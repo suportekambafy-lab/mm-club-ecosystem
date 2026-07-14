@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MMLogo } from "@/components/mm/logo";
@@ -127,11 +127,6 @@ function AuthPage() {
               ? "Ainda não tens conta? Criar conta"
               : "Já tens conta? Entrar"}
           </button>
-        </div>
-        <div className="mt-6 text-center">
-          <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">
-            ← Voltar ao Dashboard
-          </Link>
         </div>
       </div>
     </div>

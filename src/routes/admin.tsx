@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, useRouter, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +17,20 @@ import { cn } from "@/lib/utils";
 import "@/data/admin-store";
 
 export const Route = createFileRoute("/admin")({
+  ssr: false,
+  beforeLoad: async ({ location }) => {
+    const { data } = await supabase.auth.getSession();
+
+    if (!data.session) {
+      throw redirect({
+        to: "/auth",
+        search: { redirect: location.pathname } as never,
+        replace: true,
+      });
+    }
+
+    return { authUser: data.session.user };
+  },
   head: () => ({
     meta: [
       { title: "Admin — MM Club" },
@@ -63,28 +77,11 @@ const nav: Array<{
   },
 ];
 
-function hasStoredSession(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    for (let i = 0; i < window.localStorage.length; i++) {
-      const key = window.localStorage.key(i);
-      if (key && key.startsWith("sb-") && key.endsWith("-auth-token")) {
-        const raw = window.localStorage.getItem(key);
-        if (raw && raw !== "null" && raw.length > 2) return true;
-      }
-    }
-  } catch {
-    // ignore
-  }
-  return false;
-}
-
 function AdminLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
-  const [authUser, setAuthUser] = useState<User | null | undefined>(() =>
-    typeof window === "undefined" ? undefined : hasStoredSession() ? undefined : null,
-  );
+  const { authUser: initialAuthUser } = Route.useRouteContext() as { authUser: User };
+  const [authUser, setAuthUser] = useState<User | null>(initialAuthUser);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setAuthUser(data.session?.user ?? null));
