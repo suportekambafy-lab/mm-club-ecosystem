@@ -1,6 +1,7 @@
 import type { Live } from "./types";
 
-const now = Date.now();
+// Fixed baseline to avoid SSR/client hydration mismatch.
+const now = new Date("2026-07-20T18:00:00.000Z").getTime();
 const day = 86400000;
 
 export const lives: Live[] = [
