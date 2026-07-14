@@ -1,24 +1,26 @@
-// Admin overrides — persist course edits in localStorage and apply them
-// to the in-memory `courses` array so every consumer picks them up.
+// Admin overrides — persist course/expert/lesson edits in localStorage and
+// apply them to the in-memory data so every consumer picks them up.
 
 import { courses, coursesById } from "./courses";
 import { experts, expertsById } from "./experts";
-import type { Course, Expert } from "./types";
+import type { Course, Expert, Lesson } from "./types";
 
-const STORAGE_KEY = "mm-club.admin.overrides.v1";
+const STORAGE_KEY = "mm-club.admin.overrides.v2";
 
 export type CourseOverride = Partial<
   Pick<Course, "title" | "tagline" | "description" | "cover" | "logo" | "duration">
 >;
 export type ExpertOverride = Partial<Pick<Expert, "name" | "role" | "photo" | "logo" | "shortBio">>;
+export type LessonOverride = Partial<Pick<Lesson, "title" | "duration" | "videoUrl">>;
 
 export interface Overrides {
   courses: Record<string, CourseOverride>;
   experts: Record<string, ExpertOverride>;
+  lessons: Record<string, LessonOverride>; // keyed by lesson id (unique across courses)
 }
 
 function emptyOverrides(): Overrides {
-  return { courses: {}, experts: {} };
+  return { courses: {}, experts: {}, lessons: {} };
 }
 
 export function loadOverrides(): Overrides {
@@ -30,6 +32,7 @@ export function loadOverrides(): Overrides {
     return {
       courses: parsed.courses ?? {},
       experts: parsed.experts ?? {},
+      lessons: parsed.lessons ?? {},
     };
   } catch {
     return emptyOverrides();
@@ -44,6 +47,7 @@ export function saveOverrides(o: Overrides) {
 // Keep original snapshots so we can reset.
 const originalCourses = new Map<string, CourseOverride>();
 const originalExperts = new Map<string, ExpertOverride>();
+const originalLessons = new Map<string, LessonOverride>();
 
 function snapshot() {
   if (originalCourses.size === 0) {
@@ -69,11 +73,24 @@ function snapshot() {
       });
     }
   }
+  if (originalLessons.size === 0) {
+    for (const c of courses) {
+      for (const m of c.modules ?? []) {
+        for (const l of m.lessons) {
+          originalLessons.set(l.id, {
+            title: l.title,
+            duration: l.duration,
+            videoUrl: l.videoUrl,
+          });
+        }
+      }
+    }
+  }
 }
 
 export function applyOverrides(o: Overrides) {
   snapshot();
-  // Reset to originals first
+  // Reset to originals
   for (const c of courses) {
     const orig = originalCourses.get(c.id);
     if (orig) Object.assign(c, orig);
@@ -81,6 +98,14 @@ export function applyOverrides(o: Overrides) {
   for (const e of experts) {
     const orig = originalExperts.get(e.id);
     if (orig) Object.assign(e, orig);
+  }
+  for (const c of courses) {
+    for (const m of c.modules ?? []) {
+      for (const l of m.lessons) {
+        const orig = originalLessons.get(l.id);
+        if (orig) Object.assign(l, orig);
+      }
+    }
   }
   // Apply overrides
   for (const [id, patch] of Object.entries(o.courses)) {
@@ -90,6 +115,14 @@ export function applyOverrides(o: Overrides) {
   for (const [id, patch] of Object.entries(o.experts)) {
     const e = expertsById[id];
     if (e) Object.assign(e, patch);
+  }
+  for (const c of courses) {
+    for (const m of c.modules ?? []) {
+      for (const l of m.lessons) {
+        const patch = o.lessons[l.id];
+        if (patch) Object.assign(l, patch);
+      }
+    }
   }
 }
 
