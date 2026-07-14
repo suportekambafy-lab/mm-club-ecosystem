@@ -1,4 +1,5 @@
 import type { Expert } from "./types";
+import marcaMilionariaCover from "@/assets/marca-milionaria-cover.png.asset.json";
 
 export const experts: Expert[] = [
   {
@@ -6,6 +7,7 @@ export const experts: Expert[] = [
     name: "Marca Milionária",
     role: "Fundador · Estratégia",
     photo: "linear-gradient(135deg, oklch(0.35 0.08 60), oklch(0.15 0.02 60))",
+    logo: marcaMilionariaCover.url,
     shortBio: "Fundador da Marca Milionária. Estratégia de marca e escala.",
     longBio:
       "Fundador da Marca Milionária, ajudou milhares de empreendedores a construir marcas de alto valor percebido. Aqui partilha o método completo de posicionamento e escala.",
