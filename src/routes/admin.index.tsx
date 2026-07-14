@@ -11,8 +11,6 @@ export const Route = createFileRoute("/admin/")({
 const cards = [
   { to: "/admin/cursos" as const, label: "Cursos", icon: BookOpen, description: "Editar capa, título, descrição e especialista." },
   { to: "/admin/aulas" as const, label: "Aulas", icon: PlayCircle, description: "Gerir aulas e vídeos (YouTube)." },
-  { to: "/admin/especialistas" as const, label: "Especialistas", icon: UserSquare2, description: "Editar bios, fotos e logotipos." },
-  { to: "/admin/eventos" as const, label: "Eventos", icon: CalendarDays, description: "Agenda de encontros e workshops." },
   { to: "/admin/lives" as const, label: "Lives", icon: Radio, description: "Sessões ao vivo com especialistas." },
   { to: "/admin/ferramentas" as const, label: "Ferramentas", icon: Wrench, description: "Recursos e prompts para membros." },
 ];
