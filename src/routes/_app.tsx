@@ -15,6 +15,7 @@ import {
   Star,
   PanelLeftClose,
   PanelLeftOpen,
+  Menu,
   X,
   Sun,
   Moon,
