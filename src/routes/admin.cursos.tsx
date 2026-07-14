@@ -67,7 +67,7 @@ function AdminCursos() {
   };
 
   const handleReset = () => {
-    const empty: Overrides = { courses: {}, experts: {}, lessons: {} };
+    const empty: Overrides = { courses: {}, experts: {}, lessons: {}, modulesByCourse: {} };
     saveOverrides(empty);
     applyOverrides(empty);
     setOverrides(empty);
