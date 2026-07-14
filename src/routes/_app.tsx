@@ -72,11 +72,21 @@ const flatNav = navSections.flatMap((s) => s.items);
 function AppLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
+  const { theme, toggle: toggleTheme, mounted: themeMounted } = useTheme();
   const [authUser, setAuthUser] = useState<User | null | undefined>(undefined);
-  const [collapsed, setCollapsed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return window.localStorage.getItem("mm.sidebar.collapsed") === "1";
-  });
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setCollapsed(window.localStorage.getItem("mm.sidebar.collapsed") === "1");
+    setMounted(true);
+  }, []);
+
+  // Close mobile drawer on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
