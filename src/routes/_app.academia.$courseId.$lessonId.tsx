@@ -93,14 +93,16 @@ function LessonPlayer() {
 
           {/* Main content: video + title/cta */}
           <div className="space-y-6">
-            {/* Video player — YouTube embed (placeholder) */}
+            {/* Video player — YouTube embed */}
             <div className="relative aspect-video overflow-hidden rounded-3xl border border-border bg-black">
               <iframe
                 key={current.lesson.id}
-                src={`https://www.youtube.com/embed/${pickYouTubeId(current.lesson.id)}?rel=0&modestbranding=1`}
+                src={`https://www.youtube-nocookie.com/embed/${pickYouTubeId(current.lesson.id)}?rel=0&modestbranding=1&playsinline=1&autoplay=1`}
                 title={current.lesson.title}
                 className="absolute inset-0 h-full w-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                 allowFullScreen
               />
             </div>
