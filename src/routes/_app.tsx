@@ -122,172 +122,236 @@ function AppLayout() {
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 
+  const ThemeIcon = theme === "dark" ? Sun : Moon;
+  const themeLabel = theme === "dark" ? "Modo claro" : "Modo escuro";
+
+  const SidebarInner = ({ compact }: { compact: boolean }) => (
+    <>
+      <div className={cn("flex h-20 items-center", compact ? "justify-center px-2" : "justify-between px-6")}>
+        {compact ? (
+          <button
+            type="button"
+            onClick={() => setCollapsed(false)}
+            aria-label="Expandir sidebar"
+            className="rounded-lg p-2 text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground"
+          >
+            <PanelLeftOpen className="h-4 w-4" />
+          </button>
+        ) : (
+          <>
+            <MMLogo />
+            <div className="flex items-center gap-1">
+              {/* Desktop collapse */}
+              <button
+                type="button"
+                onClick={() => setCollapsed(true)}
+                aria-label="Fechar sidebar"
+                className="hidden rounded-lg p-2 text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground lg:inline-flex"
+              >
+                <PanelLeftClose className="h-4 w-4" />
+              </button>
+              {/* Mobile close */}
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Fechar menu"
+                className="rounded-lg p-2 text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground lg:hidden"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      <nav className={cn("flex-1 space-y-6 overflow-y-auto pb-4", compact ? "px-2" : "px-4")}>
+        {navSections.map((section) => (
+          <div key={section.label}>
+            {!compact && (
+              <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
+                {section.label}
+              </p>
+            )}
+            <div className="space-y-1">
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.to, item.exact);
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    title={compact ? item.label : undefined}
+                    className={cn(
+                      "group flex items-center rounded-xl text-sm transition-all",
+                      compact ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
+                      active
+                        ? "bg-surface-2 text-foreground shadow-inner ring-1 ring-[color:var(--hairline)]"
+                        : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
+                    )}
+                  >
+                    <Icon
+                      className={cn(
+                        "h-[18px] w-[18px] shrink-0 transition",
+                        active ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
+                      )}
+                    />
+                    {!compact && <span className="flex-1">{item.label}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {!compact && (
+        <div className="px-4 pb-4">
+          <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-violet to-violet-deep p-5 text-center text-violet-foreground shadow-lg shadow-violet/25">
+            <div className="pointer-events-none absolute inset-0 opacity-30 mix-blend-overlay [background-image:radial-gradient(circle_at_top_right,white,transparent_60%)]" />
+            <p className="relative text-sm font-semibold leading-tight">
+              24/7 Access to<br />o teu Painel Pessoal
+            </p>
+            <div className="relative mt-3 flex justify-center gap-0.5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} className="h-3.5 w-3.5 fill-current" />
+              ))}
+            </div>
+            <button
+              type="button"
+              className="relative mt-4 inline-flex w-full items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-violet-deep transition hover:bg-white/90"
+              onClick={() => router.navigate({ to: "/checkout" })}
+            >
+              Get Premium
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className={cn("border-t border-border", compact ? "p-2" : "p-4")}>
+        {authUser ? (
+          compact ? (
+            <button
+              onClick={handleSignOut}
+              aria-label="Sair"
+              title={displayName}
+              className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground"
+            >
+              {initials}
+            </button>
+          ) : (
+            <div className="flex items-center gap-3 rounded-lg px-2 py-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+                {initials}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
+                <p className="truncate text-xs text-muted-foreground">Membro MM Club</p>
+              </div>
+              <button
+                onClick={handleSignOut}
+                aria-label="Sair"
+                className="rounded-lg p-2 text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
+          )
+        ) : authUser === null ? (
+          <Link
+            to="/auth"
+            title={compact ? "Entrar" : undefined}
+            className={cn(
+              "flex items-center rounded-lg text-sm text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground",
+              compact ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
+            )}
+          >
+            <LogIn className="h-4 w-4" />
+            {!compact && <span className="flex-1">Entrar</span>}
+          </Link>
+        ) : (
+          <div className="h-9" />
+        )}
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Sidebar */}
+      {/* Desktop Sidebar */}
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-border bg-sidebar transition-[width] duration-200 ease-out lg:flex",
           collapsed ? "w-[76px]" : "w-64",
         )}
       >
-        <div className={cn("flex h-20 items-center", collapsed ? "justify-center px-2" : "justify-between px-6")}>
-          {collapsed ? (
-            <button
-              type="button"
-              onClick={() => setCollapsed(false)}
-              aria-label="Expandir sidebar"
-              className="rounded-lg p-2 text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground"
-            >
-              <PanelLeftOpen className="h-4 w-4" />
-            </button>
-          ) : (
-            <>
-              <MMLogo />
-              <button
-                type="button"
-                onClick={() => setCollapsed(true)}
-                aria-label="Fechar sidebar"
-                className="rounded-lg p-2 text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground"
-              >
-                <PanelLeftClose className="h-4 w-4" />
-              </button>
-            </>
-          )}
-        </div>
-
-        <nav className={cn("flex-1 space-y-6 overflow-y-auto pb-4", collapsed ? "px-2" : "px-4")}>
-          {navSections.map((section) => (
-            <div key={section.label}>
-              {!collapsed && (
-                <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
-                  {section.label}
-                </p>
-              )}
-              <div className="space-y-1">
-                {section.items.map((item) => {
-                  const Icon = item.icon;
-                  const active = isActive(item.to, item.exact);
-                  return (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      title={collapsed ? item.label : undefined}
-                      className={cn(
-                        "group flex items-center rounded-xl text-sm transition-all",
-                        collapsed ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
-                        active
-                          ? "bg-surface-2 text-foreground shadow-inner ring-1 ring-[color:var(--hairline)]"
-                          : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
-                      )}
-                    >
-                      <Icon
-                        className={cn(
-                          "h-[18px] w-[18px] shrink-0 transition",
-                          active ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
-                        )}
-                      />
-                      {!collapsed && <span className="flex-1">{item.label}</span>}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </nav>
-
-        {/* Premium promo */}
-        {!collapsed && (
-          <div className="px-4 pb-4">
-            <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-violet to-violet-deep p-5 text-center text-violet-foreground shadow-lg shadow-violet/25">
-              <div className="pointer-events-none absolute inset-0 opacity-30 mix-blend-overlay [background-image:radial-gradient(circle_at_top_right,white,transparent_60%)]" />
-              <p className="relative text-sm font-semibold leading-tight">
-                24/7 Access to<br />o teu Painel Pessoal
-              </p>
-              <div className="relative mt-3 flex justify-center gap-0.5">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="h-3.5 w-3.5 fill-current" />
-                ))}
-              </div>
-              <button
-                type="button"
-                className="relative mt-4 inline-flex w-full items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-violet-deep transition hover:bg-white/90"
-                onClick={() => router.navigate({ to: "/checkout" })}
-              >
-                Get Premium
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* profile */}
-        <div className={cn("border-t border-border", collapsed ? "p-2" : "p-4")}>
-          {authUser ? (
-            collapsed ? (
-              <button
-                onClick={handleSignOut}
-                aria-label="Sair"
-                title={displayName}
-                className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground"
-              >
-                {initials}
-              </button>
-            ) : (
-              <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                  {initials}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
-                  <p className="truncate text-xs text-muted-foreground">Membro MM Club</p>
-                </div>
-                <button
-                  onClick={handleSignOut}
-                  aria-label="Sair"
-                  className="rounded-lg p-2 text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              </div>
-            )
-          ) : authUser === null ? (
-            <Link
-              to="/auth"
-              title={collapsed ? "Entrar" : undefined}
-              className={cn(
-                "flex items-center rounded-lg text-sm text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground",
-                collapsed ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
-              )}
-            >
-              <LogIn className="h-4 w-4" />
-              {!collapsed && <span className="flex-1">Entrar</span>}
-            </Link>
-          ) : (
-            <div className="h-9" />
-          )}
-        </div>
+        <SidebarInner compact={collapsed} />
       </aside>
+
+      {/* Mobile drawer */}
+      <div
+        className={cn(
+          "fixed inset-0 z-50 lg:hidden",
+          mobileOpen ? "pointer-events-auto" : "pointer-events-none",
+        )}
+        aria-hidden={!mobileOpen}
+      >
+        <div
+          onClick={() => setMobileOpen(false)}
+          className={cn(
+            "absolute inset-0 bg-background/70 backdrop-blur-sm transition-opacity duration-200",
+            mobileOpen ? "opacity-100" : "opacity-0",
+          )}
+        />
+        <aside
+          className={cn(
+            "absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-border bg-sidebar shadow-2xl transition-transform duration-200 ease-out",
+            mobileOpen ? "translate-x-0" : "-translate-x-full",
+          )}
+        >
+          <SidebarInner compact={false} />
+        </aside>
+      </div>
 
       {/* Main */}
       <div className={cn("transition-[padding] duration-200 ease-out", collapsed ? "lg:pl-[76px]" : "lg:pl-64")}>
         {/* Topbar */}
-        <header className="sticky top-0 z-30 flex items-center gap-4 bg-background/80 px-4 pt-4 pb-4 backdrop-blur-xl md:px-8 md:pt-6">
-          <div className="lg:hidden">
+        <header className="sticky top-0 z-30 flex items-center gap-2 bg-background/80 px-3 pt-3 pb-3 backdrop-blur-xl sm:gap-4 sm:px-4 sm:pt-4 sm:pb-4 md:px-8 md:pt-6">
+          {/* Mobile menu button */}
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Abrir menu"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-1 text-foreground transition hover:bg-surface-2 lg:hidden"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+
+          <div className="hidden shrink-0 lg:hidden">
             <MMLogo />
           </div>
-          <div className="flex flex-1 items-center justify-between gap-3 rounded-2xl border border-border bg-surface-1 px-5 py-3 md:py-4">
+
+          <div className="flex min-w-0 flex-1 items-center justify-between gap-2 rounded-2xl border border-border bg-surface-1 px-3 py-2.5 sm:gap-3 sm:px-5 sm:py-3 md:py-4">
             <div className="min-w-0">
-              <p className="truncate font-display text-lg leading-tight text-foreground md:text-xl">
+              <p className="truncate font-display text-sm leading-tight text-foreground sm:text-lg md:text-xl">
                 Bem-vindo, <span className="text-primary">{displayName.split(" ")[0]}</span>.
               </p>
               <p className="mt-0.5 hidden text-xs text-muted-foreground md:block">
                 Continua a construir a tua marca milionária.
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
               <div className="hidden md:block">
                 <GlobalSearch variant="icon" />
               </div>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                aria-label={themeLabel}
+                title={themeLabel}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 text-muted-foreground transition hover:text-foreground sm:h-10 sm:w-10"
+              >
+                {themeMounted ? <ThemeIcon className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </button>
               <Link
                 to="/checkout"
                 aria-label="Guardados"
@@ -298,12 +362,12 @@ function AppLayout() {
               <Link
                 to="/comunidade"
                 aria-label="Notificações"
-                className="relative flex h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-muted-foreground transition hover:text-foreground"
+                className="relative flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 text-muted-foreground transition hover:text-foreground sm:h-10 sm:w-10"
               >
                 <Bell className="h-4 w-4" />
-                <span className="absolute right-2.5 top-2.5 h-1.5 w-1.5 rounded-full bg-primary" />
+                <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary sm:right-2.5 sm:top-2.5" />
               </Link>
-              <div className="ml-1 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-background">
+              <div className="ml-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-background sm:ml-1 sm:h-10 sm:w-10">
                 {initials}
               </div>
             </div>
@@ -311,35 +375,12 @@ function AppLayout() {
         </header>
 
         {/* Mobile search */}
-        <div className="border-b border-border px-4 py-3 md:hidden">
+        <div className="border-b border-border px-3 py-2.5 sm:px-4 sm:py-3 md:hidden">
           <GlobalSearch />
         </div>
 
-        {/* Mobile nav bar */}
-        <nav className="sticky top-16 z-20 flex gap-1 overflow-x-auto border-b border-border bg-background/80 px-4 py-2 backdrop-blur-xl lg:hidden">
-          {flatNav.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.to, item.exact);
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={cn(
-                  "flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-xs transition",
-                  active
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <main className="mx-auto max-w-7xl px-4 pb-12 pt-6 md:px-8 md:pt-8">
-          <Outlet />
+        <main className="mx-auto max-w-7xl px-3 pb-12 pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8">
+          {mounted ? <Outlet /> : <div className="min-h-[60vh]" />}
         </main>
       </div>
     </div>
