@@ -99,7 +99,29 @@ function DashboardPage() {
       </section>
 
       {user.dashboard.blocks.map((b) => (
-        <div key={b}>{blocks[b]}</div>
+        <div key={b}>
+          {blocks[b]}
+          {b === "continue" && (
+            <div className="mt-12">
+              <Rail
+                title="Cursos"
+                subtitle="Todo o catálogo da Academia MM."
+                action={
+                  <Link
+                    to="/academia"
+                    className="hidden text-xs font-medium text-primary hover:underline md:inline-flex md:items-center md:gap-1"
+                  >
+                    Ver tudo <ArrowRight className="h-3 w-3" />
+                  </Link>
+                }
+              >
+                {courses.map((c) => (
+                  <CourseCard key={c.id} course={c} className="w-[300px] shrink-0" />
+                ))}
+              </Rail>
+            </div>
+          )}
+        </div>
       ))}
     </div>
   );
