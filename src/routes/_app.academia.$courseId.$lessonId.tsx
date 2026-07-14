@@ -81,13 +81,13 @@ function LessonPlayer() {
           <aside className="rounded-3xl border border-border bg-surface-1 p-5">
             <p className="mb-4 font-display text-lg text-foreground">Módulos</p>
             <div className="space-y-3">
-              {course.modules!.map((m, mi) => (
+              {course.modules!.map((m: Module, mi: number) => (
                 <ModuleAccordion
                   key={m.id}
                   module={m}
                   courseId={course.id}
                   currentLessonId={current.lesson.id}
-                  defaultOpen={mi < 2 || m.lessons.some((l) => l.id === current.lesson.id)}
+                  defaultOpen={mi < 2 || m.lessons.some((l: Lesson) => l.id === current.lesson.id)}
                 />
               ))}
             </div>
