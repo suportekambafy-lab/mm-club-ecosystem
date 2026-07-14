@@ -154,31 +154,25 @@ function AdminCursos() {
                     onChange={(e) => updateCourse(c.id, { duration: e.target.value })}
                   />
                 </Field>
-                <Field
-                  label="Capa (URL da imagem ou CSS background)"
-                  icon={<ImageIcon className="h-3 w-3" />}
-                >
-                  <input
-                    className={inputCls}
-                    placeholder="https://... ou linear-gradient(...)"
-                    value={patch.cover ?? c.cover}
-                    onChange={(e) => updateCourse(c.id, { cover: e.target.value })}
-                  />
-                  <p className="mt-1 text-[10px] text-muted-foreground">
-                    Dica: para uma imagem cheia usa{" "}
-                    <code className="text-foreground/70">
-                      url(URL) center/cover no-repeat, #000
-                    </code>
-                  </p>
-                </Field>
-                <Field label="Logotipo (URL)" icon={<Sparkles className="h-3 w-3" />}>
-                  <input
-                    className={inputCls}
-                    placeholder="https://..."
-                    value={patch.logo ?? c.logo ?? ""}
-                    onChange={(e) => updateCourse(c.id, { logo: e.target.value })}
-                  />
-                </Field>
+                <MediaField
+                  label="Capa do curso"
+                  bucket="course-media"
+                  keyPrefix={`courses/${c.id}/cover`}
+                  accept="image/*"
+                  value={patch.cover ?? c.cover}
+                  onChange={(v) => updateCourse(c.id, { cover: v })}
+                  placeholder="URL da imagem, gradient CSS, ou usa Upload"
+                  helper="Para uma imagem em ecrã completo usa: url(URL) center/cover no-repeat, #000"
+                />
+                <MediaField
+                  label="Logotipo do curso"
+                  bucket="course-media"
+                  keyPrefix={`courses/${c.id}/logo`}
+                  accept="image/*"
+                  value={patch.logo ?? c.logo ?? ""}
+                  onChange={(v) => updateCourse(c.id, { logo: v })}
+                  placeholder="URL do logotipo"
+                />
               </div>
 
               {expert && (
