@@ -111,19 +111,34 @@ function AppLayout() {
 
         {/* profile */}
         <div className="border-t border-border p-4">
-          <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-              {currentUser.avatarInitials}
+          {authUser ? (
+            <div className="flex items-center gap-3 rounded-lg px-2 py-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+                {initials}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
+                <p className="truncate text-xs text-muted-foreground">Membro MM Club</p>
+              </div>
+              <button
+                onClick={handleSignOut}
+                aria-label="Sair"
+                className="rounded-lg p-2 text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-foreground">
-                {currentUser.name}
-              </p>
-              <p className="truncate text-xs text-muted-foreground">
-                Membro MM Club
-              </p>
-            </div>
-          </div>
+          ) : authUser === null ? (
+            <Link
+              to="/auth"
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground"
+            >
+              <LogIn className="h-4 w-4" />
+              <span className="flex-1">Entrar</span>
+            </Link>
+          ) : (
+            <div className="h-9" />
+          )}
         </div>
       </aside>
 
