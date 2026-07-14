@@ -29,7 +29,7 @@ function AdminDashboard() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat label="Cursos" value={courses.length} />
         <Stat label="Aulas" value={totalLessons} />
-        <Stat label="Especialistas" value={experts.length} />
+        <Stat label="Módulos" value={courses.reduce((n, c) => n + (c.modules?.length ?? 0), 0)} />
         <Stat label="Em breve" value={courses.filter((c) => c.status === "coming-soon").length} />
       </div>
 
