@@ -20,6 +20,7 @@ import { Route as AppAcademiaRouteImport } from './routes/_app.academia'
 import { Route as AppAcademiaIndexRouteImport } from './routes/_app.academia.index'
 import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
 import { Route as AppAcademiaCourseIdRouteImport } from './routes/_app.academia.$courseId'
+import { Route as AppAcademiaCourseIdIndexRouteImport } from './routes/_app.academia.$courseId.index'
 import { Route as AppAcademiaCourseIdLessonIdRouteImport } from './routes/_app.academia.$courseId.$lessonId'
 
 const AuthRoute = AuthRouteImport.update({
@@ -77,6 +78,12 @@ const AppAcademiaCourseIdRoute = AppAcademiaCourseIdRouteImport.update({
   path: '/$courseId',
   getParentRoute: () => AppAcademiaRoute,
 } as any)
+const AppAcademiaCourseIdIndexRoute =
+  AppAcademiaCourseIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AppAcademiaCourseIdRoute,
+  } as any)
 const AppAcademiaCourseIdLessonIdRoute =
   AppAcademiaCourseIdLessonIdRouteImport.update({
     id: '/$lessonId',
@@ -96,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/academia/': typeof AppAcademiaIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
+  '/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
@@ -104,10 +112,10 @@ export interface FileRoutesByTo {
   '/jade': typeof AppJadeRoute
   '/lives': typeof AppLivesRoute
   '/': typeof AppIndexRoute
-  '/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/academia': typeof AppAcademiaIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
+  '/academia/$courseId': typeof AppAcademiaCourseIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/_app/academia/': typeof AppAcademiaIndexRoute
   '/_app/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
+  '/_app/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/especialistas/$expertId'
     | '/academia/'
     | '/academia/$courseId/$lessonId'
+    | '/academia/$courseId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
@@ -146,10 +156,10 @@ export interface FileRouteTypes {
     | '/jade'
     | '/lives'
     | '/'
-    | '/academia/$courseId'
     | '/especialistas/$expertId'
     | '/academia'
     | '/academia/$courseId/$lessonId'
+    | '/academia/$courseId'
   id:
     | '__root__'
     | '/_app'
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/_app/especialistas/$expertId'
     | '/_app/academia/'
     | '/_app/academia/$courseId/$lessonId'
+    | '/_app/academia/$courseId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -250,6 +261,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAcademiaCourseIdRouteImport
       parentRoute: typeof AppAcademiaRoute
     }
+    '/_app/academia/$courseId/': {
+      id: '/_app/academia/$courseId/'
+      path: '/'
+      fullPath: '/academia/$courseId/'
+      preLoaderRoute: typeof AppAcademiaCourseIdIndexRouteImport
+      parentRoute: typeof AppAcademiaCourseIdRoute
+    }
     '/_app/academia/$courseId/$lessonId': {
       id: '/_app/academia/$courseId/$lessonId'
       path: '/$lessonId'
@@ -262,10 +280,12 @@ declare module '@tanstack/react-router' {
 
 interface AppAcademiaCourseIdRouteChildren {
   AppAcademiaCourseIdLessonIdRoute: typeof AppAcademiaCourseIdLessonIdRoute
+  AppAcademiaCourseIdIndexRoute: typeof AppAcademiaCourseIdIndexRoute
 }
 
 const AppAcademiaCourseIdRouteChildren: AppAcademiaCourseIdRouteChildren = {
   AppAcademiaCourseIdLessonIdRoute: AppAcademiaCourseIdLessonIdRoute,
+  AppAcademiaCourseIdIndexRoute: AppAcademiaCourseIdIndexRoute,
 }
 
 const AppAcademiaCourseIdRouteWithChildren =
