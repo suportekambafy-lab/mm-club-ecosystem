@@ -1,4 +1,5 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   GraduationCap,
@@ -8,7 +9,11 @@ import {
   Users,
   CalendarDays,
   Bell,
+  LogOut,
+  LogIn,
 } from "lucide-react";
+import type { User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 import { MMLogo } from "@/components/mm/logo";
 import { GlobalSearch } from "@/components/mm/global-search";
 import { currentUser } from "@/data/user";
@@ -37,6 +42,33 @@ const nav: NavItem[] = [
 
 function AppLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const router = useRouter();
+  const [authUser, setAuthUser] = useState<User | null | undefined>(undefined);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setAuthUser(data.session?.user ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      setAuthUser(s?.user ?? null);
+      router.invalidate();
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [router]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setAuthUser(null);
+  };
+
+  const displayName =
+    (authUser?.user_metadata?.display_name as string | undefined) ??
+    authUser?.email?.split("@")[0] ??
+    currentUser.name;
+  const initials = displayName
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
@@ -79,19 +111,34 @@ function AppLayout() {
 
         {/* profile */}
         <div className="border-t border-border p-4">
-          <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-              {currentUser.avatarInitials}
+          {authUser ? (
+            <div className="flex items-center gap-3 rounded-lg px-2 py-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+                {initials}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
+                <p className="truncate text-xs text-muted-foreground">Membro MM Club</p>
+              </div>
+              <button
+                onClick={handleSignOut}
+                aria-label="Sair"
+                className="rounded-lg p-2 text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-foreground">
-                {currentUser.name}
-              </p>
-              <p className="truncate text-xs text-muted-foreground">
-                Membro MM Club
-              </p>
-            </div>
-          </div>
+          ) : authUser === null ? (
+            <Link
+              to="/auth"
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground"
+            >
+              <LogIn className="h-4 w-4" />
+              <span className="flex-1">Entrar</span>
+            </Link>
+          ) : (
+            <div className="h-9" />
+          )}
         </div>
       </aside>
 
