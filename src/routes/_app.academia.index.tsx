@@ -182,17 +182,23 @@ function EnrolledRow({ course }: { course: Course }) {
         {expert && (
           <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
             <span
-              className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[9px] font-semibold text-white"
-              style={{ background: expert.photo }}
+              className="grid h-5 w-5 shrink-0 place-items-center overflow-hidden rounded-full text-[9px] font-semibold text-white"
+              style={expert.logo ? { background: "#000" } : { background: expert.photo }}
               aria-hidden
             >
-              {expert.name
-                .split(" ")
-                .map((n) => n[0])
-                .slice(0, 2)
-                .join("")}
+              {expert.logo ? (
+                <img src={expert.logo} alt="" className="h-full w-full object-cover" />
+              ) : (
+                expert.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .slice(0, 2)
+                  .join("")
+              )}
             </span>
-            <span className="truncate">{expert.name}</span>
+            <span className="truncate">
+              Especialista: <span className="text-foreground">{expert.name}</span>
+            </span>
           </div>
         )}
       </div>
