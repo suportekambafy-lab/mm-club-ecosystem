@@ -54,34 +54,34 @@ function LessonPlayer() {
   const source = parseVideoUrl(videoUrl);
 
   return (
-    <div className="-mx-4 -my-8 min-h-[calc(100vh-4rem)] bg-background md:-mx-8 md:-my-10">
-      <div className="mx-auto max-w-[1440px] px-4 py-6 md:px-6 md:py-8">
-        {/* Breadcrumb bar (page-level, sits below app nav) */}
-        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-border bg-surface-1 px-5 py-3 text-sm">
+    <div className="-mx-3 -my-4 bg-background sm:-mx-4 sm:-my-6 md:-mx-8 md:-my-8 lg:h-[calc(100dvh-3.5rem)] lg:overflow-hidden">
+      <div className="mx-auto flex h-full max-w-[1440px] flex-col px-3 py-4 sm:px-4 sm:py-6 md:px-6 md:py-6">
+        {/* Breadcrumb bar */}
+        <div className="mb-4 flex items-center gap-2 overflow-x-auto rounded-2xl border border-border bg-surface-1 px-4 py-2.5 text-sm md:mb-6 md:gap-3 md:px-5 md:py-3">
           <Link
             to="/academia"
-            className="text-muted-foreground transition hover:text-foreground"
+            className="shrink-0 text-muted-foreground transition hover:text-foreground"
           >
             Academia
           </Link>
-          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
           <Link
             to="/academia/$courseId"
             params={{ courseId: course.id }}
-            className="text-muted-foreground transition hover:text-foreground"
+            className="shrink-0 text-muted-foreground transition hover:text-foreground"
           >
             {course.title}
           </Link>
-          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
           <span className="truncate text-foreground">{current.lesson.title}</span>
         </div>
 
         {/* Layout: modules sidebar + main content */}
-        <div className="grid gap-6 lg:grid-cols-[330px_minmax(0,1fr)]">
-          {/* Modules sidebar */}
-          <aside className="rounded-3xl border border-border bg-surface-1 p-5">
-            <p className="mb-4 font-display text-lg text-foreground">Módulos</p>
-            <div className="space-y-3">
+        <div className="grid min-h-0 flex-1 gap-4 md:gap-6 lg:grid-cols-[330px_minmax(0,1fr)]">
+          {/* Modules sidebar — scrollable independently on desktop */}
+          <aside className="flex min-h-0 flex-col rounded-3xl border border-border bg-surface-1 p-4 md:p-5">
+            <p className="mb-4 shrink-0 font-display text-lg text-foreground">Módulos</p>
+            <div className="space-y-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
               {course.modules!.map((m: Module, mi: number) => (
                 <ModuleAccordion
                   key={m.id}
@@ -95,9 +95,9 @@ function LessonPlayer() {
           </aside>
 
           {/* Main content: video + title/cta */}
-          <div className="space-y-6">
-            {/* Video player — YouTube embed */}
-            <div className="relative aspect-video overflow-hidden rounded-3xl border border-border bg-black">
+          <div className="flex min-h-0 flex-col gap-4 md:gap-6 lg:overflow-y-auto lg:pr-1">
+            {/* Video player */}
+            <div className="relative aspect-video shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
               {source.kind === "file" && source.fileUrl ? (
                 <video
                   key={current.lesson.id}
@@ -126,57 +126,56 @@ function LessonPlayer() {
             </div>
 
             {/* Title + CTA */}
-            <div className="flex flex-col gap-5 rounded-3xl bg-surface-2 p-5 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-4 rounded-2xl bg-surface-2 p-4 sm:p-5 md:rounded-3xl lg:flex-row lg:items-center lg:justify-between lg:gap-6">
               <div className="min-w-0">
-                <h1 className="font-display text-2xl text-foreground md:text-[26px]">
+                <h1 className="font-display text-xl leading-tight text-foreground sm:text-2xl md:text-[26px]">
                   {current.lesson.title}
                 </h1>
-                <div className="mt-1.5 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                  <span>{current.module.title}</span>
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground sm:text-sm">
+                  <span className="truncate">{current.module.title}</span>
                   <span className="h-1 w-1 rounded-full bg-muted-foreground/60" />
                   <span>Aula {current.index + 1}</span>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                {/* Download with premium ring */}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <a
                   href={videoUrl}
                   target="_blank"
                   rel="noreferrer"
                   aria-label="Abrir vídeo original"
-                  className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-border bg-surface-1 text-foreground transition hover:border-primary/40"
+                  className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border bg-surface-1 text-foreground transition hover:border-primary/40 sm:h-12 sm:w-12 md:h-14 md:w-14"
                 >
-                  <Download className="h-5 w-5" />
-                  <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                    <Crown className="h-3 w-3 fill-current" />
+                  <Download className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground sm:h-5 sm:w-5">
+                    <Crown className="h-2.5 w-2.5 fill-current sm:h-3 sm:w-3" />
                   </span>
                 </a>
 
                 <Link
                   to="/comunidade"
-                  className="inline-flex h-14 items-center gap-2 rounded-2xl bg-surface-3 px-6 text-sm font-semibold text-foreground transition hover:bg-surface-3/80"
+                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-surface-3 px-4 text-xs font-semibold text-foreground transition hover:bg-surface-3/80 sm:h-12 sm:flex-none sm:rounded-2xl sm:px-5 sm:text-sm md:h-14 md:px-6"
                 >
                   <MessagesSquare className="h-4 w-4" />
-                  Sala de discussão
+                  <span className="whitespace-nowrap">Sala de discussão</span>
                 </Link>
 
                 {next ? (
                   <Link
                     to="/academia/$courseId/$lessonId"
                     params={{ courseId: course.id, lessonId: next.lesson.id }}
-                    className="inline-flex h-14 items-center gap-2 rounded-2xl bg-primary px-6 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft"
+                    className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-xs font-semibold text-primary-foreground transition hover:bg-gold-soft sm:h-12 sm:flex-none sm:rounded-2xl sm:px-5 sm:text-sm md:h-14 md:px-6"
                   >
-                    Próxima aula
+                    <span className="whitespace-nowrap">Próxima aula</span>
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 ) : (
                   <Link
                     to="/academia/$courseId"
                     params={{ courseId: course.id }}
-                    className="inline-flex h-14 items-center gap-2 rounded-2xl bg-primary px-6 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft"
+                    className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-xs font-semibold text-primary-foreground transition hover:bg-gold-soft sm:h-12 sm:flex-none sm:rounded-2xl sm:px-5 sm:text-sm md:h-14 md:px-6"
                   >
-                    Terminar curso
+                    <span className="whitespace-nowrap">Terminar curso</span>
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 )}
