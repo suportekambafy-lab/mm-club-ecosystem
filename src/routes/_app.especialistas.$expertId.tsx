@@ -48,7 +48,7 @@ function ExpertPage() {
           </h1>
           <p className="text-base text-muted-foreground">{expert.role}</p>
           <div className="flex flex-wrap gap-2 pt-1">
-            {expert.expertise.map((tag) => (
+            {expert.expertise.map((tag: string) => (
               <span
                 key={tag}
                 className="rounded-full border border-border bg-surface-1 px-3 py-1 text-xs text-muted-foreground"

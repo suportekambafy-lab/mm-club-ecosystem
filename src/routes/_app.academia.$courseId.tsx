@@ -114,7 +114,7 @@ function CourseDetail() {
         <section className="space-y-5">
           <h2 className="font-display text-xl text-foreground">Conteúdo do curso</h2>
           <div className="space-y-3">
-            {course.modules.map((m, mi) => (
+            {course.modules.map((m: import("@/data/types").Module, mi: number) => (
               <div
                 key={m.id}
                 className="overflow-hidden rounded-xl bg-surface-1 ring-1 ring-border"
@@ -130,7 +130,7 @@ function CourseDetail() {
                   </div>
                 </div>
                 <ul>
-                  {m.lessons.map((l, li) => (
+                  {m.lessons.map((l: import("@/data/types").Lesson, li: number) => (
                     <li
                       key={l.id}
                       className="flex items-center gap-4 border-b border-border/50 px-5 py-3 last:border-b-0"

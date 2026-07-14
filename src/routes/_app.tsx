@@ -18,7 +18,14 @@ export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
 
-const nav = [
+type NavItem = {
+  to: "/" | "/academia" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/eventos";
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+};
+
+const nav: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/academia", label: "Academia", icon: GraduationCap },
   { to: "/jade", label: "Jade", icon: Sparkles },
@@ -26,7 +33,7 @@ const nav = [
   { to: "/lives", label: "Lives", icon: Radio },
   { to: "/comunidade", label: "Comunidade", icon: Users },
   { to: "/eventos", label: "Eventos", icon: CalendarDays },
-] as const;
+];
 
 function AppLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });

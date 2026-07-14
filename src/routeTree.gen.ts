@@ -9,61 +9,237 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as AppLivesRouteImport } from './routes/_app.lives'
+import { Route as AppJadeRouteImport } from './routes/_app.jade'
+import { Route as AppFerramentasRouteImport } from './routes/_app.ferramentas'
+import { Route as AppComunidadeRouteImport } from './routes/_app.comunidade'
+import { Route as AppAcademiaRouteImport } from './routes/_app.academia'
+import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
+import { Route as AppAcademiaCourseIdRouteImport } from './routes/_app.academia.$courseId'
 
-const IndexRoute = IndexRouteImport.update({
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLivesRoute = AppLivesRouteImport.update({
+  id: '/lives',
+  path: '/lives',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppJadeRoute = AppJadeRouteImport.update({
+  id: '/jade',
+  path: '/jade',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFerramentasRoute = AppFerramentasRouteImport.update({
+  id: '/ferramentas',
+  path: '/ferramentas',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppComunidadeRoute = AppComunidadeRouteImport.update({
+  id: '/comunidade',
+  path: '/comunidade',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAcademiaRoute = AppAcademiaRouteImport.update({
+  id: '/academia',
+  path: '/academia',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEspecialistasExpertIdRoute =
+  AppEspecialistasExpertIdRouteImport.update({
+    id: '/especialistas/$expertId',
+    path: '/especialistas/$expertId',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppAcademiaCourseIdRoute = AppAcademiaCourseIdRouteImport.update({
+  id: '/$courseId',
+  path: '/$courseId',
+  getParentRoute: () => AppAcademiaRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof AppIndexRoute
+  '/academia': typeof AppAcademiaRouteWithChildren
+  '/comunidade': typeof AppComunidadeRoute
+  '/ferramentas': typeof AppFerramentasRoute
+  '/jade': typeof AppJadeRoute
+  '/lives': typeof AppLivesRoute
+  '/academia/$courseId': typeof AppAcademiaCourseIdRoute
+  '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/academia': typeof AppAcademiaRouteWithChildren
+  '/comunidade': typeof AppComunidadeRoute
+  '/ferramentas': typeof AppFerramentasRoute
+  '/jade': typeof AppJadeRoute
+  '/lives': typeof AppLivesRoute
+  '/': typeof AppIndexRoute
+  '/academia/$courseId': typeof AppAcademiaCourseIdRoute
+  '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/_app/academia': typeof AppAcademiaRouteWithChildren
+  '/_app/comunidade': typeof AppComunidadeRoute
+  '/_app/ferramentas': typeof AppFerramentasRoute
+  '/_app/jade': typeof AppJadeRoute
+  '/_app/lives': typeof AppLivesRoute
+  '/_app/': typeof AppIndexRoute
+  '/_app/academia/$courseId': typeof AppAcademiaCourseIdRoute
+  '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/academia'
+    | '/comunidade'
+    | '/ferramentas'
+    | '/jade'
+    | '/lives'
+    | '/academia/$courseId'
+    | '/especialistas/$expertId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/academia'
+    | '/comunidade'
+    | '/ferramentas'
+    | '/jade'
+    | '/lives'
+    | '/'
+    | '/academia/$courseId'
+    | '/especialistas/$expertId'
+  id:
+    | '__root__'
+    | '/_app'
+    | '/_app/academia'
+    | '/_app/comunidade'
+    | '/_app/ferramentas'
+    | '/_app/jade'
+    | '/_app/lives'
+    | '/_app/'
+    | '/_app/academia/$courseId'
+    | '/_app/especialistas/$expertId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/': {
+      id: '/_app/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/lives': {
+      id: '/_app/lives'
+      path: '/lives'
+      fullPath: '/lives'
+      preLoaderRoute: typeof AppLivesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/jade': {
+      id: '/_app/jade'
+      path: '/jade'
+      fullPath: '/jade'
+      preLoaderRoute: typeof AppJadeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/ferramentas': {
+      id: '/_app/ferramentas'
+      path: '/ferramentas'
+      fullPath: '/ferramentas'
+      preLoaderRoute: typeof AppFerramentasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/comunidade': {
+      id: '/_app/comunidade'
+      path: '/comunidade'
+      fullPath: '/comunidade'
+      preLoaderRoute: typeof AppComunidadeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/academia': {
+      id: '/_app/academia'
+      path: '/academia'
+      fullPath: '/academia'
+      preLoaderRoute: typeof AppAcademiaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/especialistas/$expertId': {
+      id: '/_app/especialistas/$expertId'
+      path: '/especialistas/$expertId'
+      fullPath: '/especialistas/$expertId'
+      preLoaderRoute: typeof AppEspecialistasExpertIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/academia/$courseId': {
+      id: '/_app/academia/$courseId'
+      path: '/$courseId'
+      fullPath: '/academia/$courseId'
+      preLoaderRoute: typeof AppAcademiaCourseIdRouteImport
+      parentRoute: typeof AppAcademiaRoute
     }
   }
 }
 
+interface AppAcademiaRouteChildren {
+  AppAcademiaCourseIdRoute: typeof AppAcademiaCourseIdRoute
+}
+
+const AppAcademiaRouteChildren: AppAcademiaRouteChildren = {
+  AppAcademiaCourseIdRoute: AppAcademiaCourseIdRoute,
+}
+
+const AppAcademiaRouteWithChildren = AppAcademiaRoute._addFileChildren(
+  AppAcademiaRouteChildren,
+)
+
+interface AppRouteChildren {
+  AppAcademiaRoute: typeof AppAcademiaRouteWithChildren
+  AppComunidadeRoute: typeof AppComunidadeRoute
+  AppFerramentasRoute: typeof AppFerramentasRoute
+  AppJadeRoute: typeof AppJadeRoute
+  AppLivesRoute: typeof AppLivesRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppEspecialistasExpertIdRoute: typeof AppEspecialistasExpertIdRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAcademiaRoute: AppAcademiaRouteWithChildren,
+  AppComunidadeRoute: AppComunidadeRoute,
+  AppFerramentasRoute: AppFerramentasRoute,
+  AppJadeRoute: AppJadeRoute,
+  AppLivesRoute: AppLivesRoute,
+  AppIndexRoute: AppIndexRoute,
+  AppEspecialistasExpertIdRoute: AppEspecialistasExpertIdRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
