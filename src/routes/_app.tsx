@@ -13,7 +13,6 @@ import {
   LogIn,
   ShoppingBag,
   Star,
-  Settings,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
