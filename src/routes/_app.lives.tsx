@@ -168,7 +168,7 @@ function buildCalendarUrl() {
     "PRODID:-//MM Club//Lives//PT",
     "BEGIN:VEVENT",
     `UID:${nextLive.id}@mmclub.pt`,
-    `DTSTAMP:${stamp(new Date())}`,
+    `DTSTAMP:${stamp(start)}`,
     `DTSTART:${stamp(start)}`,
     `DTEND:${stamp(end)}`,
     `SUMMARY:${nextLive.title}`,
