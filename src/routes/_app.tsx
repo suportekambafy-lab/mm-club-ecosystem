@@ -103,6 +103,14 @@ function AppLayout() {
     return () => sub.subscription.unsubscribe();
   }, [router]);
 
+  // Gate: require account to access any /_app route
+  useEffect(() => {
+    if (authUser === null) {
+      const redirect = pathname && pathname !== "/auth" ? pathname : "/";
+      router.navigate({ to: "/auth", search: { redirect } as never, replace: true });
+    }
+  }, [authUser, pathname, router]);
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setAuthUser(null);
