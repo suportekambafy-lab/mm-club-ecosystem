@@ -202,21 +202,24 @@ function AdminCursos() {
                         onChange={(e) => updateExpert(expert.id, { shortBio: e.target.value })}
                       />
                     </Field>
-                    <Field label="Foto (URL ou gradient)">
-                      <input
-                        className={inputCls}
-                        value={ePatch.photo ?? expert.photo}
-                        onChange={(e) => updateExpert(expert.id, { photo: e.target.value })}
-                      />
-                    </Field>
-                    <Field label="Logotipo do especialista (URL)">
-                      <input
-                        className={inputCls}
-                        placeholder="https://..."
-                        value={ePatch.logo ?? expert.logo ?? ""}
-                        onChange={(e) => updateExpert(expert.id, { logo: e.target.value })}
-                      />
-                    </Field>
+                    <MediaField
+                      label="Foto do especialista"
+                      bucket="course-media"
+                      keyPrefix={`experts/${expert.id}/photo`}
+                      accept="image/*"
+                      value={ePatch.photo ?? expert.photo}
+                      onChange={(v) => updateExpert(expert.id, { photo: v })}
+                      placeholder="URL da foto, gradient CSS, ou usa Upload"
+                    />
+                    <MediaField
+                      label="Logotipo do especialista"
+                      bucket="course-media"
+                      keyPrefix={`experts/${expert.id}/logo`}
+                      accept="image/*"
+                      value={ePatch.logo ?? expert.logo ?? ""}
+                      onChange={(v) => updateExpert(expert.id, { logo: v })}
+                      placeholder="URL do logotipo"
+                    />
                   </div>
                 </div>
               )}
