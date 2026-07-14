@@ -87,14 +87,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { name: "author", content: "Marca Milionária" },
       { name: "theme-color", content: "#0d0c0a" },
-      { property: "og:title", content: "MM Club" },
+      { property: "og:title", content: "MM Club — Ecossistema de educação para empreendedores" },
       {
         property: "og:description",
         content:
-          "O clube privado da Marca Milionária. Cursos, Jade, especialistas, ferramentas e comunidade.",
+          "MM Club é o clube privado da Marca Milionária: cursos, especialistas, Jade, ferramentas, lives e comunidade num único ecossistema premium.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "MM Club — Ecossistema de educação para empreendedores" },
+      { name: "twitter:description", content: "MM Club é o clube privado da Marca Milionária: cursos, especialistas, Jade, ferramentas, lives e comunidade num único ecossistema premium." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a8ad3eec-0e20-4bcb-9368-dc2c18cf88ed/id-preview-cefbb105--70574eb9-2b6c-447b-adde-9f59b54cc086.lovable.app-1784052523161.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a8ad3eec-0e20-4bcb-9368-dc2c18cf88ed/id-preview-cefbb105--70574eb9-2b6c-447b-adde-9f59b54cc086.lovable.app-1784052523161.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
