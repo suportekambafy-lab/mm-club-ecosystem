@@ -151,8 +151,8 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
 function CommunityPage() {
   const user = useUser();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const catQ = useCategories();
-  const postsQ = usePosts(activeCategory, user?.id ?? null);
+  const catQ = useCategories(user != null);
+  const postsQ = usePosts(activeCategory, user?.id ?? null, user != null);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
