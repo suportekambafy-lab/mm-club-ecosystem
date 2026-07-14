@@ -141,10 +141,10 @@ function LessonPlayer() {
               <div className="flex flex-wrap items-center gap-3">
                 {/* Download with premium ring */}
                 <a
-                  href={youtubeUrl}
+                  href={videoUrl}
                   target="_blank"
                   rel="noreferrer"
-                  aria-label="Abrir vídeo no YouTube"
+                  aria-label="Abrir vídeo original"
                   className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-border bg-surface-1 text-foreground transition hover:border-primary/40"
                 >
                   <Download className="h-5 w-5" />
@@ -267,21 +267,3 @@ function ModuleAccordion({
 
 const DEFAULT_LESSON_YOUTUBE_URL = "https://www.youtube.com/watch?v=-alfqFwiI6Y";
 
-function pickYouTubeId(urlOrId: string) {
-  if (/^[\w-]{6,}$/.test(urlOrId) && !urlOrId.includes("http")) return urlOrId;
-
-  try {
-    const url = new URL(urlOrId);
-    const watchId = url.searchParams.get("v");
-    if (watchId) return watchId;
-
-    const parts = url.pathname.split("/").filter(Boolean);
-    const embedIndex = parts.findIndex((part) => part === "embed" || part === "shorts");
-    if (embedIndex >= 0 && parts[embedIndex + 1]) return parts[embedIndex + 1];
-    if (url.hostname.includes("youtu.be") && parts[0]) return parts[0];
-  } catch {
-    return "-alfqFwiI6Y";
-  }
-
-  return "-alfqFwiI6Y";
-}
