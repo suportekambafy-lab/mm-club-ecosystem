@@ -77,10 +77,21 @@ function CourseDetail() {
             <span>{course.lessonsCount} aulas</span>
           </div>
 
-          <button className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft">
-            <Play className="h-4 w-4 fill-current" />
-            {course.progress > 0 ? "Continuar" : "Começar curso"}
-          </button>
+          {course.modules?.[0]?.lessons?.[0] ? (
+            <Link
+              to="/academia/$courseId/$lessonId"
+              params={{ courseId: course.id, lessonId: course.modules[0].lessons[0].id }}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
+            >
+              <Play className="h-4 w-4 fill-current" />
+              {course.progress > 0 ? "Continuar" : "Começar curso"}
+            </Link>
+          ) : (
+            <button className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft">
+              <Play className="h-4 w-4 fill-current" />
+              {course.progress > 0 ? "Continuar" : "Começar curso"}
+            </button>
+          )}
 
           {course.progress > 0 && (
             <div>
