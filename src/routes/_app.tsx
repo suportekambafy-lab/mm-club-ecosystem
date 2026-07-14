@@ -1,4 +1,5 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   GraduationCap,
@@ -8,7 +9,11 @@ import {
   Users,
   CalendarDays,
   Bell,
+  LogOut,
+  LogIn,
 } from "lucide-react";
+import type { User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 import { MMLogo } from "@/components/mm/logo";
 import { GlobalSearch } from "@/components/mm/global-search";
 import { currentUser } from "@/data/user";
