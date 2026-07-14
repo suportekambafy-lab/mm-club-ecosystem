@@ -1,16 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, PlayCircle, UserSquare2, CalendarDays, Radio, Wrench } from "lucide-react";
+import { BookOpen, PlayCircle, CalendarDays, Radio, Wrench } from "lucide-react";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { courses } from "@/data/courses";
-import { experts } from "@/data/experts";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
 });
 
 const cards = [
-  { to: "/admin/cursos" as const, label: "Cursos", icon: BookOpen, description: "Editar capa, título, descrição e especialista." },
-  { to: "/admin/aulas" as const, label: "Aulas", icon: PlayCircle, description: "Gerir aulas e vídeos (YouTube)." },
+  { to: "/admin/cursos" as const, label: "Cursos", icon: BookOpen, description: "Editar capa, logotipo, título, descrição e especialista." },
+  { to: "/admin/aulas" as const, label: "Aulas", icon: PlayCircle, description: "Editar aulas — upload de vídeo ou link (YouTube, Vimeo, Bunny)." },
+  { to: "/admin/eventos" as const, label: "Eventos", icon: CalendarDays, description: "Agenda de encontros e workshops." },
   { to: "/admin/lives" as const, label: "Lives", icon: Radio, description: "Sessões ao vivo com especialistas." },
   { to: "/admin/ferramentas" as const, label: "Ferramentas", icon: Wrench, description: "Recursos e prompts para membros." },
 ];
