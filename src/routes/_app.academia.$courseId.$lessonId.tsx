@@ -95,44 +95,16 @@ function LessonPlayer() {
 
           {/* Main content: video + title/cta */}
           <div className="space-y-6">
-            {/* Video player */}
-            <div
-              className="relative aspect-video overflow-hidden rounded-3xl border border-border"
-              style={{ background: course.cover }}
-            >
-              <div className="absolute inset-0 bg-black/40" />
-
-              {/* Maximize */}
-              <button
-                type="button"
-                aria-label="Ecrã cheio"
-                className="absolute right-6 top-6 flex h-12 w-12 items-center justify-center rounded-full bg-black/40 text-foreground backdrop-blur-md transition hover:bg-black/60"
-              >
-                <Maximize2 className="h-4 w-4" />
-              </button>
-
-              {/* Play */}
-              <button
-                type="button"
-                aria-label="Reproduzir"
-                className="absolute left-1/2 top-1/2 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-background shadow-2xl transition hover:scale-105"
-              >
-                <Play className="h-8 w-8 translate-x-0.5 fill-current" />
-              </button>
-
-              {/* Progress bar */}
-              <div className="absolute inset-x-6 bottom-14">
-                <div className="relative h-1 rounded-full bg-white/25">
-                  <div className="absolute inset-y-0 left-0 w-[65%] rounded-full bg-primary" />
-                  <span className="absolute left-[65%] top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary shadow-lg" />
-                </div>
-              </div>
-
-              {/* Times */}
-              <div className="absolute inset-x-6 bottom-6 flex items-center justify-between text-xs text-white">
-                <span>07:23</span>
-                <span>{formatToMinutes(current.lesson.duration)}</span>
-              </div>
+            {/* Video player — YouTube embed (placeholder) */}
+            <div className="relative aspect-video overflow-hidden rounded-3xl border border-border bg-black">
+              <iframe
+                key={current.lesson.id}
+                src={`https://www.youtube.com/embed/${pickYouTubeId(current.lesson.id)}?rel=0&modestbranding=1`}
+                title={current.lesson.title}
+                className="absolute inset-0 h-full w-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
             </div>
 
             {/* Title + CTA */}
