@@ -40,7 +40,12 @@ function AdminCursos() {
   };
 
   const handleSave = () => {
-    const clean: Overrides = { courses: {}, experts: {}, lessons: {} };
+    const clean: Overrides = {
+      courses: {},
+      experts: {},
+      lessons: overrides.lessons,
+      modulesByCourse: overrides.modulesByCourse,
+    };
     for (const [id, patch] of Object.entries(overrides.courses)) {
       const filtered = Object.fromEntries(
         Object.entries(patch).filter(([, v]) => v !== undefined && v !== ""),
