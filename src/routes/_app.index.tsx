@@ -24,6 +24,7 @@ import { topTools } from "@/data/tools";
 import { upcomingEvents } from "@/data/events";
 import { communityNotices } from "@/data/community";
 import { expertsById } from "@/data/experts";
+import { courses } from "@/data/courses";
 import type { DashboardBlockId, NewsType } from "@/data/types";
 import { formatDistanceToNow } from "date-fns";
 import { pt } from "date-fns/locale";
