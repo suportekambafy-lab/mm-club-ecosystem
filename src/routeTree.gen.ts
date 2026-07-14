@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppLivesRouteImport } from './routes/_app.lives'
@@ -19,6 +20,11 @@ import { Route as AppAcademiaRouteImport } from './routes/_app.academia'
 import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
 import { Route as AppAcademiaCourseIdRouteImport } from './routes/_app.academia.$courseId'
 
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
@@ -67,6 +73,7 @@ const AppAcademiaCourseIdRoute = AppAcademiaCourseIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/auth': typeof AuthRoute
   '/academia': typeof AppAcademiaRouteWithChildren
   '/comunidade': typeof AppComunidadeRoute
   '/ferramentas': typeof AppFerramentasRoute
@@ -76,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
 }
 export interface FileRoutesByTo {
+  '/auth': typeof AuthRoute
   '/academia': typeof AppAcademiaRouteWithChildren
   '/comunidade': typeof AppComunidadeRoute
   '/ferramentas': typeof AppFerramentasRoute
@@ -88,6 +96,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/auth': typeof AuthRoute
   '/_app/academia': typeof AppAcademiaRouteWithChildren
   '/_app/comunidade': typeof AppComunidadeRoute
   '/_app/ferramentas': typeof AppFerramentasRoute
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/academia'
     | '/comunidade'
     | '/ferramentas'
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
     | '/especialistas/$expertId'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/auth'
     | '/academia'
     | '/comunidade'
     | '/ferramentas'
@@ -121,6 +132,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
+    | '/auth'
     | '/_app/academia'
     | '/_app/comunidade'
     | '/_app/ferramentas'
@@ -133,10 +145,18 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app': {
       id: '/_app'
       path: ''
@@ -239,6 +259,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
