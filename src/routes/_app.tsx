@@ -42,6 +42,33 @@ const nav: NavItem[] = [
 
 function AppLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const router = useRouter();
+  const [authUser, setAuthUser] = useState<User | null | undefined>(undefined);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setAuthUser(data.session?.user ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      setAuthUser(s?.user ?? null);
+      router.invalidate();
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [router]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setAuthUser(null);
+  };
+
+  const displayName =
+    (authUser?.user_metadata?.display_name as string | undefined) ??
+    authUser?.email?.split("@")[0] ??
+    currentUser.name;
+  const initials = displayName
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
