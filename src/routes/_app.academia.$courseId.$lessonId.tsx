@@ -248,3 +248,24 @@ function formatToMinutes(d: string) {
   if (m) return `${m[1].padStart(2, "0")}:00`;
   return d;
 }
+
+// Placeholder YouTube videos (business / entrepreneurship talks) picked
+// deterministically per lesson id until real lesson videos are uploaded.
+const PLACEHOLDER_YOUTUBE_IDS = [
+  "ZoqgAy3h4OM", // Simon Sinek — Start With Why
+  "Th8JoIan4dg", // Steve Jobs — Stanford Commencement
+  "arj7oStGLkU", // Tim Urban — procrastination
+  "H14bBuluwB8", // Grit — Angela Duckworth
+  "iCvmsMzlF7o", // Simon Sinek — leadership
+  "8jPQjjsBbIc", // Sam Altman — how to start a startup
+  "Lp7E973zozc", // Gary Vaynerchuk
+  "IPYeCltXpxw", // How great leaders inspire action
+];
+
+function pickYouTubeId(lessonId: string) {
+  let hash = 0;
+  for (let i = 0; i < lessonId.length; i++) {
+    hash = (hash * 31 + lessonId.charCodeAt(i)) >>> 0;
+  }
+  return PLACEHOLDER_YOUTUBE_IDS[hash % PLACEHOLDER_YOUTUBE_IDS.length];
+}
