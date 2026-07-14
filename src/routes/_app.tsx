@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
 
-type NavTo = "/" | "/academia" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/eventos";
+type NavTo = "/" | "/academia" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/eventos" | "/admin";
 type NavItem = {
   to: NavTo;
   label: string;
