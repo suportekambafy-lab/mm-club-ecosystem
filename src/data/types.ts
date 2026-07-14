@@ -21,6 +21,7 @@ export interface Expert {
   name: string;
   role: string;
   photo: string; // URL or gradient token
+  logo?: string; // Optional square logo URL, shown instead of initials
   shortBio: string;
   longBio: string;
   expertise: string[];
