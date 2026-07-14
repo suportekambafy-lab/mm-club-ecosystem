@@ -344,7 +344,7 @@ function AppLayout() {
       {/* Main */}
       <div className={cn("transition-[padding] duration-200 ease-out", collapsed ? "lg:pl-[76px]" : "lg:pl-64")}>
         {/* Topbar */}
-        <header className="sticky top-0 z-30 flex items-center gap-2 bg-background/80 px-3 pt-3 pb-3 backdrop-blur-xl sm:gap-4 sm:px-4 sm:pt-4 sm:pb-4 md:px-8 md:pt-6">
+        <header className={cn("sticky top-0 z-30 items-center gap-2 bg-background/80 px-3 pt-3 pb-3 backdrop-blur-xl sm:gap-4 sm:px-4 sm:pt-4 sm:pb-4 md:px-8 md:pt-6", /^\/academia\/[^/]+\/[^/]+/.test(pathname) ? "flex lg:hidden" : "flex")}>
           {/* Mobile menu button */}
           <button
             type="button"
