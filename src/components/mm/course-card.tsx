@@ -15,11 +15,17 @@ export function CourseCard({ course, className, variant = "default" }: Props) {
   const expert = expertsById[course.expertId];
   const isSoon = course.status === "coming-soon";
   const isWide = variant === "wide";
+  const firstLesson = course.modules?.[0]?.lessons?.[0];
+  const linkProps = firstLesson && course.progress > 0
+    ? {
+        to: "/academia/$courseId/$lessonId" as const,
+        params: { courseId: course.id, lessonId: firstLesson.id },
+      }
+    : { to: "/academia/$courseId" as const, params: { courseId: course.id } };
 
   return (
     <Link
-      to="/academia/$courseId"
-      params={{ courseId: course.id }}
+      {...linkProps}
       disabled={isSoon}
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-xl bg-surface-1 ring-1 ring-border transition-all duration-300",

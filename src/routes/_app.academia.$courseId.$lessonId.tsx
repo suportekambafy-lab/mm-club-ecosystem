@@ -49,6 +49,8 @@ export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
 
 function LessonPlayer() {
   const { course, current, next } = Route.useLoaderData();
+  const youtubeUrl = current.lesson.videoUrl ?? DEFAULT_LESSON_YOUTUBE_URL;
+  const youtubeId = pickYouTubeId(youtubeUrl);
 
   return (
     <div className="-mx-4 -my-8 min-h-[calc(100vh-4rem)] bg-background md:-mx-8 md:-my-10">
@@ -97,7 +99,7 @@ function LessonPlayer() {
             <div className="relative aspect-video overflow-hidden rounded-3xl border border-border bg-black">
               <iframe
                 key={current.lesson.id}
-                src={`https://www.youtube-nocookie.com/embed/${pickYouTubeId(current.lesson.id)}?rel=0&modestbranding=1&playsinline=1&autoplay=1`}
+                src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1&playsinline=1&autoplay=1`}
                 title={current.lesson.title}
                 className="absolute inset-0 h-full w-full"
                 loading="lazy"
@@ -122,24 +124,26 @@ function LessonPlayer() {
 
               <div className="flex flex-wrap items-center gap-3">
                 {/* Download with premium ring */}
-                <button
-                  type="button"
-                  aria-label="Descarregar"
+                <a
+                  href={youtubeUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Abrir vídeo no YouTube"
                   className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-border bg-surface-1 text-foreground transition hover:border-primary/40"
                 >
                   <Download className="h-5 w-5" />
                   <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
                     <Crown className="h-3 w-3 fill-current" />
                   </span>
-                </button>
+                </a>
 
-                <button
-                  type="button"
+                <Link
+                  to="/comunidade"
                   className="inline-flex h-14 items-center gap-2 rounded-2xl bg-surface-3 px-6 text-sm font-semibold text-foreground transition hover:bg-surface-3/80"
                 >
                   <MessagesSquare className="h-4 w-4" />
                   Sala de discussão
-                </button>
+                </Link>
 
                 {next ? (
                   <Link
@@ -245,9 +249,23 @@ function ModuleAccordion({
 }
 
 
-// Placeholder YouTube video used for every lesson until real videos are uploaded.
-const PLACEHOLDER_YOUTUBE_ID = "-alfqFwiI6Y";
+const DEFAULT_LESSON_YOUTUBE_URL = "https://www.youtube.com/watch?v=-alfqFwiI6Y";
 
-function pickYouTubeId(_lessonId: string) {
-  return PLACEHOLDER_YOUTUBE_ID;
+function pickYouTubeId(urlOrId: string) {
+  if (/^[\w-]{6,}$/.test(urlOrId) && !urlOrId.includes("http")) return urlOrId;
+
+  try {
+    const url = new URL(urlOrId);
+    const watchId = url.searchParams.get("v");
+    if (watchId) return watchId;
+
+    const parts = url.pathname.split("/").filter(Boolean);
+    const embedIndex = parts.findIndex((part) => part === "embed" || part === "shorts");
+    if (embedIndex >= 0 && parts[embedIndex + 1]) return parts[embedIndex + 1];
+    if (url.hostname.includes("youtu.be") && parts[0]) return parts[0];
+  } catch {
+    return "-alfqFwiI6Y";
+  }
+
+  return "-alfqFwiI6Y";
 }

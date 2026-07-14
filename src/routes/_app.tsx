@@ -11,7 +11,6 @@ import {
   Bell,
   LogOut,
   LogIn,
-  Search,
   ShoppingBag,
   Star,
 } from "lucide-react";
@@ -153,6 +152,7 @@ function AppLayout() {
             <button
               type="button"
               className="relative mt-4 inline-flex w-full items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-violet-deep transition hover:bg-white/90"
+              onClick={() => router.navigate({ to: "/checkout" })}
             >
               Get Premium
             </button>
@@ -209,25 +209,24 @@ function AppLayout() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                aria-label="Pesquisar"
-                className="hidden h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-muted-foreground transition hover:text-foreground md:flex"
-              >
-                <Search className="h-4 w-4" />
-              </button>
-              <button
+              <div className="hidden md:block">
+                <GlobalSearch variant="icon" />
+              </div>
+              <Link
+                to="/checkout"
                 aria-label="Guardados"
                 className="hidden h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-muted-foreground transition hover:text-foreground md:flex"
               >
                 <ShoppingBag className="h-4 w-4" />
-              </button>
-              <button
+              </Link>
+              <Link
+                to="/comunidade"
                 aria-label="Notificações"
                 className="relative flex h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-muted-foreground transition hover:text-foreground"
               >
                 <Bell className="h-4 w-4" />
                 <span className="absolute right-2.5 top-2.5 h-1.5 w-1.5 rounded-full bg-primary" />
-              </button>
+              </Link>
               <div className="ml-1 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-background">
                 {initials}
               </div>
