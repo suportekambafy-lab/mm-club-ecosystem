@@ -388,7 +388,7 @@ function AppLayout() {
         </div>
 
         <main className="mx-auto max-w-7xl px-3 pb-12 pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8">
-          {mounted ? <Outlet /> : <div className="min-h-[60vh]" />}
+          {mounted && authUser ? <Outlet /> : <div className="min-h-[60vh]" />}
         </main>
       </div>
     </div>
