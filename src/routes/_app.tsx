@@ -456,9 +456,8 @@ function MobileTabBar({
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 
-  const profileActive = ["/ferramentas", "/lives", "/eventos", "/checkout"].some(
-    (p) => pathname === p || pathname.startsWith(p + "/"),
-  );
+  const profileActive = pathname === "/perfil" || pathname.startsWith("/perfil/");
+  void onOpenMore;
 
   return (
     <nav
@@ -505,10 +504,10 @@ function MobileTabBar({
           );
         })}
         <li className="flex-1">
-          <button
-            type="button"
-            onClick={onOpenMore}
-            aria-label="Perfil e mais"
+          <Link
+            to="/perfil"
+            aria-label="Perfil"
+            aria-current={profileActive ? "page" : undefined}
             className="group relative flex w-full flex-col items-center justify-center gap-1 px-2 pt-2.5 pb-2 text-[10px] font-medium transition-colors"
           >
             <span
@@ -535,8 +534,9 @@ function MobileTabBar({
             >
               Perfil
             </span>
-          </button>
+          </Link>
         </li>
+
       </ul>
     </nav>
   );
