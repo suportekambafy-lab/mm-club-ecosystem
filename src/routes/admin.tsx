@@ -63,10 +63,28 @@ const nav: Array<{
   },
 ];
 
+function hasStoredSession(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (key && key.startsWith("sb-") && key.endsWith("-auth-token")) {
+        const raw = window.localStorage.getItem(key);
+        if (raw && raw !== "null" && raw.length > 2) return true;
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return false;
+}
+
 function AdminLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
-  const [authUser, setAuthUser] = useState<User | null | undefined>(undefined);
+  const [authUser, setAuthUser] = useState<User | null | undefined>(() =>
+    typeof window === "undefined" ? undefined : hasStoredSession() ? undefined : null,
+  );
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setAuthUser(data.session?.user ?? null));

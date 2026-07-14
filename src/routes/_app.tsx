@@ -69,11 +69,31 @@ const navSections: NavSection[] = [
 
 const flatNav = navSections.flatMap((s) => s.items);
 
+function hasStoredSession(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (key && key.startsWith("sb-") && key.endsWith("-auth-token")) {
+        const raw = window.localStorage.getItem(key);
+        if (raw && raw !== "null" && raw.length > 2) return true;
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return false;
+}
+
 function AppLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
   const { theme, toggle: toggleTheme, mounted: themeMounted } = useTheme();
-  const [authUser, setAuthUser] = useState<User | null | undefined>(undefined);
+  // Initialize from localStorage synchronously to avoid flashing content
+  // before the async getSession() resolves.
+  const [authUser, setAuthUser] = useState<User | null | undefined>(() =>
+    typeof window === "undefined" ? undefined : hasStoredSession() ? undefined : null,
+  );
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -110,6 +130,12 @@ function AppLayout() {
       router.navigate({ to: "/auth", search: { redirect } as never, replace: true });
     }
   }, [authUser, pathname, router]);
+
+  // If we know there's no session, render nothing while the redirect runs.
+  if (authUser === null) {
+    return <div className="min-h-screen bg-background" />;
+  }
+
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
