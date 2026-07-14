@@ -154,7 +154,7 @@ function ContinueHero({ course }: { course: import("@/data/types").Course }) {
           </p>
           {expert && (
             <div className="mt-4">
-              <ExpertAvatar expert={expert} showName showRole />
+              <ExpertAvatar expert={expert} showName showRole asLink={false} />
             </div>
           )}
         </div>
