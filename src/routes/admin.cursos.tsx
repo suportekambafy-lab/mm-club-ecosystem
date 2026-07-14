@@ -14,17 +14,11 @@ import {
 } from "@/data/admin-store";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_app/admin")({
-  head: () => ({
-    meta: [
-      { title: "Admin — MM Club" },
-      { name: "description", content: "Painel de administração do MM Club." },
-    ],
-  }),
-  component: AdminPage,
+export const Route = createFileRoute("/admin/cursos")({
+  component: AdminCursos,
 });
 
-function AdminPage() {
+function AdminCursos() {
   const router = useRouter();
   const [overrides, setOverrides] = useState<Overrides>(() => loadOverrides());
   const [saved, setSaved] = useState(false);
@@ -77,9 +71,9 @@ function AdminPage() {
   return (
     <div className="space-y-8">
       <SectionHeading
-        eyebrow="Admin"
+        eyebrow="Admin › Cursos"
         title="Gestão de cursos."
-        description="Edita capa, logotipo, título, descrição e especialista de cada curso. As alterações aplicam-se em tempo real."
+        description="Edita capa, logotipo, título, descrição e especialista de cada curso."
       />
 
       <div className="sticky top-24 z-10 flex items-center justify-end gap-2">
@@ -107,11 +101,9 @@ function AdminPage() {
           const merged = { ...c, ...patch };
           const expert = expertsById[c.expertId];
           const ePatch = expert ? overrides.experts[expert.id] ?? {} : {};
-          const eMerged = expert ? { ...expert, ...ePatch } : null;
 
           return (
             <div key={c.id} className="rounded-2xl border border-border bg-surface-1 p-5">
-              {/* Preview header */}
               <div className="mb-5 flex items-center gap-3 border-b border-border pb-4">
                 <div
                   className="h-14 w-14 shrink-0 overflow-hidden rounded-xl ring-1 ring-[color:var(--hairline)]"
@@ -128,16 +120,9 @@ function AdminPage() {
                   <p className="truncate font-display text-sm font-semibold text-foreground">
                     {merged.title}
                   </p>
-                  {eMerged && (
-                    <p className="truncate text-xs text-muted-foreground">
-                      Especialista:{" "}
-                      <span className="text-foreground">{eMerged.name}</span>
-                    </p>
-                  )}
                 </div>
               </div>
 
-              {/* Course fields */}
               <SectionLabel>Curso</SectionLabel>
               <div className="grid grid-cols-1 gap-3">
                 <Field label="Título">
@@ -195,53 +180,50 @@ function AdminPage() {
                 </Field>
               </div>
 
-              {/* Expert fields (nested under the course) */}
               {expert && (
-                <>
-                  <div className="mt-6 border-t border-border pt-4">
-                    <SectionLabel icon={<UserCircle2 className="h-3 w-3" />}>
-                      Especialista
-                    </SectionLabel>
-                    <div className="grid grid-cols-1 gap-3">
-                      <Field label="Nome do especialista">
-                        <input
-                          className={inputCls}
-                          value={ePatch.name ?? expert.name}
-                          onChange={(e) => updateExpert(expert.id, { name: e.target.value })}
-                        />
-                      </Field>
-                      <Field label="Função / Cargo">
-                        <input
-                          className={inputCls}
-                          value={ePatch.role ?? expert.role}
-                          onChange={(e) => updateExpert(expert.id, { role: e.target.value })}
-                        />
-                      </Field>
-                      <Field label="Sobre o especialista">
-                        <textarea
-                          className={cn(inputCls, "min-h-[70px] resize-y")}
-                          value={ePatch.shortBio ?? expert.shortBio}
-                          onChange={(e) => updateExpert(expert.id, { shortBio: e.target.value })}
-                        />
-                      </Field>
-                      <Field label="Foto (URL ou gradient)">
-                        <input
-                          className={inputCls}
-                          value={ePatch.photo ?? expert.photo}
-                          onChange={(e) => updateExpert(expert.id, { photo: e.target.value })}
-                        />
-                      </Field>
-                      <Field label="Logotipo do especialista (URL)">
-                        <input
-                          className={inputCls}
-                          placeholder="https://..."
-                          value={ePatch.logo ?? expert.logo ?? ""}
-                          onChange={(e) => updateExpert(expert.id, { logo: e.target.value })}
-                        />
-                      </Field>
-                    </div>
+                <div className="mt-6 border-t border-border pt-4">
+                  <SectionLabel icon={<UserCircle2 className="h-3 w-3" />}>
+                    Especialista
+                  </SectionLabel>
+                  <div className="grid grid-cols-1 gap-3">
+                    <Field label="Nome do especialista">
+                      <input
+                        className={inputCls}
+                        value={ePatch.name ?? expert.name}
+                        onChange={(e) => updateExpert(expert.id, { name: e.target.value })}
+                      />
+                    </Field>
+                    <Field label="Função / Cargo">
+                      <input
+                        className={inputCls}
+                        value={ePatch.role ?? expert.role}
+                        onChange={(e) => updateExpert(expert.id, { role: e.target.value })}
+                      />
+                    </Field>
+                    <Field label="Sobre o especialista">
+                      <textarea
+                        className={cn(inputCls, "min-h-[70px] resize-y")}
+                        value={ePatch.shortBio ?? expert.shortBio}
+                        onChange={(e) => updateExpert(expert.id, { shortBio: e.target.value })}
+                      />
+                    </Field>
+                    <Field label="Foto (URL ou gradient)">
+                      <input
+                        className={inputCls}
+                        value={ePatch.photo ?? expert.photo}
+                        onChange={(e) => updateExpert(expert.id, { photo: e.target.value })}
+                      />
+                    </Field>
+                    <Field label="Logotipo do especialista (URL)">
+                      <input
+                        className={inputCls}
+                        placeholder="https://..."
+                        value={ePatch.logo ?? expert.logo ?? ""}
+                        onChange={(e) => updateExpert(expert.id, { logo: e.target.value })}
+                      />
+                    </Field>
                   </div>
-                </>
+                </div>
               )}
             </div>
           );
