@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   BookOpen,
   PlayCircle,
-  UserSquare2,
   CalendarDays,
   Radio,
   Wrench,
