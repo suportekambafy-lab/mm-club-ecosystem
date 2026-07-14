@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppLivesRouteImport } from './routes/_app.lives'
@@ -28,6 +29,11 @@ import { Route as AppAcademiaCourseIdLessonIdRouteImport } from './routes/_app.a
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
@@ -105,6 +111,7 @@ const AppAcademiaCourseIdLessonIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/academia': typeof AppAcademiaRouteWithChildren
   '/checkout': typeof AppCheckoutRoute
@@ -120,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
 }
 export interface FileRoutesByTo {
+  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/checkout': typeof AppCheckoutRoute
   '/comunidade': typeof AppComunidadeRoute
@@ -136,6 +144,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/_app/academia': typeof AppAcademiaRouteWithChildren
   '/_app/checkout': typeof AppCheckoutRoute
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/auth'
     | '/academia'
     | '/checkout'
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
     | '/academia/$courseId/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/admin'
     | '/auth'
     | '/checkout'
     | '/comunidade'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
+    | '/admin'
     | '/auth'
     | '/_app/academia'
     | '/_app/checkout'
@@ -203,6 +215,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
 }
 
@@ -213,6 +226,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -371,6 +391,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
