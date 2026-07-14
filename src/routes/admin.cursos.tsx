@@ -1,7 +1,8 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
-import { Save, RotateCcw, ImageIcon, Sparkles, UserCircle2 } from "lucide-react";
+import { Save, RotateCcw, UserCircle2 } from "lucide-react";
 import { SectionHeading } from "@/components/mm/section-heading";
+import { MediaField } from "@/components/mm/media-field";
 import { courses } from "@/data/courses";
 import { expertsById } from "@/data/experts";
 import {
@@ -39,7 +40,7 @@ function AdminCursos() {
   };
 
   const handleSave = () => {
-    const clean: Overrides = { courses: {}, experts: {} };
+    const clean: Overrides = { courses: {}, experts: {}, lessons: {} };
     for (const [id, patch] of Object.entries(overrides.courses)) {
       const filtered = Object.fromEntries(
         Object.entries(patch).filter(([, v]) => v !== undefined && v !== ""),
@@ -61,7 +62,7 @@ function AdminCursos() {
   };
 
   const handleReset = () => {
-    const empty: Overrides = { courses: {}, experts: {} };
+    const empty: Overrides = { courses: {}, experts: {}, lessons: {} };
     saveOverrides(empty);
     applyOverrides(empty);
     setOverrides(empty);
@@ -153,31 +154,25 @@ function AdminCursos() {
                     onChange={(e) => updateCourse(c.id, { duration: e.target.value })}
                   />
                 </Field>
-                <Field
-                  label="Capa (URL da imagem ou CSS background)"
-                  icon={<ImageIcon className="h-3 w-3" />}
-                >
-                  <input
-                    className={inputCls}
-                    placeholder="https://... ou linear-gradient(...)"
-                    value={patch.cover ?? c.cover}
-                    onChange={(e) => updateCourse(c.id, { cover: e.target.value })}
-                  />
-                  <p className="mt-1 text-[10px] text-muted-foreground">
-                    Dica: para uma imagem cheia usa{" "}
-                    <code className="text-foreground/70">
-                      url(URL) center/cover no-repeat, #000
-                    </code>
-                  </p>
-                </Field>
-                <Field label="Logotipo (URL)" icon={<Sparkles className="h-3 w-3" />}>
-                  <input
-                    className={inputCls}
-                    placeholder="https://..."
-                    value={patch.logo ?? c.logo ?? ""}
-                    onChange={(e) => updateCourse(c.id, { logo: e.target.value })}
-                  />
-                </Field>
+                <MediaField
+                  label="Capa do curso"
+                  bucket="course-media"
+                  keyPrefix={`courses/${c.id}/cover`}
+                  accept="image/*"
+                  value={patch.cover ?? c.cover}
+                  onChange={(v) => updateCourse(c.id, { cover: v })}
+                  placeholder="URL da imagem, gradient CSS, ou usa Upload"
+                  helper="Para uma imagem em ecrã completo usa: url(URL) center/cover no-repeat, #000"
+                />
+                <MediaField
+                  label="Logotipo do curso"
+                  bucket="course-media"
+                  keyPrefix={`courses/${c.id}/logo`}
+                  accept="image/*"
+                  value={patch.logo ?? c.logo ?? ""}
+                  onChange={(v) => updateCourse(c.id, { logo: v })}
+                  placeholder="URL do logotipo"
+                />
               </div>
 
               {expert && (
@@ -207,21 +202,24 @@ function AdminCursos() {
                         onChange={(e) => updateExpert(expert.id, { shortBio: e.target.value })}
                       />
                     </Field>
-                    <Field label="Foto (URL ou gradient)">
-                      <input
-                        className={inputCls}
-                        value={ePatch.photo ?? expert.photo}
-                        onChange={(e) => updateExpert(expert.id, { photo: e.target.value })}
-                      />
-                    </Field>
-                    <Field label="Logotipo do especialista (URL)">
-                      <input
-                        className={inputCls}
-                        placeholder="https://..."
-                        value={ePatch.logo ?? expert.logo ?? ""}
-                        onChange={(e) => updateExpert(expert.id, { logo: e.target.value })}
-                      />
-                    </Field>
+                    <MediaField
+                      label="Foto do especialista"
+                      bucket="course-media"
+                      keyPrefix={`experts/${expert.id}/photo`}
+                      accept="image/*"
+                      value={ePatch.photo ?? expert.photo}
+                      onChange={(v) => updateExpert(expert.id, { photo: v })}
+                      placeholder="URL da foto, gradient CSS, ou usa Upload"
+                    />
+                    <MediaField
+                      label="Logotipo do especialista"
+                      bucket="course-media"
+                      keyPrefix={`experts/${expert.id}/logo`}
+                      accept="image/*"
+                      value={ePatch.logo ?? expert.logo ?? ""}
+                      onChange={(v) => updateExpert(expert.id, { logo: v })}
+                      placeholder="URL do logotipo"
+                    />
                   </div>
                 </div>
               )}

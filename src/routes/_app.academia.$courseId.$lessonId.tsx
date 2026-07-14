@@ -13,6 +13,7 @@ import {
 import { coursesById } from "@/data/courses";
 import type { Lesson, Module } from "@/data/types";
 import { cn } from "@/lib/utils";
+import { parseVideoUrl } from "@/lib/video-source";
 
 export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
   loader: ({ params }) => {
@@ -49,8 +50,8 @@ export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
 
 function LessonPlayer() {
   const { course, current, next } = Route.useLoaderData();
-  const youtubeUrl = current.lesson.videoUrl ?? DEFAULT_LESSON_YOUTUBE_URL;
-  const youtubeId = pickYouTubeId(youtubeUrl);
+  const videoUrl = current.lesson.videoUrl ?? DEFAULT_LESSON_YOUTUBE_URL;
+  const source = parseVideoUrl(videoUrl);
 
   return (
     <div className="-mx-4 -my-8 min-h-[calc(100vh-4rem)] bg-background md:-mx-8 md:-my-10">
@@ -97,16 +98,31 @@ function LessonPlayer() {
           <div className="space-y-6">
             {/* Video player — YouTube embed */}
             <div className="relative aspect-video overflow-hidden rounded-3xl border border-border bg-black">
-              <iframe
-                key={current.lesson.id}
-                src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1&playsinline=1&autoplay=1`}
-                title={current.lesson.title}
-                className="absolute inset-0 h-full w-full"
-                loading="lazy"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-                allowFullScreen
-              />
+              {source.kind === "file" && source.fileUrl ? (
+                <video
+                  key={current.lesson.id}
+                  src={source.fileUrl}
+                  controls
+                  autoPlay
+                  playsInline
+                  className="absolute inset-0 h-full w-full bg-black"
+                />
+              ) : source.embedUrl ? (
+                <iframe
+                  key={current.lesson.id}
+                  src={source.embedUrl}
+                  title={current.lesson.title}
+                  className="absolute inset-0 h-full w-full"
+                  loading="lazy"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-sm text-white/60">
+                  Vídeo não configurado para esta aula.
+                </div>
+              )}
             </div>
 
             {/* Title + CTA */}
@@ -125,10 +141,10 @@ function LessonPlayer() {
               <div className="flex flex-wrap items-center gap-3">
                 {/* Download with premium ring */}
                 <a
-                  href={youtubeUrl}
+                  href={videoUrl}
                   target="_blank"
                   rel="noreferrer"
-                  aria-label="Abrir vídeo no YouTube"
+                  aria-label="Abrir vídeo original"
                   className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-border bg-surface-1 text-foreground transition hover:border-primary/40"
                 >
                   <Download className="h-5 w-5" />
@@ -251,21 +267,3 @@ function ModuleAccordion({
 
 const DEFAULT_LESSON_YOUTUBE_URL = "https://www.youtube.com/watch?v=-alfqFwiI6Y";
 
-function pickYouTubeId(urlOrId: string) {
-  if (/^[\w-]{6,}$/.test(urlOrId) && !urlOrId.includes("http")) return urlOrId;
-
-  try {
-    const url = new URL(urlOrId);
-    const watchId = url.searchParams.get("v");
-    if (watchId) return watchId;
-
-    const parts = url.pathname.split("/").filter(Boolean);
-    const embedIndex = parts.findIndex((part) => part === "embed" || part === "shorts");
-    if (embedIndex >= 0 && parts[embedIndex + 1]) return parts[embedIndex + 1];
-    if (url.hostname.includes("youtu.be") && parts[0]) return parts[0];
-  } catch {
-    return "-alfqFwiI6Y";
-  }
-
-  return "-alfqFwiI6Y";
-}

@@ -1,17 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, PlayCircle, UserSquare2, CalendarDays, Radio, Wrench } from "lucide-react";
+import { BookOpen, PlayCircle, CalendarDays, Radio, Wrench } from "lucide-react";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { courses } from "@/data/courses";
-import { experts } from "@/data/experts";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
 });
 
 const cards = [
-  { to: "/admin/cursos" as const, label: "Cursos", icon: BookOpen, description: "Editar capa, título, descrição e especialista." },
-  { to: "/admin/aulas" as const, label: "Aulas", icon: PlayCircle, description: "Gerir aulas e vídeos (YouTube)." },
-  { to: "/admin/especialistas" as const, label: "Especialistas", icon: UserSquare2, description: "Editar bios, fotos e logotipos." },
+  { to: "/admin/cursos" as const, label: "Cursos", icon: BookOpen, description: "Editar capa, logotipo, título, descrição e especialista." },
+  { to: "/admin/aulas" as const, label: "Aulas", icon: PlayCircle, description: "Editar aulas — upload de vídeo ou link (YouTube, Vimeo, Bunny)." },
   { to: "/admin/eventos" as const, label: "Eventos", icon: CalendarDays, description: "Agenda de encontros e workshops." },
   { to: "/admin/lives" as const, label: "Lives", icon: Radio, description: "Sessões ao vivo com especialistas." },
   { to: "/admin/ferramentas" as const, label: "Ferramentas", icon: Wrench, description: "Recursos e prompts para membros." },
@@ -31,7 +29,7 @@ function AdminDashboard() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat label="Cursos" value={courses.length} />
         <Stat label="Aulas" value={totalLessons} />
-        <Stat label="Especialistas" value={experts.length} />
+        <Stat label="Módulos" value={courses.reduce((n, c) => n + (c.modules?.length ?? 0), 0)} />
         <Stat label="Em breve" value={courses.filter((c) => c.status === "coming-soon").length} />
       </div>
 

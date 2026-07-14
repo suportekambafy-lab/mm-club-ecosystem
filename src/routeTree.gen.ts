@@ -17,7 +17,6 @@ import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AdminLivesRouteImport } from './routes/admin.lives'
 import { Route as AdminFerramentasRouteImport } from './routes/admin.ferramentas'
 import { Route as AdminEventosRouteImport } from './routes/admin.eventos'
-import { Route as AdminEspecialistasRouteImport } from './routes/admin.especialistas'
 import { Route as AdminCursosRouteImport } from './routes/admin.cursos'
 import { Route as AdminAulasRouteImport } from './routes/admin.aulas'
 import { Route as AppLivesRouteImport } from './routes/_app.lives'
@@ -70,11 +69,6 @@ const AdminFerramentasRoute = AdminFerramentasRouteImport.update({
 const AdminEventosRoute = AdminEventosRouteImport.update({
   id: '/eventos',
   path: '/eventos',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminEspecialistasRoute = AdminEspecialistasRouteImport.update({
-  id: '/especialistas',
-  path: '/especialistas',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCursosRoute = AdminCursosRouteImport.update({
@@ -164,7 +158,6 @@ export interface FileRoutesByFullPath {
   '/lives': typeof AppLivesRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/cursos': typeof AdminCursosRoute
-  '/admin/especialistas': typeof AdminEspecialistasRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/lives': typeof AdminLivesRoute
@@ -185,7 +178,6 @@ export interface FileRoutesByTo {
   '/lives': typeof AppLivesRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/cursos': typeof AdminCursosRoute
-  '/admin/especialistas': typeof AdminEspecialistasRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/lives': typeof AdminLivesRoute
@@ -210,7 +202,6 @@ export interface FileRoutesById {
   '/_app/lives': typeof AppLivesRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/cursos': typeof AdminCursosRoute
-  '/admin/especialistas': typeof AdminEspecialistasRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/lives': typeof AdminLivesRoute
@@ -237,7 +228,6 @@ export interface FileRouteTypes {
     | '/lives'
     | '/admin/aulas'
     | '/admin/cursos'
-    | '/admin/especialistas'
     | '/admin/eventos'
     | '/admin/ferramentas'
     | '/admin/lives'
@@ -258,7 +248,6 @@ export interface FileRouteTypes {
     | '/lives'
     | '/admin/aulas'
     | '/admin/cursos'
-    | '/admin/especialistas'
     | '/admin/eventos'
     | '/admin/ferramentas'
     | '/admin/lives'
@@ -282,7 +271,6 @@ export interface FileRouteTypes {
     | '/_app/lives'
     | '/admin/aulas'
     | '/admin/cursos'
-    | '/admin/especialistas'
     | '/admin/eventos'
     | '/admin/ferramentas'
     | '/admin/lives'
@@ -357,13 +345,6 @@ declare module '@tanstack/react-router' {
       path: '/eventos'
       fullPath: '/admin/eventos'
       preLoaderRoute: typeof AdminEventosRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/especialistas': {
-      id: '/admin/especialistas'
-      path: '/especialistas'
-      fullPath: '/admin/especialistas'
-      preLoaderRoute: typeof AdminEspecialistasRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/cursos': {
@@ -523,7 +504,6 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 interface AdminRouteChildren {
   AdminAulasRoute: typeof AdminAulasRoute
   AdminCursosRoute: typeof AdminCursosRoute
-  AdminEspecialistasRoute: typeof AdminEspecialistasRoute
   AdminEventosRoute: typeof AdminEventosRoute
   AdminFerramentasRoute: typeof AdminFerramentasRoute
   AdminLivesRoute: typeof AdminLivesRoute
@@ -533,7 +513,6 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAulasRoute: AdminAulasRoute,
   AdminCursosRoute: AdminCursosRoute,
-  AdminEspecialistasRoute: AdminEspecialistasRoute,
   AdminEventosRoute: AdminEventosRoute,
   AdminFerramentasRoute: AdminFerramentasRoute,
   AdminLivesRoute: AdminLivesRoute,
