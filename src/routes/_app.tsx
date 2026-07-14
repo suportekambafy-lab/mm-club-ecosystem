@@ -357,7 +357,7 @@ function AppLayout() {
       {/* Main */}
       <div className={cn("transition-[padding] duration-200 ease-out", collapsed ? "lg:pl-[76px]" : "lg:pl-64")}>
         {/* Topbar */}
-        <header className={cn("sticky top-0 z-30 items-center gap-2 bg-background/80 px-3 pt-3 pb-3 backdrop-blur-xl sm:gap-4 sm:px-4 sm:pt-4 sm:pb-4 md:px-8 md:pt-6", /^\/academia\/[^/]+\/[^/]+/.test(pathname) ? "flex lg:hidden" : "flex")}>
+        <header className="sticky top-0 z-30 flex items-center gap-2 bg-background/80 px-3 pt-3 pb-3 backdrop-blur-xl sm:gap-4 sm:px-4 sm:pt-4 sm:pb-4 md:px-8 md:pt-6">
           {/* Mobile: menu button opens the slide-in sidebar */}
           <button
             type="button"
@@ -373,67 +373,69 @@ function AppLayout() {
             <MMLogo />
           </div>
 
-
-
-          {!/^\/academia\/[^/]+\/[^/]+/.test(pathname) && (
-            <div
-              className={cn(
-                "flex min-w-0 flex-1 items-center gap-2 sm:gap-3",
-                pathname === "/"
-                  ? "justify-end sm:justify-between sm:rounded-2xl sm:border sm:border-border sm:bg-surface-1 sm:px-5 sm:py-3 md:py-4"
-                  : "justify-end",
-              )}
-            >
+          <div
+            className={cn(
+              "flex min-w-0 flex-1 items-center gap-2 sm:gap-3",
+              pathname === "/"
+                ? "justify-end sm:justify-between sm:rounded-2xl sm:border sm:border-border sm:bg-surface-1 sm:px-5 sm:py-3 md:py-4"
+                : "justify-end",
+            )}
+          >
+            {pathname === "/" && (
+              <div className="hidden min-w-0 sm:block">
+                <p className="truncate font-display text-sm leading-tight text-foreground sm:text-lg md:text-xl">
+                  Bem-vindo, <span className="text-primary">{displayName.split(" ")[0]}</span>.
+                </p>
+                <p className="mt-0.5 hidden text-xs text-muted-foreground md:block">
+                  Continua a construir a tua marca milionária.
+                </p>
+              </div>
+            )}
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
               {pathname === "/" && (
-                <div className="hidden min-w-0 sm:block">
-                  <p className="truncate font-display text-sm leading-tight text-foreground sm:text-lg md:text-xl">
-                    Bem-vindo, <span className="text-primary">{displayName.split(" ")[0]}</span>.
-                  </p>
-                  <p className="mt-0.5 hidden text-xs text-muted-foreground md:block">
-                    Continua a construir a tua marca milionária.
-                  </p>
-                </div>
-              )}
-              <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
                 <div className="hidden md:block">
                   <GlobalSearch variant="icon" />
                 </div>
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  aria-label={themeLabel}
-                  title={themeLabel}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 text-muted-foreground transition hover:text-foreground sm:h-10 sm:w-10"
-                >
-                  {themeMounted ? <ThemeIcon className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                </button>
-                <Link
-                  to="/checkout"
-                  aria-label="Guardados"
-                  className="hidden h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-muted-foreground transition hover:text-foreground md:flex"
-                >
-                  <ShoppingBag className="h-4 w-4" />
-                </Link>
-                <Link
-                  to="/comunidade"
-                  aria-label="Notificações"
-                  className="relative flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 text-muted-foreground transition hover:text-foreground sm:h-10 sm:w-10"
-                >
-                  <Bell className="h-4 w-4" />
-                  <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary sm:right-2.5 sm:top-2.5" />
-                </Link>
-                <div className="ml-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-background sm:ml-1 sm:h-10 sm:w-10">
-                  {initials}
-                </div>
-              </div>
+              )}
+              <button
+                type="button"
+                onClick={toggleTheme}
+                aria-label={themeLabel}
+                title={themeLabel}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 text-muted-foreground transition hover:text-foreground sm:h-10 sm:w-10"
+              >
+                {themeMounted ? <ThemeIcon className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </button>
+              <Link
+                to="/checkout"
+                aria-label="Guardados"
+                className="hidden h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-muted-foreground transition hover:text-foreground md:flex"
+              >
+                <ShoppingBag className="h-4 w-4" />
+              </Link>
+              <Link
+                to="/comunidade"
+                aria-label="Notificações"
+                className="relative flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 text-muted-foreground transition hover:text-foreground sm:h-10 sm:w-10"
+              >
+                <Bell className="h-4 w-4" />
+                <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary sm:right-2.5 sm:top-2.5" />
+              </Link>
+              <Link
+                to="/perfil"
+                aria-label="Perfil"
+                className="ml-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-background transition hover:bg-gold-soft sm:ml-1 sm:h-10 sm:w-10"
+              >
+                {initials}
+              </Link>
             </div>
-          )}
+          </div>
         </header>
 
-        {/* Mobile search */}
-        <div className="border-b border-border px-3 py-2.5 sm:px-4 sm:py-3 md:hidden">
-          <GlobalSearch />
-          {pathname === "/" && (
+        {/* Mobile search — só na home */}
+        {pathname === "/" && (
+          <div className="border-b border-border px-3 py-2.5 sm:px-4 sm:py-3 md:hidden">
+            <GlobalSearch />
             <div className="mt-3">
               <p className="font-display text-base leading-tight text-foreground">
                 Bem-vindo, <span className="text-primary">{displayName.split(" ")[0]}</span>.
@@ -442,8 +444,9 @@ function AppLayout() {
                 Continua a construir a tua marca milionária.
               </p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
 
         <main className="mx-auto max-w-7xl px-3 pb-24 pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8 lg:pb-12">
           {mounted && authUser ? <Outlet /> : <div className="min-h-[60vh]" />}
