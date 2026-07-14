@@ -131,31 +131,34 @@ function CourseDetail() {
                 </div>
                 <ul>
                   {m.lessons.map((l: import("@/data/types").Lesson, li: number) => (
-                    <li
-                      key={l.id}
-                      className="flex items-center gap-4 border-b border-border/50 px-5 py-3 last:border-b-0"
-                    >
-                      <span
-                        className={
-                          l.completed
-                            ? "flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary"
-                            : "flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-2 text-muted-foreground"
-                        }
+                    <li key={l.id}>
+                      <Link
+                        to="/academia/$courseId/$lessonId"
+                        params={{ courseId: course.id, lessonId: l.id }}
+                        className="flex items-center gap-4 border-b border-border/50 px-5 py-3 last:border-b-0 transition hover:bg-surface-2"
                       >
-                        {l.completed ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : (
-                          <Play className="h-3 w-3" />
-                        )}
-                      </span>
-                      <div className="flex-1">
-                        <p className="text-sm text-foreground">
-                          {String(li + 1).padStart(2, "0")}. {l.title}
-                        </p>
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {l.duration}
-                      </span>
+                        <span
+                          className={
+                            l.completed
+                              ? "flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary"
+                              : "flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-2 text-muted-foreground"
+                          }
+                        >
+                          {l.completed ? (
+                            <Check className="h-3.5 w-3.5" />
+                          ) : (
+                            <Play className="h-3 w-3" />
+                          )}
+                        </span>
+                        <div className="flex-1">
+                          <p className="text-sm text-foreground">
+                            {String(li + 1).padStart(2, "0")}. {l.title}
+                          </p>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {l.duration}
+                        </span>
+                      </Link>
                     </li>
                   ))}
                 </ul>
