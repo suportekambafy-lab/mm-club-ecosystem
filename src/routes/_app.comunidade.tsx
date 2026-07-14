@@ -87,24 +87,15 @@ function CommunityPage() {
 
   return (
     <div className="-mx-4 md:-mx-0" style={FONT}>
-      {/* Navbar */}
-      <div className="mb-6 hidden items-center justify-between rounded-2xl bg-surface-1 px-6 py-4 ring-1 ring-border md:flex">
-        <h1 className="text-2xl font-semibold text-white" style={FONT}>
-          As minhas mensagens
-        </h1>
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <RoundIcon><Search className="h-5 w-5" /></RoundIcon>
-        </div>
-      </div>
-
-      {/* Mobile title */}
-      <header className="mb-6 px-4 md:hidden">
+      {/* Mobile title only */}
+      <header className="mb-4 px-4 md:hidden">
         <h1 className="text-2xl font-semibold text-white" style={FONT}>
           Mensagens
         </h1>
       </header>
 
-      <div className="grid overflow-hidden border-y border-border bg-surface-1 md:grid-cols-[380px_1fr] md:rounded-3xl md:border md:ring-1 md:ring-border">
+      <div className="grid overflow-hidden border-y border-border bg-surface-1 md:grid-cols-[minmax(0,437fr)_minmax(0,684fr)] md:rounded-3xl md:border md:ring-1 md:ring-border">
+
         {/* ================= Sidebar ================= */}
         <aside
           className={cn(
