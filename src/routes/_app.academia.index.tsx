@@ -109,6 +109,7 @@ function AcademiaPage() {
 }
 
 function ContinueCard({ course }: { course: Course }) {
+  const expert = expertsById[course.expertId];
   const firstLesson = course.modules?.[0]?.lessons?.[0];
   const linkProps = firstLesson
     ? {
@@ -138,7 +139,12 @@ function ContinueCard({ course }: { course: Course }) {
       </div>
       <div className="p-4">
         <p className="line-clamp-1 text-sm font-medium text-foreground">{course.title}</p>
-        <p className="mt-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+        {expert && (
+          <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+            Especialista: <span className="text-foreground">{expert.name}</span>
+          </p>
+        )}
+        <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
           {Math.round(course.progress * 100)}% · {course.duration}
         </p>
       </div>
