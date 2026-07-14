@@ -36,20 +36,32 @@ function CourseDetail() {
 
       {/* Hero */}
       <section className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-        <div
-          className="relative aspect-video overflow-hidden rounded-2xl ring-1 ring-border"
-          style={{ background: course.cover }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-black/10 to-transparent" />
-          <button
-            className="absolute inset-0 flex items-center justify-center"
-            aria-label="Reproduzir"
+        {course.modules?.[0]?.lessons?.[0] ? (
+          <Link
+            to="/academia/$courseId/$lessonId"
+            params={{
+              courseId: course.id,
+              lessonId: course.modules[0].lessons[0].id,
+            }}
+            aria-label="Reproduzir primeira aula"
+            className="relative aspect-video overflow-hidden rounded-2xl ring-1 ring-border"
+            style={{ background: course.cover }}
           >
-            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary shadow-2xl shadow-primary/30 transition hover:bg-gold-soft">
-              <Play className="h-6 w-6 fill-primary-foreground text-primary-foreground" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-black/10 to-transparent" />
+            <span className="absolute inset-0 flex items-center justify-center">
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary shadow-2xl shadow-primary/30 transition hover:bg-gold-soft">
+                <Play className="h-6 w-6 fill-primary-foreground text-primary-foreground" />
+              </span>
             </span>
-          </button>
-        </div>
+          </Link>
+        ) : (
+          <div
+            className="relative aspect-video overflow-hidden rounded-2xl ring-1 ring-border"
+            style={{ background: course.cover }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-black/10 to-transparent" />
+          </div>
+        )}
 
         <div className="flex flex-col gap-6">
           <div>
