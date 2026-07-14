@@ -1,7 +1,8 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
-import { Save, RotateCcw, ImageIcon, Sparkles, UserCircle2 } from "lucide-react";
+import { Save, RotateCcw, UserCircle2 } from "lucide-react";
 import { SectionHeading } from "@/components/mm/section-heading";
+import { MediaField } from "@/components/mm/media-field";
 import { courses } from "@/data/courses";
 import { expertsById } from "@/data/experts";
 import {
