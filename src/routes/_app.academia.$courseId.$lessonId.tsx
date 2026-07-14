@@ -242,12 +242,6 @@ function ModuleAccordion({
   );
 }
 
-function formatToMinutes(d: string) {
-  // "12m" -> "12:00"; "1h 20m" -> "1:20:00" fallback keeps string.
-  const m = d.match(/^(\d+)m$/);
-  if (m) return `${m[1].padStart(2, "0")}:00`;
-  return d;
-}
 
 // Placeholder YouTube videos (business / entrepreneurship talks) picked
 // deterministically per lesson id until real lesson videos are uploaded.
