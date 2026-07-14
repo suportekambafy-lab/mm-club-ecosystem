@@ -9,6 +9,18 @@ const gradients = {
   amber: "linear-gradient(135deg, oklch(0.7 0.14 65), oklch(0.25 0.05 65))",
 };
 
+const defaultLessonModules: Course["modules"] = [
+  {
+    id: "m1",
+    title: "Aulas principais",
+    lessons: [
+      { id: "l1", title: "Aula 1 — Introdução", duration: "12m", completed: true },
+      { id: "l2", title: "Aula 2 — Método passo a passo", duration: "18m" },
+      { id: "l3", title: "Aula 3 — Aplicação prática", duration: "15m" },
+    ],
+  },
+];
+
 export const courses: Course[] = [
   {
     id: "marca-milionaria",
@@ -98,6 +110,7 @@ export const courses: Course[] = [
     progress: 0.68,
     visibility: "club",
     cover: gradients.amber,
+    modules: defaultLessonModules,
   },
   {
     id: "google-ads-essencial",
@@ -112,6 +125,7 @@ export const courses: Course[] = [
     progress: 0,
     visibility: "club",
     cover: gradients.night,
+    modules: defaultLessonModules,
   },
   {
     id: "processos-que-escalam",
@@ -126,6 +140,7 @@ export const courses: Course[] = [
     progress: 0.22,
     visibility: "club",
     cover: gradients.ember,
+    modules: defaultLessonModules,
   },
   {
     id: "lideranca-fundadores",
@@ -140,6 +155,7 @@ export const courses: Course[] = [
     progress: 0,
     visibility: "club",
     cover: gradients.night,
+    modules: defaultLessonModules,
   },
   {
     id: "produtividade-founder",
@@ -154,6 +170,7 @@ export const courses: Course[] = [
     progress: 0.05,
     visibility: "club",
     cover: gradients.rose,
+    modules: defaultLessonModules,
   },
   {
     id: "prompt-engineering-club",
@@ -168,6 +185,7 @@ export const courses: Course[] = [
     progress: 0,
     visibility: "club",
     cover: gradients.jade,
+    modules: defaultLessonModules,
   },
 
   // ─── Em breve ───────────────────────────────────────────────

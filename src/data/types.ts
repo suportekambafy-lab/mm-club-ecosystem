@@ -31,6 +31,7 @@ export interface Lesson {
   title: string;
   duration: string; // "12m"
   completed?: boolean;
+  videoUrl?: string;
 }
 
 export interface Module {
