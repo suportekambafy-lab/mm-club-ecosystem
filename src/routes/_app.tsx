@@ -357,10 +357,21 @@ function AppLayout() {
       <div className={cn("transition-[padding] duration-200 ease-out", collapsed ? "lg:pl-[76px]" : "lg:pl-64")}>
         {/* Topbar */}
         <header className={cn("sticky top-0 z-30 items-center gap-2 bg-background/80 px-3 pt-3 pb-3 backdrop-blur-xl sm:gap-4 sm:px-4 sm:pt-4 sm:pb-4 md:px-8 md:pt-6", /^\/academia\/[^/]+\/[^/]+/.test(pathname) ? "flex lg:hidden" : "flex")}>
-          {/* Mobile logo — nav lives in the bottom tab bar */}
+          {/* Mobile: menu button opens the slide-in sidebar */}
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Abrir menu"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-1 text-foreground ring-1 ring-border transition hover:bg-surface-2 lg:hidden"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+
+          {/* Mobile logo */}
           <div className="flex shrink-0 items-center lg:hidden">
             <MMLogo />
           </div>
+
 
 
           {!/^\/academia\/[^/]+\/[^/]+/.test(pathname) && (
