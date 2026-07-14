@@ -15,6 +15,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AdminLivesRouteImport } from './routes/admin.lives'
+import { Route as AdminFerramentasRouteImport } from './routes/admin.ferramentas'
 import { Route as AdminEventosRouteImport } from './routes/admin.eventos'
 import { Route as AdminEspecialistasRouteImport } from './routes/admin.especialistas'
 import { Route as AdminCursosRouteImport } from './routes/admin.cursos'
@@ -59,6 +60,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AdminLivesRoute = AdminLivesRouteImport.update({
   id: '/lives',
   path: '/lives',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFerramentasRoute = AdminFerramentasRouteImport.update({
+  id: '/ferramentas',
+  path: '/ferramentas',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminEventosRoute = AdminEventosRouteImport.update({
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/especialistas': typeof AdminEspecialistasRoute
   '/admin/eventos': typeof AdminEventosRoute
+  '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/lives': typeof AdminLivesRoute
   '/admin/': typeof AdminIndexRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/especialistas': typeof AdminEspecialistasRoute
   '/admin/eventos': typeof AdminEventosRoute
+  '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/lives': typeof AdminLivesRoute
   '/': typeof AppIndexRoute
   '/admin': typeof AdminIndexRoute
@@ -204,6 +212,7 @@ export interface FileRoutesById {
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/especialistas': typeof AdminEspecialistasRoute
   '/admin/eventos': typeof AdminEventosRoute
+  '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/lives': typeof AdminLivesRoute
   '/_app/': typeof AppIndexRoute
   '/admin/': typeof AdminIndexRoute
@@ -230,6 +239,7 @@ export interface FileRouteTypes {
     | '/admin/cursos'
     | '/admin/especialistas'
     | '/admin/eventos'
+    | '/admin/ferramentas'
     | '/admin/lives'
     | '/admin/'
     | '/academia/$courseId'
@@ -250,6 +260,7 @@ export interface FileRouteTypes {
     | '/admin/cursos'
     | '/admin/especialistas'
     | '/admin/eventos'
+    | '/admin/ferramentas'
     | '/admin/lives'
     | '/'
     | '/admin'
@@ -273,6 +284,7 @@ export interface FileRouteTypes {
     | '/admin/cursos'
     | '/admin/especialistas'
     | '/admin/eventos'
+    | '/admin/ferramentas'
     | '/admin/lives'
     | '/_app/'
     | '/admin/'
@@ -331,6 +343,13 @@ declare module '@tanstack/react-router' {
       path: '/lives'
       fullPath: '/admin/lives'
       preLoaderRoute: typeof AdminLivesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/ferramentas': {
+      id: '/admin/ferramentas'
+      path: '/ferramentas'
+      fullPath: '/admin/ferramentas'
+      preLoaderRoute: typeof AdminFerramentasRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/eventos': {
@@ -506,6 +525,7 @@ interface AdminRouteChildren {
   AdminCursosRoute: typeof AdminCursosRoute
   AdminEspecialistasRoute: typeof AdminEspecialistasRoute
   AdminEventosRoute: typeof AdminEventosRoute
+  AdminFerramentasRoute: typeof AdminFerramentasRoute
   AdminLivesRoute: typeof AdminLivesRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -515,6 +535,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCursosRoute: AdminCursosRoute,
   AdminEspecialistasRoute: AdminEspecialistasRoute,
   AdminEventosRoute: AdminEventosRoute,
+  AdminFerramentasRoute: AdminFerramentasRoute,
   AdminLivesRoute: AdminLivesRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
