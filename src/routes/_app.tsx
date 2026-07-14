@@ -361,12 +361,20 @@ function AppLayout() {
 
           <div className="flex min-w-0 flex-1 items-center justify-between gap-2 rounded-2xl border border-border bg-surface-1 px-3 py-2.5 sm:gap-3 sm:px-5 sm:py-3 md:py-4">
             <div className="min-w-0">
-              <p className="truncate font-display text-sm leading-tight text-foreground sm:text-lg md:text-xl">
-                Bem-vindo, <span className="text-primary">{displayName.split(" ")[0]}</span>.
-              </p>
-              <p className="mt-0.5 hidden text-xs text-muted-foreground md:block">
-                Continua a construir a tua marca milionária.
-              </p>
+              {pathname === "/" ? (
+                <>
+                  <p className="truncate font-display text-sm leading-tight text-foreground sm:text-lg md:text-xl">
+                    Bem-vindo, <span className="text-primary">{displayName.split(" ")[0]}</span>.
+                  </p>
+                  <p className="mt-0.5 hidden text-xs text-muted-foreground md:block">
+                    Continua a construir a tua marca milionária.
+                  </p>
+                </>
+              ) : (
+                <div className="md:hidden">
+                  <MMLogo />
+                </div>
+              )}
             </div>
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
               <div className="hidden md:block">
