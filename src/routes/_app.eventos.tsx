@@ -42,7 +42,7 @@ function EventsPage() {
               </div>
               <div className="space-y-4 p-5">
                 <div>
-                  <h1 className="font-display text-xl text-foreground">{event.title}</h1>
+                  <h2 className="font-display text-xl text-foreground">{event.title}</h2>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{event.description}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">

@@ -11,7 +11,6 @@ import {
   Bell,
   LogOut,
   LogIn,
-  Search,
   ShoppingBag,
   Star,
 } from "lucide-react";

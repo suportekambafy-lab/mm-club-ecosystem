@@ -15,7 +15,9 @@ import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppLivesRouteImport } from './routes/_app.lives'
 import { Route as AppJadeRouteImport } from './routes/_app.jade'
 import { Route as AppFerramentasRouteImport } from './routes/_app.ferramentas'
+import { Route as AppEventosRouteImport } from './routes/_app.eventos'
 import { Route as AppComunidadeRouteImport } from './routes/_app.comunidade'
+import { Route as AppCheckoutRouteImport } from './routes/_app.checkout'
 import { Route as AppAcademiaRouteImport } from './routes/_app.academia'
 import { Route as AppAcademiaIndexRouteImport } from './routes/_app.academia.index'
 import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
@@ -52,9 +54,19 @@ const AppFerramentasRoute = AppFerramentasRouteImport.update({
   path: '/ferramentas',
   getParentRoute: () => AppRoute,
 } as any)
+const AppEventosRoute = AppEventosRouteImport.update({
+  id: '/eventos',
+  path: '/eventos',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppComunidadeRoute = AppComunidadeRouteImport.update({
   id: '/comunidade',
   path: '/comunidade',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCheckoutRoute = AppCheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAcademiaRoute = AppAcademiaRouteImport.update({
@@ -95,7 +107,9 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/auth': typeof AuthRoute
   '/academia': typeof AppAcademiaRouteWithChildren
+  '/checkout': typeof AppCheckoutRoute
   '/comunidade': typeof AppComunidadeRoute
+  '/eventos': typeof AppEventosRoute
   '/ferramentas': typeof AppFerramentasRoute
   '/jade': typeof AppJadeRoute
   '/lives': typeof AppLivesRoute
@@ -107,7 +121,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
+  '/checkout': typeof AppCheckoutRoute
   '/comunidade': typeof AppComunidadeRoute
+  '/eventos': typeof AppEventosRoute
   '/ferramentas': typeof AppFerramentasRoute
   '/jade': typeof AppJadeRoute
   '/lives': typeof AppLivesRoute
@@ -122,7 +138,9 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/_app/academia': typeof AppAcademiaRouteWithChildren
+  '/_app/checkout': typeof AppCheckoutRoute
   '/_app/comunidade': typeof AppComunidadeRoute
+  '/_app/eventos': typeof AppEventosRoute
   '/_app/ferramentas': typeof AppFerramentasRoute
   '/_app/jade': typeof AppJadeRoute
   '/_app/lives': typeof AppLivesRoute
@@ -139,7 +157,9 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/academia'
+    | '/checkout'
     | '/comunidade'
+    | '/eventos'
     | '/ferramentas'
     | '/jade'
     | '/lives'
@@ -151,7 +171,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
+    | '/checkout'
     | '/comunidade'
+    | '/eventos'
     | '/ferramentas'
     | '/jade'
     | '/lives'
@@ -165,7 +187,9 @@ export interface FileRouteTypes {
     | '/_app'
     | '/auth'
     | '/_app/academia'
+    | '/_app/checkout'
     | '/_app/comunidade'
+    | '/_app/eventos'
     | '/_app/ferramentas'
     | '/_app/jade'
     | '/_app/lives'
@@ -226,11 +250,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFerramentasRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/eventos': {
+      id: '/_app/eventos'
+      path: '/eventos'
+      fullPath: '/eventos'
+      preLoaderRoute: typeof AppEventosRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/comunidade': {
       id: '/_app/comunidade'
       path: '/comunidade'
       fullPath: '/comunidade'
       preLoaderRoute: typeof AppComunidadeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/checkout': {
+      id: '/_app/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof AppCheckoutRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/academia': {
@@ -307,7 +345,9 @@ const AppAcademiaRouteWithChildren = AppAcademiaRoute._addFileChildren(
 
 interface AppRouteChildren {
   AppAcademiaRoute: typeof AppAcademiaRouteWithChildren
+  AppCheckoutRoute: typeof AppCheckoutRoute
   AppComunidadeRoute: typeof AppComunidadeRoute
+  AppEventosRoute: typeof AppEventosRoute
   AppFerramentasRoute: typeof AppFerramentasRoute
   AppJadeRoute: typeof AppJadeRoute
   AppLivesRoute: typeof AppLivesRoute
@@ -317,7 +357,9 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAcademiaRoute: AppAcademiaRouteWithChildren,
+  AppCheckoutRoute: AppCheckoutRoute,
   AppComunidadeRoute: AppComunidadeRoute,
+  AppEventosRoute: AppEventosRoute,
   AppFerramentasRoute: AppFerramentasRoute,
   AppJadeRoute: AppJadeRoute,
   AppLivesRoute: AppLivesRoute,
