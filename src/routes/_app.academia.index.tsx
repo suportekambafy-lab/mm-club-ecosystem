@@ -7,7 +7,7 @@ import type { Course, ObjectiveId } from "@/data/types";
 import { Lock } from "lucide-react";
 import { expertsById } from "@/data/experts";
 
-export const Route = createFileRoute("/_app/academia")({
+export const Route = createFileRoute("/_app/academia/")({
   head: () => ({
     meta: [
       { title: "Academia — MM Club" },
