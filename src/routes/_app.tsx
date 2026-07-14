@@ -413,10 +413,132 @@ function AppLayout() {
           <GlobalSearch />
         </div>
 
-        <main className="mx-auto max-w-7xl px-3 pb-12 pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8">
+        <main className="mx-auto max-w-7xl px-3 pb-24 pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8 lg:pb-12">
           {mounted && authUser ? <Outlet /> : <div className="min-h-[60vh]" />}
         </main>
       </div>
+
+      {/* Mobile Bottom Tab Bar */}
+      <MobileTabBar
+        pathname={pathname}
+        initials={initials}
+        onOpenMore={() => setMobileOpen(true)}
+      />
     </div>
+  );
+}
+
+type TabItem = {
+  to: NavTo;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+};
+
+const mobileTabs: TabItem[] = [
+  { to: "/", label: "Início", icon: Home, exact: true },
+  { to: "/academia", label: "Academia", icon: GraduationCap },
+  { to: "/jade", label: "Jade", icon: Sparkles },
+  { to: "/comunidade", label: "Comunidade", icon: Users },
+];
+
+function MobileTabBar({
+  pathname,
+  initials,
+  onOpenMore,
+}: {
+  pathname: string;
+  initials: string;
+  onOpenMore: () => void;
+}) {
+  // Hide on lesson pages for a distraction-free view
+  if (/^\/academia\/[^/]+\/[^/]+/.test(pathname)) return null;
+
+  const isActive = (to: string, exact?: boolean) =>
+    exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
+
+  const profileActive = ["/ferramentas", "/lives", "/eventos", "/checkout"].some(
+    (p) => pathname === p || pathname.startsWith(p + "/"),
+  );
+
+  return (
+    <nav
+      aria-label="Navegação principal"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-black/95 backdrop-blur-xl pb-[env(safe-area-inset-bottom)] lg:hidden"
+    >
+      <ul className="mx-auto flex max-w-md items-stretch justify-between px-2">
+        {mobileTabs.map((tab) => {
+          const Icon = tab.icon;
+          const active = isActive(tab.to, tab.exact);
+          return (
+            <li key={tab.to} className="flex-1">
+              <Link
+                to={tab.to}
+                aria-label={tab.label}
+                aria-current={active ? "page" : undefined}
+                className="group relative flex flex-col items-center justify-center gap-1 px-2 pt-2.5 pb-2 text-[10px] font-medium transition-colors"
+              >
+                <span
+                  className={cn(
+                    "absolute top-0 h-[2px] w-8 rounded-full transition-all duration-300",
+                    active ? "bg-primary opacity-100" : "bg-primary opacity-0",
+                  )}
+                />
+                <Icon
+                  className={cn(
+                    "h-[22px] w-[22px] transition-all duration-200",
+                    active
+                      ? "text-primary scale-110"
+                      : "text-muted-foreground group-active:scale-95",
+                  )}
+                  strokeWidth={active ? 2.4 : 2}
+                />
+                <span
+                  className={cn(
+                    "transition-colors duration-200",
+                    active ? "text-primary" : "text-muted-foreground",
+                  )}
+                >
+                  {tab.label}
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+        <li className="flex-1">
+          <button
+            type="button"
+            onClick={onOpenMore}
+            aria-label="Perfil e mais"
+            className="group relative flex w-full flex-col items-center justify-center gap-1 px-2 pt-2.5 pb-2 text-[10px] font-medium transition-colors"
+          >
+            <span
+              className={cn(
+                "absolute top-0 h-[2px] w-8 rounded-full transition-all duration-300",
+                profileActive ? "bg-primary opacity-100" : "bg-primary opacity-0",
+              )}
+            />
+            <span
+              className={cn(
+                "flex h-[22px] w-[22px] items-center justify-center rounded-full text-[9px] font-semibold transition-all duration-200",
+                profileActive
+                  ? "bg-primary text-primary-foreground scale-110"
+                  : "bg-surface-2 text-muted-foreground group-active:scale-95",
+              )}
+            >
+              {initials || <UserRound className="h-3.5 w-3.5" />}
+            </span>
+            <span
+              className={cn(
+                "transition-colors duration-200",
+                profileActive ? "text-primary" : "text-muted-foreground",
+              )}
+            >
+              Perfil
+            </span>
+          </button>
+        </li>
+      </ul>
+    </nav>
   );
 }
