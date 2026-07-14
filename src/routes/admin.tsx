@@ -29,7 +29,6 @@ type AdminTo =
   | "/admin"
   | "/admin/cursos"
   | "/admin/aulas"
-  | "/admin/especialistas"
   | "/admin/eventos"
   | "/admin/lives"
   | "/admin/ferramentas";
@@ -47,7 +46,6 @@ const nav: Array<{
     items: [
       { to: "/admin/cursos", label: "Cursos", icon: BookOpen },
       { to: "/admin/aulas", label: "Aulas", icon: PlayCircle },
-      { to: "/admin/especialistas", label: "Especialistas", icon: UserSquare2 },
     ],
   },
   {
