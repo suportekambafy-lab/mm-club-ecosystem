@@ -264,32 +264,39 @@ function AppLayout() {
       <div className={cn("border-t border-border", compact ? "p-2" : "p-4")}>
         {authUser ? (
           compact ? (
-            <button
-              onClick={handleSignOut}
-              aria-label="Sair"
+            <Link
+              to="/perfil"
+              aria-label="Perfil"
               title={displayName}
-              className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground"
+              className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft"
             >
               {initials}
-            </button>
+            </Link>
           ) : (
-            <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                {initials}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
-                <p className="truncate text-xs text-muted-foreground">Membro MM Club</p>
-              </div>
+            <div className="flex items-center gap-2 rounded-lg px-2 py-2">
+              <Link
+                to="/perfil"
+                aria-label="Perfil"
+                className="flex min-w-0 flex-1 items-center gap-3 rounded-lg transition hover:bg-sidebar-accent -mx-1 px-1 py-1"
+              >
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+                  {initials}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
+                  <p className="truncate text-xs text-muted-foreground">Membro MM Club</p>
+                </div>
+              </Link>
               <button
                 onClick={handleSignOut}
                 aria-label="Sair"
-                className="rounded-lg p-2 text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground"
+                className="shrink-0 rounded-lg p-2 text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground"
               >
                 <LogOut className="h-4 w-4" />
               </button>
             </div>
           )
+
         ) : authUser === null ? (
           <Link
             to="/auth"
