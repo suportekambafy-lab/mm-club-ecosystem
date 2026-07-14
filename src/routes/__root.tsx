@@ -117,13 +117,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+const THEME_INIT_SCRIPT = `
+try {
+  var s = localStorage.getItem('mm.theme');
+  var t = s === 'light' || s === 'dark'
+    ? s
+    : (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  document.documentElement.classList.add(t);
+  document.documentElement.style.colorScheme = t;
+} catch(e) {}
+`;
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="pt" suppressHydrationWarning>
       <head suppressHydrationWarning>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className="dark" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         {children}
         <Scripts />
       </body>
