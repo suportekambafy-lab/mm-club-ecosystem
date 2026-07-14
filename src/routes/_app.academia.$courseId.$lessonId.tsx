@@ -13,6 +13,7 @@ import {
 import { coursesById } from "@/data/courses";
 import type { Lesson, Module } from "@/data/types";
 import { cn } from "@/lib/utils";
+import { parseVideoUrl } from "@/lib/video-source";
 
 export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
   loader: ({ params }) => {
