@@ -380,12 +380,12 @@ function AppLayout() {
               className={cn(
                 "flex min-w-0 flex-1 items-center gap-2 sm:gap-3",
                 pathname === "/"
-                  ? "justify-between rounded-2xl border border-border bg-surface-1 px-3 py-2.5 sm:px-5 sm:py-3 md:py-4"
+                  ? "justify-end sm:justify-between sm:rounded-2xl sm:border sm:border-border sm:bg-surface-1 sm:px-5 sm:py-3 md:py-4"
                   : "justify-end",
               )}
             >
               {pathname === "/" && (
-                <div className="min-w-0">
+                <div className="hidden min-w-0 sm:block">
                   <p className="truncate font-display text-sm leading-tight text-foreground sm:text-lg md:text-xl">
                     Bem-vindo, <span className="text-primary">{displayName.split(" ")[0]}</span>.
                   </p>
