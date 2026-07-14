@@ -103,6 +103,14 @@ function AppLayout() {
     return () => sub.subscription.unsubscribe();
   }, [router]);
 
+  // Gate: require account to access any /_app route
+  useEffect(() => {
+    if (authUser === null) {
+      const redirect = pathname && pathname !== "/auth" ? pathname : "/";
+      router.navigate({ to: "/auth", search: { redirect } as never, replace: true });
+    }
+  }, [authUser, pathname, router]);
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setAuthUser(null);
@@ -380,7 +388,7 @@ function AppLayout() {
         </div>
 
         <main className="mx-auto max-w-7xl px-3 pb-12 pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8">
-          {mounted ? <Outlet /> : <div className="min-h-[60vh]" />}
+          {mounted && authUser ? <Outlet /> : <div className="min-h-[60vh]" />}
         </main>
       </div>
     </div>
