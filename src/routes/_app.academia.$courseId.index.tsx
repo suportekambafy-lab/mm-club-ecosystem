@@ -69,6 +69,11 @@ function CourseDetail() {
             <h1 className="mt-3 font-display text-3xl leading-tight text-foreground md:text-4xl">
               {course.title}
             </h1>
+            {expert && (
+              <p className="mt-2 text-sm text-muted-foreground">
+                Especialista: <span className="text-foreground">{expert.name}</span>
+              </p>
+            )}
             <p className="mt-3 text-sm text-muted-foreground">{course.tagline}</p>
           </div>
 

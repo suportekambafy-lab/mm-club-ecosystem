@@ -109,6 +109,7 @@ function AcademiaPage() {
 }
 
 function ContinueCard({ course }: { course: Course }) {
+  const expert = expertsById[course.expertId];
   const firstLesson = course.modules?.[0]?.lessons?.[0];
   const linkProps = firstLesson
     ? {
@@ -138,7 +139,12 @@ function ContinueCard({ course }: { course: Course }) {
       </div>
       <div className="p-4">
         <p className="line-clamp-1 text-sm font-medium text-foreground">{course.title}</p>
-        <p className="mt-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+        {expert && (
+          <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+            Especialista: <span className="text-foreground">{expert.name}</span>
+          </p>
+        )}
+        <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
           {Math.round(course.progress * 100)}% · {course.duration}
         </p>
       </div>
@@ -176,17 +182,23 @@ function EnrolledRow({ course }: { course: Course }) {
         {expert && (
           <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
             <span
-              className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[9px] font-semibold text-white"
-              style={{ background: expert.photo }}
+              className="grid h-5 w-5 shrink-0 place-items-center overflow-hidden rounded-full text-[9px] font-semibold text-white"
+              style={expert.logo ? { background: "#000" } : { background: expert.photo }}
               aria-hidden
             >
-              {expert.name
-                .split(" ")
-                .map((n) => n[0])
-                .slice(0, 2)
-                .join("")}
+              {expert.logo ? (
+                <img src={expert.logo} alt="" className="h-full w-full object-cover" />
+              ) : (
+                expert.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .slice(0, 2)
+                  .join("")
+              )}
             </span>
-            <span className="truncate">{expert.name}</span>
+            <span className="truncate">
+              Especialista: <span className="text-foreground">{expert.name}</span>
+            </span>
           </div>
         )}
       </div>
@@ -247,8 +259,12 @@ function ComingSoonCard({ course }: { course: Course }) {
         </div>
         <h3 className="font-display text-lg leading-tight text-foreground">
           {course.title}
-          {expert && <span className="text-muted-foreground"> — {expert.name}</span>}
         </h3>
+        {expert && (
+          <p className="text-xs text-muted-foreground">
+            Especialista: <span className="text-foreground">{expert.name}</span>
+          </p>
+        )}
         <p className="text-xs text-muted-foreground line-clamp-2">{course.description}</p>
       </div>
     </div>

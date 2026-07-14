@@ -80,13 +80,15 @@ export function CourseCard({ course, className, variant = "default" }: Props) {
           <h3 className="font-display text-base leading-tight text-foreground line-clamp-2">
             {course.title}
           </h3>
-          <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
-            {course.tagline}
-          </p>
+          {expert && (
+            <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
+              Especialista: <span className="text-foreground">{expert.name}</span>
+            </p>
+          )}
         </div>
 
         <div className="flex items-center justify-between gap-2 pt-1">
-          {expert && <ExpertAvatar expert={expert} size="sm" showName asLink={false} />}
+          {expert && <ExpertAvatar expert={expert} size="sm" asLink={false} />}
           {isSoon ? (
             <span className="text-[10px] font-medium uppercase tracking-wider text-primary">
               {course.releaseLabel ?? "Em breve"}
