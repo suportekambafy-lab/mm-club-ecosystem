@@ -21,6 +21,7 @@ export interface Expert {
   name: string;
   role: string;
   photo: string; // URL or gradient token
+  logo?: string; // Optional square logo URL, shown instead of initials
   shortBio: string;
   longBio: string;
   expertise: string[];
@@ -52,6 +53,7 @@ export interface Course {
   progress: number; // 0..1
   visibility: Visibility;
   cover: string; // gradient / image token
+  logo?: string; // URL for course logo (shown as brand mark)
   modules?: Module[];
   status?: "live" | "coming-soon";
   releaseLabel?: string; // "Disponível em breve" | "Novembro 2026"
