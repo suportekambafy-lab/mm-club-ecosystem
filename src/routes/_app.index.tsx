@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -175,10 +176,15 @@ function ContinueHero({ course }: { course: import("@/data/types").Course }) {
 function NextLiveCard() {
   if (!nextLive) return null;
   const expert = expertsById[nextLive.expertId];
-  const distance = formatDistanceToNow(new Date(nextLive.startsAt), {
-    locale: pt,
-    addSuffix: true,
-  });
+  const [distance, setDistance] = useState<string>("");
+  useEffect(() => {
+    setDistance(
+      formatDistanceToNow(new Date(nextLive.startsAt), {
+        locale: pt,
+        addSuffix: true,
+      }),
+    );
+  }, []);
   return (
     <section className="grid gap-4 rounded-2xl bg-surface-1 p-6 ring-1 ring-border md:grid-cols-[1fr_auto] md:items-center md:p-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
