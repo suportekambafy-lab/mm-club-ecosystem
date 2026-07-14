@@ -61,6 +61,10 @@ const navSections: NavSection[] = [
     label: "Recursos",
     items: [{ to: "/ferramentas", label: "Ferramentas", icon: Wrench }],
   },
+  {
+    label: "Gestão",
+    items: [{ to: "/admin", label: "Admin", icon: Settings }],
+  },
 ];
 
 const flatNav = navSections.flatMap((s) => s.items);
