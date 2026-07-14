@@ -28,17 +28,26 @@ export function ExpertAvatar({
   const avatar = (
     <div
       className={cn(
-        "flex items-center justify-center rounded-full font-semibold text-white ring-1 ring-[color:var(--hairline)]",
+        "flex items-center justify-center overflow-hidden rounded-full font-semibold text-white ring-1 ring-[color:var(--hairline)]",
         sizes[size],
       )}
-      style={{ background: expert.photo }}
+      style={expert.logo ? { background: "#000" } : { background: expert.photo }}
       aria-hidden
     >
-      {expert.name
-        .split(" ")
-        .map((n) => n[0])
-        .slice(0, 2)
-        .join("")}
+      {expert.logo ? (
+        <img
+          src={expert.logo}
+          alt=""
+          className="h-full w-full object-cover"
+          loading="lazy"
+        />
+      ) : (
+        expert.name
+          .split(" ")
+          .map((n) => n[0])
+          .slice(0, 2)
+          .join("")
+      )}
     </div>
   );
 
