@@ -259,8 +259,12 @@ function ComingSoonCard({ course }: { course: Course }) {
         </div>
         <h3 className="font-display text-lg leading-tight text-foreground">
           {course.title}
-          {expert && <span className="text-muted-foreground"> — {expert.name}</span>}
         </h3>
+        {expert && (
+          <p className="text-xs text-muted-foreground">
+            Especialista: <span className="text-foreground">{expert.name}</span>
+          </p>
+        )}
         <p className="text-xs text-muted-foreground line-clamp-2">{course.description}</p>
       </div>
     </div>
