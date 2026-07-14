@@ -13,6 +13,9 @@ import {
   LogIn,
   ShoppingBag,
   Star,
+  Settings,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +23,8 @@ import { MMLogo } from "@/components/mm/logo";
 import { GlobalSearch } from "@/components/mm/global-search";
 import { currentUser } from "@/data/user";
 import { cn } from "@/lib/utils";
+// Boot-time: apply admin overrides to in-memory data
+import "@/data/admin-store";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
