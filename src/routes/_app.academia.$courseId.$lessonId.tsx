@@ -78,8 +78,8 @@ function LessonPlayer() {
 
         {/* Layout: modules sidebar + main content */}
         <div className="grid min-h-0 flex-1 gap-4 md:gap-6 lg:grid-cols-[330px_minmax(0,1fr)]">
-          {/* Modules sidebar — scrollable independently on desktop */}
-          <aside className="flex min-h-0 flex-col rounded-3xl border border-border bg-surface-1 p-4 md:p-5">
+          {/* Modules sidebar — scrollable independently on desktop; below content on mobile */}
+          <aside className="order-2 flex min-h-0 flex-col rounded-3xl border border-border bg-surface-1 p-4 md:p-5 lg:order-1">
             <p className="mb-4 shrink-0 font-display text-lg text-foreground">Módulos</p>
             <div className="space-y-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
               {course.modules!.map((m: Module, mi: number) => (
@@ -95,7 +95,7 @@ function LessonPlayer() {
           </aside>
 
           {/* Main content: video + title/cta */}
-          <div className="flex min-h-0 flex-col gap-4 md:gap-6 lg:overflow-y-auto lg:pr-1">
+          <div className="order-1 flex min-h-0 flex-col gap-3 sm:gap-4 md:gap-6 lg:order-2 lg:overflow-y-auto lg:pr-1">
             {/* Video player */}
             <div className="relative aspect-video shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
               {source.kind === "file" && source.fileUrl ? (
