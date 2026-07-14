@@ -1,4 +1,5 @@
 import type { Course } from "./types";
+import marcaMilionariaCover from "@/assets/marca-milionaria-cover.png.asset.json";
 
 const gradients = {
   gold: "linear-gradient(135deg, oklch(0.82 0.13 82), oklch(0.35 0.08 60))",
