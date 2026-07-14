@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
 
-type NavTo = "/" | "/academia" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/eventos" | "/admin";
+type NavTo = "/" | "/academia" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/eventos";
 type NavItem = {
   to: NavTo;
   label: string;
@@ -59,10 +59,6 @@ const navSections: NavSection[] = [
   {
     label: "Recursos",
     items: [{ to: "/ferramentas", label: "Ferramentas", icon: Wrench }],
-  },
-  {
-    label: "Gestão",
-    items: [{ to: "/admin", label: "Admin", icon: Settings }],
   },
 ];
 
