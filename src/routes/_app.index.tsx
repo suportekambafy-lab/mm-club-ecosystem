@@ -94,20 +94,6 @@ function DashboardPage() {
     <div className="space-y-12">
       {/* Hero — Continuar */}
       <section className="space-y-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-[0.24em] text-primary">
-              Bem-vindo de volta
-            </p>
-            <h1 className="mt-2 font-display text-3xl leading-tight text-foreground md:text-4xl">
-              Olá, {user.name}.
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              O teu clube está vivo. Continua onde ficaste ou descobre o que há de novo.
-            </p>
-          </div>
-        </div>
-
         {featured && <ContinueHero course={featured} />}
       </section>
 
