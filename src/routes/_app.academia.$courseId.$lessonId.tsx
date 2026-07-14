@@ -98,16 +98,31 @@ function LessonPlayer() {
           <div className="space-y-6">
             {/* Video player — YouTube embed */}
             <div className="relative aspect-video overflow-hidden rounded-3xl border border-border bg-black">
-              <iframe
-                key={current.lesson.id}
-                src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1&playsinline=1&autoplay=1`}
-                title={current.lesson.title}
-                className="absolute inset-0 h-full w-full"
-                loading="lazy"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-                allowFullScreen
-              />
+              {source.kind === "file" && source.fileUrl ? (
+                <video
+                  key={current.lesson.id}
+                  src={source.fileUrl}
+                  controls
+                  autoPlay
+                  playsInline
+                  className="absolute inset-0 h-full w-full bg-black"
+                />
+              ) : source.embedUrl ? (
+                <iframe
+                  key={current.lesson.id}
+                  src={source.embedUrl}
+                  title={current.lesson.title}
+                  className="absolute inset-0 h-full w-full"
+                  loading="lazy"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-sm text-white/60">
+                  Vídeo não configurado para esta aula.
+                </div>
+              )}
             </div>
 
             {/* Title + CTA */}
