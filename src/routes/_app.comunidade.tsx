@@ -99,6 +99,7 @@ function initials(name: string) {
 function useCategories() {
   return useQuery({
     queryKey: ["community", "categories"],
+    enabled: true,
     queryFn: async (): Promise<Category[]> => {
       const { data, error } = await supabase
         .from("community_categories")
