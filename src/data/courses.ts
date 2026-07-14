@@ -35,7 +35,7 @@ export const courses: Course[] = [
     lessonsCount: 28,
     progress: 0.42,
     visibility: "club",
-    cover: gradients.gold,
+    cover: `url(${marcaMilionariaCover.url}) center/cover no-repeat, #000`,
     modules: [
       {
         id: "m1",
