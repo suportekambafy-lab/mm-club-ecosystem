@@ -120,10 +120,19 @@ function DashboardPage() {
 
 function ContinueHero({ course }: { course: import("@/data/types").Course }) {
   const expert = expertsById[course.expertId];
+  const firstLessonId = course.modules?.[0]?.lessons?.[0]?.id;
+  const linkProps = firstLessonId
+    ? {
+        to: "/academia/$courseId/$lessonId" as const,
+        params: { courseId: course.id, lessonId: firstLessonId },
+      }
+    : {
+        to: "/academia/$courseId" as const,
+        params: { courseId: course.id },
+      };
   return (
     <Link
-      to="/academia/$courseId"
-      params={{ courseId: course.id }}
+      {...linkProps}
       className="group relative flex flex-col overflow-hidden rounded-2xl ring-1 ring-border transition hover:ring-[color:var(--hairline)] md:flex-row"
     >
       <div
