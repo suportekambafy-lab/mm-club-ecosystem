@@ -10,10 +10,13 @@ import {
   Library,
   Lock,
   ArrowUpRight,
+  X,
   type LucideIcon,
 } from "lucide-react";
+import { useState } from "react";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { tools, toolCategories } from "@/data/tools";
+import type { Tool } from "@/data/types";
 import { currentUser } from "@/data/user";
 import { canAccess } from "@/lib/permissions";
 
@@ -43,6 +46,8 @@ export const Route = createFileRoute("/_app/ferramentas")({
 });
 
 function ToolsPage() {
+  const [selected, setSelected] = useState<Tool | null>(null);
+
   return (
     <div className="space-y-12">
       <SectionHeading
@@ -90,7 +95,9 @@ function ToolsPage() {
                       </p>
                     </div>
                     <button
+                      type="button"
                       disabled={locked}
+                      onClick={() => setSelected(t)}
                       className="inline-flex w-max items-center gap-1.5 text-xs font-medium text-primary transition hover:underline disabled:opacity-50"
                     >
                       {locked ? "Requer Premium" : "Abrir"}
@@ -103,6 +110,59 @@ function ToolsPage() {
           </section>
         );
       })}
+
+      {selected && <ToolModal tool={selected} onClose={() => setSelected(null)} />}
     </div>
   );
+}
+
+function ToolModal({ tool, onClose }: { tool: Tool; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+      <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-surface-1 ring-1 ring-border">
+        <div className="flex items-start justify-between gap-4 border-b border-border p-5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">{tool.category}</p>
+            <h2 className="mt-1 font-display text-2xl text-foreground">{tool.title}</h2>
+          </div>
+          <button
+            type="button"
+            aria-label="Fechar"
+            onClick={onClose}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 text-muted-foreground transition hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="space-y-5 p-5">
+          <p className="text-sm leading-relaxed text-muted-foreground">{tool.description}</p>
+          <div className="rounded-xl bg-background p-4 ring-1 ring-border">
+            <p className="text-sm leading-relaxed text-foreground">
+              {buildToolContent(tool)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
+          >
+            Concluir
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function buildToolContent(tool: Tool) {
+  if (tool.category === "Prompts") {
+    return `Prompt pronto: analisa ${tool.title.toLowerCase()} para a minha marca, identifica oportunidades de posicionamento premium e devolve 5 ações prioritárias.`;
+  }
+  if (tool.category === "Calculadoras") {
+    return "Calculadora ativa: define preço base, margem pretendida e âncora premium para encontrar o preço recomendado.";
+  }
+  if (tool.category === "Checklists") {
+    return "Checklist ativa: percorre cada etapa, marca o progresso e usa a lista como plano de execução semanal.";
+  }
+  return "Recurso aberto: usa este material como base editável para acelerar a tua execução dentro do método MM Club.";
 }

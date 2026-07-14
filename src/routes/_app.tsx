@@ -219,13 +219,14 @@ function AppLayout() {
               >
                 <ShoppingBag className="h-4 w-4" />
               </Link>
-              <button
+              <Link
+                to="/comunidade"
                 aria-label="Notificações"
                 className="relative flex h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-muted-foreground transition hover:text-foreground"
               >
                 <Bell className="h-4 w-4" />
                 <span className="absolute right-2.5 top-2.5 h-1.5 w-1.5 rounded-full bg-primary" />
-              </button>
+              </Link>
               <div className="ml-1 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-background">
                 {initials}
               </div>

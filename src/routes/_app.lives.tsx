@@ -7,6 +7,8 @@ import { ExpertAvatar } from "@/components/mm/expert-avatar";
 import { formatDistanceToNow, format } from "date-fns";
 import { pt } from "date-fns/locale";
 
+const RECORDING_URL = "https://www.youtube.com/watch?v=-alfqFwiI6Y";
+
 export const Route = createFileRoute("/_app/lives")({
   head: () => ({
     meta: [
@@ -79,11 +81,17 @@ function LivesPage() {
               >
                 <div className="relative h-40" style={{ background: l.cover }}>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <button className="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover:opacity-100">
+                  <a
+                    href={RECORDING_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`Ver gravação: ${l.title}`}
+                    className="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover:opacity-100"
+                  >
                     <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary shadow-xl">
                       <Play className="h-5 w-5 fill-primary-foreground text-primary-foreground" />
                     </span>
-                  </button>
+                  </a>
                   <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-[10px] font-medium text-white backdrop-blur-sm">
                     <Clock className="h-3 w-3" /> {l.duration}
                   </span>
@@ -135,12 +143,39 @@ function NextLiveHero() {
             </div>
           )}
           <div className="flex flex-wrap gap-3 pt-4">
-            <button className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft">
+            <a
+              href={buildCalendarUrl()}
+              download="mm-club-live.ics"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
+            >
               <Calendar className="h-4 w-4" /> Adicionar ao calendário
-            </button>
+            </a>
           </div>
         </div>
       </div>
     </section>
   );
+}
+
+function buildCalendarUrl() {
+  if (!nextLive) return "#";
+  const start = new Date(nextLive.startsAt);
+  const end = new Date(start.getTime() + 60 * 60 * 1000);
+  const stamp = (date: Date) => date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+  const ics = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//MM Club//Lives//PT",
+    "BEGIN:VEVENT",
+    `UID:${nextLive.id}@mmclub.pt`,
+    `DTSTAMP:${stamp(new Date())}`,
+    `DTSTART:${stamp(start)}`,
+    `DTEND:${stamp(end)}`,
+    `SUMMARY:${nextLive.title}`,
+    "DESCRIPTION:Live MM Club",
+    "LOCATION:Online",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+  return `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
 }
