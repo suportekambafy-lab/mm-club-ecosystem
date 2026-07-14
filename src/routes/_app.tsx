@@ -73,6 +73,16 @@ function AppLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
   const [authUser, setAuthUser] = useState<User | null | undefined>(undefined);
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("mm.sidebar.collapsed") === "1";
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("mm.sidebar.collapsed", collapsed ? "1" : "0");
+    }
+  }, [collapsed]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setAuthUser(data.session?.user ?? null));
