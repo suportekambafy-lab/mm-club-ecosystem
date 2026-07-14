@@ -96,10 +96,10 @@ function initials(name: string) {
 }
 
 /* ---------------- Data ---------------- */
-function useCategories() {
+function useCategories(enabled: boolean) {
   return useQuery({
     queryKey: ["community", "categories"],
-    enabled: true,
+    enabled,
     queryFn: async (): Promise<Category[]> => {
       const { data, error } = await supabase
         .from("community_categories")
@@ -111,9 +111,10 @@ function useCategories() {
   });
 }
 
-function usePosts(categoryId: string | null, userId: string | null) {
+function usePosts(categoryId: string | null, userId: string | null, enabled: boolean) {
   return useQuery({
     queryKey: ["community", "posts", categoryId ?? "all", userId ?? "anon"],
+    enabled,
     queryFn: async (): Promise<Post[]> => {
       let q = supabase
         .from("community_posts")
