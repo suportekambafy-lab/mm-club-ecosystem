@@ -15,7 +15,12 @@ import {
   Star,
   PanelLeftClose,
   PanelLeftOpen,
+  Menu,
+  X,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { useTheme } from "@/lib/theme";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { MMLogo } from "@/components/mm/logo";
