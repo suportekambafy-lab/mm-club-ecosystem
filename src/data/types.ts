@@ -52,6 +52,7 @@ export interface Course {
   progress: number; // 0..1
   visibility: Visibility;
   cover: string; // gradient / image token
+  logo?: string; // URL for course logo (shown as brand mark)
   modules?: Module[];
   status?: "live" | "coming-soon";
   releaseLabel?: string; // "Disponível em breve" | "Novembro 2026"
