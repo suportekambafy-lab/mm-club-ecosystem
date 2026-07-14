@@ -50,8 +50,8 @@ export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
 
 function LessonPlayer() {
   const { course, current, next } = Route.useLoaderData();
-  const youtubeUrl = current.lesson.videoUrl ?? DEFAULT_LESSON_YOUTUBE_URL;
-  const youtubeId = pickYouTubeId(youtubeUrl);
+  const videoUrl = current.lesson.videoUrl ?? DEFAULT_LESSON_YOUTUBE_URL;
+  const source = parseVideoUrl(videoUrl);
 
   return (
     <div className="-mx-4 -my-8 min-h-[calc(100vh-4rem)] bg-background md:-mx-8 md:-my-10">
