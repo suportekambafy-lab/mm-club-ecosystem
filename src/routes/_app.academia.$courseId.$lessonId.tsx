@@ -124,16 +124,18 @@ function LessonPlayer() {
 
               <div className="flex flex-wrap items-center gap-3">
                 {/* Download with premium ring */}
-                <button
-                  type="button"
-                  aria-label="Descarregar"
+                <a
+                  href={youtubeUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Abrir vídeo no YouTube"
                   className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-border bg-surface-1 text-foreground transition hover:border-primary/40"
                 >
                   <Download className="h-5 w-5" />
                   <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
                     <Crown className="h-3 w-3 fill-current" />
                   </span>
-                </button>
+                </a>
 
                 <Link
                   to="/comunidade"

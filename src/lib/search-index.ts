@@ -24,7 +24,7 @@ export function buildSearchIndex(): SearchItem[] {
       type: "course",
       title: c.title,
       subtitle: c.tagline,
-      href: `/academia/${c.id}`,
+      href: c.modules?.[0]?.lessons?.[0] ? `/academia/${c.id}/${c.modules[0].lessons[0].id}` : `/academia/${c.id}`,
       keywords: `${c.title} ${c.tagline} ${c.description} ${c.objectiveId}`.toLowerCase(),
     });
   }
