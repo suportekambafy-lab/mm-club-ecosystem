@@ -19,6 +19,7 @@ import { Route as AdminFerramentasRouteImport } from './routes/admin.ferramentas
 import { Route as AdminEventosRouteImport } from './routes/admin.eventos'
 import { Route as AdminCursosRouteImport } from './routes/admin.cursos'
 import { Route as AdminAulasRouteImport } from './routes/admin.aulas'
+import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
 import { Route as AppLivesRouteImport } from './routes/_app.lives'
 import { Route as AppJadeRouteImport } from './routes/_app.jade'
 import { Route as AppFerramentasRouteImport } from './routes/_app.ferramentas'
@@ -80,6 +81,11 @@ const AdminAulasRoute = AdminAulasRouteImport.update({
   id: '/aulas',
   path: '/aulas',
   getParentRoute: () => AdminRoute,
+} as any)
+const AppPerfilRoute = AppPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppLivesRoute = AppLivesRouteImport.update({
   id: '/lives',
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/ferramentas': typeof AppFerramentasRoute
   '/jade': typeof AppJadeRoute
   '/lives': typeof AppLivesRoute
+  '/perfil': typeof AppPerfilRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
@@ -176,6 +183,7 @@ export interface FileRoutesByTo {
   '/ferramentas': typeof AppFerramentasRoute
   '/jade': typeof AppJadeRoute
   '/lives': typeof AppLivesRoute
+  '/perfil': typeof AppPerfilRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
@@ -200,6 +208,7 @@ export interface FileRoutesById {
   '/_app/ferramentas': typeof AppFerramentasRoute
   '/_app/jade': typeof AppJadeRoute
   '/_app/lives': typeof AppLivesRoute
+  '/_app/perfil': typeof AppPerfilRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
@@ -226,6 +235,7 @@ export interface FileRouteTypes {
     | '/ferramentas'
     | '/jade'
     | '/lives'
+    | '/perfil'
     | '/admin/aulas'
     | '/admin/cursos'
     | '/admin/eventos'
@@ -246,6 +256,7 @@ export interface FileRouteTypes {
     | '/ferramentas'
     | '/jade'
     | '/lives'
+    | '/perfil'
     | '/admin/aulas'
     | '/admin/cursos'
     | '/admin/eventos'
@@ -269,6 +280,7 @@ export interface FileRouteTypes {
     | '/_app/ferramentas'
     | '/_app/jade'
     | '/_app/lives'
+    | '/_app/perfil'
     | '/admin/aulas'
     | '/admin/cursos'
     | '/admin/eventos'
@@ -360,6 +372,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/aulas'
       preLoaderRoute: typeof AdminAulasRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/_app/perfil': {
+      id: '/_app/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof AppPerfilRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/lives': {
       id: '/_app/lives'
@@ -483,6 +502,7 @@ interface AppRouteChildren {
   AppFerramentasRoute: typeof AppFerramentasRoute
   AppJadeRoute: typeof AppJadeRoute
   AppLivesRoute: typeof AppLivesRoute
+  AppPerfilRoute: typeof AppPerfilRoute
   AppIndexRoute: typeof AppIndexRoute
   AppEspecialistasExpertIdRoute: typeof AppEspecialistasExpertIdRoute
 }
@@ -495,6 +515,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppFerramentasRoute: AppFerramentasRoute,
   AppJadeRoute: AppJadeRoute,
   AppLivesRoute: AppLivesRoute,
+  AppPerfilRoute: AppPerfilRoute,
   AppIndexRoute: AppIndexRoute,
   AppEspecialistasExpertIdRoute: AppEspecialistasExpertIdRoute,
 }
