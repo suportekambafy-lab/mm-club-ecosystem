@@ -1030,13 +1030,16 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
   const [liked, setLiked] = useState(post.liked_by_me);
   const [likeCount, setLikeCount] = useState(post.like_count);
   const [commentCount, setCommentCount] = useState(post.comment_count);
+  const [editing, setEditing] = useState(false);
+  const [editContent, setEditContent] = useState(post.content);
   const isOwner = currentUserId === post.author_id;
 
   useEffect(() => {
     setLiked(post.liked_by_me);
     setLikeCount(post.like_count);
     setCommentCount(post.comment_count);
-  }, [post.liked_by_me, post.like_count, post.comment_count]);
+    setEditContent(post.content);
+  }, [post.liked_by_me, post.like_count, post.comment_count, post.content]);
 
   const toggleLike = async () => {
     if (!currentUserId) {
@@ -1074,6 +1077,23 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
+  const update = useMutation({
+    mutationFn: async () => {
+      const trimmed = editContent.trim();
+      if (!trimmed) throw new Error("Conteúdo vazio");
+      const { error } = await (supabase.from("community_posts") as any)
+        .update({ content: trimmed, edited_at: new Date().toISOString() })
+        .eq("id", post.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setEditing(false);
+      qc.invalidateQueries({ queryKey: ["community", "posts"] });
+      toast.success("Post atualizado.");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
+  });
+
   const authorName = post.author?.display_name ?? "Membro";
 
   return (
@@ -1085,6 +1105,7 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
             <p className="text-sm font-medium text-foreground">{authorName}</p>
             <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
               <span>{timeAgo(post.created_at)}</span>
+              {post.edited_at && <span className="italic">· editado</span>}
               {post.category && (
                 <>
                   <span>·</span>
@@ -1100,26 +1121,76 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
             </div>
           </div>
         </div>
-        {isOwner && (
-          <button
-            onClick={() => {
-              if (confirm("Apagar este post?")) del.mutate();
-            }}
-            className="rounded-full p-2 text-muted-foreground transition hover:bg-surface-2 hover:text-destructive"
-            aria-label="Apagar"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+        {isOwner && !editing && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setEditing(true)}
+              className="rounded-full p-2 text-muted-foreground transition hover:bg-surface-2 hover:text-foreground"
+              aria-label="Editar"
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => {
+                if (confirm("Apagar este post?")) del.mutate();
+              }}
+              className="rounded-full p-2 text-muted-foreground transition hover:bg-surface-2 hover:text-destructive"
+              aria-label="Apagar"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
         )}
       </header>
 
-      <div className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
-        {post.content}
-      </div>
+      {editing ? (
+        <div className="mt-3 space-y-2">
+          <textarea
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            rows={3}
+            className="w-full resize-y rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary/50"
+          />
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => {
+                setEditing(false);
+                setEditContent(post.content);
+              }}
+              className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => update.mutate()}
+              disabled={update.isPending || !editContent.trim()}
+              className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-gold-soft disabled:opacity-40"
+            >
+              {update.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+              Guardar
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+          {post.content}
+        </div>
+      )}
 
-      {post.image_url && (
+      {post.image_url && !editing && (
         <div className="mt-3 overflow-hidden rounded-xl border border-border">
           <img src={post.image_url} alt="" className="max-h-[500px] w-full object-cover" />
+        </div>
+      )}
+
+      {post.reactions.length > 0 && (
+        <div className="mt-3">
+          <ReactionBar
+            target="post"
+            targetId={post.id}
+            reactions={post.reactions}
+            currentUserId={currentUserId}
+          />
         </div>
       )}
 
@@ -1143,6 +1214,16 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
           <MessageCircle className="h-4 w-4" />
           {commentCount > 0 && <span>{commentCount}</span>}
         </button>
+        {post.reactions.length === 0 && (
+          <div className="ml-1">
+            <ReactionBar
+              target="post"
+              targetId={post.id}
+              reactions={post.reactions}
+              currentUserId={currentUserId}
+            />
+          </div>
+        )}
       </div>
 
       {showComments && (
