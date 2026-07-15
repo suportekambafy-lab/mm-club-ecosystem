@@ -51,6 +51,7 @@ type Profile = {
   avatar_url: string | null;
   bio: string | null;
 };
+type Reaction = { emoji: string; user_id: string };
 type Post = {
   id: string;
   author_id: string;
@@ -58,11 +59,13 @@ type Post = {
   content: string;
   image_url: string | null;
   created_at: string;
+  edited_at: string | null;
   author: Profile | null;
   category: Category | null;
   like_count: number;
   liked_by_me: boolean;
   comment_count: number;
+  reactions: Reaction[];
 };
 type Comment = {
   id: string;
@@ -70,8 +73,12 @@ type Comment = {
   author_id: string;
   content: string;
   created_at: string;
+  edited_at: string | null;
   author: Profile | null;
+  reactions: Reaction[];
 };
+
+const EMOJIS = ["👍", "❤️", "🔥", "🎉", "🙌", "💡", "😮", "😂"];
 
 /* ---------------- Auth hook ---------------- */
 function useUser() {
