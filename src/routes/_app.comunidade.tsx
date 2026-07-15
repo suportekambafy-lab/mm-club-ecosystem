@@ -13,7 +13,10 @@ import {
   Trash2,
   Newspaper,
   MessagesSquare,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -811,7 +814,24 @@ type ChatMessage = {
 function ChatRoom({ user }: { user: User }) {
   const qc = useQueryClient();
   const [text, setText] = useState("");
+  const [expanded, setExpanded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Lock body scroll when expanded
+  useEffect(() => {
+    if (!expanded) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setExpanded(false);
+    };
+    window.addEventListener("keydown", onEsc);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onEsc);
+    };
+  }, [expanded]);
+
 
   const q = useQuery({
     queryKey: ["community", "chat"],
@@ -874,19 +894,42 @@ function ChatRoom({ user }: { user: User }) {
   });
 
   return (
-    <div className="flex h-[calc(100vh-20rem)] min-h-[420px] flex-col rounded-2xl border border-border bg-surface-1">
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <div className="flex items-center gap-2">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-          </span>
-          <p className="text-sm font-medium text-foreground">Chat ao vivo</p>
+    <>
+      {expanded && (
+        <div
+          className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm"
+          onClick={() => setExpanded(false)}
+        />
+      )}
+      <div
+        className={cn(
+          "flex flex-col rounded-2xl border border-border bg-surface-1",
+          expanded
+            ? "fixed inset-3 z-50 md:inset-8 shadow-2xl"
+            : "h-[calc(100vh-20rem)] min-h-[420px]",
+        )}
+      >
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+            </span>
+            <p className="text-sm font-medium text-foreground">Chat ao vivo</p>
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              · {q.data?.length ?? 0} msg
+            </span>
+          </div>
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-surface-2 hover:text-foreground"
+            aria-label={expanded ? "Reduzir chat" : "Expandir chat"}
+            title={expanded ? "Reduzir (Esc)" : "Expandir"}
+          >
+            {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </button>
         </div>
-        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-          {q.data?.length ?? 0} mensagens
-        </p>
-      </div>
+
 
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
         {q.isLoading && (
@@ -964,6 +1007,8 @@ function ChatRoom({ user }: { user: User }) {
           )}
         </button>
       </form>
-    </div>
+      </div>
+    </>
   );
+
 }
