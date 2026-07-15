@@ -547,10 +547,12 @@ const mobileTabs: TabItem[] = [
 function MobileTabBar({
   pathname,
   initials,
+  avatarSrc,
   onOpenMore,
 }: {
   pathname: string;
   initials: string;
+  avatarSrc: string | null;
   onOpenMore: () => void;
 }) {
   // Hide on lesson pages for a distraction-free view
