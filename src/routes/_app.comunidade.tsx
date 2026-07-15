@@ -1609,8 +1609,11 @@ function ChatRoom({ user }: { user: User }) {
             <div key={m.id} className={cn("flex gap-2.5", mine && "flex-row-reverse")}>
               <Avatar name={name} url={m.author?.avatar_url ?? null} size={32} />
               <div className={cn("flex max-w-[75%] flex-col", mine && "items-end")}>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-[11px] font-medium text-foreground">{mine ? "Você" : name}</p>
+                <div className="flex items-baseline gap-1.5">
+                  <p className="text-[11px] font-medium text-foreground flex items-center gap-1">
+                    <span>{mine ? "Você" : name}</span>
+                    {adminIds.has(m.author_id) && <VerifiedBadge size={11} />}
+                  </p>
                   <p className="text-[10px] text-muted-foreground">{timeAgo(m.created_at)}</p>
                 </div>
                 <div
