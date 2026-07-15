@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AdminLivesRouteImport } from './routes/admin.lives'
 import { Route as AdminFerramentasRouteImport } from './routes/admin.ferramentas'
 import { Route as AdminEventosRouteImport } from './routes/admin.eventos'
@@ -56,6 +57,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppRoute,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminLivesRoute = AdminLivesRouteImport.update({
   id: '/lives',
@@ -168,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/lives': typeof AdminLivesRoute
+  '/api/chat': typeof ApiChatRoute
   '/admin/': typeof AdminIndexRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
@@ -189,6 +196,7 @@ export interface FileRoutesByTo {
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/lives': typeof AdminLivesRoute
+  '/api/chat': typeof ApiChatRoute
   '/': typeof AppIndexRoute
   '/admin': typeof AdminIndexRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
@@ -214,6 +222,7 @@ export interface FileRoutesById {
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/lives': typeof AdminLivesRoute
+  '/api/chat': typeof ApiChatRoute
   '/_app/': typeof AppIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/_app/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
@@ -241,6 +250,7 @@ export interface FileRouteTypes {
     | '/admin/eventos'
     | '/admin/ferramentas'
     | '/admin/lives'
+    | '/api/chat'
     | '/admin/'
     | '/academia/$courseId'
     | '/especialistas/$expertId'
@@ -262,6 +272,7 @@ export interface FileRouteTypes {
     | '/admin/eventos'
     | '/admin/ferramentas'
     | '/admin/lives'
+    | '/api/chat'
     | '/'
     | '/admin'
     | '/especialistas/$expertId'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/admin/eventos'
     | '/admin/ferramentas'
     | '/admin/lives'
+    | '/api/chat'
     | '/_app/'
     | '/admin/'
     | '/_app/academia/$courseId'
@@ -299,6 +311,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiChatRoute: typeof ApiChatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -337,6 +350,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/lives': {
       id: '/admin/lives'
@@ -546,6 +566,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiChatRoute: ApiChatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
