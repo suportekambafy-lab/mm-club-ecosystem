@@ -56,6 +56,7 @@ type NavItem = {
   label: string;
   icon: typeof LayoutDashboard;
   exact?: boolean;
+  soon?: boolean;
 };
 
 type NavSection = { label: string; items: NavItem[] };
@@ -65,9 +66,9 @@ const navSections: NavSection[] = [
     label: "Geral",
     items: [
       { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
-      { to: "/eventos", label: "Agenda", icon: CalendarDays },
+      { to: "/eventos", label: "Agenda", icon: CalendarDays, soon: true },
       { to: "/comunidade", label: "Comunidade", icon: Users },
-      { to: "/lives", label: "Lives", icon: Radio },
+      { to: "/lives", label: "Lives", icon: Radio, soon: true },
     ],
   },
   {
@@ -79,7 +80,7 @@ const navSections: NavSection[] = [
   },
   {
     label: "Recursos",
-    items: [{ to: "/ferramentas", label: "Ferramentas", icon: Wrench }],
+    items: [{ to: "/ferramentas", label: "Ferramentas", icon: Wrench, soon: true }],
   },
 ];
 
@@ -207,6 +208,29 @@ function AppLayout() {
               {section.items.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.to, item.exact);
+                if (item.soon) {
+                  return (
+                    <div
+                      key={item.to}
+                      title={compact ? `${item.label} — Em breve` : undefined}
+                      aria-disabled="true"
+                      className={cn(
+                        "group flex items-center rounded-xl text-sm text-muted-foreground/70 cursor-not-allowed",
+                        compact ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
+                      )}
+                    >
+                      <Icon className="h-[18px] w-[18px] shrink-0 text-muted-foreground/60" />
+                      {!compact && (
+                        <>
+                          <span className="flex-1">{item.label}</span>
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary">
+                            Em breve
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  );
+                }
                 return (
                   <Link
                     key={item.to}
