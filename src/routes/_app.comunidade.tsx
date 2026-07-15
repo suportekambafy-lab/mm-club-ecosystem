@@ -573,8 +573,9 @@ function LatestUpdatesCard({ posts }: { posts: Post[] }) {
                 size={28}
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-medium text-foreground">
-                  {p.author?.display_name ?? "Membro"}
+                <p className="truncate text-xs font-medium text-foreground flex items-center gap-1">
+                  <span className="truncate">{p.author?.display_name ?? "Membro"}</span>
+                  {adminIds.has(p.author_id) && <VerifiedBadge size={12} />}
                 </p>
                 <p className="line-clamp-2 text-[11px] text-muted-foreground">
                   {p.content}
