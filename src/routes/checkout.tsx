@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
-export const Route = createFileRoute("/_app/checkout")({
+export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
       { title: "Planos MM Club — Escolhe a tua adesão" },

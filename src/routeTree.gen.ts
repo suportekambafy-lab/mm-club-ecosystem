@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteImport } from './routes/_app'
@@ -26,7 +27,6 @@ import { Route as AppJadeRouteImport } from './routes/_app.jade'
 import { Route as AppFerramentasRouteImport } from './routes/_app.ferramentas'
 import { Route as AppEventosRouteImport } from './routes/_app.eventos'
 import { Route as AppComunidadeRouteImport } from './routes/_app.comunidade'
-import { Route as AppCheckoutRouteImport } from './routes/_app.checkout'
 import { Route as AppAcademiaRouteImport } from './routes/_app.academia'
 import { Route as AppAcademiaIndexRouteImport } from './routes/_app.academia.index'
 import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
@@ -35,6 +35,11 @@ import { Route as AppAcademiaCourseIdIndexRouteImport } from './routes/_app.acad
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as AppAcademiaCourseIdLessonIdRouteImport } from './routes/_app.academia.$courseId.$lessonId'
 
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -119,11 +124,6 @@ const AppComunidadeRoute = AppComunidadeRouteImport.update({
   path: '/comunidade',
   getParentRoute: () => AppRoute,
 } as any)
-const AppCheckoutRoute = AppCheckoutRouteImport.update({
-  id: '/checkout',
-  path: '/checkout',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppAcademiaRoute = AppAcademiaRouteImport.update({
   id: '/academia',
   path: '/academia',
@@ -168,8 +168,8 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
+  '/checkout': typeof CheckoutRoute
   '/academia': typeof AppAcademiaRouteWithChildren
-  '/checkout': typeof AppCheckoutRoute
   '/comunidade': typeof AppComunidadeRoute
   '/eventos': typeof AppEventosRoute
   '/ferramentas': typeof AppFerramentasRoute
@@ -192,7 +192,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
-  '/checkout': typeof AppCheckoutRoute
+  '/checkout': typeof CheckoutRoute
   '/comunidade': typeof AppComunidadeRoute
   '/eventos': typeof AppEventosRoute
   '/ferramentas': typeof AppFerramentasRoute
@@ -218,8 +218,8 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
+  '/checkout': typeof CheckoutRoute
   '/_app/academia': typeof AppAcademiaRouteWithChildren
-  '/_app/checkout': typeof AppCheckoutRoute
   '/_app/comunidade': typeof AppComunidadeRoute
   '/_app/eventos': typeof AppEventosRoute
   '/_app/ferramentas': typeof AppFerramentasRoute
@@ -247,8 +247,8 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
-    | '/academia'
     | '/checkout'
+    | '/academia'
     | '/comunidade'
     | '/eventos'
     | '/ferramentas'
@@ -296,8 +296,8 @@ export interface FileRouteTypes {
     | '/_app'
     | '/admin'
     | '/auth'
+    | '/checkout'
     | '/_app/academia'
-    | '/_app/checkout'
     | '/_app/comunidade'
     | '/_app/eventos'
     | '/_app/ferramentas'
@@ -324,12 +324,20 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CheckoutRoute: typeof CheckoutRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -449,13 +457,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppComunidadeRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/checkout': {
-      id: '/_app/checkout'
-      path: '/checkout'
-      fullPath: '/checkout'
-      preLoaderRoute: typeof AppCheckoutRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/academia': {
       id: '/_app/academia'
       path: '/academia'
@@ -537,7 +538,6 @@ const AppAcademiaRouteWithChildren = AppAcademiaRoute._addFileChildren(
 
 interface AppRouteChildren {
   AppAcademiaRoute: typeof AppAcademiaRouteWithChildren
-  AppCheckoutRoute: typeof AppCheckoutRoute
   AppComunidadeRoute: typeof AppComunidadeRoute
   AppEventosRoute: typeof AppEventosRoute
   AppFerramentasRoute: typeof AppFerramentasRoute
@@ -550,7 +550,6 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAcademiaRoute: AppAcademiaRouteWithChildren,
-  AppCheckoutRoute: AppCheckoutRoute,
   AppComunidadeRoute: AppComunidadeRoute,
   AppEventosRoute: AppEventosRoute,
   AppFerramentasRoute: AppFerramentasRoute,
@@ -587,6 +586,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
+  CheckoutRoute: CheckoutRoute,
   ApiChatRoute: ApiChatRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
