@@ -8,7 +8,7 @@ import {
   Radio,
   Users,
   CalendarDays,
-  Bell,
+  
   LogOut,
   LogIn,
   ShoppingBag,
