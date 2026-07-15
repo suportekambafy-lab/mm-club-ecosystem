@@ -10,8 +10,9 @@ import {
   Send,
   Loader2,
   X,
-  MoreHorizontal,
   Trash2,
+  Newspaper,
+  MessagesSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
