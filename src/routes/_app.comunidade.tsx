@@ -1473,6 +1473,7 @@ function ChatRoom({ user }: { user: User }) {
   const [text, setText] = useState("");
   const [expanded, setExpanded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const adminIds = useAdminIds();
 
   // Lock body scroll when expanded
   useEffect(() => {
