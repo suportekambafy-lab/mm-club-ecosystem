@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { courses } from "@/data/courses";
 import { cn } from "@/lib/utils";
+import { VerifiedBadge } from "@/components/mm/verified-badge";
+import { useAdminIds } from "@/hooks/use-admin-ids";
 
 export const Route = createFileRoute("/_app/perfil")({
   head: () => ({
