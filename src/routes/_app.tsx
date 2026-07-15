@@ -523,6 +523,7 @@ function AppLayout() {
       <MobileTabBar
         pathname={pathname}
         initials={initials}
+        avatarSrc={avatarSrc}
         onOpenMore={() => setMobileOpen(true)}
       />
     </div>
