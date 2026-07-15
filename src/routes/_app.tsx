@@ -92,6 +92,7 @@ function AppLayout() {
   const { authUser: initialAuthUser } = Route.useRouteContext() as { authUser: User };
   const { theme, toggle: toggleTheme, mounted: themeMounted } = useTheme();
   const [authUser, setAuthUser] = useState<User | null>(initialAuthUser);
+  const [avatarSrc, setAvatarSrc] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
