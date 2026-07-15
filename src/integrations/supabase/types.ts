@@ -44,6 +44,27 @@ export type Database = {
         }
         Relationships: []
       }
+      community_chat_messages: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       community_comments: {
         Row: {
           author_id: string
