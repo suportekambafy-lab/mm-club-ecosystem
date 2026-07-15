@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { Check, Crown, Sparkles, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -231,6 +231,24 @@ function PlansPage() {
         <p className="text-center text-xs text-muted-foreground">
           Pagamento seguro processado pela Paddle. Podes cancelar a qualquer momento.
         </p>
+
+        <footer className="mt-8 border-t border-border pt-6 text-center text-xs text-muted-foreground">
+          <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+            <Link to="/termos" className="underline hover:text-foreground">
+              Termos e Condições
+            </Link>
+            <Link to="/privacidade" className="underline hover:text-foreground">
+              Política de Privacidade
+            </Link>
+            <Link to="/reembolsos" className="underline hover:text-foreground">
+              Política de Reembolsos
+            </Link>
+            <a href="mailto:geral@mmclub.pt" className="underline hover:text-foreground">
+              Contacto
+            </a>
+          </nav>
+          <p className="mt-4">© {new Date().getFullYear()} MM Club</p>
+        </footer>
       </div>
     </>
   );
