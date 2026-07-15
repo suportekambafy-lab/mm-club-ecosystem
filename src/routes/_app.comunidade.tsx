@@ -798,3 +798,172 @@ function CommentsSection({
     </div>
   );
 }
+
+/* ---------------- Chat room ---------------- */
+type ChatMessage = {
+  id: string;
+  author_id: string;
+  content: string;
+  created_at: string;
+  author: Profile | null;
+};
+
+function ChatRoom({ user }: { user: User }) {
+  const qc = useQueryClient();
+  const [text, setText] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const q = useQuery({
+    queryKey: ["community", "chat"],
+    queryFn: async (): Promise<ChatMessage[]> => {
+      const { data, error } = await supabase
+        .from("community_chat_messages")
+        .select(
+          "id, author_id, content, created_at, author:profiles!community_chat_messages_author_id_fkey (id, display_name, avatar_url, bio)",
+        )
+        .order("created_at", { ascending: true })
+        .limit(200);
+      if (error) throw error;
+      return (data ?? []).map((m: any) => ({
+        ...m,
+        author: Array.isArray(m.author) ? m.author[0] : m.author,
+      }));
+    },
+  });
+
+  // Realtime — nova mensagem entra imediatamente
+  useEffect(() => {
+    const channel = supabase
+      .channel("community-chat")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "community_chat_messages" },
+        () => qc.invalidateQueries({ queryKey: ["community", "chat"] }),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc]);
+
+  // Auto-scroll para o fundo quando chegam mensagens
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [q.data?.length]);
+
+  const send = useMutation({
+    mutationFn: async () => {
+      const trimmed = text.trim();
+      if (!trimmed) return;
+      if (trimmed.length > 1000) throw new Error("Mensagem demasiado longa (máx. 1000).");
+      const { error } = await supabase.from("community_chat_messages").insert({
+        author_id: user.id,
+        content: trimmed,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => setText(""),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao enviar"),
+  });
+
+  const removeMsg = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("community_chat_messages").delete().eq("id", id);
+      if (error) throw error;
+    },
+  });
+
+  return (
+    <div className="flex h-[calc(100vh-20rem)] min-h-[420px] flex-col rounded-2xl border border-border bg-surface-1">
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+          </span>
+          <p className="text-sm font-medium text-foreground">Chat ao vivo</p>
+        </div>
+        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          {q.data?.length ?? 0} mensagens
+        </p>
+      </div>
+
+      <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
+        {q.isLoading && (
+          <div className="flex justify-center py-8 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" />
+          </div>
+        )}
+        {q.data?.length === 0 && (
+          <div className="flex h-full items-center justify-center">
+            <p className="text-center text-xs text-muted-foreground">
+              Seja o primeiro a dizer olá 👋
+            </p>
+          </div>
+        )}
+        {q.data?.map((m) => {
+          const mine = m.author_id === user.id;
+          const name = m.author?.display_name ?? "Membro";
+          return (
+            <div key={m.id} className={cn("flex gap-2.5", mine && "flex-row-reverse")}>
+              <Avatar name={name} url={m.author?.avatar_url ?? null} size={32} />
+              <div className={cn("flex max-w-[75%] flex-col", mine && "items-end")}>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-[11px] font-medium text-foreground">{mine ? "Você" : name}</p>
+                  <p className="text-[10px] text-muted-foreground">{timeAgo(m.created_at)}</p>
+                </div>
+                <div
+                  className={cn(
+                    "group mt-1 flex items-center gap-1 rounded-2xl px-3.5 py-2 text-sm",
+                    mine
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-surface-2 text-foreground",
+                  )}
+                >
+                  <span className="whitespace-pre-wrap">{m.content}</span>
+                  {mine && (
+                    <button
+                      onClick={() => removeMsg.mutate(m.id)}
+                      className="opacity-0 transition group-hover:opacity-100"
+                      aria-label="Apagar mensagem"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (text.trim()) send.mutate();
+        }}
+        className="flex items-center gap-2 border-t border-border p-3"
+      >
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          maxLength={1000}
+          placeholder="Escreva uma mensagem…"
+          className="flex-1 rounded-full border border-border bg-background px-4 py-2 text-sm text-foreground outline-none focus:border-primary/50"
+        />
+        <button
+          type="submit"
+          disabled={!text.trim() || send.isPending}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:bg-gold-soft disabled:opacity-40"
+          aria-label="Enviar"
+        >
+          {send.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Send className="h-4 w-4" />
+          )}
+        </button>
+      </form>
+    </div>
+  );
+}
