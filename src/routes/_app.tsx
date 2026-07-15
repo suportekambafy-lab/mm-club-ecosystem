@@ -8,7 +8,7 @@ import {
   Radio,
   Users,
   CalendarDays,
-  Bell,
+  
   LogOut,
   LogIn,
   ShoppingBag,
@@ -27,6 +27,7 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { MMLogo } from "@/components/mm/logo";
 import { GlobalSearch } from "@/components/mm/global-search";
+import { NotificationsBell } from "@/components/mm/notifications";
 
 import { cn } from "@/lib/utils";
 // Boot-time: apply admin overrides to in-memory data
@@ -495,14 +496,7 @@ function AppLayout() {
               >
                 <ShoppingBag className="h-4 w-4" />
               </Link>
-              <Link
-                to="/comunidade"
-                aria-label="Notificações"
-                className="relative flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 text-muted-foreground transition hover:text-foreground sm:h-10 sm:w-10"
-              >
-                <Bell className="h-4 w-4" />
-                <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary sm:right-2.5 sm:top-2.5" />
-              </Link>
+              <NotificationsBell />
               <Link
                 to="/perfil"
                 aria-label="Perfil"
