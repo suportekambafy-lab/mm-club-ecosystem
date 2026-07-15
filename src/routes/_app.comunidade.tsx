@@ -135,11 +135,12 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
       let q = supabase
         .from("community_posts")
         .select(
-          `id, author_id, category_id, content, image_url, created_at,
+          `id, author_id, category_id, content, image_url, created_at, edited_at,
            author:profiles!community_posts_author_id_fkey (id, display_name, avatar_url, bio),
            category:community_categories (id, slug, name, color, sort_order),
            likes:community_likes (user_id),
-           comments:community_comments (id)`,
+           comments:community_comments (id),
+           reactions:community_reactions (emoji, user_id)`,
         )
         .order("created_at", { ascending: false })
         .limit(50);
@@ -153,11 +154,13 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
         content: p.content,
         image_url: p.image_url,
         created_at: p.created_at,
+        edited_at: p.edited_at ?? null,
         author: Array.isArray(p.author) ? p.author[0] : p.author,
         category: Array.isArray(p.category) ? p.category[0] : p.category,
         like_count: p.likes?.length ?? 0,
         liked_by_me: userId ? p.likes?.some((l: any) => l.user_id === userId) : false,
         comment_count: p.comments?.length ?? 0,
+        reactions: (p.reactions ?? []) as Reaction[],
       }));
     },
   });
@@ -171,6 +174,11 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "community_likes" }, () => {
         qc.invalidateQueries({ queryKey: ["community", "posts"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "community_reactions" }, (payload) => {
+        qc.invalidateQueries({ queryKey: ["community", "posts"] });
+        const postId = (payload.new as any)?.post_id ?? (payload.old as any)?.post_id;
+        if (postId) qc.invalidateQueries({ queryKey: ["community", "comments", postId] });
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "community_comments" }, (payload) => {
         qc.invalidateQueries({ queryKey: ["community", "posts"] });
