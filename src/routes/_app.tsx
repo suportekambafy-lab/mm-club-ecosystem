@@ -92,6 +92,7 @@ function AppLayout() {
   const { authUser: initialAuthUser } = Route.useRouteContext() as { authUser: User };
   const { theme, toggle: toggleTheme, mounted: themeMounted } = useTheme();
   const [authUser, setAuthUser] = useState<User | null>(initialAuthUser);
+  const [avatarSrc, setAvatarSrc] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -120,6 +121,39 @@ function AppLayout() {
     });
     return () => sub.subscription.unsubscribe();
   }, [router]);
+
+  // Load user's avatar from private bucket
+  useEffect(() => {
+    let cancelled = false;
+    if (!authUser) {
+      setAvatarSrc(null);
+      return;
+    }
+    (async () => {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", authUser.id)
+        .maybeSingle();
+      const path = prof?.avatar_url;
+      if (!path) {
+        if (!cancelled) setAvatarSrc(null);
+        return;
+      }
+      if (/^https?:\/\//i.test(path)) {
+        if (!cancelled) setAvatarSrc(path);
+        return;
+      }
+      const { data, error } = await supabase.storage
+        .from("avatars")
+        .createSignedUrl(path, 60 * 60);
+      if (cancelled) return;
+      setAvatarSrc(error ? null : data.signedUrl);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authUser]);
 
   // Gate: require account to access any /_app route
   useEffect(() => {
@@ -289,9 +323,13 @@ function AppLayout() {
               to="/perfil"
               aria-label="Perfil"
               title={displayName}
-              className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft"
+              className="mx-auto flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft"
             >
-              {initials}
+              {avatarSrc ? (
+                <img src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
+              ) : (
+                initials
+              )}
             </Link>
           ) : (
             <div className="flex items-center gap-2 rounded-lg px-2 py-2">
@@ -300,8 +338,12 @@ function AppLayout() {
                 aria-label="Perfil"
                 className="flex min-w-0 flex-1 items-center gap-3 rounded-lg transition hover:bg-sidebar-accent -mx-1 px-1 py-1"
               >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                  {initials}
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+                  {avatarSrc ? (
+                    <img src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
+                  ) : (
+                    initials
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
@@ -444,9 +486,13 @@ function AppLayout() {
               <Link
                 to="/perfil"
                 aria-label="Perfil"
-                className="ml-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-background transition hover:bg-gold-soft sm:ml-1 sm:h-10 sm:w-10"
+                className="ml-0.5 flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-background transition hover:bg-gold-soft sm:ml-1 sm:h-10 sm:w-10"
               >
-                {initials}
+                {avatarSrc ? (
+                  <img src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
+                ) : (
+                  initials
+                )}
               </Link>
             </div>
           </div>
@@ -477,6 +523,7 @@ function AppLayout() {
       <MobileTabBar
         pathname={pathname}
         initials={initials}
+        avatarSrc={avatarSrc}
         onOpenMore={() => setMobileOpen(true)}
       />
     </div>
@@ -500,10 +547,12 @@ const mobileTabs: TabItem[] = [
 function MobileTabBar({
   pathname,
   initials,
+  avatarSrc,
   onOpenMore,
 }: {
   pathname: string;
   initials: string;
+  avatarSrc: string | null;
   onOpenMore: () => void;
 }) {
   // Hide on lesson pages for a distraction-free view
@@ -574,13 +623,17 @@ function MobileTabBar({
             />
             <span
               className={cn(
-                "flex h-[22px] w-[22px] items-center justify-center rounded-full text-[9px] font-semibold transition-all duration-200",
+                "flex h-[22px] w-[22px] items-center justify-center overflow-hidden rounded-full text-[9px] font-semibold transition-all duration-200",
                 profileActive
                   ? "bg-primary text-primary-foreground scale-110"
                   : "bg-surface-2 text-muted-foreground group-active:scale-95",
               )}
             >
-              {initials || <UserRound className="h-3.5 w-3.5" />}
+              {avatarSrc ? (
+                <img src={avatarSrc} alt="" className="h-full w-full object-cover" />
+              ) : (
+                initials || <UserRound className="h-3.5 w-3.5" />
+              )}
             </span>
             <span
               className={cn(
