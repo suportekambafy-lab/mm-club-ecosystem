@@ -129,6 +129,18 @@ function AuthPage() {
               : "Já tens conta? Entrar"}
           </button>
         </div>
+
+        <footer className="mt-8 text-center text-xs text-muted-foreground">
+          <nav className="flex flex-wrap justify-center gap-x-4 gap-y-2">
+            <Link to="/" className="hover:text-foreground">Início</Link>
+            <Link to="/checkout" className="hover:text-foreground">Planos</Link>
+            <Link to="/termos" className="hover:text-foreground">Termos</Link>
+            <Link to="/privacidade" className="hover:text-foreground">Privacidade</Link>
+            <Link to="/reembolsos" className="hover:text-foreground">Reembolsos</Link>
+            <a href="mailto:geral@mmclub.pt" className="hover:text-foreground">Contacto</a>
+          </nav>
+          <p className="mt-3">© {new Date().getFullYear()} MMClub</p>
+        </footer>
       </div>
     </div>
   );
