@@ -1256,14 +1256,16 @@ function CommentsSection({
       const { data, error } = await supabase
         .from("community_comments")
         .select(
-          "id, post_id, author_id, content, created_at, author:profiles!community_comments_author_id_fkey (id, display_name, avatar_url, bio)",
+          "id, post_id, author_id, content, created_at, edited_at, author:profiles!community_comments_author_id_fkey (id, display_name, avatar_url, bio), reactions:community_reactions (emoji, user_id)",
         )
         .eq("post_id", postId)
         .order("created_at", { ascending: true });
       if (error) throw error;
       const mapped = (data ?? []).map((c: any) => ({
         ...c,
+        edited_at: c.edited_at ?? null,
         author: Array.isArray(c.author) ? c.author[0] : c.author,
+        reactions: (c.reactions ?? []) as Reaction[],
       })) as Comment[];
       return mapped;
     },
@@ -1306,33 +1308,13 @@ function CommentsSection({
         </div>
       )}
       {q.data?.map((c) => (
-        <div key={c.id} className="flex gap-2.5">
-          <Avatar
-            name={c.author?.display_name ?? "?"}
-            url={c.author?.avatar_url ?? null}
-            size={32}
-          />
-          <div className="flex-1">
-            <div className="rounded-2xl bg-surface-2 px-3.5 py-2">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-medium text-foreground">
-                  {c.author?.display_name ?? "Membro"}
-                </p>
-                {currentUserId === c.author_id && (
-                  <button
-                    onClick={() => removeComment.mutate(c.id)}
-                    className="text-muted-foreground hover:text-destructive"
-                    aria-label="Apagar comentário"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
-              </div>
-              <p className="mt-0.5 whitespace-pre-wrap text-sm text-foreground">{c.content}</p>
-            </div>
-            <p className="mt-1 pl-3 text-[10px] text-muted-foreground">{timeAgo(c.created_at)}</p>
-          </div>
-        </div>
+        <CommentItem
+          key={c.id}
+          comment={c}
+          postId={postId}
+          currentUserId={currentUserId}
+          onDelete={() => removeComment.mutate(c.id)}
+        />
       ))}
 
       {currentUserId ? (
@@ -1373,6 +1355,124 @@ function CommentsSection({
     </div>
   );
 }
+
+function CommentItem({
+  comment,
+  postId,
+  currentUserId,
+  onDelete,
+}: {
+  comment: Comment;
+  postId: string;
+  currentUserId: string | null;
+  onDelete: () => void;
+}) {
+  const qc = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [editContent, setEditContent] = useState(comment.content);
+  const isOwner = currentUserId === comment.author_id;
+
+  useEffect(() => {
+    setEditContent(comment.content);
+  }, [comment.content]);
+
+  const update = useMutation({
+    mutationFn: async () => {
+      const trimmed = editContent.trim();
+      if (!trimmed) throw new Error("Vazio");
+      const { error } = await (supabase.from("community_comments") as any)
+        .update({ content: trimmed, edited_at: new Date().toISOString() })
+        .eq("id", comment.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setEditing(false);
+      qc.invalidateQueries({ queryKey: ["community", "comments", postId] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
+  });
+
+  return (
+    <div className="flex gap-2.5">
+      <Avatar
+        name={comment.author?.display_name ?? "?"}
+        url={comment.author?.avatar_url ?? null}
+        size={32}
+      />
+      <div className="flex-1 min-w-0">
+        <div className="rounded-2xl bg-surface-2 px-3.5 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-medium text-foreground">
+              {comment.author?.display_name ?? "Membro"}
+            </p>
+            {isOwner && !editing && (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setEditing(true)}
+                  className="text-muted-foreground hover:text-foreground"
+                  aria-label="Editar comentário"
+                >
+                  <Pencil className="h-3 w-3" />
+                </button>
+                <button
+                  onClick={onDelete}
+                  className="text-muted-foreground hover:text-destructive"
+                  aria-label="Apagar comentário"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+          </div>
+          {editing ? (
+            <div className="mt-1 space-y-2">
+              <textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                rows={2}
+                className="w-full resize-y rounded-lg border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary/50"
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setEditing(false);
+                    setEditContent(comment.content);
+                  }}
+                  className="text-[11px] text-muted-foreground hover:text-foreground"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => update.mutate()}
+                  disabled={update.isPending || !editContent.trim()}
+                  className="flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[11px] font-medium text-primary-foreground hover:bg-gold-soft disabled:opacity-40"
+                >
+                  {update.isPending ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Check className="h-2.5 w-2.5" />}
+                  Guardar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-0.5 whitespace-pre-wrap text-sm text-foreground">{comment.content}</p>
+          )}
+        </div>
+        <div className="mt-1 flex items-center gap-2 pl-3">
+          <p className="text-[10px] text-muted-foreground">
+            {timeAgo(comment.created_at)}
+            {comment.edited_at && <span className="italic"> · editado</span>}
+          </p>
+          <ReactionBar
+            target="comment"
+            targetId={comment.id}
+            reactions={comment.reactions}
+            currentUserId={currentUserId}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 /* ---------------- Chat room ---------------- */
 type ChatMessage = {
