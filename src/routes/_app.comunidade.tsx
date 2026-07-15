@@ -15,6 +15,10 @@ import {
   MessagesSquare,
   Maximize2,
   Minimize2,
+  SmilePlus,
+  Pencil,
+  Paperclip,
+  Check,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -47,6 +51,7 @@ type Profile = {
   avatar_url: string | null;
   bio: string | null;
 };
+type Reaction = { emoji: string; user_id: string };
 type Post = {
   id: string;
   author_id: string;
@@ -54,11 +59,13 @@ type Post = {
   content: string;
   image_url: string | null;
   created_at: string;
+  edited_at: string | null;
   author: Profile | null;
   category: Category | null;
   like_count: number;
   liked_by_me: boolean;
   comment_count: number;
+  reactions: Reaction[];
 };
 type Comment = {
   id: string;
@@ -66,8 +73,12 @@ type Comment = {
   author_id: string;
   content: string;
   created_at: string;
+  edited_at: string | null;
   author: Profile | null;
+  reactions: Reaction[];
 };
+
+const EMOJIS = ["👍", "❤️", "🔥", "🎉", "🙌", "💡", "😮", "😂"];
 
 /* ---------------- Auth hook ---------------- */
 function useUser() {
@@ -124,11 +135,12 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
       let q = supabase
         .from("community_posts")
         .select(
-          `id, author_id, category_id, content, image_url, created_at,
+          `id, author_id, category_id, content, image_url, created_at, edited_at,
            author:profiles!community_posts_author_id_fkey (id, display_name, avatar_url, bio),
            category:community_categories (id, slug, name, color, sort_order),
            likes:community_likes (user_id),
-           comments:community_comments (id)`,
+           comments:community_comments (id),
+           reactions:community_reactions (emoji, user_id)`,
         )
         .order("created_at", { ascending: false })
         .limit(50);
@@ -142,11 +154,13 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
         content: p.content,
         image_url: p.image_url,
         created_at: p.created_at,
+        edited_at: p.edited_at ?? null,
         author: Array.isArray(p.author) ? p.author[0] : p.author,
         category: Array.isArray(p.category) ? p.category[0] : p.category,
         like_count: p.likes?.length ?? 0,
         liked_by_me: userId ? p.likes?.some((l: any) => l.user_id === userId) : false,
         comment_count: p.comments?.length ?? 0,
+        reactions: (p.reactions ?? []) as Reaction[],
       }));
     },
   });
@@ -160,6 +174,11 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "community_likes" }, () => {
         qc.invalidateQueries({ queryKey: ["community", "posts"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "community_reactions" }, (payload) => {
+        qc.invalidateQueries({ queryKey: ["community", "posts"] });
+        const postId = (payload.new as any)?.post_id ?? (payload.old as any)?.post_id;
+        if (postId) qc.invalidateQueries({ queryKey: ["community", "comments", postId] });
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "community_comments" }, (payload) => {
         qc.invalidateQueries({ queryKey: ["community", "posts"] });
@@ -683,11 +702,12 @@ function Composer({
   const qc = useQueryClient();
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState("");
-  const [showImage, setShowImage] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [categoryId, setCategoryId] = useState<string>(
     defaultCategoryId ?? categories.find((c) => c.slug === "geral")?.id ?? "",
   );
   const taRef = useRef<HTMLTextAreaElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (defaultCategoryId) setCategoryId(defaultCategoryId);
@@ -704,6 +724,33 @@ function Composer({
     user.email?.split("@")[0] ??
     "Membro";
 
+  const handleFile = async (file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Ficheiro demasiado grande (máx. 10 MB).");
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "bin";
+      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("community-media")
+        .upload(path, file, { contentType: file.type || undefined, upsert: false });
+      if (upErr) throw upErr;
+      const { data, error } = await supabase.storage
+        .from("community-media")
+        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (error || !data) throw error ?? new Error("Falha ao gerar URL");
+      setImageUrl(data.signedUrl);
+      toast.success("Ficheiro carregado.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro no upload");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
   const create = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("community_posts").insert({
@@ -717,7 +764,6 @@ function Composer({
     onSuccess: () => {
       setContent("");
       setImageUrl("");
-      setShowImage(false);
       if (taRef.current) taRef.current.style.height = "auto";
       qc.invalidateQueries({ queryKey: ["community", "posts"] });
       toast.success("Publicado.");
@@ -738,38 +784,35 @@ function Composer({
               e.target.style.height = "auto";
               e.target.style.height = e.target.scrollHeight + "px";
             }}
-            placeholder="Partilhe algo com o clube…"
+            placeholder="Partilhe uma vitória, dúvida ou resultado com o clube…"
             rows={2}
             className="w-full resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
-          {showImage && (
-            <div className="mt-2 flex items-center gap-2">
-              <input
-                type="url"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="URL da imagem (https://…)"
-                className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none focus:border-primary/50"
-              />
-              <button
-                onClick={() => {
-                  setImageUrl("");
-                  setShowImage(false);
-                }}
-                className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          )}
-          {imageUrl && showImage && (
-            <div className="mt-2 overflow-hidden rounded-xl border border-border">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+          {imageUrl && (
+            <div className="relative mt-2 overflow-hidden rounded-xl border border-border">
               <img src={imageUrl} alt="Pré-visualização" className="max-h-72 w-full object-cover" />
+              <button
+                onClick={() => setImageUrl("")}
+                className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-background/80 text-foreground backdrop-blur transition hover:bg-background"
+                aria-label="Remover imagem"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
             </div>
           )}
         </div>
       </div>
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) handleFile(f);
+        }}
+      />
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
         <div className="flex items-center gap-2">
@@ -786,21 +829,21 @@ function Composer({
           </select>
           <button
             type="button"
-            onClick={() => setShowImage((s) => !s)}
-            className={cn(
-              "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition",
-              showImage
-                ? "border-primary/40 bg-primary/10 text-foreground"
-                : "border-border text-muted-foreground hover:text-foreground",
-            )}
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground transition hover:text-foreground disabled:opacity-50"
           >
-            <ImagePlus className="h-3.5 w-3.5" />
-            Imagem
+            {uploading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Paperclip className="h-3.5 w-3.5" />
+            )}
+            {uploading ? "A carregar…" : "Anexar"}
           </button>
         </div>
         <button
           onClick={() => create.mutate()}
-          disabled={!content.trim() || create.isPending}
+          disabled={!content.trim() || create.isPending || uploading}
           className="flex items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground transition hover:bg-gold-soft disabled:opacity-40"
         >
           {create.isPending ? (
@@ -810,6 +853,119 @@ function Composer({
           )}
           Publicar
         </button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Reaction bar ---------------- */
+function ReactionBar({
+  target,
+  targetId,
+  reactions,
+  currentUserId,
+}: {
+  target: "post" | "comment";
+  targetId: string;
+  reactions: Reaction[];
+  currentUserId: string | null;
+}) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+  const qc = useQueryClient();
+
+  // Group by emoji
+  const grouped = new Map<string, { count: number; mine: boolean }>();
+  for (const r of reactions) {
+    const g = grouped.get(r.emoji) ?? { count: 0, mine: false };
+    g.count += 1;
+    if (r.user_id === currentUserId) g.mine = true;
+    grouped.set(r.emoji, g);
+  }
+
+  const toggle = async (emoji: string) => {
+    if (!currentUserId) {
+      toast.error("Entre para reagir.");
+      return;
+    }
+    setBusy(emoji);
+    const existing = reactions.find(
+      (r) => r.emoji === emoji && r.user_id === currentUserId,
+    );
+    try {
+      if (existing) {
+        const q: any = supabase
+          .from("community_reactions")
+          .delete()
+          .eq("user_id", currentUserId)
+          .eq("emoji", emoji);
+        const { error } = await (target === "post"
+          ? q.eq("post_id", targetId)
+          : q.eq("comment_id", targetId));
+        if (error) throw error;
+      } else {
+        const row: any = { user_id: currentUserId, emoji };
+        if (target === "post") row.post_id = targetId;
+        else row.comment_id = targetId;
+        const { error } = await (supabase.from("community_reactions") as any).insert(row);
+        if (error) throw error;
+      }
+      qc.invalidateQueries({ queryKey: ["community", "posts"] });
+      qc.invalidateQueries({ queryKey: ["community", "comments"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro");
+    } finally {
+      setBusy(null);
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {[...grouped.entries()].map(([emoji, g]) => (
+        <button
+          key={emoji}
+          onClick={() => toggle(emoji)}
+          disabled={busy === emoji}
+          className={cn(
+            "flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition",
+            g.mine
+              ? "border-primary/40 bg-primary/10 text-foreground"
+              : "border-border bg-surface-2 text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <span>{emoji}</span>
+          <span className="tabular-nums">{g.count}</span>
+        </button>
+      ))}
+      <div className="relative">
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-surface-2 text-muted-foreground transition hover:text-foreground"
+          aria-label="Adicionar reação"
+        >
+          <SmilePlus className="h-3.5 w-3.5" />
+        </button>
+        {open && (
+          <>
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setOpen(false)}
+            />
+            <div className="absolute bottom-full left-0 z-20 mb-1 flex gap-1 rounded-full border border-border bg-surface-1 p-1.5 shadow-lg">
+              {EMOJIS.map((e) => (
+                <button
+                  key={e}
+                  onClick={() => toggle(e)}
+                  disabled={busy === e}
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-base transition hover:scale-125 hover:bg-surface-2"
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -874,13 +1030,16 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
   const [liked, setLiked] = useState(post.liked_by_me);
   const [likeCount, setLikeCount] = useState(post.like_count);
   const [commentCount, setCommentCount] = useState(post.comment_count);
+  const [editing, setEditing] = useState(false);
+  const [editContent, setEditContent] = useState(post.content);
   const isOwner = currentUserId === post.author_id;
 
   useEffect(() => {
     setLiked(post.liked_by_me);
     setLikeCount(post.like_count);
     setCommentCount(post.comment_count);
-  }, [post.liked_by_me, post.like_count, post.comment_count]);
+    setEditContent(post.content);
+  }, [post.liked_by_me, post.like_count, post.comment_count, post.content]);
 
   const toggleLike = async () => {
     if (!currentUserId) {
@@ -918,6 +1077,23 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
+  const update = useMutation({
+    mutationFn: async () => {
+      const trimmed = editContent.trim();
+      if (!trimmed) throw new Error("Conteúdo vazio");
+      const { error } = await (supabase.from("community_posts") as any)
+        .update({ content: trimmed, edited_at: new Date().toISOString() })
+        .eq("id", post.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setEditing(false);
+      qc.invalidateQueries({ queryKey: ["community", "posts"] });
+      toast.success("Post atualizado.");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
+  });
+
   const authorName = post.author?.display_name ?? "Membro";
 
   return (
@@ -929,6 +1105,7 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
             <p className="text-sm font-medium text-foreground">{authorName}</p>
             <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
               <span>{timeAgo(post.created_at)}</span>
+              {post.edited_at && <span className="italic">· editado</span>}
               {post.category && (
                 <>
                   <span>·</span>
@@ -944,26 +1121,76 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
             </div>
           </div>
         </div>
-        {isOwner && (
-          <button
-            onClick={() => {
-              if (confirm("Apagar este post?")) del.mutate();
-            }}
-            className="rounded-full p-2 text-muted-foreground transition hover:bg-surface-2 hover:text-destructive"
-            aria-label="Apagar"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+        {isOwner && !editing && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setEditing(true)}
+              className="rounded-full p-2 text-muted-foreground transition hover:bg-surface-2 hover:text-foreground"
+              aria-label="Editar"
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => {
+                if (confirm("Apagar este post?")) del.mutate();
+              }}
+              className="rounded-full p-2 text-muted-foreground transition hover:bg-surface-2 hover:text-destructive"
+              aria-label="Apagar"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
         )}
       </header>
 
-      <div className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
-        {post.content}
-      </div>
+      {editing ? (
+        <div className="mt-3 space-y-2">
+          <textarea
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            rows={3}
+            className="w-full resize-y rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary/50"
+          />
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => {
+                setEditing(false);
+                setEditContent(post.content);
+              }}
+              className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => update.mutate()}
+              disabled={update.isPending || !editContent.trim()}
+              className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-gold-soft disabled:opacity-40"
+            >
+              {update.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+              Guardar
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+          {post.content}
+        </div>
+      )}
 
-      {post.image_url && (
+      {post.image_url && !editing && (
         <div className="mt-3 overflow-hidden rounded-xl border border-border">
           <img src={post.image_url} alt="" className="max-h-[500px] w-full object-cover" />
+        </div>
+      )}
+
+      {post.reactions.length > 0 && (
+        <div className="mt-3">
+          <ReactionBar
+            target="post"
+            targetId={post.id}
+            reactions={post.reactions}
+            currentUserId={currentUserId}
+          />
         </div>
       )}
 
@@ -987,6 +1214,16 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
           <MessageCircle className="h-4 w-4" />
           {commentCount > 0 && <span>{commentCount}</span>}
         </button>
+        {post.reactions.length === 0 && (
+          <div className="ml-1">
+            <ReactionBar
+              target="post"
+              targetId={post.id}
+              reactions={post.reactions}
+              currentUserId={currentUserId}
+            />
+          </div>
+        )}
       </div>
 
       {showComments && (
@@ -1019,14 +1256,16 @@ function CommentsSection({
       const { data, error } = await supabase
         .from("community_comments")
         .select(
-          "id, post_id, author_id, content, created_at, author:profiles!community_comments_author_id_fkey (id, display_name, avatar_url, bio)",
+          "id, post_id, author_id, content, created_at, edited_at, author:profiles!community_comments_author_id_fkey (id, display_name, avatar_url, bio), reactions:community_reactions (emoji, user_id)",
         )
         .eq("post_id", postId)
         .order("created_at", { ascending: true });
       if (error) throw error;
       const mapped = (data ?? []).map((c: any) => ({
         ...c,
+        edited_at: c.edited_at ?? null,
         author: Array.isArray(c.author) ? c.author[0] : c.author,
+        reactions: (c.reactions ?? []) as Reaction[],
       })) as Comment[];
       return mapped;
     },
@@ -1069,33 +1308,13 @@ function CommentsSection({
         </div>
       )}
       {q.data?.map((c) => (
-        <div key={c.id} className="flex gap-2.5">
-          <Avatar
-            name={c.author?.display_name ?? "?"}
-            url={c.author?.avatar_url ?? null}
-            size={32}
-          />
-          <div className="flex-1">
-            <div className="rounded-2xl bg-surface-2 px-3.5 py-2">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-medium text-foreground">
-                  {c.author?.display_name ?? "Membro"}
-                </p>
-                {currentUserId === c.author_id && (
-                  <button
-                    onClick={() => removeComment.mutate(c.id)}
-                    className="text-muted-foreground hover:text-destructive"
-                    aria-label="Apagar comentário"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
-              </div>
-              <p className="mt-0.5 whitespace-pre-wrap text-sm text-foreground">{c.content}</p>
-            </div>
-            <p className="mt-1 pl-3 text-[10px] text-muted-foreground">{timeAgo(c.created_at)}</p>
-          </div>
-        </div>
+        <CommentItem
+          key={c.id}
+          comment={c}
+          postId={postId}
+          currentUserId={currentUserId}
+          onDelete={() => removeComment.mutate(c.id)}
+        />
       ))}
 
       {currentUserId ? (
@@ -1136,6 +1355,124 @@ function CommentsSection({
     </div>
   );
 }
+
+function CommentItem({
+  comment,
+  postId,
+  currentUserId,
+  onDelete,
+}: {
+  comment: Comment;
+  postId: string;
+  currentUserId: string | null;
+  onDelete: () => void;
+}) {
+  const qc = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [editContent, setEditContent] = useState(comment.content);
+  const isOwner = currentUserId === comment.author_id;
+
+  useEffect(() => {
+    setEditContent(comment.content);
+  }, [comment.content]);
+
+  const update = useMutation({
+    mutationFn: async () => {
+      const trimmed = editContent.trim();
+      if (!trimmed) throw new Error("Vazio");
+      const { error } = await (supabase.from("community_comments") as any)
+        .update({ content: trimmed, edited_at: new Date().toISOString() })
+        .eq("id", comment.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setEditing(false);
+      qc.invalidateQueries({ queryKey: ["community", "comments", postId] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
+  });
+
+  return (
+    <div className="flex gap-2.5">
+      <Avatar
+        name={comment.author?.display_name ?? "?"}
+        url={comment.author?.avatar_url ?? null}
+        size={32}
+      />
+      <div className="flex-1 min-w-0">
+        <div className="rounded-2xl bg-surface-2 px-3.5 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-medium text-foreground">
+              {comment.author?.display_name ?? "Membro"}
+            </p>
+            {isOwner && !editing && (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setEditing(true)}
+                  className="text-muted-foreground hover:text-foreground"
+                  aria-label="Editar comentário"
+                >
+                  <Pencil className="h-3 w-3" />
+                </button>
+                <button
+                  onClick={onDelete}
+                  className="text-muted-foreground hover:text-destructive"
+                  aria-label="Apagar comentário"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+          </div>
+          {editing ? (
+            <div className="mt-1 space-y-2">
+              <textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                rows={2}
+                className="w-full resize-y rounded-lg border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary/50"
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setEditing(false);
+                    setEditContent(comment.content);
+                  }}
+                  className="text-[11px] text-muted-foreground hover:text-foreground"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => update.mutate()}
+                  disabled={update.isPending || !editContent.trim()}
+                  className="flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[11px] font-medium text-primary-foreground hover:bg-gold-soft disabled:opacity-40"
+                >
+                  {update.isPending ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Check className="h-2.5 w-2.5" />}
+                  Guardar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-0.5 whitespace-pre-wrap text-sm text-foreground">{comment.content}</p>
+          )}
+        </div>
+        <div className="mt-1 flex items-center gap-2 pl-3">
+          <p className="text-[10px] text-muted-foreground">
+            {timeAgo(comment.created_at)}
+            {comment.edited_at && <span className="italic"> · editado</span>}
+          </p>
+          <ReactionBar
+            target="comment"
+            targetId={comment.id}
+            reactions={comment.reactions}
+            currentUserId={currentUserId}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 /* ---------------- Chat room ---------------- */
 type ChatMessage = {
