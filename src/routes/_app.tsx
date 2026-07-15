@@ -122,6 +122,39 @@ function AppLayout() {
     return () => sub.subscription.unsubscribe();
   }, [router]);
 
+  // Load user's avatar from private bucket
+  useEffect(() => {
+    let cancelled = false;
+    if (!authUser) {
+      setAvatarSrc(null);
+      return;
+    }
+    (async () => {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", authUser.id)
+        .maybeSingle();
+      const path = prof?.avatar_url;
+      if (!path) {
+        if (!cancelled) setAvatarSrc(null);
+        return;
+      }
+      if (/^https?:\/\//i.test(path)) {
+        if (!cancelled) setAvatarSrc(path);
+        return;
+      }
+      const { data, error } = await supabase.storage
+        .from("avatars")
+        .createSignedUrl(path, 60 * 60);
+      if (cancelled) return;
+      setAvatarSrc(error ? null : data.signedUrl);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authUser]);
+
   // Gate: require account to access any /_app route
   useEffect(() => {
     if (authUser === null) {
