@@ -1386,8 +1386,9 @@ function CommentItem({
       <div className="flex-1 min-w-0">
         <div className="rounded-2xl bg-surface-2 px-3.5 py-2">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-medium text-foreground">
-              {comment.author?.display_name ?? "Membro"}
+            <p className="text-xs font-medium text-foreground flex items-center gap-1">
+              <span>{comment.author?.display_name ?? "Membro"}</span>
+              {authorIsAdmin && <VerifiedBadge size={12} />}
             </p>
             {isOwner && !editing && (
               <div className="flex items-center gap-1">
