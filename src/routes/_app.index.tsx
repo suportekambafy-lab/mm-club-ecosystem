@@ -158,7 +158,7 @@ function PresentationVideoHero() {
             className="absolute inset-0 h-full w-full scale-[1.35] border-0"
             loading="lazy"
           />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-background/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-background/10" />
         </div>
       </div>
     </section>
