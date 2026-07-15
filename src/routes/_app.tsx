@@ -27,6 +27,7 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { MMLogo } from "@/components/mm/logo";
 import { GlobalSearch } from "@/components/mm/global-search";
+import { NotificationsBell } from "@/components/mm/notifications";
 
 import { cn } from "@/lib/utils";
 // Boot-time: apply admin overrides to in-memory data
