@@ -267,7 +267,35 @@ function ProfilePage() {
 
       {/* Identity card */}
       <section className="overflow-hidden rounded-2xl bg-surface-1 ring-1 ring-border">
-        <div className="h-28 bg-gradient-to-br from-primary/40 via-primary/10 to-transparent" />
+        <div
+          className="group relative h-36 sm:h-44 bg-gradient-to-br from-primary/40 via-primary/10 to-transparent"
+          style={
+            coverUrl
+              ? { backgroundImage: `url(${coverUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+              : undefined
+          }
+        >
+          <button
+            type="button"
+            onClick={() => coverFileRef.current?.click()}
+            disabled={uploadingCover}
+            className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-background/70 px-3 py-1.5 text-xs font-medium text-foreground backdrop-blur ring-1 ring-border transition hover:bg-background/90 disabled:opacity-60"
+          >
+            {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+            {coverUrl ? "Alterar capa" : "Adicionar capa"}
+          </button>
+          <input
+            ref={coverFileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleCover(f);
+              e.target.value = "";
+            }}
+          />
+        </div>
         <div className="-mt-14 flex flex-col gap-6 px-5 pb-6 sm:px-8 md:flex-row md:items-end md:justify-between">
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-end">
             <div className="relative">
