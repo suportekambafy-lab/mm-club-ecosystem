@@ -100,6 +100,25 @@ function ProfilePage() {
     };
   }, [profile?.avatar_url]);
 
+  // Resolve signed URL for cover
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!profile?.cover_url) {
+        setCoverUrl(null);
+        return;
+      }
+      const { data, error: cErr } = await supabase.storage
+        .from("avatars")
+        .createSignedUrl(profile.cover_url, 60 * 60);
+      if (cancelled) return;
+      setCoverUrl(cErr ? null : data.signedUrl);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [profile?.cover_url]);
+
   const handleSave = async () => {
     if (!authUser || !profile) return;
     setSaving(true);
