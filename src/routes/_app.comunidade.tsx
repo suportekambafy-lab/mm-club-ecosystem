@@ -1353,6 +1353,8 @@ function CommentItem({
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
   const isOwner = currentUserId === comment.author_id;
+  const adminIds = useAdminIds();
+  const authorIsAdmin = adminIds.has(comment.author_id);
 
   useEffect(() => {
     setEditContent(comment.content);
