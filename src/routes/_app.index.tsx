@@ -18,7 +18,12 @@ import { Rail } from "@/components/mm/rail";
 import { ExpertAvatar } from "@/components/mm/expert-avatar";
 import { currentUser as fallbackUser } from "@/data/user";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import { continueWatching, recommendedForUser } from "@/lib/personalization";
+import {
+  useUserProgress,
+  applyProgress,
+  continueFromProgress,
+  recommendedFromProgress,
+} from "@/hooks/use-user-progress";
 import { nextLive } from "@/data/lives";
 import { news } from "@/data/news";
 import { topTools } from "@/data/tools";
