@@ -243,8 +243,9 @@ function ProfilePage() {
               />
             </div>
             <div className="min-w-0 pb-1">
-              <h2 className="font-display text-2xl leading-tight text-foreground md:text-3xl">
-                {name}
+              <h2 className="font-display text-2xl leading-tight text-foreground md:text-3xl flex items-center gap-2">
+                <span>{name}</span>
+                {isAdmin && <VerifiedBadge size={20} title="Admin verificado" />}
               </h2>
               <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
                 <Mail className="h-3.5 w-3.5" />
