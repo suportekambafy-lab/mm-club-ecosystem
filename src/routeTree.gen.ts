@@ -32,6 +32,7 @@ import { Route as AppAcademiaIndexRouteImport } from './routes/_app.academia.ind
 import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
 import { Route as AppAcademiaCourseIdRouteImport } from './routes/_app.academia.$courseId'
 import { Route as AppAcademiaCourseIdIndexRouteImport } from './routes/_app.academia.$courseId.index'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as AppAcademiaCourseIdLessonIdRouteImport } from './routes/_app.academia.$courseId.$lessonId'
 
 const AuthRoute = AuthRouteImport.update({
@@ -150,6 +151,12 @@ const AppAcademiaCourseIdIndexRoute =
     path: '/',
     getParentRoute: () => AppAcademiaCourseIdRoute,
   } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AppAcademiaCourseIdLessonIdRoute =
   AppAcademiaCourseIdLessonIdRouteImport.update({
     id: '/$lessonId',
@@ -180,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/academia/': typeof AppAcademiaIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -202,6 +210,7 @@ export interface FileRoutesByTo {
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/academia': typeof AppAcademiaIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdIndexRoute
 }
 export interface FileRoutesById {
@@ -229,6 +238,7 @@ export interface FileRoutesById {
   '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/_app/academia/': typeof AppAcademiaIndexRoute
   '/_app/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/_app/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -256,6 +266,7 @@ export interface FileRouteTypes {
     | '/especialistas/$expertId'
     | '/academia/'
     | '/academia/$courseId/$lessonId'
+    | '/api/public/payments/webhook'
     | '/academia/$courseId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -278,6 +289,7 @@ export interface FileRouteTypes {
     | '/especialistas/$expertId'
     | '/academia'
     | '/academia/$courseId/$lessonId'
+    | '/api/public/payments/webhook'
     | '/academia/$courseId'
   id:
     | '__root__'
@@ -304,6 +316,7 @@ export interface FileRouteTypes {
     | '/_app/especialistas/$expertId'
     | '/_app/academia/'
     | '/_app/academia/$courseId/$lessonId'
+    | '/api/public/payments/webhook'
     | '/_app/academia/$courseId/'
   fileRoutesById: FileRoutesById
 }
@@ -312,6 +325,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -477,6 +491,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAcademiaCourseIdIndexRouteImport
       parentRoute: typeof AppAcademiaCourseIdRoute
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/academia/$courseId/$lessonId': {
       id: '/_app/academia/$courseId/$lessonId'
       path: '/$lessonId'
@@ -567,6 +588,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
