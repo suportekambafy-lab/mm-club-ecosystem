@@ -702,11 +702,12 @@ function Composer({
   const qc = useQueryClient();
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState("");
-  const [showImage, setShowImage] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [categoryId, setCategoryId] = useState<string>(
     defaultCategoryId ?? categories.find((c) => c.slug === "geral")?.id ?? "",
   );
   const taRef = useRef<HTMLTextAreaElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (defaultCategoryId) setCategoryId(defaultCategoryId);
@@ -723,6 +724,33 @@ function Composer({
     user.email?.split("@")[0] ??
     "Membro";
 
+  const handleFile = async (file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Ficheiro demasiado grande (máx. 10 MB).");
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "bin";
+      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("community-media")
+        .upload(path, file, { contentType: file.type || undefined, upsert: false });
+      if (upErr) throw upErr;
+      const { data, error } = await supabase.storage
+        .from("community-media")
+        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (error || !data) throw error ?? new Error("Falha ao gerar URL");
+      setImageUrl(data.signedUrl);
+      toast.success("Ficheiro carregado.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro no upload");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
   const create = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("community_posts").insert({
@@ -736,7 +764,6 @@ function Composer({
     onSuccess: () => {
       setContent("");
       setImageUrl("");
-      setShowImage(false);
       if (taRef.current) taRef.current.style.height = "auto";
       qc.invalidateQueries({ queryKey: ["community", "posts"] });
       toast.success("Publicado.");
@@ -757,38 +784,35 @@ function Composer({
               e.target.style.height = "auto";
               e.target.style.height = e.target.scrollHeight + "px";
             }}
-            placeholder="Partilhe algo com o clube…"
+            placeholder="Partilhe uma vitória, dúvida ou resultado com o clube…"
             rows={2}
             className="w-full resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
-          {showImage && (
-            <div className="mt-2 flex items-center gap-2">
-              <input
-                type="url"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="URL da imagem (https://…)"
-                className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none focus:border-primary/50"
-              />
-              <button
-                onClick={() => {
-                  setImageUrl("");
-                  setShowImage(false);
-                }}
-                className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          )}
-          {imageUrl && showImage && (
-            <div className="mt-2 overflow-hidden rounded-xl border border-border">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+          {imageUrl && (
+            <div className="relative mt-2 overflow-hidden rounded-xl border border-border">
               <img src={imageUrl} alt="Pré-visualização" className="max-h-72 w-full object-cover" />
+              <button
+                onClick={() => setImageUrl("")}
+                className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-background/80 text-foreground backdrop-blur transition hover:bg-background"
+                aria-label="Remover imagem"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
             </div>
           )}
         </div>
       </div>
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) handleFile(f);
+        }}
+      />
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
         <div className="flex items-center gap-2">
@@ -805,21 +829,21 @@ function Composer({
           </select>
           <button
             type="button"
-            onClick={() => setShowImage((s) => !s)}
-            className={cn(
-              "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition",
-              showImage
-                ? "border-primary/40 bg-primary/10 text-foreground"
-                : "border-border text-muted-foreground hover:text-foreground",
-            )}
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground transition hover:text-foreground disabled:opacity-50"
           >
-            <ImagePlus className="h-3.5 w-3.5" />
-            Imagem
+            {uploading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Paperclip className="h-3.5 w-3.5" />
+            )}
+            {uploading ? "A carregar…" : "Anexar"}
           </button>
         </div>
         <button
           onClick={() => create.mutate()}
-          disabled={!content.trim() || create.isPending}
+          disabled={!content.trim() || create.isPending || uploading}
           className="flex items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground transition hover:bg-gold-soft disabled:opacity-40"
         >
           {create.isPending ? (
@@ -829,6 +853,119 @@ function Composer({
           )}
           Publicar
         </button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Reaction bar ---------------- */
+function ReactionBar({
+  target,
+  targetId,
+  reactions,
+  currentUserId,
+}: {
+  target: "post" | "comment";
+  targetId: string;
+  reactions: Reaction[];
+  currentUserId: string | null;
+}) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+  const qc = useQueryClient();
+
+  // Group by emoji
+  const grouped = new Map<string, { count: number; mine: boolean }>();
+  for (const r of reactions) {
+    const g = grouped.get(r.emoji) ?? { count: 0, mine: false };
+    g.count += 1;
+    if (r.user_id === currentUserId) g.mine = true;
+    grouped.set(r.emoji, g);
+  }
+
+  const toggle = async (emoji: string) => {
+    if (!currentUserId) {
+      toast.error("Entre para reagir.");
+      return;
+    }
+    setBusy(emoji);
+    const existing = reactions.find(
+      (r) => r.emoji === emoji && r.user_id === currentUserId,
+    );
+    try {
+      if (existing) {
+        const q: any = supabase
+          .from("community_reactions")
+          .delete()
+          .eq("user_id", currentUserId)
+          .eq("emoji", emoji);
+        const { error } = await (target === "post"
+          ? q.eq("post_id", targetId)
+          : q.eq("comment_id", targetId));
+        if (error) throw error;
+      } else {
+        const row: any = { user_id: currentUserId, emoji };
+        if (target === "post") row.post_id = targetId;
+        else row.comment_id = targetId;
+        const { error } = await (supabase.from("community_reactions") as any).insert(row);
+        if (error) throw error;
+      }
+      qc.invalidateQueries({ queryKey: ["community", "posts"] });
+      qc.invalidateQueries({ queryKey: ["community", "comments"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro");
+    } finally {
+      setBusy(null);
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {[...grouped.entries()].map(([emoji, g]) => (
+        <button
+          key={emoji}
+          onClick={() => toggle(emoji)}
+          disabled={busy === emoji}
+          className={cn(
+            "flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition",
+            g.mine
+              ? "border-primary/40 bg-primary/10 text-foreground"
+              : "border-border bg-surface-2 text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <span>{emoji}</span>
+          <span className="tabular-nums">{g.count}</span>
+        </button>
+      ))}
+      <div className="relative">
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-surface-2 text-muted-foreground transition hover:text-foreground"
+          aria-label="Adicionar reação"
+        >
+          <SmilePlus className="h-3.5 w-3.5" />
+        </button>
+        {open && (
+          <>
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setOpen(false)}
+            />
+            <div className="absolute bottom-full left-0 z-20 mb-1 flex gap-1 rounded-full border border-border bg-surface-1 p-1.5 shadow-lg">
+              {EMOJIS.map((e) => (
+                <button
+                  key={e}
+                  onClick={() => toggle(e)}
+                  disabled={busy === e}
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-base transition hover:scale-125 hover:bg-surface-2"
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
