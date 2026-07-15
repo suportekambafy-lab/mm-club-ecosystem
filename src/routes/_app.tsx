@@ -27,7 +27,7 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { MMLogo } from "@/components/mm/logo";
 import { GlobalSearch } from "@/components/mm/global-search";
-import { currentUser } from "@/data/user";
+
 import { cn } from "@/lib/utils";
 // Boot-time: apply admin overrides to in-memory data
 import "@/data/admin-store";
@@ -146,7 +146,7 @@ function AppLayout() {
   const displayName =
     (authUser?.user_metadata?.display_name as string | undefined) ??
     authUser?.email?.split("@")[0] ??
-    currentUser.name;
+    "MM";
   const initials = displayName
     .split(" ")
     .map((p) => p[0])
