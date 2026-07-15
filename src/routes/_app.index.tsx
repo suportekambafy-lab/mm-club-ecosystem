@@ -124,7 +124,11 @@ function DashboardPage() {
                 }
               >
                 {courses.map((c) => (
-                  <CourseCard key={c.id} course={c} className="w-[300px] shrink-0" />
+                  <CourseCard
+                    key={c.id}
+                    course={applyProgress(c, progress)}
+                    className="w-[300px] shrink-0"
+                  />
                 ))}
               </Rail>
             </div>
