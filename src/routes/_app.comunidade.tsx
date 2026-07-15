@@ -1037,6 +1037,8 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
   const isOwner = currentUserId === post.author_id;
+  const adminIds = useAdminIds();
+  const authorIsAdmin = adminIds.has(post.author_id);
 
   useEffect(() => {
     setLiked(post.liked_by_me);
