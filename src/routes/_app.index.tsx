@@ -18,7 +18,12 @@ import { Rail } from "@/components/mm/rail";
 import { ExpertAvatar } from "@/components/mm/expert-avatar";
 import { currentUser as fallbackUser } from "@/data/user";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import { continueWatching, recommendedForUser } from "@/lib/personalization";
+import {
+  useUserProgress,
+  applyProgress,
+  continueFromProgress,
+  recommendedFromProgress,
+} from "@/hooks/use-user-progress";
 import { nextLive } from "@/data/lives";
 import { news } from "@/data/news";
 import { topTools } from "@/data/tools";
@@ -51,9 +56,10 @@ const newsMeta: Record<NewsType, { icon: typeof BookOpen; label: string }> = {
 function DashboardPage() {
   const { user: sessionUser } = useCurrentUser();
   const user = sessionUser ?? fallbackUser;
-  const cont = continueWatching(user);
+  const { progress } = useUserProgress();
+  const cont = continueFromProgress(progress);
   const featured = cont[0];
-  const recommended = recommendedForUser(user);
+  const recommended = recommendedFromProgress(progress);
 
   const blocks: Record<DashboardBlockId, React.ReactNode> = {
     continue:
@@ -118,7 +124,11 @@ function DashboardPage() {
                 }
               >
                 {courses.map((c) => (
-                  <CourseCard key={c.id} course={c} className="w-[300px] shrink-0" />
+                  <CourseCard
+                    key={c.id}
+                    course={applyProgress(c, progress)}
+                    className="w-[300px] shrink-0"
+                  />
                 ))}
               </Rail>
             </div>
