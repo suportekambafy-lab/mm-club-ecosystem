@@ -623,13 +623,17 @@ function MobileTabBar({
             />
             <span
               className={cn(
-                "flex h-[22px] w-[22px] items-center justify-center rounded-full text-[9px] font-semibold transition-all duration-200",
+                "flex h-[22px] w-[22px] items-center justify-center overflow-hidden rounded-full text-[9px] font-semibold transition-all duration-200",
                 profileActive
                   ? "bg-primary text-primary-foreground scale-110"
                   : "bg-surface-2 text-muted-foreground group-active:scale-95",
               )}
             >
-              {initials || <UserRound className="h-3.5 w-3.5" />}
+              {avatarSrc ? (
+                <img src={avatarSrc} alt="" className="h-full w-full object-cover" />
+              ) : (
+                initials || <UserRound className="h-3.5 w-3.5" />
+              )}
             </span>
             <span
               className={cn(
