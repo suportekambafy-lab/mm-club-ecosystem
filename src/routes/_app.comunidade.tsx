@@ -23,6 +23,8 @@ import {
 
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { VerifiedBadge } from "@/components/mm/verified-badge";
+import { useAdminIds } from "@/hooks/use-admin-ids";
 
 export const Route = createFileRoute("/_app/comunidade")({
   head: () => ({
