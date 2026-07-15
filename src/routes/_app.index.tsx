@@ -147,22 +147,24 @@ function PresentationVideoHero() {
   const videoId = "J-ivFkMIHCQ";
   const src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&playsinline=1&rel=0&showinfo=0&iv_load_policy=3&disablekb=1`;
   return (
-    <section className="relative overflow-hidden rounded-2xl ring-1 ring-border">
-      <div className="relative aspect-video w-full bg-black">
-        <iframe
-          src={src}
-          title="Apresentação MM Club"
-          allow="autoplay; encrypted-media; picture-in-picture"
-          allowFullScreen
-          className="absolute inset-0 h-full w-full scale-[1.35] border-0"
-          loading="lazy"
-        />
-        {/* overlay para evitar clique/hover no player e reforçar cinematismo */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/70 via-background/10 to-background/40" />
+    <section className="mx-auto w-full max-w-2xl">
+      <div className="relative overflow-hidden rounded-2xl ring-1 ring-border">
+        <div className="relative aspect-video w-full bg-black">
+          <iframe
+            src={src}
+            title="Apresentação MM Club"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowFullScreen
+            className="absolute inset-0 h-full w-full scale-[1.35] border-0"
+            loading="lazy"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-background/20" />
+        </div>
       </div>
     </section>
   );
 }
+
 
 function ContinueHero({ course }: { course: import("@/data/types").Course }) {
 
