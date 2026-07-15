@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ChevronRight,
   ChevronUp,
@@ -9,11 +9,15 @@ import {
   MessagesSquare,
   ArrowRight,
   Crown,
+  CheckCircle2,
+  Circle,
+  Loader2,
 } from "lucide-react";
 import { coursesById } from "@/data/courses";
 import type { Lesson, Module } from "@/data/types";
 import { cn } from "@/lib/utils";
 import { parseVideoUrl } from "@/lib/video-source";
+import { useLessonProgress } from "@/hooks/use-lesson-progress";
 
 export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
   loader: ({ params }) => {
@@ -52,6 +56,12 @@ function LessonPlayer() {
   const { course, current, next } = Route.useLoaderData();
   const videoUrl = current.lesson.videoUrl ?? DEFAULT_LESSON_YOUTUBE_URL;
   const source = parseVideoUrl(videoUrl);
+  const { completed, saving, setCompleted } = useLessonProgress(course.id, current.lesson.id);
+
+  // Reset scroll on lesson change
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [current.lesson.id]);
 
   return (
     <div className="-mx-3 -my-4 bg-background sm:-mx-4 sm:-my-6 md:-mx-8 md:-my-8 lg:h-[calc(100dvh-3.5rem)] lg:overflow-hidden">
@@ -139,6 +149,30 @@ function LessonPlayer() {
               </div>
 
               <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCompleted(!completed)}
+                  disabled={saving}
+                  aria-label={completed ? "Marcar como não concluída" : "Marcar como concluída"}
+                  className={cn(
+                    "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium transition sm:px-3",
+                    completed
+                      ? "bg-primary/15 text-primary ring-1 ring-primary/40 hover:bg-primary/20"
+                      : "bg-surface-3 text-foreground hover:bg-surface-3/80",
+                    saving && "opacity-60",
+                  )}
+                >
+                  {saving ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : completed ? (
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  ) : (
+                    <Circle className="h-3.5 w-3.5" />
+                  )}
+                  <span className="hidden whitespace-nowrap sm:inline">
+                    {completed ? "Concluída" : "Marcar concluída"}
+                  </span>
+                </button>
                 <a
                   href={videoUrl}
                   target="_blank"

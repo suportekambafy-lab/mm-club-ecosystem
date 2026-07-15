@@ -16,7 +16,8 @@ import {
 import { CourseCard } from "@/components/mm/course-card";
 import { Rail } from "@/components/mm/rail";
 import { ExpertAvatar } from "@/components/mm/expert-avatar";
-import { currentUser } from "@/data/user";
+import { currentUser as fallbackUser } from "@/data/user";
+import { useCurrentUser } from "@/hooks/use-current-user";
 import { continueWatching, recommendedForUser } from "@/lib/personalization";
 import { nextLive } from "@/data/lives";
 import { news } from "@/data/news";
@@ -48,7 +49,8 @@ const newsMeta: Record<NewsType, { icon: typeof BookOpen; label: string }> = {
 };
 
 function DashboardPage() {
-  const user = currentUser;
+  const { user: sessionUser } = useCurrentUser();
+  const user = sessionUser ?? fallbackUser;
   const cont = continueWatching(user);
   const featured = cont[0];
   const recommended = recommendedForUser(user);
