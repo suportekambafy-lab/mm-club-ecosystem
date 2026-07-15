@@ -178,6 +178,41 @@ function ProfilePage() {
     setTimeout(() => setNotice(null), 2500);
   };
 
+  const handleCover = async (file: File) => {
+    if (!authUser) return;
+    if (file.size > 8 * 1024 * 1024) {
+      setError("A imagem de capa deve ter no máximo 8 MB.");
+      return;
+    }
+    setUploadingCover(true);
+    setError(null);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `${authUser.id}/cover-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (upErr) {
+      setUploadingCover(false);
+      setError(upErr.message);
+      return;
+    }
+    const { data, error: uErr } = await supabase
+      .from("profiles")
+      .update({ cover_url: path })
+      .eq("id", authUser.id)
+      .select("id, display_name, avatar_url, cover_url, bio")
+      .maybeSingle();
+    setUploadingCover(false);
+    if (uErr) {
+      setError(uErr.message);
+      return;
+    }
+    if (data) setProfile(data);
+    setNotice("Capa atualizada.");
+    setTimeout(() => setNotice(null), 2500);
+  };
+
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     window.location.href = "/auth";
