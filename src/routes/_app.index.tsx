@@ -101,10 +101,14 @@ function DashboardPage() {
 
   return (
     <div className="space-y-12">
+      {/* Hero — Vídeo de apresentação */}
+      <PresentationVideoHero />
+
       {/* Hero — Continuar */}
       <section className="space-y-6">
         {featured && <ContinueHero course={featured} />}
       </section>
+
 
       {user.dashboard.blocks.map((b) => (
         <div key={b}>
