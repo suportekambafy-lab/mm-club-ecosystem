@@ -78,6 +78,7 @@ export type Database = {
           author_id: string
           content: string
           created_at: string
+          edited_at: string | null
           id: string
           post_id: string
           updated_at: string
@@ -86,6 +87,7 @@ export type Database = {
           author_id: string
           content: string
           created_at?: string
+          edited_at?: string | null
           id?: string
           post_id: string
           updated_at?: string
@@ -94,6 +96,7 @@ export type Database = {
           author_id?: string
           content?: string
           created_at?: string
+          edited_at?: string | null
           id?: string
           post_id?: string
           updated_at?: string
@@ -154,6 +157,7 @@ export type Database = {
           category_id: string | null
           content: string
           created_at: string
+          edited_at: string | null
           id: string
           image_url: string | null
           updated_at: string
@@ -163,6 +167,7 @@ export type Database = {
           category_id?: string | null
           content: string
           created_at?: string
+          edited_at?: string | null
           id?: string
           image_url?: string | null
           updated_at?: string
@@ -172,6 +177,7 @@ export type Database = {
           category_id?: string | null
           content?: string
           created_at?: string
+          edited_at?: string | null
           id?: string
           image_url?: string | null
           updated_at?: string
@@ -189,6 +195,48 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "community_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_reactions: {
+        Row: {
+          comment_id: string | null
+          created_at: string
+          emoji: string
+          id: string
+          post_id: string | null
+          user_id: string
+        }
+        Insert: {
+          comment_id?: string | null
+          created_at?: string
+          emoji: string
+          id?: string
+          post_id?: string | null
+          user_id: string
+        }
+        Update: {
+          comment_id?: string | null
+          created_at?: string
+          emoji?: string
+          id?: string
+          post_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_reactions_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "community_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reactions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
             referencedColumns: ["id"]
           },
         ]
