@@ -486,9 +486,13 @@ function AppLayout() {
               <Link
                 to="/perfil"
                 aria-label="Perfil"
-                className="ml-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-background transition hover:bg-gold-soft sm:ml-1 sm:h-10 sm:w-10"
+                className="ml-0.5 flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-background transition hover:bg-gold-soft sm:ml-1 sm:h-10 sm:w-10"
               >
-                {initials}
+                {avatarSrc ? (
+                  <img src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
+                ) : (
+                  initials
+                )}
               </Link>
             </div>
           </div>
