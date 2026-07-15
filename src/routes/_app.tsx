@@ -45,6 +45,26 @@ export const Route = createFileRoute("/_app")({
       });
     }
 
+    const userId = data.session.user.id;
+
+    // Admins bypass the subscription gate
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
+
+    if (!isAdmin) {
+      const { getPaddleEnvironment } = await import("@/lib/paddle");
+      const env = getPaddleEnvironment();
+      const { data: hasSub } = await supabase.rpc("has_active_subscription", {
+        user_uuid: userId,
+        check_env: env,
+      });
+      if (!hasSub) {
+        throw redirect({ to: "/checkout", replace: true });
+      }
+    }
+
     return { authUser: data.session.user };
   },
   component: AppLayout,
