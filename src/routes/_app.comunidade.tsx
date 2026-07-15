@@ -1108,7 +1108,10 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
         <div className="flex items-center gap-3">
           <Avatar name={authorName} url={post.author?.avatar_url ?? null} />
           <div>
-            <p className="text-sm font-medium text-foreground">{authorName}</p>
+            <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
+              <span>{authorName}</span>
+              {authorIsAdmin && <VerifiedBadge size={14} />}
+            </p>
             <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
               <span>{timeAgo(post.created_at)}</span>
               {post.edited_at && <span className="italic">· editado</span>}
