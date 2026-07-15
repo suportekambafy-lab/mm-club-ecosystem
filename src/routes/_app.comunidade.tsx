@@ -1007,6 +1007,8 @@ function ChatRoom({ user }: { user: User }) {
           )}
         </button>
       </form>
-    </div>
+      </div>
+    </>
   );
+
 }
