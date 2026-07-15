@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { courses } from "@/data/courses";
 import { cn } from "@/lib/utils";
+import { VerifiedBadge } from "@/components/mm/verified-badge";
+import { useAdminIds } from "@/hooks/use-admin-ids";
 
 export const Route = createFileRoute("/_app/perfil")({
   head: () => ({
@@ -172,6 +174,8 @@ function ProfilePage() {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+  const adminIds = useAdminIds();
+  const isAdmin = authUser ? adminIds.has(authUser.id) : false;
 
   const inProgress = courses.filter((c) => c.progress > 0 && c.progress < 1);
   const completed = courses.filter((c) => c.progress >= 1);
@@ -239,8 +243,9 @@ function ProfilePage() {
               />
             </div>
             <div className="min-w-0 pb-1">
-              <h2 className="font-display text-2xl leading-tight text-foreground md:text-3xl">
-                {name}
+              <h2 className="font-display text-2xl leading-tight text-foreground md:text-3xl flex items-center gap-2">
+                <span>{name}</span>
+                {isAdmin && <VerifiedBadge size={20} title="Admin verificado" />}
               </h2>
               <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
                 <Mail className="h-3.5 w-3.5" />

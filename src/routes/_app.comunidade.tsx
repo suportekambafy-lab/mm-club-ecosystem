@@ -23,6 +23,8 @@ import {
 
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { VerifiedBadge } from "@/components/mm/verified-badge";
+import { useAdminIds } from "@/hooks/use-admin-ids";
 
 export const Route = createFileRoute("/_app/comunidade")({
   head: () => ({
@@ -556,6 +558,7 @@ function ProfileCompletionCard({ user }: { user: User | null | undefined }) {
 
 function LatestUpdatesCard({ posts }: { posts: Post[] }) {
   const latest = posts.slice(0, 5);
+  const adminIds = useAdminIds();
   return (
     <SidebarCard title="Últimas atualizações">
       {latest.length === 0 ? (
@@ -570,8 +573,9 @@ function LatestUpdatesCard({ posts }: { posts: Post[] }) {
                 size={28}
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-medium text-foreground">
-                  {p.author?.display_name ?? "Membro"}
+                <p className="truncate text-xs font-medium text-foreground flex items-center gap-1">
+                  <span className="truncate">{p.author?.display_name ?? "Membro"}</span>
+                  {adminIds.has(p.author_id) && <VerifiedBadge size={12} />}
                 </p>
                 <p className="line-clamp-2 text-[11px] text-muted-foreground">
                   {p.content}
@@ -1033,6 +1037,8 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
   const isOwner = currentUserId === post.author_id;
+  const adminIds = useAdminIds();
+  const authorIsAdmin = adminIds.has(post.author_id);
 
   useEffect(() => {
     setLiked(post.liked_by_me);
@@ -1102,7 +1108,10 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
         <div className="flex items-center gap-3">
           <Avatar name={authorName} url={post.author?.avatar_url ?? null} />
           <div>
-            <p className="text-sm font-medium text-foreground">{authorName}</p>
+            <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
+              <span>{authorName}</span>
+              {authorIsAdmin && <VerifiedBadge size={14} />}
+            </p>
             <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
               <span>{timeAgo(post.created_at)}</span>
               {post.edited_at && <span className="italic">· editado</span>}
@@ -1344,6 +1353,8 @@ function CommentItem({
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
   const isOwner = currentUserId === comment.author_id;
+  const adminIds = useAdminIds();
+  const authorIsAdmin = adminIds.has(comment.author_id);
 
   useEffect(() => {
     setEditContent(comment.content);
@@ -1375,8 +1386,9 @@ function CommentItem({
       <div className="flex-1 min-w-0">
         <div className="rounded-2xl bg-surface-2 px-3.5 py-2">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-medium text-foreground">
-              {comment.author?.display_name ?? "Membro"}
+            <p className="text-xs font-medium text-foreground flex items-center gap-1">
+              <span>{comment.author?.display_name ?? "Membro"}</span>
+              {authorIsAdmin && <VerifiedBadge size={12} />}
             </p>
             {isOwner && !editing && (
               <div className="flex items-center gap-1">
@@ -1461,6 +1473,7 @@ function ChatRoom({ user }: { user: User }) {
   const [text, setText] = useState("");
   const [expanded, setExpanded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const adminIds = useAdminIds();
 
   // Lock body scroll when expanded
   useEffect(() => {
@@ -1596,8 +1609,11 @@ function ChatRoom({ user }: { user: User }) {
             <div key={m.id} className={cn("flex gap-2.5", mine && "flex-row-reverse")}>
               <Avatar name={name} url={m.author?.avatar_url ?? null} size={32} />
               <div className={cn("flex max-w-[75%] flex-col", mine && "items-end")}>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-[11px] font-medium text-foreground">{mine ? "Você" : name}</p>
+                <div className="flex items-baseline gap-1.5">
+                  <p className="text-[11px] font-medium text-foreground flex items-center gap-1">
+                    <span>{mine ? "Você" : name}</span>
+                    {adminIds.has(m.author_id) && <VerifiedBadge size={11} />}
+                  </p>
                   <p className="text-[10px] text-muted-foreground">{timeAgo(m.created_at)}</p>
                 </div>
                 <div
