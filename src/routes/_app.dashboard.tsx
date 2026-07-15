@@ -35,7 +35,7 @@ import type { DashboardBlockId, NewsType } from "@/data/types";
 import { formatDistanceToNow } from "date-fns";
 import { pt } from "date-fns/locale";
 
-export const Route = createFileRoute("/_app/")({
+export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard — MM Club" },

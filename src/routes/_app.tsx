@@ -70,7 +70,7 @@ export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
 
-type NavTo = "/" | "/academia" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/eventos" | "/perfil";
+type NavTo = "/dashboard" | "/academia" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/eventos" | "/perfil";
 type NavItem = {
   to: NavTo;
   label: string;
@@ -85,7 +85,7 @@ const navSections: NavSection[] = [
   {
     label: "Geral",
     items: [
-      { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
+      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
       { to: "/eventos", label: "Agenda", icon: CalendarDays, soon: true },
       { to: "/comunidade", label: "Comunidade", icon: Users },
       { to: "/lives", label: "Lives", icon: Radio, soon: true },
@@ -458,12 +458,12 @@ function AppLayout() {
           <div
             className={cn(
               "flex min-w-0 flex-1 items-center gap-2 sm:gap-3",
-              pathname === "/"
+              pathname === "/dashboard"
                 ? "justify-end sm:justify-between sm:rounded-2xl sm:border sm:border-border sm:bg-surface-1 sm:px-5 sm:py-3 md:py-4"
                 : "justify-end",
             )}
           >
-            {pathname === "/" && (
+            {pathname === "/dashboard" && (
               <div className="hidden min-w-0 sm:block">
                 <p className="truncate font-display text-sm leading-tight text-foreground sm:text-lg md:text-xl">
                   Bem-vindo, <span className="text-primary">{displayName.split(" ")[0]}</span>.
@@ -474,7 +474,7 @@ function AppLayout() {
               </div>
             )}
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-              {pathname === "/" && (
+              {pathname === "/dashboard" && (
                 <div className="hidden md:block">
                   <GlobalSearch variant="icon" />
                 </div>
@@ -519,7 +519,7 @@ function AppLayout() {
         </header>
 
         {/* Mobile search — só na home */}
-        {pathname === "/" && (
+        {pathname === "/dashboard" && (
           <div className="border-b border-border px-3 py-2.5 sm:px-4 sm:py-3 md:hidden">
             <GlobalSearch />
             <div className="mt-3">
@@ -558,7 +558,7 @@ type TabItem = {
 };
 
 const mobileTabs: TabItem[] = [
-  { to: "/", label: "Início", icon: Home, exact: true },
+  { to: "/dashboard", label: "Início", icon: Home, exact: true },
   { to: "/academia", label: "Academia", icon: GraduationCap },
   { to: "/jade", label: "IA", icon: Sparkles },
   { to: "/comunidade", label: "Comunidade", icon: Users },
