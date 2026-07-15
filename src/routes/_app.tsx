@@ -75,7 +75,7 @@ const navSections: NavSection[] = [
     label: "Cursos",
     items: [
       { to: "/academia", label: "Academia", icon: GraduationCap },
-      { to: "/jade", label: "Jade", icon: Sparkles },
+      { to: "/jade", label: "Suporte IA", icon: Sparkles },
     ],
   },
   {
