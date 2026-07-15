@@ -70,7 +70,7 @@ export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
 
-type NavTo = "/" | "/academia" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/eventos" | "/perfil";
+type NavTo = "/dashboard" | "/academia" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/eventos" | "/perfil";
 type NavItem = {
   to: NavTo;
   label: string;
