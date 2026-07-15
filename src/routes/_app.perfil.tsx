@@ -56,7 +56,7 @@ function ProfilePage() {
       }
       const { data: p, error: pErr } = await supabase
         .from("profiles")
-        .select("id, display_name, avatar_url, bio")
+        .select("id, display_name, avatar_url, cover_url, bio")
         .eq("id", s.user.id)
         .maybeSingle();
       if (!mounted) return;
@@ -107,7 +107,7 @@ function ProfilePage() {
       .from("profiles")
       .update({ display_name: trimmedName, bio: trimmedBio || null })
       .eq("id", authUser.id)
-      .select("id, display_name, avatar_url, bio")
+      .select("id, display_name, avatar_url, cover_url, bio")
       .maybeSingle();
     setSaving(false);
     if (uErr) {
@@ -144,7 +144,7 @@ function ProfilePage() {
       .from("profiles")
       .update({ avatar_url: path })
       .eq("id", authUser.id)
-      .select("id, display_name, avatar_url, bio")
+      .select("id, display_name, avatar_url, cover_url, bio")
       .maybeSingle();
     setUploading(false);
     if (uErr) {
