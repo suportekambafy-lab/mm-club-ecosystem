@@ -1183,30 +1183,13 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
         </div>
       )}
 
-      {post.reactions.length > 0 && (
-        <div className="mt-3">
-          <ReactionBar
-            target="post"
-            targetId={post.id}
-            reactions={post.reactions}
-            currentUserId={currentUserId}
-          />
-        </div>
-      )}
-
-      <div className="mt-4 flex items-center gap-1 border-t border-border pt-3">
-        <button
-          onClick={toggleLike}
-          className={cn(
-            "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition",
-            liked
-              ? "text-primary"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          <Heart className={cn("h-4 w-4", liked && "fill-primary")} />
-          {likeCount > 0 && <span>{likeCount}</span>}
-        </button>
+      <div className="mt-4 flex items-center gap-2 border-t border-border pt-3">
+        <ReactionBar
+          target="post"
+          targetId={post.id}
+          reactions={post.reactions}
+          currentUserId={currentUserId}
+        />
         <button
           onClick={() => setShowComments((s) => !s)}
           className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-muted-foreground transition hover:text-foreground"
@@ -1214,16 +1197,6 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
           <MessageCircle className="h-4 w-4" />
           {commentCount > 0 && <span>{commentCount}</span>}
         </button>
-        {post.reactions.length === 0 && (
-          <div className="ml-1">
-            <ReactionBar
-              target="post"
-              targetId={post.id}
-              reactions={post.reactions}
-              currentUserId={currentUserId}
-            />
-          </div>
-        )}
       </div>
 
       {showComments && (
