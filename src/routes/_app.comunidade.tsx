@@ -175,6 +175,35 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
   return query;
 }
 
+/* ---------------- Top members ---------------- */
+function useTopMembers(enabled: boolean) {
+  return useQuery({
+    queryKey: ["community", "top-members"],
+    enabled,
+    queryFn: async (): Promise<Profile[]> => {
+      // Últimos autores ativos (baseado em posts recentes)
+      const { data, error } = await supabase
+        .from("community_posts")
+        .select(
+          "author_id, created_at, author:profiles!community_posts_author_id_fkey (id, display_name, avatar_url, bio)",
+        )
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      const seen = new Set<string>();
+      const list: Profile[] = [];
+      for (const row of data ?? []) {
+        const a: any = Array.isArray((row as any).author) ? (row as any).author[0] : (row as any).author;
+        if (!a || seen.has(a.id)) continue;
+        seen.add(a.id);
+        list.push(a as Profile);
+        if (list.length >= 12) break;
+      }
+      return list;
+    },
+  });
+}
+
 /* ---------------- Page ---------------- */
 function CommunityPage() {
   const user = useUser();
@@ -182,107 +211,391 @@ function CommunityPage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const catQ = useCategories(user != null);
   const postsQ = usePosts(activeCategory, user?.id ?? null, user != null && tab === "feed");
+  const membersQ = useTopMembers(user != null);
+
+  const totalPosts = postsQ.data?.length ?? 0;
+  const activeCategoryName =
+    activeCategory && catQ.data
+      ? catQ.data.find((c) => c.id === activeCategory)?.name ?? null
+      : null;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.3em] text-primary font-display">
-          Comunidade
-        </p>
-        <h1 className="font-display text-3xl text-foreground md:text-4xl">
-          O que se passa no clube?
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Partilhe vitórias, tire dúvidas e converse ao vivo com outros membros.
-        </p>
+    <div className="mx-auto max-w-[1400px]">
+      {/* Header */}
+      <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0 space-y-1.5">
+          <p className="text-xs uppercase tracking-[0.3em] text-primary font-display">
+            Comunidade
+          </p>
+          <h1 className="font-display text-3xl text-foreground md:text-4xl">
+            {activeCategoryName ? activeCategoryName : "O que se passa no clube?"}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Partilhe vitórias, tire dúvidas e converse ao vivo com outros membros.
+          </p>
+        </div>
+        <div className="inline-flex rounded-full border border-border bg-surface-1 p-1">
+          <TabButton
+            active={tab === "feed"}
+            onClick={() => setTab("feed")}
+            icon={<Newspaper className="h-3.5 w-3.5" />}
+            label="Feed"
+          />
+          <TabButton
+            active={tab === "chat"}
+            onClick={() => setTab("chat")}
+            icon={<MessagesSquare className="h-3.5 w-3.5" />}
+            label="Chat ao vivo"
+          />
+        </div>
       </header>
 
-      {/* Tabs Feed / Chat */}
-      <div className="inline-flex rounded-full border border-border bg-surface-1 p-1">
-        <TabButton
-          active={tab === "feed"}
-          onClick={() => setTab("feed")}
-          icon={<Newspaper className="h-3.5 w-3.5" />}
-          label="Feed"
-        />
-        <TabButton
-          active={tab === "chat"}
-          onClick={() => setTab("chat")}
-          icon={<MessagesSquare className="h-3.5 w-3.5" />}
-          label="Chat ao vivo"
-        />
-      </div>
-
-      {tab === "feed" ? (
-        <>
-          {/* Category tabs */}
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            <CategoryPill
-              active={activeCategory === null}
-              onClick={() => setActiveCategory(null)}
-              label="Todas"
-            />
-            {catQ.data?.map((c) => (
-              <CategoryPill
-                key={c.id}
-                active={activeCategory === c.id}
-                color={c.color ?? undefined}
-                onClick={() => setActiveCategory(c.id)}
-                label={c.name}
+      <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)_280px]">
+        {/* LEFT SIDEBAR — categorias + membros ativos */}
+        <aside className="hidden space-y-4 lg:block">
+          <SidebarCard title="Categorias">
+            <nav className="space-y-0.5">
+              <CategoryNavItem
+                active={activeCategory === null}
+                onClick={() => setActiveCategory(null)}
+                label="Todas"
+                color={null}
+                count={totalPosts}
               />
-            ))}
-          </div>
+              {catQ.data?.map((c) => (
+                <CategoryNavItem
+                  key={c.id}
+                  active={activeCategory === c.id}
+                  onClick={() => setActiveCategory(c.id)}
+                  label={c.name}
+                  color={c.color}
+                />
+              ))}
+            </nav>
+          </SidebarCard>
 
-          {/* Composer or sign-in gate */}
-          {user === undefined ? (
-            <div className="h-24 rounded-2xl border border-border bg-surface-1" />
+          <SidebarCard title="Membros ativos" subtitle={`${membersQ.data?.length ?? 0} online`}>
+            <div className="grid grid-cols-5 gap-2">
+              {membersQ.data?.slice(0, 15).map((m) => (
+                <div
+                  key={m.id}
+                  className="group relative"
+                  title={m.display_name}
+                >
+                  <Avatar name={m.display_name} url={m.avatar_url} size={36} />
+                  <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border-2 border-surface-1 bg-emerald-500" />
+                </div>
+              ))}
+              {membersQ.isLoading && (
+                <div className="col-span-5 flex justify-center py-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                </div>
+              )}
+              {membersQ.data && membersQ.data.length === 0 && (
+                <p className="col-span-5 text-center text-xs text-muted-foreground">
+                  Ainda ninguém publicou.
+                </p>
+              )}
+            </div>
+          </SidebarCard>
+        </aside>
+
+        {/* CENTER — feed ou chat */}
+        <section className="min-w-0 space-y-5">
+          {tab === "feed" ? (
+            <>
+              {/* Category pills — mobile only */}
+              <div className="flex gap-2 overflow-x-auto pb-1 lg:hidden">
+                <CategoryPill
+                  active={activeCategory === null}
+                  onClick={() => setActiveCategory(null)}
+                  label="Todas"
+                />
+                {catQ.data?.map((c) => (
+                  <CategoryPill
+                    key={c.id}
+                    active={activeCategory === c.id}
+                    color={c.color ?? undefined}
+                    onClick={() => setActiveCategory(c.id)}
+                    label={c.name}
+                  />
+                ))}
+              </div>
+
+              {/* Composer or sign-in gate */}
+              {user === undefined ? (
+                <div className="h-24 rounded-2xl border border-border bg-surface-1" />
+              ) : user === null ? (
+                <SignInGate />
+              ) : (
+                <Composer
+                  user={user}
+                  categories={catQ.data ?? []}
+                  defaultCategoryId={activeCategory}
+                />
+              )}
+
+              {/* Feed */}
+              <div className="space-y-4">
+                {postsQ.isLoading && (
+                  <div className="flex justify-center py-12 text-muted-foreground">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  </div>
+                )}
+                {postsQ.isError && (
+                  <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+                    Não foi possível carregar o feed.
+                  </div>
+                )}
+                {postsQ.data?.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-border bg-surface-1 p-10 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      Ainda não há publicações
+                      {activeCategoryName ? ` em ${activeCategoryName}` : ""}.
+                    </p>
+                    {user && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Seja o primeiro a publicar.
+                      </p>
+                    )}
+                  </div>
+                )}
+                {postsQ.data?.map((p) => (
+                  <PostCard key={p.id} post={p} currentUserId={user?.id ?? null} />
+                ))}
+              </div>
+            </>
+          ) : user === undefined ? (
+            <div className="h-96 rounded-2xl border border-border bg-surface-1" />
           ) : user === null ? (
             <SignInGate />
           ) : (
-            <Composer
-              user={user}
-              categories={catQ.data ?? []}
-              defaultCategoryId={activeCategory}
-            />
+            <ChatRoom user={user} />
           )}
+        </section>
 
-          {/* Feed */}
-          <div className="space-y-4">
-            {postsQ.isLoading && (
-              <div className="flex justify-center py-12 text-muted-foreground">
-                <Loader2 className="h-5 w-5 animate-spin" />
-              </div>
-            )}
-            {postsQ.isError && (
-              <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-                Não foi possível carregar o feed.
-              </div>
-            )}
-            {postsQ.data?.length === 0 && (
-              <div className="rounded-2xl border border-dashed border-border bg-surface-1 p-10 text-center">
-                <p className="text-sm text-muted-foreground">
-                  Ainda não há publicações{activeCategory ? " nesta categoria" : ""}.
-                </p>
-                {user && (
-                  <p className="mt-1 text-xs text-muted-foreground">Seja o primeiro a publicar.</p>
-                )}
-              </div>
-            )}
-            {postsQ.data?.map((p) => (
-              <PostCard key={p.id} post={p} currentUserId={user?.id ?? null} />
-            ))}
-          </div>
-        </>
-      ) : user === undefined ? (
-        <div className="h-96 rounded-2xl border border-border bg-surface-1" />
-      ) : user === null ? (
-        <SignInGate />
-      ) : (
-        <ChatRoom user={user} />
-      )}
+        {/* RIGHT SIDEBAR — perfil + últimas atualizações + atalhos */}
+        <aside className="hidden space-y-4 lg:block">
+          <ProfileCompletionCard user={user} />
+          <LatestUpdatesCard posts={postsQ.data ?? []} />
+          <QuickLinksCard />
+        </aside>
+      </div>
     </div>
   );
 }
+
+/* ---------------- Sidebar primitives ---------------- */
+function SidebarCard({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-surface-1 p-4">
+      <div className="mb-3 flex items-baseline justify-between gap-2">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+          {title}
+        </h3>
+        {subtitle && (
+          <span className="text-[10px] text-muted-foreground">{subtitle}</span>
+        )}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function CategoryNavItem({
+  active,
+  onClick,
+  label,
+  color,
+  count,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  color: string | null;
+  count?: number;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition",
+        active
+          ? "bg-primary/12 text-foreground"
+          : "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
+      )}
+    >
+      <span
+        className={cn(
+          "h-2 w-2 shrink-0 rounded-full",
+          active && !color && "bg-primary",
+        )}
+        style={color ? { background: color } : undefined}
+      />
+      <span className="flex-1 truncate">{label}</span>
+      {typeof count === "number" && count > 0 && (
+        <span className="text-[10px] text-muted-foreground">{count}</span>
+      )}
+    </button>
+  );
+}
+
+function ProfileCompletionCard({ user }: { user: User | null | undefined }) {
+  const q = useQuery({
+    queryKey: ["community", "my-profile", user?.id ?? "anon"],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("display_name, avatar_url, bio")
+        .eq("id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  if (!user) return null;
+
+  const items = [
+    { label: "Nome", done: !!q.data?.display_name },
+    { label: "Avatar", done: !!q.data?.avatar_url },
+    { label: "Bio", done: !!q.data?.bio },
+  ];
+  const done = items.filter((i) => i.done).length;
+  const pct = Math.round((done / items.length) * 100);
+
+  return (
+    <SidebarCard title="Complete o perfil">
+      <div className="mb-3 flex items-center gap-3">
+        <div className="relative h-14 w-14 shrink-0">
+          <svg viewBox="0 0 36 36" className="h-14 w-14 -rotate-90">
+            <circle
+              cx="18"
+              cy="18"
+              r="15"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              className="text-surface-2"
+            />
+            <circle
+              cx="18"
+              cy="18"
+              r="15"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              className="text-primary transition-all"
+              strokeDasharray={`${(pct / 100) * 94.25} 94.25`}
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-xs font-semibold text-foreground">{pct}%</span>
+          </div>
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-foreground">
+            {done}/{items.length} completo
+          </p>
+          <Link
+            to="/perfil"
+            className="text-xs text-primary hover:underline"
+          >
+            Editar perfil →
+          </Link>
+        </div>
+      </div>
+      <ul className="space-y-1.5">
+        {items.map((i) => (
+          <li key={i.label} className="flex items-center gap-2 text-xs">
+            <span
+              className={cn(
+                "flex h-4 w-4 items-center justify-center rounded-full",
+                i.done ? "bg-primary/20 text-primary" : "bg-surface-2 text-muted-foreground",
+              )}
+            >
+              {i.done ? "✓" : "○"}
+            </span>
+            <span className={i.done ? "text-foreground" : "text-muted-foreground"}>
+              {i.label}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </SidebarCard>
+  );
+}
+
+function LatestUpdatesCard({ posts }: { posts: Post[] }) {
+  const latest = posts.slice(0, 5);
+  return (
+    <SidebarCard title="Últimas atualizações">
+      {latest.length === 0 ? (
+        <p className="text-xs text-muted-foreground">Sem atividade recente.</p>
+      ) : (
+        <ul className="space-y-3">
+          {latest.map((p) => (
+            <li key={p.id} className="flex gap-2.5">
+              <Avatar
+                name={p.author?.display_name ?? "?"}
+                url={p.author?.avatar_url ?? null}
+                size={28}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-medium text-foreground">
+                  {p.author?.display_name ?? "Membro"}
+                </p>
+                <p className="line-clamp-2 text-[11px] text-muted-foreground">
+                  {p.content}
+                </p>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">
+                  {timeAgo(p.created_at)}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </SidebarCard>
+  );
+}
+
+function QuickLinksCard() {
+  const links = [
+    { to: "/lives" as const, label: "Próximas lives" },
+    { to: "/eventos" as const, label: "Eventos MM" },
+    { to: "/academia" as const, label: "Academia" },
+    { to: "/ferramentas" as const, label: "Ferramentas" },
+  ];
+  return (
+    <SidebarCard title="Atalhos">
+      <ul className="space-y-0.5">
+        {links.map((l) => (
+          <li key={l.to}>
+            <Link
+              to={l.to}
+              className="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs text-muted-foreground transition hover:bg-surface-2 hover:text-foreground"
+            >
+              <span>{l.label}</span>
+              <span>→</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </SidebarCard>
+  );
+}
+
+
 
 function TabButton({
   active,
