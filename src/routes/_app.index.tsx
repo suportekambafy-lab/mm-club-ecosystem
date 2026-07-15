@@ -56,9 +56,10 @@ const newsMeta: Record<NewsType, { icon: typeof BookOpen; label: string }> = {
 function DashboardPage() {
   const { user: sessionUser } = useCurrentUser();
   const user = sessionUser ?? fallbackUser;
-  const cont = continueWatching(user);
+  const { progress } = useUserProgress();
+  const cont = continueFromProgress(progress);
   const featured = cont[0];
-  const recommended = recommendedForUser(user);
+  const recommended = recommendedFromProgress(progress);
 
   const blocks: Record<DashboardBlockId, React.ReactNode> = {
     continue:
