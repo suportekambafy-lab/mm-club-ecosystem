@@ -816,6 +816,27 @@ function Composer({
 }
 
 /* ---------------- Avatar ---------------- */
+function useAvatarSrc(url: string | null) {
+  return useQuery({
+    queryKey: ["avatar-signed", url],
+    enabled: !!url,
+    staleTime: 55 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    queryFn: async () => {
+      if (!url) return null;
+      // Already a full URL
+      if (/^https?:\/\//i.test(url) || url.startsWith("data:") || url.startsWith("blob:")) {
+        return url;
+      }
+      const { data, error } = await supabase.storage
+        .from("avatars")
+        .createSignedUrl(url, 60 * 60);
+      if (error) return null;
+      return data.signedUrl;
+    },
+  }).data ?? null;
+}
+
 function Avatar({
   name,
   url,
@@ -825,13 +846,14 @@ function Avatar({
   url: string | null;
   size?: number;
 }) {
-  if (url) {
+  const src = useAvatarSrc(url);
+  if (src) {
     return (
       <img
-        src={url}
+        src={src}
         alt={name}
         style={{ width: size, height: size }}
-        className="rounded-full object-cover"
+        className="rounded-full object-cover shrink-0"
       />
     );
   }
