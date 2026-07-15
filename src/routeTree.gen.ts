@@ -9,6 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermosRouteImport } from './routes/termos'
+import { Route as ReembolsosRouteImport } from './routes/reembolsos'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -35,6 +38,21 @@ import { Route as AppAcademiaCourseIdIndexRouteImport } from './routes/_app.acad
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as AppAcademiaCourseIdLessonIdRouteImport } from './routes/_app.academia.$courseId.$lessonId'
 
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReembolsosRoute = ReembolsosRouteImport.update({
+  id: '/reembolsos',
+  path: '/reembolsos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
@@ -169,6 +187,9 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRoute
+  '/privacidade': typeof PrivacidadeRoute
+  '/reembolsos': typeof ReembolsosRoute
+  '/termos': typeof TermosRoute
   '/academia': typeof AppAcademiaRouteWithChildren
   '/comunidade': typeof AppComunidadeRoute
   '/eventos': typeof AppEventosRoute
@@ -193,6 +214,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRoute
+  '/privacidade': typeof PrivacidadeRoute
+  '/reembolsos': typeof ReembolsosRoute
+  '/termos': typeof TermosRoute
   '/comunidade': typeof AppComunidadeRoute
   '/eventos': typeof AppEventosRoute
   '/ferramentas': typeof AppFerramentasRoute
@@ -219,6 +243,9 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRoute
+  '/privacidade': typeof PrivacidadeRoute
+  '/reembolsos': typeof ReembolsosRoute
+  '/termos': typeof TermosRoute
   '/_app/academia': typeof AppAcademiaRouteWithChildren
   '/_app/comunidade': typeof AppComunidadeRoute
   '/_app/eventos': typeof AppEventosRoute
@@ -248,6 +275,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/checkout'
+    | '/privacidade'
+    | '/reembolsos'
+    | '/termos'
     | '/academia'
     | '/comunidade'
     | '/eventos'
@@ -272,6 +302,9 @@ export interface FileRouteTypes {
   to:
     | '/auth'
     | '/checkout'
+    | '/privacidade'
+    | '/reembolsos'
+    | '/termos'
     | '/comunidade'
     | '/eventos'
     | '/ferramentas'
@@ -297,6 +330,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/checkout'
+    | '/privacidade'
+    | '/reembolsos'
+    | '/termos'
     | '/_app/academia'
     | '/_app/comunidade'
     | '/_app/eventos'
@@ -325,12 +361,36 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
   CheckoutRoute: typeof CheckoutRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
+  ReembolsosRoute: typeof ReembolsosRoute
+  TermosRoute: typeof TermosRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reembolsos': {
+      id: '/reembolsos'
+      path: '/reembolsos'
+      fullPath: '/reembolsos'
+      preLoaderRoute: typeof ReembolsosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/checkout': {
       id: '/checkout'
       path: '/checkout'
@@ -587,6 +647,9 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
   CheckoutRoute: CheckoutRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
+  ReembolsosRoute: ReembolsosRoute,
+  TermosRoute: TermosRoute,
   ApiChatRoute: ApiChatRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
