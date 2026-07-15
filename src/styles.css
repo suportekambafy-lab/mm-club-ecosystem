@@ -215,8 +215,19 @@
 
   h1, h2, h3, .font-display {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
-    font-weight: 700;
+    letter-spacing: -0.035em;
+    font-weight: 600;
+    font-feature-settings: "ss01", "ss02";
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-background), 0 0 0 4px oklch(0.82 0.13 82 / 0.6);
+    border-radius: 6px;
   }
 
   ::selection {
