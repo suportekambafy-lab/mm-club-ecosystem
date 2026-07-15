@@ -23,6 +23,7 @@ type ProfileRow = {
   id: string;
   display_name: string;
   avatar_url: string | null;
+  cover_url: string | null;
   bio: string | null;
 };
 
@@ -33,12 +34,15 @@ function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const coverFileRef = useRef<HTMLInputElement>(null);
   const adminIds = useAdminIds();
 
 
@@ -55,7 +59,7 @@ function ProfilePage() {
       }
       const { data: p, error: pErr } = await supabase
         .from("profiles")
-        .select("id, display_name, avatar_url, bio")
+        .select("id, display_name, avatar_url, cover_url, bio")
         .eq("id", s.user.id)
         .maybeSingle();
       if (!mounted) return;
@@ -96,6 +100,25 @@ function ProfilePage() {
     };
   }, [profile?.avatar_url]);
 
+  // Resolve signed URL for cover
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!profile?.cover_url) {
+        setCoverUrl(null);
+        return;
+      }
+      const { data, error: cErr } = await supabase.storage
+        .from("avatars")
+        .createSignedUrl(profile.cover_url, 60 * 60);
+      if (cancelled) return;
+      setCoverUrl(cErr ? null : data.signedUrl);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [profile?.cover_url]);
+
   const handleSave = async () => {
     if (!authUser || !profile) return;
     setSaving(true);
@@ -106,7 +129,7 @@ function ProfilePage() {
       .from("profiles")
       .update({ display_name: trimmedName, bio: trimmedBio || null })
       .eq("id", authUser.id)
-      .select("id, display_name, avatar_url, bio")
+      .select("id, display_name, avatar_url, cover_url, bio")
       .maybeSingle();
     setSaving(false);
     if (uErr) {
@@ -143,7 +166,7 @@ function ProfilePage() {
       .from("profiles")
       .update({ avatar_url: path })
       .eq("id", authUser.id)
-      .select("id, display_name, avatar_url, bio")
+      .select("id, display_name, avatar_url, cover_url, bio")
       .maybeSingle();
     setUploading(false);
     if (uErr) {
@@ -154,6 +177,41 @@ function ProfilePage() {
     setNotice("Foto atualizada.");
     setTimeout(() => setNotice(null), 2500);
   };
+
+  const handleCover = async (file: File) => {
+    if (!authUser) return;
+    if (file.size > 8 * 1024 * 1024) {
+      setError("A imagem de capa deve ter no máximo 8 MB.");
+      return;
+    }
+    setUploadingCover(true);
+    setError(null);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `${authUser.id}/cover-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (upErr) {
+      setUploadingCover(false);
+      setError(upErr.message);
+      return;
+    }
+    const { data, error: uErr } = await supabase
+      .from("profiles")
+      .update({ cover_url: path })
+      .eq("id", authUser.id)
+      .select("id, display_name, avatar_url, cover_url, bio")
+      .maybeSingle();
+    setUploadingCover(false);
+    if (uErr) {
+      setError(uErr.message);
+      return;
+    }
+    if (data) setProfile(data);
+    setNotice("Capa atualizada.");
+    setTimeout(() => setNotice(null), 2500);
+  };
+
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -209,7 +267,35 @@ function ProfilePage() {
 
       {/* Identity card */}
       <section className="overflow-hidden rounded-2xl bg-surface-1 ring-1 ring-border">
-        <div className="h-28 bg-gradient-to-br from-primary/40 via-primary/10 to-transparent" />
+        <div
+          className="group relative h-36 sm:h-44 bg-gradient-to-br from-primary/40 via-primary/10 to-transparent"
+          style={
+            coverUrl
+              ? { backgroundImage: `url(${coverUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+              : undefined
+          }
+        >
+          <button
+            type="button"
+            onClick={() => coverFileRef.current?.click()}
+            disabled={uploadingCover}
+            className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-background/70 px-3 py-1.5 text-xs font-medium text-foreground backdrop-blur ring-1 ring-border transition hover:bg-background/90 disabled:opacity-60"
+          >
+            {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+            {coverUrl ? "Alterar capa" : "Adicionar capa"}
+          </button>
+          <input
+            ref={coverFileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleCover(f);
+              e.target.value = "";
+            }}
+          />
+        </div>
         <div className="-mt-14 flex flex-col gap-6 px-5 pb-6 sm:px-8 md:flex-row md:items-end md:justify-between">
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-end">
             <div className="relative">
