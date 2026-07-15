@@ -174,6 +174,8 @@ function ProfilePage() {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+  const adminIds = useAdminIds();
+  const isAdmin = authUser ? adminIds.has(authUser.id) : false;
 
   const inProgress = courses.filter((c) => c.progress > 0 && c.progress < 1);
   const completed = courses.filter((c) => c.progress >= 1);
