@@ -243,7 +243,7 @@ function CommunityPage() {
   return (
     <div className="mx-auto max-w-[1400px]">
       {/* Header */}
-      <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <header className="sticky top-16 z-20 mb-6 -mx-3 flex flex-wrap items-end justify-between gap-4 border-b border-border/60 bg-background/80 px-3 pb-4 pt-2 backdrop-blur-xl sm:-mx-4 sm:px-4 md:-mx-8 md:px-8">
         <div className="min-w-0 space-y-1.5">
           <p className="text-xs uppercase tracking-[0.3em] text-primary font-display">
             Comunidade
