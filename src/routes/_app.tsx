@@ -85,7 +85,7 @@ const navSections: NavSection[] = [
   {
     label: "Geral",
     items: [
-      { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
+      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
       { to: "/eventos", label: "Agenda", icon: CalendarDays, soon: true },
       { to: "/comunidade", label: "Comunidade", icon: Users },
       { to: "/lives", label: "Lives", icon: Radio, soon: true },
