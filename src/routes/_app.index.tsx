@@ -143,7 +143,29 @@ function DashboardPage() {
   );
 }
 
+function PresentationVideoHero() {
+  const videoId = "J-ivFkMIHCQ";
+  const src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&playsinline=1&rel=0&showinfo=0&iv_load_policy=3&disablekb=1`;
+  return (
+    <section className="relative overflow-hidden rounded-2xl ring-1 ring-border">
+      <div className="relative aspect-video w-full bg-black">
+        <iframe
+          src={src}
+          title="Apresentação MM Club"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          allowFullScreen
+          className="absolute inset-0 h-full w-full scale-[1.35] border-0"
+          loading="lazy"
+        />
+        {/* overlay para evitar clique/hover no player e reforçar cinematismo */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/70 via-background/10 to-background/40" />
+      </div>
+    </section>
+  );
+}
+
 function ContinueHero({ course }: { course: import("@/data/types").Course }) {
+
   const expert = expertsById[course.expertId];
   const firstLessonId = course.modules?.[0]?.lessons?.[0]?.id;
   const linkProps = firstLessonId
