@@ -814,7 +814,24 @@ type ChatMessage = {
 function ChatRoom({ user }: { user: User }) {
   const qc = useQueryClient();
   const [text, setText] = useState("");
+  const [expanded, setExpanded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Lock body scroll when expanded
+  useEffect(() => {
+    if (!expanded) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setExpanded(false);
+    };
+    window.addEventListener("keydown", onEsc);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onEsc);
+    };
+  }, [expanded]);
+
 
   const q = useQuery({
     queryKey: ["community", "chat"],
