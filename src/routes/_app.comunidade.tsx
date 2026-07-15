@@ -113,7 +113,8 @@ function useCategories(enabled: boolean) {
 }
 
 function usePosts(categoryId: string | null, userId: string | null, enabled: boolean) {
-  return useQuery({
+  const qc = useQueryClient();
+  const query = useQuery({
     queryKey: ["community", "posts", categoryId ?? "all", userId ?? "anon"],
     enabled,
     queryFn: async (): Promise<Post[]> => {
@@ -146,6 +147,29 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
       }));
     },
   });
+
+  useEffect(() => {
+    if (!enabled) return;
+    const channel = supabase
+      .channel("community-feed")
+      .on("postgres_changes", { event: "*", schema: "public", table: "community_posts" }, () => {
+        qc.invalidateQueries({ queryKey: ["community", "posts"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "community_likes" }, () => {
+        qc.invalidateQueries({ queryKey: ["community", "posts"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "community_comments" }, (payload) => {
+        qc.invalidateQueries({ queryKey: ["community", "posts"] });
+        const postId = (payload.new as any)?.post_id ?? (payload.old as any)?.post_id;
+        if (postId) qc.invalidateQueries({ queryKey: ["community", "comments", postId] });
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [enabled, qc]);
+
+  return query;
 }
 
 /* ---------------- Page ---------------- */
