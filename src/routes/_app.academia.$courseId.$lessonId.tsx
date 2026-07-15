@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ChevronRight,
   ChevronUp,
@@ -9,11 +9,15 @@ import {
   MessagesSquare,
   ArrowRight,
   Crown,
+  CheckCircle2,
+  Circle,
+  Loader2,
 } from "lucide-react";
 import { coursesById } from "@/data/courses";
 import type { Lesson, Module } from "@/data/types";
 import { cn } from "@/lib/utils";
 import { parseVideoUrl } from "@/lib/video-source";
+import { useLessonProgress } from "@/hooks/use-lesson-progress";
 
 export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
   loader: ({ params }) => {
@@ -52,6 +56,12 @@ function LessonPlayer() {
   const { course, current, next } = Route.useLoaderData();
   const videoUrl = current.lesson.videoUrl ?? DEFAULT_LESSON_YOUTUBE_URL;
   const source = parseVideoUrl(videoUrl);
+  const { completed, saving, setCompleted } = useLessonProgress(course.id, current.lesson.id);
+
+  // Reset scroll on lesson change
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [current.lesson.id]);
 
   return (
     <div className="-mx-3 -my-4 bg-background sm:-mx-4 sm:-my-6 md:-mx-8 md:-my-8 lg:h-[calc(100dvh-3.5rem)] lg:overflow-hidden">
