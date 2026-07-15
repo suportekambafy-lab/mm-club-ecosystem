@@ -15,6 +15,10 @@ import {
   MessagesSquare,
   Maximize2,
   Minimize2,
+  SmilePlus,
+  Pencil,
+  Paperclip,
+  Check,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
