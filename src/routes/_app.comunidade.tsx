@@ -271,9 +271,9 @@ function CommunityPage() {
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)_280px]">
+      <div className="grid items-start gap-6 lg:grid-cols-[240px_minmax(0,1fr)_280px]">
         {/* LEFT SIDEBAR — categorias + membros ativos */}
-        <aside className="hidden space-y-4 lg:block">
+        <aside className="hidden space-y-4 lg:sticky lg:top-24 lg:block lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-1 [scrollbar-width:thin]">
           <SidebarCard title="Categorias">
             <nav className="space-y-0.5">
               <CategoryNavItem
@@ -396,7 +396,7 @@ function CommunityPage() {
         </section>
 
         {/* RIGHT SIDEBAR — perfil + últimas atualizações + atalhos */}
-        <aside className="hidden space-y-4 lg:block">
+        <aside className="hidden space-y-4 lg:sticky lg:top-24 lg:block lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-1 [scrollbar-width:thin]">
           <ProfileCompletionCard user={user} />
           <LatestUpdatesCard posts={postsQ.data ?? []} />
           <QuickLinksCard />
