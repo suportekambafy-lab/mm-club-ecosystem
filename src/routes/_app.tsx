@@ -458,12 +458,12 @@ function AppLayout() {
           <div
             className={cn(
               "flex min-w-0 flex-1 items-center gap-2 sm:gap-3",
-              pathname === "/"
+              pathname === "/dashboard"
                 ? "justify-end sm:justify-between sm:rounded-2xl sm:border sm:border-border sm:bg-surface-1 sm:px-5 sm:py-3 md:py-4"
                 : "justify-end",
             )}
           >
-            {pathname === "/" && (
+            {pathname === "/dashboard" && (
               <div className="hidden min-w-0 sm:block">
                 <p className="truncate font-display text-sm leading-tight text-foreground sm:text-lg md:text-xl">
                   Bem-vindo, <span className="text-primary">{displayName.split(" ")[0]}</span>.
@@ -474,7 +474,7 @@ function AppLayout() {
               </div>
             )}
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-              {pathname === "/" && (
+              {pathname === "/dashboard" && (
                 <div className="hidden md:block">
                   <GlobalSearch variant="icon" />
                 </div>
@@ -519,7 +519,7 @@ function AppLayout() {
         </header>
 
         {/* Mobile search — só na home */}
-        {pathname === "/" && (
+        {pathname === "/dashboard" && (
           <div className="border-b border-border px-3 py-2.5 sm:px-4 sm:py-3 md:hidden">
             <GlobalSearch />
             <div className="mt-3">
