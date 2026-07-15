@@ -558,6 +558,7 @@ function ProfileCompletionCard({ user }: { user: User | null | undefined }) {
 
 function LatestUpdatesCard({ posts }: { posts: Post[] }) {
   const latest = posts.slice(0, 5);
+  const adminIds = useAdminIds();
   return (
     <SidebarCard title="Últimas atualizações">
       {latest.length === 0 ? (
