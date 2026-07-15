@@ -13,7 +13,10 @@ import {
   Trash2,
   Newspaper,
   MessagesSquare,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
