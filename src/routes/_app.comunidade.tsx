@@ -175,9 +175,10 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
 /* ---------------- Page ---------------- */
 function CommunityPage() {
   const user = useUser();
+  const [tab, setTab] = useState<"feed" | "chat">("feed");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const catQ = useCategories(user != null);
-  const postsQ = usePosts(activeCategory, user?.id ?? null, user != null);
+  const postsQ = usePosts(activeCategory, user?.id ?? null, user != null && tab === "feed");
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -189,68 +190,121 @@ function CommunityPage() {
           O que se passa no clube?
         </h1>
         <p className="text-sm text-muted-foreground">
-          Partilhe vitórias, tire dúvidas e conecte-se com outros membros.
+          Partilhe vitórias, tire dúvidas e converse ao vivo com outros membros.
         </p>
       </header>
 
-      {/* Category tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        <CategoryPill
-          active={activeCategory === null}
-          onClick={() => setActiveCategory(null)}
-          label="Todas"
+      {/* Tabs Feed / Chat */}
+      <div className="inline-flex rounded-full border border-border bg-surface-1 p-1">
+        <TabButton
+          active={tab === "feed"}
+          onClick={() => setTab("feed")}
+          icon={<Newspaper className="h-3.5 w-3.5" />}
+          label="Feed"
         />
-        {catQ.data?.map((c) => (
-          <CategoryPill
-            key={c.id}
-            active={activeCategory === c.id}
-            color={c.color ?? undefined}
-            onClick={() => setActiveCategory(c.id)}
-            label={c.name}
-          />
-        ))}
+        <TabButton
+          active={tab === "chat"}
+          onClick={() => setTab("chat")}
+          icon={<MessagesSquare className="h-3.5 w-3.5" />}
+          label="Chat ao vivo"
+        />
       </div>
 
-      {/* Composer or sign-in gate */}
-      {user === undefined ? (
-        <div className="h-24 rounded-2xl border border-border bg-surface-1" />
+      {tab === "feed" ? (
+        <>
+          {/* Category tabs */}
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            <CategoryPill
+              active={activeCategory === null}
+              onClick={() => setActiveCategory(null)}
+              label="Todas"
+            />
+            {catQ.data?.map((c) => (
+              <CategoryPill
+                key={c.id}
+                active={activeCategory === c.id}
+                color={c.color ?? undefined}
+                onClick={() => setActiveCategory(c.id)}
+                label={c.name}
+              />
+            ))}
+          </div>
+
+          {/* Composer or sign-in gate */}
+          {user === undefined ? (
+            <div className="h-24 rounded-2xl border border-border bg-surface-1" />
+          ) : user === null ? (
+            <SignInGate />
+          ) : (
+            <Composer
+              user={user}
+              categories={catQ.data ?? []}
+              defaultCategoryId={activeCategory}
+            />
+          )}
+
+          {/* Feed */}
+          <div className="space-y-4">
+            {postsQ.isLoading && (
+              <div className="flex justify-center py-12 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+              </div>
+            )}
+            {postsQ.isError && (
+              <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+                Não foi possível carregar o feed.
+              </div>
+            )}
+            {postsQ.data?.length === 0 && (
+              <div className="rounded-2xl border border-dashed border-border bg-surface-1 p-10 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Ainda não há publicações{activeCategory ? " nesta categoria" : ""}.
+                </p>
+                {user && (
+                  <p className="mt-1 text-xs text-muted-foreground">Seja o primeiro a publicar.</p>
+                )}
+              </div>
+            )}
+            {postsQ.data?.map((p) => (
+              <PostCard key={p.id} post={p} currentUserId={user?.id ?? null} />
+            ))}
+          </div>
+        </>
+      ) : user === undefined ? (
+        <div className="h-96 rounded-2xl border border-border bg-surface-1" />
       ) : user === null ? (
         <SignInGate />
       ) : (
-        <Composer
-          user={user}
-          categories={catQ.data ?? []}
-          defaultCategoryId={activeCategory}
-        />
+        <ChatRoom user={user} />
       )}
-
-      {/* Feed */}
-      <div className="space-y-4">
-        {postsQ.isLoading && (
-          <div className="flex justify-center py-12 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin" />
-          </div>
-        )}
-        {postsQ.isError && (
-          <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-            Não foi possível carregar o feed.
-          </div>
-        )}
-        {postsQ.data?.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-border bg-surface-1 p-10 text-center">
-            <p className="text-sm text-muted-foreground">
-              Ainda não há publicações{activeCategory ? " nesta categoria" : ""}.
-            </p>
-            {user && (
-              <p className="mt-1 text-xs text-muted-foreground">Seja o primeiro a publicar.</p>
-            )}
-          </div>
-        )}
-        {postsQ.data?.map((p) => (
-          <PostCard key={p.id} post={p} currentUserId={user?.id ?? null} />
-        ))}
-      </div>
     </div>
+  );
+}
+
+function TabButton({
+  active,
+  onClick,
+  icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-medium transition",
+        active
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }
 
