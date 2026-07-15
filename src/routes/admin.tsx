@@ -82,6 +82,8 @@ function AdminLayout() {
   const router = useRouter();
   const { authUser: initialAuthUser } = Route.useRouteContext() as { authUser: User };
   const [authUser, setAuthUser] = useState<User | null>(initialAuthUser);
+  const [checking, setChecking] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setAuthUser(data.session?.user ?? null));
@@ -92,13 +94,28 @@ function AdminLayout() {
   useEffect(() => {
     if (authUser === null) {
       router.navigate({ to: "/auth", search: { redirect: pathname } as never, replace: true });
+      return;
     }
+    let cancelled = false;
+    setChecking(true);
+    supabase
+      .rpc("has_role", { _user_id: authUser.id, _role: "admin" })
+      .then(({ data }) => {
+        if (cancelled) return;
+        const ok = Boolean(data);
+        setIsAdmin(ok);
+        setChecking(false);
+        if (!ok) router.navigate({ to: "/", replace: true });
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [authUser, pathname, router]);
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 
-  if (!authUser) {
+  if (!authUser || checking || !isAdmin) {
     return <div className="min-h-screen bg-background" />;
   }
 
