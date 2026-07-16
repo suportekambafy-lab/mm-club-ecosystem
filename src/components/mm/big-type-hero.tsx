@@ -273,20 +273,7 @@ export function BigTypeHero() {
           </motion.div>
         </div>
 
-        {/* Mobile floating chips — below type, in-flow */}
-        <div className="mt-4 flex flex-wrap justify-center gap-2 sm:hidden">
-          <div className="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface-1/70 px-3 py-1.5 backdrop-blur">
-            <span
-              className="h-4 w-4 rounded-full"
-              style={{ background: "linear-gradient(135deg, oklch(0.82 0.13 82), oklch(0.58 0.14 68))" }}
-            />
-            <span className="text-[11px] font-medium">+2.400 membros</span>
-          </div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface-1/70 px-3 py-1.5 backdrop-blur">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            <span className="text-[11px] font-medium">Suporte IA online</span>
-          </div>
-        </div>
+
 
         {/* CTA row */}
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3 sm:mt-9">
