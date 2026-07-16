@@ -285,7 +285,7 @@ export function BigTypeHero() {
       </div>
 
       {/* Bottom three-card system */}
-      <div id="pilares" className="mx-auto mt-10 max-w-[1180px] px-4 sm:mt-14 sm:px-8">
+      <div id="pilares" className="mx-auto mt-24 max-w-[1180px] px-4 sm:mt-32 sm:px-8">
         <div className="grid gap-6 md:grid-cols-3">
           {/* Card 1 — Academia */}
           <motion.div
