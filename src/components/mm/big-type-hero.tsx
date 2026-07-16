@@ -267,7 +267,7 @@ export function BigTypeHero() {
 
 
         {/* CTA row */}
-        <div className="mt-7 flex flex-wrap items-center justify-center gap-3 sm:mt-9">
+        <div className="mt-14 flex flex-wrap items-center justify-center gap-4 sm:mt-20">
           <Link
             to="/checkout"
             className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-4 text-sm font-semibold text-primary-foreground shadow-[0_20px_60px_-20px_oklch(0.82_0.13_82_/_0.7)] hover:bg-gold-soft transition-all"
