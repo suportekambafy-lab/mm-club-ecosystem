@@ -147,7 +147,7 @@ export function BigTypeHero() {
   };
 
   return (
-    <section className="relative overflow-hidden pt-14 pb-6 sm:pt-16 sm:pb-8">
+    <section className="relative overflow-hidden pt-20 pb-14 sm:pt-28 sm:pb-20">
       {/* background grid */}
       <div
         aria-hidden
