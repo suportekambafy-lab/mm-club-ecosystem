@@ -72,7 +72,7 @@ const ArrowInk = ({ flip = false }: { flip?: boolean }) => (
 /* ---------- Rotating badge ---------- */
 
 const CircularBadge = () => (
-  <div className="relative h-32 w-32 sm:h-36 sm:w-36">
+  <div className="relative h-24 w-24 sm:h-36 sm:w-36">
     <motion.svg
       viewBox="0 0 160 160"
       className="absolute inset-0 text-foreground"
@@ -80,10 +80,7 @@ const CircularBadge = () => (
       transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
     >
       <defs>
-        <path
-          id="badge-circle"
-          d="M 80,80 m -62,0 a 62,62 0 1,1 124,0 a 62,62 0 1,1 -124,0"
-        />
+        <path id="badge-circle" d="M 80,80 m -62,0 a 62,62 0 1,1 124,0 a 62,62 0 1,1 -124,0" />
       </defs>
       <text className="fill-current text-[11px] font-semibold uppercase tracking-[0.28em]">
         <textPath href="#badge-circle" startOffset="0">
@@ -92,8 +89,8 @@ const CircularBadge = () => (
       </text>
     </motion.svg>
     <div className="absolute inset-0 flex items-center justify-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_oklch(0.82_0.13_82_/_0.7)]">
-        <ArrowRight className="h-6 w-6 -rotate-45" strokeWidth={2.4} />
+      <div className="flex h-11 w-11 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_oklch(0.82_0.13_82_/_0.7)]">
+        <ArrowRight className="h-4 w-4 sm:h-6 sm:w-6 -rotate-45" strokeWidth={2.4} />
       </div>
     </div>
   </div>
@@ -119,15 +116,15 @@ function GlassCard({
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }}
-      className={`absolute z-20 flex items-center gap-3 rounded-2xl border border-white/15 bg-background/50 p-3 pr-5 backdrop-blur-xl shadow-[0_20px_60px_-20px_rgba(0,0,0,0.5)] ${className}`}
+      className={`absolute z-20 flex items-center gap-2 sm:gap-3 rounded-xl sm:rounded-2xl border border-white/15 bg-background/50 p-2 pr-3 sm:p-3 sm:pr-5 backdrop-blur-xl shadow-[0_20px_60px_-20px_rgba(0,0,0,0.5)] ${className}`}
     >
       <div
-        className="h-10 w-10 shrink-0 rounded-xl"
+        className="h-7 w-7 sm:h-10 sm:w-10 shrink-0 rounded-lg sm:rounded-xl"
         style={{ background: gradient }}
       />
       <div>
-        <p className="font-display text-sm leading-tight text-foreground">{name}</p>
-        <p className="text-[11px] text-muted-foreground">{points}</p>
+        <p className="font-display text-[11px] sm:text-sm leading-tight text-foreground">{name}</p>
+        <p className="text-[9px] sm:text-[11px] text-muted-foreground">{points}</p>
       </div>
     </motion.div>
   );
@@ -196,7 +193,7 @@ export function BigTypeHero() {
               initial="hidden"
               animate="show"
               variants={stackAnim}
-              className="font-display text-[16vw] font-extrabold tracking-tight text-foreground/85 md:text-[9vw] lg:text-[7.5rem]"
+              className="font-display text-[13vw] font-extrabold tracking-tight text-foreground/85 md:text-[9vw] lg:text-[7.5rem]"
             >
               #CLUB
             </motion.h1>
@@ -205,7 +202,7 @@ export function BigTypeHero() {
               initial="hidden"
               animate="show"
               variants={stackAnim}
-              className="font-display text-[16vw] font-extrabold tracking-tight text-transparent md:text-[9vw] lg:text-[7.5rem]"
+              className="font-display text-[13vw] font-extrabold tracking-tight text-transparent md:text-[9vw] lg:text-[7.5rem]"
               style={{ WebkitTextStroke: "1.2px var(--gold)" }}
             >
               MARCA
@@ -215,7 +212,7 @@ export function BigTypeHero() {
               initial="hidden"
               animate="show"
               variants={stackAnim}
-              className="font-display text-[15vw] font-extrabold tracking-tight md:text-[8.5vw] lg:text-[7rem]"
+              className="font-display text-[11.5vw] font-extrabold tracking-tight md:text-[8.5vw] lg:text-[7rem]"
               style={{
                 background: "linear-gradient(180deg, var(--gold-soft), var(--gold-deep))",
                 WebkitBackgroundClip: "text",
@@ -232,14 +229,14 @@ export function BigTypeHero() {
             name="sofia.mm"
             points="+2.400 membros"
             gradient="linear-gradient(135deg, oklch(0.82 0.13 82), oklch(0.58 0.14 68))"
-            className="left-[2%] top-[38%] sm:left-[6%] sm:top-[42%]"
+            className="left-[-2%] top-[40%] sm:left-[6%] sm:top-[42%]"
             delay={0.6}
           />
           <GlassCard
             name="andre.eth"
             points="Suporte IA · online"
             gradient="linear-gradient(135deg, oklch(0.62 0.22 285), oklch(0.42 0.2 285))"
-            className="right-[2%] top-[6%] sm:right-[6%] sm:top-[10%]"
+            className="right-[-2%] top-[2%] sm:right-[6%] sm:top-[10%]"
             delay={0.75}
           />
 
