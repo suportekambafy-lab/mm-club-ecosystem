@@ -387,9 +387,7 @@ export function BigTypeHero() {
               </p>
               <p className="mt-1 font-display text-3xl">2.412</p>
               <div className="mt-3 flex -space-x-2">
-                {[
-                  "linear-gradient(135deg, oklch(0.82 0.13 82), oklch(0.58 0.14 68))",
-              <div className="mt-3 flex -space-x-2">
+
                 {[avatar1, avatar3, avatar5, avatar2].map((src, i) => (
                   <img
                     key={i}
