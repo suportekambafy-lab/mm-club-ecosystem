@@ -24,27 +24,6 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-const testimonials = [
-  {
-    quote:
-      "O clube mudou o meu ritmo. Em quatro meses fiz mais do que nos dois anos anteriores.",
-    name: "Inês Cardoso",
-    role: "Fundadora · Estúdio de branding",
-  },
-  {
-    quote:
-      "Nunca tive acesso a este nível de curadoria e comunidade portuguesa a este preço.",
-    name: "Ricardo Bento",
-    role: "E-commerce · +5 lojas",
-  },
-  {
-    quote:
-      "A Suporte IA e as lives semanais foram o divisor de águas para a minha marca.",
-    name: "Marta Silva",
-    role: "Coach & criadora digital",
-  },
-];
-
 function AuthPage() {
   const navigate = useNavigate();
   const { redirect } = useSearch({ from: "/auth" });
@@ -53,7 +32,6 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [tIndex, setTIndex] = useState(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -61,10 +39,6 @@ function AuthPage() {
     });
   }, [navigate, redirect]);
 
-  useEffect(() => {
-    const t = setInterval(() => setTIndex((n) => (n + 1) % testimonials.length), 6000);
-    return () => clearInterval(t);
-  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
