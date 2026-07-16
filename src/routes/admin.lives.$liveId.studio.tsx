@@ -82,6 +82,14 @@ function LiveStudio() {
     setError(null);
     setStatus("requesting-media");
     try {
+      if (!window.isSecureContext) {
+        throw new Error("A página tem de estar em HTTPS para aceder à câmara/microfone.");
+      }
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error(
+          "O navegador ou o preview em iframe está a bloquear a câmara. Abre esta página numa janela nova.",
+        );
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } },
         audio: { echoCancellation: true, noiseSuppression: true },
@@ -92,7 +100,18 @@ function LiveStudio() {
       }
       setStatus("ready");
     } catch (e) {
-      setError("Não foi possível aceder à câmara/microfone: " + (e as Error).message);
+      const err = e as DOMException & { name?: string; message?: string };
+      let msg = err.message || String(err);
+      if (err.name === "NotAllowedError") {
+        msg = inIframe
+          ? "Acesso à câmara/microfone bloqueado pelo preview do Lovable. Abre esta página numa janela nova e tenta de novo."
+          : "Permissão negada. Autoriza câmara e microfone nas definições do navegador.";
+      } else if (err.name === "NotFoundError") {
+        msg = "Não foi encontrada uma câmara ou microfone neste dispositivo.";
+      } else if (err.name === "NotReadableError") {
+        msg = "A câmara/microfone está a ser usada por outra aplicação.";
+      }
+      setError(msg);
       setStatus("error");
     }
   }
