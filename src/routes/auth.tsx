@@ -258,13 +258,11 @@ function AuthPage() {
               transition={{ duration: 0.4 }}
               className="mt-6 lg:mt-8"
             >
-              <div className="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface-1/60 px-3 py-1.5 backdrop-blur">
-                <Sparkles className="h-3 w-3 text-primary" />
-                <span className="text-[10px] font-medium uppercase tracking-[0.24em] text-muted-foreground">
-                  {mode === "signin" ? "Regresso ao clube" : "Adesão ao clube"}
-                </span>
+              <div className="flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.28em] text-muted-foreground">
+                <span className="h-px w-8 bg-hairline" />
+                {mode === "signin" ? "Regresso ao clube" : "Adesão ao clube"}
               </div>
-              <h1 className="mt-4 font-display text-4xl leading-tight tracking-tight text-foreground">
+              <h1 className="mt-5 font-display text-4xl leading-[1.05] tracking-tight text-foreground lg:text-5xl">
                 {mode === "signin" ? "Entra." : "Cria a tua conta."}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
