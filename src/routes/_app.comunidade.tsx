@@ -1611,11 +1611,19 @@ function ChatRoom({ user }: { user: User }) {
 
 
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
-        {q.isLoading && (
-          <div className="flex justify-center py-8 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin" />
-          </div>
-        )}
+        {q.isLoading &&
+          Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className={cn("flex gap-2.5", i % 2 === 1 && "flex-row-reverse")}
+            >
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div className={cn("flex max-w-[75%] flex-col gap-1", i % 2 === 1 && "items-end")}>
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-8 w-40 rounded-2xl" />
+              </div>
+            </div>
+          ))}
         {q.data?.length === 0 && (
           <div className="flex h-full items-center justify-center">
             <p className="text-center text-xs text-muted-foreground">
