@@ -1,28 +1,54 @@
 import { cn } from "@/lib/utils";
+import mmIcon from "@/assets/mm-icon.png.asset.json";
 
-export function MMLogo({ className }: { className?: string }) {
+/**
+ * Official MM Club logo — cube icon (isotipo) + "MM Club" wordmark.
+ * Text color adapts to theme: black on light, white on dark.
+ */
+export function MMLogo({
+  className,
+  showWordmark = true,
+  size = 36,
+}: {
+  className?: string;
+  showWordmark?: boolean;
+  size?: number;
+}) {
   return (
-    <div className={cn("flex items-center gap-2.5", className)}>
-      <div
-        className="flex h-8 w-8 items-center justify-center rounded-md"
-        style={{
-          background:
-            "linear-gradient(135deg, oklch(0.82 0.13 82), oklch(0.55 0.12 60))",
-        }}
-        aria-hidden
-      >
-        <span className="font-display text-[13px] font-semibold text-black">
-          MM
+    <div className={cn("flex items-center gap-3", className)}>
+      <img
+        src={mmIcon.url}
+        alt="MM Club"
+        width={size}
+        height={size}
+        className="shrink-0 select-none"
+        draggable={false}
+      />
+      {showWordmark && (
+        <span className="font-display text-[19px] font-light tracking-tight text-foreground leading-none">
+          MM <span className="font-light">Club</span>
         </span>
-      </div>
-      <div className="flex flex-col leading-none">
-        <span className="font-display text-[15px] tracking-tight text-foreground">
-          MM Club
-        </span>
-        <span className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-          Marca Milionária
-        </span>
-      </div>
+      )}
     </div>
+  );
+}
+
+/** Icon-only mark for footers, favicons, compact contexts. */
+export function MMIcon({
+  className,
+  size = 32,
+}: {
+  className?: string;
+  size?: number;
+}) {
+  return (
+    <img
+      src={mmIcon.url}
+      alt="MM Club"
+      width={size}
+      height={size}
+      className={cn("shrink-0 select-none", className)}
+      draggable={false}
+    />
   );
 }
