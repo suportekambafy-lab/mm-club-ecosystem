@@ -14,6 +14,7 @@
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.7",
     "@ai-sdk/react": "^4.0.23",
+    "@cloudflare/stream-react": "^1.9.3",
     "@hookform/resolvers": "^5.2.2",
     "@paddle/paddle-node-sdk": "^3.8.0",
     "@radix-ui/react-accordion": "^1.2.12",
@@ -54,7 +55,9 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
+    "hls.js": "^1.6.16",
     "input-otp": "^1.4.2",
+    "jose": "^6.2.3",
     "lucide-react": "^0.575.0",
     "motion": "^12.42.2",
     "react": "^19.2.0",
