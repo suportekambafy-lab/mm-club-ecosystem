@@ -528,7 +528,16 @@ function AppLayout() {
         )}
 
 
-        <main className="mx-auto max-w-7xl px-3 pb-24 pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8 lg:pb-12">
+        <main className="relative mx-auto max-w-7xl px-3 pb-24 pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8 lg:pb-12">
+          {/* Ambient editorial glow — matches landing page atmosphere */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+            style={{
+              background:
+                "radial-gradient(50% 30% at 80% 0%, oklch(0.82 0.13 82 / 0.09), transparent 70%), radial-gradient(40% 25% at 10% 40%, oklch(0.55 0.22 285 / 0.06), transparent 70%)",
+            }}
+          />
           {mounted && authUser ? <Outlet /> : <div className="min-h-[60vh]" />}
         </main>
       </div>
