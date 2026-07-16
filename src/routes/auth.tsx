@@ -5,6 +5,7 @@ import { ArrowRight, ArrowLeft, Mail, Lock, User, Sparkles, Quote } from "lucide
 import { supabase } from "@/integrations/supabase/client";
 import { MMLogo } from "@/components/mm/logo";
 import { toast } from "sonner";
+import authCover from "@/assets/auth-cover.jpg";
 import { cn } from "@/lib/utils";
 
 type Search = { redirect?: string };
