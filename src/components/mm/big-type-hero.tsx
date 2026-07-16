@@ -194,6 +194,7 @@ export function BigTypeHero() {
               animate="show"
               variants={stackAnim}
               className="font-display text-[7.6vw] font-extrabold tracking-tight text-foreground/85 sm:text-[6.4vw] md:text-[5.2vw] lg:text-[4.6rem]"
+              style={{ fontSize: "clamp(1.85rem, 5.4vw, 4rem)" }}
             >
               #CLUB
             </motion.h1>
@@ -203,7 +204,7 @@ export function BigTypeHero() {
               animate="show"
               variants={stackAnim}
               className="font-display text-[7.6vw] font-extrabold tracking-tight text-transparent sm:text-[6.4vw] md:text-[5.2vw] lg:text-[4.6rem]"
-              style={{ WebkitTextStroke: "1.2px var(--gold)" }}
+              style={{ fontSize: "clamp(1.85rem, 5.4vw, 4rem)", WebkitTextStroke: "1px var(--gold)" }}
             >
               MARCA
             </motion.h1>
@@ -214,6 +215,7 @@ export function BigTypeHero() {
               variants={stackAnim}
               className="font-display text-[6.6vw] font-extrabold tracking-tight sm:text-[5.7vw] md:text-[4.7vw] lg:text-[4.25rem]"
               style={{
+                fontSize: "clamp(1.55rem, 4.7vw, 3.75rem)",
                 background: "linear-gradient(180deg, var(--gold-soft), var(--gold-deep))",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
