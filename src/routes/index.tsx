@@ -52,8 +52,7 @@ function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <Nav scrolled={scrolled} />
-      <Hero />
-      <TrustStrip />
+      <BigTypeHero />
       <FeatureAcademia />
       <FeatureJade />
       <FeatureComunidade />
