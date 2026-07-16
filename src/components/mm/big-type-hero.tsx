@@ -189,9 +189,9 @@ export function BigTypeHero() {
         </div>
 
         {/* massive type stack + overlays */}
-        <div className="relative mt-5 sm:mt-6">
+        <div className="relative mt-14 sm:mt-20">
           {/* type */}
-          <div className="relative z-0 flex flex-col items-center leading-[0.98] sm:leading-[0.94]">
+          <div className="relative z-0 flex flex-col items-center gap-1 leading-[1.02] sm:gap-2 sm:leading-[1]">
             <motion.h1
               custom={0}
               initial="hidden"
