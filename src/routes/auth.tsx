@@ -294,3 +294,45 @@ function Field({
     </label>
   );
 }
+
+const FEEDBACKS = [
+  { name: "Ricardo M.", role: "Fundador · Agência", quote: "Em 90 dias reposicionei a marca e triplicámos o ticket médio." },
+  { name: "Sofia A.", role: "Consultora", quote: "O ecossistema MM deu-me clareza estratégica que nenhum curso deu." },
+  { name: "João P.", role: "CEO · SaaS", quote: "Passei de operador a dono. A comunidade é de outro nível." },
+  { name: "Marta L.", role: "Coach executiva", quote: "Autoridade real, sem showoff. É isto que faltava no mercado." },
+  { name: "André S.", role: "Investidor", quote: "Networking premium a sério. Já fechei duas parcerias aqui dentro." },
+  { name: "Inês R.", role: "Founder · D2C", quote: "As ferramentas e as lives valem sozinhas o investimento anual." },
+];
+
+function FeedbackMarquee() {
+  const items = [...FEEDBACKS, ...FEEDBACKS];
+  return (
+    <div
+      className="relative h-40 overflow-hidden"
+      style={{
+        maskImage:
+          "linear-gradient(180deg, transparent 0%, black 18%, black 82%, transparent 100%)",
+        WebkitMaskImage:
+          "linear-gradient(180deg, transparent 0%, black 18%, black 82%, transparent 100%)",
+      }}
+    >
+      <div className="animate-[mm-marquee-y_28s_linear_infinite] flex flex-col gap-3">
+        {items.map((f, i) => (
+          <figure
+            key={i}
+            className="rounded-xl border border-white/10 bg-white/[0.04] p-3 backdrop-blur-sm"
+          >
+            <blockquote className="text-[12.5px] leading-snug text-white/85">
+              “{f.quote}”
+            </blockquote>
+            <figcaption className="mt-1.5 text-[10px] uppercase tracking-[0.2em] text-white/50">
+              {f.name} · {f.role}
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+      <style>{`@keyframes mm-marquee-y { from { transform: translateY(0); } to { transform: translateY(-50%); } }`}</style>
+    </div>
+  );
+}
+
