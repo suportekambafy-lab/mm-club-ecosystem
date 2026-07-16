@@ -55,7 +55,7 @@ function LivesPage() {
           <h2 className="mb-4 font-display text-lg text-foreground">A decorrer agora</h2>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {liveNow.map((l) => (
-              <LiveCard key={l.id} live={l} live />
+              <LiveCard key={l.id} live={l} isLive />
             ))}
           </div>
         </section>
