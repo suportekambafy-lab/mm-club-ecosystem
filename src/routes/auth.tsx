@@ -54,7 +54,9 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("Conta criada. Já podes entrar.");
+        toast.success("Conta criada. Escolhe o teu plano para entrar.");
+        navigate({ to: "/checkout" });
+        return;
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -65,6 +67,7 @@ function AuthPage() {
     } finally {
       setLoading(false);
     }
+
   }
 
 
