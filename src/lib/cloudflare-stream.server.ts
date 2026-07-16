@@ -1,7 +1,7 @@
 // Server-only helpers to talk to the Cloudflare Stream API.
 // Do NOT import this from client code or module scope of *.functions.ts.
 
-import { SignJWT, importPKCS8 } from "jose";
+import { SignJWT, importJWK, importPKCS8 } from "jose";
 
 const API_BASE = "https://api.cloudflare.com/client/v4";
 
@@ -69,11 +69,7 @@ export async function listVideosForLiveInput(uid: string): Promise<Array<{ uid: 
  */
 export async function signPlaybackToken(videoUid: string, opts: { ttlSeconds?: number } = {}): Promise<string> {
   const kid = requireEnv("CLOUDFLARE_STREAM_SIGNING_KEY_ID");
-  const pemRaw = requireEnv("CLOUDFLARE_STREAM_SIGNING_KEY_PEM");
-  // Support secrets pasted with literal \n
-  const pem = pemRaw.includes("BEGIN") ? pemRaw : Buffer.from(pemRaw, "base64").toString("utf8");
-  const normalized = pem.replace(/\\n/g, "\n");
-  const key = await importPKCS8(normalized, "RS256");
+  const key = await importStreamSigningKey(requireEnv("CLOUDFLARE_STREAM_SIGNING_KEY_PEM"));
 
   const now = Math.floor(Date.now() / 1000);
   const exp = now + (opts.ttlSeconds ?? 7200);
@@ -84,4 +80,62 @@ export async function signPlaybackToken(videoUid: string, opts: { ttlSeconds?: n
     .setNotBefore(now)
     .setExpirationTime(exp)
     .sign(key);
+}
+
+async function importStreamSigningKey(raw: string) {
+  const material = decodeSecretMaterial(raw);
+
+  const parsed = tryParseJson(material);
+  if (parsed && typeof parsed === "object") {
+    if ("jwk" in parsed && parsed.jwk && typeof parsed.jwk === "object") {
+      return importJWK(parsed.jwk as Parameters<typeof importJWK>[0], "RS256");
+    }
+    if ("kty" in parsed) {
+      return importJWK(parsed as Parameters<typeof importJWK>[0], "RS256");
+    }
+    for (const field of ["pem", "privateKey", "private_key", "key"] as const) {
+      const value = (parsed as Record<string, unknown>)[field];
+      if (typeof value === "string" && value.trim()) return importStreamSigningKey(value);
+    }
+  }
+
+  const pem = material.replace(/\\n/g, "\n").trim();
+  if (pem.includes("BEGIN RSA PRIVATE KEY")) {
+    const { createPrivateKey } = await import("crypto");
+    const keyObject = createPrivateKey({ key: pem, format: "pem", type: "pkcs1" });
+    const pkcs8 = keyObject.export({ format: "pem", type: "pkcs8" });
+    return importPKCS8(pkcs8.toString(), "RS256");
+  }
+
+  if (pem.includes("BEGIN PRIVATE KEY")) {
+    return importPKCS8(pem, "RS256");
+  }
+
+  throw new Error("Cloudflare Stream signing key is not a supported private key format.");
+}
+
+function decodeSecretMaterial(raw: string): string {
+  let value = raw.trim();
+  const parsedString = tryParseJson(value);
+  if (typeof parsedString === "string") value = parsedString.trim();
+  value = value.replace(/\\n/g, "\n");
+
+  if (value.includes("BEGIN") || value.startsWith("{")) return value;
+
+  try {
+    const decoded = Buffer.from(value, "base64").toString("utf8").trim();
+    if (decoded.includes("BEGIN") || decoded.startsWith("{")) return decoded;
+  } catch {
+    /* keep original */
+  }
+
+  return value;
+}
+
+function tryParseJson(value: string): unknown {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
 }
