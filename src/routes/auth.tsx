@@ -105,40 +105,68 @@ function AuthPage() {
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(180deg, oklch(0.11 0.004 60) 0%, oklch(0.09 0.004 60) 100%)",
+                "linear-gradient(180deg, oklch(0.12 0.004 60) 0%, oklch(0.10 0.004 60) 100%)",
             }}
           />
-          {/* Fine editorial grid */}
+          {/* Ambient glows — gold + violet, matching landing hero */}
           <div
             aria-hidden
-            className="absolute inset-0 opacity-[0.12]"
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(55% 45% at 22% 18%, oklch(0.82 0.13 82 / 0.28), transparent 70%), radial-gradient(50% 42% at 82% 88%, oklch(0.55 0.22 285 / 0.22), transparent 70%)",
+            }}
+          />
+          {/* Fine grid */}
+          <div
+            aria-hidden
+            className="absolute inset-0 opacity-60"
             style={{
               backgroundImage:
-                "linear-gradient(to right, oklch(1 0 0 / 0.5) 1px, transparent 1px), linear-gradient(to bottom, oklch(1 0 0 / 0.5) 1px, transparent 1px)",
-              backgroundSize: "80px 80px",
+                "linear-gradient(to right, oklch(1 0 0 / 0.05) 1px, transparent 1px), linear-gradient(to bottom, oklch(1 0 0 / 0.05) 1px, transparent 1px)",
+              backgroundSize: "56px 56px",
+              maskImage:
+                "radial-gradient(ellipse 90% 70% at 50% 45%, black 40%, transparent 85%)",
             }}
           />
-          {/* Atmospheric glows — violet top-right, gold bottom-left */}
+          {/* Big-type watermark — landing vocabulary */}
           <div
             aria-hidden
-            className="pointer-events-none absolute -right-[10%] -top-[10%] h-[500px] w-[500px] rounded-full opacity-25 blur-[120px]"
-            style={{ background: "oklch(0.55 0.22 285)" }}
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -bottom-[5%] -left-[5%] h-[440px] w-[440px] rounded-full opacity-[0.18] blur-[110px]"
-            style={{ background: "var(--gold-deep)" }}
-          />
-          {/* Editorial big-type — single horizontal "CLUB" whisper */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute left-[-6%] top-1/2 -translate-y-1/2 select-none"
+            className="pointer-events-none absolute inset-x-0 top-[26%] flex flex-col items-center gap-1 leading-[1] select-none"
           >
-            <h2 className="font-display text-[22vw] font-extrabold uppercase leading-none tracking-tighter text-white/[0.035]">
-              Club
-            </h2>
+            <div
+              className="font-display text-[9vw] font-extrabold tracking-tight text-white/[0.06]"
+            >
+              #CLUB
+            </div>
+            <div
+              className="font-display text-[9vw] font-extrabold tracking-tight text-transparent"
+              style={{ WebkitTextStroke: "1px oklch(0.82 0.13 82 / 0.35)" }}
+            >
+              MARCA
+            </div>
+            <div
+              className="font-display text-[8vw] font-extrabold tracking-tight"
+              style={{
+                background: "linear-gradient(180deg, var(--gold-soft), var(--gold-deep))",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                opacity: 0.85,
+              }}
+            >
+              MILIONÁRIA
+            </div>
           </div>
-
+          {/* Bottom fade for legibility */}
+          <div
+            aria-hidden
+            className="absolute inset-x-0 bottom-0 h-1/2"
+            style={{
+              background:
+                "linear-gradient(180deg, transparent 0%, oklch(0.10 0.004 60 / 0.85) 60%, oklch(0.10 0.004 60) 100%)",
+            }}
+          />
 
 
           {/* Content */}
