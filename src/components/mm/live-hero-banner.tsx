@@ -27,6 +27,28 @@ export function LiveHeroBanner({ live, className }: { live: LiveLike; className?
   const isLive = live.status === "live";
   const isReplay = live.status === "published" || live.status === "ended";
   const [distance, setDistance] = useState<string>("");
+  const [countdown, setCountdown] = useState<{ d: number; h: number; m: number; s: number } | null>(null);
+
+  useEffect(() => {
+    if (isLive || isReplay) return;
+    const tick = () => {
+      const diff = new Date(live.starts_at).getTime() - Date.now();
+      if (diff <= 0) {
+        setCountdown({ d: 0, h: 0, m: 0, s: 0 });
+        return;
+      }
+      const s = Math.floor(diff / 1000);
+      setCountdown({
+        d: Math.floor(s / 86400),
+        h: Math.floor((s % 86400) / 3600),
+        m: Math.floor((s % 3600) / 60),
+        s: s % 60,
+      });
+    };
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => clearInterval(t);
+  }, [live.starts_at, isLive, isReplay]);
 
   useEffect(() => {
     if (isLive) return;
@@ -69,7 +91,7 @@ export function LiveHeroBanner({ live, className }: { live: LiveLike; className?
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
 
       {/* Content */}
-      <div className="relative flex min-h-[280px] flex-col justify-between gap-6 p-6 md:min-h-[360px] md:p-10">
+      <div className="relative flex min-h-[340px] flex-col justify-between gap-6 p-6 md:min-h-[460px] md:p-14">
         <div className="flex flex-wrap items-center gap-2">
           {isLive && (
             <span className="inline-flex items-center gap-2 rounded-full bg-red-500/95 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white shadow-lg shadow-red-500/40">
@@ -77,7 +99,7 @@ export function LiveHeroBanner({ live, className }: { live: LiveLike; className?
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
               </span>
-              Ao vivo
+              Ao vivo agora
             </span>
           )}
           {!isLive && !isReplay && (
@@ -99,8 +121,8 @@ export function LiveHeroBanner({ live, className }: { live: LiveLike; className?
           )}
         </div>
 
-        <div className="max-w-2xl space-y-3">
-          <h2 className="font-display text-2xl leading-tight text-white md:text-4xl">
+        <div className="max-w-3xl space-y-4">
+          <h2 className="font-display text-3xl leading-[1.05] tracking-tight text-white md:text-6xl">
             {live.title}
           </h2>
           {live.description && (
@@ -109,11 +131,35 @@ export function LiveHeroBanner({ live, className }: { live: LiveLike; className?
             </p>
           )}
 
-          <div className="flex flex-wrap items-center gap-4 pt-2">
+          {/* Countdown for scheduled sessions — dramatic stage feel */}
+          {countdown && !isLive && !isReplay && (
+            <div className="flex flex-wrap gap-3 pt-2">
+              {[
+                { v: countdown.d, l: "Dias" },
+                { v: countdown.h, l: "Horas" },
+                { v: countdown.m, l: "Min" },
+                { v: countdown.s, l: "Seg" },
+              ].map((u) => (
+                <div
+                  key={u.l}
+                  className="flex min-w-[64px] flex-col items-center rounded-xl bg-white/5 px-3 py-2 backdrop-blur-md ring-1 ring-white/10 md:min-w-[84px] md:px-4 md:py-3"
+                >
+                  <span className="font-display text-2xl tabular-nums leading-none text-white md:text-4xl">
+                    {String(u.v).padStart(2, "0")}
+                  </span>
+                  <span className="mt-1 text-[9px] uppercase tracking-[0.2em] text-white/50 md:text-[10px]">
+                    {u.l}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center gap-4 pt-3">
             {expert && (
               <div className="flex items-center gap-2.5">
                 <div
-                  className="h-9 w-9 shrink-0 rounded-full ring-1 ring-white/20"
+                  className="h-10 w-10 shrink-0 rounded-full ring-1 ring-white/20"
                   style={
                     expert.logo
                       ? {
@@ -132,7 +178,7 @@ export function LiveHeroBanner({ live, className }: { live: LiveLike; className?
             )}
             <span
               className={cn(
-                "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition",
+                "inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition",
                 isLive
                   ? "bg-white text-black group-hover:bg-white/90"
                   : "bg-primary text-primary-foreground group-hover:bg-gold-soft",

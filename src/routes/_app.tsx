@@ -80,32 +80,18 @@ type NavItem = {
   soon?: boolean;
 };
 
-type NavSection = { label: string; items: NavItem[] };
-
-const navSections: NavSection[] = [
-  {
-    label: "Geral",
-    items: [
-      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
-      { to: "/eventos", label: "Agenda", icon: CalendarDays, soon: true },
-      { to: "/comunidade", label: "Comunidade", icon: Users },
-      { to: "/lives", label: "Lives", icon: Radio },
-    ],
-  },
-  {
-    label: "Cursos",
-    items: [
-      { to: "/academia", label: "Academia", icon: GraduationCap },
-      { to: "/jade", label: "Suporte IA", icon: Star },
-    ],
-  },
-  {
-    label: "Recursos",
-    items: [{ to: "/ferramentas", label: "Ferramentas", icon: Wrench, soon: true }],
-  },
+// Editorial single-list nav — MasterClass / Apple TV energy, no SaaS group labels.
+const navItems: NavItem[] = [
+  { to: "/dashboard", label: "Início", icon: Home, exact: true },
+  { to: "/academia", label: "Academia", icon: GraduationCap },
+  { to: "/jade", label: "Jade", icon: Star },
+  { to: "/lives", label: "Ao Vivo", icon: Radio },
+  { to: "/comunidade", label: "Comunidade", icon: Users },
+  { to: "/ferramentas", label: "Ferramentas", icon: Wrench, soon: true },
+  { to: "/eventos", label: "Eventos", icon: CalendarDays, soon: true },
 ];
 
-const flatNav = navSections.flatMap((s) => s.items);
+const flatNav = navItems;
 
 function AppLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -251,91 +237,93 @@ function AppLayout() {
         )}
       </div>
 
-      <nav className={cn("flex-1 space-y-6 overflow-y-auto pb-4", compact ? "px-2" : "px-4")}>
-        {navSections.map((section) => (
-          <div key={section.label}>
-            {!compact && (
-              <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
-                {section.label}
-              </p>
-            )}
-            <div className="space-y-1">
-              {section.items.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.to, item.exact);
-                if (item.soon) {
-                  return (
-                    <div
-                      key={item.to}
-                      title={compact ? `${item.label} — Em breve` : undefined}
-                      aria-disabled="true"
-                      className={cn(
-                        "group flex items-center rounded-xl text-sm text-muted-foreground/70 cursor-not-allowed",
-                        compact ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
-                      )}
-                    >
-                      <Icon className="h-[18px] w-[18px] shrink-0 text-muted-foreground/60" />
-                      {!compact && (
-                        <>
-                          <span className="flex-1">{item.label}</span>
-                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary">
-                            Em breve
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  );
-                }
-                return (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    title={compact ? item.label : undefined}
+      <nav className={cn("flex-1 overflow-y-auto pb-4", compact ? "px-2 pt-2" : "px-4 pt-4")}>
+        <div className={cn("space-y-1", !compact && "space-y-1.5")}>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.to, item.exact);
+            if (item.soon) {
+              return (
+                <div
+                  key={item.to}
+                  title={compact ? `${item.label} — Em breve` : undefined}
+                  aria-disabled="true"
+                  className={cn(
+                    "group relative flex items-center rounded-xl cursor-not-allowed",
+                    compact
+                      ? "justify-center px-2 py-3 text-sm text-muted-foreground/70"
+                      : "gap-4 px-4 py-3 font-display text-[15px] tracking-wide text-muted-foreground/60",
+                  )}
+                >
+                  <Icon className="h-[19px] w-[19px] shrink-0 text-muted-foreground/50" />
+                  {!compact && (
+                    <>
+                      <span className="flex-1">{item.label}</span>
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary">
+                        Em breve
+                      </span>
+                    </>
+                  )}
+                </div>
+              );
+            }
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                title={compact ? item.label : undefined}
+                className={cn(
+                  "group relative flex items-center rounded-xl transition-all duration-300",
+                  compact
+                    ? "justify-center px-2 py-3 text-sm"
+                    : "gap-4 px-4 py-3 font-display text-[15px] tracking-wide",
+                  active
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {/* Gold left rail — editorial active indicator */}
+                {!compact && (
+                  <span
+                    aria-hidden
                     className={cn(
-                      "group flex items-center rounded-xl text-sm transition-all",
-                      compact ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
-                      active
-                        ? "bg-surface-2 text-foreground shadow-inner ring-1 ring-[color:var(--hairline)]"
-                        : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
+                      "absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-primary transition-all duration-300",
+                      active ? "opacity-100 scale-y-100" : "opacity-0 scale-y-50",
                     )}
-                  >
-                    <Icon
-                      className={cn(
-                        "h-[18px] w-[18px] shrink-0 transition",
-                        active ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
-                      )}
-                    />
-                    {!compact && <span className="flex-1">{item.label}</span>}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+                  />
+                )}
+                <Icon
+                  className={cn(
+                    "h-[19px] w-[19px] shrink-0 transition",
+                    active ? "text-primary" : "text-muted-foreground/80 group-hover:text-foreground",
+                  )}
+                />
+                {!compact && <span className="flex-1">{item.label}</span>}
+                {compact && active && (
+                  <span
+                    aria-hidden
+                    className="absolute inset-y-1 left-0 w-[3px] rounded-r-full bg-primary"
+                  />
+                )}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
       {!compact && (
-        <div className="px-4 pb-4">
-          <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-violet to-violet-deep p-5 text-center text-violet-foreground shadow-lg shadow-violet/25">
-            <div className="pointer-events-none absolute inset-0 opacity-30 mix-blend-overlay [background-image:radial-gradient(circle_at_top_right,white,transparent_60%)]" />
-            <p className="relative text-sm font-semibold leading-tight">
-              24/7 Access to<br />o teu Painel Pessoal
+        <div className="px-6 pb-5">
+          <div className="border-t border-hairline pt-5">
+            <p className="font-display text-[11px] uppercase tracking-[0.28em] text-muted-foreground/70">
+              MM Club
             </p>
-            <div className="relative mt-3 flex justify-center gap-0.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} className="h-3.5 w-3.5 fill-current" />
-              ))}
-            </div>
-            <button
-              type="button"
-              className="relative mt-4 inline-flex w-full items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-violet-deep transition hover:bg-white/90"
-              onClick={() => router.navigate({ to: "/checkout" })}
-            >
-              Get Premium
-            </button>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+              Um ecossistema para founders da próxima geração.
+            </p>
           </div>
         </div>
       )}
+
 
       <div className={cn("border-t border-border", compact ? "p-2" : "p-4")}>
         {authUser ? (
@@ -464,16 +452,7 @@ function AppLayout() {
                 : "justify-end",
             )}
           >
-            {pathname === "/dashboard" && (
-              <div className="hidden min-w-0 sm:block">
-                <p className="truncate font-display text-sm leading-tight text-foreground sm:text-lg md:text-xl">
-                  Bem-vindo, <span className="text-primary">{displayName.split(" ")[0]}</span>.
-                </p>
-                <p className="mt-0.5 hidden text-xs text-muted-foreground md:block">
-                  Continua a construir a tua marca milionária.
-                </p>
-              </div>
-            )}
+            {/* Greeting moved into cinematic dashboard hero — topbar stays minimal */}
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
               {pathname === "/dashboard" && (
                 <div className="hidden md:block">
@@ -516,14 +495,6 @@ function AppLayout() {
         {pathname === "/dashboard" && (
           <div className="border-b border-border px-3 py-2.5 sm:px-4 sm:py-3 md:hidden">
             <GlobalSearch />
-            <div className="mt-3">
-              <p className="font-display text-base leading-tight text-foreground">
-                Bem-vindo, <span className="text-primary">{displayName.split(" ")[0]}</span>.
-              </p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Continua a construir a tua marca milionária.
-              </p>
-            </div>
           </div>
         )}
 

@@ -23,7 +23,7 @@ import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { expertsById } from "@/data/experts";
 import { courses } from "@/data/courses";
 import { supabase } from "@/integrations/supabase/client";
-import type { DashboardBlockId } from "@/data/types";
+
 import { formatDistanceToNow } from "date-fns";
 import { pt } from "date-fns/locale";
 
@@ -73,9 +73,21 @@ function DashboardPage() {
     };
   }, []);
 
-  const blocks: Record<DashboardBlockId, React.ReactNode> = {
-    continue:
-      cont.length > 0 ? (
+  return (
+    <div className="space-y-16">
+      {/* Cinematic hero — full bleed, autoplay muted loop, editorial overlay */}
+      <CinematicHero name={user.name} />
+
+      {/* Live activa em destaque */}
+      {realFeaturedLive?.status === "live" && (
+        <LiveHeroBanner live={realFeaturedLive} />
+      )}
+
+      {/* Continuar a construir */}
+      {featured && <ContinueHero course={featured} />}
+
+      {/* Rails na ordem editorial */}
+      {cont.length > 0 && (
         <Rail
           title="Continua a aprender"
           subtitle="Onde ficaste da última vez."
@@ -89,98 +101,102 @@ function DashboardPage() {
           }
         >
           {cont.map((c) => (
-            <CourseCard key={c.id} course={c} className="w-[300px] shrink-0" />
+            <CourseCard key={c.id} course={c} className="w-[340px] shrink-0" />
           ))}
         </Rail>
-      ) : null,
-    recommended: (
+      )}
+
+      <Rail
+        title="Explorar Academia"
+        subtitle="Todo o catálogo do ecossistema MM."
+        action={
+          <Link
+            to="/academia"
+            className="hidden text-xs font-medium text-primary hover:underline md:inline-flex md:items-center md:gap-1"
+          >
+            Ver tudo <ArrowRight className="h-3 w-3" />
+          </Link>
+        }
+      >
+        {courses.map((c) => (
+          <CourseCard
+            key={c.id}
+            course={applyProgress(c, progress)}
+            className="w-[340px] shrink-0"
+          />
+        ))}
+      </Rail>
+
+      {realFeaturedLive?.status !== "live" && realFeaturedLive && (
+        <section>
+          <div className="mb-4 flex items-end justify-between px-1">
+            <div>
+              <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-primary">
+                Próxima Live
+              </p>
+              <h2 className="mt-1.5 font-display text-xl leading-tight text-foreground md:text-2xl">
+                O palco privado do clube.
+              </h2>
+            </div>
+          </div>
+          <LiveHeroBanner live={realFeaturedLive} />
+        </section>
+      )}
+
       <Rail
         title="Recomendado para ti"
         subtitle="Curadoria com base no teu percurso."
       >
         {recommended.map((c) => (
-          <CourseCard key={c.id} course={c} className="w-[300px] shrink-0" />
+          <CourseCard key={c.id} course={c} className="w-[340px] shrink-0" />
         ))}
       </Rail>
-    ),
-    "next-live": realFeaturedLive ? <LiveHeroBanner live={realFeaturedLive} /> : null,
-    news: null,
-    "top-tools": null,
-    "upcoming-events": null,
-    jade: <JadeCTA />,
-    community: <CommunityBlock />,
-  };
 
-  return (
-    <div className="space-y-12">
-      {/* Hero — Live activa em destaque quando existe */}
-      {realFeaturedLive?.status === "live" && <LiveHeroBanner live={realFeaturedLive} />}
-
-      {/* Hero — Vídeo de apresentação */}
-      <PresentationVideoHero />
-
-      {/* Hero — Continuar */}
-      <section className="space-y-6">
-        {featured && <ContinueHero course={featured} />}
-      </section>
-
-
-
-
-      {user.dashboard.blocks.map((b) => (
-        <div key={b}>
-          {blocks[b]}
-          {b === "continue" && (
-            <div className="mt-12">
-              <Rail
-                title="Cursos"
-                subtitle="Todo o catálogo da Academia MM."
-                action={
-                  <Link
-                    to="/academia"
-                    className="hidden text-xs font-medium text-primary hover:underline md:inline-flex md:items-center md:gap-1"
-                  >
-                    Ver tudo <ArrowRight className="h-3 w-3" />
-                  </Link>
-                }
-              >
-                {courses.map((c) => (
-                  <CourseCard
-                    key={c.id}
-                    course={applyProgress(c, progress)}
-                    className="w-[300px] shrink-0"
-                  />
-                ))}
-              </Rail>
-            </div>
-          )}
-        </div>
-      ))}
+      <JadeCTA />
+      <CommunityBlock />
     </div>
   );
 }
 
-function PresentationVideoHero() {
+function CinematicHero({ name }: { name: string }) {
   const videoId = "J-ivFkMIHCQ";
   const src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&playsinline=1&rel=0&showinfo=0&iv_load_policy=3&disablekb=1`;
+  const firstName = name.split(" ")[0];
   return (
-    <section className="mx-auto w-full max-w-2xl">
-      <div className="relative overflow-hidden rounded-2xl ring-1 ring-border">
-        <div className="relative aspect-video w-full bg-black">
-          <iframe
-            src={src}
-            title="Apresentação MM Club"
-            allow="autoplay; encrypted-media; picture-in-picture"
-            allowFullScreen
-            className="absolute inset-0 h-full w-full scale-[1.35] border-0"
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-background/10" />
+    <section className="relative -mx-3 overflow-hidden sm:-mx-4 md:-mx-8">
+      <div className="relative aspect-[16/9] w-full bg-black md:aspect-[21/9]">
+        <iframe
+          src={src}
+          title="MM Club"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          allowFullScreen
+          className="absolute inset-0 h-full w-full scale-[1.5] border-0"
+          loading="lazy"
+        />
+        {/* Cinematic gradients — bottom heavy so text sits on darkness */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-transparent to-background/30" />
+
+        {/* Editorial overlay */}
+        <div className="absolute inset-0 flex items-end">
+          <div className="w-full px-6 pb-8 md:px-14 md:pb-16">
+            <p className="font-display text-[10px] uppercase tracking-[0.32em] text-primary md:text-xs">
+              MM Club
+            </p>
+            <h1 className="mt-3 font-display text-3xl leading-[1.02] tracking-tight text-foreground md:text-6xl lg:text-7xl">
+              Bom regresso,{" "}
+              <span className="text-primary">{firstName}</span>.
+            </h1>
+            <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-lg">
+              Continua a construir a tua Marca Milionária.
+            </p>
+          </div>
         </div>
       </div>
     </section>
   );
 }
+
 
 
 function ContinueHero({ course }: { course: import("@/data/types").Course }) {
