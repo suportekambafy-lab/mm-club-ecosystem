@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { useAdminIds } from "@/hooks/use-admin-ids";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_app/comunidade")({
   head: () => ({
@@ -307,11 +308,10 @@ function CommunityPage() {
                   <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border-2 border-surface-1 bg-emerald-500" />
                 </div>
               ))}
-              {membersQ.isLoading && (
-                <div className="col-span-5 flex justify-center py-2 text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                </div>
-              )}
+              {membersQ.isLoading &&
+                Array.from({ length: 10 }).map((_, i) => (
+                  <Skeleton key={i} className="h-9 w-9 rounded-full" />
+                ))}
               {membersQ.data && membersQ.data.length === 0 && (
                 <p className="col-span-5 text-center text-xs text-muted-foreground">
                   Ainda ninguém publicou.
@@ -358,11 +358,27 @@ function CommunityPage() {
 
               {/* Feed */}
               <div className="space-y-4">
-                {postsQ.isLoading && (
-                  <div className="flex justify-center py-12 text-muted-foreground">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  </div>
-                )}
+                {postsQ.isLoading &&
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="rounded-2xl border border-border bg-surface-1 p-5"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-10 w-10 rounded-full" />
+                        <div className="space-y-2">
+                          <Skeleton className="h-3 w-32" />
+                          <Skeleton className="h-3 w-20" />
+                        </div>
+                      </div>
+                      <div className="mt-4 space-y-2">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-11/12" />
+                        <Skeleton className="h-4 w-3/4" />
+                      </div>
+                      <Skeleton className="mt-4 h-48 w-full rounded-xl" />
+                    </div>
+                  ))}
                 {postsQ.isError && (
                   <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
                     Não foi possível carregar o feed.
@@ -1284,11 +1300,16 @@ function CommentsSection({
 
   return (
     <div className="mt-3 space-y-3 border-t border-border pt-3">
-      {q.isLoading && (
-        <div className="flex justify-center text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
-        </div>
-      )}
+      {q.isLoading &&
+        Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="flex gap-2">
+            <Skeleton className="h-7 w-7 rounded-full" />
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-3 w-full" />
+            </div>
+          </div>
+        ))}
       {q.data?.map((c) => (
         <CommentItem
           key={c.id}
@@ -1590,11 +1611,19 @@ function ChatRoom({ user }: { user: User }) {
 
 
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
-        {q.isLoading && (
-          <div className="flex justify-center py-8 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin" />
-          </div>
-        )}
+        {q.isLoading &&
+          Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className={cn("flex gap-2.5", i % 2 === 1 && "flex-row-reverse")}
+            >
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div className={cn("flex max-w-[75%] flex-col gap-1", i % 2 === 1 && "items-end")}>
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-8 w-40 rounded-2xl" />
+              </div>
+            </div>
+          ))}
         {q.data?.length === 0 && (
           <div className="flex h-full items-center justify-center">
             <p className="text-center text-xs text-muted-foreground">
