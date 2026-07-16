@@ -5,7 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
+type CheckoutSearch = { plan?: "start" | "plus" | "elite" };
+
 export const Route = createFileRoute("/checkout")({
+  validateSearch: (s: Record<string, unknown>): CheckoutSearch => {
+    const p = s.plan;
+    return {
+      plan: p === "start" || p === "plus" || p === "elite" ? p : undefined,
+    };
+  },
   head: () => ({
     meta: [
       { title: "Planos MM Club — Escolhe a tua adesão" },
