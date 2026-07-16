@@ -170,18 +170,10 @@ function EnrolledRow({ course }: { course: Course }) {
     >
       {/* Cover */}
       <div
-        className="relative aspect-[16/9] w-full shrink-0 overflow-hidden rounded-xl md:h-16 md:w-24 md:aspect-auto"
+        className="aspect-[16/9] w-full shrink-0 overflow-hidden rounded-xl md:h-16 md:w-24 md:aspect-auto"
         style={{ background: course.cover }}
       >
-        {firstLesson?.cover && (
-          <img
-            src={firstLesson.cover}
-            alt=""
-            loading="lazy"
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-        )}
-        <div className="absolute inset-0 bg-linear-to-tr from-black/60 to-transparent" />
+        <div className="h-full w-full bg-linear-to-tr from-black/60 to-transparent" />
       </div>
 
       {/* Title + mentor */}
