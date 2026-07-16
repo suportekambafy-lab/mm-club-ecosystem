@@ -197,27 +197,6 @@ function CinematicHero({ name }: { name: string }) {
   );
 }
 
-function PresentationVideoHero() {
-  const videoId = "J-ivFkMIHCQ";
-  const src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&playsinline=1&rel=0&showinfo=0&iv_load_policy=3&disablekb=1`;
-  return (
-    <section className="mx-auto w-full max-w-2xl">
-      <div className="relative overflow-hidden rounded-2xl ring-1 ring-border">
-        <div className="relative aspect-video w-full bg-black">
-          <iframe
-            src={src}
-            title="Apresentação MM Club"
-            allow="autoplay; encrypted-media; picture-in-picture"
-            allowFullScreen
-            className="absolute inset-0 h-full w-full scale-[1.35] border-0"
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-background/10" />
-        </div>
-      </div>
-    </section>
-  );
-}
 
 
 function ContinueHero({ course }: { course: import("@/data/types").Course }) {
