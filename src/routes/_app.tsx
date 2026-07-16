@@ -80,32 +80,18 @@ type NavItem = {
   soon?: boolean;
 };
 
-type NavSection = { label: string; items: NavItem[] };
-
-const navSections: NavSection[] = [
-  {
-    label: "Geral",
-    items: [
-      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
-      { to: "/eventos", label: "Agenda", icon: CalendarDays, soon: true },
-      { to: "/comunidade", label: "Comunidade", icon: Users },
-      { to: "/lives", label: "Lives", icon: Radio },
-    ],
-  },
-  {
-    label: "Cursos",
-    items: [
-      { to: "/academia", label: "Academia", icon: GraduationCap },
-      { to: "/jade", label: "Suporte IA", icon: Star },
-    ],
-  },
-  {
-    label: "Recursos",
-    items: [{ to: "/ferramentas", label: "Ferramentas", icon: Wrench, soon: true }],
-  },
+// Editorial single-list nav — MasterClass / Apple TV energy, no SaaS group labels.
+const navItems: NavItem[] = [
+  { to: "/dashboard", label: "Início", icon: Home, exact: true },
+  { to: "/academia", label: "Academia", icon: GraduationCap },
+  { to: "/jade", label: "Jade", icon: Star },
+  { to: "/lives", label: "Ao Vivo", icon: Radio },
+  { to: "/comunidade", label: "Comunidade", icon: Users },
+  { to: "/ferramentas", label: "Ferramentas", icon: Wrench, soon: true },
+  { to: "/eventos", label: "Eventos", icon: CalendarDays, soon: true },
 ];
 
-const flatNav = navSections.flatMap((s) => s.items);
+const flatNav = navItems;
 
 function AppLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
