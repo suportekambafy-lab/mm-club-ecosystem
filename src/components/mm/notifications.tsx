@@ -10,7 +10,7 @@ import {
   CalendarDays,
   Play,
   Check,
-  Sparkles,
+  
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { news } from "@/data/news";
