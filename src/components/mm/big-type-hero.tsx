@@ -190,13 +190,13 @@ export function BigTypeHero() {
         {/* massive type stack + overlays */}
         <div className="relative mt-14 sm:mt-16">
           {/* type */}
-          <div className="relative z-0 flex flex-col items-center leading-[0.82]">
+          <div className="relative z-0 flex flex-col items-center leading-[0.85]">
             <motion.h1
               custom={0}
               initial="hidden"
               animate="show"
               variants={stackAnim}
-              className="font-display text-[22vw] font-extrabold tracking-tight text-foreground/85 sm:text-[18vw] lg:text-[15rem]"
+              className="font-display text-[14vw] font-extrabold tracking-tight text-foreground/85 sm:text-[13vw] lg:text-[11rem]"
             >
               #CLUB
             </motion.h1>
@@ -205,7 +205,7 @@ export function BigTypeHero() {
               initial="hidden"
               animate="show"
               variants={stackAnim}
-              className="-mt-[3vw] font-display text-[22vw] font-extrabold tracking-tight text-transparent sm:text-[18vw] lg:text-[15rem]"
+              className="font-display text-[14vw] font-extrabold tracking-tight text-transparent sm:text-[13vw] lg:text-[11rem]"
               style={{
                 WebkitTextStroke: "1.5px var(--gold)",
               }}
@@ -217,7 +217,7 @@ export function BigTypeHero() {
               initial="hidden"
               animate="show"
               variants={stackAnim}
-              className="-mt-[3vw] font-display text-[22vw] font-extrabold tracking-tight sm:text-[18vw] lg:text-[15rem]"
+              className="font-display text-[13vw] font-extrabold tracking-tight sm:text-[12vw] lg:text-[10rem]"
               style={{
                 background:
                   "linear-gradient(180deg, var(--gold-soft), var(--gold-deep))",
