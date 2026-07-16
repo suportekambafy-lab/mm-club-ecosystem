@@ -571,13 +571,13 @@ function FeatureComunidade() {
             ].map((p, i) => (
               <div key={p.n} className="rounded-xl border border-border bg-surface-2/40 p-4">
                 <div className="flex items-center gap-3">
-                  <div
-                    className="h-9 w-9 rounded-full"
-                    style={{
-                      background: i
-                        ? "linear-gradient(135deg, oklch(0.55 0.22 285), oklch(0.42 0.2 285))"
-                        : "linear-gradient(135deg, oklch(0.82 0.13 82), oklch(0.58 0.14 68))",
-                    }}
+                  <img
+                    src={i ? avatar2 : avatar1}
+                    alt=""
+                    loading="lazy"
+                    width={36}
+                    height={36}
+                    className="h-9 w-9 rounded-full object-cover"
                   />
                   <div>
                     <p className="text-xs font-semibold">{p.n}</p>
