@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { Check, Crown, Sparkles, Star } from "lucide-react";
+import { Check, Crown, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
@@ -50,7 +50,7 @@ const PLANS: Plan[] = [
     id: "start",
     priceId: "mm_club_start_monthly",
     name: "MM Club Start",
-    icon: <Sparkles className="h-5 w-5" />,
+    icon: <Star className="h-5 w-5" />,
     price: "29,90 €",
     cadence: "/ mês",
     intro: "Ideal para quem quer começar hoje.",

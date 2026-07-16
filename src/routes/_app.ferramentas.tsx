@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Sparkles } from "lucide-react";
+import { Wand2 } from "lucide-react";
 import { SectionHeading } from "@/components/mm/section-heading";
 
 export const Route = createFileRoute("/_app/ferramentas")({
@@ -27,7 +27,7 @@ function ToolsPage() {
 
       <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-border bg-surface-1 px-6 py-20 text-center">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary ring-1 ring-[color:var(--hairline)]">
-          <Sparkles className="h-5 w-5" />
+          <Wand2 className="h-5 w-5" />
         </div>
         <h2 className="font-display text-xl text-foreground md:text-2xl">Em breve</h2>
         <p className="max-w-md text-sm text-muted-foreground">

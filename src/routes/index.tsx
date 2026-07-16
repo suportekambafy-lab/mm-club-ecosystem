@@ -6,7 +6,7 @@ import {
   Users,
   Radio,
   Wrench,
-  Sparkles,
+  Bot,
   Check,
   Crown,
 } from "lucide-react";
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/")({
 
 const features = [
   { icon: BookOpen, title: "Academia", desc: "Cursos completos e novos módulos todos os meses." },
-  { icon: Sparkles, title: "Suporte IA (Jade)", desc: "Assistente treinada com o método MM." },
+  { icon: Bot, title: "Suporte IA (Jade)", desc: "Assistente treinada com o método MM." },
   { icon: Users, title: "Comunidade", desc: "Rede privada de empreendedores portugueses." },
   { icon: Radio, title: "Lives exclusivas", desc: "Sessões ao vivo com especialistas." },
   { icon: Wrench, title: "Ferramentas & Templates", desc: "Checklists, prompts e recursos práticos." },
