@@ -51,16 +51,37 @@ export const getLive = createServerFn({ method: "GET" })
     const { data: live, error } = await context.supabase
       .from("lives")
       .select(
-        "id,title,description,expert_id,starts_at,duration_minutes,visibility,cover_url,status,cf_playback_id,recording_video_uid",
+        "id,title,description,expert_id,starts_at,duration_minutes,visibility,cover_url,status,cf_playback_id,cf_live_input_id,recording_video_uid",
       )
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!live) throw new Error("Live não encontrada ou sem acesso.");
 
+    // Backfill recording UID for ended/published lives when the webhook didn't fire.
+    let recordingUid = live.recording_video_uid;
+    const isReplay = live.status === "published" || live.status === "ended";
+    if (isReplay && !recordingUid && live.cf_live_input_id) {
+      try {
+        const { listVideosForLiveInput } = await import("@/lib/cloudflare-stream.server");
+        const videos = await listVideosForLiveInput(live.cf_live_input_id);
+        const ready = videos.find((v) => v.readyToStream) ?? videos[0];
+        if (ready?.uid) {
+          recordingUid = ready.uid;
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          await supabaseAdmin
+            .from("lives")
+            .update({ recording_video_uid: ready.uid, status: "published" })
+            .eq("id", live.id);
+        }
+      } catch (e) {
+        console.error("[lives] backfill recording_video_uid failed", e);
+      }
+    }
+
     // Determine the playback UID (live vs. recording).
-    const videoUid = live.status === "published" || live.status === "ended"
-      ? live.recording_video_uid ?? live.cf_playback_id
+    const videoUid = isReplay
+      ? recordingUid ?? live.cf_playback_id
       : live.cf_playback_id;
 
     let playbackToken: string | null = null;
@@ -75,6 +96,7 @@ export const getLive = createServerFn({ method: "GET" })
 
     return { live, playbackToken, videoUid };
   });
+
 
 // Chat messages: initial fetch + send.
 export const listChatMessages = createServerFn({ method: "GET" })
