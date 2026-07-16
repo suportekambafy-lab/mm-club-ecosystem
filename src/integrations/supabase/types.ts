@@ -277,6 +277,101 @@ export type Database = {
         }
         Relationships: []
       }
+      live_chat_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          live_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          live_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          live_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_chat_messages_live_id_fkey"
+            columns: ["live_id"]
+            isOneToOne: false
+            referencedRelation: "lives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lives: {
+        Row: {
+          cf_live_input_id: string | null
+          cf_playback_id: string | null
+          cf_rtmps_url: string | null
+          cf_stream_key: string | null
+          cover_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          duration_minutes: number
+          expert_id: string | null
+          id: string
+          published_lesson_id: string | null
+          recording_video_uid: string | null
+          starts_at: string
+          status: Database["public"]["Enums"]["live_status"]
+          title: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          cf_live_input_id?: string | null
+          cf_playback_id?: string | null
+          cf_rtmps_url?: string | null
+          cf_stream_key?: string | null
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number
+          expert_id?: string | null
+          id?: string
+          published_lesson_id?: string | null
+          recording_video_uid?: string | null
+          starts_at: string
+          status?: Database["public"]["Enums"]["live_status"]
+          title: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          cf_live_input_id?: string | null
+          cf_playback_id?: string | null
+          cf_rtmps_url?: string | null
+          cf_stream_key?: string | null
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number
+          expert_id?: string | null
+          id?: string
+          published_lesson_id?: string | null
+          recording_video_uid?: string | null
+          starts_at?: string
+          status?: Database["public"]["Enums"]["live_status"]
+          title?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -408,6 +503,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_live: {
+        Args: { _live_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_active_subscription: {
         Args: { check_env?: string; user_uuid: string }
         Returns: boolean
@@ -423,6 +522,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "moderator" | "user"
       content_visibility: "public" | "purchased" | "club" | "premium"
+      live_status: "scheduled" | "live" | "ended" | "published"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -552,6 +652,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "moderator", "user"],
       content_visibility: ["public", "purchased", "club", "premium"],
+      live_status: ["scheduled", "live", "ended", "published"],
     },
   },
 } as const
