@@ -147,7 +147,7 @@ export function BigTypeHero() {
   };
 
   return (
-    <section className="relative overflow-hidden pt-14 pb-6 sm:pt-16 sm:pb-8">
+    <section className="relative overflow-hidden pt-20 pb-14 sm:pt-28 sm:pb-20">
       {/* background grid */}
       <div
         aria-hidden
@@ -172,8 +172,8 @@ export function BigTypeHero() {
 
       <div className="mx-auto max-w-[1180px] px-4 sm:px-8">
         {/* intro tag + CTA */}
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface-1/60 px-3 py-1.5 backdrop-blur">
+        <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface-1/60 px-4 py-2 backdrop-blur">
             <span className="relative flex h-1.5 w-1.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
@@ -182,16 +182,16 @@ export function BigTypeHero() {
               Clube privado · Temporada 2026
             </span>
           </div>
-          <p className="max-w-lg text-xs leading-relaxed text-muted-foreground sm:text-sm">
+          <p className="max-w-lg text-sm leading-relaxed text-muted-foreground sm:text-base">
             O ecossistema privado da Marca Milionária. Cursos, Suporte IA,
             comunidade, lives e ferramentas — num único acesso.
           </p>
         </div>
 
         {/* massive type stack + overlays */}
-        <div className="relative mt-5 sm:mt-6">
+        <div className="relative mt-14 sm:mt-20">
           {/* type */}
-          <div className="relative z-0 flex flex-col items-center leading-[0.98] sm:leading-[0.94]">
+          <div className="relative z-0 flex flex-col items-center gap-1 leading-[1.02] sm:gap-2 sm:leading-[1]">
             <motion.h1
               custom={0}
               initial="hidden"
@@ -267,7 +267,7 @@ export function BigTypeHero() {
 
 
         {/* CTA row */}
-        <div className="mt-7 flex flex-wrap items-center justify-center gap-3 sm:mt-9">
+        <div className="mt-14 flex flex-wrap items-center justify-center gap-4 sm:mt-20">
           <Link
             to="/checkout"
             className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-4 text-sm font-semibold text-primary-foreground shadow-[0_20px_60px_-20px_oklch(0.82_0.13_82_/_0.7)] hover:bg-gold-soft transition-all"
@@ -285,7 +285,7 @@ export function BigTypeHero() {
       </div>
 
       {/* Bottom three-card system */}
-      <div id="pilares" className="mx-auto mt-10 max-w-[1180px] px-4 sm:mt-14 sm:px-8">
+      <div id="pilares" className="mx-auto mt-24 max-w-[1180px] px-4 sm:mt-32 sm:px-8">
         <div className="grid gap-6 md:grid-cols-3">
           {/* Card 1 — Academia */}
           <motion.div
