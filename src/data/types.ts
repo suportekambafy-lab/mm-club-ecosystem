@@ -33,7 +33,9 @@ export interface Lesson {
   duration: string; // "12m"
   completed?: boolean;
   videoUrl?: string;
+  cover?: string; // URL for lesson thumbnail
 }
+
 
 export interface Module {
   id: string;
