@@ -17,6 +17,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { MMLogo } from "@/components/mm/logo";
 import { BigTypeHero } from "@/components/mm/big-type-hero";
 import cover from "@/assets/marca-milionaria-cover.png.asset.json";
+import lessonL1 from "@/assets/lesson-l1.jpg";
+import lessonL2 from "@/assets/lesson-l2.jpg";
+import lessonL3 from "@/assets/lesson-l3.jpg";
+import lessonL4 from "@/assets/lesson-l4.jpg";
+import lessonL5 from "@/assets/lesson-l5.jpg";
+import lessonL6 from "@/assets/lesson-l6.jpg";
 
 export const Route = createFileRoute("/")({
   ssr: false,
