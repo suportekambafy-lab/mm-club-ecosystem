@@ -1,5 +1,5 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { Check, Crown, Star } from "lucide-react";
+import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
+import { Check, Crown, Sparkles, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
@@ -100,6 +100,7 @@ const PLANS: Plan[] = [
 
 function PlansPage() {
   const navigate = useNavigate();
+  const { plan: recommendedPlan } = useSearch({ from: "/checkout" });
   const { openCheckout, loading } = usePaddleCheckout();
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [pendingPlan, setPendingPlan] = useState<string | null>(null);
