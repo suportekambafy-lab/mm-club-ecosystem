@@ -250,154 +250,6 @@ function ContinueHero({ course }: { course: import("@/data/types").Course }) {
   );
 }
 
-function NextLiveCard() {
-  if (!nextLive) return null;
-  const expert = expertsById[nextLive.expertId];
-  const [distance, setDistance] = useState<string>("");
-  useEffect(() => {
-    setDistance(
-      formatDistanceToNow(new Date(nextLive.startsAt), {
-        locale: pt,
-        addSuffix: true,
-      }),
-    );
-  }, []);
-  return (
-    <section className="grid gap-4 rounded-2xl bg-surface-1 p-6 ring-1 ring-border md:grid-cols-[1fr_auto] md:items-center md:p-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
-        <div
-          className="h-24 w-24 shrink-0 rounded-xl ring-1 ring-[color:var(--hairline)]"
-          style={{ background: nextLive.cover }}
-        />
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-primary">
-              <Radio className="h-3 w-3" /> Próxima live
-            </span>
-            <span className="text-xs text-muted-foreground">{distance}</span>
-          </div>
-          <h3 className="mt-2 font-display text-xl text-foreground">
-            {nextLive.title}
-          </h3>
-          {expert && (
-            <div className="mt-3">
-              <ExpertAvatar expert={expert} size="sm" showName showRole />
-            </div>
-          )}
-        </div>
-      </div>
-      <Link
-        to="/lives"
-        className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
-      >
-        <Calendar className="h-4 w-4" /> Adicionar
-      </Link>
-    </section>
-  );
-}
-
-function NewsRail() {
-  return (
-    <Rail
-      title="Novidades"
-      subtitle="Tudo o que se moveu esta semana no clube."
-    >
-      {news.map((item) => {
-        const Meta = newsMeta[item.type];
-        const Icon = Meta.icon;
-        return (
-          <Link
-            key={item.id}
-            to={item.href}
-            className="group flex w-[300px] shrink-0 flex-col justify-between gap-4 rounded-xl bg-surface-1 p-5 ring-1 ring-border transition hover:ring-[color:var(--hairline)]"
-          >
-            <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-primary">
-                <Icon className="h-3 w-3" /> {Meta.label}
-              </span>
-              <span className="text-[10px] text-muted-foreground">{item.timeAgo}</span>
-            </div>
-            <div>
-              <p className="font-display text-base leading-tight text-foreground line-clamp-2">
-                {item.title}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">{item.subtitle}</p>
-            </div>
-            <span className="inline-flex items-center gap-1 text-xs text-primary opacity-0 transition group-hover:opacity-100">
-              Explorar <ArrowRight className="h-3 w-3" />
-            </span>
-          </Link>
-        );
-      })}
-    </Rail>
-  );
-}
-
-function TopToolsBlock() {
-  return (
-    <section className="space-y-4">
-      <div className="flex items-end justify-between px-1">
-        <div>
-          <h2 className="font-display text-xl text-foreground md:text-2xl">
-            As tuas ferramentas
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">Atalhos rápidos para o dia-a-dia.</p>
-        </div>
-        <Link
-          to="/ferramentas"
-          className="text-xs font-medium text-primary hover:underline"
-        >
-          Ver tudo
-        </Link>
-      </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {topTools.map((t) => (
-          <Link
-            key={t.id}
-            to="/ferramentas"
-            className="group flex flex-col justify-between gap-3 rounded-xl bg-surface-1 p-4 ring-1 ring-border transition hover:ring-[color:var(--hairline)]"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Zap className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-foreground">{t.title}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
-                {t.description}
-              </p>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function UpcomingEventsBlock() {
-  return (
-    <Rail title="Próximos eventos" subtitle="MM Summit, presenciais e masterclasses.">
-      {upcomingEvents.map((ev) => (
-        <Link
-          key={ev.id}
-          to="/eventos"
-          className="group flex w-[340px] shrink-0 flex-col overflow-hidden rounded-xl bg-surface-1 ring-1 ring-border transition hover:ring-[color:var(--hairline)]"
-        >
-          <div className="h-32" style={{ background: ev.cover }} />
-          <div className="flex flex-col gap-2 p-5">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-primary">
-              {ev.type} · {ev.date}
-            </span>
-            <h3 className="font-display text-lg leading-tight text-foreground">
-              {ev.title}
-            </h3>
-            <p className="text-xs text-muted-foreground">{ev.location}</p>
-          </div>
-        </Link>
-      ))}
-    </Rail>
-  );
-}
-
 function JadeCTA() {
   return (
     <Link
@@ -427,7 +279,34 @@ function JadeCTA() {
   );
 }
 
+type RecentPost = {
+  id: string;
+  content: string;
+  created_at: string;
+  author: { display_name: string | null } | null;
+};
+
 function CommunityBlock() {
+  const [posts, setPosts] = useState<RecentPost[]>([]);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("community_posts")
+      .select("id, content, created_at, author:profiles!community_posts_author_id_fkey(display_name)")
+      .order("created_at", { ascending: false })
+      .limit(3)
+      .then(({ data }) => {
+        if (cancelled) return;
+        setPosts((data as unknown as RecentPost[]) ?? []);
+        setHydrated(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <section className="grid gap-4 md:grid-cols-2">
       <div className="rounded-2xl bg-surface-1 p-6 ring-1 ring-border">
@@ -448,17 +327,31 @@ function CommunityBlock() {
       <div className="rounded-2xl bg-surface-1 p-6 ring-1 ring-border">
         <div className="flex items-center gap-2">
           <Bell className="h-4 w-4 text-primary" />
-          <h3 className="font-display text-lg text-foreground">Avisos recentes</h3>
+          <h3 className="font-display text-lg text-foreground">Atividade recente</h3>
         </div>
-        <ul className="mt-3 space-y-2">
-          {communityNotices.slice(0, 2).map((n) => (
-            <li key={n.id} className="text-sm">
-              <span className="text-foreground">{n.title}</span>
-              <span className="ml-2 text-xs text-muted-foreground">{n.timeAgo}</span>
-            </li>
-          ))}
-        </ul>
+        {hydrated && posts.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">
+            Ainda sem publicações. Sê o primeiro a partilhar na comunidade.
+          </p>
+        ) : (
+          <ul className="mt-3 space-y-2.5">
+            {posts.map((p) => (
+              <li key={p.id} className="text-sm">
+                <span className="font-medium text-foreground">
+                  {p.author?.display_name ?? "Membro"}
+                </span>
+                <span className="ml-2 text-muted-foreground line-clamp-1">
+                  {p.content}
+                </span>
+                <span className="ml-2 text-[11px] text-muted-foreground/70">
+                  {formatDistanceToNow(new Date(p.created_at), { locale: pt, addSuffix: true })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </section>
   );
 }
+
