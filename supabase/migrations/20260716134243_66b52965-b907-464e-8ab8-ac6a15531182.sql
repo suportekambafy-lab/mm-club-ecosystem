@@ -1,0 +1,1 @@
+ALTER TABLE public.lives ADD COLUMN IF NOT EXISTS cf_webrtc_url text;

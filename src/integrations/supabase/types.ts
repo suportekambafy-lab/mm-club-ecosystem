@@ -315,6 +315,7 @@ export type Database = {
           cf_playback_id: string | null
           cf_rtmps_url: string | null
           cf_stream_key: string | null
+          cf_webrtc_url: string | null
           cover_url: string | null
           created_at: string
           created_by: string | null
@@ -335,6 +336,7 @@ export type Database = {
           cf_playback_id?: string | null
           cf_rtmps_url?: string | null
           cf_stream_key?: string | null
+          cf_webrtc_url?: string | null
           cover_url?: string | null
           created_at?: string
           created_by?: string | null
@@ -355,6 +357,7 @@ export type Database = {
           cf_playback_id?: string | null
           cf_rtmps_url?: string | null
           cf_stream_key?: string | null
+          cf_webrtc_url?: string | null
           cover_url?: string | null
           created_at?: string
           created_by?: string | null
