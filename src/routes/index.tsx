@@ -115,7 +115,7 @@ function Nav({ scrolled }: { scrolled: boolean }) {
             Entrar
           </Link>
           <Link
-            to="/checkout"
+            to="/quiz"
             className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-gold-soft transition-colors"
           >
             Aderir <ArrowRight className="h-3.5 w-3.5" />
@@ -173,10 +173,10 @@ function Hero() {
 
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <Link
-              to="/checkout"
+              to="/quiz"
               className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_10px_40px_-10px_oklch(0.82_0.13_82_/_0.6)] hover:bg-gold-soft transition-all"
             >
-              Aderir ao MM Club
+              Fazer diagnóstico
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <a
@@ -361,10 +361,10 @@ function FeatureSection({
           </ul>
           <div className="mt-9">
             <Link
-              to="/checkout"
+              to="/quiz"
               className="group inline-flex items-center gap-1.5 text-sm font-semibold text-foreground border-b border-hairline pb-1 hover:border-primary transition-colors"
             >
-              Aceder no MM Club
+              Começar diagnóstico
               <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
           </div>

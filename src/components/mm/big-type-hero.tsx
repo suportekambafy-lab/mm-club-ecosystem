@@ -258,7 +258,7 @@ export function BigTypeHero() {
             transition={{ duration: 0.8, delay: 1.1, ease: [0.22, 1, 0.36, 1] }}
             className="absolute right-[10%] bottom-[-4%] z-20 hidden sm:block"
           >
-            <Link to="/checkout" aria-label="Aderir ao MM Club">
+            <Link to="/quiz" aria-label="Fazer diagnóstico MM Club">
               <CircularBadge />
             </Link>
           </motion.div>
@@ -269,10 +269,10 @@ export function BigTypeHero() {
         {/* CTA row */}
         <div className="mt-14 flex flex-wrap items-center justify-center gap-4 sm:mt-20">
           <Link
-            to="/checkout"
+            to="/quiz"
             className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-4 text-sm font-semibold text-primary-foreground shadow-[0_20px_60px_-20px_oklch(0.82_0.13_82_/_0.7)] hover:bg-gold-soft transition-all"
           >
-            Aderir agora
+            Fazer diagnóstico
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
           <a

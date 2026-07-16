@@ -1,11 +1,19 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { Check, Crown, Star } from "lucide-react";
+import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
+import { Check, Crown, Sparkles, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
+type CheckoutSearch = { plan?: "start" | "plus" | "elite" };
+
 export const Route = createFileRoute("/checkout")({
+  validateSearch: (s: Record<string, unknown>): CheckoutSearch => {
+    const p = s.plan;
+    return {
+      plan: p === "start" || p === "plus" || p === "elite" ? p : undefined,
+    };
+  },
   head: () => ({
     meta: [
       { title: "Planos MM Club — Escolhe a tua adesão" },
@@ -92,6 +100,7 @@ const PLANS: Plan[] = [
 
 function PlansPage() {
   const navigate = useNavigate();
+  const { plan: recommendedPlan } = useSearch({ from: "/checkout" });
   const { openCheckout, loading } = usePaddleCheckout();
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [pendingPlan, setPendingPlan] = useState<string | null>(null);
@@ -120,29 +129,44 @@ function PlansPage() {
       <PaymentTestModeBanner />
       <div className="mx-auto max-w-6xl space-y-10 px-4 py-8">
         <header className="text-center">
-          <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
-            <Crown className="h-4 w-4" /> Adesão MM Club
-          </span>
+          {recommendedPlan ? (
+            <span className="inline-flex items-center gap-2 rounded-full border border-hairline bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
+              <Sparkles className="h-3.5 w-3.5" /> Recomendado pelo teu diagnóstico
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
+              <Crown className="h-4 w-4" /> Adesão MM Club
+            </span>
+          )}
           <h1 className="mt-5 font-display text-4xl leading-tight text-foreground md:text-5xl">
-            Escolhe a tua adesão
+            {recommendedPlan ? "O teu plano ideal está pronto." : "Escolhe a tua adesão"}
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground md:text-base">
-            Todos os planos incluem o acesso completo ao MM Club. Escolhe a duração que
-            mais te convém.
+            {recommendedPlan
+              ? "Destacámos a recomendação do teu diagnóstico — mas és livre de escolher outro plano."
+              : "Todos os planos incluem o acesso completo ao MM Club. Escolhe a duração que mais te convém."}
           </p>
         </header>
 
         <section className="grid gap-6 md:grid-cols-3">
-          {PLANS.map((plan) => (
+          {PLANS.map((plan) => {
+            const isRecommended = recommendedPlan === plan.id;
+            return (
             <article
               key={plan.id}
               className={`relative flex flex-col rounded-3xl p-6 ring-1 transition ${
-                plan.highlight
+                isRecommended
+                  ? "bg-surface-1 text-foreground ring-2 ring-primary shadow-[0_30px_80px_-30px_oklch(0.82_0.13_82_/_0.5)] md:-translate-y-2"
+                  : plan.highlight
                   ? "bg-linear-to-br from-violet to-violet-deep text-violet-foreground ring-transparent shadow-xl md:-translate-y-2"
                   : "bg-surface-1 text-foreground ring-border"
               }`}
             >
-              {plan.badge && (
+              {isRecommended ? (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary-foreground shadow-lg">
+                  <Sparkles className="h-3 w-3" /> Recomendado
+                </span>
+              ) : plan.badge ? (
                 <span
                   className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${
                     plan.highlight
@@ -152,7 +176,7 @@ function PlansPage() {
                 >
                   {plan.badge}
                 </span>
-              )}
+              ) : null}
 
               <div
                 className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
@@ -221,7 +245,8 @@ function PlansPage() {
                 {loading && pendingPlan === plan.id ? "A abrir checkout..." : "Subscrever"}
               </button>
             </article>
-          ))}
+            );
+          })}
         </section>
 
         <p className="text-center text-xs text-muted-foreground">
