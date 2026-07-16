@@ -40,13 +40,6 @@ export const Route = createFileRoute("/_app/dashboard")({
   component: DashboardPage,
 });
 
-const newsMeta: Record<NewsType, { icon: typeof BookOpen; label: string }> = {
-  course: { icon: BookOpen, label: "Novo curso" },
-  expert: { icon: Users, label: "Novo especialista" },
-  live: { icon: Radio, label: "Nova live" },
-  tool: { icon: Wrench, label: "Nova ferramenta" },
-  jade: { icon: Bot, label: "Jade" },
-};
 
 function DashboardPage() {
   const { user: sessionUser } = useCurrentUser();
