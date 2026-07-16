@@ -23,7 +23,7 @@ import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { expertsById } from "@/data/experts";
 import { courses } from "@/data/courses";
 import { supabase } from "@/integrations/supabase/client";
-import type { DashboardBlockId } from "@/data/types";
+
 import { formatDistanceToNow } from "date-fns";
 import { pt } from "date-fns/locale";
 
