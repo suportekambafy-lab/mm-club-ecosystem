@@ -106,7 +106,8 @@ function AuthPage() {
               transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
               className="max-w-md"
             >
-              <div className="flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.32em] text-white/70">
+              <FeedbackMarquee />
+              <div className="mt-6 flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.32em] text-white/70">
                 <span className="h-px w-10 bg-white/40" />
                 Clube privado · Temporada 2026
               </div>
@@ -114,6 +115,7 @@ function AuthPage() {
                 O ecossistema privado da Marca Milionária.
               </p>
             </motion.div>
+
           </div>
 
 
