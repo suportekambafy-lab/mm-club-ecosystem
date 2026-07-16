@@ -635,7 +635,7 @@ function FeatureLives() {
               412 a ver
             </div>
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-foreground shadow-2xl">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-foreground shadow-2xl dark:bg-transparent dark:text-white dark:shadow-none">
                 <Radio className="h-6 w-6" />
               </div>
             </div>
