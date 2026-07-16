@@ -1,12 +1,12 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { ArrowRight, ArrowLeft, Mail, Lock, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MMLogo } from "@/components/mm/logo";
 import { toast } from "sonner";
 import authCover from "@/assets/auth-cover.jpg";
-import { cn } from "@/lib/utils";
+
 
 type Search = { redirect?: string };
 
@@ -24,27 +24,6 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-const testimonials = [
-  {
-    quote:
-      "O clube mudou o meu ritmo. Em quatro meses fiz mais do que nos dois anos anteriores.",
-    name: "Inês Cardoso",
-    role: "Fundadora · Estúdio de branding",
-  },
-  {
-    quote:
-      "Nunca tive acesso a este nível de curadoria e comunidade portuguesa a este preço.",
-    name: "Ricardo Bento",
-    role: "E-commerce · +5 lojas",
-  },
-  {
-    quote:
-      "A Suporte IA e as lives semanais foram o divisor de águas para a minha marca.",
-    name: "Marta Silva",
-    role: "Coach & criadora digital",
-  },
-];
-
 function AuthPage() {
   const navigate = useNavigate();
   const { redirect } = useSearch({ from: "/auth" });
@@ -53,7 +32,6 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [tIndex, setTIndex] = useState(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -61,10 +39,6 @@ function AuthPage() {
     });
   }, [navigate, redirect]);
 
-  useEffect(() => {
-    const t = setInterval(() => setTIndex((n) => (n + 1) % testimonials.length), 6000);
-    return () => clearInterval(t);
-  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -93,7 +67,8 @@ function AuthPage() {
     }
   }
 
-  const t = testimonials[tIndex];
+
+
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -109,37 +84,15 @@ function AuthPage() {
             height={1536}
             className="absolute inset-0 h-full w-full object-cover object-center"
           />
-          {/* Vignette + colour grading */}
+          {/* Subtle bottom vignette — just enough for legibility */}
           <div
             aria-hidden
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(180deg, oklch(0.13 0.003 60 / 0.35) 0%, oklch(0.10 0.004 60 / 0.72) 55%, oklch(0.10 0.004 60 / 0.96) 100%)",
+                "linear-gradient(180deg, oklch(0.10 0.004 60 / 0.35) 0%, transparent 30%, transparent 55%, oklch(0.10 0.004 60 / 0.85) 100%)",
             }}
           />
-          <div
-            aria-hidden
-            className="absolute inset-0"
-            style={{
-              background:
-                "radial-gradient(55% 45% at 20% 15%, oklch(0.82 0.13 82 / 0.22), transparent 70%), radial-gradient(50% 42% at 85% 90%, oklch(0.55 0.22 285 / 0.20), transparent 70%)",
-            }}
-          />
-          {/* Fine grid overlay */}
-          <div
-            aria-hidden
-            className="absolute inset-0 opacity-30"
-            style={{
-              backgroundImage:
-                "linear-gradient(to right, oklch(1 0 0 / 0.05) 1px, transparent 1px), linear-gradient(to bottom, oklch(1 0 0 / 0.05) 1px, transparent 1px)",
-              backgroundSize: "56px 56px",
-              maskImage:
-                "radial-gradient(ellipse 90% 70% at 50% 45%, black 40%, transparent 85%)",
-            }}
-          />
-
-
 
           {/* Content */}
           <div className="relative z-10 flex h-full flex-col justify-between p-10 xl:p-14">
@@ -147,74 +100,22 @@ function AuthPage() {
               <MMLogo />
             </Link>
 
-            <div className="max-w-lg">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className="flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.28em] text-white/60">
-                  <span className="h-px w-8 bg-white/30" />
-                  Clube privado · Temporada 2026
-                </div>
-                <h2 className="mt-6 font-display text-4xl leading-[1.05] tracking-tight text-white xl:text-[54px]">
-                  Bem-vindo ao ecossistema privado da Marca Milionária.
-                </h2>
-                <p className="mt-5 max-w-md text-sm leading-relaxed text-white/65 xl:text-base">
-                  Cursos, comunidade, lives e ferramentas — desenhados como um único produto premium.
-                </p>
-              </motion.div>
-
-              {/* Rotating testimonial */}
-              <div className="mt-12 min-h-[130px]">
-                <AnimatePresence mode="wait">
-                  <motion.figure
-                    key={t.name}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -12 }}
-                    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                    className="border-l border-white/20 pl-5"
-                  >
-                    <blockquote className="font-display text-lg leading-relaxed text-white/90 xl:text-xl">
-                      “{t.quote}”
-                    </blockquote>
-                    <figcaption className="mt-4 text-[11px] uppercase tracking-[0.2em] text-white/50">
-                      <span className="text-white/80">{t.name}</span> — {t.role}
-                    </figcaption>
-                  </motion.figure>
-                </AnimatePresence>
-                <div className="mt-5 flex items-center gap-1.5 pl-5">
-                  {testimonials.map((_, i) => (
-                    <span
-                      key={i}
-                      className={cn(
-                        "h-px transition-all",
-                        i === tIndex ? "w-8 bg-white/80" : "w-4 bg-white/25",
-                      )}
-                    />
-                  ))}
-                </div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+              className="max-w-md"
+            >
+              <div className="flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.32em] text-white/70">
+                <span className="h-px w-10 bg-white/40" />
+                Clube privado · Temporada 2026
               </div>
-            </div>
-
-            {/* Metrics */}
-            <dl className="grid max-w-md grid-cols-3 gap-6 border-t border-white/10 pt-6">
-              {[
-                ["+2.400", "Membros ativos"],
-                ["+120", "Aulas na Academia"],
-                ["4.9", "Satisfação"],
-              ].map(([n, l]) => (
-                <div key={l}>
-                  <dt className="font-display text-2xl text-white">{n}</dt>
-                  <dd className="mt-1 text-[10px] uppercase tracking-[0.22em] text-white/60">
-                    {l}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-
+              <h2 className="mt-5 font-display text-3xl leading-[1.05] tracking-tight text-white xl:text-[40px]">
+                Marca Milionária.
+              </h2>
+            </motion.div>
           </div>
+
         </aside>
 
         {/* ==== RIGHT — Form ==== */}
