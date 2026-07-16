@@ -752,8 +752,8 @@ function FeatureEventos() {
             </div>
             <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
               <div className="flex -space-x-2">
-                {["oklch(0.82 0.13 82)", "oklch(0.55 0.22 285)", "oklch(0.68 0.14 70)", "oklch(0.65 0.2 285)"].map((c) => (
-                  <span key={c} className="h-7 w-7 rounded-full border-2 border-surface-1" style={{ background: c }} />
+                {[avatar4, avatar6, avatar3, avatar1].map((src, i) => (
+                  <img key={i} src={src} alt="" loading="lazy" width={28} height={28} className="h-7 w-7 rounded-full border-2 border-surface-1 object-cover" />
                 ))}
                 <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-surface-1 bg-surface-3 text-[10px] font-semibold">
                   +18
