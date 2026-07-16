@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { Copy, Plus, Trash2, Radio, Loader2 } from "lucide-react";
+import { Copy, Plus, Trash2, Radio, Loader2, Video } from "lucide-react";
 import { SectionHeading } from "@/components/mm/section-heading";
 import {
   adminListLives,
@@ -189,6 +189,13 @@ function AdminLives() {
                     {new Date(r.starts_at).toLocaleString("pt-PT")} · {r.duration_minutes}m · {r.visibility} · {r.status}
                   </p>
                 </div>
+                <Link
+                  to="/admin/lives/$liveId/studio"
+                  params={{ liveId: r.id }}
+                  className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  <Video className="h-3 w-3" /> Transmitir do navegador
+                </Link>
                 <button
                   type="button"
                   onClick={() => handleShowIngest(r.id)}

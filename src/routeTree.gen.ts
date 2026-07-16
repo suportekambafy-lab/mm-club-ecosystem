@@ -39,6 +39,7 @@ import { Route as AppAcademiaCourseIdRouteImport } from './routes/_app.academia.
 import { Route as AppAcademiaCourseIdIndexRouteImport } from './routes/_app.academia.$courseId.index'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicCloudflareStreamWebhookRouteImport } from './routes/api/public/cloudflare-stream/webhook'
+import { Route as AdminLivesLiveIdStudioRouteImport } from './routes/admin.lives.$liveId.studio'
 import { Route as AppAcademiaCourseIdLessonIdRouteImport } from './routes/_app.academia.$courseId.$lessonId'
 
 const TermosRoute = TermosRouteImport.update({
@@ -194,6 +195,11 @@ const ApiPublicCloudflareStreamWebhookRoute =
     path: '/api/public/cloudflare-stream/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AdminLivesLiveIdStudioRoute = AdminLivesLiveIdStudioRouteImport.update({
+  id: '/$liveId/studio',
+  path: '/$liveId/studio',
+  getParentRoute: () => AdminLivesRoute,
+} as any)
 const AppAcademiaCourseIdLessonIdRoute =
   AppAcademiaCourseIdLessonIdRouteImport.update({
     id: '/$lessonId',
@@ -221,7 +227,7 @@ export interface FileRoutesByFullPath {
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
-  '/admin/lives': typeof AdminLivesRoute
+  '/admin/lives': typeof AdminLivesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/admin/': typeof AdminIndexRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
@@ -229,6 +235,7 @@ export interface FileRoutesByFullPath {
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/academia/': typeof AppAcademiaIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
+  '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
@@ -251,13 +258,14 @@ export interface FileRoutesByTo {
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
-  '/admin/lives': typeof AdminLivesRoute
+  '/admin/lives': typeof AdminLivesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/admin': typeof AdminIndexRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/academia': typeof AppAcademiaIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
+  '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdIndexRoute
@@ -284,7 +292,7 @@ export interface FileRoutesById {
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
-  '/admin/lives': typeof AdminLivesRoute
+  '/admin/lives': typeof AdminLivesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/admin/': typeof AdminIndexRoute
   '/_app/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
@@ -292,6 +300,7 @@ export interface FileRoutesById {
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
   '/_app/academia/': typeof AppAcademiaIndexRoute
   '/_app/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
+  '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/_app/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
@@ -326,6 +335,7 @@ export interface FileRouteTypes {
     | '/lives/$liveId'
     | '/academia/'
     | '/academia/$courseId/$lessonId'
+    | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/payments/webhook'
     | '/academia/$courseId/'
@@ -355,6 +365,7 @@ export interface FileRouteTypes {
     | '/lives/$liveId'
     | '/academia'
     | '/academia/$courseId/$lessonId'
+    | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/payments/webhook'
     | '/academia/$courseId'
@@ -388,6 +399,7 @@ export interface FileRouteTypes {
     | '/_app/lives/$liveId'
     | '/_app/academia/'
     | '/_app/academia/$courseId/$lessonId'
+    | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/payments/webhook'
     | '/_app/academia/$courseId/'
@@ -619,6 +631,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCloudflareStreamWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/lives/$liveId/studio': {
+      id: '/admin/lives/$liveId/studio'
+      path: '/$liveId/studio'
+      fullPath: '/admin/lives/$liveId/studio'
+      preLoaderRoute: typeof AdminLivesLiveIdStudioRouteImport
+      parentRoute: typeof AdminLivesRoute
+    }
     '/_app/academia/$courseId/$lessonId': {
       id: '/_app/academia/$courseId/$lessonId'
       path: '/$lessonId'
@@ -694,12 +713,24 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface AdminLivesRouteChildren {
+  AdminLivesLiveIdStudioRoute: typeof AdminLivesLiveIdStudioRoute
+}
+
+const AdminLivesRouteChildren: AdminLivesRouteChildren = {
+  AdminLivesLiveIdStudioRoute: AdminLivesLiveIdStudioRoute,
+}
+
+const AdminLivesRouteWithChildren = AdminLivesRoute._addFileChildren(
+  AdminLivesRouteChildren,
+)
+
 interface AdminRouteChildren {
   AdminAulasRoute: typeof AdminAulasRoute
   AdminCursosRoute: typeof AdminCursosRoute
   AdminEventosRoute: typeof AdminEventosRoute
   AdminFerramentasRoute: typeof AdminFerramentasRoute
-  AdminLivesRoute: typeof AdminLivesRoute
+  AdminLivesRoute: typeof AdminLivesRouteWithChildren
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -708,7 +739,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCursosRoute: AdminCursosRoute,
   AdminEventosRoute: AdminEventosRoute,
   AdminFerramentasRoute: AdminFerramentasRoute,
-  AdminLivesRoute: AdminLivesRoute,
+  AdminLivesRoute: AdminLivesRouteWithChildren,
   AdminIndexRoute: AdminIndexRoute,
 }
 
