@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { useAdminIds } from "@/hooks/use-admin-ids";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_app/comunidade")({
   head: () => ({
