@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MMLogo } from "@/components/mm/logo";
+import { BigTypeHero } from "@/components/mm/big-type-hero";
 import cover from "@/assets/marca-milionaria-cover.png.asset.json";
 
 export const Route = createFileRoute("/")({
@@ -51,8 +52,7 @@ function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <Nav scrolled={scrolled} />
-      <Hero />
-      <TrustStrip />
+      <BigTypeHero />
       <FeatureAcademia />
       <FeatureJade />
       <FeatureComunidade />
