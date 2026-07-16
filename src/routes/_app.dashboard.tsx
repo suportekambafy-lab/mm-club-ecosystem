@@ -3,13 +3,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
   Play,
-  Calendar,
   BookOpen,
-  Wrench,
   Users,
   Radio,
   Bot,
-  Zap,
   Bell,
 } from "lucide-react";
 import { CourseCard } from "@/components/mm/course-card";
@@ -24,17 +21,14 @@ import {
   continueFromProgress,
   recommendedFromProgress,
 } from "@/hooks/use-user-progress";
-import { nextLive } from "@/data/lives";
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
-import { news } from "@/data/news";
-import { topTools } from "@/data/tools";
-import { upcomingEvents } from "@/data/events";
-import { communityNotices } from "@/data/community";
 import { expertsById } from "@/data/experts";
 import { courses } from "@/data/courses";
-import type { DashboardBlockId, NewsType } from "@/data/types";
+import { supabase } from "@/integrations/supabase/client";
+import type { DashboardBlockId } from "@/data/types";
 import { formatDistanceToNow } from "date-fns";
 import { pt } from "date-fns/locale";
+
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
