@@ -243,16 +243,16 @@ function CommunityPage() {
 
   return (
     <div className="mx-auto max-w-[1400px]">
-      {/* Header */}
-      <header className="sticky top-16 z-20 mb-6 -mx-3 flex flex-wrap items-end justify-between gap-4 border-b border-border/60 bg-background/80 px-3 pb-4 pt-2 backdrop-blur-xl sm:-mx-4 sm:px-4 md:-mx-8 md:px-8">
-        <div className="min-w-0 space-y-1.5">
-          <p className="text-xs uppercase tracking-[0.3em] text-primary font-display">
-            Comunidade
+      {/* Header — editorial */}
+      <header className="sticky top-16 z-20 mb-8 -mx-3 flex flex-wrap items-end justify-between gap-6 border-b border-border/60 bg-background/85 px-3 pb-6 pt-6 backdrop-blur-xl sm:-mx-4 sm:px-4 md:-mx-8 md:px-8">
+        <div className="min-w-0 space-y-3">
+          <p className="text-[10px] uppercase tracking-[0.4em] text-primary font-display">
+            — Comunidade
           </p>
-          <h1 className="font-display text-3xl text-foreground md:text-4xl">
+          <h1 className="font-display text-4xl leading-[1.05] text-foreground md:text-6xl">
             {activeCategoryName ? activeCategoryName : "O que se passa no clube?"}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="max-w-xl text-sm text-muted-foreground md:text-base">
             Partilhe vitórias, tire dúvidas e converse ao vivo com outros membros.
           </p>
         </div>
@@ -271,6 +271,7 @@ function CommunityPage() {
           />
         </div>
       </header>
+
 
       <div className="grid items-start gap-6 lg:grid-cols-[240px_minmax(0,1fr)_280px]">
         {/* LEFT SIDEBAR — categorias + membros ativos */}
