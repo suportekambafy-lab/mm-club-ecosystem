@@ -3,9 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
   Play,
-  BookOpen,
   Users,
-  Radio,
   Bot,
   Bell,
 } from "lucide-react";
