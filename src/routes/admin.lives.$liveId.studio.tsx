@@ -13,6 +13,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { SectionHeading } from "@/components/mm/section-heading";
+import { LiveChat } from "@/components/mm/live-chat";
+import { supabase } from "@/integrations/supabase/client";
 import { adminGetLiveIngest, adminSetLiveBroadcastState } from "@/lib/lives.functions";
 
 export const Route = createFileRoute("/admin/lives/$liveId/studio")({
