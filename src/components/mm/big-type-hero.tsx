@@ -190,13 +190,13 @@ export function BigTypeHero() {
         {/* massive type stack + overlays */}
         <div className="relative mt-14 sm:mt-16">
           {/* type */}
-          <div className="relative z-0 flex flex-col items-center leading-[0.85]">
+          <div className="relative z-0 flex flex-col items-center leading-[0.88]">
             <motion.h1
               custom={0}
               initial="hidden"
               animate="show"
               variants={stackAnim}
-              className="font-display text-[14vw] font-extrabold tracking-tight text-foreground/85 sm:text-[13vw] lg:text-[11rem]"
+              className="font-display text-[16vw] font-extrabold tracking-tight text-foreground/85 md:text-[9vw] lg:text-[7.5rem]"
             >
               #CLUB
             </motion.h1>
@@ -205,10 +205,8 @@ export function BigTypeHero() {
               initial="hidden"
               animate="show"
               variants={stackAnim}
-              className="font-display text-[14vw] font-extrabold tracking-tight text-transparent sm:text-[13vw] lg:text-[11rem]"
-              style={{
-                WebkitTextStroke: "1.5px var(--gold)",
-              }}
+              className="font-display text-[16vw] font-extrabold tracking-tight text-transparent md:text-[9vw] lg:text-[7.5rem]"
+              style={{ WebkitTextStroke: "1.2px var(--gold)" }}
             >
               MARCA
             </motion.h1>
@@ -217,10 +215,9 @@ export function BigTypeHero() {
               initial="hidden"
               animate="show"
               variants={stackAnim}
-              className="font-display text-[13vw] font-extrabold tracking-tight sm:text-[12vw] lg:text-[10rem]"
+              className="font-display text-[15vw] font-extrabold tracking-tight md:text-[8.5vw] lg:text-[7rem]"
               style={{
-                background:
-                  "linear-gradient(180deg, var(--gold-soft), var(--gold-deep))",
+                background: "linear-gradient(180deg, var(--gold-soft), var(--gold-deep))",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
