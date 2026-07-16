@@ -172,8 +172,8 @@ export function BigTypeHero() {
 
       <div className="mx-auto max-w-[1180px] px-4 sm:px-8">
         {/* intro tag + CTA */}
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface-1/60 px-3 py-1.5 backdrop-blur">
+        <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface-1/60 px-4 py-2 backdrop-blur">
             <span className="relative flex h-1.5 w-1.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
@@ -182,7 +182,7 @@ export function BigTypeHero() {
               Clube privado · Temporada 2026
             </span>
           </div>
-          <p className="max-w-lg text-xs leading-relaxed text-muted-foreground sm:text-sm">
+          <p className="max-w-lg text-sm leading-relaxed text-muted-foreground sm:text-base">
             O ecossistema privado da Marca Milionária. Cursos, Suporte IA,
             comunidade, lives e ferramentas — num único acesso.
           </p>
