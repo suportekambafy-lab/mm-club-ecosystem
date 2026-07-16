@@ -17,6 +17,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { MMLogo } from "@/components/mm/logo";
 import { BigTypeHero } from "@/components/mm/big-type-hero";
 import cover from "@/assets/marca-milionaria-cover.png.asset.json";
+import lessonL1 from "@/assets/lesson-l1.jpg";
+import lessonL2 from "@/assets/lesson-l2.jpg";
+import lessonL3 from "@/assets/lesson-l3.jpg";
+import lessonL4 from "@/assets/lesson-l4.jpg";
+import lessonL5 from "@/assets/lesson-l5.jpg";
+import lessonL6 from "@/assets/lesson-l6.jpg";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -408,12 +414,14 @@ function FeatureAcademia() {
         <Mockup>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { t: "Fundamentos", n: "12 aulas", tone: "from-primary/40 to-primary/10" },
-              { t: "Posicionamento", n: "8 aulas", tone: "from-violet/40 to-violet/10" },
-              { t: "Oferta Milionária", n: "10 aulas", tone: "from-gold-soft/50 to-gold-soft/10" },
+              { t: "Fundamentos", n: "12 aulas", tone: "from-primary/40 to-primary/10", img: lessonL1 },
+              { t: "Posicionamento", n: "8 aulas", tone: "from-violet/40 to-violet/10", img: lessonL2 },
+              { t: "Oferta Milionária", n: "10 aulas", tone: "from-gold-soft/50 to-gold-soft/10", img: lessonL3 },
             ].map((c) => (
               <div key={c.t} className="rounded-xl border border-border bg-surface-2/40 p-3">
                 <div className={`aspect-video rounded-lg bg-gradient-to-br ${c.tone} mb-3 relative overflow-hidden`}>
+                  <img src={c.img} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                   <span className="absolute bottom-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-[9px] text-white">
                     Módulo
                   </span>
@@ -607,6 +615,8 @@ function FeatureLives() {
       visual={
         <Mockup tint="radial-gradient(60% 60% at 50% 50%, oklch(0.82 0.13 82 / 0.28), transparent 70%)">
           <div className="relative aspect-video overflow-hidden rounded-xl bg-gradient-to-br from-primary/40 via-violet/20 to-transparent">
+            <img src={lessonL4} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
             <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-destructive/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
               <Circle className="h-1.5 w-1.5 fill-current" /> Ao vivo
             </div>
@@ -614,27 +624,30 @@ function FeatureLives() {
               412 a ver
             </div>
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-foreground">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-foreground shadow-2xl">
                 <Radio className="h-6 w-6" />
               </div>
             </div>
-            <div className="absolute bottom-3 left-3 right-3 rounded-lg bg-black/50 px-3 py-2 backdrop-blur">
+            <div className="absolute bottom-3 left-3 right-3 rounded-lg bg-black/60 px-3 py-2 backdrop-blur">
               <p className="text-[10px] uppercase tracking-widest text-white/70">Live · Quinta 21h</p>
               <p className="text-sm font-semibold text-white">Como cobrar €10k por projeto</p>
             </div>
           </div>
           <div className="mt-4 space-y-2">
             {[
-              ["Ter 21h", "Storytelling de marca", "Rita F."],
-              ["Qui 21h", "Copy que vende", "Miguel A."],
-              ["Sáb 11h", "Q&A aberto", "Equipa MM"],
-            ].map(([d, t, w]) => (
-              <div key={t as string} className="flex items-center justify-between rounded-lg border border-border bg-surface-2/40 px-3 py-2">
-                <div>
-                  <p className="text-[10px] uppercase tracking-widest text-primary">{d}</p>
-                  <p className="text-sm font-medium">{t}</p>
+              { d: "Ter 21h", t: "Storytelling de marca", w: "Rita F.", img: lessonL5 },
+              { d: "Qui 21h", t: "Copy que vende", w: "Miguel A.", img: lessonL6 },
+              { d: "Sáb 11h", t: "Q&A aberto", w: "Equipa MM", img: lessonL2 },
+            ].map(({ d, t, w, img }) => (
+              <div key={t} className="flex items-center gap-3 rounded-lg border border-border bg-surface-2/40 px-3 py-2">
+                <div className="relative h-10 w-14 shrink-0 overflow-hidden rounded-md">
+                  <img src={img} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
                 </div>
-                <span className="text-[11px] text-muted-foreground">com {w}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] uppercase tracking-widest text-primary">{d}</p>
+                  <p className="truncate text-sm font-medium">{t}</p>
+                </div>
+                <span className="shrink-0 text-[11px] text-muted-foreground">com {w}</span>
               </div>
             ))}
           </div>
