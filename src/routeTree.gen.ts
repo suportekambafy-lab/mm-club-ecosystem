@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as ReembolsosRouteImport } from './routes/reembolsos'
+import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -52,6 +53,11 @@ const TermosRoute = TermosRouteImport.update({
 const ReembolsosRoute = ReembolsosRouteImport.update({
   id: '/reembolsos',
   path: '/reembolsos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuizRoute = QuizRouteImport.update({
+  id: '/quiz',
+  path: '/quiz',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
@@ -225,6 +231,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/quiz': typeof QuizRoute
   '/reembolsos': typeof ReembolsosRoute
   '/termos': typeof TermosRoute
   '/academia': typeof AppAcademiaRouteWithChildren
@@ -259,6 +266,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/quiz': typeof QuizRoute
   '/reembolsos': typeof ReembolsosRoute
   '/termos': typeof TermosRoute
   '/comunidade': typeof AppComunidadeRoute
@@ -292,6 +300,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/quiz': typeof QuizRoute
   '/reembolsos': typeof ReembolsosRoute
   '/termos': typeof TermosRoute
   '/_app/academia': typeof AppAcademiaRouteWithChildren
@@ -329,6 +338,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/privacidade'
+    | '/quiz'
     | '/reembolsos'
     | '/termos'
     | '/academia'
@@ -363,6 +373,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/privacidade'
+    | '/quiz'
     | '/reembolsos'
     | '/termos'
     | '/comunidade'
@@ -395,6 +406,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/privacidade'
+    | '/quiz'
     | '/reembolsos'
     | '/termos'
     | '/_app/academia'
@@ -432,6 +444,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CheckoutRoute: typeof CheckoutRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
+  QuizRoute: typeof QuizRoute
   ReembolsosRoute: typeof ReembolsosRoute
   TermosRoute: typeof TermosRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -453,6 +466,13 @@ declare module '@tanstack/react-router' {
       path: '/reembolsos'
       fullPath: '/reembolsos'
       preLoaderRoute: typeof ReembolsosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quiz': {
+      id: '/quiz'
+      path: '/quiz'
+      fullPath: '/quiz'
+      preLoaderRoute: typeof QuizRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacidade': {
@@ -790,6 +810,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CheckoutRoute: CheckoutRoute,
   PrivacidadeRoute: PrivacidadeRoute,
+  QuizRoute: QuizRoute,
   ReembolsosRoute: ReembolsosRoute,
   TermosRoute: TermosRoute,
   ApiChatRoute: ApiChatRoute,
