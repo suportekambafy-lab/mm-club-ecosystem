@@ -423,22 +423,22 @@ function FeatureAcademia() {
       ]}
       visual={
         <Mockup>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {[
               { t: "Fundamentos", n: "12 aulas", tone: "from-primary/40 to-primary/10", img: lessonL1 },
               { t: "Posicionamento", n: "8 aulas", tone: "from-violet/40 to-violet/10", img: lessonL2 },
               { t: "Oferta Milionária", n: "10 aulas", tone: "from-gold-soft/50 to-gold-soft/10", img: lessonL3 },
             ].map((c) => (
-              <div key={c.t} className="rounded-xl border border-border bg-surface-2/40 p-3">
-                <div className={`aspect-video rounded-lg bg-gradient-to-br ${c.tone} mb-3 relative overflow-hidden`}>
+              <div key={c.t} className="rounded-2xl border border-border bg-surface-2/40 p-4">
+                <div className={`aspect-video rounded-xl bg-gradient-to-br ${c.tone} mb-4 relative overflow-hidden`}>
                   <img src={c.img} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                  <span className="absolute bottom-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-[9px] text-white">
+                  <span className="absolute bottom-2.5 left-2.5 rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-medium text-white backdrop-blur">
                     Módulo
                   </span>
                 </div>
-                <p className="text-xs font-semibold">{c.t}</p>
-                <p className="text-[10px] text-muted-foreground">{c.n}</p>
+                <p className="text-sm font-semibold sm:text-base">{c.t}</p>
+                <p className="text-xs text-muted-foreground">{c.n}</p>
               </div>
             ))}
           </div>
