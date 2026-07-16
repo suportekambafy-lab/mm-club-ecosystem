@@ -15,6 +15,7 @@ import {
 import { CourseCard } from "@/components/mm/course-card";
 import { Rail } from "@/components/mm/rail";
 import { ExpertAvatar } from "@/components/mm/expert-avatar";
+import { LiveHeroBanner } from "@/components/mm/live-hero-banner";
 import { currentUser as fallbackUser } from "@/data/user";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import {
@@ -24,6 +25,7 @@ import {
   recommendedFromProgress,
 } from "@/hooks/use-user-progress";
 import { nextLive } from "@/data/lives";
+import { listLives } from "@/lib/lives.functions";
 import { news } from "@/data/news";
 import { topTools } from "@/data/tools";
 import { upcomingEvents } from "@/data/events";
@@ -60,6 +62,32 @@ function DashboardPage() {
   const featured = cont[0];
   const recommended = recommendedFromProgress(progress);
 
+  // Real live from backend — takes priority over static nextLive placeholder.
+  type RealLive = Awaited<ReturnType<typeof listLives>>[number];
+  const [realFeaturedLive, setRealFeaturedLive] = useState<RealLive | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => {
+      listLives()
+        .then((rows) => {
+          if (cancelled) return;
+          const list = rows as RealLive[];
+          const active = list.find((l) => l.status === "live");
+          const upcoming = list
+            .filter((l) => l.status === "scheduled" && new Date(l.starts_at).getTime() > Date.now() - 3600_000)
+            .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0];
+          setRealFeaturedLive(active ?? upcoming ?? null);
+        })
+        .catch(() => {});
+    };
+    load();
+    const t = setInterval(load, 20_000);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
+  }, []);
+
   const blocks: Record<DashboardBlockId, React.ReactNode> = {
     continue:
       cont.length > 0 ? (
@@ -90,7 +118,7 @@ function DashboardPage() {
         ))}
       </Rail>
     ),
-    "next-live": nextLive ? <NextLiveCard /> : null,
+    "next-live": realFeaturedLive ? <LiveHeroBanner live={realFeaturedLive} /> : nextLive ? <NextLiveCard /> : null,
     news: <NewsRail />,
     "top-tools": <TopToolsBlock />,
     "upcoming-events": <UpcomingEventsBlock />,
@@ -100,6 +128,9 @@ function DashboardPage() {
 
   return (
     <div className="space-y-12">
+      {/* Hero — Live activa em destaque quando existe */}
+      {realFeaturedLive?.status === "live" && <LiveHeroBanner live={realFeaturedLive} />}
+
       {/* Hero — Vídeo de apresentação */}
       <PresentationVideoHero />
 
@@ -107,6 +138,8 @@ function DashboardPage() {
       <section className="space-y-6">
         {featured && <ContinueHero course={featured} />}
       </section>
+
+
 
 
       {user.dashboard.blocks.map((b) => (

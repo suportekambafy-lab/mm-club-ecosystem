@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Send, MessagesSquare } from "lucide-react";
+import { Send, MessagesSquare, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { listChatMessages, sendChatMessage } from "@/lib/lives.functions";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,13 @@ type Message = {
   created_at: string;
 };
 
-export function LiveChat({ liveId, currentUserId }: { liveId: string; currentUserId: string | null }) {
+type Props = {
+  liveId: string;
+  currentUserId: string | null;
+  readOnly?: boolean;
+};
+
+export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -32,7 +38,7 @@ export function LiveChat({ liveId, currentUserId }: { liveId: string; currentUse
       .catch((e) => setError((e as Error).message));
 
     const channel = supabase
-      .channel(`live:${liveId}`)
+      .channel(`live-chat:${liveId}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "live_chat_messages", filter: `live_id=eq.${liveId}` },
@@ -74,15 +80,27 @@ export function LiveChat({ liveId, currentUserId }: { liveId: string; currentUse
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col rounded-2xl border border-border bg-surface-1">
-      <div className="flex items-center gap-2 border-b border-border px-4 py-3">
-        <MessagesSquare className="h-4 w-4 text-primary" />
-        <p className="font-display text-sm">Chat ao vivo</p>
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-surface-1/80 backdrop-blur-sm">
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <div className="flex items-center gap-2">
+          <MessagesSquare className="h-4 w-4 text-primary" />
+          <p className="font-display text-sm">
+            {readOnly ? "Conversa da sessão" : "Chat ao vivo"}
+          </p>
+        </div>
+        {readOnly && (
+          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+            <Lock className="h-3 w-3" />
+            Leitura
+          </span>
+        )}
       </div>
 
-      <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
+      <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
         {messages.length === 0 ? (
-          <p className="text-center text-xs text-muted-foreground">Sê o primeiro a comentar.</p>
+          <p className="pt-6 text-center text-xs text-muted-foreground">
+            {readOnly ? "Nenhuma mensagem gravada nesta sessão." : "Sê o primeiro a comentar."}
+          </p>
         ) : (
           messages.map((m) => {
             const mine = m.user_id === currentUserId;
@@ -107,31 +125,33 @@ export function LiveChat({ liveId, currentUserId }: { liveId: string; currentUse
         )}
       </div>
 
-      <form onSubmit={handleSend} className="border-t border-border p-3">
-        {error && <p className="mb-2 text-[11px] text-red-400">{error}</p>}
-        {currentUserId ? (
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Escreve uma mensagem…"
-              maxLength={2000}
-              className="flex-1 rounded-full bg-surface-2 px-4 py-2 text-sm text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40"
-            />
-            <button
-              type="submit"
-              disabled={sending || !text.trim()}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground transition disabled:opacity-50"
-              aria-label="Enviar"
-            >
-              <Send className="h-4 w-4" />
-            </button>
-          </div>
-        ) : (
-          <p className="text-center text-xs text-muted-foreground">Inicia sessão para participar no chat.</p>
-        )}
-      </form>
+      {!readOnly && (
+        <form onSubmit={handleSend} className="border-t border-border p-3">
+          {error && <p className="mb-2 text-[11px] text-red-400">{error}</p>}
+          {currentUserId ? (
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Escreve uma mensagem…"
+                maxLength={2000}
+                className="flex-1 rounded-full bg-surface-2 px-4 py-2 text-sm text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40"
+              />
+              <button
+                type="submit"
+                disabled={sending || !text.trim()}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground transition disabled:opacity-50"
+                aria-label="Enviar"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <p className="text-center text-xs text-muted-foreground">Inicia sessão para participar no chat.</p>
+          )}
+        </form>
+      )}
     </div>
   );
 }
