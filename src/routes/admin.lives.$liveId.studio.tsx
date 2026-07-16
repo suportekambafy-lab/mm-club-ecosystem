@@ -222,6 +222,30 @@ function LiveStudio() {
         description="Câmara e microfone deste dispositivo enviam directamente para o Cloudflare Stream via WebRTC (WHIP)."
       />
 
+      {inIframe && (
+        <div className="flex flex-col gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <p className="font-medium">Estás a ver isto dentro do preview.</p>
+              <p className="text-amber-100/80">
+                O preview em iframe bloqueia o acesso à câmara/microfone. Abre esta página numa
+                janela nova para transmitir.
+              </p>
+            </div>
+          </div>
+          <a
+            href={typeof window !== "undefined" ? window.location.href : "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-amber-500 px-4 py-2 text-xs font-medium text-black hover:bg-amber-400"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Abrir em nova janela
+          </a>
+        </div>
+      )}
+
       {error && (
         <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           {error}
