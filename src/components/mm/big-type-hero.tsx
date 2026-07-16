@@ -72,7 +72,7 @@ const ArrowInk = ({ flip = false }: { flip?: boolean }) => (
 /* ---------- Rotating badge ---------- */
 
 const CircularBadge = () => (
-  <div className="relative h-32 w-32 sm:h-36 sm:w-36">
+  <div className="relative h-24 w-24 sm:h-36 sm:w-36">
     <motion.svg
       viewBox="0 0 160 160"
       className="absolute inset-0 text-foreground"
@@ -80,10 +80,7 @@ const CircularBadge = () => (
       transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
     >
       <defs>
-        <path
-          id="badge-circle"
-          d="M 80,80 m -62,0 a 62,62 0 1,1 124,0 a 62,62 0 1,1 -124,0"
-        />
+        <path id="badge-circle" d="M 80,80 m -62,0 a 62,62 0 1,1 124,0 a 62,62 0 1,1 -124,0" />
       </defs>
       <text className="fill-current text-[11px] font-semibold uppercase tracking-[0.28em]">
         <textPath href="#badge-circle" startOffset="0">
@@ -92,8 +89,8 @@ const CircularBadge = () => (
       </text>
     </motion.svg>
     <div className="absolute inset-0 flex items-center justify-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_oklch(0.82_0.13_82_/_0.7)]">
-        <ArrowRight className="h-6 w-6 -rotate-45" strokeWidth={2.4} />
+      <div className="flex h-11 w-11 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_oklch(0.82_0.13_82_/_0.7)]">
+        <ArrowRight className="h-4 w-4 sm:h-6 sm:w-6 -rotate-45" strokeWidth={2.4} />
       </div>
     </div>
   </div>
