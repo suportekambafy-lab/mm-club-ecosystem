@@ -96,7 +96,7 @@ const navSections: NavSection[] = [
     label: "Cursos",
     items: [
       { to: "/academia", label: "Academia", icon: GraduationCap },
-      { to: "/jade", label: "Suporte IA", icon: Bot },
+      { to: "/jade", label: "Suporte IA", icon: Star },
     ],
   },
   {
@@ -554,7 +554,7 @@ type TabItem = {
 const mobileTabs: TabItem[] = [
   { to: "/dashboard", label: "Início", icon: Home, exact: true },
   { to: "/academia", label: "Academia", icon: GraduationCap },
-  { to: "/jade", label: "IA", icon: Bot },
+  { to: "/jade", label: "IA", icon: Star },
   { to: "/comunidade", label: "Comunidade", icon: Users },
 ];
 
