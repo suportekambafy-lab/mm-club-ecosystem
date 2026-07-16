@@ -3,7 +3,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
   Play,
-  Play,
   Calendar,
   BookOpen,
   Wrench,
