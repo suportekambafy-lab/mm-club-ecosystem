@@ -143,7 +143,7 @@ export function BigTypeHero() {
   };
 
   return (
-    <section className="relative overflow-hidden pt-20 pb-10 sm:pt-24 sm:pb-12">
+    <section className="relative overflow-hidden pt-16 pb-8 sm:pt-20 sm:pb-10">
       {/* background grid */}
       <div
         aria-hidden
@@ -168,7 +168,7 @@ export function BigTypeHero() {
 
       <div className="mx-auto max-w-[1180px] px-4 sm:px-8">
         {/* intro tag + CTA */}
-        <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 text-center">
+        <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface-1/60 px-3 py-1.5 backdrop-blur">
             <span className="relative flex h-1.5 w-1.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
@@ -178,14 +178,14 @@ export function BigTypeHero() {
               Clube privado · Temporada 2026
             </span>
           </div>
-          <p className="max-w-xl text-sm text-muted-foreground sm:text-base">
+          <p className="max-w-lg text-xs leading-relaxed text-muted-foreground sm:text-sm">
             O ecossistema privado da Marca Milionária. Cursos, Suporte IA,
             comunidade, lives e ferramentas — num único acesso.
           </p>
         </div>
 
         {/* massive type stack + overlays */}
-        <div className="relative mt-8 sm:mt-10">
+        <div className="relative mt-6 sm:mt-8">
           {/* type */}
           <div className="relative z-0 flex flex-col items-center leading-[0.94] sm:leading-[0.9]">
             <motion.h1
@@ -193,7 +193,7 @@ export function BigTypeHero() {
               initial="hidden"
               animate="show"
               variants={stackAnim}
-              className="font-display text-[10vw] font-extrabold tracking-tight text-foreground/85 sm:text-[11vw] md:text-[8vw] lg:text-[6.25rem]"
+              className="font-display text-[9vw] font-extrabold tracking-tight text-foreground/85 sm:text-[8.2vw] md:text-[6.4vw] lg:text-[5.35rem]"
             >
               #CLUB
             </motion.h1>
@@ -202,7 +202,7 @@ export function BigTypeHero() {
               initial="hidden"
               animate="show"
               variants={stackAnim}
-              className="font-display text-[10vw] font-extrabold tracking-tight text-transparent sm:text-[11vw] md:text-[8vw] lg:text-[6.25rem]"
+              className="font-display text-[9vw] font-extrabold tracking-tight text-transparent sm:text-[8.2vw] md:text-[6.4vw] lg:text-[5.35rem]"
               style={{ WebkitTextStroke: "1.2px var(--gold)" }}
             >
               MARCA
@@ -212,7 +212,7 @@ export function BigTypeHero() {
               initial="hidden"
               animate="show"
               variants={stackAnim}
-              className="font-display text-[8.8vw] font-extrabold tracking-tight sm:text-[9.6vw] md:text-[7.4vw] lg:text-[5.8rem]"
+              className="font-display text-[7.8vw] font-extrabold tracking-tight sm:text-[7.2vw] md:text-[5.8vw] lg:text-[4.95rem]"
               style={{
                 background: "linear-gradient(180deg, var(--gold-soft), var(--gold-deep))",
                 WebkitBackgroundClip: "text",
@@ -272,7 +272,7 @@ export function BigTypeHero() {
         </div>
 
         {/* Mobile floating chips — below type, in-flow */}
-        <div className="mt-6 flex flex-wrap justify-center gap-2 sm:hidden">
+        <div className="mt-4 flex flex-wrap justify-center gap-2 sm:hidden">
           <div className="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface-1/70 px-3 py-1.5 backdrop-blur">
             <span
               className="h-4 w-4 rounded-full"
@@ -287,7 +287,7 @@ export function BigTypeHero() {
         </div>
 
         {/* CTA row */}
-        <div className="mt-20 flex flex-wrap items-center justify-center gap-3 sm:mt-24">
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-3 sm:mt-12">
           <Link
             to="/checkout"
             className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-4 text-sm font-semibold text-primary-foreground shadow-[0_20px_60px_-20px_oklch(0.82_0.13_82_/_0.7)] hover:bg-gold-soft transition-all"
@@ -305,7 +305,7 @@ export function BigTypeHero() {
       </div>
 
       {/* Bottom three-card system */}
-      <div id="pilares" className="mx-auto mt-24 max-w-[1400px] px-4 sm:mt-32 sm:px-8">
+      <div id="pilares" className="mx-auto mt-14 max-w-[1180px] px-4 sm:mt-20 sm:px-8">
         <div className="grid gap-6 md:grid-cols-3">
           {/* Card 1 — Academia */}
           <motion.div
