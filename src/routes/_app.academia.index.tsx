@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, Play, Search, Users, ChevronDown, Lock, ArrowRight, Clock } from "lucide-react";
+import { Play, Search, ChevronDown, Lock, Clock } from "lucide-react";
 import { liveCourses, upcomingCourses } from "@/data/courses";
 import { expertsById } from "@/data/experts";
 import type { Course } from "@/data/types";
