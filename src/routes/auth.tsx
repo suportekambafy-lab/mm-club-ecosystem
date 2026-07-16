@@ -153,36 +153,20 @@ function AuthPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
               >
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 backdrop-blur">
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
-                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
-                  </span>
-                  <span className="text-[10px] font-medium uppercase tracking-[0.24em] text-white/80">
-                    Clube privado · Temporada 2026
-                  </span>
+                <div className="flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.28em] text-white/60">
+                  <span className="h-px w-8 bg-white/30" />
+                  Clube privado · Temporada 2026
                 </div>
-                <h2 className="mt-6 font-display text-4xl leading-[1.02] tracking-tight text-white xl:text-[52px]">
-                  Bem-vindo ao{" "}
-                  <span
-                    className="inline-block bg-clip-text text-transparent"
-                    style={{
-                      backgroundImage:
-                        "linear-gradient(180deg, var(--gold-soft), var(--gold-deep))",
-                    }}
-                  >
-                    ecossistema privado
-                  </span>{" "}
-                  da Marca Milionária.
+                <h2 className="mt-6 font-display text-4xl leading-[1.05] tracking-tight text-white xl:text-[54px]">
+                  Bem-vindo ao ecossistema privado da Marca Milionária.
                 </h2>
-                <p className="mt-4 max-w-md text-sm leading-relaxed text-white/70 xl:text-base">
-                  Cursos, Suporte IA, comunidade, lives e ferramentas — desenhados
-                  como um único produto premium.
+                <p className="mt-5 max-w-md text-sm leading-relaxed text-white/65 xl:text-base">
+                  Cursos, comunidade, lives e ferramentas — desenhados como um único produto premium.
                 </p>
               </motion.div>
 
               {/* Rotating testimonial */}
-              <div className="mt-10 min-h-[130px]">
+              <div className="mt-12 min-h-[130px]">
                 <AnimatePresence mode="wait">
                   <motion.figure
                     key={t.name}
@@ -190,24 +174,23 @@ function AuthPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -12 }}
                     transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                    className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-md"
+                    className="border-l border-white/20 pl-5"
                   >
-                    <Quote className="h-4 w-4 text-primary" />
-                    <blockquote className="mt-3 font-display text-base leading-relaxed text-white xl:text-lg">
+                    <blockquote className="font-display text-lg leading-relaxed text-white/90 xl:text-xl">
                       “{t.quote}”
                     </blockquote>
-                    <figcaption className="mt-3 text-xs text-white/60">
-                      <span className="text-white/90">{t.name}</span> · {t.role}
+                    <figcaption className="mt-4 text-[11px] uppercase tracking-[0.2em] text-white/50">
+                      <span className="text-white/80">{t.name}</span> — {t.role}
                     </figcaption>
                   </motion.figure>
                 </AnimatePresence>
-                <div className="mt-3 flex items-center gap-1.5">
+                <div className="mt-5 flex items-center gap-1.5 pl-5">
                   {testimonials.map((_, i) => (
                     <span
                       key={i}
                       className={cn(
-                        "h-1 rounded-full transition-all",
-                        i === tIndex ? "w-6 bg-primary" : "w-2 bg-white/25",
+                        "h-px transition-all",
+                        i === tIndex ? "w-8 bg-white/80" : "w-4 bg-white/25",
                       )}
                     />
                   ))}
@@ -220,7 +203,7 @@ function AuthPage() {
               {[
                 ["+2.400", "Membros ativos"],
                 ["+120", "Aulas na Academia"],
-                ["4.9★", "Satisfação"],
+                ["4.9", "Satisfação"],
               ].map(([n, l]) => (
                 <div key={l}>
                   <dt className="font-display text-2xl text-white">{n}</dt>
@@ -230,6 +213,7 @@ function AuthPage() {
                 </div>
               ))}
             </dl>
+
           </div>
         </aside>
 
