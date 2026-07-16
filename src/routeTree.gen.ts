@@ -33,6 +33,7 @@ import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppComunidadeRouteImport } from './routes/_app.comunidade'
 import { Route as AppAcademiaRouteImport } from './routes/_app.academia'
 import { Route as AdminLivesIndexRouteImport } from './routes/admin.lives.index'
+import { Route as AppLivesIndexRouteImport } from './routes/_app.lives.index'
 import { Route as AppAcademiaIndexRouteImport } from './routes/_app.academia.index'
 import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
 import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
@@ -162,6 +163,11 @@ const AdminLivesIndexRoute = AdminLivesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminLivesRoute,
 } as any)
+const AppLivesIndexRoute = AppLivesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppLivesRoute,
+} as any)
 const AppAcademiaIndexRoute = AppAcademiaIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -240,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/academia/': typeof AppAcademiaIndexRoute
+  '/lives/': typeof AppLivesIndexRoute
   '/admin/lives/': typeof AdminLivesIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
@@ -259,7 +266,6 @@ export interface FileRoutesByTo {
   '/eventos': typeof AppEventosRoute
   '/ferramentas': typeof AppFerramentasRoute
   '/jade': typeof AppJadeRoute
-  '/lives': typeof AppLivesRouteWithChildren
   '/perfil': typeof AppPerfilRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/cursos': typeof AdminCursosRoute
@@ -270,6 +276,7 @@ export interface FileRoutesByTo {
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/academia': typeof AppAcademiaIndexRoute
+  '/lives': typeof AppLivesIndexRoute
   '/admin/lives': typeof AdminLivesIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
@@ -306,6 +313,7 @@ export interface FileRoutesById {
   '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
   '/_app/academia/': typeof AppAcademiaIndexRoute
+  '/_app/lives/': typeof AppLivesIndexRoute
   '/admin/lives/': typeof AdminLivesIndexRoute
   '/_app/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
@@ -342,6 +350,7 @@ export interface FileRouteTypes {
     | '/especialistas/$expertId'
     | '/lives/$liveId'
     | '/academia/'
+    | '/lives/'
     | '/admin/lives/'
     | '/academia/$courseId/$lessonId'
     | '/admin/lives/$liveId/studio'
@@ -361,7 +370,6 @@ export interface FileRouteTypes {
     | '/eventos'
     | '/ferramentas'
     | '/jade'
-    | '/lives'
     | '/perfil'
     | '/admin/aulas'
     | '/admin/cursos'
@@ -372,6 +380,7 @@ export interface FileRouteTypes {
     | '/especialistas/$expertId'
     | '/lives/$liveId'
     | '/academia'
+    | '/lives'
     | '/admin/lives'
     | '/academia/$courseId/$lessonId'
     | '/admin/lives/$liveId/studio'
@@ -407,6 +416,7 @@ export interface FileRouteTypes {
     | '/_app/especialistas/$expertId'
     | '/_app/lives/$liveId'
     | '/_app/academia/'
+    | '/_app/lives/'
     | '/admin/lives/'
     | '/_app/academia/$courseId/$lessonId'
     | '/admin/lives/$liveId/studio'
@@ -599,6 +609,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLivesIndexRouteImport
       parentRoute: typeof AdminLivesRoute
     }
+    '/_app/lives/': {
+      id: '/_app/lives/'
+      path: '/'
+      fullPath: '/lives/'
+      preLoaderRoute: typeof AppLivesIndexRouteImport
+      parentRoute: typeof AppLivesRoute
+    }
     '/_app/academia/': {
       id: '/_app/academia/'
       path: '/'
@@ -694,10 +711,12 @@ const AppAcademiaRouteWithChildren = AppAcademiaRoute._addFileChildren(
 
 interface AppLivesRouteChildren {
   AppLivesLiveIdRoute: typeof AppLivesLiveIdRoute
+  AppLivesIndexRoute: typeof AppLivesIndexRoute
 }
 
 const AppLivesRouteChildren: AppLivesRouteChildren = {
   AppLivesLiveIdRoute: AppLivesLiveIdRoute,
+  AppLivesIndexRoute: AppLivesIndexRoute,
 }
 
 const AppLivesRouteWithChildren = AppLivesRoute._addFileChildren(
@@ -780,13 +799,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
