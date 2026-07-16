@@ -237,67 +237,78 @@ function AppLayout() {
         )}
       </div>
 
-      <nav className={cn("flex-1 space-y-6 overflow-y-auto pb-4", compact ? "px-2" : "px-4")}>
-        {navSections.map((section) => (
-          <div key={section.label}>
-            {!compact && (
-              <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
-                {section.label}
-              </p>
-            )}
-            <div className="space-y-1">
-              {section.items.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.to, item.exact);
-                if (item.soon) {
-                  return (
-                    <div
-                      key={item.to}
-                      title={compact ? `${item.label} — Em breve` : undefined}
-                      aria-disabled="true"
-                      className={cn(
-                        "group flex items-center rounded-xl text-sm text-muted-foreground/70 cursor-not-allowed",
-                        compact ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
-                      )}
-                    >
-                      <Icon className="h-[18px] w-[18px] shrink-0 text-muted-foreground/60" />
-                      {!compact && (
-                        <>
-                          <span className="flex-1">{item.label}</span>
-                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary">
-                            Em breve
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  );
-                }
-                return (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    title={compact ? item.label : undefined}
+      <nav className={cn("flex-1 overflow-y-auto pb-4", compact ? "px-2 pt-2" : "px-4 pt-4")}>
+        <div className={cn("space-y-1", !compact && "space-y-1.5")}>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.to, item.exact);
+            if (item.soon) {
+              return (
+                <div
+                  key={item.to}
+                  title={compact ? `${item.label} — Em breve` : undefined}
+                  aria-disabled="true"
+                  className={cn(
+                    "group relative flex items-center rounded-xl cursor-not-allowed",
+                    compact
+                      ? "justify-center px-2 py-3 text-sm text-muted-foreground/70"
+                      : "gap-4 px-4 py-3 font-display text-[15px] tracking-wide text-muted-foreground/60",
+                  )}
+                >
+                  <Icon className="h-[19px] w-[19px] shrink-0 text-muted-foreground/50" />
+                  {!compact && (
+                    <>
+                      <span className="flex-1">{item.label}</span>
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary">
+                        Em breve
+                      </span>
+                    </>
+                  )}
+                </div>
+              );
+            }
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                title={compact ? item.label : undefined}
+                className={cn(
+                  "group relative flex items-center rounded-xl transition-all duration-300",
+                  compact
+                    ? "justify-center px-2 py-3 text-sm"
+                    : "gap-4 px-4 py-3 font-display text-[15px] tracking-wide",
+                  active
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {/* Gold left rail — editorial active indicator */}
+                {!compact && (
+                  <span
+                    aria-hidden
                     className={cn(
-                      "group flex items-center rounded-xl text-sm transition-all",
-                      compact ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
-                      active
-                        ? "bg-surface-2 text-foreground shadow-inner ring-1 ring-[color:var(--hairline)]"
-                        : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
+                      "absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-primary transition-all duration-300",
+                      active ? "opacity-100 scale-y-100" : "opacity-0 scale-y-50",
                     )}
-                  >
-                    <Icon
-                      className={cn(
-                        "h-[18px] w-[18px] shrink-0 transition",
-                        active ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
-                      )}
-                    />
-                    {!compact && <span className="flex-1">{item.label}</span>}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+                  />
+                )}
+                <Icon
+                  className={cn(
+                    "h-[19px] w-[19px] shrink-0 transition",
+                    active ? "text-primary" : "text-muted-foreground/80 group-hover:text-foreground",
+                  )}
+                />
+                {!compact && <span className="flex-1">{item.label}</span>}
+                {compact && active && (
+                  <span
+                    aria-hidden
+                    className="absolute inset-y-1 left-0 w-[3px] rounded-r-full bg-primary"
+                  />
+                )}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
       {!compact && (
