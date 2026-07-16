@@ -1,7 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Radio, Loader2, Mic, MicOff, Video, VideoOff } from "lucide-react";
+import {
+  ArrowLeft,
+  Radio,
+  Loader2,
+  Mic,
+  MicOff,
+  Video,
+  VideoOff,
+  ExternalLink,
+  AlertTriangle,
+} from "lucide-react";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { adminGetLiveIngest } from "@/lib/lives.functions";
 
