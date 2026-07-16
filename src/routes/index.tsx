@@ -850,7 +850,7 @@ function FinalCTA() {
               <div className="text-left lg:text-right">
                 <p className="text-xs uppercase tracking-widest text-muted-foreground">A partir de</p>
                 <p className="mt-1 font-display text-5xl">
-                  €49<span className="text-lg text-muted-foreground">/mês</span>
+                  €29,90<span className="text-lg text-muted-foreground">/mês</span>
                 </p>
               </div>
               <Link
