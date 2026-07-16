@@ -103,16 +103,12 @@ function PlansPage() {
   }, []);
 
   const handleSelect = async (plan: Plan) => {
-    if (!user) {
-      navigate({ to: "/auth", search: { redirect: "/checkout" } });
-      return;
-    }
     setPendingPlan(plan.id);
     try {
       await openCheckout({
         priceId: plan.priceId,
-        customerEmail: user.email,
-        customData: { userId: user.id },
+        customerEmail: user?.email,
+        customData: user ? { userId: user.id } : undefined,
       });
     } finally {
       setPendingPlan(null);
