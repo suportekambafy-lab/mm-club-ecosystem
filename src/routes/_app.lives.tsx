@@ -101,7 +101,7 @@ function EmptyState({ label }: { label: string }) {
   );
 }
 
-function LiveCard({ live, live: isLive }: { live: Live; live?: boolean }) {
+function LiveCard({ live, isLive }: { live: Live; isLive?: boolean }) {
   const date = new Date(live.starts_at);
   const dateStr = new Intl.DateTimeFormat("pt-PT", {
     day: "2-digit",
