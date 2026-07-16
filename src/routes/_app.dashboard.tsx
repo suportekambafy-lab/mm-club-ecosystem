@@ -105,10 +105,10 @@ function DashboardPage() {
         ))}
       </Rail>
     ),
-    "next-live": realFeaturedLive ? <LiveHeroBanner live={realFeaturedLive} /> : nextLive ? <NextLiveCard /> : null,
-    news: <NewsRail />,
-    "top-tools": <TopToolsBlock />,
-    "upcoming-events": <UpcomingEventsBlock />,
+    "next-live": realFeaturedLive ? <LiveHeroBanner live={realFeaturedLive} /> : null,
+    news: null,
+    "top-tools": null,
+    "upcoming-events": null,
     jade: <JadeCTA />,
     community: <CommunityBlock />,
   };
