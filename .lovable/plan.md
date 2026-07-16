@@ -1,103 +1,84 @@
+# Redesign interno MM Club — Cinematic Premium
 
-# Sistema de Lives Nativo — Cloudflare Stream + Chat MM Club
+Vou alinhar todo o painel interno à linguagem premium da landing (preto + dourado + espaço + tipografia editorial), inspirado em **MasterClass / Apple TV / Netflix / Linear**. Deixa de parecer dashboard SaaS e passa a parecer um produto de consumo premium.
 
-Objetivo: substituir os dados mock em `src/data/lives.ts` por um sistema real de lives com streaming Cloudflare Stream, controlo de acesso por subscrição/entitlement, gravação automática publicada na Academia, e chat próprio integrado ao login.
+O componente `hero.tsx` que colaste é uma referência visual (BASE / SocialFi) — não vou copiá-lo literal (é de outra marca), mas vou puxar os princípios: tipografia gigante, cartões de vidro flutuantes, hierarquia dramática, respiração generosa.
 
-## Arquitetura
+## Escopo desta iteração
+
+Foco em **4 superfícies principais** + sidebar. Sem tocar em lógica de negócio, backend, permissões, dados.
+
+### 1. Sidebar — Reduzida ao essencial, editorial
+- Reorganizar ordem: **INÍCIO · ACADEMIA · JADE · AO VIVO · COMUNIDADE · FERRAMENTAS · EVENTOS**
+- Tipografia maior, tracking mais aberto (uppercase leve), mais espaço vertical entre itens
+- Remover divisões visuais desnecessárias, hairlines só onde faz sentido
+- Estado ativo com marca dourada lateral (barra fina) em vez de bg-fill
+- Manter collapsible actual
+
+### 2. Dashboard — Netflix / Apple TV
+Nova ordem e composição:
 
 ```text
-Mentor (OBS) ──RTMP──▶ Cloudflare Stream Live Input
-                            │
-                            ├── HLS playback (signed tokens)  ──▶ Player MM Club
-                            └── Recording (VOD) ──webhook──▶ backend ──▶ tabela lessons
-                                                                    │
-Membro ──login──▶ MM Club ──entitlement check──▶ Player + Chat (Realtime)
+┌─────────────────────────────────────────────┐
+│  HERO CINEMATOGRÁFICO                       │
+│  Vídeo autoplay full-bleed (aspect 21/9)   │
+│  Overlay: "Bom regresso, Victor."           │
+│  Sub: "Continua a construir a tua Marca..." │
+│  Sem controlos visíveis, mute, loop         │
+└─────────────────────────────────────────────┘
+
+── Continuar a aprender (rail horizontal, thumbnails grandes)
+── Próxima Live (banner cinemático, não card)
+── Jade (bloco editorial largo, não CTA compacto)
+── Ferramentas (rail)
+── Comunidade (feed preview estilo social)
+── Eventos (rail)
 ```
 
-## Backend (migrations)
+- Remover o vídeo YouTube pequeno centrado actual → substituir por **hero full-bleed** com o mesmo vídeo mas com aspect ratio cinematográfico e overlay de texto editorial
+- Saudação personalizada com nome do user (`user.name`) em display font gigante
+- Thumbnails dos cursos maiores (400px em vez de 300px), hover com scale+glow dourado subtil
+- Remover a duplicação de "Cursos" logo abaixo de "Continua a aprender" (redundância actual)
 
-Nova tabela `lives`:
-- `id`, `title`, `description`, `expert_id`
-- `starts_at`, `duration_minutes`, `visibility` (`public|club|premium`)
-- `cover_url`
-- `cf_live_input_id`, `cf_stream_key` (só server), `cf_playback_id`
-- `status` (`scheduled|live|ended|published`)
-- `recording_video_uid` (Cloudflare Stream VOD id após término)
-- `published_lesson_id` (FK opcional para a aula gerada)
+### 3. Academia — Streaming de conhecimento
+- Hero editorial no topo com destaque de 1 curso featured (imagem gigante, tipografia grande)
+- Grid de cursos com thumbnails maiores estilo MasterClass (aspect 3/4 tipo poster, ou 16/9 grandes)
+- Hover: escurece vizinhos, curso destaca com título + expert + duração
+- Secção "Especialistas" com fotos grandes circulares
 
-Nova tabela `live_chat_messages`:
-- `id`, `live_id`, `user_id`, `body`, `created_at`
-- RLS: SELECT se o utilizador tem entitlement da live; INSERT só próprio.
-- Ativar Realtime nesta tabela.
+### 4. Lives — O palco
+- Página `/lives` como palco: banner enorme com próxima live (ou live activa)
+- Countdown grande e dramático
+- Foto do especialista em destaque
+- Grid abaixo: replays estilo Netflix thumbnails
 
-`GRANT`s + RLS conforme regras do projeto. Policies usam `has_role` e um helper `can_access_live(live_id, uid)` que valida entitlement/subscrição.
+### 5. Comunidade — Rede social premium
+- Layout tipo X/LinkedIn: feed central mais largo, sidebar direita com destaques
+- Posts com mais respiração, avatares maiores, tipografia melhor
+- Menos "caixas", mais divisores subtis
 
-Tabela `lessons`/módulos já existe (via `courses`) — a gravação publicada cria uma aula "Gravação: {title}" num módulo especial "Lives gravadas" do curso associado ao mentor, ou numa área global "Lives".
+## Design tokens novos
 
-## Server functions e rotas
+Adicionar a `src/styles.css`:
+- Gradiente hero dourado escuro (`--gradient-hero-cinematic`)
+- Sombras douradas suaves para hover premium (`--shadow-gold-glow`)
+- Aspect ratios cinematográficos onde precisar
 
-`src/lib/lives.functions.ts` (createServerFn, requireSupabaseAuth):
-- `listLives()` — próximas + gravadas visíveis ao utilizador.
-- `getLive(id)` — devolve metadata + `playbackToken` (signed URL Cloudflare Stream) só se o utilizador puder aceder.
-- `sendChatMessage(liveId, body)`.
+Todas as cores vêm dos tokens existentes (`--primary` dourado, `--background`, `--surface-*`). Nada hardcoded.
 
-`src/lib/lives.server.ts` (server-only):
-- `createLiveInput()` — cria Live Input em Cloudflare Stream via API.
-- `signPlaybackToken(videoUid)` — assina JWT para HLS privado.
-- Admin-only server fns para criar/agendar lives (usa `supabaseAdmin` após verificar role admin).
+## O que NÃO vou tocar
 
-Rotas HTTP em `src/routes/api/public/`:
-- `cloudflare-stream/webhook.ts` — recebe eventos `live_input.connected`, `video.ready`. Verifica HMAC (`CF_STREAM_WEBHOOK_SECRET`), atualiza `lives.status`, e ao `video.ready` de uma gravação: cria aula em `lessons` com o `videoUid` e marca `status='published'`.
+- Rotas, permissões, entitlements, backend
+- Landing page (`index.tsx`), auth, checkout, admin
+- Lógica de progresso, lives realtime, community CRUD
+- Estrutura de dados (`src/data/*`)
 
-## Frontend
+## Ordem de implementação
 
-`src/routes/_app.lives.tsx` — lista real (server fn), estado ao vivo/agendada/gravada, badge "AO VIVO" pulsante.
+1. Tokens CSS + sidebar reordenada e redesenhada
+2. Dashboard: novo hero cinematográfico + ordem de rails
+3. Academia: hero featured + grid poster
+4. Lives: palco + countdown
+5. Comunidade: feed social premium
 
-`src/routes/_app.lives.$liveId.tsx` (nova) — página do evento:
-- Player HLS (`hls.js` ou `<Stream />` de `@cloudflare/stream-react`) com token assinado.
-- Painel de chat lateral com Realtime (`live_chat_messages`), input só para logados com acesso.
-- Contagem regressiva antes do início.
-- Após terminar: mostra CTA "Ver gravação na Academia" quando publicada.
-
-`src/routes/admin.lives.tsx` — form para criar live (título, mentor, data, visibilidade, cover); ao criar chama `createLiveInput` e devolve RTMP URL + stream key para o mentor configurar no OBS.
-
-## Controlo de acesso
-
-- Server-side em `getLive`: verifica `visibility` vs entitlements + subscrição ativa (`has_active_subscription`). Só devolve token de playback se autorizado.
-- Chat: RLS na tabela + server fn valida antes de inserir.
-- Tokens Cloudflare Stream expiram em 2h, renováveis.
-
-## Secrets necessários
-
-- `CLOUDFLARE_ACCOUNT_ID`
-- `CLOUDFLARE_STREAM_API_TOKEN`
-- `CLOUDFLARE_STREAM_SIGNING_KEY_ID` + `CLOUDFLARE_STREAM_SIGNING_KEY_PEM` (para tokens JWT de playback privado)
-- `CF_STREAM_WEBHOOK_SECRET`
-
-Pedidos via `add_secret` depois da aprovação do plano.
-
-## Fases de entrega
-
-1. **Fase 1 — Fundação:** migrations (`lives`, `live_chat_messages`, policies, Realtime), server fns de leitura, página de detalhe da live com player e chat funcionais, secrets Cloudflare configurados.
-2. **Fase 2 — Admin + ingestão:** rota admin para criar lives, criação automática de Live Input no Cloudflare, exibição de RTMP URL/key ao mentor.
-3. **Fase 3 — Webhook + publicação automática:** endpoint público verificado, transição de estados, criação da aula gravada na Academia com o `videoUid` (usar o player Cloudflare também para VOD).
-4. **Fase 4 — Polimento:** contagem regressiva, notificações, moderação de chat (delete pelo mentor/admin), presença ("X a assistir").
-
-## Dependências npm
-
-- `@cloudflare/stream-react` (player)
-- `jose` (assinar JWT de playback)
-
-## Notas técnicas
-
-- Streamkey nunca sai do servidor exceto para o admin criador da live (server fn com role check).
-- Player usa iframe do Cloudflare com `?signedURL=...` — evita ter que embutir hls.js e mantém DRM/tokens.
-- Chat: canal Realtime `live:{liveId}`, filtro por `live_id`.
-- Gravação: Live Inputs criam VOD automaticamente quando `recording.mode='automatic'` no create.
-
-## Confirmação necessária
-
-Antes de começar preciso confirmar:
-1. Os secrets Cloudflare — vou pedi-los via formulário seguro depois de aprovares o plano. Precisas ter uma conta Cloudflare com Stream ativado (paga; ~$5/1000 min armazenados + $1/1000 min entregues).
-2. Onde publicar a gravação: numa secção **"Lives" dedicada na Academia** (recomendado) ou dentro do curso do mentor correspondente?
-3. Avanço já com as 4 fases seguidas, ou queres validar Fase 1 antes de continuar?
+Pronto para começar. Confirmas ou queres ajustar o escopo?
