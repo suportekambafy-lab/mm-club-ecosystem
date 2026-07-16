@@ -312,27 +312,18 @@ function AppLayout() {
       </nav>
 
       {!compact && (
-        <div className="px-4 pb-4">
-          <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-violet to-violet-deep p-5 text-center text-violet-foreground shadow-lg shadow-violet/25">
-            <div className="pointer-events-none absolute inset-0 opacity-30 mix-blend-overlay [background-image:radial-gradient(circle_at_top_right,white,transparent_60%)]" />
-            <p className="relative text-sm font-semibold leading-tight">
-              24/7 Access to<br />o teu Painel Pessoal
+        <div className="px-6 pb-5">
+          <div className="border-t border-hairline pt-5">
+            <p className="font-display text-[11px] uppercase tracking-[0.28em] text-muted-foreground/70">
+              MM Club
             </p>
-            <div className="relative mt-3 flex justify-center gap-0.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} className="h-3.5 w-3.5 fill-current" />
-              ))}
-            </div>
-            <button
-              type="button"
-              className="relative mt-4 inline-flex w-full items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-violet-deep transition hover:bg-white/90"
-              onClick={() => router.navigate({ to: "/checkout" })}
-            >
-              Get Premium
-            </button>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+              Um ecossistema para founders da próxima geração.
+            </p>
           </div>
         </div>
       )}
+
 
       <div className={cn("border-t border-border", compact ? "p-2" : "p-4")}>
         {authUser ? (
