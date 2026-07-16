@@ -245,7 +245,8 @@ function PlansPage() {
                 {loading && pendingPlan === plan.id ? "A abrir checkout..." : "Subscrever"}
               </button>
             </article>
-          ))}
+            );
+          })}
         </section>
 
         <p className="text-center text-xs text-muted-foreground">
