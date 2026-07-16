@@ -23,6 +23,13 @@ import lessonL3 from "@/assets/lesson-l3.jpg";
 import lessonL4 from "@/assets/lesson-l4.jpg";
 import lessonL5 from "@/assets/lesson-l5.jpg";
 import lessonL6 from "@/assets/lesson-l6.jpg";
+import avatar1 from "@/assets/avatar-1.jpg";
+import avatar2 from "@/assets/avatar-2.jpg";
+import avatar3 from "@/assets/avatar-3.jpg";
+import avatar4 from "@/assets/avatar-4.jpg";
+import avatar5 from "@/assets/avatar-5.jpg";
+import avatar6 from "@/assets/avatar-6.jpg";
+const avatars = [avatar1, avatar2, avatar3, avatar4, avatar5, avatar6];
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -257,11 +264,15 @@ function Hero() {
             </div>
             <div className="absolute -right-4 bottom-16 hidden rounded-2xl border border-hairline bg-surface-1/95 p-3 shadow-xl backdrop-blur md:flex items-center gap-3 animate-fade-in [animation-delay:600ms]">
               <div className="flex -space-x-2">
-                {["oklch(0.72 0.14 74)", "oklch(0.55 0.22 285)", "oklch(0.82 0.13 82)"].map((c) => (
-                  <span
-                    key={c}
-                    className="h-7 w-7 rounded-full border-2 border-surface-1"
-                    style={{ background: c }}
+                {[avatar1, avatar5, avatar2].map((src, i) => (
+                  <img
+                    key={i}
+                    src={src}
+                    alt=""
+                    loading="lazy"
+                    width={28}
+                    height={28}
+                    className="h-7 w-7 rounded-full border-2 border-surface-1 object-cover"
                   />
                 ))}
               </div>
@@ -560,13 +571,13 @@ function FeatureComunidade() {
             ].map((p, i) => (
               <div key={p.n} className="rounded-xl border border-border bg-surface-2/40 p-4">
                 <div className="flex items-center gap-3">
-                  <div
-                    className="h-9 w-9 rounded-full"
-                    style={{
-                      background: i
-                        ? "linear-gradient(135deg, oklch(0.55 0.22 285), oklch(0.42 0.2 285))"
-                        : "linear-gradient(135deg, oklch(0.82 0.13 82), oklch(0.58 0.14 68))",
-                    }}
+                  <img
+                    src={i ? avatar2 : avatar1}
+                    alt=""
+                    loading="lazy"
+                    width={36}
+                    height={36}
+                    className="h-9 w-9 rounded-full object-cover"
                   />
                   <div>
                     <p className="text-xs font-semibold">{p.n}</p>
@@ -741,8 +752,8 @@ function FeatureEventos() {
             </div>
             <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
               <div className="flex -space-x-2">
-                {["oklch(0.82 0.13 82)", "oklch(0.55 0.22 285)", "oklch(0.68 0.14 70)", "oklch(0.65 0.2 285)"].map((c) => (
-                  <span key={c} className="h-7 w-7 rounded-full border-2 border-surface-1" style={{ background: c }} />
+                {[avatar4, avatar6, avatar3, avatar1].map((src, i) => (
+                  <img key={i} src={src} alt="" loading="lazy" width={28} height={28} className="h-7 w-7 rounded-full border-2 border-surface-1 object-cover" />
                 ))}
                 <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-surface-1 bg-surface-3 text-[10px] font-semibold">
                   +18
