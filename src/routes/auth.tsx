@@ -5,6 +5,7 @@ import { ArrowRight, ArrowLeft, Mail, Lock, User, Sparkles, Quote } from "lucide
 import { supabase } from "@/integrations/supabase/client";
 import { MMLogo } from "@/components/mm/logo";
 import { toast } from "sonner";
+import authCover from "@/assets/auth-cover.jpg";
 import { cn } from "@/lib/utils";
 
 type Search = { redirect?: string };
@@ -97,30 +98,38 @@ function AuthPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
-        {/* ==== LEFT — Cinematic stage (MM Club identity) ==== */}
+        {/* ==== LEFT — Cinematic stage ==== */}
         <aside className="relative hidden overflow-hidden bg-background lg:block">
-          {/* Base atmosphere */}
+          {/* Editorial portrait */}
+          <img
+            src={authCover}
+            alt=""
+            aria-hidden
+            width={1024}
+            height={1536}
+            className="absolute inset-0 h-full w-full object-cover object-center"
+          />
+          {/* Vignette + colour grading */}
           <div
             aria-hidden
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(180deg, oklch(0.12 0.004 60) 0%, oklch(0.10 0.004 60) 100%)",
+                "linear-gradient(180deg, oklch(0.13 0.003 60 / 0.35) 0%, oklch(0.10 0.004 60 / 0.72) 55%, oklch(0.10 0.004 60 / 0.96) 100%)",
             }}
           />
-          {/* Ambient glows — gold + violet, matching landing hero */}
           <div
             aria-hidden
             className="absolute inset-0"
             style={{
               background:
-                "radial-gradient(55% 45% at 22% 18%, oklch(0.82 0.13 82 / 0.28), transparent 70%), radial-gradient(50% 42% at 82% 88%, oklch(0.55 0.22 285 / 0.22), transparent 70%)",
+                "radial-gradient(55% 45% at 20% 15%, oklch(0.82 0.13 82 / 0.22), transparent 70%), radial-gradient(50% 42% at 85% 90%, oklch(0.55 0.22 285 / 0.20), transparent 70%)",
             }}
           />
-          {/* Fine grid */}
+          {/* Fine grid overlay */}
           <div
             aria-hidden
-            className="absolute inset-0 opacity-60"
+            className="absolute inset-0 opacity-30"
             style={{
               backgroundImage:
                 "linear-gradient(to right, oklch(1 0 0 / 0.05) 1px, transparent 1px), linear-gradient(to bottom, oklch(1 0 0 / 0.05) 1px, transparent 1px)",
@@ -129,44 +138,7 @@ function AuthPage() {
                 "radial-gradient(ellipse 90% 70% at 50% 45%, black 40%, transparent 85%)",
             }}
           />
-          {/* Big-type watermark — landing vocabulary */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-[26%] flex flex-col items-center gap-1 leading-[1] select-none"
-          >
-            <div
-              className="font-display text-[9vw] font-extrabold tracking-tight text-white/[0.06]"
-            >
-              #CLUB
-            </div>
-            <div
-              className="font-display text-[9vw] font-extrabold tracking-tight text-transparent"
-              style={{ WebkitTextStroke: "1px oklch(0.82 0.13 82 / 0.35)" }}
-            >
-              MARCA
-            </div>
-            <div
-              className="font-display text-[8vw] font-extrabold tracking-tight"
-              style={{
-                background: "linear-gradient(180deg, var(--gold-soft), var(--gold-deep))",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-                opacity: 0.85,
-              }}
-            >
-              MILIONÁRIA
-            </div>
-          </div>
-          {/* Bottom fade for legibility */}
-          <div
-            aria-hidden
-            className="absolute inset-x-0 bottom-0 h-1/2"
-            style={{
-              background:
-                "linear-gradient(180deg, transparent 0%, oklch(0.10 0.004 60 / 0.85) 60%, oklch(0.10 0.004 60) 100%)",
-            }}
-          />
+
 
 
           {/* Content */}
