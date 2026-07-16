@@ -13,7 +13,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { SectionHeading } from "@/components/mm/section-heading";
-import { adminGetLiveIngest } from "@/lib/lives.functions";
+import { adminGetLiveIngest, adminSetLiveBroadcastState } from "@/lib/lives.functions";
 
 export const Route = createFileRoute("/admin/lives/$liveId/studio")({
   component: LiveStudio,
@@ -24,6 +24,7 @@ type Status = "idle" | "requesting-media" | "ready" | "connecting" | "live" | "e
 function LiveStudio() {
   const { liveId } = Route.useParams();
   const getIngest = useServerFn(adminGetLiveIngest);
+  const setBroadcastState = useServerFn(adminSetLiveBroadcastState);
 
   const [whipUrl, setWhipUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>("idle");
@@ -165,7 +166,13 @@ function LiveStudio() {
         throw new Error(`WHIP HTTP ${res.status}: ${await res.text().catch(() => res.statusText)}`);
       }
       const answerSdp = await res.text();
-      await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
+      setStatus("live");
+      await setBroadcastState({ data: { id: liveId, status: "live" } }).catch((err) => {
+        console.error("[live-studio] failed to mark live", err);
+      });
+      pc.setRemoteDescription({ type: "answer", sdp: answerSdp }).catch((err) => {
+        console.error("[live-studio] failed to apply WebRTC answer", err);
+      });
     } catch (e) {
       setError((e as Error).message);
       setStatus("error");
@@ -197,10 +204,13 @@ function LiveStudio() {
     if (videoRef.current) videoRef.current.srcObject = null;
   }
 
-  function endLive() {
+  async function endLive() {
     teardown();
     setStatus("ended");
     setElapsed(0);
+    await setBroadcastState({ data: { id: liveId, status: "ended" } }).catch((err) => {
+      console.error("[live-studio] failed to mark ended", err);
+    });
   }
 
   const mmss = `${String(Math.floor(elapsed / 60)).padStart(2, "0")}:${String(elapsed % 60).padStart(2, "0")}`;
