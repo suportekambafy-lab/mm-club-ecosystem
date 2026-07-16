@@ -165,18 +165,34 @@ function LiveStudio() {
       if (!res.ok) {
         throw new Error(`WHIP HTTP ${res.status}: ${await res.text().catch(() => res.statusText)}`);
       }
-      const answerSdp = await res.text();
       setStatus("live");
       await setBroadcastState({ data: { id: liveId, status: "live" } }).catch((err) => {
         console.error("[live-studio] failed to mark live", err);
       });
-      pc.setRemoteDescription({ type: "answer", sdp: answerSdp }).catch((err) => {
-        console.error("[live-studio] failed to apply WebRTC answer", err);
-      });
+      const answerSdp = await readTextWithTimeout(res, 5000);
+      if (answerSdp.trim()) {
+        pc.setRemoteDescription({ type: "answer", sdp: answerSdp }).catch((err) => {
+          console.error("[live-studio] failed to apply WebRTC answer", err);
+        });
+      }
     } catch (e) {
       setError((e as Error).message);
       setStatus("error");
       teardown();
+    }
+  }
+
+  async function readTextWithTimeout(res: Response, ms: number) {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([
+        res.text(),
+        new Promise<string>((resolve) => {
+          timeoutId = setTimeout(() => resolve(""), ms);
+        }),
+      ]);
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
     }
   }
 
