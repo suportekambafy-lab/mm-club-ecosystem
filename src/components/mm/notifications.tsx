@@ -10,7 +10,7 @@ import {
   CalendarDays,
   Play,
   Check,
-  Sparkles,
+  
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { news } from "@/data/news";
@@ -292,7 +292,7 @@ export function NotificationsBell({ className }: { className?: string }) {
         >
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              
               <p className="font-display text-sm text-foreground">Notificações</p>
             </div>
             {unreadCount > 0 && (

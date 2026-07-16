@@ -7,7 +7,7 @@ export const tools: Tool[] = [
     description: "Diagnóstico do posicionamento atual da tua marca em minutos.",
     category: "Prompts",
     visibility: "club",
-    icon: "Sparkles",
+    icon: "Wand2",
   },
   {
     id: "t2",
@@ -15,7 +15,7 @@ export const tools: Tool[] = [
     description: "Gera 10 ângulos de criativo prontos a testar.",
     category: "Prompts",
     visibility: "club",
-    icon: "Sparkles",
+    icon: "Wand2",
   },
   {
     id: "t3",

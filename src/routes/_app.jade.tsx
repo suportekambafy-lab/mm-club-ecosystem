@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect, useMemo } from "react";
-import { ArrowUp, Plus, Sparkles, Square } from "lucide-react";
+import { ArrowUp, Plus, Bot, Square } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import ReactMarkdown from "react-markdown";
@@ -76,7 +76,7 @@ function SuporteIAPage() {
       <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-8 md:py-4">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary ring-1 ring-[color:var(--hairline)]">
-            <Sparkles className="h-4 w-4" />
+            <Bot className="h-4 w-4" />
           </div>
           <div className="min-w-0">
             <h1 className="font-display text-lg text-foreground">Suporte IA</h1>
@@ -98,7 +98,7 @@ function SuporteIAPage() {
           {messages.length === 0 && (
             <div className="space-y-6 py-8 text-center md:py-12">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-[color:var(--hairline)]">
-                <Sparkles className="h-6 w-6" />
+                <Bot className="h-6 w-6" />
               </div>
               <div>
                 <h2 className="font-display text-2xl text-foreground">

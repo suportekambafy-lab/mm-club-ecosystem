@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   GraduationCap,
-  Sparkles,
+  Bot,
   Wrench,
   Radio,
   Users,
@@ -96,7 +96,7 @@ const navSections: NavSection[] = [
     label: "Cursos",
     items: [
       { to: "/academia", label: "Academia", icon: GraduationCap },
-      { to: "/jade", label: "Suporte IA", icon: Sparkles },
+      { to: "/jade", label: "Suporte IA", icon: Bot },
     ],
   },
   {
@@ -554,7 +554,7 @@ type TabItem = {
 const mobileTabs: TabItem[] = [
   { to: "/dashboard", label: "Início", icon: Home, exact: true },
   { to: "/academia", label: "Academia", icon: GraduationCap },
-  { to: "/jade", label: "IA", icon: Sparkles },
+  { to: "/jade", label: "IA", icon: Bot },
   { to: "/comunidade", label: "Comunidade", icon: Users },
 ];
 
