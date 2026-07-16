@@ -226,21 +226,8 @@ export function BigTypeHero() {
             </motion.h1>
           </div>
 
-          {/* Glass cards — desktop only */}
-          <GlassCard
-            name="sofia.mm"
-            points="+2.400 membros"
-            gradient="linear-gradient(135deg, oklch(0.82 0.13 82), oklch(0.58 0.14 68))"
-            className="hidden sm:flex sm:left-[6%] sm:top-[42%]"
-            delay={0.6}
-          />
-          <GlassCard
-            name="andre.eth"
-            points="Suporte IA · online"
-            gradient="linear-gradient(135deg, oklch(0.62 0.22 285), oklch(0.42 0.2 285))"
-            className="hidden sm:flex sm:right-[6%] sm:top-[10%]"
-            delay={0.75}
-          />
+
+
 
           {/* Decorative arrows */}
           <motion.div
