@@ -308,11 +308,10 @@ function CommunityPage() {
                   <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border-2 border-surface-1 bg-emerald-500" />
                 </div>
               ))}
-              {membersQ.isLoading && (
-                <div className="col-span-5 flex justify-center py-2 text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                </div>
-              )}
+              {membersQ.isLoading &&
+                Array.from({ length: 10 }).map((_, i) => (
+                  <Skeleton key={i} className="h-9 w-9 rounded-full" />
+                ))}
               {membersQ.data && membersQ.data.length === 0 && (
                 <p className="col-span-5 text-center text-xs text-muted-foreground">
                   Ainda ninguém publicou.
