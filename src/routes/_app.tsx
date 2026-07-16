@@ -452,16 +452,7 @@ function AppLayout() {
                 : "justify-end",
             )}
           >
-            {pathname === "/dashboard" && (
-              <div className="hidden min-w-0 sm:block">
-                <p className="truncate font-display text-sm leading-tight text-foreground sm:text-lg md:text-xl">
-                  Bem-vindo, <span className="text-primary">{displayName.split(" ")[0]}</span>.
-                </p>
-                <p className="mt-0.5 hidden text-xs text-muted-foreground md:block">
-                  Continua a construir a tua marca milionária.
-                </p>
-              </div>
-            )}
+            {/* Greeting moved into cinematic dashboard hero — topbar stays minimal */}
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
               {pathname === "/dashboard" && (
                 <div className="hidden md:block">
