@@ -143,7 +143,7 @@ export function BigTypeHero() {
   };
 
   return (
-    <section className="relative overflow-hidden pt-16 pb-8 sm:pt-20 sm:pb-10">
+    <section className="relative overflow-hidden pt-14 pb-6 sm:pt-16 sm:pb-8">
       {/* background grid */}
       <div
         aria-hidden
@@ -185,15 +185,15 @@ export function BigTypeHero() {
         </div>
 
         {/* massive type stack + overlays */}
-        <div className="relative mt-6 sm:mt-8">
+        <div className="relative mt-5 sm:mt-6">
           {/* type */}
-          <div className="relative z-0 flex flex-col items-center leading-[0.94] sm:leading-[0.9]">
+          <div className="relative z-0 flex flex-col items-center leading-[0.98] sm:leading-[0.94]">
             <motion.h1
               custom={0}
               initial="hidden"
               animate="show"
               variants={stackAnim}
-              className="font-display text-[9vw] font-extrabold tracking-tight text-foreground/85 sm:text-[8.2vw] md:text-[6.4vw] lg:text-[5.35rem]"
+              className="font-display text-[7.6vw] font-extrabold tracking-tight text-foreground/85 sm:text-[6.4vw] md:text-[5.2vw] lg:text-[4.6rem]"
             >
               #CLUB
             </motion.h1>
@@ -202,7 +202,7 @@ export function BigTypeHero() {
               initial="hidden"
               animate="show"
               variants={stackAnim}
-              className="font-display text-[9vw] font-extrabold tracking-tight text-transparent sm:text-[8.2vw] md:text-[6.4vw] lg:text-[5.35rem]"
+              className="font-display text-[7.6vw] font-extrabold tracking-tight text-transparent sm:text-[6.4vw] md:text-[5.2vw] lg:text-[4.6rem]"
               style={{ WebkitTextStroke: "1.2px var(--gold)" }}
             >
               MARCA
@@ -212,7 +212,7 @@ export function BigTypeHero() {
               initial="hidden"
               animate="show"
               variants={stackAnim}
-              className="font-display text-[7.8vw] font-extrabold tracking-tight sm:text-[7.2vw] md:text-[5.8vw] lg:text-[4.95rem]"
+              className="font-display text-[6.6vw] font-extrabold tracking-tight sm:text-[5.7vw] md:text-[4.7vw] lg:text-[4.25rem]"
               style={{
                 background: "linear-gradient(180deg, var(--gold-soft), var(--gold-deep))",
                 WebkitBackgroundClip: "text",
@@ -287,7 +287,7 @@ export function BigTypeHero() {
         </div>
 
         {/* CTA row */}
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-3 sm:mt-12">
+        <div className="mt-7 flex flex-wrap items-center justify-center gap-3 sm:mt-9">
           <Link
             to="/checkout"
             className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-4 text-sm font-semibold text-primary-foreground shadow-[0_20px_60px_-20px_oklch(0.82_0.13_82_/_0.7)] hover:bg-gold-soft transition-all"
@@ -305,7 +305,7 @@ export function BigTypeHero() {
       </div>
 
       {/* Bottom three-card system */}
-      <div id="pilares" className="mx-auto mt-14 max-w-[1180px] px-4 sm:mt-20 sm:px-8">
+      <div id="pilares" className="mx-auto mt-10 max-w-[1180px] px-4 sm:mt-14 sm:px-8">
         <div className="grid gap-6 md:grid-cols-3">
           {/* Card 1 — Academia */}
           <motion.div
