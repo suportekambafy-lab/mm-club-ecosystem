@@ -60,18 +60,17 @@ export const Route = createFileRoute("/api/public/cloudflare-stream/webhook")({
           }
 
           if (liveInputId && (state === "live-ended" || state === "ready")) {
-            // Attach the recording video UID + mark ended/published.
-            const patch: Record<string, unknown> = {};
             if (uid && readyToStream) {
-              patch.recording_video_uid = uid;
-              patch.status = "published";
+              await supabaseAdmin
+                .from("lives")
+                .update({ recording_video_uid: uid, status: "published" })
+                .eq("cf_live_input_id", liveInputId);
             } else {
-              patch.status = "ended";
+              await supabaseAdmin
+                .from("lives")
+                .update({ status: "ended" })
+                .eq("cf_live_input_id", liveInputId);
             }
-            await supabaseAdmin
-              .from("lives")
-              .update(patch)
-              .eq("cf_live_input_id", liveInputId);
           }
         } catch (e) {
           console.error("[cf-stream webhook] db update failed", e);
