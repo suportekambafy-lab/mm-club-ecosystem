@@ -27,6 +27,28 @@ export function LiveHeroBanner({ live, className }: { live: LiveLike; className?
   const isLive = live.status === "live";
   const isReplay = live.status === "published" || live.status === "ended";
   const [distance, setDistance] = useState<string>("");
+  const [countdown, setCountdown] = useState<{ d: number; h: number; m: number; s: number } | null>(null);
+
+  useEffect(() => {
+    if (isLive || isReplay) return;
+    const tick = () => {
+      const diff = new Date(live.starts_at).getTime() - Date.now();
+      if (diff <= 0) {
+        setCountdown({ d: 0, h: 0, m: 0, s: 0 });
+        return;
+      }
+      const s = Math.floor(diff / 1000);
+      setCountdown({
+        d: Math.floor(s / 86400),
+        h: Math.floor((s % 86400) / 3600),
+        m: Math.floor((s % 3600) / 60),
+        s: s % 60,
+      });
+    };
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => clearInterval(t);
+  }, [live.starts_at, isLive, isReplay]);
 
   useEffect(() => {
     if (isLive) return;
