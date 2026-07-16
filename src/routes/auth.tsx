@@ -84,13 +84,13 @@ function AuthPage() {
             height={1536}
             className="absolute inset-0 h-full w-full object-cover object-center"
           />
-          {/* Subtle bottom vignette — just enough for legibility */}
+          {/* Vignette — top for logo, strong bottom for text */}
           <div
             aria-hidden
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(180deg, oklch(0.10 0.004 60 / 0.35) 0%, transparent 30%, transparent 55%, oklch(0.10 0.004 60 / 0.85) 100%)",
+                "linear-gradient(180deg, oklch(0.10 0.004 60 / 0.55) 0%, transparent 18%, transparent 65%, oklch(0.08 0.004 60 / 0.92) 100%)",
             }}
           />
 
@@ -110,11 +110,12 @@ function AuthPage() {
                 <span className="h-px w-10 bg-white/40" />
                 Clube privado · Temporada 2026
               </div>
-              <h2 className="mt-5 font-display text-3xl leading-[1.05] tracking-tight text-white xl:text-[40px]">
-                Marca Milionária.
-              </h2>
+              <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/75">
+                O ecossistema privado da Marca Milionária.
+              </p>
             </motion.div>
           </div>
+
 
         </aside>
 
