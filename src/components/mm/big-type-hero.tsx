@@ -224,19 +224,19 @@ export function BigTypeHero() {
             </motion.h1>
           </div>
 
-          {/* Glass cards */}
+          {/* Glass cards — desktop only */}
           <GlassCard
             name="sofia.mm"
             points="+2.400 membros"
             gradient="linear-gradient(135deg, oklch(0.82 0.13 82), oklch(0.58 0.14 68))"
-            className="left-[-2%] top-[40%] sm:left-[6%] sm:top-[42%]"
+            className="hidden sm:flex sm:left-[6%] sm:top-[42%]"
             delay={0.6}
           />
           <GlassCard
             name="andre.eth"
             points="Suporte IA · online"
             gradient="linear-gradient(135deg, oklch(0.62 0.22 285), oklch(0.42 0.2 285))"
-            className="right-[-2%] top-[2%] sm:right-[6%] sm:top-[10%]"
+            className="hidden sm:flex sm:right-[6%] sm:top-[10%]"
             delay={0.75}
           />
 
@@ -258,17 +258,32 @@ export function BigTypeHero() {
             <ArrowGoldRight />
           </motion.div>
 
-          {/* Circular badge */}
+          {/* Circular badge — desktop only */}
           <motion.div
             initial={{ opacity: 0, scale: 0.6 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 1.1, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute right-[4%] bottom-[-2%] z-20 sm:right-[10%] sm:bottom-[-4%]"
+            className="absolute right-[10%] bottom-[-4%] z-20 hidden sm:block"
           >
             <Link to="/checkout" aria-label="Aderir ao MM Club">
               <CircularBadge />
             </Link>
           </motion.div>
+        </div>
+
+        {/* Mobile floating chips — below type, in-flow */}
+        <div className="mt-6 flex flex-wrap justify-center gap-2 sm:hidden">
+          <div className="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface-1/70 px-3 py-1.5 backdrop-blur">
+            <span
+              className="h-4 w-4 rounded-full"
+              style={{ background: "linear-gradient(135deg, oklch(0.82 0.13 82), oklch(0.58 0.14 68))" }}
+            />
+            <span className="text-[11px] font-medium">+2.400 membros</span>
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface-1/70 px-3 py-1.5 backdrop-blur">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            <span className="text-[11px] font-medium">Suporte IA online</span>
+          </div>
         </div>
 
         {/* CTA row */}
