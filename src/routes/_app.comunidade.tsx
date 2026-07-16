@@ -1300,11 +1300,16 @@ function CommentsSection({
 
   return (
     <div className="mt-3 space-y-3 border-t border-border pt-3">
-      {q.isLoading && (
-        <div className="flex justify-center text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
-        </div>
-      )}
+      {q.isLoading &&
+        Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="flex gap-2">
+            <Skeleton className="h-7 w-7 rounded-full" />
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-3 w-full" />
+            </div>
+          </div>
+        ))}
       {q.data?.map((c) => (
         <CommentItem
           key={c.id}
