@@ -143,7 +143,7 @@ export function BigTypeHero() {
   };
 
   return (
-    <section className="relative overflow-hidden pt-28 pb-16 sm:pt-32">
+    <section className="relative overflow-hidden pt-20 pb-10 sm:pt-24 sm:pb-12">
       {/* background grid */}
       <div
         aria-hidden
@@ -166,7 +166,7 @@ export function BigTypeHero() {
         }}
       />
 
-      <div className="mx-auto max-w-[1400px] px-4 sm:px-8">
+      <div className="mx-auto max-w-[1180px] px-4 sm:px-8">
         {/* intro tag + CTA */}
         <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface-1/60 px-3 py-1.5 backdrop-blur">
@@ -185,15 +185,15 @@ export function BigTypeHero() {
         </div>
 
         {/* massive type stack + overlays */}
-        <div className="relative mt-14 sm:mt-16">
+        <div className="relative mt-8 sm:mt-10">
           {/* type */}
-          <div className="relative z-0 flex flex-col items-center leading-[0.88]">
+          <div className="relative z-0 flex flex-col items-center leading-[0.94] sm:leading-[0.9]">
             <motion.h1
               custom={0}
               initial="hidden"
               animate="show"
               variants={stackAnim}
-              className="font-display text-[13vw] font-extrabold tracking-tight text-foreground/85 md:text-[9vw] lg:text-[7.5rem]"
+              className="font-display text-[10vw] font-extrabold tracking-tight text-foreground/85 sm:text-[11vw] md:text-[8vw] lg:text-[6.25rem]"
             >
               #CLUB
             </motion.h1>
@@ -202,7 +202,7 @@ export function BigTypeHero() {
               initial="hidden"
               animate="show"
               variants={stackAnim}
-              className="font-display text-[13vw] font-extrabold tracking-tight text-transparent md:text-[9vw] lg:text-[7.5rem]"
+              className="font-display text-[10vw] font-extrabold tracking-tight text-transparent sm:text-[11vw] md:text-[8vw] lg:text-[6.25rem]"
               style={{ WebkitTextStroke: "1.2px var(--gold)" }}
             >
               MARCA
@@ -212,7 +212,7 @@ export function BigTypeHero() {
               initial="hidden"
               animate="show"
               variants={stackAnim}
-              className="font-display text-[11.5vw] font-extrabold tracking-tight md:text-[8.5vw] lg:text-[7rem]"
+              className="font-display text-[8.8vw] font-extrabold tracking-tight sm:text-[9.6vw] md:text-[7.4vw] lg:text-[5.8rem]"
               style={{
                 background: "linear-gradient(180deg, var(--gold-soft), var(--gold-deep))",
                 WebkitBackgroundClip: "text",
