@@ -1,6 +1,10 @@
 import { motion } from "motion/react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
+import avatar1 from "@/assets/avatar-1.jpg";
+import avatar2 from "@/assets/avatar-2.jpg";
+import avatar3 from "@/assets/avatar-3.jpg";
+import avatar5 from "@/assets/avatar-5.jpg";
 
 /* ---------- Hand-drawn arrows ---------- */
 
@@ -383,16 +387,16 @@ export function BigTypeHero() {
               </p>
               <p className="mt-1 font-display text-3xl">2.412</p>
               <div className="mt-3 flex -space-x-2">
-                {[
-                  "linear-gradient(135deg, oklch(0.82 0.13 82), oklch(0.58 0.14 68))",
-                  "linear-gradient(135deg, oklch(0.62 0.22 285), oklch(0.42 0.2 285))",
-                  "linear-gradient(135deg, oklch(0.72 0.14 74), oklch(0.55 0.12 60))",
-                  "linear-gradient(135deg, oklch(0.65 0.2 285), oklch(0.5 0.2 285))",
-                ].map((g, i) => (
-                  <span
+
+                {[avatar1, avatar3, avatar5, avatar2].map((src, i) => (
+                  <img
                     key={i}
-                    className="h-6 w-6 rounded-full border-2 border-surface-1"
-                    style={{ background: g }}
+                    src={src}
+                    alt=""
+                    loading="lazy"
+                    width={24}
+                    height={24}
+                    className="h-6 w-6 rounded-full border-2 border-surface-1 object-cover"
                   />
                 ))}
                 <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-surface-1 bg-surface-3 text-[9px] font-semibold">
