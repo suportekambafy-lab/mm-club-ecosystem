@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect, useMemo } from "react";
-import { ArrowUp, Plus, Bot, Square } from "lucide-react";
+import { ArrowUp, Square } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import ReactMarkdown from "react-markdown";
@@ -74,22 +74,17 @@ function SuporteIAPage() {
   return (
     <div className="-mx-3 -my-4 flex h-[calc(100vh-8rem)] flex-col sm:-mx-4 sm:-my-6 md:-mx-8 md:-my-8 md:h-[calc(100vh-4rem)]">
       <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-8 md:py-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary ring-1 ring-[color:var(--hairline)]">
-            <Bot className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="font-display text-lg text-foreground">Suporte IA</h1>
-            <p className="text-xs text-muted-foreground">
-              Marca, marketing, vendas e escala.
-            </p>
-          </div>
+        <div className="min-w-0">
+          <h1 className="font-display text-lg text-foreground">Suporte IA</h1>
+          <p className="text-xs text-muted-foreground">
+            Marca, marketing, vendas e escala.
+          </p>
         </div>
         <button
           onClick={newConversation}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-1 px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-surface-2"
+          className="inline-flex items-center rounded-full border border-border bg-surface-1 px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-surface-2"
         >
-          <Plus className="h-3.5 w-3.5" /> Nova conversa
+          Nova conversa
         </button>
       </header>
 
@@ -97,9 +92,6 @@ function SuporteIAPage() {
         <div className="mx-auto max-w-2xl space-y-6">
           {messages.length === 0 && (
             <div className="space-y-6 py-8 text-center md:py-12">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-[color:var(--hairline)]">
-                <Bot className="h-6 w-6" />
-              </div>
               <div>
                 <h2 className="font-display text-2xl text-foreground">
                   Como te posso ajudar?
