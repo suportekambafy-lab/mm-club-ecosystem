@@ -37,6 +37,19 @@ function LiveStudio() {
   const streamRef = useRef<MediaStream | null>(null);
   const startedAtRef = useRef<number | null>(null);
 
+  // Detect if we're running inside an iframe (e.g. Lovable preview) — many
+  // preview iframes disable getUserMedia via Permissions-Policy, so we surface
+  // a clear "abrir em nova janela" affordance before the user hits an opaque
+  // NotAllowedError.
+  const [inIframe, setInIframe] = useState(false);
+  useEffect(() => {
+    try {
+      setInIframe(window.self !== window.top);
+    } catch {
+      setInIframe(true);
+    }
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
