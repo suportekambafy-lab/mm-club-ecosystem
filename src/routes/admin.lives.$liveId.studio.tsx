@@ -1,7 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Radio, Loader2, Mic, MicOff, Video, VideoOff } from "lucide-react";
+import {
+  ArrowLeft,
+  Radio,
+  Loader2,
+  Mic,
+  MicOff,
+  Video,
+  VideoOff,
+  ExternalLink,
+  AlertTriangle,
+} from "lucide-react";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { adminGetLiveIngest } from "@/lib/lives.functions";
 
@@ -26,6 +36,19 @@ function LiveStudio() {
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const startedAtRef = useRef<number | null>(null);
+
+  // Detect if we're running inside an iframe (e.g. Lovable preview) — many
+  // preview iframes disable getUserMedia via Permissions-Policy, so we surface
+  // a clear "abrir em nova janela" affordance before the user hits an opaque
+  // NotAllowedError.
+  const [inIframe, setInIframe] = useState(false);
+  useEffect(() => {
+    try {
+      setInIframe(window.self !== window.top);
+    } catch {
+      setInIframe(true);
+    }
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -59,6 +82,14 @@ function LiveStudio() {
     setError(null);
     setStatus("requesting-media");
     try {
+      if (!window.isSecureContext) {
+        throw new Error("A página tem de estar em HTTPS para aceder à câmara/microfone.");
+      }
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error(
+          "O navegador ou o preview em iframe está a bloquear a câmara. Abre esta página numa janela nova.",
+        );
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } },
         audio: { echoCancellation: true, noiseSuppression: true },
@@ -69,7 +100,18 @@ function LiveStudio() {
       }
       setStatus("ready");
     } catch (e) {
-      setError("Não foi possível aceder à câmara/microfone: " + (e as Error).message);
+      const err = e as DOMException & { name?: string; message?: string };
+      let msg = err.message || String(err);
+      if (err.name === "NotAllowedError") {
+        msg = inIframe
+          ? "Acesso à câmara/microfone bloqueado pelo preview do Lovable. Abre esta página numa janela nova e tenta de novo."
+          : "Permissão negada. Autoriza câmara e microfone nas definições do navegador.";
+      } else if (err.name === "NotFoundError") {
+        msg = "Não foi encontrada uma câmara ou microfone neste dispositivo.";
+      } else if (err.name === "NotReadableError") {
+        msg = "A câmara/microfone está a ser usada por outra aplicação.";
+      }
+      setError(msg);
       setStatus("error");
     }
   }
@@ -179,6 +221,30 @@ function LiveStudio() {
         title="Transmitir do navegador."
         description="Câmara e microfone deste dispositivo enviam directamente para o Cloudflare Stream via WebRTC (WHIP)."
       />
+
+      {inIframe && (
+        <div className="flex flex-col gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <p className="font-medium">Estás a ver isto dentro do preview.</p>
+              <p className="text-amber-100/80">
+                O preview em iframe bloqueia o acesso à câmara/microfone. Abre esta página numa
+                janela nova para transmitir.
+              </p>
+            </div>
+          </div>
+          <a
+            href={typeof window !== "undefined" ? window.location.href : "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-amber-500 px-4 py-2 text-xs font-medium text-black hover:bg-amber-400"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Abrir em nova janela
+          </a>
+        </div>
+      )}
 
       {error && (
         <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
