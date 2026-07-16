@@ -124,6 +124,14 @@ function ContinueCard({ course }: { course: Course }) {
       className="group flex w-[280px] shrink-0 flex-col overflow-hidden rounded-2xl bg-surface-2 transition hover:bg-surface-3"
     >
       <div className="relative aspect-video overflow-hidden" style={{ background: course.cover }}>
+        {firstLesson?.cover && (
+          <img
+            src={firstLesson.cover}
+            alt=""
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          />
+        )}
         <div className="absolute inset-0 bg-linear-to-t from-black/70 to-transparent" />
         <span className="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-background transition group-hover:scale-110">
           <Play className="h-5 w-5 translate-x-0.5 fill-current" />
