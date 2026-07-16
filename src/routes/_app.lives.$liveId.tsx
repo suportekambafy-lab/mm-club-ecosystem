@@ -1,10 +1,23 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, CalendarDays, Clock, Users } from "lucide-react";
+import {
+  ChevronLeft,
+  CalendarDays,
+  Clock,
+  Users,
+  Radio,
+  Play,
+  FileText,
+  Sparkles,
+  Lock,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getLive } from "@/lib/lives.functions";
 import { LivePlayer } from "@/components/mm/live-player";
 import { LiveChat } from "@/components/mm/live-chat";
+import { useLivePresence } from "@/hooks/use-live-presence";
+import { expertsById } from "@/data/experts";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/lives/$liveId")({
   loader: async ({ params }) => {
@@ -18,17 +31,21 @@ export const Route = createFileRoute("/_app/lives/$liveId")({
     meta: loaderData
       ? [
           { title: `${loaderData.live.title} — MM Club` },
-          { name: "description", content: loaderData.live.description ?? "Live MM Club." },
+          { name: "description", content: loaderData.live.description ?? "Sessão ao vivo do MM Club." },
         ]
       : [{ title: "Live — MM Club" }],
   }),
   component: LiveDetail,
 });
 
+type LoaderData = Awaited<ReturnType<typeof getLive>>;
+
 function LiveDetail() {
-  const { live, playbackToken, videoUid } = Route.useLoaderData();
+  const initial = Route.useLoaderData();
+  const [data, setData] = useState<LoaderData>(initial);
   const [userId, setUserId] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState(() => diff(live.starts_at));
+  const [countdown, setCountdown] = useState<string | null>(() => diff(initial.live.starts_at));
+  const [elapsed, setElapsed] = useState<number>(0);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
@@ -36,47 +53,125 @@ function LiveDetail() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  // Countdown while scheduled
   useEffect(() => {
-    if (live.status !== "scheduled") return;
-    const t = setInterval(() => setCountdown(diff(live.starts_at)), 1000);
+    if (data.live.status !== "scheduled") return;
+    const t = setInterval(() => setCountdown(diff(data.live.starts_at)), 1000);
     return () => clearInterval(t);
-  }, [live.starts_at, live.status]);
+  }, [data.live.starts_at, data.live.status]);
 
+  // Elapsed time while live
+  useEffect(() => {
+    if (data.live.status !== "live") return;
+    const startedAt = new Date(data.live.starts_at).getTime();
+    const t = setInterval(() => {
+      setElapsed(Math.max(0, Math.floor((Date.now() - startedAt) / 1000)));
+    }, 1000);
+    return () => clearInterval(t);
+  }, [data.live.starts_at, data.live.status]);
+
+  // Auto-refresh status transitions (scheduled → live → ended → published)
+  useEffect(() => {
+    if (data.live.status === "published") return;
+    const t = setInterval(async () => {
+      try {
+        const fresh = await getLive({ data: { id: data.live.id } });
+        setData(fresh);
+      } catch {
+        /* ignore transient errors */
+      }
+    }, 15000);
+    return () => clearInterval(t);
+  }, [data.live.id, data.live.status]);
+
+  const { live, playbackToken, videoUid } = data;
   const isLive = live.status === "live";
+  const isReplay = live.status === "ended" || live.status === "published";
+  const expert = live.expert_id ? expertsById[live.expert_id] : undefined;
+
+  const presenceCount = useLivePresence(isLive ? live.id : null, userId);
+
   const dateStr = new Intl.DateTimeFormat("pt-PT", {
     dateStyle: "full",
     timeStyle: "short",
   }).format(new Date(live.starts_at));
 
+  const visibilityLabel =
+    live.visibility === "public" ? "Aberta" : live.visibility === "premium" ? "Premium" : "MM Club";
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <Link
         to="/lives"
-        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition hover:text-foreground"
+        className="inline-flex items-center gap-1.5 text-xs uppercase tracking-widest text-muted-foreground transition hover:text-foreground"
       >
         <ChevronLeft className="h-3.5 w-3.5" />
-        Lives
+        Voltar às Lives
       </Link>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="space-y-4">
-          {videoUid ? (
-            <LivePlayer videoUid={videoUid} playbackToken={playbackToken} live={isLive} />
-          ) : (
-            <div className="flex aspect-video items-center justify-center rounded-2xl border border-border bg-surface-1 text-center">
-              <div className="max-w-sm space-y-2 px-6">
-                <p className="font-display text-lg text-foreground">Ainda não começou</p>
-                {live.status === "scheduled" && countdown && (
-                  <p className="font-mono text-sm text-primary">{countdown}</p>
-                )}
-                <p className="text-xs text-muted-foreground">{dateStr}</p>
-              </div>
-            </div>
-          )}
+      {/* CINEMATIC PLAYER + STATUS BAR */}
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="space-y-5">
+          <div className="relative">
+            {videoUid ? (
+              <LivePlayer videoUid={videoUid} playbackToken={playbackToken} live={isLive} />
+            ) : (
+              <PrelivePoster live={live} countdown={countdown} />
+            )}
 
-          <div className="rounded-2xl border border-border bg-surface-1 p-5">
-            <h1 className="font-display text-2xl text-foreground md:text-3xl">{live.title}</h1>
-            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+            {/* Floating status chip over the player */}
+            {(isLive || isReplay) && (
+              <div className="pointer-events-none absolute left-4 top-4 flex flex-wrap items-center gap-2">
+                {isLive && (
+                  <span className="inline-flex items-center gap-2 rounded-full bg-red-500/95 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white shadow-lg shadow-red-500/40">
+                    <span className="relative inline-flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+                    </span>
+                    Ao vivo
+                  </span>
+                )}
+                {isReplay && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white backdrop-blur">
+                    <Play className="h-3 w-3" />
+                    Replay
+                  </span>
+                )}
+                {isLive && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-[11px] font-medium text-white backdrop-blur">
+                    <Users className="h-3 w-3" />
+                    {presenceCount} {presenceCount === 1 ? "espectador" : "espectadores"}
+                  </span>
+                )}
+                {isLive && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-[11px] font-medium text-white backdrop-blur">
+                    <Clock className="h-3 w-3" />
+                    {formatElapsed(elapsed)}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* SESSION HEADER */}
+          <div className="rounded-3xl border border-border bg-gradient-to-br from-surface-1 to-surface-2/40 p-6 md:p-8">
+            <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <Radio className="h-3 w-3 text-primary" />
+                Sessão MM Club
+              </span>
+              <span>·</span>
+              <span className="inline-flex items-center gap-1">
+                <Lock className="h-3 w-3" />
+                {visibilityLabel}
+              </span>
+            </div>
+
+            <h1 className="mt-3 font-display text-3xl leading-tight text-foreground md:text-4xl">
+              {live.title}
+            </h1>
+
+            <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
                 <CalendarDays className="h-3.5 w-3.5" />
                 {dateStr}
@@ -85,26 +180,114 @@ function LiveDetail() {
                 <Clock className="h-3.5 w-3.5" />
                 {live.duration_minutes} min
               </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Users className="h-3.5 w-3.5" />
-                {live.visibility === "public"
-                  ? "Aberta"
-                  : live.visibility === "premium"
-                    ? "Premium"
-                    : "MM Club"}
-              </span>
             </div>
+
             {live.description && (
-              <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+              <p className="mt-6 whitespace-pre-line text-sm leading-relaxed text-muted-foreground md:text-base">
                 {live.description}
               </p>
             )}
           </div>
+
+          {/* EXPERT CARD */}
+          {expert && (
+            <Link
+              to="/especialistas/$expertId"
+              params={{ expertId: expert.id }}
+              className="group flex items-center gap-5 rounded-3xl border border-border bg-surface-1 p-5 transition hover:border-primary/40 md:p-6"
+            >
+              <div
+                className="h-16 w-16 shrink-0 rounded-2xl ring-1 ring-border md:h-20 md:w-20"
+                style={
+                  expert.logo
+                    ? {
+                        backgroundImage: `url(${expert.logo})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }
+                    : { background: expert.photo }
+                }
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-primary">
+                  Conduzido por
+                </p>
+                <p className="mt-1 font-display text-lg text-foreground md:text-xl">
+                  {expert.name}
+                </p>
+                <p className="text-xs text-muted-foreground md:text-sm">{expert.role}</p>
+                {expert.shortBio && (
+                  <p className="mt-2 line-clamp-2 text-xs text-muted-foreground/80 md:text-sm">
+                    {expert.shortBio}
+                  </p>
+                )}
+              </div>
+              <ChevronLeft className="h-4 w-4 shrink-0 rotate-180 text-muted-foreground transition group-hover:text-primary" />
+            </Link>
+          )}
+
+          {/* MATERIALS PLACEHOLDER */}
+          <div className="rounded-3xl border border-dashed border-border bg-surface-1/50 p-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <FileText className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-display text-sm text-foreground">Materiais da sessão</p>
+                <p className="text-xs text-muted-foreground">
+                  {isReplay
+                    ? "Os recursos partilhados durante a sessão aparecerão aqui em breve."
+                    : "Slides, links e recursos serão disponibilizados aqui após a sessão."}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="lg:h-[calc(100dvh-8rem)] lg:sticky lg:top-20">
-          <LiveChat liveId={live.id} currentUserId={userId} />
-        </div>
+        {/* CHAT SIDEBAR */}
+        <aside className="xl:sticky xl:top-24 xl:h-[calc(100dvh-8rem)]">
+          <LiveChat liveId={live.id} currentUserId={userId} readOnly={isReplay} />
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function PrelivePoster({
+  live,
+  countdown,
+}: {
+  live: LoaderData["live"];
+  countdown: string | null;
+}) {
+  const cover = live.cover_url;
+  return (
+    <div
+      className="relative aspect-video w-full overflow-hidden rounded-3xl border border-border bg-black shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)]"
+      style={
+        cover
+          ? {
+              backgroundImage: `url(${cover})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }
+          : undefined
+      }
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/70 to-black/90" />
+      <div className="relative flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
+        <span className="inline-flex items-center gap-2 rounded-full bg-primary/15 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary ring-1 ring-primary/30">
+          <Sparkles className="h-3 w-3" />
+          Em breve
+        </span>
+        <h2 className="font-display text-2xl text-white md:text-3xl">A sessão começa em</h2>
+        {countdown ? (
+          <p className="font-mono text-4xl font-semibold tracking-widest text-white md:text-6xl">
+            {countdown}
+          </p>
+        ) : (
+          <p className="text-sm text-white/70">A começar a qualquer momento…</p>
+        )}
       </div>
     </div>
   );
@@ -118,6 +301,17 @@ function diff(iso: string): string | null {
   const h = Math.floor((s % 86400) / 3600);
   const m = Math.floor((s % 3600) / 60);
   const sec = s % 60;
-  if (d > 0) return `${d}d ${h}h ${m}m`;
+  if (d > 0) return `${d}d ${String(h).padStart(2, "0")}h ${String(m).padStart(2, "0")}m`;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
+
+function formatElapsed(s: number): string {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+  return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+}
+
+// Silence unused import warning when cn is not needed
+void cn;
