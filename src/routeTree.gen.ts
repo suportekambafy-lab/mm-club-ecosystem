@@ -32,6 +32,7 @@ import { Route as AppEventosRouteImport } from './routes/_app.eventos'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppComunidadeRouteImport } from './routes/_app.comunidade'
 import { Route as AppAcademiaRouteImport } from './routes/_app.academia'
+import { Route as AdminLivesIndexRouteImport } from './routes/admin.lives.index'
 import { Route as AppAcademiaIndexRouteImport } from './routes/_app.academia.index'
 import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
 import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
@@ -156,6 +157,11 @@ const AppAcademiaRoute = AppAcademiaRouteImport.update({
   path: '/academia',
   getParentRoute: () => AppRoute,
 } as any)
+const AdminLivesIndexRoute = AdminLivesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminLivesRoute,
+} as any)
 const AppAcademiaIndexRoute = AppAcademiaIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -234,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/academia/': typeof AppAcademiaIndexRoute
+  '/admin/lives/': typeof AdminLivesIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
@@ -258,12 +265,12 @@ export interface FileRoutesByTo {
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
-  '/admin/lives': typeof AdminLivesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/admin': typeof AdminIndexRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/academia': typeof AppAcademiaIndexRoute
+  '/admin/lives': typeof AdminLivesIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
@@ -299,6 +306,7 @@ export interface FileRoutesById {
   '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
   '/_app/academia/': typeof AppAcademiaIndexRoute
+  '/admin/lives/': typeof AdminLivesIndexRoute
   '/_app/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
@@ -334,6 +342,7 @@ export interface FileRouteTypes {
     | '/especialistas/$expertId'
     | '/lives/$liveId'
     | '/academia/'
+    | '/admin/lives/'
     | '/academia/$courseId/$lessonId'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
@@ -358,12 +367,12 @@ export interface FileRouteTypes {
     | '/admin/cursos'
     | '/admin/eventos'
     | '/admin/ferramentas'
-    | '/admin/lives'
     | '/api/chat'
     | '/admin'
     | '/especialistas/$expertId'
     | '/lives/$liveId'
     | '/academia'
+    | '/admin/lives'
     | '/academia/$courseId/$lessonId'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
@@ -398,6 +407,7 @@ export interface FileRouteTypes {
     | '/_app/especialistas/$expertId'
     | '/_app/lives/$liveId'
     | '/_app/academia/'
+    | '/admin/lives/'
     | '/_app/academia/$courseId/$lessonId'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
@@ -582,6 +592,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAcademiaRouteImport
       parentRoute: typeof AppRoute
     }
+    '/admin/lives/': {
+      id: '/admin/lives/'
+      path: '/'
+      fullPath: '/admin/lives/'
+      preLoaderRoute: typeof AdminLivesIndexRouteImport
+      parentRoute: typeof AdminLivesRoute
+    }
     '/_app/academia/': {
       id: '/_app/academia/'
       path: '/'
@@ -714,10 +731,12 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AdminLivesRouteChildren {
+  AdminLivesIndexRoute: typeof AdminLivesIndexRoute
   AdminLivesLiveIdStudioRoute: typeof AdminLivesLiveIdStudioRoute
 }
 
 const AdminLivesRouteChildren: AdminLivesRouteChildren = {
+  AdminLivesIndexRoute: AdminLivesIndexRoute,
   AdminLivesLiveIdStudioRoute: AdminLivesLiveIdStudioRoute,
 }
 
