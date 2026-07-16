@@ -116,15 +116,15 @@ function GlassCard({
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }}
-      className={`absolute z-20 flex items-center gap-3 rounded-2xl border border-white/15 bg-background/50 p-3 pr-5 backdrop-blur-xl shadow-[0_20px_60px_-20px_rgba(0,0,0,0.5)] ${className}`}
+      className={`absolute z-20 flex items-center gap-2 sm:gap-3 rounded-xl sm:rounded-2xl border border-white/15 bg-background/50 p-2 pr-3 sm:p-3 sm:pr-5 backdrop-blur-xl shadow-[0_20px_60px_-20px_rgba(0,0,0,0.5)] ${className}`}
     >
       <div
-        className="h-10 w-10 shrink-0 rounded-xl"
+        className="h-7 w-7 sm:h-10 sm:w-10 shrink-0 rounded-lg sm:rounded-xl"
         style={{ background: gradient }}
       />
       <div>
-        <p className="font-display text-sm leading-tight text-foreground">{name}</p>
-        <p className="text-[11px] text-muted-foreground">{points}</p>
+        <p className="font-display text-[11px] sm:text-sm leading-tight text-foreground">{name}</p>
+        <p className="text-[9px] sm:text-[11px] text-muted-foreground">{points}</p>
       </div>
     </motion.div>
   );
