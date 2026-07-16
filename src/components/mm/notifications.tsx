@@ -1,27 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  Bell,
-  BookOpen,
-  Radio,
-  Wrench,
-  Users,
-  Bot,
-  CalendarDays,
-  Play,
-  Check,
-  
-} from "lucide-react";
+import { Bell, Radio, Play, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { news } from "@/data/news";
-import { lives } from "@/data/lives";
-import { communityNotices } from "@/data/community";
-import { upcomingEvents } from "@/data/events";
+import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { useUserProgress, continueFromProgress } from "@/hooks/use-user-progress";
 import { formatDistanceToNow } from "date-fns";
 import { pt } from "date-fns/locale";
 
-type NotifKind = "live" | "course" | "expert" | "tool" | "jade" | "community" | "event" | "progress";
+type NotifKind = "live" | "progress";
 
 type Notif = {
   id: string;
@@ -29,33 +15,21 @@ type Notif = {
   title: string;
   subtitle: string;
   href: string;
-  createdAt: number; // ms epoch (deterministic)
-  priority?: number; // higher = pinned to top
+  createdAt: number;
+  priority?: number;
 };
 
 const iconByKind: Record<NotifKind, typeof Bell> = {
   live: Radio,
-  course: BookOpen,
-  expert: Users,
-  tool: Wrench,
-  jade: Bot,
-  community: Users,
-  event: CalendarDays,
   progress: Play,
 };
 
 const labelByKind: Record<NotifKind, string> = {
   live: "Live",
-  course: "Curso",
-  expert: "Especialista",
-  tool: "Ferramenta",
-  jade: "Jade",
-  community: "Comunidade",
-  event: "Evento",
   progress: "Continua",
 };
 
-const STORAGE_KEY = "mm.notifications.state.v1";
+const STORAGE_KEY = "mm.notifications.state.v2";
 
 type StoredState = {
   readIds: string[];
@@ -84,40 +58,57 @@ function saveState(s: StoredState) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
 }
 
-// Deterministic fixed "now" — matches lives.ts baseline so mock dates land coherent.
-const BASELINE_NOW = new Date("2026-07-20T18:00:00.000Z").getTime();
+type RealLive = Awaited<ReturnType<typeof listLives>>[number];
 
 function useAggregatedNotifs(): Notif[] {
   const { progress } = useUserProgress();
+  const [liveRows, setLiveRows] = useState<RealLive[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    listLives()
+      .then((rows) => {
+        if (cancelled) return;
+        setLiveRows(rows as RealLive[]);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return useMemo(() => {
     const out: Notif[] = [];
+    const now = Date.now();
 
-    // 1) Próxima live — proativo
-    const upcomingLives = lives
-      .filter((l) => !l.recording && new Date(l.startsAt).getTime() > BASELINE_NOW)
-      .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
-    const next = upcomingLives[0];
-    if (next) {
-      const startsMs = new Date(next.startsAt).getTime();
-      const diffDays = Math.round((startsMs - BASELINE_NOW) / 86400000);
+    // 1) Live ativa ou próxima
+    const active = liveRows.find((l) => l.status === "live");
+    const upcoming = liveRows
+      .filter((l) => l.status === "scheduled" && new Date(l.starts_at).getTime() > now - 3600_000)
+      .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0];
+    const featured = active ?? upcoming;
+    if (featured) {
+      const startsMs = new Date(featured.starts_at).getTime();
+      const diffDays = Math.round((startsMs - now) / 86400000);
       out.push({
-        id: `live:${next.id}`,
+        id: `live:${featured.id}`,
         kind: "live",
-        title: next.title,
+        title: featured.title,
         subtitle:
-          diffDays <= 0
-            ? "Começa em breve"
-            : diffDays === 1
-              ? "Amanhã ao vivo"
-              : `Daqui a ${diffDays} dias`,
+          featured.status === "live"
+            ? "A decorrer agora"
+            : diffDays <= 0
+              ? "Começa em breve"
+              : diffDays === 1
+                ? "Amanhã ao vivo"
+                : `Daqui a ${diffDays} dias`,
         href: "/lives",
-        createdAt: BASELINE_NOW - 3600_000,
+        createdAt: now - 3600_000,
         priority: 10,
       });
     }
 
-    // 2) Continuar a aprender — proativo
+    // 2) Continuar a aprender
     const cont = continueFromProgress(progress)[0];
     if (cont) {
       out.push({
@@ -126,62 +117,17 @@ function useAggregatedNotifs(): Notif[] {
         title: `Continua "${cont.title}"`,
         subtitle: `${Math.round(cont.progress * 100)}% concluído · retoma onde ficaste`,
         href: `/academia/${cont.id}`,
-        createdAt: BASELINE_NOW - 2 * 3600_000,
+        createdAt: now - 2 * 3600_000,
         priority: 8,
       });
     }
 
-    // 3) Novidades recentes
-    news.slice(0, 4).forEach((n, i) => {
-      const kind: NotifKind =
-        n.type === "course"
-          ? "course"
-          : n.type === "expert"
-            ? "expert"
-            : n.type === "live"
-              ? "live"
-              : n.type === "tool"
-                ? "tool"
-                : "jade";
-      out.push({
-        id: `news:${n.id}`,
-        kind,
-        title: n.title,
-        subtitle: n.subtitle,
-        href: n.href,
-        createdAt: BASELINE_NOW - (i + 1) * 86400_000,
-      });
-    });
-
-    // 4) Comunidade
-    communityNotices.slice(0, 2).forEach((c, i) => {
-      out.push({
-        id: `community:${c.id}`,
-        kind: "community",
-        title: c.title,
-        subtitle: c.body,
-        href: "/comunidade",
-        createdAt: BASELINE_NOW - (i + 1) * 12 * 3600_000,
-      });
-    });
-
-    // 5) Próximos eventos
-    upcomingEvents.slice(0, 2).forEach((ev, i) => {
-      out.push({
-        id: `event:${ev.id}`,
-        kind: "event",
-        title: ev.title,
-        subtitle: `${ev.type} · ${ev.date}`,
-        href: "/eventos",
-        createdAt: BASELINE_NOW - (i + 1) * 2 * 86400_000,
-      });
-    });
-
     return out.sort(
       (a, b) => (b.priority ?? 0) - (a.priority ?? 0) || b.createdAt - a.createdAt,
     );
-  }, [progress]);
+  }, [progress, liveRows]);
 }
+
 
 export function NotificationsBell({ className }: { className?: string }) {
   const notifs = useAggregatedNotifs();
