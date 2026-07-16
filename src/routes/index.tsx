@@ -264,11 +264,15 @@ function Hero() {
             </div>
             <div className="absolute -right-4 bottom-16 hidden rounded-2xl border border-hairline bg-surface-1/95 p-3 shadow-xl backdrop-blur md:flex items-center gap-3 animate-fade-in [animation-delay:600ms]">
               <div className="flex -space-x-2">
-                {["oklch(0.72 0.14 74)", "oklch(0.55 0.22 285)", "oklch(0.82 0.13 82)"].map((c) => (
-                  <span
-                    key={c}
-                    className="h-7 w-7 rounded-full border-2 border-surface-1"
-                    style={{ background: c }}
+                {[avatar1, avatar5, avatar2].map((src, i) => (
+                  <img
+                    key={i}
+                    src={src}
+                    alt=""
+                    loading="lazy"
+                    width={28}
+                    height={28}
+                    className="h-7 w-7 rounded-full border-2 border-surface-1 object-cover"
                   />
                 ))}
               </div>
