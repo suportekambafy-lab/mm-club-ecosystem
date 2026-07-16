@@ -13,6 +13,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { SectionHeading } from "@/components/mm/section-heading";
+import { LiveChat } from "@/components/mm/live-chat";
+import { supabase } from "@/integrations/supabase/client";
 import { adminGetLiveIngest, adminSetLiveBroadcastState } from "@/lib/lives.functions";
 
 export const Route = createFileRoute("/admin/lives/$liveId/studio")({
@@ -32,6 +34,11 @@ function LiveStudio() {
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [elapsed, setElapsed] = useState(0);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
+  }, []);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -278,110 +285,118 @@ function LiveStudio() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-border bg-black">
-        <div className="relative aspect-video w-full">
-          <video
-            ref={videoRef}
-            autoPlay
-            muted
-            playsInline
-            className="h-full w-full object-cover"
-          />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="space-y-6">
+          <div className="overflow-hidden rounded-2xl border border-border bg-black">
+            <div className="relative aspect-video w-full">
+              <video
+                ref={videoRef}
+                autoPlay
+                muted
+                playsInline
+                className="h-full w-full object-cover"
+              />
 
-          {status === "idle" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/70 text-center">
-              <Video className="h-8 w-8 text-primary" />
-              <p className="max-w-sm text-sm text-muted-foreground">
-                Vai ser pedido acesso à câmara e ao microfone.
-              </p>
-              <button
-                type="button"
-                onClick={requestMedia}
-                className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground"
-              >
-                Activar câmara & microfone
-              </button>
+              {status === "idle" && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/70 text-center">
+                  <Video className="h-8 w-8 text-primary" />
+                  <p className="max-w-sm text-sm text-muted-foreground">
+                    Vai ser pedido acesso à câmara e ao microfone.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={requestMedia}
+                    className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground"
+                  >
+                    Activar câmara & microfone
+                  </button>
+                </div>
+              )}
+
+              {status === "requesting-media" && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/70">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              )}
+
+              {(status === "live" || status === "connecting") && (
+                <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-red-500/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-white">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
+                  {status === "live" ? `AO VIVO · ${mmss}` : "A ligar…"}
+                </div>
+              )}
             </div>
-          )}
 
-          {status === "requesting-media" && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/70">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-surface-1 px-5 py-4">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={toggleMic}
+                  disabled={!streamRef.current}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border hover:border-primary/40 disabled:opacity-40"
+                  title={micOn ? "Silenciar micro" : "Ativar micro"}
+                >
+                  {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4 text-red-300" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleCam}
+                  disabled={!streamRef.current}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border hover:border-primary/40 disabled:opacity-40"
+                  title={camOn ? "Desligar câmara" : "Ligar câmara"}
+                >
+                  {camOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4 text-red-300" />}
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {status === "ready" && (
+                  <button
+                    type="button"
+                    onClick={goLive}
+                    disabled={!whipUrl}
+                    className="inline-flex items-center gap-2 rounded-full bg-red-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-60"
+                  >
+                    <Radio className="h-4 w-4" /> Ir para o ar
+                  </button>
+                )}
+                {status === "connecting" && (
+                  <span className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" /> A negociar WebRTC…
+                  </span>
+                )}
+                {status === "live" && (
+                  <button
+                    type="button"
+                    onClick={endLive}
+                    className="inline-flex items-center gap-2 rounded-full border border-red-500/40 px-5 py-2.5 text-sm font-medium text-red-300 hover:bg-red-500/10"
+                  >
+                    Terminar transmissão
+                  </button>
+                )}
+                {status === "ended" && (
+                  <span className="text-xs text-muted-foreground">
+                    Transmissão terminada. A gravação será publicada automaticamente.
+                  </span>
+                )}
+              </div>
             </div>
-          )}
-
-          {(status === "live" || status === "connecting") && (
-            <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-red-500/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-white">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
-              {status === "live" ? `AO VIVO · ${mmss}` : "A ligar…"}
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-surface-1 px-5 py-4">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={toggleMic}
-              disabled={!streamRef.current}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border hover:border-primary/40 disabled:opacity-40"
-              title={micOn ? "Silenciar micro" : "Ativar micro"}
-            >
-              {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4 text-red-300" />}
-            </button>
-            <button
-              type="button"
-              onClick={toggleCam}
-              disabled={!streamRef.current}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border hover:border-primary/40 disabled:opacity-40"
-              title={camOn ? "Desligar câmara" : "Ligar câmara"}
-            >
-              {camOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4 text-red-300" />}
-            </button>
           </div>
 
-          <div className="flex items-center gap-2">
-            {status === "ready" && (
-              <button
-                type="button"
-                onClick={goLive}
-                disabled={!whipUrl}
-                className="inline-flex items-center gap-2 rounded-full bg-red-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-60"
-              >
-                <Radio className="h-4 w-4" /> Ir para o ar
-              </button>
-            )}
-            {status === "connecting" && (
-              <span className="inline-flex items-center gap-2 text-xs text-muted-foreground">
-                <Loader2 className="h-3 w-3 animate-spin" /> A negociar WebRTC…
-              </span>
-            )}
-            {status === "live" && (
-              <button
-                type="button"
-                onClick={endLive}
-                className="inline-flex items-center gap-2 rounded-full border border-red-500/40 px-5 py-2.5 text-sm font-medium text-red-300 hover:bg-red-500/10"
-              >
-                Terminar transmissão
-              </button>
-            )}
-            {status === "ended" && (
-              <span className="text-xs text-muted-foreground">
-                Transmissão terminada. A gravação será publicada automaticamente.
-              </span>
-            )}
+          <div className="rounded-2xl border border-border bg-surface-1 p-5 text-xs text-muted-foreground">
+            <p className="mb-2 font-display text-sm text-foreground">Como funciona</p>
+            <ul className="list-disc space-y-1 pl-5">
+              <li>A câmara/micro deste separador ligam-se ao Cloudflare Stream via WebRTC (WHIP).</li>
+              <li>Os alunos vêem a live em <code className="rounded bg-surface-2 px-1">/lives/{liveId}</code> (HLS baixa latência).</li>
+              <li>Ao terminar, a gravação fica automaticamente disponível na página da live.</li>
+              <li>Não fechar o separador durante a transmissão. Se cair a rede, volta a esta página e prime <em>Ir para o ar</em>.</li>
+            </ul>
           </div>
         </div>
-      </div>
 
-      <div className="rounded-2xl border border-border bg-surface-1 p-5 text-xs text-muted-foreground">
-        <p className="mb-2 font-display text-sm text-foreground">Como funciona</p>
-        <ul className="list-disc space-y-1 pl-5">
-          <li>A câmara/micro deste separador ligam-se ao Cloudflare Stream via WebRTC (WHIP).</li>
-          <li>Os alunos vêem a live em <code className="rounded bg-surface-2 px-1">/lives/{liveId}</code> (HLS baixa latência).</li>
-          <li>Ao terminar, a gravação fica automaticamente disponível na página da live.</li>
-          <li>Não fechar o separador durante a transmissão. Se cair a rede, volta a esta página e prime <em>Ir para o ar</em>.</li>
-        </ul>
+        <aside className="xl:sticky xl:top-24 xl:h-[calc(100dvh-8rem)]">
+          <LiveChat liveId={liveId} currentUserId={userId} />
+        </aside>
       </div>
     </div>
   );

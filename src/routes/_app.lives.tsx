@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Radio, CalendarDays, Lock, PlayCircle, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { SectionHeading } from "@/components/mm/section-heading";
-import { listLives } from "@/lib/lives.functions";
+import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { LiveHeroBanner } from "@/components/mm/live-hero-banner";
 import { expertsById } from "@/data/experts";
 import { cn } from "@/lib/utils";

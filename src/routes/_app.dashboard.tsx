@@ -25,7 +25,7 @@ import {
   recommendedFromProgress,
 } from "@/hooks/use-user-progress";
 import { nextLive } from "@/data/lives";
-import { listLives } from "@/lib/lives.functions";
+import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { news } from "@/data/news";
 import { topTools } from "@/data/tools";
 import { upcomingEvents } from "@/data/events";
