@@ -199,7 +199,7 @@ export const adminGetLiveIngest = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("lives")
-      .select("cf_rtmps_url,cf_stream_key,cf_live_input_id")
+      .select("cf_rtmps_url,cf_stream_key,cf_live_input_id,cf_webrtc_url")
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
