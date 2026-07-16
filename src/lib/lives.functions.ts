@@ -153,6 +153,7 @@ export const adminCreateLive = createServerFn({ method: "POST" })
         cf_live_input_id: input.uid,
         cf_stream_key: input.rtmps.streamKey,
         cf_rtmps_url: input.rtmps.url,
+        cf_webrtc_url: input.webRTC?.url ?? null,
         cf_playback_id: input.uid, // For live inputs, playback uses the input UID.
         created_by: context.userId,
       })
@@ -162,6 +163,7 @@ export const adminCreateLive = createServerFn({ method: "POST" })
     return {
       id: row.id,
       rtmps: input.rtmps,
+      webRTC: input.webRTC ?? null,
     };
   });
 
