@@ -149,7 +149,8 @@ function SuporteIAPage() {
             }}
             rows={1}
             placeholder="Escreve a tua pergunta…"
-            className="flex-1 resize-none bg-transparent px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+            className="flex-1 resize-none bg-transparent px-3 py-2.5 text-base text-foreground placeholder:text-muted-foreground focus:outline-none md:text-sm"
+            style={{ fontSize: "16px" }}
             autoFocus
           />
           {isBusy ? (
