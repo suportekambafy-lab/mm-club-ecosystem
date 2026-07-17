@@ -448,7 +448,8 @@ function AppLayout() {
 
       {/* Main */}
       <div className={cn("transition-[padding] duration-200 ease-out", collapsed ? "lg:pl-[76px]" : "lg:pl-64")}>
-        {/* Topbar */}
+        {/* Topbar — hidden on immersive routes */}
+        {pathname !== "/shorts" && (
         <header className="sticky top-0 z-30 flex items-center gap-2 bg-background/80 px-3 pt-3 pb-3 backdrop-blur-xl sm:gap-4 sm:px-4 sm:pt-4 sm:pb-4 md:px-8 md:pt-6">
           {/* Mobile: menu button opens the slide-in sidebar */}
           <button
@@ -510,6 +511,7 @@ function AppLayout() {
             </div>
           </div>
         </header>
+        )}
 
         {/* Mobile search — só na home */}
         {pathname === "/dashboard" && (
@@ -519,8 +521,13 @@ function AppLayout() {
         )}
 
 
-        <main className="relative mx-auto max-w-7xl px-3 pb-24 pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8 lg:pb-12 xl:max-w-[1600px] 2xl:max-w-[1760px]">
+        <main className={cn(
+          pathname === "/shorts"
+            ? "relative"
+            : "relative mx-auto max-w-7xl px-3 pb-24 pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8 lg:pb-12 xl:max-w-[1600px] 2xl:max-w-[1760px]",
+        )}>
           {/* Ambient editorial glow — matches landing page atmosphere */}
+          {pathname !== "/shorts" && (
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
@@ -529,6 +536,7 @@ function AppLayout() {
                 "radial-gradient(50% 30% at 80% 0%, oklch(0.82 0.13 82 / 0.09), transparent 70%), radial-gradient(40% 25% at 10% 40%, oklch(0.55 0.22 285 / 0.06), transparent 70%)",
             }}
           />
+          )}
           {mounted && authUser ? <Outlet /> : <div className="min-h-[60vh]" />}
         </main>
       </div>
@@ -539,6 +547,7 @@ function AppLayout() {
         initials={initials}
         avatarSrc={avatarSrc}
         onOpenMore={() => setMobileOpen(true)}
+        immersive={pathname === "/shorts"}
       />
     </div>
   );
@@ -553,9 +562,9 @@ type TabItem = {
 
 const mobileTabs: TabItem[] = [
   { to: "/dashboard", label: "Início", icon: Home, exact: true },
-  { to: "/academia", label: "Academia", icon: GraduationCap },
-  { to: "/jade", label: "MM AI", icon: Star },
+  { to: "/shorts", label: "Shorts", icon: Clapperboard },
   { to: "/comunidade", label: "Comunidade", icon: Users },
+  { to: "/jade", label: "MM AI", icon: Star },
 ];
 
 function MobileTabBar({
@@ -563,11 +572,13 @@ function MobileTabBar({
   initials,
   avatarSrc,
   onOpenMore,
+  immersive = false,
 }: {
   pathname: string;
   initials: string;
   avatarSrc: string | null;
   onOpenMore: () => void;
+  immersive?: boolean;
 }) {
   // Hide on lesson pages for a distraction-free view
   if (/^\/academia\/[^/]+\/[^/]+/.test(pathname)) return null;
@@ -581,85 +592,72 @@ function MobileTabBar({
   return (
     <nav
       aria-label="Navegação principal"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl pb-[env(safe-area-inset-bottom)] lg:hidden"
+      className={cn(
+        "fixed inset-x-0 z-40 flex justify-center px-3 lg:hidden",
+        "bottom-[calc(env(safe-area-inset-bottom)+0.5rem)]",
+      )}
     >
-      <ul className="mx-auto flex max-w-md items-stretch justify-between px-2">
+      <ul
+        className={cn(
+          "flex items-center gap-1 rounded-full px-2 py-1.5 shadow-2xl backdrop-blur-2xl ring-1 transition-colors",
+          immersive
+            ? "bg-black/40 ring-white/15"
+            : "bg-background/80 ring-border",
+        )}
+      >
         {mobileTabs.map((tab) => {
           const Icon = tab.icon;
           const active = isActive(tab.to, tab.exact);
           return (
-            <li key={tab.to} className="flex-1">
+            <li key={tab.to}>
               <Link
                 to={tab.to}
                 aria-label={tab.label}
                 aria-current={active ? "page" : undefined}
-                className="group relative flex flex-col items-center justify-center gap-1 px-2 pt-2.5 pb-2 text-[10px] font-medium transition-colors"
+                className={cn(
+                  "relative flex h-11 w-11 items-center justify-center rounded-full transition",
+                  active
+                    ? immersive
+                      ? "bg-white/15 text-white"
+                      : "bg-primary/15 text-primary"
+                    : immersive
+                      ? "text-white/85 hover:text-white"
+                      : "text-muted-foreground hover:text-foreground",
+                )}
               >
-                <span
-                  className={cn(
-                    "absolute top-0 h-[2px] w-8 rounded-full transition-all duration-300",
-                    active ? "bg-primary opacity-100" : "bg-primary opacity-0",
-                  )}
-                />
                 <Icon
-                  className={cn(
-                    "h-[22px] w-[22px] transition-all duration-200",
-                    active
-                      ? "text-primary scale-110"
-                      : "text-muted-foreground group-active:scale-95",
-                  )}
+                  className="h-[22px] w-[22px]"
                   strokeWidth={active ? 2.4 : 2}
+                  fill={active && tab.to === "/shorts" ? "currentColor" : "none"}
                 />
-                <span
-                  className={cn(
-                    "transition-colors duration-200",
-                    active ? "text-primary" : "text-muted-foreground",
-                  )}
-                >
-                  {tab.label}
-                </span>
               </Link>
             </li>
           );
         })}
-        <li className="flex-1">
+        <li>
           <Link
             to="/perfil"
             aria-label="Perfil"
             aria-current={profileActive ? "page" : undefined}
-            className="group relative flex w-full flex-col items-center justify-center gap-1 px-2 pt-2.5 pb-2 text-[10px] font-medium transition-colors"
+            className={cn(
+              "flex h-11 w-11 items-center justify-center rounded-full transition",
+              profileActive && (immersive ? "ring-2 ring-white" : "ring-2 ring-primary"),
+            )}
           >
             <span
               className={cn(
-                "absolute top-0 h-[2px] w-8 rounded-full transition-all duration-300",
-                profileActive ? "bg-primary opacity-100" : "bg-primary opacity-0",
-              )}
-            />
-            <span
-              className={cn(
-                "flex h-[22px] w-[22px] items-center justify-center overflow-hidden rounded-full text-[9px] font-semibold transition-all duration-200",
-                profileActive
-                  ? "bg-primary text-primary-foreground scale-110"
-                  : "bg-surface-2 text-muted-foreground group-active:scale-95",
+                "flex h-8 w-8 items-center justify-center overflow-hidden rounded-full text-[10px] font-semibold",
+                immersive ? "bg-white/20 text-white" : "bg-surface-2 text-muted-foreground",
               )}
             >
               {avatarSrc ? (
                 <img src={avatarSrc} alt="" className="h-full w-full object-cover" />
               ) : (
-                initials || <UserRound className="h-3.5 w-3.5" />
+                initials || <UserRound className="h-4 w-4" />
               )}
-            </span>
-            <span
-              className={cn(
-                "transition-colors duration-200",
-                profileActive ? "text-primary" : "text-muted-foreground",
-              )}
-            >
-              Perfil
             </span>
           </Link>
         </li>
-
       </ul>
     </nav>
   );

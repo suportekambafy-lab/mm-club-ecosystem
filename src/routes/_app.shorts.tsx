@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Heart, Volume2, VolumeX, Plus, X, Upload, Trash2, Eye, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -31,9 +32,16 @@ type ShortRow = {
 };
 
 type ShortWithAuthor = ShortRow & {
-  author: { display_name: string | null; avatar_url: string | null } | null;
+  author: { display_name: string | null; avatar_url: string | null; verified: boolean } | null;
   liked: boolean;
 };
+
+async function resolveAvatar(pathOrUrl: string | null): Promise<string | null> {
+  if (!pathOrUrl) return null;
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
+  const { data } = await supabase.storage.from("avatars").createSignedUrl(pathOrUrl, 60 * 60 * 24);
+  return data?.signedUrl ?? null;
+}
 
 function ShortsPage() {
   const { user } = useCurrentUser();
@@ -56,7 +64,15 @@ function ShortsPage() {
         .from("profiles")
         .select("id, display_name, avatar_url")
         .in("id", authorIds);
-      const authorMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", authorIds);
+      const adminIds = new Set((roles ?? []).filter((r) => r.role === "admin").map((r) => r.user_id));
+
+      const profList = profiles ?? [];
+      const signed = await Promise.all(profList.map((p) => resolveAvatar(p.avatar_url)));
+      const authorMap = new Map(profList.map((p, i) => [p.id, { ...p, signedAvatar: signed[i] }]));
 
       let likedIds = new Set<string>();
       if (user) {
@@ -68,16 +84,16 @@ function ShortsPage() {
         likedIds = new Set((likes ?? []).map((l) => l.short_id));
       }
 
-      return rows.map((r) => ({
-        ...r,
-        author: authorMap.get(r.author_id)
-          ? {
-              display_name: authorMap.get(r.author_id)!.display_name,
-              avatar_url: authorMap.get(r.author_id)!.avatar_url,
-            }
-          : null,
-        liked: likedIds.has(r.id),
-      }));
+      return rows.map((r): ShortWithAuthor => {
+        const a = authorMap.get(r.author_id);
+        return {
+          ...r,
+          author: a
+            ? { display_name: a.display_name, avatar_url: a.signedAvatar, verified: adminIds.has(a.id) }
+            : null,
+          liked: likedIds.has(r.id),
+        };
+      });
     },
   });
 
@@ -123,7 +139,7 @@ function ShortsPage() {
   });
 
   return (
-    <div className="fixed inset-0 top-14 z-0 bg-black lg:top-16">
+    <div className="fixed inset-0 z-30 bg-black">
       {/* Feed */}
       {shortsQuery.isLoading ? (
         <div className="flex h-full items-center justify-center text-sm text-white/60">A carregar…</div>
@@ -324,8 +340,9 @@ function ShortItem({
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-white">
-                  {short.author?.display_name ?? "Membro MM"}
+                <p className="flex items-center gap-1 truncate text-sm font-semibold text-white">
+                  <span className="truncate">{short.author?.display_name ?? "Membro MM"}</span>
+                  {short.author?.verified && <VerifiedBadge size={14} className="shrink-0" />}
                 </p>
                 <p className="flex items-center gap-1 text-[11px] text-white/60">
                   <Eye className="h-3 w-3" /> {short.views_count.toLocaleString("pt-PT")} visualizações
