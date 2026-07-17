@@ -56,6 +56,23 @@ function SuporteIAPage() {
     textareaRef.current?.focus();
   }, [chatId]);
 
+  // Lock page scroll so only the messages container scrolls (native app feel).
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtml = html.style.overflow;
+    const prevBody = body.style.overflow;
+    const prevOverscroll = body.style.overscrollBehavior;
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    body.style.overscrollBehavior = "none";
+    return () => {
+      html.style.overflow = prevHtml;
+      body.style.overflow = prevBody;
+      body.style.overscrollBehavior = prevOverscroll;
+    };
+  }, []);
+
   function send(text: string) {
     const trimmed = text.trim();
     if (!trimmed || isBusy) return;
