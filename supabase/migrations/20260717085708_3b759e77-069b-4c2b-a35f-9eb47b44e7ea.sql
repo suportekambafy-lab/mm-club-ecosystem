@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.notify_on_community_reaction() FROM PUBLIC, anon, authenticated;
