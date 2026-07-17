@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign } from "lucide-react";
+import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { useUserProgress, continueFromProgress } from "@/hooks/use-user-progress";
@@ -28,6 +28,7 @@ const iconByKind: Record<NotifKind, typeof Bell> = {
   like: Heart,
   reply: MessageCircle,
   mention: AtSign,
+  reaction: Smile,
 };
 
 const labelByKind: Record<NotifKind, string> = {
@@ -36,6 +37,7 @@ const labelByKind: Record<NotifKind, string> = {
   like: "Gosto",
   reply: "Resposta",
   mention: "Menção",
+  reaction: "Reação",
 };
 
 const STORAGE_KEY = "mm.notifications.state.v2";
