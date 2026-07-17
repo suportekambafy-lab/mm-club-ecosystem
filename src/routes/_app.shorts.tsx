@@ -375,6 +375,8 @@ function ShortItem({
   onToggleMute,
   onToggleLike,
   onOpenComments,
+  onCloseComments,
+  commentsOpen,
   onDelete,
   canDelete,
 }: {
@@ -386,6 +388,8 @@ function ShortItem({
   onToggleMute: () => void;
   onToggleLike: () => void;
   onOpenComments: () => void;
+  onCloseComments: () => void;
+  commentsOpen: boolean;
   onDelete: () => void;
   canDelete: boolean;
 }) {
@@ -413,7 +417,11 @@ function ShortItem({
       .join("");
   }, [short.author?.display_name]);
 
-  const togglePause = () => {
+  const handleVideoTap = () => {
+    if (commentsOpen) {
+      onCloseComments();
+      return;
+    }
     const v = videoRef.current;
     if (!v) return;
     if (v.paused) {
@@ -430,18 +438,18 @@ function ShortItem({
       data-short-idx={idx}
       className="relative flex h-full min-h-full w-full snap-start snap-always items-center justify-center"
     >
-      <div className="relative flex h-full w-full items-start justify-center bg-black">
+      <div className="relative flex h-full w-full items-center justify-center bg-black">
         <div className={cn("relative h-full w-full", !compact && "sm:aspect-[9/16] sm:h-full sm:w-auto sm:max-w-[min(100%,calc(100dvh*9/16))]") }>
           <video
             ref={videoRef}
             src={short.video_url}
             poster={short.thumbnail_url ?? undefined}
-            className="h-full w-full object-cover object-top"
+            className={cn("h-full w-full", compact ? "object-contain" : "object-cover object-top")}
             loop
             muted={muted}
             playsInline
             preload="metadata"
-            onClick={togglePause}
+            onClick={handleVideoTap}
           />
           {paused && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
