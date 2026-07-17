@@ -32,6 +32,7 @@ import { Route as AppFerramentasRouteImport } from './routes/_app.ferramentas'
 import { Route as AppEventosRouteImport } from './routes/_app.eventos'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppComunidadeRouteImport } from './routes/_app.comunidade'
+import { Route as AppCodigoRouteImport } from './routes/_app.codigo'
 import { Route as AppAcademiaRouteImport } from './routes/_app.academia'
 import { Route as AdminLivesIndexRouteImport } from './routes/admin.lives.index'
 import { Route as AppLivesIndexRouteImport } from './routes/_app.lives.index'
@@ -159,6 +160,11 @@ const AppComunidadeRoute = AppComunidadeRouteImport.update({
   path: '/comunidade',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCodigoRoute = AppCodigoRouteImport.update({
+  id: '/codigo',
+  path: '/codigo',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAcademiaRoute = AppAcademiaRouteImport.update({
   id: '/academia',
   path: '/academia',
@@ -235,6 +241,7 @@ export interface FileRoutesByFullPath {
   '/reembolsos': typeof ReembolsosRoute
   '/termos': typeof TermosRoute
   '/academia': typeof AppAcademiaRouteWithChildren
+  '/codigo': typeof AppCodigoRoute
   '/comunidade': typeof AppComunidadeRoute
   '/dashboard': typeof AppDashboardRoute
   '/eventos': typeof AppEventosRoute
@@ -269,6 +276,7 @@ export interface FileRoutesByTo {
   '/quiz': typeof QuizRoute
   '/reembolsos': typeof ReembolsosRoute
   '/termos': typeof TermosRoute
+  '/codigo': typeof AppCodigoRoute
   '/comunidade': typeof AppComunidadeRoute
   '/dashboard': typeof AppDashboardRoute
   '/eventos': typeof AppEventosRoute
@@ -304,6 +312,7 @@ export interface FileRoutesById {
   '/reembolsos': typeof ReembolsosRoute
   '/termos': typeof TermosRoute
   '/_app/academia': typeof AppAcademiaRouteWithChildren
+  '/_app/codigo': typeof AppCodigoRoute
   '/_app/comunidade': typeof AppComunidadeRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/eventos': typeof AppEventosRoute
@@ -342,6 +351,7 @@ export interface FileRouteTypes {
     | '/reembolsos'
     | '/termos'
     | '/academia'
+    | '/codigo'
     | '/comunidade'
     | '/dashboard'
     | '/eventos'
@@ -376,6 +386,7 @@ export interface FileRouteTypes {
     | '/quiz'
     | '/reembolsos'
     | '/termos'
+    | '/codigo'
     | '/comunidade'
     | '/dashboard'
     | '/eventos'
@@ -410,6 +421,7 @@ export interface FileRouteTypes {
     | '/reembolsos'
     | '/termos'
     | '/_app/academia'
+    | '/_app/codigo'
     | '/_app/comunidade'
     | '/_app/dashboard'
     | '/_app/eventos'
@@ -615,6 +627,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppComunidadeRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/codigo': {
+      id: '/_app/codigo'
+      path: '/codigo'
+      fullPath: '/codigo'
+      preLoaderRoute: typeof AppCodigoRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/academia': {
       id: '/_app/academia'
       path: '/academia'
@@ -745,6 +764,7 @@ const AppLivesRouteWithChildren = AppLivesRoute._addFileChildren(
 
 interface AppRouteChildren {
   AppAcademiaRoute: typeof AppAcademiaRouteWithChildren
+  AppCodigoRoute: typeof AppCodigoRoute
   AppComunidadeRoute: typeof AppComunidadeRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppEventosRoute: typeof AppEventosRoute
@@ -757,6 +777,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAcademiaRoute: AppAcademiaRouteWithChildren,
+  AppCodigoRoute: AppCodigoRoute,
   AppComunidadeRoute: AppComunidadeRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppEventosRoute: AppEventosRoute,

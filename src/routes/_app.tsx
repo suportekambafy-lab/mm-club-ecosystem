@@ -21,6 +21,7 @@ import {
   Moon,
   Home,
   UserRound,
+  ShieldCheck,
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import type { User } from "@supabase/supabase-js";
@@ -66,12 +67,26 @@ export const Route = createFileRoute("/_app")({
       }
     }
 
-    return { authUser: data.session.user };
+    // Club Code gate — force acceptance on first login
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("club_code_accepted_at")
+      .eq("id", userId)
+      .maybeSingle();
+    const codeAccepted = Boolean(
+      (prof as { club_code_accepted_at?: string | null } | null)
+        ?.club_code_accepted_at,
+    );
+    if (!codeAccepted && location.pathname !== "/codigo") {
+      throw redirect({ to: "/codigo", replace: true });
+    }
+
+    return { authUser: data.session.user, codeAccepted };
   },
   component: AppLayout,
 });
 
-type NavTo = "/dashboard" | "/academia" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/eventos" | "/perfil";
+type NavTo = "/dashboard" | "/academia" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/eventos" | "/perfil" | "/codigo";
 type NavItem = {
   to: NavTo;
   label: string;
@@ -89,6 +104,7 @@ const navItems: NavItem[] = [
   { to: "/comunidade", label: "Comunidade", icon: Users },
   { to: "/ferramentas", label: "Ferramentas", icon: Wrench, soon: true },
   { to: "/eventos", label: "Eventos", icon: CalendarDays, soon: true },
+  { to: "/codigo", label: "Código do Clube", icon: ShieldCheck },
 ];
 
 const flatNav = navItems;
@@ -96,8 +112,9 @@ const flatNav = navItems;
 function AppLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
-  const { authUser: initialAuthUser } = Route.useRouteContext() as { authUser: User };
+  const { authUser: initialAuthUser, codeAccepted: initialCodeAccepted } = Route.useRouteContext() as { authUser: User; codeAccepted: boolean };
   const { theme, toggle: toggleTheme, mounted: themeMounted } = useTheme();
+  const codeAccepted = initialCodeAccepted;
   const [authUser, setAuthUser] = useState<User | null>(initialAuthUser);
   const [avatarSrc, setAvatarSrc] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
@@ -242,11 +259,13 @@ function AppLayout() {
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.to, item.exact);
-            if (item.soon) {
+            const locked = !codeAccepted && item.to !== "/codigo";
+            if (item.soon || locked) {
+              const badge = locked ? "Bloqueado" : "Em breve";
               return (
                 <div
                   key={item.to}
-                  title={compact ? `${item.label} — Em breve` : undefined}
+                  title={compact ? `${item.label} — ${badge}` : undefined}
                   aria-disabled="true"
                   className={cn(
                     "group relative flex items-center rounded-xl cursor-not-allowed",
@@ -260,7 +279,7 @@ function AppLayout() {
                     <>
                       <span className="flex-1">{item.label}</span>
                       <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary">
-                        Em breve
+                        {badge}
                       </span>
                     </>
                   )}
