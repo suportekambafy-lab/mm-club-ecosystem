@@ -139,10 +139,10 @@ function ShortsPage() {
   });
 
   return (
-    <div className="fixed inset-0 z-30 bg-black">
+    <div className="fixed inset-0 z-30 h-[100dvh] max-h-[100dvh] overflow-hidden bg-black">
       {/* Feed */}
       {shortsQuery.isLoading ? (
-        <div className="flex h-full items-center justify-center text-sm text-white/60">A carregar…</div>
+        <div className="flex h-[100dvh] items-center justify-center text-sm text-white/60">A carregar…</div>
       ) : shorts.length === 0 ? (
         <EmptyState onCreate={() => setUploaderOpen(true)} />
       ) : (
@@ -228,7 +228,7 @@ function ShortsFeed({
   return (
     <div
       ref={containerRef}
-      className="h-full w-full snap-y snap-mandatory overflow-y-auto overscroll-contain"
+      className="h-[100dvh] max-h-[100dvh] w-full snap-y snap-mandatory overflow-y-auto overscroll-contain"
       style={{ scrollbarWidth: "none" }}
     >
       {shorts.map((s, i) => (
@@ -306,15 +306,15 @@ function ShortItem({
   return (
     <section
       data-short-idx={idx}
-      className="relative flex h-full w-full snap-start snap-always items-center justify-center"
+      className="relative flex h-[100dvh] min-h-[100dvh] w-full snap-start snap-always items-center justify-center"
     >
-      <div className="relative flex h-full w-full items-center justify-center bg-black sm:h-full">
-        <div className="relative h-full w-full sm:aspect-[9/16] sm:h-full sm:w-auto sm:max-w-[min(100%,calc(100vh*9/16))]">
+      <div className="relative flex h-[100dvh] w-full items-start justify-center bg-black sm:h-[100dvh]">
+        <div className="relative h-[100dvh] w-full sm:aspect-[9/16] sm:h-[100dvh] sm:w-auto sm:max-w-[min(100%,calc(100dvh*9/16))]">
           <video
             ref={videoRef}
             src={short.video_url}
             poster={short.thumbnail_url ?? undefined}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover object-top"
             loop
             muted={muted}
             playsInline
