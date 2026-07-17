@@ -28,6 +28,7 @@ type ShortRow = {
   caption: string | null;
   views_count: number;
   likes_count: number;
+  comments_count: number;
   created_at: string;
 };
 
