@@ -395,6 +395,31 @@ function ShortItem({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/shorts?v=${short.id}` : "";
+
+  const handleShare = async () => {
+    setMenuOpen(false);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "MM Short", text: short.caption ?? "", url: shareUrl });
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success("Link copiado");
+      }
+    } catch {}
+  };
+
+  const handleCopyLink = async () => {
+    setMenuOpen(false);
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Link copiado");
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
+  };
 
   useEffect(() => {
     const v = videoRef.current;
