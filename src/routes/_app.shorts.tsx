@@ -330,7 +330,7 @@ function ShortItem({
           )}
 
           {/* Bottom gradient + info */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-4 pt-16">
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 pb-[calc(env(safe-area-inset-bottom)+5.5rem)] pt-16 lg:pb-4">
             <div className="pointer-events-auto flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-white/20">
                 {short.author?.avatar_url ? (
