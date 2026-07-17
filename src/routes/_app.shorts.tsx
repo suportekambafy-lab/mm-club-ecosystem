@@ -339,8 +339,9 @@ function ShortItem({
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-white">
-                  {short.author?.display_name ?? "Membro MM"}
+                <p className="flex items-center gap-1 truncate text-sm font-semibold text-white">
+                  <span className="truncate">{short.author?.display_name ?? "Membro MM"}</span>
+                  {short.author?.verified && <VerifiedBadge size={14} className="shrink-0" />}
                 </p>
                 <p className="flex items-center gap-1 text-[11px] text-white/60">
                   <Eye className="h-3 w-3" /> {short.views_count.toLocaleString("pt-PT")} visualizações
