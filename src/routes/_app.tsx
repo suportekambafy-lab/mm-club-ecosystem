@@ -410,7 +410,11 @@ function AppLayout() {
   );
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div
+      className="min-h-screen bg-background text-foreground"
+      style={{ ["--mm-sidebar-w" as string]: collapsed ? "76px" : "256px" } as React.CSSProperties}
+    >
+
       {/* Desktop Sidebar */}
       <aside
         className={cn(
