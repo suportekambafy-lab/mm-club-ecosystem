@@ -72,7 +72,8 @@ function SuporteIAPage() {
   }
 
   return (
-    <div className="-mx-3 -mt-4 -mb-24 flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden sm:-mx-4 sm:-mt-6 md:-mx-8 md:-mt-8 md:-mb-12 md:h-[calc(100dvh-5rem)]">
+    <div className="fixed inset-x-0 bottom-0 z-10 flex flex-col overflow-hidden bg-background top-[calc(env(safe-area-inset-top)+4rem)] sm:top-[calc(env(safe-area-inset-top)+4.5rem)] md:top-[calc(env(safe-area-inset-top)+5rem)] lg:left-[var(--mm-sidebar-w,0px)]">
+
 
       <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-8 md:py-4">
         <div className="min-w-0">
