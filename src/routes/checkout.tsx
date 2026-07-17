@@ -1,8 +1,12 @@
-import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
+import { createFileRoute, useSearch, Link } from "@tanstack/react-router";
 import { Check, Crown, Sparkles, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useStripeCheckout } from "@/hooks/useStripeCheckout";
+import {
+  getPaddleEnvironment,
+  initializePaddle,
+  resolvePriceId,
+} from "@/lib/paddle";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 type CheckoutSearch = { plan?: "start" | "plus" | "elite" };
@@ -100,17 +104,20 @@ const PLANS: Plan[] = [
 
 function PlansPage() {
   const { plan: recommendedPlan } = useSearch({ from: "/checkout" });
-  const { openCheckout, closeCheckout, isOpen, checkoutElement } = useStripeCheckout();
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [pendingPlan, setPendingPlan] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) setUser({ id: data.user.id, email: data.user.email ?? undefined });
     });
+    initializePaddle().catch((e) => {
+      console.error("Paddle init failed", e);
+    });
   }, []);
 
-  const handleSelect = (plan: Plan) => {
+  const handleSelect = async (plan: Plan) => {
     if (plan.id === "plus") {
       alert(
         "O plano Plus (6 meses) ainda não está disponível. Contacta-nos em geral@mmclub.pt para adesão manual, ou escolhe Start / Elite.",
@@ -118,34 +125,44 @@ function PlansPage() {
       return;
     }
     setPendingPlan(plan.id);
-    openCheckout({
-      priceId: plan.priceId,
-      customerEmail: user?.email,
-      userId: user?.id,
-      returnUrl: `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
-    });
+    setError(null);
+    try {
+      await initializePaddle();
+      const paddlePriceId = await resolvePriceId(plan.priceId);
+      const successUrl = `${window.location.origin}/checkout/return`;
+      window.Paddle.Checkout.open({
+        items: [{ priceId: paddlePriceId, quantity: 1 }],
+        customer: user?.email ? { email: user.email } : undefined,
+        customData: user?.id ? { userId: user.id } : undefined,
+        settings: {
+          displayMode: "overlay",
+          theme: "dark",
+          successUrl,
+        },
+      });
+    } catch (e) {
+      console.error(e);
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Não foi possível abrir o checkout. Tenta novamente.",
+      );
+    } finally {
+      setPendingPlan(null);
+    }
   };
+
+  
 
   return (
     <>
       <PaymentTestModeBanner />
-      {isOpen ? (
-        <div className="fixed inset-0 z-[100] overflow-y-auto bg-background">
-          <div className="mx-auto max-w-3xl px-4 py-6">
-            <button
-              type="button"
-              onClick={() => {
-                closeCheckout();
-                setPendingPlan(null);
-              }}
-              className="mb-4 inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-surface-1"
-            >
-              ← Voltar aos planos
-            </button>
-            {checkoutElement}
-          </div>
+      {error ? (
+        <div className="mx-auto mt-4 max-w-3xl rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-center text-sm text-destructive">
+          {error}
         </div>
       ) : null}
+
       <div className="mx-auto max-w-6xl space-y-10 px-4 py-8">
         <header className="text-center">
           {recommendedPlan ? (

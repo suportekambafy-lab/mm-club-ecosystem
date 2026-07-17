@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
-import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
+import { EventName, type PaddleEnv, verifyWebhook } from "@/lib/paddle.server";
 
 let _supabase: any = null;
 function getSupabase(): any {
@@ -13,96 +13,133 @@ function getSupabase(): any {
   return _supabase;
 }
 
-async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
-  const userId = subscription.metadata?.userId;
-  if (!userId) {
-    console.error("No userId in subscription metadata");
-    return;
-  }
-  const item = subscription.items?.data?.[0];
-  const priceId =
-    item?.price?.lookup_key ||
-    item?.price?.metadata?.lovable_external_id ||
-    item?.price?.id;
-  const productId = item?.price?.product;
-  const periodStart = item?.current_period_start ?? subscription.current_period_start;
-  const periodEnd = item?.current_period_end ?? subscription.current_period_end;
+/**
+ * Resolve the app userId for a Paddle customer.
+ * Prefers customData.userId from the checkout, then falls back to the
+ * paddle_customers mirror. Never trusts anything unverified.
+ */
+async function resolveUserId(
+  customerId: string,
+  customData: unknown,
+): Promise<string | null> {
+  const inline = (customData as { userId?: unknown } | null)?.userId;
+  if (typeof inline === "string" && inline.length) return inline;
 
-  await getSupabase().from("subscriptions").upsert(
-    {
-      user_id: userId,
-      stripe_subscription_id: subscription.id,
-      stripe_customer_id: subscription.customer,
-      product_id: productId,
-      price_id: priceId,
-      status: subscription.status,
-      current_period_start: periodStart
-        ? new Date(periodStart * 1000).toISOString()
-        : null,
-      current_period_end: periodEnd
-        ? new Date(periodEnd * 1000).toISOString()
-        : null,
-      environment: env,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "stripe_subscription_id" },
-  );
+  const { data } = await getSupabase()
+    .from("paddle_customers")
+    .select("user_id")
+    .eq("paddle_customer_id", customerId)
+    .maybeSingle();
+  return (data?.user_id as string | undefined) ?? null;
 }
 
-async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
-  const item = subscription.items?.data?.[0];
-  const priceId =
-    item?.price?.lookup_key ||
-    item?.price?.metadata?.lovable_external_id ||
-    item?.price?.id;
-  const productId = item?.price?.product;
-  const periodStart = item?.current_period_start ?? subscription.current_period_start;
-  const periodEnd = item?.current_period_end ?? subscription.current_period_end;
+async function handleSubscriptionCreatedOrUpdated(
+  data: any,
+  env: PaddleEnv,
+) {
+  const userId = await resolveUserId(data.customerId, data.customData);
+  if (!userId) {
+    console.error("subscription webhook: no userId", { id: data.id });
+    return;
+  }
+
+  const item = data.items?.[0];
+  const priceExternal = item?.price?.importMeta?.externalId;
+  const productExternal = item?.product?.importMeta?.externalId;
+  if (!priceExternal || !productExternal) {
+    console.warn("Skipping subscription: missing importMeta.externalId", {
+      rawPriceId: item?.price?.id,
+      rawProductId: item?.product?.id,
+    });
+    return;
+  }
+
+  const scheduledChange = data.scheduledChange ?? null;
 
   await getSupabase()
     .from("subscriptions")
-    .update({
-      status: subscription.status,
-      product_id: productId,
-      price_id: priceId,
-      current_period_start: periodStart
-        ? new Date(periodStart * 1000).toISOString()
-        : null,
-      current_period_end: periodEnd
-        ? new Date(periodEnd * 1000).toISOString()
-        : null,
-      cancel_at_period_end: subscription.cancel_at_period_end || false,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("stripe_subscription_id", subscription.id)
-    .eq("environment", env);
+    .upsert(
+      {
+        user_id: userId,
+        paddle_subscription_id: data.id,
+        paddle_customer_id: data.customerId,
+        product_id: productExternal,
+        price_id: priceExternal,
+        status: data.status,
+        current_period_start: data.currentBillingPeriod?.startsAt ?? null,
+        current_period_end: data.currentBillingPeriod?.endsAt ?? null,
+        cancel_at_period_end:
+          scheduledChange?.action === "cancel" ? true : false,
+        scheduled_change_action: scheduledChange?.action ?? null,
+        scheduled_change_at: scheduledChange?.effectiveAt ?? null,
+        environment: env,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "paddle_subscription_id" },
+    );
 }
 
-async function handleSubscriptionDeleted(subscription: any, env: StripeEnv) {
+async function handleSubscriptionCanceled(data: any, env: PaddleEnv) {
   await getSupabase()
     .from("subscriptions")
     .update({
       status: "canceled",
       updated_at: new Date().toISOString(),
     })
-    .eq("stripe_subscription_id", subscription.id)
+    .eq("paddle_subscription_id", data.id)
     .eq("environment", env);
 }
 
-async function handleWebhook(req: Request, env: StripeEnv) {
+async function handleCustomer(data: any, env: PaddleEnv) {
+  if (!data?.id || !data?.email) return;
+  await getSupabase()
+    .from("paddle_customers")
+    .upsert(
+      {
+        paddle_customer_id: data.id,
+        email: data.email,
+        environment: env,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "paddle_customer_id" },
+    );
+}
+
+async function handleTransactionCompleted(data: any) {
+  // Fulfillment path is subscription-based; log for audit and stay idempotent.
+  console.log("transaction.completed", {
+    id: data.id,
+    subscriptionId: data.subscriptionId,
+    customerId: data.customerId,
+    status: data.status,
+  });
+}
+
+async function handleWebhook(req: Request, env: PaddleEnv) {
   const event = await verifyWebhook(req, env);
-  switch (event.type) {
-    case "customer.subscription.created":
-      await handleSubscriptionCreated(event.data.object, env);
+
+  switch (event.eventType) {
+    case EventName.SubscriptionCreated:
+    case EventName.SubscriptionUpdated:
+    case EventName.SubscriptionActivated:
+    case EventName.SubscriptionTrialing:
+    case EventName.SubscriptionPaused:
+    case EventName.SubscriptionResumed:
+    case EventName.SubscriptionPastDue:
+      await handleSubscriptionCreatedOrUpdated(event.data, env);
       break;
-    case "customer.subscription.updated":
-      await handleSubscriptionUpdated(event.data.object, env);
+    case EventName.SubscriptionCanceled:
+      await handleSubscriptionCanceled(event.data, env);
       break;
-    case "customer.subscription.deleted":
-      await handleSubscriptionDeleted(event.data.object, env);
+    case EventName.CustomerCreated:
+    case EventName.CustomerUpdated:
+      await handleCustomer(event.data, env);
+      break;
+    case EventName.TransactionCompleted:
+      await handleTransactionCompleted(event.data);
       break;
     default:
-      console.log("Unhandled event:", event.type);
+      console.log("Unhandled event:", event.eventType);
   }
 }
 
@@ -113,14 +150,16 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
         const rawEnv = new URL(request.url).searchParams.get("env");
         if (rawEnv !== "sandbox" && rawEnv !== "live") {
           console.error("Webhook received with invalid env:", rawEnv);
-          return Response.json({ received: true, ignored: "invalid env" });
+          return new Response("Invalid env", { status: 400 });
         }
-        const env: StripeEnv = rawEnv;
+        const env: PaddleEnv = rawEnv;
         try {
           await handleWebhook(request, env);
           return Response.json({ received: true });
         } catch (e) {
-          console.error("Webhook error:", e);
+          console.error("Paddle webhook error:", e);
+          // Non-2xx keeps Paddle retrying — required for signature failures
+          // and transient errors.
           return new Response("Webhook error", { status: 400 });
         }
       },
