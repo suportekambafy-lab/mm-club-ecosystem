@@ -138,7 +138,7 @@ function ShortsPage() {
   });
 
   return (
-    <div className="fixed inset-0 top-14 z-0 bg-black lg:top-16">
+    <div className="fixed inset-0 z-30 bg-black">
       {/* Feed */}
       {shortsQuery.isLoading ? (
         <div className="flex h-full items-center justify-center text-sm text-white/60">A carregar…</div>
