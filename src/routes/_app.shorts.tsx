@@ -422,6 +422,15 @@ function ShortItem({
   };
 
   useEffect(() => {
+    if (!menuOpen) return;
+    const html = document.documentElement;
+    html.setAttribute("data-shorts-composer", "open");
+    return () => html.removeAttribute("data-shorts-composer");
+  }, [menuOpen]);
+
+
+
+  useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
     if (active) {
