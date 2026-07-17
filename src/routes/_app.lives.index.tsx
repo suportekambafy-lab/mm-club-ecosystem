@@ -51,7 +51,6 @@ function LivesPage() {
   return (
     <div className="space-y-14">
       <SectionHeading
-        eyebrow="MM Club · Sessões premium"
         title="O clube em direto."
         description="Um palco privado com o fundador e os especialistas MM. Ao vivo, sem ruído e sempre disponível como replay."
       />
