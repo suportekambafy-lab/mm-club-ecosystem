@@ -2,6 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, Check, Clock, Play } from "lucide-react";
 import { coursesById } from "@/data/courses";
 import "@/data/admin-store";
+import { useAdminOverridesVersion } from "@/hooks/use-admin-overrides";
 import { expertsById } from "@/data/experts";
 import { ExpertAvatar } from "@/components/mm/expert-avatar";
 import type { Lesson, Module } from "@/data/types";
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/_app/academia/$courseId/")({
 
 function CourseDetail() {
   const { courseId } = Route.useLoaderData();
+  useAdminOverridesVersion(); // re-render when admin overrides change
   const course = coursesById[courseId];
   const expert = expertsById[course.expertId];
   const firstLesson = course.modules?.[0]?.lessons?.[0];
