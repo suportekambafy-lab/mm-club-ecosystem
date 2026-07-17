@@ -63,7 +63,15 @@ function ShortsPage() {
         .from("profiles")
         .select("id, display_name, avatar_url")
         .in("id", authorIds);
-      const authorMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", authorIds);
+      const adminIds = new Set((roles ?? []).filter((r) => r.role === "admin").map((r) => r.user_id));
+
+      const profList = profiles ?? [];
+      const signed = await Promise.all(profList.map((p) => resolveAvatar(p.avatar_url)));
+      const authorMap = new Map(profList.map((p, i) => [p.id, { ...p, signedAvatar: signed[i] }]));
 
       let likedIds = new Set<string>();
       if (user) {
@@ -75,16 +83,16 @@ function ShortsPage() {
         likedIds = new Set((likes ?? []).map((l) => l.short_id));
       }
 
-      return rows.map((r) => ({
-        ...r,
-        author: authorMap.get(r.author_id)
-          ? {
-              display_name: authorMap.get(r.author_id)!.display_name,
-              avatar_url: authorMap.get(r.author_id)!.avatar_url,
-            }
-          : null,
-        liked: likedIds.has(r.id),
-      }));
+      return rows.map((r): ShortWithAuthor => {
+        const a = authorMap.get(r.author_id);
+        return {
+          ...r,
+          author: a
+            ? { display_name: a.display_name, avatar_url: a.signedAvatar, verified: adminIds.has(a.id) }
+            : null,
+          liked: likedIds.has(r.id),
+        };
+      });
     },
   });
 
