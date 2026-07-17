@@ -22,6 +22,8 @@ export function createStripeClient(env: StripeEnv): Stripe {
 
   return new Stripe(connectionApiKey, {
     apiVersion: "2026-03-25.dahlia" as unknown as Stripe.StripeConfig["apiVersion"],
+    // @ts-expect-error - apiVersion pinned via literal cast
+    // eslint-disable-next-line
     httpClient: Stripe.createFetchHttpClient((input, init) => {
       const stripeUrl = input instanceof Request ? input.url : input.toString();
       const gatewayUrl = stripeUrl.replace("https://api.stripe.com", GATEWAY_STRIPE_BASE);
