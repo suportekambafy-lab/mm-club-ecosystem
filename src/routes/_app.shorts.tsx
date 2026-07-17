@@ -354,6 +354,7 @@ function ShortItem({
   muted,
   onToggleMute,
   onToggleLike,
+  onOpenComments,
   onDelete,
   canDelete,
 }: {
@@ -363,6 +364,7 @@ function ShortItem({
   muted: boolean;
   onToggleMute: () => void;
   onToggleLike: () => void;
+  onOpenComments: () => void;
   onDelete: () => void;
   canDelete: boolean;
 }) {
