@@ -241,10 +241,35 @@ function CommunityPage() {
       ? catQ.data.find((c) => c.id === activeCategory)?.name ?? null
       : null;
 
+  // Header oculta ao fazer scroll para baixo, reaparece ao subir
+  const [headerHidden, setHeaderHidden] = useState(false);
+  useEffect(() => {
+    let lastY = typeof window !== "undefined" ? window.scrollY : 0;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const dy = y - lastY;
+      if (y < 40) {
+        setHeaderHidden(false);
+      } else if (dy > 6) {
+        setHeaderHidden(true);
+      } else if (dy < -6) {
+        setHeaderHidden(false);
+      }
+      lastY = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <div className="mx-auto w-full max-w-[1600px] 2xl:max-w-[1760px]">
       {/* Header — editorial */}
-      <header className="sticky top-16 z-20 mb-8 -mx-3 flex flex-wrap items-end justify-between gap-6 border-b border-border/60 bg-background/85 px-3 pb-6 pt-6 backdrop-blur-xl sm:-mx-4 sm:px-4 md:-mx-8 md:px-8">
+      <header
+        className={cn(
+          "sticky top-16 z-20 mb-8 -mx-3 flex flex-wrap items-end justify-between gap-6 border-b border-border/60 bg-background/85 px-3 pb-6 pt-6 backdrop-blur-xl transition-all duration-300 ease-out sm:-mx-4 sm:px-4 md:-mx-8 md:px-8",
+          headerHidden && "pointer-events-none -translate-y-6 opacity-0",
+        )}
+      >
         <div className="min-w-0 space-y-3">
           <p className="text-[10px] uppercase tracking-[0.4em] text-primary font-display">
             — Comunidade
