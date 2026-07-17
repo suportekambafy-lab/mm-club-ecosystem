@@ -309,7 +309,7 @@ function ShortItem({
       className="relative flex h-full w-full snap-start snap-always items-center justify-center"
     >
       <div className="relative flex h-full w-full items-center justify-center bg-black sm:h-full">
-        <div className="relative h-full w-full sm:aspect-[9/16] sm:h-full sm:w-auto sm:max-w-[min(100%,calc((100vh-6rem)*9/16))]">
+        <div className="relative h-full w-full sm:aspect-[9/16] sm:h-full sm:w-auto sm:max-w-[min(100%,calc(100vh*9/16))]">
           <video
             ref={videoRef}
             src={short.video_url}
