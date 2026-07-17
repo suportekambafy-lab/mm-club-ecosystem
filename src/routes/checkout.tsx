@@ -152,7 +152,7 @@ function PlansPage() {
     }
   };
 
-  const envLabel = getPaddleEnvironment();
+  
 
   return (
     <>
