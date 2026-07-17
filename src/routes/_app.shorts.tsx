@@ -228,7 +228,7 @@ function ShortsPage() {
 
       {/* Progress bar at top while uploading */}
       {upload && (
-        <div className="pointer-events-none fixed inset-x-0 top-0 z-50 px-3 pt-3 lg:pl-[calc(16rem+0.75rem)]">
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-50 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] lg:pl-[calc(16rem+0.75rem)] lg:pt-3">
           <div className="pointer-events-auto mx-auto flex max-w-md items-center gap-3 rounded-full border border-white/10 bg-black/60 px-4 py-2 text-white shadow-lg backdrop-blur-md">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20">
               <Upload className="h-4 w-4 text-primary" />
