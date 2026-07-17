@@ -253,7 +253,7 @@ function PlansPage() {
 
               <button
                 type="button"
-                disabled={loading && pendingPlan === plan.id}
+                disabled={pendingPlan === plan.id}
                 onClick={() => handleSelect(plan)}
                 className={`mt-6 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition disabled:opacity-60 ${
                   plan.highlight
@@ -261,7 +261,7 @@ function PlansPage() {
                     : "bg-foreground text-background hover:opacity-90"
                 }`}
               >
-                {loading && pendingPlan === plan.id ? "A abrir checkout..." : "Subscrever"}
+                {pendingPlan === plan.id ? "A abrir checkout..." : "Subscrever"}
               </button>
             </article>
             );
@@ -269,8 +269,9 @@ function PlansPage() {
         </section>
 
         <p className="text-center text-xs text-muted-foreground">
-          Pagamento seguro processado pela Paddle. Podes cancelar a qualquer momento.
+          Pagamento seguro processado pela Stripe. Podes cancelar a qualquer momento.
         </p>
+
 
         <footer className="mt-8 border-t border-border pt-6 text-center text-xs text-muted-foreground">
           <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2">
