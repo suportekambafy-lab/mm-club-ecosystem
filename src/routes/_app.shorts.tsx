@@ -447,8 +447,8 @@ function UploaderModal({
       toast.error("Escolhe um ficheiro de vídeo.");
       return;
     }
-    if (f.size > 100 * 1024 * 1024) {
-      toast.error("Vídeo demasiado grande (máx. 100 MB).");
+    if (f.size > 2 * 1024 * 1024 * 1024) {
+      toast.error("Vídeo demasiado grande (máx. 2 GB).");
       return;
     }
     setFile(f);
