@@ -1,5 +1,5 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Save,
   RotateCcw,
@@ -53,6 +53,34 @@ function AdminAulas() {
 
   const current = useMemo(() => courses.find((c) => c.id === openCourse), [openCourse]);
   const modules = modulesByCourse[openCourse] ?? [];
+
+  // Autosave — persist every edit to localStorage + apply to in-memory data,
+  // so edits never revert and switching tabs restores the working copy.
+  const isFirstRun = useRef(true);
+  useEffect(() => {
+    if (isFirstRun.current) {
+      isFirstRun.current = false;
+      return;
+    }
+    const t = setTimeout(() => {
+      const clean: Overrides = {
+        courses: overrides.courses,
+        experts: overrides.experts,
+        lessons: {},
+        modulesByCourse: {},
+      };
+      for (const c of courses) {
+        clean.modulesByCourse[c.id] = modulesByCourse[c.id] ?? cloneModules(c.modules);
+      }
+      saveOverrides(clean);
+      applyOverrides(clean);
+      setSaved(true);
+      const clear = setTimeout(() => setSaved(false), 1500);
+      return () => clearTimeout(clear);
+    }, 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modulesByCourse]);
 
   const patchModules = (courseId: string, next: Module[]) => {
     setModulesByCourse((s) => ({ ...s, [courseId]: next }));
@@ -201,7 +229,7 @@ function AdminAulas() {
           className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
         >
           <Save className="h-3.5 w-3.5" />
-          {saved ? "Guardado ✓" : "Guardar"}
+          {saved ? "Guardado ✓" : "Guarda automaticamente"}
         </button>
       </div>
 
