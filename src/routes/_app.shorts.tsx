@@ -316,26 +316,43 @@ function ShortsFeed({
 
   const [commentsFor, setCommentsFor] = useState<ShortWithAuthor | null>(null);
 
+  useEffect(() => {
+    if (!commentsFor) return;
+    const html = document.documentElement;
+    html.setAttribute("data-shorts-comments", "open");
+    return () => {
+      html.removeAttribute("data-shorts-comments");
+    };
+  }, [commentsFor]);
+
+  const commentsOpen = !!commentsFor;
+
   return (
-    <div
-      ref={containerRef}
-      className="h-[100dvh] max-h-[100dvh] w-full snap-y snap-mandatory overflow-y-auto overscroll-contain"
-      style={{ scrollbarWidth: "none" }}
-    >
-      {shorts.map((s, i) => (
-        <ShortItem
-          key={s.id}
-          idx={i}
-          short={s}
-          active={i === activeIdx && !commentsFor}
-          muted={muted}
-          onToggleMute={() => setMuted((m) => !m)}
-          onToggleLike={() => onToggleLike(s)}
-          onOpenComments={() => setCommentsFor(s)}
-          onDelete={() => onDelete(s.id)}
-          canDelete={currentUserId === s.author_id}
-        />
-      ))}
+    <div className="fixed inset-0 flex flex-col bg-black">
+      <div
+        ref={containerRef}
+        className={cn(
+          "w-full snap-y snap-mandatory overflow-y-auto overscroll-contain transition-[height] duration-300 ease-out",
+          commentsOpen ? "h-[40dvh]" : "h-[100dvh]",
+        )}
+        style={{ scrollbarWidth: "none" }}
+      >
+        {shorts.map((s, i) => (
+          <ShortItem
+            key={s.id}
+            idx={i}
+            short={s}
+            active={i === activeIdx}
+            compact={commentsOpen}
+            muted={muted}
+            onToggleMute={() => setMuted((m) => !m)}
+            onToggleLike={() => onToggleLike(s)}
+            onOpenComments={() => setCommentsFor(s)}
+            onDelete={() => onDelete(s.id)}
+            canDelete={currentUserId === s.author_id}
+          />
+        ))}
+      </div>
       {commentsFor && (
         <CommentsDrawer
           short={commentsFor}
