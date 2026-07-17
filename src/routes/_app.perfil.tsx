@@ -78,6 +78,8 @@ function ProfilePage() {
   }, []);
 
   // Resolve signed URL for private avatar bucket
+  const avatarResolving = Boolean(profile?.avatar_url) && avatarUrl === null;
+  const coverResolving = Boolean(profile?.cover_url) && coverUrl === null;
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -91,7 +93,7 @@ function ProfilePage() {
         .createSignedUrl(profile.avatar_url, 60 * 60);
       if (cancelled) return;
       if (sErr) {
-        setAvatarUrl(null);
+        setAvatarUrl("");
       } else {
         setAvatarUrl(data.signedUrl);
       }
@@ -113,11 +115,12 @@ function ProfilePage() {
         .from("avatars")
         .createSignedUrl(profile.cover_url, 60 * 60);
       if (cancelled) return;
-      setCoverUrl(cErr ? null : data.signedUrl);
+      setCoverUrl(cErr ? "" : data.signedUrl);
     })();
     return () => {
       cancelled = true;
     };
+
   }, [profile?.cover_url]);
 
   const handleSave = async () => {
@@ -293,6 +296,9 @@ function ProfilePage() {
               : undefined
           }
         >
+          {coverResolving && (
+            <div className="absolute inset-0 animate-pulse bg-surface-2" />
+          )}
           <button
             type="button"
             onClick={() => coverFileRef.current?.click()}
@@ -314,6 +320,7 @@ function ProfilePage() {
             }}
           />
         </div>
+
         <div className="-mt-14 flex flex-col gap-6 px-5 pb-6 sm:px-8 md:flex-row md:items-end md:justify-between">
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-end">
             <div className="relative">
@@ -322,11 +329,18 @@ function ProfilePage() {
                 style={
                   avatarUrl
                     ? { backgroundImage: `url(${avatarUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
-                    : { background: "var(--primary)" }
+                    : avatarResolving
+                      ? undefined
+                      : { background: "var(--primary)" }
                 }
               >
-                {!avatarUrl && <span>{initials}</span>}
+                {avatarResolving ? (
+                  <div className="h-full w-full animate-pulse bg-surface-3" />
+                ) : (
+                  !avatarUrl && <span>{initials}</span>
+                )}
               </div>
+
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
