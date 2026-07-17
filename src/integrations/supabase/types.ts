@@ -375,6 +375,68 @@ export type Database = {
         }
         Relationships: []
       }
+      mm_short_likes: {
+        Row: {
+          created_at: string
+          short_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          short_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          short_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mm_short_likes_short_id_fkey"
+            columns: ["short_id"]
+            isOneToOne: false
+            referencedRelation: "mm_shorts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mm_shorts: {
+        Row: {
+          author_id: string
+          caption: string | null
+          created_at: string
+          id: string
+          likes_count: number
+          thumbnail_url: string | null
+          updated_at: string
+          video_url: string
+          views_count: number
+        }
+        Insert: {
+          author_id: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          likes_count?: number
+          thumbnail_url?: string | null
+          updated_at?: string
+          video_url: string
+          views_count?: number
+        }
+        Update: {
+          author_id?: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          likes_count?: number
+          thumbnail_url?: string | null
+          updated_at?: string
+          video_url?: string
+          views_count?: number
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           actor_id: string | null
@@ -575,6 +637,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      mm_short_increment_view: {
+        Args: { _short_id: string }
+        Returns: undefined
       }
     }
     Enums: {
