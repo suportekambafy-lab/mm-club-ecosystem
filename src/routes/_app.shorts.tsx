@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Heart, Volume2, VolumeX, Plus, X, Upload, Trash2, Eye, Play } from "lucide-react";
+import { Heart, Volume2, VolumeX, Plus, X, Upload, Trash2, Eye, Play, MessageCircle, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
@@ -28,6 +28,7 @@ type ShortRow = {
   caption: string | null;
   views_count: number;
   likes_count: number;
+  comments_count: number;
   created_at: string;
 };
 
@@ -113,7 +114,7 @@ function ShortsPage() {
     queryFn: async () => {
       const { data: shorts, error } = await supabase
         .from("mm_shorts")
-        .select("id, author_id, video_url, thumbnail_url, caption, views_count, likes_count, created_at")
+        .select("id, author_id, video_url, thumbnail_url, caption, views_count, likes_count, comments_count, created_at")
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
@@ -313,6 +314,8 @@ function ShortsFeed({
     supabase.rpc("mm_short_increment_view", { _short_id: s.id }).then(() => {});
   }, [activeIdx, shorts]);
 
+  const [commentsFor, setCommentsFor] = useState<ShortWithAuthor | null>(null);
+
   return (
     <div
       ref={containerRef}
@@ -324,14 +327,22 @@ function ShortsFeed({
           key={s.id}
           idx={i}
           short={s}
-          active={i === activeIdx}
+          active={i === activeIdx && !commentsFor}
           muted={muted}
           onToggleMute={() => setMuted((m) => !m)}
           onToggleLike={() => onToggleLike(s)}
+          onOpenComments={() => setCommentsFor(s)}
           onDelete={() => onDelete(s.id)}
           canDelete={currentUserId === s.author_id}
         />
       ))}
+      {commentsFor && (
+        <CommentsDrawer
+          short={commentsFor}
+          currentUserId={currentUserId}
+          onClose={() => setCommentsFor(null)}
+        />
+      )}
     </div>
   );
 }
@@ -343,6 +354,7 @@ function ShortItem({
   muted,
   onToggleMute,
   onToggleLike,
+  onOpenComments,
   onDelete,
   canDelete,
 }: {
@@ -352,6 +364,7 @@ function ShortItem({
   muted: boolean;
   onToggleMute: () => void;
   onToggleLike: () => void;
+  onOpenComments: () => void;
   onDelete: () => void;
   canDelete: boolean;
 }) {
@@ -464,6 +477,18 @@ function ShortItem({
               </span>
               <span className="text-[11px] font-semibold text-white drop-shadow">
                 {short.likes_count.toLocaleString("pt-PT")}
+              </span>
+            </button>
+            <button
+              onClick={onOpenComments}
+              className="flex flex-col items-center gap-1"
+              aria-label="Abrir comentários"
+            >
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/50 backdrop-blur">
+                <MessageCircle className="h-6 w-6 text-white" />
+              </span>
+              <span className="text-[11px] font-semibold text-white drop-shadow">
+                {short.comments_count.toLocaleString("pt-PT")}
               </span>
             </button>
             <button
@@ -634,6 +659,252 @@ function UploaderModal({
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------- Comments Drawer ----------------
+
+type CommentRow = {
+  id: string;
+  short_id: string;
+  user_id: string;
+  body: string;
+  created_at: string;
+};
+
+type CommentWithAuthor = CommentRow & {
+  author: { display_name: string | null; avatar_url: string | null; verified: boolean } | null;
+};
+
+function timeAgo(iso: string): string {
+  const s = Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d`;
+  const w = Math.floor(d / 7);
+  if (w < 5) return `${w}sem`;
+  return new Date(iso).toLocaleDateString("pt-PT", { day: "2-digit", month: "short" });
+}
+
+function CommentsDrawer({
+  short,
+  currentUserId,
+  onClose,
+}: {
+  short: ShortWithAuthor;
+  currentUserId: string | undefined;
+  onClose: () => void;
+}) {
+  const qc = useQueryClient();
+  const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const commentsQuery = useQuery<CommentWithAuthor[]>({
+    queryKey: ["mm-short-comments", short.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("mm_short_comments")
+        .select("id, short_id, user_id, body, created_at")
+        .eq("short_id", short.id)
+        .order("created_at", { ascending: true })
+        .limit(300);
+      if (error) throw error;
+      const rows = (data ?? []) as CommentRow[];
+      if (rows.length === 0) return [];
+      const ids = Array.from(new Set(rows.map((r) => r.user_id)));
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url")
+        .in("id", ids);
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", ids);
+      const adminIds = new Set((roles ?? []).filter((r) => r.role === "admin").map((r) => r.user_id));
+      const profList = profs ?? [];
+      const signed = await Promise.all(profList.map((p) => resolveAvatar(p.avatar_url)));
+      const map = new Map(profList.map((p, i) => [p.id, { ...p, signedAvatar: signed[i] }]));
+      return rows.map((r) => {
+        const a = map.get(r.user_id);
+        return {
+          ...r,
+          author: a
+            ? { display_name: a.display_name, avatar_url: a.signedAvatar, verified: adminIds.has(a.id) }
+            : null,
+        };
+      });
+    },
+  });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`short-comments:${short.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "mm_short_comments", filter: `short_id=eq.${short.id}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["mm-short-comments", short.id] });
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [short.id, qc]);
+
+  useEffect(() => {
+    if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
+  }, [commentsQuery.data?.length]);
+
+  const comments = commentsQuery.data ?? [];
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const body = text.trim();
+    if (!body || !currentUserId || sending) return;
+    setSending(true);
+    try {
+      const { error } = await supabase
+        .from("mm_short_comments")
+        .insert({ short_id: short.id, user_id: currentUserId, body });
+      if (error) throw error;
+      setText("");
+      qc.invalidateQueries({ queryKey: ["mm-short-comments", short.id] });
+      qc.setQueryData<ShortWithAuthor[]>(["mm-shorts", currentUserId ?? "anon"], (old) =>
+        (old ?? []).map((s) => (s.id === short.id ? { ...s, comments_count: s.comments_count + 1 } : s)),
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao enviar");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const remove = async (id: string) => {
+    const prev = comments;
+    qc.setQueryData<CommentWithAuthor[]>(["mm-short-comments", short.id], (old) =>
+      (old ?? []).filter((c) => c.id !== id),
+    );
+    const { error } = await supabase.from("mm_short_comments").delete().eq("id", id);
+    if (error) {
+      qc.setQueryData(["mm-short-comments", short.id], prev);
+      toast.error("Não foi possível eliminar.");
+    } else {
+      qc.setQueryData<ShortWithAuthor[]>(["mm-shorts", currentUserId ?? "anon"], (old) =>
+        (old ?? []).map((s) =>
+          s.id === short.id ? { ...s, comments_count: Math.max(0, s.comments_count - 1) } : s,
+        ),
+      );
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-end justify-center" role="dialog" aria-modal="true">
+      <button
+        aria-label="Fechar comentários"
+        onClick={onClose}
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+      />
+      <div className="relative flex h-[75dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-neutral-900 text-white shadow-2xl">
+        <div className="flex items-center justify-between px-4 pt-3">
+          <div className="mx-auto h-1 w-10 rounded-full bg-white/25" />
+        </div>
+        <div className="flex items-center justify-between px-4 pb-3 pt-2">
+          <h3 className="text-sm font-semibold">
+            {short.comments_count.toLocaleString("pt-PT")} comentário
+            {short.comments_count === 1 ? "" : "s"}
+          </h3>
+          <button
+            onClick={onClose}
+            className="rounded-full p-1.5 text-white/70 transition hover:bg-white/10 hover:text-white"
+            aria-label="Fechar"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div ref={listRef} className="flex-1 space-y-4 overflow-y-auto px-4 pb-4">
+          {commentsQuery.isLoading ? (
+            <p className="pt-10 text-center text-xs text-white/50">A carregar…</p>
+          ) : comments.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 pt-20 text-center">
+              <MessageCircle className="h-8 w-8 text-white/30" />
+              <p className="text-sm font-semibold">Ainda sem comentários</p>
+              <p className="text-xs text-white/50">Sê o primeiro a comentar.</p>
+            </div>
+          ) : (
+            comments.map((c) => {
+              const mine = c.user_id === currentUserId;
+              const initials = (c.author?.display_name ?? "M")
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((p) => p[0]?.toUpperCase() ?? "")
+                .join("");
+              return (
+                <div key={c.id} className="flex gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                    {c.author?.avatar_url ? (
+                      <img src={c.author.avatar_url} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      initials || "M"
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="flex flex-wrap items-center gap-1.5 text-sm">
+                      <span className="font-semibold">{c.author?.display_name ?? "Membro MM"}</span>
+                      {c.author?.verified && <VerifiedBadge size={12} />}
+                      <span className="text-[11px] text-white/50">{timeAgo(c.created_at)}</span>
+                    </p>
+                    <p className="whitespace-pre-wrap break-words text-sm text-white/90">{c.body}</p>
+                  </div>
+                  {mine && (
+                    <button
+                      onClick={() => remove(c.id)}
+                      className="shrink-0 self-start rounded-full p-1 text-white/40 transition hover:bg-white/10 hover:text-white"
+                      aria-label="Eliminar"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        <form
+          onSubmit={submit}
+          className="flex items-center gap-2 border-t border-white/10 bg-neutral-900 px-3 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]"
+        >
+          {currentUserId ? (
+            <>
+              <input
+                type="text"
+                value={text}
+                onChange={(e) => setText(e.target.value.slice(0, 500))}
+                placeholder="Adiciona um comentário…"
+                className="flex-1 rounded-full bg-white/10 px-4 py-2.5 text-[16px] text-white placeholder:text-white/40 outline-none ring-1 ring-transparent focus:ring-white/30"
+              />
+              <button
+                type="submit"
+                disabled={sending || !text.trim()}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground transition disabled:opacity-40"
+                aria-label="Enviar"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </>
+          ) : (
+            <p className="w-full text-center text-xs text-white/60">Inicia sessão para comentar.</p>
+          )}
+        </form>
       </div>
     </div>
   );
