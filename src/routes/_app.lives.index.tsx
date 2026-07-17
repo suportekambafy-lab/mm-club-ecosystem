@@ -104,7 +104,6 @@ function EmptyHero() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,oklch(0.55_0.12_60_/_0.15),transparent_60%)]" />
       <div className="relative flex flex-col items-start gap-5">
         <span className="inline-flex items-center gap-2 rounded-full bg-primary/15 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary ring-1 ring-primary/30">
-          <Sparkles className="h-3 w-3" />
           Próxima sessão em breve
         </span>
         <h2 className="max-w-2xl font-display text-3xl leading-tight text-foreground md:text-5xl">
