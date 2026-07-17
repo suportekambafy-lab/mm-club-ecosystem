@@ -79,26 +79,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "MM Club — Ecossistema de educação para empreendedores" },
+      { title: "MM Club — Ecossistema privado da Marca Milionária" },
       {
         name: "description",
         content:
-          "MM Club é o clube privado da Marca Milionária: cursos, especialistas, MM Intelligence, ferramentas, lives e comunidade num único ecossistema premium.",
+          "O clube privado da Marca Milionária. Academia, Suporte IA, comunidade, lives e ferramentas para empreendedores portugueses. Premium por design.",
       },
       { name: "author", content: "Marca Milionária" },
       { name: "theme-color", content: "#0d0c0a" },
-      { property: "og:title", content: "MM Club — Ecossistema de educação para empreendedores" },
+      { property: "og:title", content: "MM Club — Ecossistema privado da Marca Milionária" },
       {
         property: "og:description",
         content:
-          "MM Club é o clube privado da Marca Milionária: cursos, especialistas, MM Intelligence, ferramentas, lives e comunidade num único ecossistema premium.",
+          "O clube privado da Marca Milionária. Academia, Suporte IA, comunidade, lives e ferramentas para empreendedores portugueses. Premium por design.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "MM Club — Ecossistema de educação para empreendedores" },
-      { name: "twitter:description", content: "MM Club é o clube privado da Marca Milionária: cursos, especialistas, MM Intelligence, ferramentas, lives e comunidade num único ecossistema premium." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a8ad3eec-0e20-4bcb-9368-dc2c18cf88ed/id-preview-cefbb105--70574eb9-2b6c-447b-adde-9f59b54cc086.lovable.app-1784052523161.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a8ad3eec-0e20-4bcb-9368-dc2c18cf88ed/id-preview-cefbb105--70574eb9-2b6c-447b-adde-9f59b54cc086.lovable.app-1784052523161.png" },
+      { name: "twitter:title", content: "MM Club — Ecossistema privado da Marca Milionária" },
+      { name: "twitter:description", content: "O clube privado da Marca Milionária. Academia, Suporte IA, comunidade, lives e ferramentas para empreendedores portugueses. Premium por design." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/bf418ae8-168a-4717-89ff-021ffc2e0334" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/bf418ae8-168a-4717-89ff-021ffc2e0334" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
