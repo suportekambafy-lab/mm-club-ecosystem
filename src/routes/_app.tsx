@@ -22,6 +22,7 @@ import {
   Home,
   UserRound,
   ShieldCheck,
+  Clapperboard,
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import type { User } from "@supabase/supabase-js";
@@ -86,7 +87,7 @@ export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
 
-type NavTo = "/dashboard" | "/academia" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/eventos" | "/perfil" | "/codigo";
+type NavTo = "/dashboard" | "/academia" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/shorts" | "/eventos" | "/perfil" | "/codigo";
 type NavItem = {
   to: NavTo;
   label: string;
@@ -102,6 +103,7 @@ const navItems: NavItem[] = [
   { to: "/jade", label: "MM Intelligence", icon: Star },
   { to: "/lives", label: "Ao Vivo", icon: Radio },
   { to: "/comunidade", label: "Comunidade", icon: Users },
+  { to: "/shorts", label: "MM Shorts", icon: Clapperboard },
   { to: "/ferramentas", label: "Ferramentas", icon: Wrench, soon: true },
   { to: "/eventos", label: "Eventos", icon: CalendarDays, soon: true },
   { to: "/codigo", label: "Código do Clube", icon: ShieldCheck },
