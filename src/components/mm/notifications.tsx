@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Bell, Radio, Play, Check } from "lucide-react";
+import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { useUserProgress, continueFromProgress } from "@/hooks/use-user-progress";
 import { formatDistanceToNow } from "date-fns";
 import { pt } from "date-fns/locale";
+import { useCommunityNotifications, type CommunityNotifKind } from "@/lib/community-notifications";
 
-type NotifKind = "live" | "progress";
+type NotifKind = "live" | "progress" | CommunityNotifKind;
 
 type Notif = {
   id: string;
@@ -17,16 +18,24 @@ type Notif = {
   href: string;
   createdAt: number;
   priority?: number;
+  source: "local" | "db";
+  read?: boolean;
 };
 
 const iconByKind: Record<NotifKind, typeof Bell> = {
   live: Radio,
   progress: Play,
+  like: Heart,
+  reply: MessageCircle,
+  mention: AtSign,
 };
 
 const labelByKind: Record<NotifKind, string> = {
   live: "Live",
   progress: "Continua",
+  like: "Gosto",
+  reply: "Resposta",
+  mention: "Menção",
 };
 
 const STORAGE_KEY = "mm.notifications.state.v2";
@@ -60,7 +69,7 @@ function saveState(s: StoredState) {
 
 type RealLive = Awaited<ReturnType<typeof listLives>>[number];
 
-function useAggregatedNotifs(): Notif[] {
+function useDerivedNotifs(): Notif[] {
   const { progress } = useUserProgress();
   const [liveRows, setLiveRows] = useState<RealLive[]>([]);
 
@@ -81,7 +90,6 @@ function useAggregatedNotifs(): Notif[] {
     const out: Notif[] = [];
     const now = Date.now();
 
-    // 1) Live ativa ou próxima
     const active = liveRows.find((l) => l.status === "live");
     const upcoming = liveRows
       .filter((l) => l.status === "scheduled" && new Date(l.starts_at).getTime() > now - 3600_000)
@@ -105,10 +113,10 @@ function useAggregatedNotifs(): Notif[] {
         href: "/lives",
         createdAt: now - 3600_000,
         priority: 10,
+        source: "local",
       });
     }
 
-    // 2) Continuar a aprender
     const cont = continueFromProgress(progress)[0];
     if (cont) {
       out.push({
@@ -119,18 +127,43 @@ function useAggregatedNotifs(): Notif[] {
         href: `/academia/${cont.id}`,
         createdAt: now - 2 * 3600_000,
         priority: 8,
+        source: "local",
       });
     }
 
-    return out.sort(
-      (a, b) => (b.priority ?? 0) - (a.priority ?? 0) || b.createdAt - a.createdAt,
-    );
+    return out;
   }, [progress, liveRows]);
 }
 
+function communityCopy(kind: CommunityNotifKind, actorName: string | null): { title: string; subtitle: string } {
+  const who = actorName?.trim() || "Alguém";
+  if (kind === "like") {
+    return {
+      title: `${who} gostou do teu post`,
+      subtitle: "Toca para veres a publicação",
+    };
+  }
+  if (kind === "reply") {
+    return {
+      title: `${who} comentou no teu post`,
+      subtitle: "Vê a resposta na comunidade",
+    };
+  }
+  return {
+    title: `${who} mencionou-te`,
+    subtitle: "Foste referido numa publicação",
+  };
+}
 
 export function NotificationsBell({ className }: { className?: string }) {
-  const notifs = useAggregatedNotifs();
+  const derived = useDerivedNotifs();
+  const {
+    items: dbItems,
+    markAllRead: dbMarkAllRead,
+    markRead: dbMarkRead,
+    dismiss: dbDismiss,
+  } = useCommunityNotifications();
+
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<StoredState>({ readIds: [], dismissedIds: [], lastOpenedAt: 0 });
   const [hydrated, setHydrated] = useState(false);
@@ -142,7 +175,6 @@ export function NotificationsBell({ className }: { className?: string }) {
     setHydrated(true);
   }, []);
 
-  // Close on outside click / escape
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
@@ -166,10 +198,35 @@ export function NotificationsBell({ className }: { className?: string }) {
     };
   }, [open]);
 
-  const visible = notifs.filter((n) => !state.dismissedIds.includes(n.id));
-  const unreadCount = hydrated
-    ? visible.filter((n) => !state.readIds.includes(n.id)).length
-    : 0;
+  const merged: Notif[] = useMemo(() => {
+    const fromDb: Notif[] = dbItems.map((n) => {
+      const copy = communityCopy(n.kind, n.actor_name);
+      const href = n.post_id ? `/comunidade?post=${n.post_id}` : "/comunidade";
+      return {
+        id: `notif:${n.id}`,
+        kind: n.kind,
+        title: copy.title,
+        subtitle: copy.subtitle,
+        href,
+        createdAt: new Date(n.created_at).getTime(),
+        source: "db",
+        read: !!n.read_at,
+        priority: 5,
+      };
+    });
+    return [...derived, ...fromDb].sort(
+      (a, b) => (b.priority ?? 0) - (a.priority ?? 0) || b.createdAt - a.createdAt,
+    );
+  }, [derived, dbItems]);
+
+  const visible = merged.filter((n) =>
+    n.source === "local" ? !state.dismissedIds.includes(n.id) : true,
+  );
+
+  const isReadOf = (n: Notif) =>
+    n.source === "db" ? !!n.read : state.readIds.includes(n.id);
+
+  const unreadCount = hydrated ? visible.filter((n) => !isReadOf(n)).length : 0;
 
   const handleOpen = () => {
     const next = !open;
@@ -182,26 +239,35 @@ export function NotificationsBell({ className }: { className?: string }) {
   };
 
   const markAllRead = () => {
-    const ids = visible.map((n) => n.id);
+    const localIds = visible.filter((n) => n.source === "local").map((n) => n.id);
     const s: StoredState = {
       ...state,
-      readIds: Array.from(new Set([...state.readIds, ...ids])),
+      readIds: Array.from(new Set([...state.readIds, ...localIds])),
     };
     setState(s);
     saveState(s);
+    void dbMarkAllRead();
   };
 
-  const markRead = (id: string) => {
-    if (state.readIds.includes(id)) return;
-    const s: StoredState = { ...state, readIds: [...state.readIds, id] };
+  const markRead = (n: Notif) => {
+    if (n.source === "db") {
+      if (!n.read) void dbMarkRead(n.id.replace(/^notif:/, ""));
+      return;
+    }
+    if (state.readIds.includes(n.id)) return;
+    const s: StoredState = { ...state, readIds: [...state.readIds, n.id] };
     setState(s);
     saveState(s);
   };
 
-  const dismiss = (id: string) => {
+  const dismiss = (n: Notif) => {
+    if (n.source === "db") {
+      void dbDismiss(n.id.replace(/^notif:/, ""));
+      return;
+    }
     const s: StoredState = {
       ...state,
-      dismissedIds: Array.from(new Set([...state.dismissedIds, id])),
+      dismissedIds: Array.from(new Set([...state.dismissedIds, n.id])),
     };
     setState(s);
     saveState(s);
@@ -238,7 +304,6 @@ export function NotificationsBell({ className }: { className?: string }) {
         >
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <div className="flex items-center gap-2">
-              
               <p className="font-display text-sm text-foreground">Notificações</p>
             </div>
             {unreadCount > 0 && (
@@ -267,7 +332,7 @@ export function NotificationsBell({ className }: { className?: string }) {
               <ul className="divide-y divide-border">
                 {visible.map((n) => {
                   const Icon = iconByKind[n.kind];
-                  const isRead = state.readIds.includes(n.id);
+                  const isRead = isReadOf(n);
                   const created = new Date(n.createdAt);
                   const timeAgo = hydrated
                     ? formatDistanceToNow(created, { locale: pt, addSuffix: true })
@@ -277,7 +342,7 @@ export function NotificationsBell({ className }: { className?: string }) {
                       <Link
                         to={n.href}
                         onClick={() => {
-                          markRead(n.id);
+                          markRead(n);
                           setOpen(false);
                         }}
                         className={cn(
@@ -318,7 +383,7 @@ export function NotificationsBell({ className }: { className?: string }) {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          dismiss(n.id);
+                          dismiss(n);
                         }}
                         aria-label="Dispensar notificação"
                         className="absolute right-2 top-2 hidden h-6 w-6 items-center justify-center rounded-full bg-surface-2 text-muted-foreground opacity-0 transition hover:text-foreground group-hover:flex group-hover:opacity-100"
