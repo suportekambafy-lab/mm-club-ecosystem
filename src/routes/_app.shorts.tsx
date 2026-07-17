@@ -162,7 +162,7 @@ function ShortsPage() {
         className="fixed left-4 top-4 z-40 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white/90 ring-1 ring-white/20 backdrop-blur-md transition hover:bg-black/60 hover:text-white lg:left-[calc(16rem+1rem)]"
         aria-label="Publicar MM Short"
       >
-        <Plus className="h-6 w-6" />
+        <Plus className="h-5 w-5" strokeWidth={2} />
       </button>
 
       {uploaderOpen && user && (
