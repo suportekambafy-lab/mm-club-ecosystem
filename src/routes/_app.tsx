@@ -593,61 +593,61 @@ function MobileTabBar({
     <nav
       aria-label="Navegação principal"
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 lg:hidden",
-        immersive
-          ? "bg-black/55 backdrop-blur-2xl [-webkit-backdrop-filter:blur(24px)] border-t border-white/10"
-          : "bg-background/70 backdrop-blur-2xl [-webkit-backdrop-filter:blur(24px)] border-t border-border/70",
+        "fixed inset-x-0 z-40 flex justify-center px-3 lg:hidden",
+        "bottom-[calc(env(safe-area-inset-bottom)+0.5rem)]",
       )}
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <ul className="mx-auto flex max-w-md items-center justify-around px-2 py-2">
+      <ul
+        className={cn(
+          "flex items-center gap-1 rounded-full px-3 py-2 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 ring-1 transition-colors",
+          immersive
+            ? "bg-black/45 ring-white/15"
+            : "bg-background/70 ring-border",
+        )}
+      >
         {mobileTabs.map((tab) => {
           const Icon = tab.icon;
           const active = isActive(tab.to, tab.exact);
           return (
-            <li key={tab.to} className="flex-1">
+            <li key={tab.to}>
               <Link
                 to={tab.to}
                 aria-label={tab.label}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative mx-auto flex h-12 w-full items-center justify-center rounded-xl transition",
+                  "relative flex h-12 w-14 items-center justify-center rounded-full transition",
                   active
                     ? immersive
-                      ? "text-white"
-                      : "text-foreground"
+                      ? "bg-white/15 text-white"
+                      : "bg-primary/15 text-primary"
                     : immersive
-                      ? "text-white/70 hover:text-white"
+                      ? "text-white/85 hover:text-white"
                       : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 <Icon
-                  className="h-7 w-7"
-                  strokeWidth={active ? 2.4 : 1.8}
+                  className="h-[24px] w-[24px]"
+                  strokeWidth={active ? 2.4 : 2}
                   fill={active && tab.to === "/shorts" ? "currentColor" : "none"}
                 />
               </Link>
             </li>
           );
         })}
-        <li className="flex-1">
+        <li>
           <Link
             to="/perfil"
             aria-label="Perfil"
             aria-current={profileActive ? "page" : undefined}
-            className="mx-auto flex h-12 w-full items-center justify-center"
+            className={cn(
+              "flex h-12 w-14 items-center justify-center rounded-full transition",
+              profileActive && (immersive ? "ring-2 ring-white" : "ring-2 ring-primary"),
+            )}
           >
             <span
               className={cn(
-                "flex h-7 w-7 items-center justify-center overflow-hidden rounded-full text-[10px] font-semibold ring-1",
-                profileActive
-                  ? immersive
-                    ? "ring-white"
-                    : "ring-foreground"
-                  : immersive
-                    ? "ring-white/30"
-                    : "ring-border",
-                immersive ? "bg-white/15 text-white" : "bg-surface-2 text-muted-foreground",
+                "flex h-8 w-8 items-center justify-center overflow-hidden rounded-full text-[10px] font-semibold",
+                immersive ? "bg-white/20 text-white" : "bg-surface-2 text-muted-foreground",
               )}
             >
               {avatarSrc ? (
