@@ -78,6 +78,8 @@ function ProfilePage() {
   }, []);
 
   // Resolve signed URL for private avatar bucket
+  const avatarResolving = Boolean(profile?.avatar_url) && avatarUrl === null;
+  const coverResolving = Boolean(profile?.cover_url) && coverUrl === null;
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -91,7 +93,7 @@ function ProfilePage() {
         .createSignedUrl(profile.avatar_url, 60 * 60);
       if (cancelled) return;
       if (sErr) {
-        setAvatarUrl(null);
+        setAvatarUrl("");
       } else {
         setAvatarUrl(data.signedUrl);
       }
@@ -113,11 +115,12 @@ function ProfilePage() {
         .from("avatars")
         .createSignedUrl(profile.cover_url, 60 * 60);
       if (cancelled) return;
-      setCoverUrl(cErr ? null : data.signedUrl);
+      setCoverUrl(cErr ? "" : data.signedUrl);
     })();
     return () => {
       cancelled = true;
     };
+
   }, [profile?.cover_url]);
 
   const handleSave = async () => {
