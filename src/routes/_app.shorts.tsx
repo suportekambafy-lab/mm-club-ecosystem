@@ -220,7 +220,7 @@ function ShortsPage() {
       {/* Floating create button */}
       <button
         onClick={() => setUploaderOpen(true)}
-        className="fixed left-4 top-4 z-40 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white/90 ring-1 ring-white/20 backdrop-blur-md transition hover:bg-black/60 hover:text-white lg:left-[calc(16rem+1rem)]"
+        className="fixed left-4 top-[calc(env(safe-area-inset-top)+1rem)] z-40 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white/90 ring-1 ring-white/20 backdrop-blur-md transition hover:bg-black/60 hover:text-white lg:left-[calc(16rem+1rem)] lg:top-4"
         aria-label="Publicar MM Short"
       >
         <Plus className="h-5 w-5" strokeWidth={2} />
