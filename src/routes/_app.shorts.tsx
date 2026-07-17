@@ -604,6 +604,14 @@ function UploaderModal({
     };
   }, [previewUrl]);
 
+  useEffect(() => {
+    const html = document.documentElement;
+    html.setAttribute("data-shorts-composer", "open");
+    return () => {
+      html.removeAttribute("data-shorts-composer");
+    };
+  }, []);
+
   const publish = () => {
     if (!file) return;
     onSubmit(file, caption);
