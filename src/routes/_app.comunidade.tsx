@@ -845,8 +845,8 @@ function Composer({
             className="w-full resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
           {imageUrl && (
-            <div className="relative mt-2 overflow-hidden rounded-xl border border-border">
-              <img src={imageUrl} alt="Pré-visualização" className="max-h-72 w-full object-cover" />
+            <div className="relative mt-2 flex justify-center overflow-hidden rounded-xl border border-border bg-surface-2">
+              <img src={imageUrl} alt="Pré-visualização" className="max-h-72 w-auto max-w-full object-contain sm:max-w-[520px]" />
               <button
                 onClick={() => setImageUrl("")}
                 className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-background/80 text-foreground backdrop-blur transition hover:bg-background"
@@ -1239,8 +1239,13 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
       )}
 
       {post.image_url && !editing && (
-        <div className="mt-3 overflow-hidden rounded-xl border border-border">
-          <img src={post.image_url} alt="" className="max-h-[500px] w-full object-cover" />
+        <div className="mt-3 flex justify-center overflow-hidden rounded-xl border border-border bg-surface-2">
+          <img
+            src={post.image_url}
+            alt=""
+            loading="lazy"
+            className="max-h-[560px] w-auto max-w-full object-contain sm:max-w-[560px]"
+          />
         </div>
       )}
 
