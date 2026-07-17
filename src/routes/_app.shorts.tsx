@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Heart, Volume2, VolumeX, Plus, X, Upload, Trash2, Eye, Play, MessageCircle, Send } from "lucide-react";
+import { Heart, Volume2, VolumeX, Plus, X, Upload, Trash2, Eye, Play, MessageCircle, ArrowUp, CornerDownRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
@@ -459,6 +459,8 @@ function ShortItem({
             </div>
           )}
 
+          {!compact && (
+            <>
           {/* Bottom gradient + info */}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 pb-[calc(env(safe-area-inset-bottom)+5.5rem)] pt-16 lg:pb-4">
             <div className="pointer-events-auto flex items-center gap-2">
@@ -537,6 +539,8 @@ function ShortItem({
               </button>
             )}
           </div>
+            </>
+          )}
         </div>
       </div>
     </section>
@@ -700,6 +704,7 @@ type CommentRow = {
   short_id: string;
   user_id: string;
   body: string;
+  parent_id: string | null;
   created_at: string;
 };
 
@@ -721,6 +726,8 @@ function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString("pt-PT", { day: "2-digit", month: "short" });
 }
 
+const QUICK_EMOJIS = ["❤️", "🔥", "👏", "😂", "😍", "😮", "🙌", "💯"];
+
 function CommentsDrawer({
   short,
   currentUserId,
@@ -733,14 +740,16 @@ function CommentsDrawer({
   const qc = useQueryClient();
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [replyTo, setReplyTo] = useState<CommentWithAuthor | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const commentsQuery = useQuery<CommentWithAuthor[]>({
     queryKey: ["mm-short-comments", short.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("mm_short_comments")
-        .select("id, short_id, user_id, body, created_at")
+        .select("id, short_id, user_id, body, parent_id, created_at")
         .eq("short_id", short.id)
         .order("created_at", { ascending: true })
         .limit(300);
@@ -788,11 +797,32 @@ function CommentsDrawer({
     };
   }, [short.id, qc]);
 
-  useEffect(() => {
-    if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
-  }, [commentsQuery.data?.length]);
-
   const comments = commentsQuery.data ?? [];
+
+  const { topLevel, repliesByParent } = useMemo(() => {
+    const top: CommentWithAuthor[] = [];
+    const map = new Map<string, CommentWithAuthor[]>();
+    for (const c of comments) {
+      if (c.parent_id) {
+        const arr = map.get(c.parent_id) ?? [];
+        arr.push(c);
+        map.set(c.parent_id, arr);
+      } else {
+        top.push(c);
+      }
+    }
+    return { topLevel: top, repliesByParent: map };
+  }, [comments]);
+
+  const startReply = (c: CommentWithAuthor) => {
+    setReplyTo(c);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
+  const insertEmoji = (emoji: string) => {
+    setText((t) => (t + emoji).slice(0, 500));
+    inputRef.current?.focus();
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -802,9 +832,15 @@ function CommentsDrawer({
     try {
       const { error } = await supabase
         .from("mm_short_comments")
-        .insert({ short_id: short.id, user_id: currentUserId, body });
+        .insert({
+          short_id: short.id,
+          user_id: currentUserId,
+          body,
+          parent_id: replyTo?.parent_id ?? replyTo?.id ?? null,
+        });
       if (error) throw error;
       setText("");
+      setReplyTo(null);
       qc.invalidateQueries({ queryKey: ["mm-short-comments", short.id] });
       qc.setQueryData<ShortWithAuthor[]>(["mm-shorts", currentUserId ?? "anon"], (old) =>
         (old ?? []).map((s) => (s.id === short.id ? { ...s, comments_count: s.comments_count + 1 } : s)),
@@ -819,7 +855,7 @@ function CommentsDrawer({
   const remove = async (id: string) => {
     const prev = comments;
     qc.setQueryData<CommentWithAuthor[]>(["mm-short-comments", short.id], (old) =>
-      (old ?? []).filter((c) => c.id !== id),
+      (old ?? []).filter((c) => c.id !== id && c.parent_id !== id),
     );
     const { error } = await supabase.from("mm_short_comments").delete().eq("id", id);
     if (error) {
@@ -834,104 +870,154 @@ function CommentsDrawer({
     }
   };
 
+  const renderComment = (c: CommentWithAuthor, isReply = false) => {
+    const mine = c.user_id === currentUserId;
+    const initials = (c.author?.display_name ?? "M")
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((p) => p[0]?.toUpperCase() ?? "")
+      .join("");
+    return (
+      <div key={c.id} className={cn("flex gap-3", isReply && "ml-10")}>
+        <div className={cn(
+          "flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-xs font-semibold text-primary-foreground",
+          isReply ? "h-7 w-7 text-[10px]" : "h-9 w-9",
+        )}>
+          {c.author?.avatar_url ? (
+            <img src={c.author.avatar_url} alt="" className="h-full w-full object-cover" />
+          ) : (
+            initials || "M"
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="flex flex-wrap items-center gap-1.5 text-sm">
+            <span className="font-semibold">{c.author?.display_name ?? "Membro MM"}</span>
+            {c.author?.verified && <VerifiedBadge size={12} />}
+            <span className="text-[11px] text-white/50">{timeAgo(c.created_at)}</span>
+          </p>
+          <p className="whitespace-pre-wrap break-words text-sm text-white/90">{c.body}</p>
+          {currentUserId && (
+            <button
+              onClick={() => startReply(c)}
+              className="mt-1 text-[11px] font-medium text-white/50 transition hover:text-white"
+            >
+              Responder
+            </button>
+          )}
+        </div>
+        {mine && (
+          <button
+            onClick={() => remove(c.id)}
+            className="shrink-0 self-start rounded-full p-1 text-white/40 transition hover:bg-white/10 hover:text-white"
+            aria-label="Eliminar"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div
       className="relative z-[70] flex h-[60dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-neutral-900 text-white shadow-2xl"
       role="dialog"
       aria-modal="true"
     >
-        <div className="flex items-center justify-between px-4 pt-3">
-          <div className="mx-auto h-1 w-10 rounded-full bg-white/25" />
+      <div className="flex items-center justify-between px-4 pt-3">
+        <div className="mx-auto h-1 w-10 rounded-full bg-white/25" />
+      </div>
+      <div className="flex items-center justify-between px-4 pb-3 pt-2">
+        <h3 className="text-sm font-semibold">
+          {short.comments_count.toLocaleString("pt-PT")} comentário
+          {short.comments_count === 1 ? "" : "s"}
+        </h3>
+        <button
+          onClick={onClose}
+          className="rounded-full p-1.5 text-white/70 transition hover:bg-white/10 hover:text-white"
+          aria-label="Fechar"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div ref={listRef} className="flex-1 space-y-4 overflow-y-auto px-4 pb-4">
+        {commentsQuery.isLoading ? (
+          <p className="pt-10 text-center text-xs text-white/50">A carregar…</p>
+        ) : topLevel.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-1 pt-20 text-center">
+            <p className="text-sm font-semibold">Ainda sem comentários</p>
+            <p className="text-xs text-white/50">Sê o primeiro a comentar.</p>
+          </div>
+        ) : (
+          topLevel.map((c) => (
+            <div key={c.id} className="space-y-3">
+              {renderComment(c)}
+              {(repliesByParent.get(c.id) ?? []).map((r) => renderComment(r, true))}
+            </div>
+          ))
+        )}
+      </div>
+
+      {currentUserId && (
+        <div className="flex gap-2 overflow-x-auto border-t border-white/10 px-3 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {QUICK_EMOJIS.map((e) => (
+            <button
+              key={e}
+              type="button"
+              onClick={() => insertEmoji(e)}
+              className="shrink-0 rounded-full px-2 py-1 text-lg transition hover:bg-white/10"
+              aria-label={`Adicionar ${e}`}
+            >
+              {e}
+            </button>
+          ))}
         </div>
-        <div className="flex items-center justify-between px-4 pb-3 pt-2">
-          <h3 className="text-sm font-semibold">
-            {short.comments_count.toLocaleString("pt-PT")} comentário
-            {short.comments_count === 1 ? "" : "s"}
-          </h3>
+      )}
+
+      {replyTo && (
+        <div className="flex items-center justify-between gap-2 border-t border-white/10 bg-white/5 px-4 py-2 text-[11px] text-white/70">
+          <span className="flex items-center gap-1.5 truncate">
+            <CornerDownRight className="h-3 w-3 shrink-0" />
+            A responder a <span className="font-semibold text-white">{replyTo.author?.display_name ?? "Membro MM"}</span>
+          </span>
           <button
-            onClick={onClose}
-            className="rounded-full p-1.5 text-white/70 transition hover:bg-white/10 hover:text-white"
-            aria-label="Fechar"
+            onClick={() => setReplyTo(null)}
+            className="shrink-0 rounded-full p-1 text-white/60 hover:bg-white/10 hover:text-white"
+            aria-label="Cancelar resposta"
           >
-            <X className="h-4 w-4" />
+            <X className="h-3.5 w-3.5" />
           </button>
         </div>
+      )}
 
-        <div ref={listRef} className="flex-1 space-y-4 overflow-y-auto px-4 pb-4">
-          {commentsQuery.isLoading ? (
-            <p className="pt-10 text-center text-xs text-white/50">A carregar…</p>
-          ) : comments.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 pt-20 text-center">
-              <MessageCircle className="h-8 w-8 text-white/30" />
-              <p className="text-sm font-semibold">Ainda sem comentários</p>
-              <p className="text-xs text-white/50">Sê o primeiro a comentar.</p>
-            </div>
-          ) : (
-            comments.map((c) => {
-              const mine = c.user_id === currentUserId;
-              const initials = (c.author?.display_name ?? "M")
-                .split(/\s+/)
-                .slice(0, 2)
-                .map((p) => p[0]?.toUpperCase() ?? "")
-                .join("");
-              return (
-                <div key={c.id} className="flex gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                    {c.author?.avatar_url ? (
-                      <img src={c.author.avatar_url} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      initials || "M"
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="flex flex-wrap items-center gap-1.5 text-sm">
-                      <span className="font-semibold">{c.author?.display_name ?? "Membro MM"}</span>
-                      {c.author?.verified && <VerifiedBadge size={12} />}
-                      <span className="text-[11px] text-white/50">{timeAgo(c.created_at)}</span>
-                    </p>
-                    <p className="whitespace-pre-wrap break-words text-sm text-white/90">{c.body}</p>
-                  </div>
-                  {mine && (
-                    <button
-                      onClick={() => remove(c.id)}
-                      className="shrink-0 self-start rounded-full p-1 text-white/40 transition hover:bg-white/10 hover:text-white"
-                      aria-label="Eliminar"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        <form
-          onSubmit={submit}
-          className="flex items-center gap-2 border-t border-white/10 bg-neutral-900 px-3 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]"
-        >
-          {currentUserId ? (
-            <>
-              <input
-                type="text"
-                value={text}
-                onChange={(e) => setText(e.target.value.slice(0, 500))}
-                placeholder="Adiciona um comentário…"
-                className="flex-1 rounded-full bg-white/10 px-4 py-2.5 text-[16px] text-white placeholder:text-white/40 outline-none ring-1 ring-transparent focus:ring-white/30"
-              />
-              <button
-                type="submit"
-                disabled={sending || !text.trim()}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground transition disabled:opacity-40"
-                aria-label="Enviar"
-              >
-                <Send className="h-4 w-4" />
-              </button>
-            </>
-          ) : (
-            <p className="w-full text-center text-xs text-white/60">Inicia sessão para comentar.</p>
-          )}
-        </form>
+      <form
+        onSubmit={submit}
+        className="border-t border-white/10 bg-neutral-900 px-3 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]"
+      >
+        {currentUserId ? (
+          <div className="relative flex items-center">
+            <input
+              ref={inputRef}
+              type="text"
+              value={text}
+              onChange={(e) => setText(e.target.value.slice(0, 500))}
+              placeholder={replyTo ? `Responder a ${replyTo.author?.display_name ?? "…"}…` : "Adiciona um comentário…"}
+              className="flex-1 rounded-full bg-white/10 py-2.5 pl-4 pr-12 text-[16px] text-white placeholder:text-white/40 outline-none ring-1 ring-transparent focus:ring-white/30"
+            />
+            <button
+              type="submit"
+              disabled={sending || !text.trim()}
+              className="absolute right-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition disabled:opacity-40"
+              aria-label="Enviar"
+            >
+              <ArrowUp className="h-4 w-4" strokeWidth={2.5} />
+            </button>
+          </div>
+        ) : (
+          <p className="w-full text-center text-xs text-white/60">Inicia sessão para comentar.</p>
+        )}
+      </form>
     </div>
   );
 }
