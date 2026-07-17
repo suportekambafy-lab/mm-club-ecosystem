@@ -225,13 +225,41 @@ function ShortsPage() {
         <Plus className="h-5 w-5" strokeWidth={2} />
       </button>
 
+      {/* Progress bar at top while uploading */}
+      {upload && (
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-50 px-3 pt-3 lg:pl-[calc(16rem+0.75rem)]">
+          <div className="pointer-events-auto mx-auto flex max-w-md items-center gap-3 rounded-full border border-white/10 bg-black/60 px-4 py-2 text-white shadow-lg backdrop-blur-md">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20">
+              <Upload className="h-4 w-4 text-primary" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-medium">
+                {upload.status === "uploading" && `A enviar… ${upload.progress}%`}
+                {upload.status === "processing" && "A processar…"}
+                {upload.status === "done" && "Publicado!"}
+                {upload.status === "error" && (upload.error ?? "Falha no upload")}
+              </p>
+              <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-white/15">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all duration-200",
+                    upload.status === "error" ? "bg-red-500" : "bg-primary",
+                    upload.status === "processing" && "animate-pulse",
+                  )}
+                  style={{ width: `${upload.status === "processing" ? 100 : upload.progress}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {uploaderOpen && user && (
         <UploaderModal
-          userId={user.id}
           onClose={() => setUploaderOpen(false)}
-          onCreated={() => {
+          onSubmit={(file, caption) => {
             setUploaderOpen(false);
-            qc.invalidateQueries({ queryKey: ["mm-shorts"] });
+            void startUpload(file, caption);
           }}
         />
       )}
