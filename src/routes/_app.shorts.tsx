@@ -47,6 +47,66 @@ function ShortsPage() {
   const { user } = useCurrentUser();
   const qc = useQueryClient();
   const [uploaderOpen, setUploaderOpen] = useState(false);
+  const [upload, setUpload] = useState<{ progress: number; status: "uploading" | "processing" | "done" | "error"; error?: string } | null>(null);
+
+  const startUpload = useCallback(
+    async (file: File, caption: string) => {
+      if (!user) return;
+      setUpload({ progress: 0, status: "uploading" });
+      try {
+        const ext = file.name.split(".").pop() || "mp4";
+        const path = `shorts/${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+        const { data: signed, error: signErr } = await supabase.storage
+          .from("community-media")
+          .createSignedUploadUrl(path);
+        if (signErr || !signed) throw signErr ?? new Error("Falha ao preparar upload");
+
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("PUT", signed.signedUrl, true);
+          xhr.setRequestHeader("Content-Type", file.type || "video/mp4");
+          xhr.upload.onprogress = (evt) => {
+            if (evt.lengthComputable) {
+              const pct = Math.round((evt.loaded / evt.total) * 100);
+              setUpload((u) => (u ? { ...u, progress: pct } : u));
+            }
+          };
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) resolve();
+            else reject(new Error(`Upload falhou (${xhr.status})`));
+          };
+          xhr.onerror = () => reject(new Error("Erro de rede no upload"));
+          xhr.send(file);
+        });
+
+        setUpload({ progress: 100, status: "processing" });
+
+        const { data: urlData, error: urlErr } = await supabase.storage
+          .from("community-media")
+          .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+        if (urlErr || !urlData) throw urlErr ?? new Error("Falha ao gerar URL do vídeo");
+
+        const { error: insertErr } = await supabase.from("mm_shorts").insert({
+          author_id: user.id,
+          video_url: urlData.signedUrl,
+          caption: caption.trim() || null,
+        });
+        if (insertErr) throw insertErr;
+
+        setUpload({ progress: 100, status: "done" });
+        toast.success("MM Short publicado!");
+        qc.invalidateQueries({ queryKey: ["mm-shorts"] });
+        setTimeout(() => setUpload(null), 1500);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Falha ao publicar";
+        setUpload({ progress: 0, status: "error", error: msg });
+        toast.error(msg);
+        setTimeout(() => setUpload(null), 4000);
+      }
+    },
+    [user, qc],
+  );
 
   const shortsQuery = useQuery<ShortWithAuthor[]>({
     queryKey: ["mm-shorts", user?.id ?? "anon"],
@@ -165,13 +225,41 @@ function ShortsPage() {
         <Plus className="h-5 w-5" strokeWidth={2} />
       </button>
 
+      {/* Progress bar at top while uploading */}
+      {upload && (
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-50 px-3 pt-3 lg:pl-[calc(16rem+0.75rem)]">
+          <div className="pointer-events-auto mx-auto flex max-w-md items-center gap-3 rounded-full border border-white/10 bg-black/60 px-4 py-2 text-white shadow-lg backdrop-blur-md">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20">
+              <Upload className="h-4 w-4 text-primary" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-medium">
+                {upload.status === "uploading" && `A enviar… ${upload.progress}%`}
+                {upload.status === "processing" && "A processar…"}
+                {upload.status === "done" && "Publicado!"}
+                {upload.status === "error" && (upload.error ?? "Falha no upload")}
+              </p>
+              <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-white/15">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all duration-200",
+                    upload.status === "error" ? "bg-red-500" : "bg-primary",
+                    upload.status === "processing" && "animate-pulse",
+                  )}
+                  style={{ width: `${upload.status === "processing" ? 100 : upload.progress}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {uploaderOpen && user && (
         <UploaderModal
-          userId={user.id}
           onClose={() => setUploaderOpen(false)}
-          onCreated={() => {
+          onSubmit={(file, caption) => {
             setUploaderOpen(false);
-            qc.invalidateQueries({ queryKey: ["mm-shorts"] });
+            void startUpload(file, caption);
           }}
         />
       )}
@@ -428,18 +516,15 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
 // ---------------- Uploader ----------------
 
 function UploaderModal({
-  userId,
   onClose,
-  onCreated,
+  onSubmit,
 }: {
-  userId: string;
   onClose: () => void;
-  onCreated: () => void;
+  onSubmit: (file: File, caption: string) => void;
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [caption, setCaption] = useState("");
-  const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const pick = useCallback((f: File) => {
@@ -461,35 +546,9 @@ function UploaderModal({
     };
   }, [previewUrl]);
 
-  const publish = async () => {
+  const publish = () => {
     if (!file) return;
-    setBusy(true);
-    try {
-      const ext = file.name.split(".").pop() || "mp4";
-      const path = `shorts/${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("community-media")
-        .upload(path, file, { contentType: file.type || "video/mp4", upsert: false });
-      if (upErr) throw upErr;
-      const { data, error } = await supabase.storage
-        .from("community-media")
-        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-      if (error || !data) throw error ?? new Error("Falha ao gerar URL do vídeo");
-
-      const { error: insertErr } = await supabase.from("mm_shorts").insert({
-        author_id: userId,
-        video_url: data.signedUrl,
-        caption: caption.trim() || null,
-      });
-      if (insertErr) throw insertErr;
-
-      toast.success("MM Short publicado!");
-      onCreated();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao publicar");
-    } finally {
-      setBusy(false);
-    }
+    onSubmit(file, caption);
   };
 
   return (
@@ -568,10 +627,10 @@ function UploaderModal({
             </button>
             <button
               onClick={publish}
-              disabled={!file || busy}
+              disabled={!file}
               className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
             >
-              {busy ? "A publicar…" : "Publicar"}
+              Publicar
             </button>
           </div>
         </div>
