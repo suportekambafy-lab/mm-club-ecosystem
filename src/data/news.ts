@@ -36,7 +36,7 @@ export const news: NewsItem[] = [
   {
     id: "n5",
     type: "jade",
-    title: "Jade atualizada com o método Marca Milionária",
+    title: "MM Intelligence atualizada com o método Marca Milionária",
     subtitle: "Base de conhecimento expandida",
     timeAgo: "há 6 dias",
     href: "/jade",

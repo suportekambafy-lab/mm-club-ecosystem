@@ -83,7 +83,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "MM Club é o clube privado da Marca Milionária: cursos, especialistas, Jade, ferramentas, lives e comunidade num único ecossistema premium.",
+          "MM Club é o clube privado da Marca Milionária: cursos, especialistas, MM Intelligence, ferramentas, lives e comunidade num único ecossistema premium.",
       },
       { name: "author", content: "Marca Milionária" },
       { name: "theme-color", content: "#0d0c0a" },
@@ -91,12 +91,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:description",
         content:
-          "MM Club é o clube privado da Marca Milionária: cursos, especialistas, Jade, ferramentas, lives e comunidade num único ecossistema premium.",
+          "MM Club é o clube privado da Marca Milionária: cursos, especialistas, MM Intelligence, ferramentas, lives e comunidade num único ecossistema premium.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "MM Club — Ecossistema de educação para empreendedores" },
-      { name: "twitter:description", content: "MM Club é o clube privado da Marca Milionária: cursos, especialistas, Jade, ferramentas, lives e comunidade num único ecossistema premium." },
+      { name: "twitter:description", content: "MM Club é o clube privado da Marca Milionária: cursos, especialistas, MM Intelligence, ferramentas, lives e comunidade num único ecossistema premium." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a8ad3eec-0e20-4bcb-9368-dc2c18cf88ed/id-preview-cefbb105--70574eb9-2b6c-447b-adde-9f59b54cc086.lovable.app-1784052523161.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a8ad3eec-0e20-4bcb-9368-dc2c18cf88ed/id-preview-cefbb105--70574eb9-2b6c-447b-adde-9f59b54cc086.lovable.app-1784052523161.png" },
     ],

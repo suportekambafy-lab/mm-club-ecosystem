@@ -15,12 +15,12 @@ export const experts: Expert[] = [
   },
   {
     id: "jade",
-    name: "Jade",
+    name: "MM Intelligence",
     role: "IA nativa do MM Club",
     photo: "linear-gradient(135deg, oklch(0.82 0.13 82), oklch(0.55 0.12 60))",
     shortBio: "A inteligência do clube. Treinada com a base de conhecimento MM.",
     longBio:
-      "Jade é a IA nativa do MM Club. Responde com base exclusiva no conhecimento produzido pela marca — cursos, playbooks e livraria de prompts.",
+      "MM Intelligence é a IA nativa do MM Club. Responde com base exclusiva no conhecimento produzido pela marca — cursos, playbooks e livraria de prompts.",
     expertise: ["IA aplicada", "Copy", "Estratégia"],
   },
   {

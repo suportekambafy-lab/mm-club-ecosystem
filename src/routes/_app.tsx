@@ -84,7 +84,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { to: "/dashboard", label: "Início", icon: Home, exact: true },
   { to: "/academia", label: "Academia", icon: GraduationCap },
-  { to: "/jade", label: "Jade", icon: Star },
+  { to: "/jade", label: "MM Intelligence", icon: Star },
   { to: "/lives", label: "Ao Vivo", icon: Radio },
   { to: "/comunidade", label: "Comunidade", icon: Users },
   { to: "/ferramentas", label: "Ferramentas", icon: Wrench, soon: true },
@@ -534,7 +534,7 @@ type TabItem = {
 const mobileTabs: TabItem[] = [
   { to: "/dashboard", label: "Início", icon: Home, exact: true },
   { to: "/academia", label: "Academia", icon: GraduationCap },
-  { to: "/jade", label: "IA", icon: Star },
+  { to: "/jade", label: "MM AI", icon: Star },
   { to: "/comunidade", label: "Comunidade", icon: Users },
 ];
 

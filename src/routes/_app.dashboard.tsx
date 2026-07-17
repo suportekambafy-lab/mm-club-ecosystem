@@ -276,7 +276,7 @@ function JadeCTA() {
         </div>
         <div>
           <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-primary">
-            Jade
+            MM Intelligence
           </p>
           <h3 className="mt-1 font-display text-xl text-foreground md:text-2xl">
             A inteligência do clube.
