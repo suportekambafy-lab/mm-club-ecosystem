@@ -496,6 +496,7 @@ function AppLayout() {
               >
                 <ShoppingBag className="h-4 w-4" />
               </Link>
+              <NotificationsBell />
               <Link
                 to="/perfil"
                 aria-label="Perfil"
@@ -507,7 +508,6 @@ function AppLayout() {
                   initials
                 )}
               </Link>
-              <NotificationsBell />
             </div>
           </div>
         </header>
