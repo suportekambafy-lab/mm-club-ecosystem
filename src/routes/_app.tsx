@@ -66,7 +66,21 @@ export const Route = createFileRoute("/_app")({
       }
     }
 
-    return { authUser: data.session.user };
+    // Club Code gate — force acceptance on first login
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("club_code_accepted_at")
+      .eq("id", userId)
+      .maybeSingle();
+    const codeAccepted = Boolean(
+      (prof as { club_code_accepted_at?: string | null } | null)
+        ?.club_code_accepted_at,
+    );
+    if (!codeAccepted && location.pathname !== "/codigo") {
+      throw redirect({ to: "/codigo", replace: true });
+    }
+
+    return { authUser: data.session.user, codeAccepted };
   },
   component: AppLayout,
 });
