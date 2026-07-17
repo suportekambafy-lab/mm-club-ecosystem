@@ -27,7 +27,9 @@ function PrivacyPage() {
           <h2 className="font-display text-xl">1. Responsável pelo tratamento</h2>
           <p className="mt-2">
             O responsável pelo tratamento dos teus dados pessoais é{" "}
-            <strong>MM Club</strong>, contactável em{" "}
+            <strong>Snowcountry, Lda.</strong>, sociedade constituída em Portugal,
+            NIPC <strong>517 449 234</strong>, que opera o serviço MM Club.
+            Contacto:{" "}
             <a className="underline" href="mailto:geral@mmclub.pt">geral@mmclub.pt</a>.
           </p>
         </section>

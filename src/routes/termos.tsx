@@ -27,9 +27,11 @@ function TermsPage() {
           <h2 className="font-display text-xl">1. Identificação do vendedor</h2>
           <p className="mt-2">
             Este website e o serviço MM Club (o &ldquo;Serviço&rdquo;) são operados
-            por <strong>MM Club</strong> (&ldquo;nós&rdquo;, &ldquo;nosso&rdquo;), com
-            contacto através de <a className="underline" href="mailto:geral@mmclub.pt">geral@mmclub.pt</a>.
-            Ao utilizares o Serviço, contratas diretamente com MM Club.
+            por <strong>Snowcountry, Lda.</strong> (&ldquo;MM Club&rdquo;, &ldquo;nós&rdquo;, &ldquo;nosso&rdquo;),
+            sociedade constituída em Portugal, NIPC <strong>517 449 234</strong>,
+            contactável através de{" "}
+            <a className="underline" href="mailto:geral@mmclub.pt">geral@mmclub.pt</a>.
+            Ao utilizares o Serviço, contratas diretamente com a Snowcountry, Lda.
           </p>
         </section>
 
