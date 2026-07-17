@@ -1,29 +1,23 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, Check, Clock, Play } from "lucide-react";
 import { coursesById } from "@/data/courses";
+import "@/data/admin-store";
 import { expertsById } from "@/data/experts";
 import { ExpertAvatar } from "@/components/mm/expert-avatar";
 import type { Lesson, Module } from "@/data/types";
 
 export const Route = createFileRoute("/_app/academia/$courseId/")({
   loader: ({ params }) => {
-    const course = coursesById[params.courseId];
-    if (!course) throw notFound();
-    return { course };
+    if (!coursesById[params.courseId]) throw notFound();
+    return { courseId: params.courseId };
   },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: `${loaderData.course.title} — MM Club` },
-          { name: "description", content: loaderData.course.tagline },
-        ]
-      : [{ title: "Curso — MM Club" }],
-  }),
+  head: () => ({ meta: [{ title: "Curso — MM Club" }] }),
   component: CourseDetail,
 });
 
 function CourseDetail() {
-  const { course } = Route.useLoaderData();
+  const { courseId } = Route.useLoaderData();
+  const course = coursesById[courseId];
   const expert = expertsById[course.expertId];
   const firstLesson = course.modules?.[0]?.lessons?.[0];
 
