@@ -1,5 +1,5 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Save, RotateCcw, UserCircle2 } from "lucide-react";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { MediaField } from "@/components/mm/media-field";
