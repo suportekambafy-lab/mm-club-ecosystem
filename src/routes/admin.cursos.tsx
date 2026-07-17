@@ -132,7 +132,7 @@ function AdminCursos() {
           className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
         >
           <Save className="h-3.5 w-3.5" />
-          {saved ? "Guardado ✓" : "Guardar"}
+          {saved ? "Guardado ✓" : "Guarda automaticamente"}
         </button>
       </div>
 
