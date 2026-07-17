@@ -368,6 +368,7 @@ function ShortItem({
   idx,
   short,
   active,
+  compact = false,
   muted,
   onToggleMute,
   onToggleLike,
@@ -378,6 +379,7 @@ function ShortItem({
   idx: number;
   short: ShortWithAuthor;
   active: boolean;
+  compact?: boolean;
   muted: boolean;
   onToggleMute: () => void;
   onToggleLike: () => void;
