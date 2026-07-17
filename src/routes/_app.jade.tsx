@@ -72,7 +72,8 @@ function SuporteIAPage() {
   }
 
   return (
-    <div className="-mx-3 -my-4 flex h-[calc(100vh-8rem)] flex-col sm:-mx-4 sm:-my-6 md:-mx-8 md:-my-8 md:h-[calc(100vh-4rem)]">
+    <div className="-mx-3 -mt-4 -mb-24 flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden sm:-mx-4 sm:-mt-6 md:-mx-8 md:-mt-8 md:-mb-12 md:h-[calc(100dvh-5rem)]">
+
       <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-8 md:py-4">
         <div className="min-w-0">
           <h1 className="font-display text-lg text-foreground">Suporte IA</h1>
