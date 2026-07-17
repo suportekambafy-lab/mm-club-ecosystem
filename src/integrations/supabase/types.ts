@@ -375,6 +375,57 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          actor_id: string | null
+          comment_id: string | null
+          created_at: string
+          dismissed_at: string | null
+          id: string
+          kind: string
+          post_id: string | null
+          read_at: string | null
+          user_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          comment_id?: string | null
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          kind: string
+          post_id?: string | null
+          read_at?: string | null
+          user_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          comment_id?: string | null
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          kind?: string
+          post_id?: string | null
+          read_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "community_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -510,6 +561,7 @@ export type Database = {
         Args: { _live_id: string; _user_id: string }
         Returns: boolean
       }
+      extract_mention_user_ids: { Args: { _text: string }; Returns: string[] }
       has_active_subscription: {
         Args: { check_env?: string; user_uuid: string }
         Returns: boolean
