@@ -329,11 +329,18 @@ function ProfilePage() {
                 style={
                   avatarUrl
                     ? { backgroundImage: `url(${avatarUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
-                    : { background: "var(--primary)" }
+                    : avatarResolving
+                      ? undefined
+                      : { background: "var(--primary)" }
                 }
               >
-                {!avatarUrl && <span>{initials}</span>}
+                {avatarResolving ? (
+                  <div className="h-full w-full animate-pulse bg-surface-3" />
+                ) : (
+                  !avatarUrl && <span>{initials}</span>
+                )}
               </div>
+
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
