@@ -426,10 +426,10 @@ function ShortItem({
   return (
     <section
       data-short-idx={idx}
-      className="relative flex h-[100dvh] min-h-[100dvh] w-full snap-start snap-always items-center justify-center"
+      className="relative flex h-full min-h-full w-full snap-start snap-always items-center justify-center"
     >
-      <div className="relative flex h-[100dvh] w-full items-start justify-center bg-black sm:h-[100dvh]">
-        <div className="relative h-[100dvh] w-full sm:aspect-[9/16] sm:h-[100dvh] sm:w-auto sm:max-w-[min(100%,calc(100dvh*9/16))]">
+      <div className="relative flex h-full w-full items-start justify-center bg-black">
+        <div className={cn("relative h-full w-full", !compact && "sm:aspect-[9/16] sm:h-full sm:w-auto sm:max-w-[min(100%,calc(100dvh*9/16))]") }>
           <video
             ref={videoRef}
             src={short.video_url}
