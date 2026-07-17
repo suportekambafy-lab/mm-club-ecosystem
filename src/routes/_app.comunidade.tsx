@@ -242,7 +242,7 @@ function CommunityPage() {
       : null;
 
   return (
-    <div className="mx-auto max-w-[1400px]">
+    <div className="mx-auto w-full max-w-[1600px] 2xl:max-w-[1760px]">
       {/* Header — editorial */}
       <header className="sticky top-16 z-20 mb-8 -mx-3 flex flex-wrap items-end justify-between gap-6 border-b border-border/60 bg-background/85 px-3 pb-6 pt-6 backdrop-blur-xl sm:-mx-4 sm:px-4 md:-mx-8 md:px-8">
         <div className="min-w-0 space-y-3">
@@ -273,7 +273,7 @@ function CommunityPage() {
       </header>
 
 
-      <div className="grid items-start gap-6 lg:grid-cols-[240px_minmax(0,1fr)_280px]">
+      <div className="grid items-start gap-8 lg:grid-cols-[220px_minmax(0,1fr)_280px] xl:gap-10 xl:grid-cols-[240px_minmax(0,1fr)_300px]">
         {/* LEFT SIDEBAR — categorias + membros ativos */}
         <aside className="hidden space-y-4 lg:sticky lg:top-24 lg:block lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-1 [scrollbar-width:thin]">
           <SidebarCard title="Categorias">

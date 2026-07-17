@@ -499,7 +499,7 @@ function AppLayout() {
         )}
 
 
-        <main className="relative mx-auto max-w-7xl px-3 pb-24 pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8 lg:pb-12">
+        <main className="relative mx-auto max-w-7xl px-3 pb-24 pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8 lg:pb-12 xl:max-w-[1600px] 2xl:max-w-[1760px]">
           {/* Ambient editorial glow — matches landing page atmosphere */}
           <div
             aria-hidden
