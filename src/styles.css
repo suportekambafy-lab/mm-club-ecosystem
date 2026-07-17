@@ -262,4 +262,5 @@
 }
 
 /* Hide mobile tab bar when shorts comments are open */
-html[data-shorts-comments="open"] [data-mobile-tabbar] { display: none !important; }
+html[data-shorts-comments="open"] [data-mobile-tabbar],
+html[data-shorts-composer="open"] [data-mobile-tabbar] { display: none !important; }
