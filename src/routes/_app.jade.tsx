@@ -129,7 +129,7 @@ function SuporteIAPage() {
         </div>
       </div>
 
-      <div className="border-t border-border bg-background/80 px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+5.5rem)] backdrop-blur-xl md:px-8 md:pt-4 md:pb-4">
+      <div className="border-t border-border bg-background/80 px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+7.5rem)] backdrop-blur-xl md:px-8 md:pt-4 md:pb-4">
         <form
           onSubmit={(e) => {
             e.preventDefault();
