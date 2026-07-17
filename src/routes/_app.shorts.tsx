@@ -31,9 +31,16 @@ type ShortRow = {
 };
 
 type ShortWithAuthor = ShortRow & {
-  author: { display_name: string | null; avatar_url: string | null } | null;
+  author: { display_name: string | null; avatar_url: string | null; verified: boolean } | null;
   liked: boolean;
 };
+
+async function resolveAvatar(pathOrUrl: string | null): Promise<string | null> {
+  if (!pathOrUrl) return null;
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
+  const { data } = await supabase.storage.from("avatars").createSignedUrl(pathOrUrl, 60 * 60 * 24);
+  return data?.signedUrl ?? null;
+}
 
 function ShortsPage() {
   const { user } = useCurrentUser();
