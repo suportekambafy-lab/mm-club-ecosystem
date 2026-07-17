@@ -4,7 +4,6 @@ import {
   ArrowRight,
   Play,
   Users,
-  Bot,
   Bell,
 } from "lucide-react";
 import { CourseCard } from "@/components/mm/course-card";
