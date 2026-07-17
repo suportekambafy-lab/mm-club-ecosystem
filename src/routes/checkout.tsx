@@ -1,5 +1,5 @@
 import { createFileRoute, useSearch, Link } from "@tanstack/react-router";
-import { Crown, Sparkles, Star } from "lucide-react";
+import { Check, Crown, Sparkles, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
