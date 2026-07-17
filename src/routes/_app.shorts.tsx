@@ -316,26 +316,43 @@ function ShortsFeed({
 
   const [commentsFor, setCommentsFor] = useState<ShortWithAuthor | null>(null);
 
+  useEffect(() => {
+    if (!commentsFor) return;
+    const html = document.documentElement;
+    html.setAttribute("data-shorts-comments", "open");
+    return () => {
+      html.removeAttribute("data-shorts-comments");
+    };
+  }, [commentsFor]);
+
+  const commentsOpen = !!commentsFor;
+
   return (
-    <div
-      ref={containerRef}
-      className="h-[100dvh] max-h-[100dvh] w-full snap-y snap-mandatory overflow-y-auto overscroll-contain"
-      style={{ scrollbarWidth: "none" }}
-    >
-      {shorts.map((s, i) => (
-        <ShortItem
-          key={s.id}
-          idx={i}
-          short={s}
-          active={i === activeIdx && !commentsFor}
-          muted={muted}
-          onToggleMute={() => setMuted((m) => !m)}
-          onToggleLike={() => onToggleLike(s)}
-          onOpenComments={() => setCommentsFor(s)}
-          onDelete={() => onDelete(s.id)}
-          canDelete={currentUserId === s.author_id}
-        />
-      ))}
+    <div className="fixed inset-0 flex flex-col bg-black">
+      <div
+        ref={containerRef}
+        className={cn(
+          "w-full snap-y snap-mandatory overflow-y-auto overscroll-contain transition-[height] duration-300 ease-out",
+          commentsOpen ? "h-[40dvh]" : "h-[100dvh]",
+        )}
+        style={{ scrollbarWidth: "none" }}
+      >
+        {shorts.map((s, i) => (
+          <ShortItem
+            key={s.id}
+            idx={i}
+            short={s}
+            active={i === activeIdx}
+            compact={commentsOpen}
+            muted={muted}
+            onToggleMute={() => setMuted((m) => !m)}
+            onToggleLike={() => onToggleLike(s)}
+            onOpenComments={() => setCommentsFor(s)}
+            onDelete={() => onDelete(s.id)}
+            canDelete={currentUserId === s.author_id}
+          />
+        ))}
+      </div>
       {commentsFor && (
         <CommentsDrawer
           short={commentsFor}
@@ -351,6 +368,7 @@ function ShortItem({
   idx,
   short,
   active,
+  compact = false,
   muted,
   onToggleMute,
   onToggleLike,
@@ -361,6 +379,7 @@ function ShortItem({
   idx: number;
   short: ShortWithAuthor;
   active: boolean;
+  compact?: boolean;
   muted: boolean;
   onToggleMute: () => void;
   onToggleLike: () => void;
@@ -407,10 +426,10 @@ function ShortItem({
   return (
     <section
       data-short-idx={idx}
-      className="relative flex h-[100dvh] min-h-[100dvh] w-full snap-start snap-always items-center justify-center"
+      className="relative flex h-full min-h-full w-full snap-start snap-always items-center justify-center"
     >
-      <div className="relative flex h-[100dvh] w-full items-start justify-center bg-black sm:h-[100dvh]">
-        <div className="relative h-[100dvh] w-full sm:aspect-[9/16] sm:h-[100dvh] sm:w-auto sm:max-w-[min(100%,calc(100dvh*9/16))]">
+      <div className="relative flex h-full w-full items-start justify-center bg-black">
+        <div className={cn("relative h-full w-full", !compact && "sm:aspect-[9/16] sm:h-full sm:w-auto sm:max-w-[min(100%,calc(100dvh*9/16))]") }>
           <video
             ref={videoRef}
             src={short.video_url}
@@ -806,13 +825,11 @@ function CommentsDrawer({
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center" role="dialog" aria-modal="true">
-      <button
-        aria-label="Fechar comentários"
-        onClick={onClose}
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-      />
-      <div className="relative flex h-[75dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-neutral-900 text-white shadow-2xl">
+    <div
+      className="relative z-[70] flex h-[60dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-neutral-900 text-white shadow-2xl"
+      role="dialog"
+      aria-modal="true"
+    >
         <div className="flex items-center justify-between px-4 pt-3">
           <div className="mx-auto h-1 w-10 rounded-full bg-white/25" />
         </div>
@@ -905,7 +922,6 @@ function CommentsDrawer({
             <p className="w-full text-center text-xs text-white/60">Inicia sessão para comentar.</p>
           )}
         </form>
-      </div>
     </div>
   );
 }
