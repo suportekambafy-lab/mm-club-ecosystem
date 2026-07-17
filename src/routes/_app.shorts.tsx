@@ -357,7 +357,7 @@ function ShortItem({
           </div>
 
           {/* Right rail: actions */}
-          <div className="absolute bottom-24 right-3 flex flex-col items-center gap-4">
+          <div className="absolute right-3 bottom-[calc(env(safe-area-inset-bottom)+6.5rem)] flex flex-col items-center gap-4 lg:bottom-24">
             <button
               onClick={onToggleLike}
               className="flex flex-col items-center gap-1"
