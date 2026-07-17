@@ -39,6 +39,41 @@ function AdminCursos() {
     setSaved(false);
   };
 
+  // Autosave — persist every edit to localStorage + apply immediately.
+  const isFirstRun = useRef(true);
+  useEffect(() => {
+    if (isFirstRun.current) {
+      isFirstRun.current = false;
+      return;
+    }
+    const t = setTimeout(() => {
+      const clean: Overrides = {
+        courses: {},
+        experts: {},
+        lessons: overrides.lessons,
+        modulesByCourse: overrides.modulesByCourse,
+      };
+      for (const [id, patch] of Object.entries(overrides.courses)) {
+        const filtered = Object.fromEntries(
+          Object.entries(patch).filter(([, v]) => v !== undefined && v !== ""),
+        );
+        if (Object.keys(filtered).length > 0) clean.courses[id] = filtered;
+      }
+      for (const [id, patch] of Object.entries(overrides.experts)) {
+        const filtered = Object.fromEntries(
+          Object.entries(patch).filter(([, v]) => v !== undefined && v !== ""),
+        );
+        if (Object.keys(filtered).length > 0) clean.experts[id] = filtered;
+      }
+      saveOverrides(clean);
+      applyOverrides(clean);
+      setSaved(true);
+      const clear = setTimeout(() => setSaved(false), 1500);
+      return () => clearTimeout(clear);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [overrides]);
+
   const handleSave = () => {
     const clean: Overrides = {
       courses: {},
