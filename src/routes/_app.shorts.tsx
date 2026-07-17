@@ -541,6 +541,7 @@ function ShortItem({
           </div>
             </>
           )}
+        </div>
       </div>
     </section>
   );
