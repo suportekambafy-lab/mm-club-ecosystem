@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Heart, Volume2, VolumeX, Plus, X, Upload, Trash2, Eye, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
