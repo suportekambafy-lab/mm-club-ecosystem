@@ -242,7 +242,7 @@ function CommunityPage() {
       : null;
 
   return (
-    <div className="mx-auto max-w-[1400px]">
+    <div className="mx-auto w-full max-w-[1600px] 2xl:max-w-[1760px]">
       {/* Header — editorial */}
       <header className="sticky top-16 z-20 mb-8 -mx-3 flex flex-wrap items-end justify-between gap-6 border-b border-border/60 bg-background/85 px-3 pb-6 pt-6 backdrop-blur-xl sm:-mx-4 sm:px-4 md:-mx-8 md:px-8">
         <div className="min-w-0 space-y-3">
