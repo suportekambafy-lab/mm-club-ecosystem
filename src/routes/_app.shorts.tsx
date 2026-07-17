@@ -825,13 +825,11 @@ function CommentsDrawer({
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center" role="dialog" aria-modal="true">
-      <button
-        aria-label="Fechar comentários"
-        onClick={onClose}
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-      />
-      <div className="relative flex h-[75dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-neutral-900 text-white shadow-2xl">
+    <div
+      className="relative z-[70] flex h-[60dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-neutral-900 text-white shadow-2xl"
+      role="dialog"
+      aria-modal="true"
+    >
         <div className="flex items-center justify-between px-4 pt-3">
           <div className="mx-auto h-1 w-10 rounded-full bg-white/25" />
         </div>
