@@ -161,9 +161,32 @@ export function applyOverrides(o: Overrides) {
       }
     }
   }
+
+  version++;
+  listeners.forEach((l) => l());
+}
+
+// --- Reactive subscription so React components re-render after overrides
+// are applied on the client (SSR renders with base data; overrides land
+// after hydration and must trigger a refresh). ---
+let version = 0;
+const listeners = new Set<() => void>();
+
+export function subscribeOverrides(cb: () => void) {
+  listeners.add(cb);
+  return () => {
+    listeners.delete(cb);
+  };
+}
+
+export function getOverridesVersion() {
+  return version;
 }
 
 // Apply on load (browser only)
 if (typeof window !== "undefined") {
   applyOverrides(loadOverrides());
+  window.addEventListener("storage", (e) => {
+    if (e.key === STORAGE_KEY) applyOverrides(loadOverrides());
+  });
 }
