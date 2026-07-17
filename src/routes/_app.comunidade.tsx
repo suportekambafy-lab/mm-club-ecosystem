@@ -410,6 +410,15 @@ function CommunityPage() {
           ) : (
             <ChatRoom user={user} />
           )}
+
+          {/* Cards que só aparecem na sidebar direita a partir de 2xl — em telas menores ficam por baixo do feed */}
+          {tab === "feed" && (
+            <div className="grid gap-4 pt-2 sm:grid-cols-2 xl:grid-cols-3 2xl:hidden">
+              <ProfileCompletionCard user={user} />
+              <LatestUpdatesCard posts={postsQ.data ?? []} />
+              <QuickLinksCard />
+            </div>
+          )}
         </section>
 
         {/* RIGHT SIDEBAR — perfil + últimas atualizações + atalhos */}
