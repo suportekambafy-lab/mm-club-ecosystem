@@ -627,10 +627,10 @@ function UploaderModal({
             </button>
             <button
               onClick={publish}
-              disabled={!file || busy}
+              disabled={!file}
               className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
             >
-              {busy ? "A publicar…" : "Publicar"}
+              Publicar
             </button>
           </div>
         </div>
