@@ -160,6 +160,12 @@ function communityCopy(kind: CommunityNotifKind, actorName: string | null): { ti
       subtitle: "Vê a resposta na comunidade",
     };
   }
+  if (kind === "reaction") {
+    return {
+      title: `${who} reagiu à tua publicação`,
+      subtitle: "Abre para ver a reação",
+    };
+  }
   return {
     title: `${who} mencionou-te`,
     subtitle: "Foste referido numa publicação",
