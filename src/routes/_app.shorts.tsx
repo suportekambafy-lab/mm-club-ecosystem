@@ -480,6 +480,18 @@ function ShortItem({
               </span>
             </button>
             <button
+              onClick={onOpenComments}
+              className="flex flex-col items-center gap-1"
+              aria-label="Abrir comentários"
+            >
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/50 backdrop-blur">
+                <MessageCircle className="h-6 w-6 text-white" />
+              </span>
+              <span className="text-[11px] font-semibold text-white drop-shadow">
+                {short.comments_count.toLocaleString("pt-PT")}
+              </span>
+            </button>
+            <button
               onClick={onToggleMute}
               className="flex h-11 w-11 items-center justify-center rounded-full bg-black/50 backdrop-blur"
               aria-label={muted ? "Ativar som" : "Silenciar"}
