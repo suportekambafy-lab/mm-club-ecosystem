@@ -40,7 +40,7 @@ export const Route = createFileRoute("/_app/dashboard")({
 
 
 function DashboardPage() {
-  const { user: sessionUser } = useCurrentUser();
+  const { user: sessionUser, loading: userLoading } = useCurrentUser();
   const user = sessionUser ?? fallbackUser;
   const { progress } = useUserProgress();
   const cont = continueFromProgress(progress);
