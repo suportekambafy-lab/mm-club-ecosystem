@@ -477,7 +477,7 @@ function FeatureJade() {
           <br /> a qualquer hora.
         </>
       }
-      description="Assistente treinada no método Marca Milionária. Faz perguntas, pede feedback, valida ideias — como se tivesses o Rui contigo, 24/7."
+      description="MM Intelligence — assistente treinada no método Marca Milionária. Faz perguntas, pede feedback, valida ideias — como se tivesses o Rui contigo, 24/7."
       bullets={[
         "Contexto completo do método MM",
         "Sugestões acionáveis, não respostas genéricas",
