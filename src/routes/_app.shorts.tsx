@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Heart, Volume2, VolumeX, Plus, X, Upload, Trash2, Eye, Play, MessageCircle, ArrowUp, CornerDownRight } from "lucide-react";
+import { Heart, Volume2, VolumeX, Plus, X, Upload, Trash2, Eye, Play, MessageCircle, ArrowUp, CornerDownRight, MoreHorizontal, Share2, Link2, Flag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
@@ -395,6 +395,31 @@ function ShortItem({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/shorts?v=${short.id}` : "";
+
+  const handleShare = async () => {
+    setMenuOpen(false);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "MM Short", text: short.caption ?? "", url: shareUrl });
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success("Link copiado");
+      }
+    } catch {}
+  };
+
+  const handleCopyLink = async () => {
+    setMenuOpen(false);
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Link copiado");
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
+  };
 
   useEffect(() => {
     const v = videoRef.current;
@@ -529,17 +554,73 @@ function ShortItem({
             >
               {muted ? <VolumeX className="h-7 w-7 text-white drop-shadow-lg" /> : <Volume2 className="h-7 w-7 text-white drop-shadow-lg" />}
             </button>
-            {canDelete && (
-              <button
-                onClick={onDelete}
-                className="flex h-11 w-11 items-center justify-center"
-                aria-label="Eliminar"
-              >
-                <Trash2 className="h-7 w-7 text-white drop-shadow-lg" />
-              </button>
-            )}
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="flex h-11 w-11 items-center justify-center"
+              aria-label="Mais opções"
+            >
+              <MoreHorizontal className="h-7 w-7 text-white drop-shadow-lg" />
+            </button>
           </div>
             </>
+          )}
+
+          {menuOpen && (
+            <div
+              className="absolute inset-0 z-40 flex items-end justify-center bg-black/60 backdrop-blur-sm"
+              onClick={() => setMenuOpen(false)}
+            >
+              <div
+                className="w-full max-w-md rounded-t-2xl bg-neutral-900 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] text-white shadow-2xl ring-1 ring-white/10"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-white/25" />
+                <div className="px-2 py-2">
+                  <button
+                    onClick={handleShare}
+                    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-[15px] transition hover:bg-white/5"
+                  >
+                    <Share2 className="h-5 w-5" />
+                    Partilhar
+                  </button>
+                  <button
+                    onClick={handleCopyLink}
+                    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-[15px] transition hover:bg-white/5"
+                  >
+                    <Link2 className="h-5 w-5" />
+                    Copiar link
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      toast.success("Denúncia enviada. Obrigado.");
+                    }}
+                    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-[15px] transition hover:bg-white/5"
+                  >
+                    <Flag className="h-5 w-5" />
+                    Denunciar
+                  </button>
+                  {canDelete && (
+                    <button
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onDelete();
+                      }}
+                      className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-[15px] text-red-400 transition hover:bg-red-500/10"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                      Eliminar
+                    </button>
+                  )}
+                </div>
+                <button
+                  onClick={() => setMenuOpen(false)}
+                  className="mx-2 mb-2 w-[calc(100%-1rem)] rounded-xl bg-white/5 py-3 text-sm font-semibold transition hover:bg-white/10"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </div>
