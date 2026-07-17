@@ -277,9 +277,6 @@ function JadeCTA() {
       className="group relative flex flex-col gap-4 overflow-hidden rounded-2xl bg-surface-1 p-6 ring-1 ring-border transition hover:ring-[color:var(--hairline)] md:flex-row md:items-center md:justify-between md:p-8"
     >
       <div className="flex items-center gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-[color:var(--hairline)]">
-          <Bot className="h-6 w-6" />
-        </div>
         <div>
           <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-primary">
             MM Intelligence
