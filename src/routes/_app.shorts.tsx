@@ -314,6 +314,8 @@ function ShortsFeed({
     supabase.rpc("mm_short_increment_view", { _short_id: s.id }).then(() => {});
   }, [activeIdx, shorts]);
 
+  const [commentsFor, setCommentsFor] = useState<ShortWithAuthor | null>(null);
+
   return (
     <div
       ref={containerRef}
@@ -325,14 +327,22 @@ function ShortsFeed({
           key={s.id}
           idx={i}
           short={s}
-          active={i === activeIdx}
+          active={i === activeIdx && !commentsFor}
           muted={muted}
           onToggleMute={() => setMuted((m) => !m)}
           onToggleLike={() => onToggleLike(s)}
+          onOpenComments={() => setCommentsFor(s)}
           onDelete={() => onDelete(s.id)}
           canDelete={currentUserId === s.author_id}
         />
       ))}
+      {commentsFor && (
+        <CommentsDrawer
+          short={commentsFor}
+          currentUserId={currentUserId}
+          onClose={() => setCommentsFor(null)}
+        />
+      )}
     </div>
   );
 }
