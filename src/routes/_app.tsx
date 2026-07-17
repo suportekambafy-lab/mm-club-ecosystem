@@ -448,7 +448,8 @@ function AppLayout() {
 
       {/* Main */}
       <div className={cn("transition-[padding] duration-200 ease-out", collapsed ? "lg:pl-[76px]" : "lg:pl-64")}>
-        {/* Topbar */}
+        {/* Topbar — hidden on immersive routes */}
+        {pathname !== "/shorts" && (
         <header className="sticky top-0 z-30 flex items-center gap-2 bg-background/80 px-3 pt-3 pb-3 backdrop-blur-xl sm:gap-4 sm:px-4 sm:pt-4 sm:pb-4 md:px-8 md:pt-6">
           {/* Mobile: menu button opens the slide-in sidebar */}
           <button
@@ -510,6 +511,7 @@ function AppLayout() {
             </div>
           </div>
         </header>
+        )}
 
         {/* Mobile search — só na home */}
         {pathname === "/dashboard" && (
@@ -519,8 +521,13 @@ function AppLayout() {
         )}
 
 
-        <main className="relative mx-auto max-w-7xl px-3 pb-24 pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8 lg:pb-12 xl:max-w-[1600px] 2xl:max-w-[1760px]">
+        <main className={cn(
+          pathname === "/shorts"
+            ? "relative"
+            : "relative mx-auto max-w-7xl px-3 pb-24 pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8 lg:pb-12 xl:max-w-[1600px] 2xl:max-w-[1760px]",
+        )}>
           {/* Ambient editorial glow — matches landing page atmosphere */}
+          {pathname !== "/shorts" && (
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
@@ -529,6 +536,7 @@ function AppLayout() {
                 "radial-gradient(50% 30% at 80% 0%, oklch(0.82 0.13 82 / 0.09), transparent 70%), radial-gradient(40% 25% at 10% 40%, oklch(0.55 0.22 285 / 0.06), transparent 70%)",
             }}
           />
+          )}
           {mounted && authUser ? <Outlet /> : <div className="min-h-[60vh]" />}
         </main>
       </div>
@@ -539,6 +547,7 @@ function AppLayout() {
         initials={initials}
         avatarSrc={avatarSrc}
         onOpenMore={() => setMobileOpen(true)}
+        immersive={pathname === "/shorts"}
       />
     </div>
   );
