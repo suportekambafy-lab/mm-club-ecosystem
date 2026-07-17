@@ -2,7 +2,7 @@
   "name": "MM Club — Marca Milionária",
   "short_name": "MM Club",
   "description": "O clube privado da Marca Milionária. Academia, Suporte IA, comunidade, lives e ferramentas para empreendedores portugueses.",
-  "start_url": "/",
+  "start_url": "/dashboard",
   "scope": "/",
   "id": "/",
   "display": "standalone",

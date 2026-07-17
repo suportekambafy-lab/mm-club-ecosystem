@@ -450,7 +450,7 @@ function AppLayout() {
       <div className={cn("transition-[padding] duration-200 ease-out", collapsed ? "lg:pl-[76px]" : "lg:pl-64")}>
         {/* Topbar — hidden on immersive routes */}
         {pathname !== "/shorts" && (
-        <header className="sticky top-0 z-30 flex items-center gap-2 bg-background/80 px-3 pt-3 pb-3 backdrop-blur-xl sm:gap-4 sm:px-4 sm:pt-4 sm:pb-4 md:px-8 md:pt-6">
+        <header className="sticky top-0 z-30 flex items-center gap-2 bg-background/80 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 backdrop-blur-xl sm:gap-4 sm:px-4 sm:pt-[calc(env(safe-area-inset-top)+1rem)] sm:pb-4 md:px-8 md:pt-[calc(env(safe-area-inset-top)+1.5rem)]">
           {/* Mobile: menu button opens the slide-in sidebar */}
           <button
             type="button"
