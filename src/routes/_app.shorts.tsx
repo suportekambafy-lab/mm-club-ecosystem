@@ -114,7 +114,7 @@ function ShortsPage() {
     queryFn: async () => {
       const { data: shorts, error } = await supabase
         .from("mm_shorts")
-        .select("id, author_id, video_url, thumbnail_url, caption, views_count, likes_count, created_at")
+        .select("id, author_id, video_url, thumbnail_url, caption, views_count, likes_count, comments_count, created_at")
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
