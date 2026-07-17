@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Radio, CalendarDays, Lock, PlayCircle, Sparkles } from "lucide-react";
+import { Radio, CalendarDays, Lock, PlayCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
