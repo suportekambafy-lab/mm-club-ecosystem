@@ -76,7 +76,7 @@ function DashboardPage() {
   return (
     <div className="space-y-16">
       {/* Cinematic hero — full bleed, autoplay muted loop, editorial overlay */}
-      <CinematicHero name={user.name} />
+      <CinematicHero name={sessionUser?.name ?? ""} loading={userLoading && !sessionUser} />
 
       {/* Live activa em destaque */}
       {realFeaturedLive?.status === "live" && (
