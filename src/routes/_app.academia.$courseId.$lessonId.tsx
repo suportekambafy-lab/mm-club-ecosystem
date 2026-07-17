@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { coursesById } from "@/data/courses";
 import "@/data/admin-store";
+import { useAdminOverridesVersion } from "@/hooks/use-admin-overrides";
 import type { Lesson, Module } from "@/data/types";
 import { cn } from "@/lib/utils";
 import { parseVideoUrl } from "@/lib/video-source";
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
 
 function LessonPlayer() {
   const { courseId, lessonId } = Route.useLoaderData();
+  const overridesVersion = useAdminOverridesVersion();
 
   // Recompute from (possibly-overridden) in-memory data so admin edits show up.
   const data = useMemo(() => {
@@ -48,7 +50,7 @@ function LessonPlayer() {
     const current = flat[currentIdx];
     if (!current) return null;
     return { course, current, next: flat[currentIdx + 1] ?? null };
-  }, [courseId, lessonId]);
+  }, [courseId, lessonId, overridesVersion]);
 
   if (!data) {
     return (
