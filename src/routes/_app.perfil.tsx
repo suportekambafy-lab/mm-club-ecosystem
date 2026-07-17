@@ -268,7 +268,6 @@ function ProfilePage() {
   return (
     <div className="space-y-10">
       <SectionHeading
-        eyebrow="Perfil"
         title="A tua conta MM Club."
         description="Gere os teus dados, a tua foto e acompanha o teu progresso."
       />
