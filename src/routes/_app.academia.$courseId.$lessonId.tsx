@@ -1,5 +1,6 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, notFound } from "@tanstack/react-router";
+import { useEffect, useMemo } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   ChevronRight,
   ChevronUp,
@@ -14,6 +15,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { coursesById } from "@/data/courses";
+import "@/data/admin-store";
 import type { Lesson, Module } from "@/data/types";
 import { cn } from "@/lib/utils";
 import { parseVideoUrl } from "@/lib/video-source";
@@ -22,38 +24,41 @@ import { useLessonProgress } from "@/hooks/use-lesson-progress";
 export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
   loader: ({ params }) => {
     const course = coursesById[params.courseId];
-    if (!course || !course.modules) throw notFound();
-
-    // Flatten lessons with module reference.
-    const flat: Array<{ lesson: Lesson; module: Module; index: number }> = [];
-    let counter = 0;
-    for (const m of course.modules) {
-      for (const l of m.lessons) {
-        flat.push({ lesson: l, module: m, index: counter++ });
-      }
-    }
-    const currentIdx = flat.findIndex((x) => x.lesson.id === params.lessonId);
-    if (currentIdx === -1) throw notFound();
-    const current = flat[currentIdx];
-    const next = flat[currentIdx + 1] ?? null;
-
-    return { course, current, next };
+    if (!course) throw notFound();
+    return { courseId: params.courseId, lessonId: params.lessonId };
   },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          {
-            title: `${loaderData.current.lesson.title} — ${loaderData.course.title}`,
-          },
-          { name: "description", content: loaderData.course.tagline },
-        ]
-      : [{ title: "Aula — MM Club" }],
-  }),
+  head: () => ({ meta: [{ title: "Aula — MM Club" }] }),
   component: LessonPlayer,
 });
 
 function LessonPlayer() {
-  const { course, current, next } = Route.useLoaderData();
+  const { courseId, lessonId } = Route.useLoaderData();
+
+  // Recompute from (possibly-overridden) in-memory data so admin edits show up.
+  const data = useMemo(() => {
+    const course = coursesById[courseId];
+    if (!course || !course.modules) return null;
+    const flat: Array<{ lesson: Lesson; module: Module; index: number }> = [];
+    let counter = 0;
+    for (const m of course.modules) {
+      for (const l of m.lessons) flat.push({ lesson: l, module: m, index: counter++ });
+    }
+    let currentIdx = flat.findIndex((x) => x.lesson.id === lessonId);
+    if (currentIdx === -1) currentIdx = 0; // fallback: lesson was deleted
+    const current = flat[currentIdx];
+    if (!current) return null;
+    return { course, current, next: flat[currentIdx + 1] ?? null };
+  }, [courseId, lessonId]);
+
+  if (!data) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center text-sm text-muted-foreground">
+        Curso sem aulas disponíveis.
+      </div>
+    );
+  }
+
+  const { course, current, next } = data;
   const videoUrl = current.lesson.videoUrl ?? DEFAULT_LESSON_YOUTUBE_URL;
   const source = parseVideoUrl(videoUrl);
   const { completed, saving, setCompleted } = useLessonProgress(course.id, current.lesson.id);
