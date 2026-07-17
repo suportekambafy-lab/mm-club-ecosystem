@@ -47,6 +47,66 @@ function ShortsPage() {
   const { user } = useCurrentUser();
   const qc = useQueryClient();
   const [uploaderOpen, setUploaderOpen] = useState(false);
+  const [upload, setUpload] = useState<{ progress: number; status: "uploading" | "processing" | "done" | "error"; error?: string } | null>(null);
+
+  const startUpload = useCallback(
+    async (file: File, caption: string) => {
+      if (!user) return;
+      setUpload({ progress: 0, status: "uploading" });
+      try {
+        const ext = file.name.split(".").pop() || "mp4";
+        const path = `shorts/${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+        const { data: signed, error: signErr } = await supabase.storage
+          .from("community-media")
+          .createSignedUploadUrl(path);
+        if (signErr || !signed) throw signErr ?? new Error("Falha ao preparar upload");
+
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("PUT", signed.signedUrl, true);
+          xhr.setRequestHeader("Content-Type", file.type || "video/mp4");
+          xhr.upload.onprogress = (evt) => {
+            if (evt.lengthComputable) {
+              const pct = Math.round((evt.loaded / evt.total) * 100);
+              setUpload((u) => (u ? { ...u, progress: pct } : u));
+            }
+          };
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) resolve();
+            else reject(new Error(`Upload falhou (${xhr.status})`));
+          };
+          xhr.onerror = () => reject(new Error("Erro de rede no upload"));
+          xhr.send(file);
+        });
+
+        setUpload({ progress: 100, status: "processing" });
+
+        const { data: urlData, error: urlErr } = await supabase.storage
+          .from("community-media")
+          .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+        if (urlErr || !urlData) throw urlErr ?? new Error("Falha ao gerar URL do vídeo");
+
+        const { error: insertErr } = await supabase.from("mm_shorts").insert({
+          author_id: user.id,
+          video_url: urlData.signedUrl,
+          caption: caption.trim() || null,
+        });
+        if (insertErr) throw insertErr;
+
+        setUpload({ progress: 100, status: "done" });
+        toast.success("MM Short publicado!");
+        qc.invalidateQueries({ queryKey: ["mm-shorts"] });
+        setTimeout(() => setUpload(null), 1500);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Falha ao publicar";
+        setUpload({ progress: 0, status: "error", error: msg });
+        toast.error(msg);
+        setTimeout(() => setUpload(null), 4000);
+      }
+    },
+    [user, qc],
+  );
 
   const shortsQuery = useQuery<ShortWithAuthor[]>({
     queryKey: ["mm-shorts", user?.id ?? "anon"],
