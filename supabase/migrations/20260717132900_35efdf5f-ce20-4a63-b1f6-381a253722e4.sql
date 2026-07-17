@@ -1,0 +1,2 @@
+ALTER TABLE public.mm_short_comments ADD COLUMN IF NOT EXISTS parent_id uuid REFERENCES public.mm_short_comments(id) ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS idx_mm_short_comments_parent ON public.mm_short_comments(parent_id);

@@ -380,6 +380,7 @@ export type Database = {
           body: string
           created_at: string
           id: string
+          parent_id: string | null
           short_id: string
           user_id: string
         }
@@ -387,6 +388,7 @@ export type Database = {
           body: string
           created_at?: string
           id?: string
+          parent_id?: string | null
           short_id: string
           user_id: string
         }
@@ -394,10 +396,18 @@ export type Database = {
           body?: string
           created_at?: string
           id?: string
+          parent_id?: string | null
           short_id?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "mm_short_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "mm_short_comments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "mm_short_comments_short_id_fkey"
             columns: ["short_id"]
