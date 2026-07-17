@@ -1239,8 +1239,13 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
       )}
 
       {post.image_url && !editing && (
-        <div className="mt-3 overflow-hidden rounded-xl border border-border">
-          <img src={post.image_url} alt="" className="max-h-[500px] w-full object-cover" />
+        <div className="mt-3 flex justify-center overflow-hidden rounded-xl border border-border bg-surface-2">
+          <img
+            src={post.image_url}
+            alt=""
+            loading="lazy"
+            className="max-h-[560px] w-auto max-w-full object-contain sm:max-w-[560px]"
+          />
         </div>
       )}
 
