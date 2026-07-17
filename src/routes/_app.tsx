@@ -619,12 +619,13 @@ function MobileTabBar({
                   "relative flex h-12 w-14 items-center justify-center rounded-full transition",
                   active
                     ? immersive
-                      ? "bg-white/15 text-white"
-                      : "bg-primary/15 text-primary"
+                      ? "text-white"
+                      : "text-primary"
                     : immersive
                       ? "text-white/85 hover:text-white"
                       : "text-muted-foreground hover:text-foreground",
                 )}
+
               >
                 <Icon
                   className="h-[24px] w-[24px]"
