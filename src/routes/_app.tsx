@@ -57,8 +57,8 @@ export const Route = createFileRoute("/_app")({
     });
 
     if (!isAdmin) {
-      const { getPaddleEnvironment } = await import("@/lib/paddle");
-      const env = getPaddleEnvironment();
+      const { getStripeEnvironment } = await import("@/lib/stripe");
+      const env = getStripeEnvironment();
       const { data: hasSub } = await supabase.rpc("has_active_subscription", {
         user_uuid: userId,
         check_env: env,

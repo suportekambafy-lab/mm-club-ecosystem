@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-r
 import { Check, Crown, Sparkles, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
+import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 type CheckoutSearch = { plan?: "start" | "plus" | "elite" };
@@ -99,9 +99,8 @@ const PLANS: Plan[] = [
 ];
 
 function PlansPage() {
-  const navigate = useNavigate();
   const { plan: recommendedPlan } = useSearch({ from: "/checkout" });
-  const { openCheckout, loading } = usePaddleCheckout();
+  const { openCheckout, closeCheckout, isOpen, checkoutElement } = useStripeCheckout();
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [pendingPlan, setPendingPlan] = useState<string | null>(null);
 
@@ -111,22 +110,42 @@ function PlansPage() {
     });
   }, []);
 
-  const handleSelect = async (plan: Plan) => {
-    setPendingPlan(plan.id);
-    try {
-      await openCheckout({
-        priceId: plan.priceId,
-        customerEmail: user?.email,
-        customData: user ? { userId: user.id } : undefined,
-      });
-    } finally {
-      setPendingPlan(null);
+  const handleSelect = (plan: Plan) => {
+    if (plan.id === "plus") {
+      alert(
+        "O plano Plus (6 meses) ainda não está disponível. Contacta-nos em geral@mmclub.pt para adesão manual, ou escolhe Start / Elite.",
+      );
+      return;
     }
+    setPendingPlan(plan.id);
+    openCheckout({
+      priceId: plan.priceId,
+      customerEmail: user?.email,
+      userId: user?.id,
+      returnUrl: `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
+    });
   };
 
   return (
     <>
       <PaymentTestModeBanner />
+      {isOpen ? (
+        <div className="fixed inset-0 z-[100] overflow-y-auto bg-background">
+          <div className="mx-auto max-w-3xl px-4 py-6">
+            <button
+              type="button"
+              onClick={() => {
+                closeCheckout();
+                setPendingPlan(null);
+              }}
+              className="mb-4 inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-surface-1"
+            >
+              ← Voltar aos planos
+            </button>
+            {checkoutElement}
+          </div>
+        </div>
+      ) : null}
       <div className="mx-auto max-w-6xl space-y-10 px-4 py-8">
         <header className="text-center">
           {recommendedPlan ? (
@@ -234,7 +253,7 @@ function PlansPage() {
 
               <button
                 type="button"
-                disabled={loading && pendingPlan === plan.id}
+                disabled={pendingPlan === plan.id}
                 onClick={() => handleSelect(plan)}
                 className={`mt-6 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition disabled:opacity-60 ${
                   plan.highlight
@@ -242,7 +261,7 @@ function PlansPage() {
                     : "bg-foreground text-background hover:opacity-90"
                 }`}
               >
-                {loading && pendingPlan === plan.id ? "A abrir checkout..." : "Subscrever"}
+                {pendingPlan === plan.id ? "A abrir checkout..." : "Subscrever"}
               </button>
             </article>
             );
@@ -250,8 +269,9 @@ function PlansPage() {
         </section>
 
         <p className="text-center text-xs text-muted-foreground">
-          Pagamento seguro processado pela Paddle. Podes cancelar a qualquer momento.
+          Pagamento seguro processado pela Stripe. Podes cancelar a qualquer momento.
         </p>
+
 
         <footer className="mt-8 border-t border-border pt-6 text-center text-xs text-muted-foreground">
           <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2">
