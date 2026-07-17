@@ -50,6 +50,16 @@ function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
+    // PWA / standalone mode: skip landing entirely — go straight to the app.
+    // The /_app guard sends unauthenticated users to /auth automatically.
+    const isStandalone =
+      window.matchMedia?.("(display-mode: standalone)").matches ||
+      // iOS Safari
+      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+    if (isStandalone) {
+      window.location.replace("/dashboard");
+      return;
+    }
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) window.location.replace("/dashboard");
     });
