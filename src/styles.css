@@ -260,3 +260,6 @@
     z-index: 1;
   }
 }
+
+/* Hide mobile tab bar when shorts comments are open */
+html[data-shorts-comments="open"] [data-mobile-tabbar] { display: none !important; }
