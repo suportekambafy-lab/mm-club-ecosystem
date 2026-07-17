@@ -497,13 +497,13 @@ function ShortItem({
             >
               <span
                 className={cn(
-                  "flex h-11 w-11 items-center justify-center rounded-full bg-black/50 backdrop-blur transition",
-                  short.liked && "bg-red-500/90",
+                  "flex h-11 w-11 items-center justify-center transition",
+                  short.liked && "text-red-500",
                 )}
               >
                 <Heart
-                  className={cn("h-6 w-6", short.liked ? "text-white" : "text-white")}
-                  fill={short.liked ? "white" : "none"}
+                  className="h-8 w-8 text-white drop-shadow-lg"
+                  fill={short.liked ? "currentColor" : "none"}
                 />
               </span>
               <span className="text-[11px] font-semibold text-white drop-shadow">
@@ -515,8 +515,8 @@ function ShortItem({
               className="flex flex-col items-center gap-1"
               aria-label="Abrir comentários"
             >
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/50 backdrop-blur">
-                <MessageCircle className="h-6 w-6 text-white" />
+              <span className="flex h-11 w-11 items-center justify-center">
+                <MessageCircle className="h-8 w-8 text-white drop-shadow-lg" />
               </span>
               <span className="text-[11px] font-semibold text-white drop-shadow">
                 {short.comments_count.toLocaleString("pt-PT")}
@@ -524,18 +524,18 @@ function ShortItem({
             </button>
             <button
               onClick={onToggleMute}
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-black/50 backdrop-blur"
+              className="flex h-11 w-11 items-center justify-center"
               aria-label={muted ? "Ativar som" : "Silenciar"}
             >
-              {muted ? <VolumeX className="h-5 w-5 text-white" /> : <Volume2 className="h-5 w-5 text-white" />}
+              {muted ? <VolumeX className="h-7 w-7 text-white drop-shadow-lg" /> : <Volume2 className="h-7 w-7 text-white drop-shadow-lg" />}
             </button>
             {canDelete && (
               <button
                 onClick={onDelete}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-black/50 backdrop-blur"
+                className="flex h-11 w-11 items-center justify-center"
                 aria-label="Eliminar"
               >
-                <Trash2 className="h-5 w-5 text-white" />
+                <Trash2 className="h-7 w-7 text-white drop-shadow-lg" />
               </button>
             )}
           </div>
