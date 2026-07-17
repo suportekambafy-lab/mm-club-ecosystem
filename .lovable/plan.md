@@ -1,84 +1,67 @@
-# Redesign interno MM Club — Cinematic Premium
+# Notificações da Comunidade
 
-Vou alinhar todo o painel interno à linguagem premium da landing (preto + dourado + espaço + tipografia editorial), inspirado em **MasterClass / Apple TV / Netflix / Linear**. Deixa de parecer dashboard SaaS e passa a parecer um produto de consumo premium.
+Adicionar notificações reais para atividade da comunidade e integrá-las no sino do topbar (que hoje só mostra lives e "continua a aprender").
 
-O componente `hero.tsx` que colaste é uma referência visual (BASE / SocialFi) — não vou copiá-lo literal (é de outra marca), mas vou puxar os princípios: tipografia gigante, cartões de vidro flutuantes, hierarquia dramática, respiração generosa.
+## O que o utilizador verá
 
-## Escopo desta iteração
+- Sino no topbar passa a mostrar também:
+  - **Like** — "Alguém gostou do teu post/comentário"
+  - **Resposta** — "Alguém comentou no teu post" / "Alguém respondeu ao teu comentário"
+  - **Menção** — "Foste mencionado por @nome" (via `@handle` em posts/comentários)
+- Badge com contador de não lidas (real, vindo da BD; não localStorage).
+- Clicar leva para `/comunidade` com o post relevante em foco (scroll + highlight temporário).
+- Botão "Marcar tudo como lido" e dispensar individual.
+- Realtime: novas notificações aparecem sem refresh.
 
-Foco em **4 superfícies principais** + sidebar. Sem tocar em lógica de negócio, backend, permissões, dados.
+## Backend (migração)
 
-### 1. Sidebar — Reduzida ao essencial, editorial
-- Reorganizar ordem: **INÍCIO · ACADEMIA · JADE · AO VIVO · COMUNIDADE · FERRAMENTAS · EVENTOS**
-- Tipografia maior, tracking mais aberto (uppercase leve), mais espaço vertical entre itens
-- Remover divisões visuais desnecessárias, hairlines só onde faz sentido
-- Estado ativo com marca dourada lateral (barra fina) em vez de bg-fill
-- Manter collapsible actual
+Nova tabela `public.notifications`:
 
-### 2. Dashboard — Netflix / Apple TV
-Nova ordem e composição:
-
-```text
-┌─────────────────────────────────────────────┐
-│  HERO CINEMATOGRÁFICO                       │
-│  Vídeo autoplay full-bleed (aspect 21/9)   │
-│  Overlay: "Bom regresso, Victor."           │
-│  Sub: "Continua a construir a tua Marca..." │
-│  Sem controlos visíveis, mute, loop         │
-└─────────────────────────────────────────────┘
-
-── Continuar a aprender (rail horizontal, thumbnails grandes)
-── Próxima Live (banner cinemático, não card)
-── Jade (bloco editorial largo, não CTA compacto)
-── Ferramentas (rail)
-── Comunidade (feed preview estilo social)
-── Eventos (rail)
+```
+id uuid pk
+user_id uuid  -- destinatário
+actor_id uuid -- quem gerou a ação (pode ser null p/ sistema)
+kind text check in ('like','reply','mention')
+post_id uuid null references community_posts
+comment_id uuid null references community_comments
+read_at timestamptz null
+created_at timestamptz default now()
 ```
 
-- Remover o vídeo YouTube pequeno centrado actual → substituir por **hero full-bleed** com o mesmo vídeo mas com aspect ratio cinematográfico e overlay de texto editorial
-- Saudação personalizada com nome do user (`user.name`) em display font gigante
-- Thumbnails dos cursos maiores (400px em vez de 300px), hover com scale+glow dourado subtil
-- Remover a duplicação de "Cursos" logo abaixo de "Continua a aprender" (redundância actual)
+- Índice em `(user_id, created_at desc)` e parcial em não lidas.
+- GRANTs: `authenticated` SELECT/UPDATE (só as próprias); `service_role` ALL.
+- RLS: `user_id = auth.uid()` para SELECT/UPDATE. INSERT só via triggers (security definer).
+- Publicação realtime: `ALTER PUBLICATION supabase_realtime ADD TABLE notifications`.
 
-### 3. Academia — Streaming de conhecimento
-- Hero editorial no topo com destaque de 1 curso featured (imagem gigante, tipografia grande)
-- Grid de cursos com thumbnails maiores estilo MasterClass (aspect 3/4 tipo poster, ou 16/9 grandes)
-- Hover: escurece vizinhos, curso destaca com título + expert + duração
-- Secção "Especialistas" com fotos grandes circulares
+Triggers (SECURITY DEFINER):
 
-### 4. Lives — O palco
-- Página `/lives` como palco: banner enorme com próxima live (ou live activa)
-- Countdown grande e dramático
-- Foto do especialista em destaque
-- Grid abaixo: replays estilo Netflix thumbnails
+- `on_community_likes_insert` → cria notificação `like` para o dono do post/comentário (skip self-like).
+- `on_community_comments_insert` → cria notificação `reply` para o dono do post (e para o dono do comentário pai se `parent_id`), skip self.
+- Menções: parse `@handle` no `body` de posts/comentários → resolver via `profiles.display_name` (case-insensitive, sem espaços) → inserir `mention` (skip self, dedupe com like/reply do mesmo evento).
 
-### 5. Comunidade — Rede social premium
-- Layout tipo X/LinkedIn: feed central mais largo, sidebar direita com destaques
-- Posts com mais respiração, avatares maiores, tipografia melhor
-- Menos "caixas", mais divisores subtis
+## Frontend
 
-## Design tokens novos
+- Novo módulo `src/lib/notifications.ts`:
+  - `useNotifications()` — carrega lista + subscribe realtime na tabela filtrado por `user_id`.
+  - `markAllRead()`, `markRead(id)`, `dismiss(id)` (dismiss = soft, usando `read_at` + filtro local; ou coluna `dismissed_at` se necessário — decidir no impl).
+- Refatorar `src/components/mm/notifications.tsx`:
+  - Manter as fontes atuais (lives + progress) e **mergear** com as novas notificações da BD.
+  - Ordenar por `created_at`.
+  - Ícones: `Heart` (like), `MessageCircle` (reply), `AtSign` (mention).
+  - Links: `/comunidade?post=<id>` (ou `#post-<id>`).
+- Em `_app.comunidade.tsx`: ao carregar com `?post=<id>`, scroll + ring dourado temporário no post.
+- Parsing de menções no render dos posts/comentários: transformar `@nome` em link para perfil/destaque (leve, opcional nesta iteração — foco é criar as notificações).
 
-Adicionar a `src/styles.css`:
-- Gradiente hero dourado escuro (`--gradient-hero-cinematic`)
-- Sombras douradas suaves para hover premium (`--shadow-gold-glow`)
-- Aspect ratios cinematográficos onde precisar
+## Detalhes técnicos
 
-Todas as cores vêm dos tokens existentes (`--primary` dourado, `--background`, `--surface-*`). Nada hardcoded.
+- `markAllRead` = `update notifications set read_at = now() where user_id = auth.uid() and read_at is null`.
+- Contador não lidas = `count(*) where read_at is null`.
+- Realtime channel: `notifications:user_id=eq.<uid>`.
+- Self-notify: sempre skip (`actor_id = user_id`).
+- Mentions: se um comentário tem menção **e** já dispara reply para o mesmo user, preferir `mention` (não duplicar).
 
-## O que NÃO vou tocar
+## Fora do âmbito
 
-- Rotas, permissões, entitlements, backend
-- Landing page (`index.tsx`), auth, checkout, admin
-- Lógica de progresso, lives realtime, community CRUD
-- Estrutura de dados (`src/data/*`)
-
-## Ordem de implementação
-
-1. Tokens CSS + sidebar reordenada e redesenhada
-2. Dashboard: novo hero cinematográfico + ordem de rails
-3. Academia: hero featured + grid poster
-4. Lives: palco + countdown
-5. Comunidade: feed social premium
-
-Pronto para começar. Confirmas ou queres ajustar o escopo?
+- Emails/push.
+- Notificações de lives/eventos novos (mantém-se derivado como hoje).
+- UI de definições de notificação por utilizador.
