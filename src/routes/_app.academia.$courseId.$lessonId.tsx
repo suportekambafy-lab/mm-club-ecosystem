@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { coursesById } from "@/data/courses";
 import "@/data/admin-store";
+import { useAdminOverridesVersion } from "@/hooks/use-admin-overrides";
 import type { Lesson, Module } from "@/data/types";
 import { cn } from "@/lib/utils";
 import { parseVideoUrl } from "@/lib/video-source";
