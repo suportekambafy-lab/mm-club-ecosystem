@@ -375,6 +375,38 @@ export type Database = {
         }
         Relationships: []
       }
+      mm_short_comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          short_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          short_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          short_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mm_short_comments_short_id_fkey"
+            columns: ["short_id"]
+            isOneToOne: false
+            referencedRelation: "mm_shorts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mm_short_likes: {
         Row: {
           created_at: string
@@ -405,6 +437,7 @@ export type Database = {
         Row: {
           author_id: string
           caption: string | null
+          comments_count: number
           created_at: string
           id: string
           likes_count: number
@@ -416,6 +449,7 @@ export type Database = {
         Insert: {
           author_id: string
           caption?: string | null
+          comments_count?: number
           created_at?: string
           id?: string
           likes_count?: number
@@ -427,6 +461,7 @@ export type Database = {
         Update: {
           author_id?: string
           caption?: string | null
+          comments_count?: number
           created_at?: string
           id?: string
           likes_count?: number
