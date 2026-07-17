@@ -922,7 +922,6 @@ function CommentsDrawer({
             <p className="w-full text-center text-xs text-white/60">Inicia sessão para comentar.</p>
           )}
         </form>
-      </div>
     </div>
   );
 }
