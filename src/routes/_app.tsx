@@ -446,10 +446,9 @@ function AppLayout() {
 
           <div
             className={cn(
-              "flex min-w-0 flex-1 items-center gap-2 sm:gap-3",
-              pathname === "/dashboard"
-                ? "justify-end sm:justify-between sm:rounded-2xl sm:border sm:border-border sm:bg-surface-1 sm:px-5 sm:py-3 md:py-4"
-                : "justify-end",
+              "flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-3",
+              pathname === "/dashboard" &&
+                "sm:rounded-2xl sm:border sm:border-border sm:bg-surface-1 sm:px-5 sm:py-3 md:py-4",
             )}
           >
             {/* Greeting moved into cinematic dashboard hero — topbar stays minimal */}
