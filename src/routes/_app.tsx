@@ -592,6 +592,7 @@ function MobileTabBar({
   return (
     <nav
       aria-label="Navegação principal"
+      data-mobile-tabbar
       className={cn(
         "fixed inset-x-0 z-40 flex justify-center px-3 lg:hidden",
         "bottom-[calc(env(safe-area-inset-bottom)+0.5rem)]",
