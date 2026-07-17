@@ -85,7 +85,7 @@ export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
 
-type NavTo = "/dashboard" | "/academia" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/eventos" | "/perfil";
+type NavTo = "/dashboard" | "/academia" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/eventos" | "/perfil" | "/codigo";
 type NavItem = {
   to: NavTo;
   label: string;
@@ -103,6 +103,7 @@ const navItems: NavItem[] = [
   { to: "/comunidade", label: "Comunidade", icon: Users },
   { to: "/ferramentas", label: "Ferramentas", icon: Wrench, soon: true },
   { to: "/eventos", label: "Eventos", icon: CalendarDays, soon: true },
+  { to: "/codigo", label: "Código do Clube", icon: ShieldCheck },
 ];
 
 const flatNav = navItems;
@@ -110,8 +111,9 @@ const flatNav = navItems;
 function AppLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
-  const { authUser: initialAuthUser } = Route.useRouteContext() as { authUser: User };
+  const { authUser: initialAuthUser, codeAccepted: initialCodeAccepted } = Route.useRouteContext() as { authUser: User; codeAccepted: boolean };
   const { theme, toggle: toggleTheme, mounted: themeMounted } = useTheme();
+  const codeAccepted = initialCodeAccepted;
   const [authUser, setAuthUser] = useState<User | null>(initialAuthUser);
   const [avatarSrc, setAvatarSrc] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
