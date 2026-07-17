@@ -296,6 +296,9 @@ function ProfilePage() {
               : undefined
           }
         >
+          {coverResolving && (
+            <div className="absolute inset-0 animate-pulse bg-surface-2" />
+          )}
           <button
             type="button"
             onClick={() => coverFileRef.current?.click()}
@@ -317,6 +320,7 @@ function ProfilePage() {
             }}
           />
         </div>
+
         <div className="-mt-14 flex flex-col gap-6 px-5 pb-6 sm:px-8 md:flex-row md:items-end md:justify-between">
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-end">
             <div className="relative">
