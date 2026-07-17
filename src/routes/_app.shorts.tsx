@@ -516,18 +516,15 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
 // ---------------- Uploader ----------------
 
 function UploaderModal({
-  userId,
   onClose,
-  onCreated,
+  onSubmit,
 }: {
-  userId: string;
   onClose: () => void;
-  onCreated: () => void;
+  onSubmit: (file: File, caption: string) => void;
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [caption, setCaption] = useState("");
-  const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const pick = useCallback((f: File) => {
@@ -549,35 +546,9 @@ function UploaderModal({
     };
   }, [previewUrl]);
 
-  const publish = async () => {
+  const publish = () => {
     if (!file) return;
-    setBusy(true);
-    try {
-      const ext = file.name.split(".").pop() || "mp4";
-      const path = `shorts/${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("community-media")
-        .upload(path, file, { contentType: file.type || "video/mp4", upsert: false });
-      if (upErr) throw upErr;
-      const { data, error } = await supabase.storage
-        .from("community-media")
-        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-      if (error || !data) throw error ?? new Error("Falha ao gerar URL do vídeo");
-
-      const { error: insertErr } = await supabase.from("mm_shorts").insert({
-        author_id: userId,
-        video_url: data.signedUrl,
-        caption: caption.trim() || null,
-      });
-      if (insertErr) throw insertErr;
-
-      toast.success("MM Short publicado!");
-      onCreated();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao publicar");
-    } finally {
-      setBusy(false);
-    }
+    onSubmit(file, caption);
   };
 
   return (
