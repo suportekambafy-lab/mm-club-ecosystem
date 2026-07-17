@@ -158,7 +158,7 @@ function DashboardPage() {
   );
 }
 
-function CinematicHero({ name }: { name: string }) {
+function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
   const videoId = "J-ivFkMIHCQ";
   const src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&playsinline=1&rel=0&showinfo=0&iv_load_policy=3&disablekb=1`;
   const firstName = name.split(" ")[0];
@@ -185,8 +185,14 @@ function CinematicHero({ name }: { name: string }) {
             </p>
             <h1 className="mt-3 font-display text-3xl leading-[1.02] tracking-tight text-foreground md:text-6xl lg:text-7xl">
               Bom regresso,{" "}
-              <span className="text-primary">{firstName}</span>.
+              {loading || !firstName ? (
+                <span className="inline-block h-[0.9em] w-[6ch] animate-pulse rounded-md bg-surface-2 align-middle" />
+              ) : (
+                <span className="text-primary">{firstName}</span>
+              )}
+              {!loading && firstName ? "." : ""}
             </h1>
+
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-lg">
               Continua a construir a tua Marca Milionária.
             </p>
