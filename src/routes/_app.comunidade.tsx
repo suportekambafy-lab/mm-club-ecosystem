@@ -413,7 +413,8 @@ function CommunityPage() {
         </section>
 
         {/* RIGHT SIDEBAR — perfil + últimas atualizações + atalhos */}
-        <aside className="hidden space-y-4 lg:sticky lg:top-24 lg:block lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-1 [scrollbar-width:thin]">
+        <aside className="hidden space-y-4 2xl:sticky 2xl:top-24 2xl:block 2xl:max-h-[calc(100vh-7rem)] 2xl:overflow-y-auto 2xl:pr-1 [scrollbar-width:thin]">
+
           <ProfileCompletionCard user={user} />
           <LatestUpdatesCard posts={postsQ.data ?? []} />
           <QuickLinksCard />
