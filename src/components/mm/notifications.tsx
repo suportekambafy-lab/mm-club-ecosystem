@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign } from "lucide-react";
+import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { useUserProgress, continueFromProgress } from "@/hooks/use-user-progress";
@@ -28,6 +28,7 @@ const iconByKind: Record<NotifKind, typeof Bell> = {
   like: Heart,
   reply: MessageCircle,
   mention: AtSign,
+  reaction: Smile,
 };
 
 const labelByKind: Record<NotifKind, string> = {
@@ -36,6 +37,7 @@ const labelByKind: Record<NotifKind, string> = {
   like: "Gosto",
   reply: "Resposta",
   mention: "Menção",
+  reaction: "Reação",
 };
 
 const STORAGE_KEY = "mm.notifications.state.v2";
@@ -98,6 +100,10 @@ function useDerivedNotifs(): Notif[] {
     if (featured) {
       const startsMs = new Date(featured.starts_at).getTime();
       const diffDays = Math.round((startsMs - now) / 86400000);
+      // Use real timestamps: created_at for scheduled announces, or start time for live
+      const createdAtRaw =
+        (featured as unknown as { created_at?: string }).created_at ?? featured.starts_at;
+      const createdMs = new Date(createdAtRaw).getTime();
       out.push({
         id: `live:${featured.id}`,
         kind: "live",
@@ -111,7 +117,7 @@ function useDerivedNotifs(): Notif[] {
                 ? "Amanhã ao vivo"
                 : `Daqui a ${diffDays} dias`,
         href: "/lives",
-        createdAt: now - 3600_000,
+        createdAt: Number.isFinite(createdMs) ? createdMs : now,
         priority: 10,
         source: "local",
       });
@@ -119,13 +125,18 @@ function useDerivedNotifs(): Notif[] {
 
     const cont = continueFromProgress(progress)[0];
     if (cont) {
+      // Real timestamp: last watched lesson time from lesson_progress
+      const bucket = progress[cont.id];
+      const lastWatchedMs = bucket?.lastWatchedAt
+        ? new Date(bucket.lastWatchedAt).getTime()
+        : now;
       out.push({
         id: `progress:${cont.id}`,
         kind: "progress",
         title: `Continua "${cont.title}"`,
         subtitle: `${Math.round(cont.progress * 100)}% concluído · retoma onde ficaste`,
         href: `/academia/${cont.id}`,
-        createdAt: now - 2 * 3600_000,
+        createdAt: Number.isFinite(lastWatchedMs) ? lastWatchedMs : now,
         priority: 8,
         source: "local",
       });
@@ -147,6 +158,12 @@ function communityCopy(kind: CommunityNotifKind, actorName: string | null): { ti
     return {
       title: `${who} comentou no teu post`,
       subtitle: "Vê a resposta na comunidade",
+    };
+  }
+  if (kind === "reaction") {
+    return {
+      title: `${who} reagiu à tua publicação`,
+      subtitle: "Abre para ver a reação",
     };
   }
   return {
