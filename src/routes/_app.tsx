@@ -219,7 +219,7 @@ function AppLayout() {
 
   const SidebarInner = ({ compact }: { compact: boolean }) => (
     <>
-      <div className={cn("flex h-20 items-center", compact ? "justify-center px-2" : "justify-between px-6")}>
+      <div className={cn("flex h-20 items-center pt-[env(safe-area-inset-top)]", compact ? "justify-center px-2" : "justify-between px-6")}>
         {compact ? (
           <button
             type="button"

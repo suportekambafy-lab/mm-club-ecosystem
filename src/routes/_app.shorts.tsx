@@ -220,7 +220,7 @@ function ShortsPage() {
       {/* Floating create button */}
       <button
         onClick={() => setUploaderOpen(true)}
-        className="fixed left-4 top-4 z-40 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white/90 ring-1 ring-white/20 backdrop-blur-md transition hover:bg-black/60 hover:text-white lg:left-[calc(16rem+1rem)]"
+        className="fixed left-4 top-[calc(env(safe-area-inset-top)+1rem)] z-40 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white/90 ring-1 ring-white/20 backdrop-blur-md transition hover:bg-black/60 hover:text-white lg:left-[calc(16rem+1rem)] lg:top-4"
         aria-label="Publicar MM Short"
       >
         <Plus className="h-5 w-5" strokeWidth={2} />
@@ -228,7 +228,7 @@ function ShortsPage() {
 
       {/* Progress bar at top while uploading */}
       {upload && (
-        <div className="pointer-events-none fixed inset-x-0 top-0 z-50 px-3 pt-3 lg:pl-[calc(16rem+0.75rem)]">
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-50 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] lg:pl-[calc(16rem+0.75rem)] lg:pt-3">
           <div className="pointer-events-auto mx-auto flex max-w-md items-center gap-3 rounded-full border border-white/10 bg-black/60 px-4 py-2 text-white shadow-lg backdrop-blur-md">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20">
               <Upload className="h-4 w-4 text-primary" />
