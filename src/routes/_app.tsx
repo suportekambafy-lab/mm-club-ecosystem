@@ -259,6 +259,33 @@ function AppLayout() {
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.to, item.exact);
+            const locked = !codeAccepted && item.to !== "/codigo";
+            if (item.soon || locked) {
+              const badge = locked ? "Bloqueado" : "Em breve";
+              return (
+                <div
+                  key={item.to}
+                  title={compact ? `${item.label} — ${badge}` : undefined}
+                  aria-disabled="true"
+                  className={cn(
+                    "group relative flex items-center rounded-xl cursor-not-allowed",
+                    compact
+                      ? "justify-center px-2 py-3 text-sm text-muted-foreground/70"
+                      : "gap-4 px-4 py-3 font-display text-[15px] tracking-wide text-muted-foreground/60",
+                  )}
+                >
+                  <Icon className="h-[19px] w-[19px] shrink-0 text-muted-foreground/50" />
+                  {!compact && (
+                    <>
+                      <span className="flex-1">{item.label}</span>
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary">
+                        {badge}
+                      </span>
+                    </>
+                  )}
+                </div>
+              );
+            }
             if (item.soon) {
               return (
                 <div
