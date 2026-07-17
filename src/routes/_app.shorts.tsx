@@ -348,6 +348,8 @@ function ShortsFeed({
             onToggleMute={() => setMuted((m) => !m)}
             onToggleLike={() => onToggleLike(s)}
             onOpenComments={() => setCommentsFor(s)}
+            onCloseComments={() => setCommentsFor(null)}
+            commentsOpen={commentsOpen}
             onDelete={() => onDelete(s.id)}
             canDelete={currentUserId === s.author_id}
           />
