@@ -285,20 +285,8 @@ function PlansPage() {
                     </span>
                   ) : null}
 
-                  {/* Icon */}
-                  <div
-                    className={cn(
-                      "flex h-11 w-11 items-center justify-center rounded-2xl",
-                      plan.highlight
-                        ? "bg-white/15 text-violet-foreground"
-                        : "bg-primary/10 text-primary",
-                    )}
-                  >
-                    {plan.icon}
-                  </div>
-
                   {/* Tier + best for */}
-                  <h2 className="mt-6 font-display text-2xl tracking-tight">
+                  <h2 className="mt-2 font-display text-2xl tracking-tight">
                     {plan.name}
                   </h2>
                   <p
