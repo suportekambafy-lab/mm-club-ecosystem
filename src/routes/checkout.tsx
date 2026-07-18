@@ -214,11 +214,7 @@ function PlansPage() {
               <span className="inline-flex items-center gap-2 rounded-full border border-hairline bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                 <Sparkles className="h-3.5 w-3.5" /> Recomendado pelo teu diagnóstico
               </span>
-            ) : (
-              <span className="inline-flex items-center gap-2 rounded-full border border-hairline bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                <Crown className="h-3.5 w-3.5" /> Adesão MM Club
-              </span>
-            )}
+            ) : null}
             <h1 className="mt-6 font-display text-4xl leading-[1.05] tracking-tight text-foreground md:text-6xl">
               {recommendedPlan ? (
                 <>O teu plano ideal está pronto.</>
