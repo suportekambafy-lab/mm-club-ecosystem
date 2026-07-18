@@ -245,7 +245,7 @@ function PlansPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.08 * i, ease: "easeOut" }}
                   className={cn(
-                    "group relative flex flex-col overflow-hidden rounded-3xl p-7 ring-1 transition-all duration-300",
+                    "group relative flex flex-col rounded-3xl p-7 ring-1 transition-all duration-300",
                     isRecommended
                       ? "bg-surface-1 text-foreground ring-2 ring-primary shadow-[0_40px_120px_-40px_oklch(0.82_0.13_82_/_0.55)] md:-translate-y-3"
                       : plan.highlight
@@ -256,12 +256,16 @@ function PlansPage() {
                   {/* Sheen */}
                   <div
                     aria-hidden
-                    className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-                    style={{
-                      background:
-                        "radial-gradient(600px circle at var(--x,50%) var(--y,0%), oklch(1 0 0 / 0.06), transparent 40%)",
-                    }}
-                  />
+                    className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                  >
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background:
+                          "radial-gradient(600px circle at var(--x,50%) var(--y,0%), oklch(1 0 0 / 0.06), transparent 40%)",
+                      }}
+                    />
+                  </div>
 
                   {/* Badge */}
                   {isRecommended ? (
