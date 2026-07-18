@@ -214,11 +214,7 @@ function PlansPage() {
               <span className="inline-flex items-center gap-2 rounded-full border border-hairline bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                 <Sparkles className="h-3.5 w-3.5" /> Recomendado pelo teu diagnóstico
               </span>
-            ) : (
-              <span className="inline-flex items-center gap-2 rounded-full border border-hairline bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                <Crown className="h-3.5 w-3.5" /> Adesão MM Club
-              </span>
-            )}
+            ) : null}
             <h1 className="mt-6 font-display text-4xl leading-[1.05] tracking-tight text-foreground md:text-6xl">
               {recommendedPlan ? (
                 <>O teu plano ideal está pronto.</>
@@ -249,7 +245,7 @@ function PlansPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.08 * i, ease: "easeOut" }}
                   className={cn(
-                    "group relative flex flex-col overflow-hidden rounded-3xl p-7 ring-1 transition-all duration-300",
+                    "group relative flex flex-col rounded-3xl p-7 ring-1 transition-all duration-300",
                     isRecommended
                       ? "bg-surface-1 text-foreground ring-2 ring-primary shadow-[0_40px_120px_-40px_oklch(0.82_0.13_82_/_0.55)] md:-translate-y-3"
                       : plan.highlight
@@ -260,12 +256,16 @@ function PlansPage() {
                   {/* Sheen */}
                   <div
                     aria-hidden
-                    className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-                    style={{
-                      background:
-                        "radial-gradient(600px circle at var(--x,50%) var(--y,0%), oklch(1 0 0 / 0.06), transparent 40%)",
-                    }}
-                  />
+                    className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                  >
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background:
+                          "radial-gradient(600px circle at var(--x,50%) var(--y,0%), oklch(1 0 0 / 0.06), transparent 40%)",
+                      }}
+                    />
+                  </div>
 
                   {/* Badge */}
                   {isRecommended ? (
@@ -285,20 +285,8 @@ function PlansPage() {
                     </span>
                   ) : null}
 
-                  {/* Icon */}
-                  <div
-                    className={cn(
-                      "flex h-11 w-11 items-center justify-center rounded-2xl",
-                      plan.highlight
-                        ? "bg-white/15 text-violet-foreground"
-                        : "bg-primary/10 text-primary",
-                    )}
-                  >
-                    {plan.icon}
-                  </div>
-
                   {/* Tier + best for */}
-                  <h2 className="mt-6 font-display text-2xl tracking-tight">
+                  <h2 className="mt-2 font-display text-2xl tracking-tight">
                     {plan.name}
                   </h2>
                   <p
