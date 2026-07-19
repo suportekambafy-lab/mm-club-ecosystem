@@ -53,7 +53,7 @@ function CheckoutPayPage() {
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
-  const selected = plan ? PLAN_MAP[plan] : null;
+  const selected = plan ? PLAN_MAP[plan as NonNullable<PaySearch["plan"]>] : null;
 
   useEffect(() => {
     if (!selected) {
