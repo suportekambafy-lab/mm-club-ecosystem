@@ -20,6 +20,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as CheckoutPayRouteImport } from './routes/checkout.pay'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AdminLivesRouteImport } from './routes/admin.lives'
 import { Route as AdminFerramentasRouteImport } from './routes/admin.ferramentas'
@@ -100,6 +101,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/return',
   path: '/return',
+  getParentRoute: () => CheckoutRoute,
+} as any)
+const CheckoutPayRoute = CheckoutPayRouteImport.update({
+  id: '/pay',
+  path: '/pay',
   getParentRoute: () => CheckoutRoute,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -268,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/lives': typeof AdminLivesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
+  '/checkout/pay': typeof CheckoutPayRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/admin/': typeof AdminIndexRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
@@ -303,6 +310,7 @@ export interface FileRoutesByTo {
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/api/chat': typeof ApiChatRoute
+  '/checkout/pay': typeof CheckoutPayRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/admin': typeof AdminIndexRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
@@ -343,6 +351,7 @@ export interface FileRoutesById {
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/lives': typeof AdminLivesRouteWithChildren
   '/api/chat': typeof ApiChatRoute
+  '/checkout/pay': typeof CheckoutPayRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/admin/': typeof AdminIndexRoute
   '/_app/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
@@ -384,6 +393,7 @@ export interface FileRouteTypes {
     | '/admin/ferramentas'
     | '/admin/lives'
     | '/api/chat'
+    | '/checkout/pay'
     | '/checkout/return'
     | '/admin/'
     | '/academia/$courseId'
@@ -419,6 +429,7 @@ export interface FileRouteTypes {
     | '/admin/eventos'
     | '/admin/ferramentas'
     | '/api/chat'
+    | '/checkout/pay'
     | '/checkout/return'
     | '/admin'
     | '/especialistas/$expertId'
@@ -458,6 +469,7 @@ export interface FileRouteTypes {
     | '/admin/ferramentas'
     | '/admin/lives'
     | '/api/chat'
+    | '/checkout/pay'
     | '/checkout/return'
     | '/admin/'
     | '/_app/academia/$courseId'
@@ -565,6 +577,13 @@ declare module '@tanstack/react-router' {
       path: '/return'
       fullPath: '/checkout/return'
       preLoaderRoute: typeof CheckoutReturnRouteImport
+      parentRoute: typeof CheckoutRoute
+    }
+    '/checkout/pay': {
+      id: '/checkout/pay'
+      path: '/pay'
+      fullPath: '/checkout/pay'
+      preLoaderRoute: typeof CheckoutPayRouteImport
       parentRoute: typeof CheckoutRoute
     }
     '/api/chat': {
@@ -865,10 +884,12 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface CheckoutRouteChildren {
+  CheckoutPayRoute: typeof CheckoutPayRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
 }
 
 const CheckoutRouteChildren: CheckoutRouteChildren = {
+  CheckoutPayRoute: CheckoutPayRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
 }
 
