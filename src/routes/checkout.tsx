@@ -147,12 +147,6 @@ function PlansPage() {
   }, []);
 
   const handleSelect = async (plan: Plan) => {
-    if (plan.id === "plus") {
-      alert(
-        "O plano Plus (6 meses) ainda não está disponível. Contacta-nos em geral@mmclub.pt para adesão manual, ou escolhe Start / Elite.",
-      );
-      return;
-    }
     setPendingPlan(plan.id);
     setError(null);
     try {
