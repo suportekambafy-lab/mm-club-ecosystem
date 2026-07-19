@@ -1,12 +1,7 @@
-import { createFileRoute, useSearch, Link } from "@tanstack/react-router";
+import { createFileRoute, useSearch, useNavigate, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Check, Crown, Sparkles, Star, X, ShieldCheck, Zap } from "lucide-react";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  initializePaddle,
-  resolvePriceId,
-} from "@/lib/paddle";
+import { useState } from "react";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { cn } from "@/lib/utils";
 
