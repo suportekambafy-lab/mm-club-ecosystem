@@ -165,7 +165,7 @@ function CheckoutPayPage() {
                 A preparar checkout seguro…
               </div>
             ) : null}
-            <div id="paddle-checkout-frame" className="min-h-[450px]" />
+            <div className="paddle-checkout-frame min-h-[450px]" />
           </section>
         </main>
       </div>
