@@ -1,7 +1,12 @@
-import { createFileRoute, useSearch, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useSearch, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Check, Crown, Sparkles, Star, X, ShieldCheck, Zap } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  initializePaddle,
+  resolvePriceId,
+} from "@/lib/paddle";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { cn } from "@/lib/utils";
 
@@ -128,17 +133,53 @@ function BenefitRow({ text, checked }: Benefit) {
 
 function PlansPage() {
   const { plan: recommendedPlan } = useSearch({ from: "/checkout" });
-  const navigate = useNavigate();
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [pendingPlan, setPendingPlan] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSelect = (plan: Plan) => {
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) setUser({ id: data.user.id, email: data.user.email ?? undefined });
+    });
+    initializePaddle().catch((e) => {
+      console.error("Paddle init failed", e);
+    });
+  }, []);
+
+  const handleSelect = async (plan: Plan) => {
+    if (plan.id === "plus") {
+      alert(
+        "O plano Plus (6 meses) ainda não está disponível. Contacta-nos em geral@mmclub.pt para adesão manual, ou escolhe Start / Elite.",
+      );
+      return;
+    }
     setPendingPlan(plan.id);
     setError(null);
-    navigate({ to: "/checkout/pay", search: { plan: plan.id } });
+    try {
+      await initializePaddle();
+      const paddlePriceId = await resolvePriceId(plan.priceId);
+      const successUrl = `${window.location.origin}/checkout/return`;
+      window.Paddle.Checkout.open({
+        items: [{ priceId: paddlePriceId, quantity: 1 }],
+        customer: user?.email ? { email: user.email } : undefined,
+        customData: user?.id ? { userId: user.id } : undefined,
+        settings: {
+          displayMode: "overlay",
+          theme: "dark",
+          successUrl,
+        },
+      });
+    } catch (e) {
+      console.error(e);
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Não foi possível abrir o checkout. Tenta novamente.",
+      );
+    } finally {
+      setPendingPlan(null);
+    }
   };
-
-
 
   return (
     <>
