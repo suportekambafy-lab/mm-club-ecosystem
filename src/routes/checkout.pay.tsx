@@ -84,10 +84,8 @@ function CheckoutPayPage() {
             frameInitialHeight: 450,
             frameStyle:
               "width: 100%; min-width: 312px; background-color: transparent; border: none;",
-            theme: "dark",
             successUrl: `${window.location.origin}/checkout/return`,
             allowLogout: false,
-            variant: "one-page",
           },
         });
 
