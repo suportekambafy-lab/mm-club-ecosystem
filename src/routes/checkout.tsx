@@ -138,7 +138,7 @@ function PlansPage() {
     navigate({ to: "/checkout/pay", search: { plan: plan.id } });
   };
 
-  };
+
 
   return (
     <>
