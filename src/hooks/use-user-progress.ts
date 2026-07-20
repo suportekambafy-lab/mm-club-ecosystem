@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { courses as allCourses } from "@/data/courses";
 import type { Course } from "@/data/types";
+import { parseDurationToMinutes } from "@/lib/course-duration";
 
 export type ProgressByCourse = Record<
   string,
@@ -10,12 +11,21 @@ export type ProgressByCourse = Record<
     lastWatchedAt: string | null;
     lastLessonId: string | null;
     completedLessons: Set<string>;
+    watchedSeconds: Map<string, number>;
   }
 >;
 
 
 function totalLessons(course: Course): number {
   return course.modules?.reduce((n, m) => n + m.lessons.length, 0) ?? 0;
+}
+
+function lessonDurationSeconds(course: Course, lessonId: string): number {
+  for (const mod of course.modules ?? []) {
+    const lesson = mod.lessons.find((l) => l.id === lessonId);
+    if (lesson) return parseDurationToMinutes(lesson.duration) * 60;
+  }
+  return 0;
 }
 
 export function useUserProgress() {
@@ -36,7 +46,7 @@ export function useUserProgress() {
       }
       const { data } = await supabase
         .from("lesson_progress")
-        .select("course_id, lesson_id, completed, last_watched_at")
+        .select("course_id, lesson_id, completed, progress_seconds, last_watched_at")
         .eq("user_id", u.user.id);
 
       const byCourse: ProgressByCourse = {};
@@ -48,8 +58,12 @@ export function useUserProgress() {
             lastWatchedAt: null,
             lastLessonId: null,
             completedLessons: new Set<string>(),
+            watchedSeconds: new Map<string, number>(),
           });
         if (row.completed) bucket.completedLessons.add(row.lesson_id);
+        if ((row.progress_seconds ?? 0) > 0) {
+          bucket.watchedSeconds.set(row.lesson_id, row.progress_seconds ?? 0);
+        }
         if (
           row.last_watched_at &&
           (!bucket.lastWatchedAt || row.last_watched_at > bucket.lastWatchedAt)
@@ -63,7 +77,21 @@ export function useUserProgress() {
         const bucket = byCourse[course.id];
         if (!bucket) continue;
         const total = totalLessons(course);
-        bucket.progress = total > 0 ? bucket.completedLessons.size / total : 0;
+        let completedUnits = 0;
+        for (const mod of course.modules ?? []) {
+          for (const lesson of mod.lessons) {
+            if (bucket.completedLessons.has(lesson.id)) {
+              completedUnits += 1;
+              continue;
+            }
+            const watched = bucket.watchedSeconds.get(lesson.id) ?? 0;
+            if (watched > 0) {
+              const duration = lessonDurationSeconds(course, lesson.id);
+              completedUnits += duration > 0 ? Math.min(watched / duration, 0.95) : 0.05;
+            }
+          }
+        }
+        bucket.progress = total > 0 ? Math.min(completedUnits / total, 1) : 0;
       }
       if (!cancelled) {
         setProgress(byCourse);
