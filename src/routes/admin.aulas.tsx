@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { MediaField } from "@/components/mm/media-field";
+import { LessonKnowledgePanel } from "@/components/mm/lesson-knowledge-panel";
 import { courses } from "@/data/courses";
 import {
   applyOverrides,
@@ -378,6 +379,14 @@ function AdminAulas() {
                           helper="Imagem usada em ‘Continua a assistir’ e nas capas da Academia."
                         />
                       </div>
+
+                      <LessonKnowledgePanel
+                        courseId={current.id}
+                        courseTitle={current.title}
+                        lessonId={l.id}
+                        lessonTitle={l.title}
+                        videoUrl={l.videoUrl}
+                      />
 
                     </div>
                   );
