@@ -1,4 +1,27 @@
 import type { Course, Lesson } from "@/data/types";
+import { parseVideoUrl } from "@/lib/video-source";
+
+/**
+ * Best-effort thumbnail for a lesson. Falls back through:
+ *   1. Explicit lesson.cover
+ *   2. YouTube video thumbnail derived from videoUrl
+ *   3. Course logo (image asset)
+ * Returns an image URL suitable for `url(...)` backgrounds or <img src>.
+ */
+export function lessonThumb(
+  lesson: Lesson | null | undefined,
+  course: Course,
+): string | null {
+  if (!lesson) return course.logo ?? null;
+  if (lesson.cover) return lesson.cover;
+  const v = parseVideoUrl(lesson.videoUrl);
+  if (v.kind === "youtube" && v.embedUrl) {
+    const m = v.embedUrl.match(/embed\/([\w-]+)/);
+    if (m) return `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg`;
+  }
+  return course.logo ?? null;
+}
+
 
 // Parse strings like "12m", "1h", "1h 20m", "90 min", "1:20" -> minutes
 export function parseDurationToMinutes(input?: string): number {

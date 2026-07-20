@@ -5,7 +5,7 @@ import type { Course } from "@/data/types";
 import { expertsById } from "@/data/experts";
 import { ExpertAvatar } from "./expert-avatar";
 import { cn } from "@/lib/utils";
-import { computeCourseDuration } from "@/lib/course-duration";
+import { computeCourseDuration, lessonThumb } from "@/lib/course-duration";
 
 
 interface Props {
@@ -31,7 +31,7 @@ export function CourseCard({ course, className, variant = "default", resumeLesso
           params: { courseId: course.id, lessonId: resumeLesson.id },
         }
       : { to: "/academia/$courseId" as const, params: { courseId: course.id } };
-  const showLessonCover = course.progress > 0 && !!resumeLesson?.cover;
+  const thumb = course.progress > 0 ? lessonThumb(resumeLesson, course) : null;
 
 
   return (
@@ -69,10 +69,11 @@ export function CourseCard({ course, className, variant = "default", resumeLesso
             isWide ? "aspect-[16/8]" : "aspect-[16/10]",
           )}
           style={{
-            background: showLessonCover
-              ? `url(${resumeLesson!.cover}) center/cover no-repeat, #000`
+            background: thumb
+              ? `url(${thumb}) center/cover no-repeat, #000`
               : course.cover,
           }}
+
 
         >
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
