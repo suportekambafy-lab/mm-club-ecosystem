@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Camera, Loader2, LogOut, Mail, Pencil, Save, Trophy, X } from "lucide-react";
+import { Camera, CreditCard, ExternalLink, Loader2, LogOut, Mail, Pencil, Save, Sparkles, Trophy, X } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { SectionHeading } from "@/components/mm/section-heading";
@@ -9,6 +9,9 @@ import { cn } from "@/lib/utils";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { useAdminIds } from "@/hooks/use-admin-ids";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getPaddleEnvironment } from "@/lib/paddle";
+import { createCustomerPortalSession } from "@/lib/paddle.functions";
+
 
 export const Route = createFileRoute("/_app/perfil")({
   head: () => ({
