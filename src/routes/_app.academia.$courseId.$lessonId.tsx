@@ -460,9 +460,10 @@ function TrackedVideoPlayer({
           playsInline
           className="absolute inset-0 h-full w-full bg-black"
           onLoadedMetadata={(event) => {
-            if (initialSeekDoneRef.current || startSeconds <= 3) return;
+            const startAt = startRef.current;
+            if (initialSeekDoneRef.current || startAt <= 3) return;
             initialSeekDoneRef.current = true;
-            event.currentTarget.currentTime = Math.min(startSeconds, event.currentTarget.duration || startSeconds);
+            event.currentTarget.currentTime = Math.min(startAt, event.currentTarget.duration || startAt);
           }}
           onTimeUpdate={(event) => persist(event.currentTarget.currentTime)}
           onPause={(event) => persist(event.currentTarget.currentTime, false, true)}
