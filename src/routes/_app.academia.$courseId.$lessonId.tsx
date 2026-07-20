@@ -446,7 +446,7 @@ function TrackedVideoPlayer({
       player?.off?.("pause", onPause);
       player?.off?.("ended", onEnded);
     };
-  }, [persist, source.embedUrl, source.kind, startSeconds]);
+  }, [persist, source.embedUrl, source.kind, lessonId]);
 
   if (source.kind === "file" && source.fileUrl) {
     return (
