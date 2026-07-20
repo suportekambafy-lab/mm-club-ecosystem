@@ -1,5 +1,5 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   ChevronRight,
@@ -63,7 +63,10 @@ function LessonPlayer() {
   const { course, current, next } = data;
   const videoUrl = current.lesson.videoUrl ?? DEFAULT_LESSON_YOUTUBE_URL;
   const source = parseVideoUrl(videoUrl);
-  const { completed, saving, setCompleted } = useLessonProgress(course.id, current.lesson.id);
+  const { row, completed, saving, saveProgress, setCompleted } = useLessonProgress(
+    course.id,
+    current.lesson.id,
+  );
 
   // Reset scroll on lesson change
   useEffect(() => {
@@ -114,33 +117,13 @@ function LessonPlayer() {
           {/* Main content: video + title/cta */}
           <div className="order-1 flex min-h-0 flex-col gap-3 sm:gap-4 md:gap-6 lg:order-2 lg:overflow-y-auto lg:pr-1">
             {/* Video player */}
-            <div className="relative aspect-video shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
-              {source.kind === "file" && source.fileUrl ? (
-                <video
-                  key={current.lesson.id}
-                  src={source.fileUrl}
-                  controls
-                  autoPlay
-                  playsInline
-                  className="absolute inset-0 h-full w-full bg-black"
-                />
-              ) : source.embedUrl ? (
-                <iframe
-                  key={current.lesson.id}
-                  src={source.embedUrl}
-                  title={current.lesson.title}
-                  className="absolute inset-0 h-full w-full"
-                  loading="lazy"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-                  allowFullScreen
-                />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-sm text-white/60">
-                  Vídeo não configurado para esta aula.
-                </div>
-              )}
-            </div>
+            <TrackedVideoPlayer
+              lessonId={current.lesson.id}
+              title={current.lesson.title}
+              source={source}
+              startSeconds={row?.progress_seconds ?? 0}
+              saveProgress={saveProgress}
+            />
 
             {/* Title + CTA */}
             <div className="flex flex-row items-center justify-between gap-2 rounded-xl bg-surface-2 px-2.5 py-2 sm:gap-3 sm:px-4 sm:py-3">
@@ -309,4 +292,185 @@ function ModuleAccordion({
 
 
 const DEFAULT_LESSON_YOUTUBE_URL = "https://www.youtube.com/watch?v=-alfqFwiI6Y";
+
+type SaveLessonProgress = ReturnType<typeof useLessonProgress>["saveProgress"];
+
+type PlayerJsPlayer = {
+  on: (event: string, callback: (data?: { seconds?: number; duration?: number }) => void) => void;
+  off?: (event: string, callback?: (data?: { seconds?: number; duration?: number }) => void) => void;
+  setCurrentTime: (seconds: number) => void;
+  getCurrentTime: (callback: (seconds: number) => void) => void;
+};
+
+type PlayerJsConstructor = new (element: HTMLIFrameElement) => PlayerJsPlayer;
+
+declare global {
+  interface Window {
+    playerjs?: { Player: PlayerJsConstructor };
+  }
+}
+
+let playerJsPromise: Promise<void> | null = null;
+
+function loadPlayerJs() {
+  if (typeof window === "undefined") return Promise.resolve();
+  if (window.playerjs?.Player) return Promise.resolve();
+  if (playerJsPromise) return playerJsPromise;
+
+  playerJsPromise = new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>("script[data-playerjs]");
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", reject, { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://assets.mediadelivery.net/playerjs/playerjs-latest.min.js";
+    script.async = true;
+    script.dataset.playerjs = "true";
+    script.onload = () => resolve();
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+
+  return playerJsPromise;
+}
+
+function trackedEmbedUrl(url: string, lessonId: string) {
+  try {
+    const u = new URL(url);
+    u.searchParams.set("t", lessonId);
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
+function TrackedVideoPlayer({
+  lessonId,
+  title,
+  source,
+  startSeconds,
+  saveProgress,
+}: {
+  lessonId: string;
+  title: string;
+  source: ReturnType<typeof parseVideoUrl>;
+  startSeconds: number;
+  saveProgress: SaveLessonProgress;
+}) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const lastSavedRef = useRef(0);
+  const initialSeekDoneRef = useRef(false);
+
+  useEffect(() => {
+    lastSavedRef.current = Math.max(0, Math.floor(startSeconds));
+    initialSeekDoneRef.current = false;
+  }, [lessonId, startSeconds]);
+
+  const persist = useCallback(
+    (seconds: number, completed = false, force = false) => {
+      const safeSeconds = Math.max(0, Math.floor(seconds));
+      if (!force && Math.abs(safeSeconds - lastSavedRef.current) < 5) return;
+      lastSavedRef.current = safeSeconds;
+      void saveProgress(safeSeconds, { completed, silent: true });
+    },
+    [saveProgress],
+  );
+
+  useEffect(() => {
+    if (source.kind !== "bunny" || !source.embedUrl) return;
+    let player: PlayerJsPlayer | null = null;
+    let cancelled = false;
+
+    const onTimeUpdate = (data?: { seconds?: number; duration?: number }) => {
+      if (typeof data?.seconds === "number") persist(data.seconds);
+    };
+    const onSeeked = (data?: { seconds?: number }) => {
+      if (typeof data?.seconds === "number") persist(data.seconds, false, true);
+    };
+    const onEnded = (data?: { seconds?: number; duration?: number }) => {
+      persist(data?.duration ?? data?.seconds ?? lastSavedRef.current, true, true);
+    };
+    const onPause = () => {
+      player?.getCurrentTime((seconds) => persist(seconds, false, true));
+    };
+
+    void loadPlayerJs()
+      .then(() => {
+        if (cancelled || !iframeRef.current || !window.playerjs?.Player) return;
+        player = new window.playerjs.Player(iframeRef.current);
+        player.on("ready", () => {
+          if (cancelled) return;
+          if (startSeconds > 3) player?.setCurrentTime(startSeconds);
+          player?.on("timeupdate", onTimeUpdate);
+          player?.on("seeked", onSeeked);
+          player?.on("pause", onPause);
+          player?.on("ended", onEnded);
+        });
+      })
+      .catch((error) => console.warn("Falha ao carregar controlo do player", error));
+
+    return () => {
+      cancelled = true;
+      player?.getCurrentTime((seconds) => persist(seconds, false, true));
+      player?.off?.("timeupdate", onTimeUpdate);
+      player?.off?.("seeked", onSeeked);
+      player?.off?.("pause", onPause);
+      player?.off?.("ended", onEnded);
+    };
+  }, [persist, source.embedUrl, source.kind, startSeconds]);
+
+  if (source.kind === "file" && source.fileUrl) {
+    return (
+      <div className="relative aspect-video shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
+        <video
+          key={lessonId}
+          ref={videoRef}
+          src={source.fileUrl}
+          controls
+          autoPlay
+          playsInline
+          className="absolute inset-0 h-full w-full bg-black"
+          onLoadedMetadata={(event) => {
+            if (initialSeekDoneRef.current || startSeconds <= 3) return;
+            initialSeekDoneRef.current = true;
+            event.currentTarget.currentTime = Math.min(startSeconds, event.currentTarget.duration || startSeconds);
+          }}
+          onTimeUpdate={(event) => persist(event.currentTarget.currentTime)}
+          onPause={(event) => persist(event.currentTarget.currentTime, false, true)}
+          onEnded={(event) => persist(event.currentTarget.duration || event.currentTarget.currentTime, true, true)}
+        />
+      </div>
+    );
+  }
+
+  if (source.embedUrl) {
+    return (
+      <div className="relative aspect-video shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
+        <iframe
+          key={lessonId}
+          ref={iframeRef}
+          src={source.kind === "bunny" ? trackedEmbedUrl(source.embedUrl, lessonId) : source.embedUrl}
+          title={title}
+          className="absolute inset-0 h-full w-full"
+          loading="lazy"
+          referrerPolicy="strict-origin-when-cross-origin"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+          allowFullScreen
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative aspect-video shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
+      <div className="absolute inset-0 flex items-center justify-center text-sm text-white/60">
+        Vídeo não configurado para esta aula.
+      </div>
+    </div>
+  );
+}
 
