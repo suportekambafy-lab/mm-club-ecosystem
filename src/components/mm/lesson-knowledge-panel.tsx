@@ -126,8 +126,9 @@ export function LessonKnowledgePanel({
       {open && (
         <div className="space-y-3 border-t border-border px-4 py-4">
           <p className="text-xs text-muted-foreground">
-            A MM Intelligence usa este texto para responder com contexto da aula.
-            Transcreve automaticamente HLS/Bunny em pedaços ou cola a transcrição.
+            Transcrição automática a correr em segundo plano: a cada 3 minutos o sistema
+            escolhe a próxima aula com vídeo e transcreve-a. Não precisas de clicar em
+            nada — os botões abaixo servem só para forçar já esta aula ou colar texto manualmente.
           </p>
 
           <div className="flex flex-wrap gap-2">
