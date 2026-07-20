@@ -496,3 +496,191 @@ export const searchLessonKnowledge = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return matches ?? [];
   });
+
+// -------- background auto-transcription --------
+
+/** Shared ingest logic reusable from server routes (no auth middleware). */
+async function ingestTranscriptRaw(params: {
+  courseId: string;
+  lessonId: string;
+  courseTitle?: string | null;
+  lessonTitle?: string | null;
+  videoUrl?: string | null;
+  transcript: string;
+  language?: string;
+}) {
+  const apiKey = requireAiKey();
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  const { data: row, error: upErr } = await supabaseAdmin
+    .from("lesson_transcripts")
+    .upsert(
+      {
+        course_id: params.courseId,
+        lesson_id: params.lessonId,
+        course_title: params.courseTitle ?? null,
+        lesson_title: params.lessonTitle ?? null,
+        video_url: params.videoUrl ?? null,
+        transcript: params.transcript,
+        language: params.language ?? "pt",
+        status: "embedding",
+        error: null,
+        model: EMBEDDING_MODEL,
+      },
+      { onConflict: "course_id,lesson_id" },
+    )
+    .select("id")
+    .single();
+  if (upErr || !row) throw new Error(upErr?.message ?? "Falhou upsert de transcrição");
+
+  const chunks = chunkText(params.transcript);
+  if (!chunks.length) throw new Error("Transcrição demasiado curta");
+  const embeddings = await embedBatch(chunks, apiKey);
+
+  await supabaseAdmin.from("lesson_transcript_chunks").delete().eq("transcript_id", row.id);
+  const rows = chunks.map((content, i) => ({
+    transcript_id: row.id,
+    course_id: params.courseId,
+    lesson_id: params.lessonId,
+    course_title: params.courseTitle ?? null,
+    lesson_title: params.lessonTitle ?? null,
+    chunk_index: i,
+    content,
+    embedding: embeddings[i] as unknown as string,
+  }));
+  for (let i = 0; i < rows.length; i += 200) {
+    const slice = rows.slice(i, i + 200);
+    const { error } = await supabaseAdmin.from("lesson_transcript_chunks").insert(slice);
+    if (error) throw new Error(error.message);
+  }
+  await supabaseAdmin
+    .from("lesson_transcripts")
+    .update({ status: "ready", error: null })
+    .eq("id", row.id);
+  return { chunks: chunks.length };
+}
+
+/**
+ * Picks the next lesson (with a videoUrl set via admin overrides) that
+ * has no transcript yet — or has failed — and transcribes it. Uses a
+ * simple lock via `status = 'transcribing'` to avoid concurrent workers.
+ * Returns a small summary the cron/route can log.
+ */
+export async function runAutoTranscribeTick(): Promise<{
+  ok: boolean;
+  skipped?: string;
+  processed?: { courseId: string; lessonId: string; chars: number };
+  error?: string;
+}> {
+  const apiKey = requireAiKey();
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  // Lock: if another worker is currently transcribing (within last 20min), skip.
+  const lockCutoff = new Date(Date.now() - 20 * 60 * 1000).toISOString();
+  const { data: inFlight } = await supabaseAdmin
+    .from("lesson_transcripts")
+    .select("course_id,lesson_id,updated_at")
+    .eq("status", "transcribing")
+    .gte("updated_at", lockCutoff)
+    .limit(1);
+  if (inFlight && inFlight.length > 0) {
+    return { ok: true, skipped: "another lesson is being transcribed" };
+  }
+
+  // Load course overrides (video URLs + titles live here).
+  const { data: ov } = await supabaseAdmin
+    .from("admin_overrides")
+    .select("data")
+    .eq("id", "courses")
+    .maybeSingle();
+  const overrides = (ov?.data ?? {}) as {
+    courses?: Record<string, { title?: string }>;
+    modulesByCourse?: Record<
+      string,
+      Array<{ lessons: Array<{ id: string; title?: string; videoUrl?: string }> }>
+    >;
+  };
+  const modulesByCourse = overrides.modulesByCourse ?? {};
+
+  // Build candidate list (courseId, lessonId, title, url).
+  type Candidate = {
+    courseId: string;
+    lessonId: string;
+    courseTitle: string | null;
+    lessonTitle: string | null;
+    videoUrl: string;
+  };
+  const candidates: Candidate[] = [];
+  for (const [courseId, mods] of Object.entries(modulesByCourse)) {
+    const courseTitle = overrides.courses?.[courseId]?.title ?? null;
+    for (const m of mods ?? []) {
+      for (const l of m.lessons ?? []) {
+        if (l.videoUrl && /^https?:\/\//i.test(l.videoUrl)) {
+          candidates.push({
+            courseId,
+            lessonId: l.id,
+            courseTitle,
+            lessonTitle: l.title ?? null,
+            videoUrl: l.videoUrl,
+          });
+        }
+      }
+    }
+  }
+  if (candidates.length === 0) return { ok: true, skipped: "no lessons with videoUrl" };
+
+  // Filter out anything already ready/embedding/transcribing.
+  const { data: existing } = await supabaseAdmin
+    .from("lesson_transcripts")
+    .select("course_id,lesson_id,status")
+    .in(
+      "lesson_id",
+      candidates.map((c) => c.lessonId),
+    );
+  const done = new Set(
+    (existing ?? [])
+      .filter((r: any) => r.status === "ready" || r.status === "embedding" || r.status === "transcribing")
+      .map((r: any) => `${r.course_id}::${r.lesson_id}`),
+  );
+  const next = candidates.find((c) => !done.has(`${c.courseId}::${c.lessonId}`));
+  if (!next) return { ok: true, skipped: "all lessons transcribed" };
+
+  // Mark as transcribing (acts as lock).
+  await supabaseAdmin.from("lesson_transcripts").upsert(
+    {
+      course_id: next.courseId,
+      lesson_id: next.lessonId,
+      course_title: next.courseTitle,
+      lesson_title: next.lessonTitle,
+      video_url: next.videoUrl,
+      status: "transcribing",
+      error: null,
+      model: TRANSCRIBE_MODEL,
+    },
+    { onConflict: "course_id,lesson_id" },
+  );
+
+  try {
+    const text = await transcribeFromUrl(next.videoUrl, apiKey);
+    await ingestTranscriptRaw({
+      courseId: next.courseId,
+      lessonId: next.lessonId,
+      courseTitle: next.courseTitle,
+      lessonTitle: next.lessonTitle,
+      videoUrl: next.videoUrl,
+      transcript: text,
+    });
+    return {
+      ok: true,
+      processed: { courseId: next.courseId, lessonId: next.lessonId, chars: text.length },
+    };
+  } catch (e: any) {
+    await supabaseAdmin
+      .from("lesson_transcripts")
+      .update({ status: "error", error: String(e?.message ?? e) })
+      .eq("course_id", next.courseId)
+      .eq("lesson_id", next.lessonId);
+    return { ok: false, error: String(e?.message ?? e) };
+  }
+}
+

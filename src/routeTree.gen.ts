@@ -44,6 +44,7 @@ import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.espe
 import { Route as AppAcademiaCourseIdRouteImport } from './routes/_app.academia.$courseId'
 import { Route as AppAcademiaCourseIdIndexRouteImport } from './routes/_app.academia.$courseId.index'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicHooksAutoTranscribeRouteImport } from './routes/api/public/hooks/auto-transcribe'
 import { Route as ApiPublicCloudflareStreamWebhookRouteImport } from './routes/api/public/cloudflare-stream/webhook'
 import { Route as AdminLivesLiveIdStudioRouteImport } from './routes/admin.lives.$liveId.studio'
 import { Route as AppAcademiaCourseIdLessonIdRouteImport } from './routes/_app.academia.$courseId.$lessonId'
@@ -225,6 +226,12 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksAutoTranscribeRoute =
+  ApiPublicHooksAutoTranscribeRouteImport.update({
+    id: '/api/public/hooks/auto-transcribe',
+    path: '/api/public/hooks/auto-transcribe',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCloudflareStreamWebhookRoute =
   ApiPublicCloudflareStreamWebhookRouteImport.update({
     id: '/api/public/cloudflare-stream/webhook',
@@ -279,6 +286,7 @@ export interface FileRoutesByFullPath {
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
+  '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
 }
@@ -313,6 +321,7 @@ export interface FileRoutesByTo {
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
+  '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdIndexRoute
 }
@@ -354,6 +363,7 @@ export interface FileRoutesById {
   '/_app/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
+  '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/_app/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
 }
@@ -395,6 +405,7 @@ export interface FileRouteTypes {
     | '/academia/$courseId/$lessonId'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
+    | '/api/public/hooks/auto-transcribe'
     | '/api/public/payments/webhook'
     | '/academia/$courseId/'
   fileRoutesByTo: FileRoutesByTo
@@ -429,6 +440,7 @@ export interface FileRouteTypes {
     | '/academia/$courseId/$lessonId'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
+    | '/api/public/hooks/auto-transcribe'
     | '/api/public/payments/webhook'
     | '/academia/$courseId'
   id:
@@ -469,6 +481,7 @@ export interface FileRouteTypes {
     | '/_app/academia/$courseId/$lessonId'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
+    | '/api/public/hooks/auto-transcribe'
     | '/api/public/payments/webhook'
     | '/_app/academia/$courseId/'
   fileRoutesById: FileRoutesById
@@ -485,6 +498,7 @@ export interface RootRouteChildren {
   TermosRoute: typeof TermosRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiPublicCloudflareStreamWebhookRoute: typeof ApiPublicCloudflareStreamWebhookRoute
+  ApiPublicHooksAutoTranscribeRoute: typeof ApiPublicHooksAutoTranscribeRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -735,6 +749,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/auto-transcribe': {
+      id: '/api/public/hooks/auto-transcribe'
+      path: '/api/public/hooks/auto-transcribe'
+      fullPath: '/api/public/hooks/auto-transcribe'
+      preLoaderRoute: typeof ApiPublicHooksAutoTranscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cloudflare-stream/webhook': {
       id: '/api/public/cloudflare-stream/webhook'
       path: '/api/public/cloudflare-stream/webhook'
@@ -888,6 +909,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermosRoute: TermosRoute,
   ApiChatRoute: ApiChatRoute,
   ApiPublicCloudflareStreamWebhookRoute: ApiPublicCloudflareStreamWebhookRoute,
+  ApiPublicHooksAutoTranscribeRoute: ApiPublicHooksAutoTranscribeRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
