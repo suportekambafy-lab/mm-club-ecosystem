@@ -370,23 +370,30 @@ function TrackedVideoPlayer({
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const lastSavedRef = useRef(0);
   const initialSeekDoneRef = useRef(false);
-
-  useEffect(() => {
-    lastSavedRef.current = Math.max(0, Math.floor(startSeconds));
+  // Snapshot the resume position once per lesson. Without this, every saveProgress
+  // updates the row → startSeconds prop changes → seek effect re-fires → video
+  // jumps back and appears to loop.
+  const startRef = useRef(startSeconds);
+  const currentLessonIdRef = useRef(lessonId);
+  if (currentLessonIdRef.current !== lessonId) {
+    currentLessonIdRef.current = lessonId;
+    startRef.current = startSeconds;
     initialSeekDoneRef.current = false;
-  }, [lessonId, startSeconds]);
+    lastSavedRef.current = Math.max(0, Math.floor(startSeconds));
+  }
 
   useEffect(() => {
     const video = videoRef.current;
-    if (source.kind !== "file" || !video || initialSeekDoneRef.current || startSeconds <= 3) return;
+    const startAt = startRef.current;
+    if (source.kind !== "file" || !video || initialSeekDoneRef.current || startAt <= 3) return;
     const seek = () => {
       initialSeekDoneRef.current = true;
-      video.currentTime = Math.min(startSeconds, video.duration || startSeconds);
+      video.currentTime = Math.min(startAt, video.duration || startAt);
     };
     if (video.readyState >= 1) seek();
     else video.addEventListener("loadedmetadata", seek, { once: true });
     return () => video.removeEventListener("loadedmetadata", seek);
-  }, [source.kind, startSeconds]);
+  }, [source.kind, lessonId]);
 
   const persist = useCallback(
     (seconds: number, completed = false, force = false) => {
