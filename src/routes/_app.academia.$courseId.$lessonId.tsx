@@ -114,6 +114,7 @@ function LessonPlayer() {
                 <ModuleAccordion
                   key={m.id}
                   module={m}
+                  course={course}
                   courseId={course.id}
                   currentLessonId={current.lesson.id}
                   defaultOpen={mi < 2 || m.lessons.some((l: Lesson) => l.id === current.lesson.id)}
