@@ -58,16 +58,21 @@ export const createCustomerPortalSession = createServerFn({ method: "POST" })
       .maybeSingle();
 
     if (error) throw new Error(error.message);
-    if (!sub?.paddle_customer_id) {
+    if (!sub?.paddle_customer_id || !sub.paddle_customer_id.startsWith("ctm_")) {
       return { error: "no_customer" as const };
     }
+
 
     const env = (sub.environment as PaddleEnv) ?? "live";
     const paddle = getPaddleClient(env);
 
+    const subIds =
+      sub.paddle_subscription_id && sub.paddle_subscription_id.startsWith("sub_")
+        ? [sub.paddle_subscription_id]
+        : [];
     const session = await paddle.customerPortalSessions.create(
       sub.paddle_customer_id,
-      sub.paddle_subscription_id ? [sub.paddle_subscription_id] : [],
+      subIds,
     );
 
     return {
