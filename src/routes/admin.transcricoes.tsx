@@ -81,7 +81,8 @@ function AdminTranscricoes() {
   const [overridesLoaded, setOverridesLoaded] = useState(false);
 
   useEffect(() => {
-    loadOverrides().then(() => setOverridesLoaded(true));
+    applyOverrides(loadOverrides());
+    setOverridesLoaded(true);
   }, []);
 
   const fetchRows = async () => {
