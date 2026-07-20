@@ -17,10 +17,12 @@ import {
 import { coursesById } from "@/data/courses";
 import "@/data/admin-store";
 import { useAdminOverridesVersion } from "@/hooks/use-admin-overrides";
-import type { Lesson, Module } from "@/data/types";
+import type { Course, Lesson, Module } from "@/data/types";
 import { cn } from "@/lib/utils";
 import { parseVideoUrl } from "@/lib/video-source";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
+import { lessonThumb } from "@/lib/course-duration";
+import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 
 export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
   loader: ({ params }) => {
@@ -58,7 +60,7 @@ function LessonPlayer() {
   const courseIdForProgress = data?.course.id ?? "__no_course__";
   const videoUrl = data?.current.lesson.videoUrl ?? DEFAULT_LESSON_YOUTUBE_URL;
   const source = parseVideoUrl(videoUrl);
-  const { row, completed, saving, saveProgress, setCompleted } = useLessonProgress(
+  const { row, completed, saving, loaded, saveProgress, setCompleted } = useLessonProgress(
     courseIdForProgress,
     currentLessonId,
   );
@@ -112,6 +114,7 @@ function LessonPlayer() {
                 <ModuleAccordion
                   key={m.id}
                   module={m}
+                  course={course}
                   courseId={course.id}
                   currentLessonId={current.lesson.id}
                   defaultOpen={mi < 2 || m.lessons.some((l: Lesson) => l.id === current.lesson.id)}
@@ -123,13 +126,21 @@ function LessonPlayer() {
           {/* Main content: video + title/cta */}
           <div className="order-1 flex min-h-0 min-w-0 flex-col gap-3 sm:gap-4 md:gap-6 lg:order-2 lg:overflow-y-auto lg:pr-1">
             {/* Video player */}
-            <TrackedVideoPlayer
-              lessonId={current.lesson.id}
-              title={current.lesson.title}
-              source={source}
-              startSeconds={row?.progress_seconds ?? 0}
-              saveProgress={saveProgress}
-            />
+            {loaded ? (
+              <TrackedVideoPlayer
+                lessonId={current.lesson.id}
+                title={current.lesson.title}
+                source={source}
+                startSeconds={row?.progress_seconds ?? 0}
+                saveProgress={saveProgress}
+              />
+            ) : (
+              <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-white/60" />
+                </div>
+              </div>
+            )}
 
             {/* Title + CTA */}
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-xl bg-surface-2 px-2.5 py-2 sm:gap-3 sm:px-4 sm:py-3">
@@ -223,11 +234,13 @@ function LessonPlayer() {
 
 function ModuleAccordion({
   module,
+  course,
   courseId,
   currentLessonId,
   defaultOpen,
 }: {
   module: Module;
+  course: Course;
   courseId: string;
   currentLessonId: string;
   defaultOpen: boolean;
@@ -253,46 +266,74 @@ function ModuleAccordion({
 
       {open && (
         <ul className="mt-4 space-y-2.5">
-          {module.lessons.map((l) => {
-            const active = l.id === currentLessonId;
-            return (
-              <li key={l.id}>
-                <Link
-                  to="/academia/$courseId/$lessonId"
-                  params={{ courseId, lessonId: l.id }}
-                  className={cn(
-                    "flex min-w-0 items-center gap-3 rounded-2xl px-3 py-3 transition sm:px-4",
-                    active
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-surface-3 text-foreground hover:bg-surface-3/70",
-                  )}
-                >
-                  <PlayCircle
-                    className={cn(
-                      "h-7 w-7 shrink-0",
-                      active ? "text-primary-foreground" : "text-foreground/80",
-                    )}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm">{l.title}</p>
-                    <p
-                      className={cn(
-                        "text-xs",
-                        active
-                          ? "text-primary-foreground/75"
-                          : "text-muted-foreground",
-                      )}
-                    >
-                      {l.duration}
-                    </p>
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
+          {module.lessons.map((l) => (
+            <LessonRow
+              key={l.id}
+              lesson={l}
+              course={course}
+              courseId={courseId}
+              active={l.id === currentLessonId}
+            />
+          ))}
         </ul>
       )}
     </div>
+  );
+}
+
+function LessonRow({
+  lesson,
+  course,
+  courseId,
+  active,
+}: {
+  lesson: Lesson;
+  course: Course;
+  courseId: string;
+  active: boolean;
+}) {
+  const syncThumb = lessonThumb(lesson, course);
+  const { thumb: oembedThumb } = useBunnyThumb(syncThumb ? null : lesson.videoUrl);
+  const thumb = syncThumb ?? oembedThumb;
+
+  return (
+    <li>
+      <Link
+        to="/academia/$courseId/$lessonId"
+        params={{ courseId, lessonId: lesson.id }}
+        className={cn(
+          "flex min-w-0 items-center gap-3 rounded-2xl px-2 py-2 transition sm:px-2.5",
+          active
+            ? "bg-primary text-primary-foreground"
+            : "bg-surface-3 text-foreground hover:bg-surface-3/70",
+        )}
+      >
+        <div
+          className="relative h-12 w-20 shrink-0 overflow-hidden rounded-lg bg-black ring-1 ring-black/40"
+          style={thumb ? { backgroundImage: `url(${thumb})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+        >
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+            <PlayCircle
+              className={cn(
+                "h-5 w-5 drop-shadow",
+                active ? "text-primary-foreground" : "text-white/90",
+              )}
+            />
+          </div>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm">{lesson.title}</p>
+          <p
+            className={cn(
+              "text-xs",
+              active ? "text-primary-foreground/75" : "text-muted-foreground",
+            )}
+          >
+            {lesson.duration}
+          </p>
+        </div>
+      </Link>
+    </li>
   );
 }
 
