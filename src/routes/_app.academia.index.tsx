@@ -189,14 +189,14 @@ function FeaturedHero({
         <div className="absolute inset-0 flex items-end">
           <div className="w-full px-6 pb-8 md:px-14 md:pb-14 lg:max-w-3xl">
             <p className="font-display text-[10px] uppercase tracking-[0.32em] text-primary md:text-xs">
-              {percent > 0 ? "Continua a assistir" : "Destaque"}
+              {started ? "Continua a assistir" : "Destaque"}
             </p>
             <h1 className="mt-3 font-display text-3xl leading-[1.02] tracking-tight text-foreground md:text-5xl lg:text-6xl">
               {course.title}
             </h1>
-            {percent > 0 && resumeLesson ? (
+            {resumeLesson ? (
               <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">
-                Próxima: <span className="text-foreground">{resumeLesson.title}</span>
+                Aula: <span className="text-foreground">{resumeLesson.title}</span>
               </p>
             ) : course.tagline ? (
               <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">
@@ -207,7 +207,7 @@ function FeaturedHero({
             <div className="mt-6 flex flex-wrap items-center gap-4">
               <span className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/25 transition group-hover:bg-gold-soft">
                 <Play className="h-4 w-4 fill-current" />
-                {percent > 0 ? "Continuar" : "Começar agora"}
+                {started ? "Continuar" : "Começar agora"}
               </span>
               {expert && (
                 <div className="flex items-center gap-2.5">
@@ -229,19 +229,21 @@ function FeaturedHero({
                   </div>
                 </div>
               )}
-              <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Clock className="h-3.5 w-3.5" />
-                {totalDuration}
-              </span>
+              {lessonDurationLabel && (
+                <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Clock className="h-3.5 w-3.5" />
+                  {lessonDurationLabel}
+                </span>
+              )}
             </div>
 
-            {percent > 0 && (
+            {started && (
               <div className="mt-5 max-w-md">
                 <div className="h-1 overflow-hidden rounded-full bg-surface-3/50">
-                  <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
+                  <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${lessonPercent}%` }} />
                 </div>
                 <p className="mt-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
-                  {percent}% concluído
+                  {lessonPercent}% desta aula
                 </p>
               </div>
             )}
