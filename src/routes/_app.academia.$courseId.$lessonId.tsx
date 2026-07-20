@@ -429,7 +429,7 @@ function TrackedVideoPlayer({
         player = new window.playerjs.Player(iframeRef.current);
         player.on("ready", () => {
           if (cancelled) return;
-          if (startSeconds > 3) player?.setCurrentTime(startSeconds);
+          if (startRef.current > 3) player?.setCurrentTime(startRef.current);
           player?.on("timeupdate", onTimeUpdate);
           player?.on("seeked", onSeeked);
           player?.on("pause", onPause);
