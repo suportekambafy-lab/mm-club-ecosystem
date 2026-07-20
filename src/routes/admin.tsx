@@ -11,6 +11,7 @@ import {
   Wrench,
   ArrowLeft,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 // Ensure admin overrides are applied
