@@ -13,9 +13,11 @@ interface Props {
   className?: string;
   variant?: "default" | "wide";
   resumeLessonId?: string | null;
+  /** Show the lesson thumbnail instead of the course cover (only for "Continuar a ver"). */
+  showResumeThumb?: boolean;
 }
 
-export function CourseCard({ course, className, variant = "default", resumeLessonId }: Props) {
+export function CourseCard({ course, className, variant = "default", resumeLessonId, showResumeThumb = false }: Props) {
   const expert = expertsById[course.expertId];
   const isSoon = course.status === "coming-soon";
   const isWide = variant === "wide";
@@ -31,7 +33,7 @@ export function CourseCard({ course, className, variant = "default", resumeLesso
           params: { courseId: course.id, lessonId: resumeLesson.id },
         }
       : { to: "/academia/$courseId" as const, params: { courseId: course.id } };
-  const thumb = course.progress > 0 ? lessonThumb(resumeLesson, course) : null;
+  const thumb = showResumeThumb && course.progress > 0 ? lessonThumb(resumeLesson, course) : null;
 
 
   return (
