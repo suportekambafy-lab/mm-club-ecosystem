@@ -66,7 +66,7 @@ export function useLessonProgress(courseId: string, lessonId: string) {
         last_watched_at: new Date().toISOString(),
       };
 
-      if (typeof options?.completed === "boolean") payload.completed = options.completed;
+      payload.completed = options?.completed ?? rowRef.current?.completed ?? false;
       if (typeof progressSeconds === "number" && Number.isFinite(progressSeconds)) {
         payload.progress_seconds = Math.max(0, Math.floor(progressSeconds));
       }
