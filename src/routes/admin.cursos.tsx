@@ -9,6 +9,7 @@ import {
   applyOverrides,
   loadOverrides,
   saveOverrides,
+  pushOverridesToServer,
   type Overrides,
   type CourseOverride,
   type ExpertOverride,
@@ -67,6 +68,7 @@ function AdminCursos() {
       }
       saveOverrides(clean);
       applyOverrides(clean);
+      void pushOverridesToServer(clean);
       setSaved(true);
       const clear = setTimeout(() => setSaved(false), 1500);
       return () => clearTimeout(clear);
@@ -95,6 +97,7 @@ function AdminCursos() {
     }
     saveOverrides(clean);
     applyOverrides(clean);
+    void pushOverridesToServer(clean);
     setOverrides(clean);
     setSaved(true);
     router.invalidate();
@@ -105,6 +108,7 @@ function AdminCursos() {
     const empty: Overrides = { courses: {}, experts: {}, lessons: {}, modulesByCourse: {} };
     saveOverrides(empty);
     applyOverrides(empty);
+    void pushOverridesToServer(empty);
     setOverrides(empty);
     router.invalidate();
   };

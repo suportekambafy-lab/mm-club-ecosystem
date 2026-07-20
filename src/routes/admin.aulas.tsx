@@ -17,6 +17,7 @@ import {
   applyOverrides,
   loadOverrides,
   saveOverrides,
+  pushOverridesToServer,
   type Overrides,
 } from "@/data/admin-store";
 import type { Module, Lesson } from "@/data/types";
@@ -74,6 +75,7 @@ function AdminAulas() {
       }
       saveOverrides(clean);
       applyOverrides(clean);
+      void pushOverridesToServer(clean);
       setSaved(true);
       const clear = setTimeout(() => setSaved(false), 1500);
       return () => clearTimeout(clear);
@@ -184,6 +186,7 @@ function AdminAulas() {
 
     saveOverrides(clean);
     applyOverrides(clean);
+    void pushOverridesToServer(clean);
     setOverrides(clean);
     setSaved(true);
     router.invalidate();
