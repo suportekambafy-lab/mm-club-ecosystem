@@ -72,22 +72,63 @@ async function embedBatch(inputs: string[], apiKey: string): Promise<number[][]>
   return out;
 }
 
+function resolveDirectMediaUrl(url: string): string {
+  // Bunny Stream iframe embed → direct MP4 via pull zone env var, if defined.
+  const m = url.match(/iframe\.mediadelivery\.net\/(?:embed|play)\/(\d+)\/([0-9a-f-]{36})/i);
+  if (m) {
+    const guid = m[2];
+    const pullZone = process.env.VITE_BUNNY_PULL_ZONE || process.env.BUNNY_PULL_ZONE;
+    if (pullZone) {
+      return `https://${pullZone}.b-cdn.net/${guid}/play_720p.mp4`;
+    }
+  }
+  return url;
+}
+
 async function transcribeFromUrl(url: string, apiKey: string): Promise<string> {
-  // Fetch the media, forward to STT. The gateway caps bodies at 25 MiB — for
-  // longer videos, admin must paste the transcript manually.
-  const media = await fetch(url);
-  if (!media.ok) throw new Error(`Não consegui obter o vídeo (${media.status})`);
+  const mediaUrl = resolveDirectMediaUrl(url);
+  const media = await fetch(mediaUrl);
+  if (!media.ok) {
+    throw new Error(
+      `Não consegui obter o vídeo (${media.status}). Usa URL directo (.mp4/.mp3) ou cola a transcrição manualmente.`,
+    );
+  }
+  const contentType = (media.headers.get("content-type") ?? "").toLowerCase();
   const blob = await media.blob();
+
+  // Reject HTML/embed pages — the transcription model can't decode them.
+  if (
+    contentType.includes("text/html") ||
+    contentType.includes("application/xml") ||
+    (!contentType.startsWith("audio/") &&
+      !contentType.startsWith("video/") &&
+      !contentType.includes("octet-stream"))
+  ) {
+    throw new Error(
+      "O URL não é um ficheiro áudio/vídeo directo (parece uma página embed). Cola um link .mp4/.mp3 directo, ou cola a transcrição manualmente.",
+    );
+  }
+
   if (blob.size > 25 * 1024 * 1024) {
     throw new Error(
       "Ficheiro maior que 25MB. Para aulas longas, cola a transcrição manualmente.",
     );
   }
-  // Derive a filename that matches the container
+  if (blob.size < 2048) {
+    throw new Error("Ficheiro vazio ou demasiado pequeno. Verifica o URL.");
+  }
+
   const ext =
-    ({ "audio/webm": "webm", "audio/mp4": "m4a", "audio/mpeg": "mp3", "audio/wav": "wav", "video/mp4": "mp4", "video/webm": "webm" } as Record<string, string>)[
-      blob.type.split(";")[0]
-    ] ?? "mp4";
+    ({
+      "audio/webm": "webm",
+      "audio/mp4": "m4a",
+      "audio/mpeg": "mp3",
+      "audio/wav": "wav",
+      "video/mp4": "mp4",
+      "video/webm": "webm",
+      "video/quicktime": "mov",
+    } as Record<string, string>)[contentType.split(";")[0]] ??
+    (mediaUrl.match(/\.(mp4|m4a|mp3|wav|webm|mov)(?:\?|$)/i)?.[1]?.toLowerCase() ?? "mp4");
 
   const form = new FormData();
   form.append("model", TRANSCRIBE_MODEL);
