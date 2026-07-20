@@ -49,6 +49,61 @@ function ProfilePage() {
   const coverFileRef = useRef<HTMLInputElement>(null);
   const adminIds = useAdminIds();
 
+  type Sub = {
+    price_id: string | null;
+    product_id: string | null;
+    status: string | null;
+    current_period_end: string | null;
+    cancel_at_period_end: boolean | null;
+    environment: string | null;
+  };
+  const [sub, setSub] = useState<Sub | null>(null);
+  const [subLoading, setSubLoading] = useState(true);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) {
+        if (mounted) setSubLoading(false);
+        return;
+      }
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("price_id, product_id, status, current_period_end, cancel_at_period_end, environment")
+        .eq("user_id", u.user.id)
+        .eq("environment", getPaddleEnvironment())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!mounted) return;
+      setSub(data as Sub | null);
+      setSubLoading(false);
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const openPortal = async () => {
+    setPortalLoading(true);
+    setError(null);
+    try {
+      const res = await createCustomerPortalSession();
+      if ("error" in res) {
+        setError("Sem plano ativo associado à conta.");
+        return;
+      }
+      window.open(res.url, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível abrir o portal.");
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+
+
 
   // Load session + profile
   useEffect(() => {
