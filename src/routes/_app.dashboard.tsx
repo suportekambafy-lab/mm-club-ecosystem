@@ -157,10 +157,30 @@ function DashboardPage() {
   );
 }
 
+// Vídeo de fundo (loop, mute) do hero
+const HERO_BG_VIDEO_ID = "J-ivFkMIHCQ";
+// Vídeo de boas-vindas (modal) — troca este ID para o vídeo oficial
+const WELCOME_VIDEO_ID = "J-ivFkMIHCQ";
+
 function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
-  const videoId = "J-ivFkMIHCQ";
-  const src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&playsinline=1&rel=0&showinfo=0&iv_load_policy=3&disablekb=1`;
+  const src = `https://www.youtube-nocookie.com/embed/${HERO_BG_VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${HERO_BG_VIDEO_ID}&controls=0&modestbranding=1&playsinline=1&rel=0&showinfo=0&iv_load_policy=3&disablekb=1`;
   const firstName = name.split(" ")[0];
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+
+  useEffect(() => {
+    if (!welcomeOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setWelcomeOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [welcomeOpen]);
+
   return (
     <section className="relative -mx-3 overflow-hidden sm:-mx-4 md:-mx-8">
       <div className="relative aspect-[16/9] w-full bg-black md:aspect-[21/9]">
@@ -195,9 +215,50 @@ function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-lg">
               Continua a construir a tua Marca Milionária.
             </p>
+
+            <button
+              type="button"
+              onClick={() => setWelcomeOpen(true)}
+              className="group/play mt-6 inline-flex items-center gap-3 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/25 transition hover:bg-gold-soft md:mt-8 md:px-6 md:py-3 md:text-base"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-foreground/15 ring-1 ring-primary-foreground/20 transition group-hover/play:scale-110 md:h-9 md:w-9">
+                <Play className="h-3.5 w-3.5 fill-current md:h-4 md:w-4" />
+              </span>
+              Ver boas-vindas
+            </button>
           </div>
         </div>
       </div>
+
+      {welcomeOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setWelcomeOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-5xl overflow-hidden rounded-2xl bg-black shadow-[0_40px_120px_-20px_rgba(0,0,0,0.9)] ring-1 ring-white/10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setWelcomeOpen(false)}
+              aria-label="Fechar"
+              className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white ring-1 ring-white/15 transition hover:bg-black/80"
+            >
+              ✕
+            </button>
+            <div className="relative aspect-video w-full">
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${WELCOME_VIDEO_ID}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
+                title="Boas-vindas ao MM Club"
+                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                allowFullScreen
+                className="absolute inset-0 h-full w-full border-0"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
