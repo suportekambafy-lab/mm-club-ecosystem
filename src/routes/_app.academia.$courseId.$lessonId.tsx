@@ -17,10 +17,12 @@ import {
 import { coursesById } from "@/data/courses";
 import "@/data/admin-store";
 import { useAdminOverridesVersion } from "@/hooks/use-admin-overrides";
-import type { Lesson, Module } from "@/data/types";
+import type { Course, Lesson, Module } from "@/data/types";
 import { cn } from "@/lib/utils";
 import { parseVideoUrl } from "@/lib/video-source";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
+import { lessonThumb } from "@/lib/course-duration";
+import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 
 export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
   loader: ({ params }) => {
