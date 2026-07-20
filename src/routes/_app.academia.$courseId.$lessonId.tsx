@@ -80,8 +80,8 @@ function LessonPlayer() {
 
 
   return (
-    <div className="-mx-3 -my-4 bg-background sm:-mx-4 sm:-my-6 md:-mx-8 md:-my-8 lg:h-[calc(100dvh-3.5rem)] lg:overflow-hidden">
-      <div className="mx-auto flex h-full max-w-[1440px] flex-col px-3 py-4 sm:px-4 sm:py-6 md:px-6 md:py-6">
+    <div className="-mx-3 -my-4 h-[calc(100dvh-3.5rem)] max-w-[100vw] overflow-x-hidden bg-background sm:-mx-4 sm:-my-6 md:-mx-8 md:-my-8 lg:overflow-hidden">
+      <div className="mx-auto flex h-full max-w-[1440px] flex-col overflow-y-auto overflow-x-hidden px-3 py-4 sm:px-4 sm:py-6 md:px-6 md:py-6 lg:overflow-hidden">
         {/* Breadcrumb bar */}
         <div className="mb-4 flex items-center gap-2 overflow-x-auto rounded-2xl border border-border bg-surface-1 px-4 py-2.5 text-sm md:mb-6 md:gap-3 md:px-5 md:py-3">
           <Link
@@ -370,23 +370,30 @@ function TrackedVideoPlayer({
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const lastSavedRef = useRef(0);
   const initialSeekDoneRef = useRef(false);
-
-  useEffect(() => {
-    lastSavedRef.current = Math.max(0, Math.floor(startSeconds));
+  // Snapshot the resume position once per lesson. Without this, every saveProgress
+  // updates the row → startSeconds prop changes → seek effect re-fires → video
+  // jumps back and appears to loop.
+  const startRef = useRef(startSeconds);
+  const currentLessonIdRef = useRef(lessonId);
+  if (currentLessonIdRef.current !== lessonId) {
+    currentLessonIdRef.current = lessonId;
+    startRef.current = startSeconds;
     initialSeekDoneRef.current = false;
-  }, [lessonId, startSeconds]);
+    lastSavedRef.current = Math.max(0, Math.floor(startSeconds));
+  }
 
   useEffect(() => {
     const video = videoRef.current;
-    if (source.kind !== "file" || !video || initialSeekDoneRef.current || startSeconds <= 3) return;
+    const startAt = startRef.current;
+    if (source.kind !== "file" || !video || initialSeekDoneRef.current || startAt <= 3) return;
     const seek = () => {
       initialSeekDoneRef.current = true;
-      video.currentTime = Math.min(startSeconds, video.duration || startSeconds);
+      video.currentTime = Math.min(startAt, video.duration || startAt);
     };
     if (video.readyState >= 1) seek();
     else video.addEventListener("loadedmetadata", seek, { once: true });
     return () => video.removeEventListener("loadedmetadata", seek);
-  }, [source.kind, startSeconds]);
+  }, [source.kind, lessonId]);
 
   const persist = useCallback(
     (seconds: number, completed = false, force = false) => {
@@ -422,7 +429,7 @@ function TrackedVideoPlayer({
         player = new window.playerjs.Player(iframeRef.current);
         player.on("ready", () => {
           if (cancelled) return;
-          if (startSeconds > 3) player?.setCurrentTime(startSeconds);
+          if (startRef.current > 3) player?.setCurrentTime(startRef.current);
           player?.on("timeupdate", onTimeUpdate);
           player?.on("seeked", onSeeked);
           player?.on("pause", onPause);
@@ -439,7 +446,7 @@ function TrackedVideoPlayer({
       player?.off?.("pause", onPause);
       player?.off?.("ended", onEnded);
     };
-  }, [persist, source.embedUrl, source.kind, startSeconds]);
+  }, [persist, source.embedUrl, source.kind, lessonId]);
 
   if (source.kind === "file" && source.fileUrl) {
     return (
@@ -453,9 +460,10 @@ function TrackedVideoPlayer({
           playsInline
           className="absolute inset-0 h-full w-full bg-black"
           onLoadedMetadata={(event) => {
-            if (initialSeekDoneRef.current || startSeconds <= 3) return;
+            const startAt = startRef.current;
+            if (initialSeekDoneRef.current || startAt <= 3) return;
             initialSeekDoneRef.current = true;
-            event.currentTarget.currentTime = Math.min(startSeconds, event.currentTarget.duration || startSeconds);
+            event.currentTarget.currentTime = Math.min(startAt, event.currentTarget.duration || startAt);
           }}
           onTimeUpdate={(event) => persist(event.currentTarget.currentTime)}
           onPause={(event) => persist(event.currentTarget.currentTime, false, true)}
