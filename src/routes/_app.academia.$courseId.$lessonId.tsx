@@ -58,7 +58,7 @@ function LessonPlayer() {
   const courseIdForProgress = data?.course.id ?? "__no_course__";
   const videoUrl = data?.current.lesson.videoUrl ?? DEFAULT_LESSON_YOUTUBE_URL;
   const source = parseVideoUrl(videoUrl);
-  const { row, completed, saving, saveProgress, setCompleted } = useLessonProgress(
+  const { row, completed, saving, loaded, saveProgress, setCompleted } = useLessonProgress(
     courseIdForProgress,
     currentLessonId,
   );
