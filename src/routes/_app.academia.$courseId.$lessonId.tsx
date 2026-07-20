@@ -52,6 +52,22 @@ function LessonPlayer() {
     return { course, current, next: flat[currentIdx + 1] ?? null };
   }, [courseId, lessonId, overridesVersion]);
 
+  // IMPORTANT: All hooks below must run unconditionally to preserve hook order
+  // across renders (including when `data` transitions from null → value).
+  const currentLessonId = data?.current.lesson.id ?? "__no_lesson__";
+  const courseIdForProgress = data?.course.id ?? "__no_course__";
+  const videoUrl = data?.current.lesson.videoUrl ?? DEFAULT_LESSON_YOUTUBE_URL;
+  const source = parseVideoUrl(videoUrl);
+  const { row, completed, saving, saveProgress, setCompleted } = useLessonProgress(
+    courseIdForProgress,
+    currentLessonId,
+  );
+
+  // Reset scroll on lesson change
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [currentLessonId]);
+
   if (!data) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center text-sm text-muted-foreground">
@@ -61,17 +77,7 @@ function LessonPlayer() {
   }
 
   const { course, current, next } = data;
-  const videoUrl = current.lesson.videoUrl ?? DEFAULT_LESSON_YOUTUBE_URL;
-  const source = parseVideoUrl(videoUrl);
-  const { row, completed, saving, saveProgress, setCompleted } = useLessonProgress(
-    course.id,
-    current.lesson.id,
-  );
 
-  // Reset scroll on lesson change
-  useEffect(() => {
-    window.scrollTo({ top: 0 });
-  }, [current.lesson.id]);
 
   return (
     <div className="-mx-3 -my-4 bg-background sm:-mx-4 sm:-my-6 md:-mx-8 md:-my-8 lg:h-[calc(100dvh-3.5rem)] lg:overflow-hidden">
