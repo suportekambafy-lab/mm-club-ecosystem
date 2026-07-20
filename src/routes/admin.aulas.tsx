@@ -366,6 +366,19 @@ function AdminAulas() {
                           helper="Suporta YouTube, Vimeo, Bunny.net (iframe.mediadelivery.net) e ficheiros .mp4/.webm."
                         />
                       </div>
+                      <div className="mt-3">
+                        <MediaField
+                          label="Thumbnail da aula"
+                          bucket="course-media"
+                          keyPrefix={`lessons/${current.id}/${l.id}/thumb`}
+                          accept="image/*"
+                          value={l.cover ?? ""}
+                          onChange={(v) => updateLesson(mi, li, { cover: v })}
+                          placeholder="Cola URL da imagem ou faz upload"
+                          helper="Imagem usada em ‘Continua a assistir’ e nas capas da Academia."
+                        />
+                      </div>
+
                     </div>
                   );
                 })}
