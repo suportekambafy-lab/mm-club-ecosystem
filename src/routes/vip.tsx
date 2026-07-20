@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Check, Sparkles, Star } from "lucide-react";
+import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { initializePaddle, resolvePriceId } from "@/lib/paddle";
@@ -102,7 +102,6 @@ function VipPage() {
             transition={{ duration: 0.4 }}
             className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
           >
-            <Sparkles className="h-3.5 w-3.5" />
             Convite VIP
           </motion.div>
 
