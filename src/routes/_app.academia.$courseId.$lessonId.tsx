@@ -370,6 +370,18 @@ function TrackedVideoPlayer({
     initialSeekDoneRef.current = false;
   }, [lessonId, startSeconds]);
 
+  useEffect(() => {
+    const video = videoRef.current;
+    if (source.kind !== "file" || !video || initialSeekDoneRef.current || startSeconds <= 3) return;
+    const seek = () => {
+      initialSeekDoneRef.current = true;
+      video.currentTime = Math.min(startSeconds, video.duration || startSeconds);
+    };
+    if (video.readyState >= 1) seek();
+    else video.addEventListener("loadedmetadata", seek, { once: true });
+    return () => video.removeEventListener("loadedmetadata", seek);
+  }, [source.kind, startSeconds]);
+
   const persist = useCallback(
     (seconds: number, completed = false, force = false) => {
       const safeSeconds = Math.max(0, Math.floor(seconds));
