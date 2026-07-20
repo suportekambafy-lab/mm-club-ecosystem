@@ -75,6 +75,7 @@ function AdminAulas() {
       }
       saveOverrides(clean);
       applyOverrides(clean);
+      void pushOverridesToServer(clean);
       setSaved(true);
       const clear = setTimeout(() => setSaved(false), 1500);
       return () => clearTimeout(clear);
