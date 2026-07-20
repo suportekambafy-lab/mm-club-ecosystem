@@ -5,7 +5,7 @@ import { liveCourses, upcomingCourses } from "@/data/courses";
 import { expertsById } from "@/data/experts";
 import type { Course } from "@/data/types";
 import { useUserProgress, type ProgressByCourse } from "@/hooks/use-user-progress";
-import { computeCourseDuration, computeLessonsCount, findLesson } from "@/lib/course-duration";
+import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb } from "@/lib/course-duration";
 
 export const Route = createFileRoute("/_app/academia/")({
   head: () => ({
@@ -153,10 +153,10 @@ function FeaturedHero({
   const totalDuration = computeCourseDuration(course);
   // For "continua a assistir", prefer the lesson thumbnail — that's what the user
   // was actually watching. Fallback to course cover.
-  const heroBackground =
-    percent > 0 && resumeLesson?.cover
-      ? `url(${resumeLesson.cover}) center/cover no-repeat, #000`
-      : course.cover;
+  const thumb = percent > 0 ? lessonThumb(resumeLesson, course) : null;
+  const heroBackground = thumb
+    ? `url(${thumb}) center/cover no-repeat, #000`
+    : course.cover;
 
   return (
     <Link
@@ -167,8 +167,9 @@ function FeaturedHero({
         className="relative aspect-[16/10] w-full md:aspect-[21/9]"
         style={{ background: heroBackground }}
       >
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-background/10 to-transparent" />
+
 
         <div className="absolute inset-0 flex items-end">
           <div className="w-full px-6 pb-8 md:px-14 md:pb-14 lg:max-w-3xl">
@@ -257,10 +258,11 @@ function PosterCard({
       : { to: "/academia/$courseId" as const, params: { courseId: course.id } };
   const totalDuration = computeCourseDuration(course);
   const lessonsCount = computeLessonsCount(course);
-  const posterBackground =
-    percent > 0 && resumeLesson?.cover
-      ? `url(${resumeLesson.cover}) center/cover no-repeat, #000`
-      : course.cover;
+  const thumb = percent > 0 ? lessonThumb(resumeLesson, course) : null;
+  const posterBackground = thumb
+    ? `url(${thumb}) center/cover no-repeat, #000`
+    : course.cover;
+
 
   return (
     <Link
