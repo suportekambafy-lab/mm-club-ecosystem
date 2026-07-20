@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Camera, Loader2, LogOut, Mail, Pencil, Save, Trophy, X } from "lucide-react";
+import { Camera, CreditCard, ExternalLink, Loader2, LogOut, Mail, Pencil, Save, Sparkles, Trophy, X } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { SectionHeading } from "@/components/mm/section-heading";
@@ -9,6 +9,9 @@ import { cn } from "@/lib/utils";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { useAdminIds } from "@/hooks/use-admin-ids";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getPaddleEnvironment } from "@/lib/paddle";
+import { createCustomerPortalSession } from "@/lib/paddle.functions";
+
 
 export const Route = createFileRoute("/_app/perfil")({
   head: () => ({
@@ -45,6 +48,61 @@ function ProfilePage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const coverFileRef = useRef<HTMLInputElement>(null);
   const adminIds = useAdminIds();
+
+  type Sub = {
+    price_id: string | null;
+    product_id: string | null;
+    status: string | null;
+    current_period_end: string | null;
+    cancel_at_period_end: boolean | null;
+    environment: string | null;
+  };
+  const [sub, setSub] = useState<Sub | null>(null);
+  const [subLoading, setSubLoading] = useState(true);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) {
+        if (mounted) setSubLoading(false);
+        return;
+      }
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("price_id, product_id, status, current_period_end, cancel_at_period_end, environment")
+        .eq("user_id", u.user.id)
+        .eq("environment", getPaddleEnvironment())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!mounted) return;
+      setSub(data as Sub | null);
+      setSubLoading(false);
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const openPortal = async () => {
+    setPortalLoading(true);
+    setError(null);
+    try {
+      const res = await createCustomerPortalSession();
+      if ("error" in res) {
+        setError("Sem plano ativo associado à conta.");
+        return;
+      }
+      window.open(res.url, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível abrir o portal.");
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+
 
 
   // Load session + profile
@@ -455,7 +513,83 @@ function ProfilePage() {
         </Field>
       </section>
 
+      {/* Gerenciar plano */}
+      <section className="space-y-4">
+        <div className="flex items-baseline justify-between px-1">
+          <h2 className="font-display text-xl text-foreground md:text-2xl">Gerenciar plano</h2>
+          {sub?.status && (
+            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+              {sub.status}
+            </span>
+          )}
+        </div>
+
+        <div className="rounded-2xl bg-surface-1 p-5 ring-1 ring-border sm:p-6">
+          {subLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-5 w-48" />
+              <Skeleton className="h-4 w-64" />
+              <Skeleton className="h-10 w-40" />
+            </div>
+          ) : sub ? (
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
+                  <CreditCard className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-display text-lg text-foreground">
+                    {formatPlanLabel(sub.price_id)}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {sub.cancel_at_period_end
+                      ? "Cancela no final do período atual"
+                      : sub.current_period_end
+                        ? `Próxima renovação em ${new Date(sub.current_period_end).toLocaleDateString("pt-PT", { day: "2-digit", month: "long", year: "numeric" })}`
+                        : "Assinatura ativa"}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={openPortal}
+                disabled={portalLoading}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft disabled:opacity-60"
+              >
+                {portalLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ExternalLink className="h-4 w-4" />
+                )}
+                Gerenciar plano
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-display text-lg text-foreground">Sem plano ativo</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Ativa o teu acesso completo ao MM Club para desbloquear todos os cursos, lives e ferramentas.
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/checkout"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
+              >
+                Ver planos
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Progress */}
+
       <section className="space-y-4">
         <div className="flex items-baseline justify-between px-1">
           <h2 className="font-display text-xl text-foreground md:text-2xl">Progresso</h2>
@@ -541,3 +675,18 @@ function Stat({
     </div>
   );
 }
+
+function formatPlanLabel(priceId: string | null): string {
+  if (!priceId) return "Plano MM Club";
+  const map: Record<string, string> = {
+    mm_club_start_monthly: "MM Club Start · Mensal",
+    mm_club_plus_semestral: "MM Club Plus · Semestral",
+    mm_club_elite_anual: "MM Club Elite · Anual",
+  };
+  if (map[priceId]) return map[priceId];
+  return priceId
+    .replace(/^mm_club_/, "MM Club ")
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
