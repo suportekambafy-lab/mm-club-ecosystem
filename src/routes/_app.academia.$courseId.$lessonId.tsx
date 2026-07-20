@@ -80,8 +80,8 @@ function LessonPlayer() {
 
 
   return (
-    <div className="-mx-3 -my-4 bg-background sm:-mx-4 sm:-my-6 md:-mx-8 md:-my-8 lg:h-[calc(100dvh-3.5rem)] lg:overflow-hidden">
-      <div className="mx-auto flex h-full max-w-[1440px] flex-col px-3 py-4 sm:px-4 sm:py-6 md:px-6 md:py-6">
+    <div className="-mx-3 -my-4 h-[calc(100dvh-3.5rem)] max-w-[100vw] overflow-x-hidden bg-background sm:-mx-4 sm:-my-6 md:-mx-8 md:-my-8 lg:overflow-hidden">
+      <div className="mx-auto flex h-full max-w-[1440px] flex-col overflow-y-auto overflow-x-hidden px-3 py-4 sm:px-4 sm:py-6 md:px-6 md:py-6 lg:overflow-hidden">
         {/* Breadcrumb bar */}
         <div className="mb-4 flex items-center gap-2 overflow-x-auto rounded-2xl border border-border bg-surface-1 px-4 py-2.5 text-sm md:mb-6 md:gap-3 md:px-5 md:py-3">
           <Link
