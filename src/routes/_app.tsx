@@ -692,3 +692,12 @@ function MobileTabBar({
     </nav>
   );
 }
+
+function tierNameFromPriceId(priceId: string | null): string {
+  if (!priceId) return "Membro MM Club";
+  const p = priceId.toLowerCase();
+  if (p.includes("elite") || p.includes("anual") || p.includes("annual") || p.includes("yearly")) return "MM Club Elite";
+  if (p.includes("plus") || p.includes("semestral")) return "MM Club Plus";
+  if (p.includes("start") || p.includes("monthly") || p.includes("mensal")) return "MM Club Start";
+  return "Membro MM Club";
+}
