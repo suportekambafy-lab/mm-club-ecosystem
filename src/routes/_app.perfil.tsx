@@ -560,18 +560,22 @@ function ProfilePage() {
                 Gerenciar plano
               </button>
             </div>
+          ) : isAdmin ? (
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="font-display text-lg text-foreground">Admin · Acesso total</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Como administrador do MM Club, tens acesso vitalício a todos os cursos, lives e ferramentas.
+                </p>
+              </div>
+            </div>
           ) : (
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="font-display text-lg text-foreground">Sem plano ativo</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Ativa o teu acesso completo ao MM Club para desbloquear todos os cursos, lives e ferramentas.
-                  </p>
-                </div>
+              <div className="min-w-0">
+                <p className="font-display text-lg text-foreground">Sem plano ativo</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Ativa o teu acesso completo ao MM Club para desbloquear todos os cursos, lives e ferramentas.
+                </p>
               </div>
               <Link
                 to="/checkout"
@@ -581,6 +585,7 @@ function ProfilePage() {
               </Link>
             </div>
           )}
+
         </div>
       </section>
 
