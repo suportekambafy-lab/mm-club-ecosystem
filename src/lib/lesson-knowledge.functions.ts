@@ -172,8 +172,8 @@ async function transcribeFromHls(playlistUrl: string, apiKey: string): Promise<s
     }
     const t = await transcribeChunk(
       out,
-      isFmp4 ? "chunk.mp4" : "chunk.ts",
-      isFmp4 ? "video/mp4" : "video/mp2t",
+      isFmp4 ? "chunk.mp4" : "chunk.mpeg",
+      isFmp4 ? "video/mp4" : "video/mpeg",
       apiKey,
     );
     if (t.trim()) texts.push(t.trim());
