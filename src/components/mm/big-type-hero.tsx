@@ -284,10 +284,29 @@ export function BigTypeHero() {
           </motion.div>
         </div>
 
-
+        {/* Animated play — abre modal de boas-vindas */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.6 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 1.2, ease: [0.22, 1, 0.36, 1] }}
+          className="mt-12 flex justify-center sm:mt-16"
+        >
+          <button
+            type="button"
+            onClick={() => setWelcomeOpen(true)}
+            aria-label="Reproduzir apresentação"
+            className="group relative"
+          >
+            <span className="absolute inset-0 -m-4 rounded-full bg-primary/30 blur-xl transition-all group-hover:-m-6" />
+            <span className="absolute inset-0 -m-2 rounded-full bg-primary/40 animate-ping" />
+            <span className="relative flex h-20 w-20 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_20px_60px_-15px_oklch(0.82_0.13_82_/_0.8)] transition-transform group-hover:scale-105 sm:h-24 sm:w-24">
+              <Play className="h-7 w-7 translate-x-0.5 fill-current sm:h-9 sm:w-9" />
+            </span>
+          </button>
+        </motion.div>
 
         {/* CTA row */}
-        <div className="mt-14 flex flex-wrap items-center justify-center gap-4 sm:mt-20">
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-4 sm:mt-14">
           <Link
             to="/quiz"
             className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-4 text-sm font-semibold text-primary-foreground shadow-[0_20px_60px_-20px_oklch(0.82_0.13_82_/_0.7)] hover:bg-gold-soft transition-all"
@@ -303,6 +322,47 @@ export function BigTypeHero() {
           </a>
         </div>
       </div>
+
+      <AnimatePresence>
+        {welcomeOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm"
+            onClick={() => setWelcomeOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              className="relative w-full max-w-5xl overflow-hidden rounded-2xl bg-black shadow-[0_40px_120px_-20px_rgba(0,0,0,0.9)] ring-1 ring-white/10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setWelcomeOpen(false)}
+                aria-label="Fechar"
+                className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white ring-1 ring-white/15 transition hover:bg-black/80"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <div className="relative aspect-video w-full">
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${WELCOME_VIDEO_ID}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
+                  title="Boas-vindas ao MM Club"
+                  allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                  allowFullScreen
+                  className="absolute inset-0 h-full w-full border-0"
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
 
       {/* Bottom three-card system */}
       <div id="pilares" className="mx-auto mt-24 max-w-[1180px] px-4 sm:mt-32 sm:px-8">
