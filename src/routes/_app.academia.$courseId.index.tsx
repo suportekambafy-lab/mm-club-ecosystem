@@ -5,9 +5,10 @@ import "@/data/admin-store";
 import { useAdminOverridesVersion } from "@/hooks/use-admin-overrides";
 import { expertsById } from "@/data/experts";
 import { ExpertAvatar } from "@/components/mm/expert-avatar";
-import type { Lesson, Module } from "@/data/types";
+import type { Course, Lesson, Module } from "@/data/types";
 import { useUserProgress } from "@/hooks/use-user-progress";
-import { computeCourseDuration, computeLessonsCount, findLesson } from "@/lib/course-duration";
+import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb } from "@/lib/course-duration";
+import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 
 export const Route = createFileRoute("/_app/academia/$courseId/")({
   loader: ({ params }) => {
