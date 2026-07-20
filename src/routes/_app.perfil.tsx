@@ -675,10 +675,18 @@ function Stat({
 function formatPlanLabel(priceId: string | null): string {
   if (!priceId) return "Plano MM Club";
   const map: Record<string, string> = {
-    mm_club_start_monthly: "MM Club Start · Mensal",
+    mm_club_start_monthly: "MM Club · Mensal",
     mm_club_plus_semestral: "MM Club Plus · Semestral",
     mm_club_elite_anual: "MM Club Elite · Anual",
+    monthly_plan: "MM Club · Mensal",
+    semestral_plan: "MM Club Plus · Semestral",
+    annual_plan: "MM Club Elite · Anual",
+    monthly: "MM Club · Mensal",
+    semestral: "MM Club Plus · Semestral",
+    annual: "MM Club Elite · Anual",
+    annual_yearly: "MM Club Elite · Anual",
   };
+
   if (map[priceId]) return map[priceId];
   return priceId
     .replace(/^mm_club_/, "MM Club ")
