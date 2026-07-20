@@ -250,7 +250,13 @@ async function transcribeFromHls(playlistUrl: string, apiKey: string): Promise<s
       isFmp4 ? "video/mp4" : "audio/mp4",
       apiKey,
     );
-    if (t.trim()) texts.push(t.trim());
+    const trimmed = t.trim();
+    if (!trimmed) {
+      // Fail hard: um batch com áudio real tem de produzir texto. Caso contrário
+      // marcaríamos como "concluída" com transcrição parcial. Deixa o cron reiniciar.
+      throw new Error("Chunk HLS devolveu transcrição vazia — abortar para retry.");
+    }
+    texts.push(trimmed);
     batch = initBytes ? [initBytes] : [];
     size = initBytes ? initBytes.byteLength : 0;
   };
