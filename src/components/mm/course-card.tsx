@@ -5,25 +5,34 @@ import type { Course } from "@/data/types";
 import { expertsById } from "@/data/experts";
 import { ExpertAvatar } from "./expert-avatar";
 import { cn } from "@/lib/utils";
+import { computeCourseDuration } from "@/lib/course-duration";
+
 
 interface Props {
   course: Course;
   className?: string;
   variant?: "default" | "wide";
+  resumeLessonId?: string | null;
 }
 
-export function CourseCard({ course, className, variant = "default" }: Props) {
+export function CourseCard({ course, className, variant = "default", resumeLessonId }: Props) {
   const expert = expertsById[course.expertId];
   const isSoon = course.status === "coming-soon";
   const isWide = variant === "wide";
   const firstLesson = course.modules?.[0]?.lessons?.[0];
+  const resumeLesson =
+    (resumeLessonId
+      ? course.modules?.flatMap((m) => m.lessons).find((l) => l.id === resumeLessonId)
+      : null) ?? firstLesson;
   const linkProps =
-    firstLesson && course.progress > 0
+    resumeLesson && course.progress > 0
       ? {
           to: "/academia/$courseId/$lessonId" as const,
-          params: { courseId: course.id, lessonId: firstLesson.id },
+          params: { courseId: course.id, lessonId: resumeLesson.id },
         }
       : { to: "/academia/$courseId" as const, params: { courseId: course.id } };
+  const showLessonCover = course.progress > 0 && !!resumeLesson?.cover;
+
 
   return (
     <motion.div
@@ -59,7 +68,12 @@ export function CourseCard({ course, className, variant = "default" }: Props) {
             "relative overflow-hidden",
             isWide ? "aspect-[16/8]" : "aspect-[16/10]",
           )}
-          style={{ background: course.cover }}
+          style={{
+            background: showLessonCover
+              ? `url(${resumeLesson!.cover}) center/cover no-repeat, #000`
+              : course.cover,
+          }}
+
         >
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
           <div className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
@@ -77,7 +91,7 @@ export function CourseCard({ course, className, variant = "default" }: Props) {
           ) : (
             <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/45 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-white backdrop-blur-md">
               <Clock className="h-3 w-3" />
-              {course.duration}
+              {computeCourseDuration(course)}
             </div>
           )}
 

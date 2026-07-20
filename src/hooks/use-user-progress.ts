@@ -5,8 +5,14 @@ import type { Course } from "@/data/types";
 
 export type ProgressByCourse = Record<
   string,
-  { progress: number; lastWatchedAt: string | null; completedLessons: Set<string> }
+  {
+    progress: number;
+    lastWatchedAt: string | null;
+    lastLessonId: string | null;
+    completedLessons: Set<string>;
+  }
 >;
+
 
 function totalLessons(course: Course): number {
   return course.modules?.reduce((n, m) => n + m.lessons.length, 0) ?? 0;
@@ -40,16 +46,19 @@ export function useUserProgress() {
           (byCourse[row.course_id] = {
             progress: 0,
             lastWatchedAt: null,
+            lastLessonId: null,
             completedLessons: new Set<string>(),
           });
         if (row.completed) bucket.completedLessons.add(row.lesson_id);
         if (
-          !bucket.lastWatchedAt ||
-          (row.last_watched_at && row.last_watched_at > bucket.lastWatchedAt)
+          row.last_watched_at &&
+          (!bucket.lastWatchedAt || row.last_watched_at > bucket.lastWatchedAt)
         ) {
           bucket.lastWatchedAt = row.last_watched_at;
+          bucket.lastLessonId = row.lesson_id;
         }
       }
+
       for (const course of allCourses) {
         const bucket = byCourse[course.id];
         if (!bucket) continue;

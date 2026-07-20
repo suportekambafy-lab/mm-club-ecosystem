@@ -6,6 +6,8 @@ import { useAdminOverridesVersion } from "@/hooks/use-admin-overrides";
 import { expertsById } from "@/data/experts";
 import { ExpertAvatar } from "@/components/mm/expert-avatar";
 import type { Lesson, Module } from "@/data/types";
+import { useUserProgress } from "@/hooks/use-user-progress";
+import { computeCourseDuration, computeLessonsCount, findLesson } from "@/lib/course-duration";
 
 export const Route = createFileRoute("/_app/academia/$courseId/")({
   loader: ({ params }) => {
@@ -21,7 +23,17 @@ function CourseDetail() {
   useAdminOverridesVersion(); // re-render when admin overrides change
   const course = coursesById[courseId];
   const expert = expertsById[course.expertId];
-  const firstLesson = course.modules?.[0]?.lessons?.[0];
+  const { progress } = useUserProgress();
+  const p = progress[course.id];
+  const percent = Math.round((p?.progress ?? 0) * 100);
+  const resumeLesson =
+    (p?.lastLessonId ? findLesson(course, p.lastLessonId) : null) ??
+    course.modules?.[0]?.lessons?.[0] ??
+    null;
+  const firstLesson = resumeLesson;
+  const totalDuration = computeCourseDuration(course);
+  const totalLessons = computeLessonsCount(course);
+
 
   return (
     <div className="space-y-10">
@@ -37,9 +49,14 @@ function CourseDetail() {
           <Link
             to="/academia/$courseId/$lessonId"
             params={{ courseId: course.id, lessonId: firstLesson.id }}
-            aria-label="Reproduzir primeira aula"
-            className="relative aspect-video overflow-hidden rounded-2xl ring-1 ring-border"
-            style={{ background: course.cover }}
+            aria-label={percent > 0 ? "Continuar aula" : "Reproduzir primeira aula"}
+            className="group relative aspect-video overflow-hidden rounded-2xl ring-1 ring-border"
+            style={{
+              background:
+                percent > 0 && firstLesson.cover
+                  ? `url(${firstLesson.cover}) center/cover no-repeat, #000`
+                  : course.cover,
+            }}
           >
             <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-black/10 to-transparent" />
             <span className="absolute inset-0 flex items-center justify-center">
@@ -56,6 +73,7 @@ function CourseDetail() {
             <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-black/10 to-transparent" />
           </div>
         )}
+
 
         <div className="flex flex-col gap-6">
           <div>
@@ -82,10 +100,10 @@ function CourseDetail() {
 
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5" /> {course.duration}
+              <Clock className="h-3.5 w-3.5" /> {totalDuration}
             </span>
             <span>·</span>
-            <span>{course.lessonsCount} aulas</span>
+            <span>{totalLessons} aulas</span>
           </div>
 
           {firstLesson && (
@@ -95,24 +113,29 @@ function CourseDetail() {
               className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
             >
               <Play className="h-4 w-4 fill-current" />
-              {course.progress > 0 ? "Continuar" : "Começar curso"}
+              {percent > 0 ? "Continuar" : "Começar curso"}
             </Link>
           )}
 
-          {course.progress > 0 && (
+          {percent > 0 && (
             <div>
               <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-                <span>Progresso</span>
-                <span className="text-primary">{Math.round(course.progress * 100)}%</span>
+                <span>
+                  Progresso
+                  {resumeLesson && (
+                    <span className="ml-2 text-foreground/80">
+                      · Próxima: {resumeLesson.title}
+                    </span>
+                  )}
+                </span>
+                <span className="text-primary">{percent}%</span>
               </div>
               <div className="h-1 overflow-hidden rounded-full bg-surface-3">
-                <div
-                  className="h-full bg-primary"
-                  style={{ width: `${Math.round(course.progress * 100)}%` }}
-                />
+                <div className="h-full bg-primary" style={{ width: `${percent}%` }} />
               </div>
             </div>
           )}
+
         </div>
       </section>
 
