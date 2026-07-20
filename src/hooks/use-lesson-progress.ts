@@ -14,10 +14,18 @@ export function useLessonProgress(courseId: string, lessonId: string) {
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const rowRef = useRef<LessonProgressRow | null>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
     rowRef.current = row;
   }, [row]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -78,13 +86,13 @@ export function useLessonProgress(courseId: string, lessonId: string) {
           .select("course_id, lesson_id, completed, progress_seconds, last_watched_at")
           .maybeSingle();
         if (error) throw error;
-        if (data) setRow(data);
+        if (data && mountedRef.current) setRow(data);
         return data;
       } catch (error) {
         console.warn("Falha ao gravar progresso da aula", error);
         return null;
       } finally {
-        if (!options?.silent) setSaving(false);
+        if (!options?.silent && mountedRef.current) setSaving(false);
       }
     },
     [courseId, lessonId],
