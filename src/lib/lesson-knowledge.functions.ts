@@ -107,6 +107,51 @@ async function transcribeChunk(
   return json.text ?? "";
 }
 
+function concatBytes(parts: Uint8Array[]): Uint8Array {
+  const total = parts.reduce((a, b) => a + b.byteLength, 0);
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const part of parts) {
+    out.set(part, off);
+    off += part.byteLength;
+  }
+  return out;
+}
+
+function parseHlsAttributes(input: string): Record<string, string> {
+  const attrs: Record<string, string> = {};
+  const re = /([A-Z0-9-]+)=("[^"]*"|[^,]*)/gi;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(input))) {
+    attrs[match[1].toUpperCase()] = match[2].replace(/^"|"$/g, "");
+  }
+  return attrs;
+}
+
+async function transmuxTsToAudioMp4(bytes: Uint8Array): Promise<Uint8Array> {
+  const muxjs = ((await import("mux.js")) as any).default;
+  const Transmuxer = muxjs?.mp4?.Transmuxer;
+  if (!Transmuxer) throw new Error("Conversor HLS indisponível");
+
+  const outputs: Uint8Array[] = [];
+  const transmuxer = new Transmuxer({ remux: false, keepOriginalTimestamps: false });
+  transmuxer.on("data", (data: any) => {
+    if (data?.type !== "audio") return;
+    const parts: Uint8Array[] = [];
+    if (data.initSegment?.byteLength) parts.push(data.initSegment);
+    if (data.data?.byteLength) parts.push(data.data);
+    if (parts.length) outputs.push(concatBytes(parts));
+  });
+  transmuxer.push(bytes);
+  transmuxer.flush();
+
+  const audio = concatBytes(outputs);
+  if (audio.byteLength < 2048) {
+    throw new Error("Esta variante HLS não contém áudio transcrevível. Verifica se a aula tem faixa de áudio ativa.");
+  }
+  return audio;
+}
+
 async function transcribeFromHls(playlistUrl: string, apiKey: string): Promise<string> {
   // Fetch playlist; if it's a master, pick the lowest-bandwidth variant to
   // maximise minutes-per-MB (transcription doesn't need high resolution).
@@ -119,21 +164,55 @@ async function transcribeFromHls(playlistUrl: string, apiKey: string): Promise<s
   let text = await fetchText(mediaUrl);
   if (text.includes("#EXT-X-STREAM-INF")) {
     const lines = text.split(/\r?\n/);
+    const audioRenditions = new Map<string, string>();
+    for (const line of lines) {
+      if (!line.startsWith("#EXT-X-MEDIA") || !/TYPE=AUDIO/i.test(line)) continue;
+      const attrs = parseHlsAttributes(line);
+      if (attrs.URI && attrs["GROUP-ID"]) {
+        audioRenditions.set(attrs["GROUP-ID"], new URL(attrs.URI, mediaUrl).toString());
+      }
+    }
+
     let bestUri: string | null = null;
     let bestBw = Infinity;
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].startsWith("#EXT-X-STREAM-INF")) {
-        const bw = Number(lines[i].match(/BANDWIDTH=(\d+)/i)?.[1] ?? Infinity);
+        const attrs = parseHlsAttributes(lines[i]);
+        const audioPlaylist = attrs.AUDIO ? audioRenditions.get(attrs.AUDIO) : null;
+        if (audioPlaylist) {
+          bestUri = audioPlaylist;
+          break;
+        }
+        const codecs = attrs.CODECS ?? "";
+        const hasAudioCodec = /mp4a|aac|opus|audio/i.test(codecs);
+        const bw = Number(attrs.BANDWIDTH ?? Infinity);
         const uri = lines[i + 1]?.trim();
-        if (uri && !uri.startsWith("#") && bw < bestBw) {
+        if (uri && !uri.startsWith("#") && hasAudioCodec && bw < bestBw) {
           bestBw = bw;
           bestUri = uri;
+        }
+      }
+    }
+    if (!bestUri) {
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith("#EXT-X-STREAM-INF")) {
+          const attrs = parseHlsAttributes(lines[i]);
+          const bw = Number(attrs.BANDWIDTH ?? Infinity);
+          const uri = lines[i + 1]?.trim();
+          if (uri && !uri.startsWith("#") && bw < bestBw) {
+            bestBw = bw;
+            bestUri = uri;
+          }
         }
       }
     }
     if (!bestUri) throw new Error("Master HLS sem variantes utilizáveis");
     mediaUrl = new URL(bestUri, mediaUrl).toString();
     text = await fetchText(mediaUrl);
+  }
+
+  if (/^#EXT-X-KEY:.*METHOD=(?!NONE)/im.test(text)) {
+    throw new Error("Este HLS está encriptado/protegido e não pode ser transcrito diretamente. Usa um link HLS sem DRM/encriptação ou cola a transcrição manualmente.");
   }
 
   const lines = text.split(/\r?\n/);
@@ -163,19 +242,9 @@ async function transcribeFromHls(playlistUrl: string, apiKey: string): Promise<s
   const flush = async () => {
     const hasContent = batch.length > (initBytes ? 1 : 0);
     if (!hasContent) return;
-    const total = batch.reduce((a, b) => a + b.byteLength, 0);
-    const out = new Uint8Array(total);
-    let off = 0;
-    for (const b of batch) {
-      out.set(b, off);
-      off += b.byteLength;
-    }
-    const t = await transcribeChunk(
-      out,
-      isFmp4 ? "chunk.mp4" : "chunk.mpeg",
-      isFmp4 ? "video/mp4" : "video/mpeg",
-      apiKey,
-    );
+    const out = concatBytes(batch);
+    const audioPayload = isFmp4 ? out : await transmuxTsToAudioMp4(out);
+    const t = await transcribeChunk(audioPayload, isFmp4 ? "chunk.mp4" : "chunk.m4a", "audio/mp4", apiKey);
     if (t.trim()) texts.push(t.trim());
     batch = initBytes ? [initBytes] : [];
     size = initBytes ? initBytes.byteLength : 0;
