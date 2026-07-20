@@ -58,9 +58,10 @@ export const createCustomerPortalSession = createServerFn({ method: "POST" })
       .maybeSingle();
 
     if (error) throw new Error(error.message);
-    if (!sub?.paddle_customer_id) {
+    if (!sub?.paddle_customer_id || !sub.paddle_customer_id.startsWith("ctm_")) {
       return { error: "no_customer" as const };
     }
+
 
     const env = (sub.environment as PaddleEnv) ?? "live";
     const paddle = getPaddleClient(env);
