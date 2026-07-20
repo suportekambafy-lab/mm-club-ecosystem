@@ -1,10 +1,13 @@
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Play, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import avatar1 from "@/assets/avatar-1.jpg";
 import avatar2 from "@/assets/avatar-2.jpg";
 import avatar3 from "@/assets/avatar-3.jpg";
 import avatar5 from "@/assets/avatar-5.jpg";
+
+const WELCOME_VIDEO_ID = "J-ivFkMIHCQ";
 
 /* ---------- Hand-drawn arrows ---------- */
 
