@@ -127,7 +127,7 @@ export function LessonKnowledgePanel({
         <div className="space-y-3 border-t border-border px-4 py-4">
           <p className="text-xs text-muted-foreground">
             A MM Intelligence usa este texto para responder com contexto da aula.
-            Transcreve automaticamente (para ficheiros até 25MB) ou cola a transcrição.
+            Transcreve automaticamente HLS/Bunny em pedaços ou cola a transcrição.
           </p>
 
           <div className="flex flex-wrap gap-2">
