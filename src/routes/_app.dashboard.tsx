@@ -106,6 +106,7 @@ function DashboardPage() {
               key={c.id}
               course={c}
               resumeLessonId={progress[c.id]?.lastLessonId ?? null}
+              showResumeThumb
               className="w-[340px] shrink-0"
             />
           ))}
