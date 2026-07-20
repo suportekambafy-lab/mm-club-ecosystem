@@ -73,37 +73,150 @@ async function embedBatch(inputs: string[], apiKey: string): Promise<number[][]>
 }
 
 function resolveDirectMediaUrl(url: string): string {
-  // Bunny Stream iframe embed → direct MP4 via pull zone env var, if defined.
+  // Bunny Stream iframe embed → direct HLS playlist via pull zone env var.
   const m = url.match(/iframe\.mediadelivery\.net\/(?:embed|play)\/(\d+)\/([0-9a-f-]{36})/i);
   if (m) {
     const guid = m[2];
     const pullZone = process.env.VITE_BUNNY_PULL_ZONE || process.env.BUNNY_PULL_ZONE;
     if (pullZone) {
-      return `https://${pullZone}.b-cdn.net/${guid}/play_720p.mp4`;
+      return `https://${pullZone}.b-cdn.net/${guid}/playlist.m3u8`;
     }
-  }
-  // Bunny HLS playlist → MP4 rendition on the same pull zone.
-  // e.g. https://vz-xxx.b-cdn.net/{guid}/playlist.m3u8 → .../play_480p.mp4
-  const hls = url.match(/^(https?:\/\/[^/]+\/[0-9a-f-]{36})\/(?:playlist|[^/]+)\.m3u8/i);
-  if (hls) {
-    // 480p keeps the file small enough to fit under the 25MB STT cap for typical lessons.
-    return `${hls[1]}/play_480p.mp4`;
   }
   return url;
 }
 
+async function transcribeChunk(
+  bytes: Uint8Array,
+  filename: string,
+  mime: string,
+  apiKey: string,
+): Promise<string> {
+  const form = new FormData();
+  form.append("model", TRANSCRIBE_MODEL);
+  form.append("file", new Blob([bytes as BlobPart], { type: mime }), filename);
+  const res = await fetch(`${GATEWAY}/audio/transcriptions`, {
+    method: "POST",
+    headers: { "Lovable-API-Key": apiKey },
+    body: form,
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Transcrição ${res.status}: ${body.slice(0, 300)}`);
+  }
+  const json = (await res.json()) as { text?: string };
+  return json.text ?? "";
+}
+
+async function transcribeFromHls(playlistUrl: string, apiKey: string): Promise<string> {
+  // Fetch playlist; if it's a master, pick the lowest-bandwidth variant to
+  // maximise minutes-per-MB (transcription doesn't need high resolution).
+  const fetchText = async (u: string) => {
+    const r = await fetch(u);
+    if (!r.ok) throw new Error(`HLS ${r.status} em ${u}`);
+    return r.text();
+  };
+  let mediaUrl = playlistUrl;
+  let text = await fetchText(mediaUrl);
+  if (text.includes("#EXT-X-STREAM-INF")) {
+    const lines = text.split(/\r?\n/);
+    let bestUri: string | null = null;
+    let bestBw = Infinity;
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].startsWith("#EXT-X-STREAM-INF")) {
+        const bw = Number(lines[i].match(/BANDWIDTH=(\d+)/i)?.[1] ?? Infinity);
+        const uri = lines[i + 1]?.trim();
+        if (uri && !uri.startsWith("#") && bw < bestBw) {
+          bestBw = bw;
+          bestUri = uri;
+        }
+      }
+    }
+    if (!bestUri) throw new Error("Master HLS sem variantes utilizáveis");
+    mediaUrl = new URL(bestUri, mediaUrl).toString();
+    text = await fetchText(mediaUrl);
+  }
+
+  const lines = text.split(/\r?\n/);
+  // fMP4 init segment (present for Bunny fMP4 packaging)
+  let initUri: string | null = null;
+  const initTag = lines.find((l) => l.startsWith("#EXT-X-MAP"));
+  if (initTag) {
+    const u = initTag.match(/URI="([^"]+)"/)?.[1];
+    if (u) initUri = new URL(u, mediaUrl).toString();
+  }
+  const segments = lines
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith("#"))
+    .map((l) => new URL(l, mediaUrl).toString());
+  if (!segments.length) throw new Error("HLS sem segmentos");
+
+  const initBytes = initUri
+    ? new Uint8Array(await (await fetch(initUri)).arrayBuffer())
+    : null;
+  const isFmp4 = !!initBytes;
+
+  const MAX = 20 * 1024 * 1024;
+  const texts: string[] = [];
+  let batch: Uint8Array[] = initBytes ? [initBytes] : [];
+  let size = initBytes ? initBytes.byteLength : 0;
+
+  const flush = async () => {
+    const hasContent = batch.length > (initBytes ? 1 : 0);
+    if (!hasContent) return;
+    const total = batch.reduce((a, b) => a + b.byteLength, 0);
+    const out = new Uint8Array(total);
+    let off = 0;
+    for (const b of batch) {
+      out.set(b, off);
+      off += b.byteLength;
+    }
+    const t = await transcribeChunk(
+      out,
+      isFmp4 ? "chunk.mp4" : "chunk.ts",
+      isFmp4 ? "video/mp4" : "video/mp2t",
+      apiKey,
+    );
+    if (t.trim()) texts.push(t.trim());
+    batch = initBytes ? [initBytes] : [];
+    size = initBytes ? initBytes.byteLength : 0;
+  };
+
+  for (const segUrl of segments) {
+    const r = await fetch(segUrl);
+    if (!r.ok) throw new Error(`Segmento HLS ${r.status}`);
+    const bytes = new Uint8Array(await r.arrayBuffer());
+    if (size + bytes.byteLength > MAX && batch.length > (initBytes ? 1 : 0)) {
+      await flush();
+    }
+    batch.push(bytes);
+    size += bytes.byteLength;
+  }
+  await flush();
+
+  const combined = texts.join(" ").replace(/\s+/g, " ").trim();
+  if (!combined) throw new Error("Nenhum segmento transcrito");
+  return combined;
+}
+
 async function transcribeFromUrl(url: string, apiKey: string): Promise<string> {
   const mediaUrl = resolveDirectMediaUrl(url);
+
+  // HLS path — chunk by segment so lessons of any duration can be transcribed
+  // without hitting the 25MB per-request cap.
+  if (/\.m3u8(\?|$)/i.test(mediaUrl)) {
+    return transcribeFromHls(mediaUrl, apiKey);
+  }
+
+  // Direct file path (mp4/mp3/wav/…): single-shot upload up to 25MB.
   const media = await fetch(mediaUrl);
   if (!media.ok) {
     throw new Error(
-      `Não consegui obter o vídeo (${media.status}). Usa URL directo (.mp4/.mp3) ou cola a transcrição manualmente.`,
+      `Não consegui obter o vídeo (${media.status}). Usa URL directo (.mp4/.mp3/.m3u8) ou cola a transcrição manualmente.`,
     );
   }
   const contentType = (media.headers.get("content-type") ?? "").toLowerCase();
   const blob = await media.blob();
 
-  // Reject HTML/embed pages — the transcription model can't decode them.
   if (
     contentType.includes("text/html") ||
     contentType.includes("application/xml") ||
@@ -112,13 +225,12 @@ async function transcribeFromUrl(url: string, apiKey: string): Promise<string> {
       !contentType.includes("octet-stream"))
   ) {
     throw new Error(
-      "O URL não é um ficheiro áudio/vídeo directo (parece uma página embed). Cola um link .mp4/.mp3 directo, ou cola a transcrição manualmente.",
+      "O URL não é um ficheiro áudio/vídeo directo (parece uma página embed). Cola um link .mp4/.mp3/.m3u8 directo, ou cola a transcrição manualmente.",
     );
   }
-
   if (blob.size > 25 * 1024 * 1024) {
     throw new Error(
-      "Ficheiro maior que 25MB. Para aulas longas, cola a transcrição manualmente.",
+      "Ficheiro directo maior que 25MB. Usa antes o URL HLS (.m3u8) da mesma aula — é transcrito em pedaços automaticamente.",
     );
   }
   if (blob.size < 2048) {
@@ -137,22 +249,7 @@ async function transcribeFromUrl(url: string, apiKey: string): Promise<string> {
     } as Record<string, string>)[contentType.split(";")[0]] ??
     (mediaUrl.match(/\.(mp4|m4a|mp3|wav|webm|mov)(?:\?|$)/i)?.[1]?.toLowerCase() ?? "mp4");
 
-  const form = new FormData();
-  form.append("model", TRANSCRIBE_MODEL);
-  form.append("file", blob, `lesson.${ext}`);
-
-  const res = await fetch(`${GATEWAY}/audio/transcriptions`, {
-    method: "POST",
-    headers: { "Lovable-API-Key": apiKey },
-    body: form,
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`Transcrição ${res.status}: ${body.slice(0, 400)}`);
-  }
-  const json = (await res.json()) as { text?: string };
-  if (!json.text) throw new Error("Resposta de transcrição sem texto");
-  return json.text;
+  return transcribeChunk(new Uint8Array(await blob.arrayBuffer()), `lesson.${ext}`, contentType || "video/mp4", apiKey);
 }
 
 // -------- server functions --------
