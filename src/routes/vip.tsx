@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Check, Sparkles, Star } from "lucide-react";
+import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { initializePaddle, resolvePriceId } from "@/lib/paddle";
@@ -102,7 +102,6 @@ function VipPage() {
             transition={{ duration: 0.4 }}
             className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
           >
-            <Sparkles className="h-3.5 w-3.5" />
             Convite VIP
           </motion.div>
 
@@ -132,14 +131,9 @@ function VipPage() {
             transition={{ duration: 0.5, delay: 0.15 }}
             className="mt-10 w-full overflow-hidden rounded-3xl border border-primary/30 bg-card/60 p-8 shadow-[0_30px_80px_-40px_oklch(0.82_0.13_82_/_0.4)] backdrop-blur"
           >
-            <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 text-primary">
-                <Star className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="text-sm text-muted-foreground">Plano VIP</p>
-                <p className="text-lg font-semibold">MM Club — 3 meses grátis</p>
-              </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Plano VIP</p>
+              <p className="text-lg font-semibold">MM Club — 3 meses grátis</p>
             </div>
 
             <div className="mt-6 flex items-end gap-2">
