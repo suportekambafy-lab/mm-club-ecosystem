@@ -6,6 +6,8 @@ import { useAdminOverridesVersion } from "@/hooks/use-admin-overrides";
 import { expertsById } from "@/data/experts";
 import { ExpertAvatar } from "@/components/mm/expert-avatar";
 import type { Lesson, Module } from "@/data/types";
+import { useUserProgress } from "@/hooks/use-user-progress";
+import { computeCourseDuration, computeLessonsCount, findLesson } from "@/lib/course-duration";
 
 export const Route = createFileRoute("/_app/academia/$courseId/")({
   loader: ({ params }) => {
@@ -21,7 +23,17 @@ function CourseDetail() {
   useAdminOverridesVersion(); // re-render when admin overrides change
   const course = coursesById[courseId];
   const expert = expertsById[course.expertId];
-  const firstLesson = course.modules?.[0]?.lessons?.[0];
+  const { progress } = useUserProgress();
+  const p = progress[course.id];
+  const percent = Math.round((p?.progress ?? 0) * 100);
+  const resumeLesson =
+    (p?.lastLessonId ? findLesson(course, p.lastLessonId) : null) ??
+    course.modules?.[0]?.lessons?.[0] ??
+    null;
+  const firstLesson = resumeLesson;
+  const totalDuration = computeCourseDuration(course);
+  const totalLessons = computeLessonsCount(course);
+
 
   return (
     <div className="space-y-10">
