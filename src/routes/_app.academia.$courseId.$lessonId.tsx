@@ -123,13 +123,21 @@ function LessonPlayer() {
           {/* Main content: video + title/cta */}
           <div className="order-1 flex min-h-0 min-w-0 flex-col gap-3 sm:gap-4 md:gap-6 lg:order-2 lg:overflow-y-auto lg:pr-1">
             {/* Video player */}
-            <TrackedVideoPlayer
-              lessonId={current.lesson.id}
-              title={current.lesson.title}
-              source={source}
-              startSeconds={row?.progress_seconds ?? 0}
-              saveProgress={saveProgress}
-            />
+            {loaded ? (
+              <TrackedVideoPlayer
+                lessonId={current.lesson.id}
+                title={current.lesson.title}
+                source={source}
+                startSeconds={row?.progress_seconds ?? 0}
+                saveProgress={saveProgress}
+              />
+            ) : (
+              <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-white/60" />
+                </div>
+              </div>
+            )}
 
             {/* Title + CTA */}
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-xl bg-surface-2 px-2.5 py-2 sm:gap-3 sm:px-4 sm:py-3">
