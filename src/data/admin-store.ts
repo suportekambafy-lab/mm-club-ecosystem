@@ -219,7 +219,7 @@ export async function pushOverridesToServer(o: Overrides) {
       .upsert(
         {
           id: "courses",
-          data: o as unknown as Record<string, unknown>,
+          data: o as never,
           updated_at: new Date().toISOString(),
         },
         { onConflict: "id" },
