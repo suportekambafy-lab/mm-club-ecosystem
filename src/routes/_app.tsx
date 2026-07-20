@@ -181,6 +181,37 @@ function AppLayout() {
     };
   }, [authUser]);
 
+  // Plan tier label (name only, no billing period)
+  const [planLabel, setPlanLabel] = useState<string>("Membro MM Club");
+  useEffect(() => {
+    let cancelled = false;
+    if (!authUser) return;
+    (async () => {
+      const { data: isAdmin } = await supabase.rpc("has_role", {
+        _user_id: authUser.id,
+        _role: "admin",
+      });
+      if (isAdmin) {
+        if (!cancelled) setPlanLabel("Admin · Acesso total");
+        return;
+      }
+      const { data: sub } = await supabase
+        .from("subscriptions")
+        .select("price_id, status")
+        .eq("user_id", authUser.id)
+        .in("status", ["active", "trialing", "past_due"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled) return;
+      const pid = (sub as { price_id?: string | null } | null)?.price_id ?? null;
+      setPlanLabel(tierNameFromPriceId(pid));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authUser]);
+
   // Gate: require account to access any /_app route
   useEffect(() => {
     if (authUser === null) {
@@ -377,7 +408,7 @@ function AppLayout() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
-                  <p className="truncate text-xs text-muted-foreground">Membro MM Club</p>
+                  <p className="truncate text-xs text-muted-foreground">{planLabel}</p>
                 </div>
               </Link>
               <button
@@ -660,4 +691,13 @@ function MobileTabBar({
       </ul>
     </nav>
   );
+}
+
+function tierNameFromPriceId(priceId: string | null): string {
+  if (!priceId) return "Membro MM Club";
+  const p = priceId.toLowerCase();
+  if (p.includes("elite") || p.includes("anual") || p.includes("annual") || p.includes("yearly")) return "MM Club Elite";
+  if (p.includes("plus") || p.includes("semestral")) return "MM Club Plus";
+  if (p.includes("start") || p.includes("monthly") || p.includes("mensal")) return "MM Club Start";
+  return "Membro MM Club";
 }
