@@ -181,6 +181,37 @@ function AppLayout() {
     };
   }, [authUser]);
 
+  // Plan tier label (name only, no billing period)
+  const [planLabel, setPlanLabel] = useState<string>("Membro MM Club");
+  useEffect(() => {
+    let cancelled = false;
+    if (!authUser) return;
+    (async () => {
+      const { data: isAdmin } = await supabase.rpc("has_role", {
+        _user_id: authUser.id,
+        _role: "admin",
+      });
+      if (isAdmin) {
+        if (!cancelled) setPlanLabel("Admin · Acesso total");
+        return;
+      }
+      const { data: sub } = await supabase
+        .from("subscriptions")
+        .select("price_id, status")
+        .eq("user_id", authUser.id)
+        .in("status", ["active", "trialing", "past_due"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled) return;
+      const pid = (sub as { price_id?: string | null } | null)?.price_id ?? null;
+      setPlanLabel(tierNameFromPriceId(pid));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authUser]);
+
   // Gate: require account to access any /_app route
   useEffect(() => {
     if (authUser === null) {
