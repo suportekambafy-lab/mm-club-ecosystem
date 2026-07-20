@@ -5,6 +5,8 @@ import type { Course } from "@/data/types";
 import { expertsById } from "@/data/experts";
 import { ExpertAvatar } from "./expert-avatar";
 import { cn } from "@/lib/utils";
+import { computeCourseDuration } from "@/lib/course-duration";
+
 
 interface Props {
   course: Course;
@@ -89,7 +91,7 @@ export function CourseCard({ course, className, variant = "default", resumeLesso
           ) : (
             <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/45 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-white backdrop-blur-md">
               <Clock className="h-3 w-3" />
-              {course.duration}
+              {computeCourseDuration(course)}
             </div>
           )}
 
