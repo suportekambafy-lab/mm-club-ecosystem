@@ -193,12 +193,22 @@
 }
 
 @layer base {
+  *,
+  ::before,
+  ::after {
+    box-sizing: border-box;
+  }
+
   * {
     border-color: var(--color-border);
   }
 
   html,
   body {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: clip;
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
@@ -207,10 +217,50 @@
   }
 
   body {
+    min-height: 100dvh;
+    overscroll-behavior-x: none;
     background-image:
       radial-gradient(ellipse 80% 50% at 50% -10%, oklch(0.82 0.13 82 / 0.08), transparent 60%),
       radial-gradient(ellipse 60% 40% at 100% 100%, oklch(0.82 0.13 82 / 0.05), transparent 60%);
     background-attachment: fixed;
+  }
+
+  #root,
+  #__root {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  img,
+  video,
+  iframe,
+  canvas,
+  svg {
+    max-width: 100%;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+    min-width: 0;
+  }
+
+  @supports not (overflow: clip) {
+    html,
+    body,
+    #root,
+    #__root {
+      overflow-x: hidden;
+    }
+  }
+
+  @media (max-width: 640px) {
+    body {
+      background-attachment: scroll;
+    }
   }
 
   h1, h2, h3, .font-display {

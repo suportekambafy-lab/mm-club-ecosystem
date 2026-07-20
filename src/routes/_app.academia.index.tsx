@@ -51,12 +51,12 @@ function AcademiaPage() {
   }, [progress]);
 
   return (
-    <div className="space-y-16">
+    <div className="max-w-full space-y-16 overflow-x-clip">
       {featured && <FeaturedHero course={featured} progress={progress} />}
 
       {continuing.length > 0 && (
         <section className="space-y-5">
-          <div className="flex items-end justify-between px-1">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 px-1">
             <div>
               <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-primary">
                 A tua jornada
@@ -75,7 +75,7 @@ function AcademiaPage() {
       )}
 
       <section className="space-y-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between px-1">
+        <div className="grid grid-cols-1 gap-4 px-1 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
           <div>
             <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-primary">
               Academia MM
@@ -88,8 +88,8 @@ function AcademiaPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <label className="flex h-11 min-w-[220px] items-center gap-2 rounded-full border border-border bg-surface-1 px-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <label className="flex h-11 w-full min-w-0 items-center gap-2 rounded-full border border-border bg-surface-1 px-4 md:w-[260px]">
               <Search className="h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
@@ -291,7 +291,7 @@ function PosterCard({
     <Link
       {...linkProps}
       className={
-        (inGrid ? "" : "w-[320px] shrink-0 ") +
+        (inGrid ? "" : "w-[min(82vw,320px)] shrink-0 ") +
         "group relative flex flex-col overflow-hidden rounded-2xl bg-surface-1 ring-1 ring-border transition-all duration-500 hover:-translate-y-1 hover:ring-[color:var(--hairline)] hover:shadow-[0_28px_80px_-30px_oklch(0.82_0.13_82_/_0.35)]"
       }
     >
