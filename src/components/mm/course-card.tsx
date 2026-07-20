@@ -10,20 +10,27 @@ interface Props {
   course: Course;
   className?: string;
   variant?: "default" | "wide";
+  resumeLessonId?: string | null;
 }
 
-export function CourseCard({ course, className, variant = "default" }: Props) {
+export function CourseCard({ course, className, variant = "default", resumeLessonId }: Props) {
   const expert = expertsById[course.expertId];
   const isSoon = course.status === "coming-soon";
   const isWide = variant === "wide";
   const firstLesson = course.modules?.[0]?.lessons?.[0];
+  const resumeLesson =
+    (resumeLessonId
+      ? course.modules?.flatMap((m) => m.lessons).find((l) => l.id === resumeLessonId)
+      : null) ?? firstLesson;
   const linkProps =
-    firstLesson && course.progress > 0
+    resumeLesson && course.progress > 0
       ? {
           to: "/academia/$courseId/$lessonId" as const,
-          params: { courseId: course.id, lessonId: firstLesson.id },
+          params: { courseId: course.id, lessonId: resumeLesson.id },
         }
       : { to: "/academia/$courseId" as const, params: { courseId: course.id } };
+  const showLessonCover = course.progress > 0 && !!resumeLesson?.cover;
+
 
   return (
     <motion.div
