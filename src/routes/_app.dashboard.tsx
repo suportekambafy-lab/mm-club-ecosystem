@@ -21,6 +21,8 @@ import {
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { expertsById } from "@/data/experts";
 import { courses } from "@/data/courses";
+import { computeCourseDuration } from "@/lib/course-duration";
+
 import { supabase } from "@/integrations/supabase/client";
 
 import { formatDistanceToNow } from "date-fns";
@@ -257,7 +259,7 @@ function ContinueHero({ course }: { course: import("@/data/types").Course }) {
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span>{Math.round(course.progress * 100)}% concluído</span>
             <span>·</span>
-            <span>{course.duration}</span>
+            <span>{computeCourseDuration(course)}</span>
           </div>
           <div className="h-1 w-full overflow-hidden rounded-full bg-surface-3">
             <div
