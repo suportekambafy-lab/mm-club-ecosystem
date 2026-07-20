@@ -5,7 +5,7 @@ import { liveCourses, upcomingCourses } from "@/data/courses";
 import { expertsById } from "@/data/experts";
 import type { Course } from "@/data/types";
 import { useUserProgress, type ProgressByCourse } from "@/hooks/use-user-progress";
-import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb } from "@/lib/course-duration";
+import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb, parseDurationToMinutes, formatMinutes } from "@/lib/course-duration";
 
 export const Route = createFileRoute("/_app/academia/")({
   head: () => ({
