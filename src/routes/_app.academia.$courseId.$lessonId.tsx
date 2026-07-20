@@ -234,11 +234,13 @@ function LessonPlayer() {
 
 function ModuleAccordion({
   module,
+  course,
   courseId,
   currentLessonId,
   defaultOpen,
 }: {
   module: Module;
+  course: Course;
   courseId: string;
   currentLessonId: string;
   defaultOpen: boolean;
@@ -264,46 +266,74 @@ function ModuleAccordion({
 
       {open && (
         <ul className="mt-4 space-y-2.5">
-          {module.lessons.map((l) => {
-            const active = l.id === currentLessonId;
-            return (
-              <li key={l.id}>
-                <Link
-                  to="/academia/$courseId/$lessonId"
-                  params={{ courseId, lessonId: l.id }}
-                  className={cn(
-                    "flex min-w-0 items-center gap-3 rounded-2xl px-3 py-3 transition sm:px-4",
-                    active
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-surface-3 text-foreground hover:bg-surface-3/70",
-                  )}
-                >
-                  <PlayCircle
-                    className={cn(
-                      "h-7 w-7 shrink-0",
-                      active ? "text-primary-foreground" : "text-foreground/80",
-                    )}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm">{l.title}</p>
-                    <p
-                      className={cn(
-                        "text-xs",
-                        active
-                          ? "text-primary-foreground/75"
-                          : "text-muted-foreground",
-                      )}
-                    >
-                      {l.duration}
-                    </p>
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
+          {module.lessons.map((l) => (
+            <LessonRow
+              key={l.id}
+              lesson={l}
+              course={course}
+              courseId={courseId}
+              active={l.id === currentLessonId}
+            />
+          ))}
         </ul>
       )}
     </div>
+  );
+}
+
+function LessonRow({
+  lesson,
+  course,
+  courseId,
+  active,
+}: {
+  lesson: Lesson;
+  course: Course;
+  courseId: string;
+  active: boolean;
+}) {
+  const syncThumb = lessonThumb(lesson, course);
+  const { thumb: oembedThumb } = useBunnyThumb(syncThumb ? null : lesson.videoUrl);
+  const thumb = syncThumb ?? oembedThumb;
+
+  return (
+    <li>
+      <Link
+        to="/academia/$courseId/$lessonId"
+        params={{ courseId, lessonId: lesson.id }}
+        className={cn(
+          "flex min-w-0 items-center gap-3 rounded-2xl px-2 py-2 transition sm:px-2.5",
+          active
+            ? "bg-primary text-primary-foreground"
+            : "bg-surface-3 text-foreground hover:bg-surface-3/70",
+        )}
+      >
+        <div
+          className="relative h-12 w-20 shrink-0 overflow-hidden rounded-lg bg-black ring-1 ring-black/40"
+          style={thumb ? { backgroundImage: `url(${thumb})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+        >
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+            <PlayCircle
+              className={cn(
+                "h-5 w-5 drop-shadow",
+                active ? "text-primary-foreground" : "text-white/90",
+              )}
+            />
+          </div>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm">{lesson.title}</p>
+          <p
+            className={cn(
+              "text-xs",
+              active ? "text-primary-foreground/75" : "text-muted-foreground",
+            )}
+          >
+            {lesson.duration}
+          </p>
+        </div>
+      </Link>
+    </li>
   );
 }
 
