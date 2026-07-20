@@ -533,23 +533,19 @@ function ProfilePage() {
             </div>
           ) : sub ? (
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
-                  <CreditCard className="h-5 w-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="font-display text-lg text-foreground">
-                    {formatPlanLabel(sub.price_id)}
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {sub.cancel_at_period_end
-                      ? "Cancela no final do período atual"
-                      : sub.current_period_end
-                        ? `Próxima renovação em ${new Date(sub.current_period_end).toLocaleDateString("pt-PT", { day: "2-digit", month: "long", year: "numeric" })}`
-                        : "Assinatura ativa"}
-                  </p>
-                </div>
+              <div className="min-w-0">
+                <p className="font-display text-lg text-foreground">
+                  {formatPlanLabel(sub.price_id)}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {sub.cancel_at_period_end
+                    ? "Cancela no final do período atual"
+                    : sub.current_period_end
+                      ? `Próxima renovação em ${new Date(sub.current_period_end).toLocaleDateString("pt-PT", { day: "2-digit", month: "long", year: "numeric" })}`
+                      : "Assinatura ativa"}
+                </p>
               </div>
+
               <button
                 type="button"
                 onClick={openPortal}
@@ -679,10 +675,18 @@ function Stat({
 function formatPlanLabel(priceId: string | null): string {
   if (!priceId) return "Plano MM Club";
   const map: Record<string, string> = {
-    mm_club_start_monthly: "MM Club Start · Mensal",
+    mm_club_start_monthly: "MM Club · Mensal",
     mm_club_plus_semestral: "MM Club Plus · Semestral",
     mm_club_elite_anual: "MM Club Elite · Anual",
+    monthly_plan: "MM Club · Mensal",
+    semestral_plan: "MM Club Plus · Semestral",
+    annual_plan: "MM Club Elite · Anual",
+    monthly: "MM Club · Mensal",
+    semestral: "MM Club Plus · Semestral",
+    annual: "MM Club Elite · Anual",
+    annual_yearly: "MM Club Elite · Anual",
   };
+
   if (map[priceId]) return map[priceId];
   return priceId
     .replace(/^mm_club_/, "MM Club ")
