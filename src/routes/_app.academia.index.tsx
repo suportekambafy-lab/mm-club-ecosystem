@@ -149,11 +149,26 @@ function FeaturedHero({
         params: { courseId: course.id, lessonId: resumeLesson.id },
       }
     : { to: "/academia/$courseId" as const, params: { courseId: course.id } };
-  const percent = Math.round(course.progress * 100);
-  const totalDuration = computeCourseDuration(course);
+  const courseProgress = progress[course.id];
+  // Per-lesson real progress: watched seconds / lesson duration seconds
+  const lessonDurationMin = resumeLesson ? parseDurationToMinutes(resumeLesson.duration) : 0;
+  const lessonDurationSec = lessonDurationMin * 60;
+  const watchedSec = resumeLesson
+    ? courseProgress?.watchedSeconds.get(resumeLesson.id) ?? 0
+    : 0;
+  const isLessonCompleted = resumeLesson
+    ? courseProgress?.completedLessons.has(resumeLesson.id) ?? false
+    : false;
+  const lessonPercent = isLessonCompleted
+    ? 100
+    : lessonDurationSec > 0
+      ? Math.min(100, Math.round((watchedSec / lessonDurationSec) * 100))
+      : 0;
+  const started = watchedSec > 0 || isLessonCompleted || (course.progress ?? 0) > 0;
+  const lessonDurationLabel = lessonDurationMin > 0 ? formatMinutes(lessonDurationMin) : resumeLesson?.duration || "";
   // For "continua a assistir", prefer the lesson thumbnail — that's what the user
   // was actually watching. Fallback to course cover.
-  const thumb = percent > 0 ? lessonThumb(resumeLesson, course) : null;
+  const thumb = started ? lessonThumb(resumeLesson, course) : null;
   const heroBackground = thumb
     ? `url(${thumb}) center/cover no-repeat, #000`
     : course.cover;
