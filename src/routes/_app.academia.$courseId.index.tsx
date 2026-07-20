@@ -180,3 +180,49 @@ function CourseDetail() {
     </div>
   );
 }
+
+function CourseLessonRow({
+  lesson,
+  course,
+  index,
+}: {
+  lesson: Lesson;
+  course: Course;
+  index: number;
+}) {
+  const syncThumb = lessonThumb(lesson, course);
+  const { thumb: oembedThumb } = useBunnyThumb(syncThumb ? null : lesson.videoUrl);
+  const thumb = syncThumb ?? oembedThumb;
+
+  return (
+    <li>
+      <Link
+        to="/academia/$courseId/$lessonId"
+        params={{ courseId: course.id, lessonId: lesson.id }}
+        className="group grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/50 px-4 py-3 transition last:border-b-0 hover:bg-surface-2 sm:gap-4 sm:px-5"
+      >
+        <div className="relative h-14 w-24 shrink-0 overflow-hidden rounded-lg bg-black ring-1 ring-border sm:h-16 sm:w-28">
+          {thumb ? (
+            <img src={thumb} alt="" loading="lazy" className="h-full w-full object-cover" />
+          ) : (
+            <div className="absolute inset-0" style={{ background: course.cover }} />
+          )}
+          <span className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition group-hover:opacity-100">
+            <Play className="h-4 w-4 fill-white text-white" />
+          </span>
+          {lesson.completed && (
+            <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <Check className="h-2.5 w-2.5" />
+            </span>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm text-foreground">
+            {String(index + 1).padStart(2, "0")}. {lesson.title}
+          </p>
+        </div>
+        <span className="shrink-0 text-xs text-muted-foreground">{lesson.duration}</span>
+      </Link>
+    </li>
+  );
+}
