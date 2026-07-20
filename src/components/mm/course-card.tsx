@@ -66,7 +66,12 @@ export function CourseCard({ course, className, variant = "default", resumeLesso
             "relative overflow-hidden",
             isWide ? "aspect-[16/8]" : "aspect-[16/10]",
           )}
-          style={{ background: course.cover }}
+          style={{
+            background: showLessonCover
+              ? `url(${resumeLesson!.cover}) center/cover no-repeat, #000`
+              : course.cover,
+          }}
+
         >
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
           <div className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
