@@ -93,7 +93,7 @@ async function transcribeChunk(
 ): Promise<string> {
   const form = new FormData();
   form.append("model", TRANSCRIBE_MODEL);
-  form.append("file", new Blob([bytes], { type: mime }), filename);
+  form.append("file", new Blob([bytes as BlobPart], { type: mime }), filename);
   const res = await fetch(`${GATEWAY}/audio/transcriptions`, {
     method: "POST",
     headers: { "Lovable-API-Key": apiKey },
