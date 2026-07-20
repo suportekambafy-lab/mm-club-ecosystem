@@ -379,9 +379,10 @@ function ProfilePage() {
           />
         </div>
 
-        <div className="-mt-14 flex flex-col gap-6 px-5 pb-6 sm:px-8 md:flex-row md:items-end md:justify-between">
+        <div className="flex flex-col gap-6 px-5 pb-6 sm:px-8 md:flex-row md:items-end md:justify-between">
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-end">
-            <div className="relative">
+            {/* avatar pulled up over cover; name stays below */}
+            <div className="relative -mt-14">
               <div
                 className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl bg-surface-2 text-2xl font-semibold text-primary-foreground ring-4 ring-background sm:h-28 sm:w-28"
                 style={
