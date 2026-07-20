@@ -11,7 +11,7 @@ export type CourseOverride = Partial<
   Pick<Course, "title" | "tagline" | "description" | "cover" | "logo" | "duration">
 >;
 export type ExpertOverride = Partial<Pick<Expert, "name" | "role" | "photo" | "logo" | "shortBio">>;
-export type LessonOverride = Partial<Pick<Lesson, "title" | "duration" | "videoUrl">>;
+export type LessonOverride = Partial<Pick<Lesson, "title" | "duration" | "videoUrl" | "cover">>;
 
 export interface Overrides {
   courses: Record<string, CourseOverride>;
@@ -97,7 +97,9 @@ function snapshot() {
             title: l.title,
             duration: l.duration,
             videoUrl: l.videoUrl,
+            cover: l.cover,
           });
+
         }
       }
     }
