@@ -635,21 +635,41 @@ export async function runAutoTranscribeTick(): Promise<{
   }
   if (candidates.length === 0) return { ok: true, skipped: "no lessons with videoUrl" };
 
-  // Filter out anything already ready/embedding/transcribing.
+  // Filter out anything already ready/embedding/transcribing, and honour a
+  // short cooldown on failed rows (retry, mas não em loop apertado).
   const { data: existing } = await supabaseAdmin
     .from("lesson_transcripts")
-    .select("course_id,lesson_id,status")
+    .select("course_id,lesson_id,status,updated_at")
     .in(
       "lesson_id",
       candidates.map((c) => c.lessonId),
     );
-  const done = new Set(
+  const ERROR_COOLDOWN_MS = 5 * 60 * 1000;
+  const now = Date.now();
+  const skip = new Set<string>();
+  for (const r of (existing ?? []) as any[]) {
+    const key = `${r.course_id}::${r.lesson_id}`;
+    if (r.status === "ready" || r.status === "embedding" || r.status === "transcribing") {
+      skip.add(key);
+    } else if (r.status === "error") {
+      const ts = r.updated_at ? new Date(r.updated_at).getTime() : 0;
+      if (now - ts < ERROR_COOLDOWN_MS) skip.add(key);
+    }
+  }
+  // Prioriza aulas em "error" (mais antigas primeiro) para reinício, depois novas.
+  const errorSet = new Set(
     (existing ?? [])
-      .filter((r: any) => r.status === "ready" || r.status === "embedding" || r.status === "transcribing")
+      .filter((r: any) => r.status === "error")
       .map((r: any) => `${r.course_id}::${r.lesson_id}`),
   );
-  const next = candidates.find((c) => !done.has(`${c.courseId}::${c.lessonId}`));
-  if (!next) return { ok: true, skipped: "all lessons transcribed" };
+  const eligible = candidates.filter((c) => !skip.has(`${c.courseId}::${c.lessonId}`));
+  eligible.sort((a, b) => {
+    const ae = errorSet.has(`${a.courseId}::${a.lessonId}`) ? 0 : 1;
+    const be = errorSet.has(`${b.courseId}::${b.lessonId}`) ? 0 : 1;
+    return ae - be;
+  });
+  const next = eligible[0];
+  if (!next) return { ok: true, skipped: "all lessons transcribed or in cooldown" };
 
   // Mark as transcribing (acts as lock).
   await supabaseAdmin.from("lesson_transcripts").upsert(
