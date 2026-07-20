@@ -5,6 +5,7 @@ import { liveCourses, upcomingCourses } from "@/data/courses";
 import { expertsById } from "@/data/experts";
 import type { Course } from "@/data/types";
 import { useUserProgress, type ProgressByCourse } from "@/hooks/use-user-progress";
+import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb, parseDurationToMinutes, formatMinutes } from "@/lib/course-duration";
 
 export const Route = createFileRoute("/_app/academia/")({
@@ -167,8 +168,14 @@ function FeaturedHero({
   const started = watchedSec > 0 || isLessonCompleted || (course.progress ?? 0) > 0;
   const lessonDurationLabel = lessonDurationMin > 0 ? formatMinutes(lessonDurationMin) : resumeLesson?.duration || "";
   // For "continua a assistir", prefer the lesson thumbnail — that's what the user
-  // was actually watching. Fallback to course cover.
-  const thumb = started ? lessonThumb(resumeLesson, course) : null;
+  // was actually watching. Try sync resolution first (YouTube / Bunny CDN URL /
+  // Bunny iframe when VITE_BUNNY_PULL_ZONE is set), then fall back to Bunny
+  // OEmbed for iframe embeds we can't resolve locally.
+  const syncThumb = started ? lessonThumb(resumeLesson, course) : null;
+  const { thumb: oembedThumb } = useBunnyThumb(
+    started && !syncThumb ? resumeLesson?.videoUrl : null,
+  );
+  const thumb = syncThumb ?? oembedThumb;
   const heroBackground = thumb
     ? `url(${thumb}) center/cover no-repeat, #000`
     : course.cover;
