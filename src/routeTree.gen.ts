@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VipRouteImport } from './routes/vip'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as ReembolsosRouteImport } from './routes/reembolsos'
 import { Route as QuizRouteImport } from './routes/quiz'
@@ -50,6 +51,11 @@ import { Route as ApiPublicCloudflareStreamWebhookRouteImport } from './routes/a
 import { Route as AdminLivesLiveIdStudioRouteImport } from './routes/admin.lives.$liveId.studio'
 import { Route as AppAcademiaCourseIdLessonIdRouteImport } from './routes/_app.academia.$courseId.$lessonId'
 
+const VipRoute = VipRouteImport.update({
+  id: '/vip',
+  path: '/vip',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermosRoute = TermosRouteImport.update({
   id: '/termos',
   path: '/termos',
@@ -265,6 +271,7 @@ export interface FileRoutesByFullPath {
   '/quiz': typeof QuizRoute
   '/reembolsos': typeof ReembolsosRoute
   '/termos': typeof TermosRoute
+  '/vip': typeof VipRoute
   '/academia': typeof AppAcademiaRouteWithChildren
   '/codigo': typeof AppCodigoRoute
   '/comunidade': typeof AppComunidadeRoute
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/quiz': typeof QuizRoute
   '/reembolsos': typeof ReembolsosRoute
   '/termos': typeof TermosRoute
+  '/vip': typeof VipRoute
   '/codigo': typeof AppCodigoRoute
   '/comunidade': typeof AppComunidadeRoute
   '/dashboard': typeof AppDashboardRoute
@@ -344,6 +352,7 @@ export interface FileRoutesById {
   '/quiz': typeof QuizRoute
   '/reembolsos': typeof ReembolsosRoute
   '/termos': typeof TermosRoute
+  '/vip': typeof VipRoute
   '/_app/academia': typeof AppAcademiaRouteWithChildren
   '/_app/codigo': typeof AppCodigoRoute
   '/_app/comunidade': typeof AppComunidadeRoute
@@ -387,6 +396,7 @@ export interface FileRouteTypes {
     | '/quiz'
     | '/reembolsos'
     | '/termos'
+    | '/vip'
     | '/academia'
     | '/codigo'
     | '/comunidade'
@@ -427,6 +437,7 @@ export interface FileRouteTypes {
     | '/quiz'
     | '/reembolsos'
     | '/termos'
+    | '/vip'
     | '/codigo'
     | '/comunidade'
     | '/dashboard'
@@ -465,6 +476,7 @@ export interface FileRouteTypes {
     | '/quiz'
     | '/reembolsos'
     | '/termos'
+    | '/vip'
     | '/_app/academia'
     | '/_app/codigo'
     | '/_app/comunidade'
@@ -508,6 +520,7 @@ export interface RootRouteChildren {
   QuizRoute: typeof QuizRoute
   ReembolsosRoute: typeof ReembolsosRoute
   TermosRoute: typeof TermosRoute
+  VipRoute: typeof VipRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiPublicCloudflareStreamWebhookRoute: typeof ApiPublicCloudflareStreamWebhookRoute
   ApiPublicHooksAutoTranscribeRoute: typeof ApiPublicHooksAutoTranscribeRoute
@@ -516,6 +529,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/vip': {
+      id: '/vip'
+      path: '/vip'
+      fullPath: '/vip'
+      preLoaderRoute: typeof VipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/termos': {
       id: '/termos'
       path: '/termos'
@@ -928,6 +948,7 @@ const rootRouteChildren: RootRouteChildren = {
   QuizRoute: QuizRoute,
   ReembolsosRoute: ReembolsosRoute,
   TermosRoute: TermosRoute,
+  VipRoute: VipRoute,
   ApiChatRoute: ApiChatRoute,
   ApiPublicCloudflareStreamWebhookRoute: ApiPublicCloudflareStreamWebhookRoute,
   ApiPublicHooksAutoTranscribeRoute: ApiPublicHooksAutoTranscribeRoute,
