@@ -140,6 +140,22 @@ function GlassCard({
 /* ---------- Big Type Stack Hero ---------- */
 
 export function BigTypeHero() {
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+
+  useEffect(() => {
+    if (!welcomeOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setWelcomeOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [welcomeOpen]);
+
   const stackAnim = {
     hidden: { opacity: 0, y: 40 },
     show: (i: number) => ({
@@ -151,6 +167,7 @@ export function BigTypeHero() {
 
   return (
     <section className="relative overflow-hidden pt-20 pb-14 sm:pt-28 sm:pb-20">
+
       {/* background grid */}
       <div
         aria-hidden
