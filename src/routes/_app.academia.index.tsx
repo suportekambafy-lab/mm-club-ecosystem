@@ -1,8 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Play, Search, ChevronDown, Lock, Clock } from "lucide-react";
+import { useMemo } from "react";
 import { liveCourses, upcomingCourses } from "@/data/courses";
 import { expertsById } from "@/data/experts";
 import type { Course } from "@/data/types";
+import { useUserProgress, type ProgressByCourse } from "@/hooks/use-user-progress";
+import { computeCourseDuration, computeLessonsCount, findLesson } from "@/lib/course-duration";
 
 export const Route = createFileRoute("/_app/academia/")({
   head: () => ({
@@ -18,18 +21,38 @@ export const Route = createFileRoute("/_app/academia/")({
   component: AcademiaPage,
 });
 
+function firstLessonOf(course: Course) {
+  return course.modules?.[0]?.lessons?.[0] ?? null;
+}
+
+function resumeLessonOf(course: Course, progress: ProgressByCourse) {
+  const p = progress[course.id];
+  const last = p?.lastLessonId ? findLesson(course, p.lastLessonId) : null;
+  return last ?? firstLessonOf(course);
+}
+
 function AcademiaPage() {
-  const continuing = liveCourses.filter((c) => c.progress > 0 && c.progress < 1);
-  const enrolled = liveCourses;
-  // Featured: prefer next in progress, otherwise first live course.
-  const featured = continuing[0] ?? liveCourses[0];
+  const { progress } = useUserProgress();
+
+  const { continuing, enrolled, featured } = useMemo(() => {
+    const enrolled = liveCourses.map((c) => ({
+      ...c,
+      progress: progress[c.id]?.progress ?? 0,
+    }));
+    const continuing = enrolled
+      .filter((c) => c.progress > 0 && c.progress < 1)
+      .sort((a, b) => {
+        const ta = progress[a.id]?.lastWatchedAt ?? "";
+        const tb = progress[b.id]?.lastWatchedAt ?? "";
+        return tb.localeCompare(ta);
+      });
+    return { continuing, enrolled, featured: continuing[0] ?? enrolled[0] };
+  }, [progress]);
 
   return (
     <div className="space-y-16">
-      {/* Featured cinematic hero — MasterClass energy */}
-      {featured && <FeaturedHero course={featured} />}
+      {featured && <FeaturedHero course={featured} progress={progress} />}
 
-      {/* Continue Watching — poster rail */}
       {continuing.length > 0 && (
         <section className="space-y-5">
           <div className="flex items-end justify-between px-1">
@@ -44,13 +67,12 @@ function AcademiaPage() {
           </div>
           <div className="scrollbar-none -mx-1 flex gap-5 overflow-x-auto px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {continuing.map((c) => (
-              <PosterCard key={c.id} course={c} />
+              <PosterCard key={c.id} course={c} progress={progress} />
             ))}
           </div>
         </section>
       )}
 
-      {/* Enrolled Courses grid — streaming poster feel */}
       <section className="space-y-5">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between px-1">
           <div>
@@ -86,12 +108,11 @@ function AcademiaPage() {
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {enrolled.map((c) => (
-            <PosterCard key={c.id} course={c} inGrid />
+            <PosterCard key={c.id} course={c} progress={progress} inGrid />
           ))}
         </div>
       </section>
 
-      {/* Em breve */}
       {upcomingCourses.length > 0 && (
         <section className="space-y-5">
           <div className="px-1">
@@ -113,16 +134,29 @@ function AcademiaPage() {
   );
 }
 
-function FeaturedHero({ course }: { course: Course }) {
+function FeaturedHero({
+  course,
+  progress,
+}: {
+  course: Course;
+  progress: ProgressByCourse;
+}) {
   const expert = expertsById[course.expertId];
-  const firstLesson = course.modules?.[0]?.lessons?.[0];
-  const linkProps = firstLesson
+  const resumeLesson = resumeLessonOf(course, progress);
+  const linkProps = resumeLesson
     ? {
         to: "/academia/$courseId/$lessonId" as const,
-        params: { courseId: course.id, lessonId: firstLesson.id },
+        params: { courseId: course.id, lessonId: resumeLesson.id },
       }
     : { to: "/academia/$courseId" as const, params: { courseId: course.id } };
   const percent = Math.round(course.progress * 100);
+  const totalDuration = computeCourseDuration(course);
+  // For "continua a assistir", prefer the lesson thumbnail — that's what the user
+  // was actually watching. Fallback to course cover.
+  const heroBackground =
+    percent > 0 && resumeLesson?.cover
+      ? `url(${resumeLesson.cover}) center/cover no-repeat, #000`
+      : course.cover;
 
   return (
     <Link
@@ -131,9 +165,8 @@ function FeaturedHero({ course }: { course: Course }) {
     >
       <div
         className="relative aspect-[16/10] w-full md:aspect-[21/9]"
-        style={{ background: course.cover }}
+        style={{ background: heroBackground }}
       >
-        {/* Cinematic gradient stack */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/30 to-transparent" />
 
@@ -145,11 +178,15 @@ function FeaturedHero({ course }: { course: Course }) {
             <h1 className="mt-3 font-display text-3xl leading-[1.02] tracking-tight text-foreground md:text-5xl lg:text-6xl">
               {course.title}
             </h1>
-            {course.tagline && (
+            {percent > 0 && resumeLesson ? (
+              <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">
+                Próxima: <span className="text-foreground">{resumeLesson.title}</span>
+              </p>
+            ) : course.tagline ? (
               <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">
                 {course.tagline}
               </p>
-            )}
+            ) : null}
 
             <div className="mt-6 flex flex-wrap items-center gap-4">
               <span className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/25 transition group-hover:bg-gold-soft">
@@ -162,7 +199,11 @@ function FeaturedHero({ course }: { course: Course }) {
                     className="h-9 w-9 shrink-0 rounded-full ring-1 ring-hairline"
                     style={
                       expert.logo
-                        ? { backgroundImage: `url(${expert.logo})`, backgroundSize: "cover", backgroundPosition: "center" }
+                        ? {
+                            backgroundImage: `url(${expert.logo})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                          }
                         : { background: expert.photo }
                     }
                   />
@@ -174,7 +215,7 @@ function FeaturedHero({ course }: { course: Course }) {
               )}
               <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Clock className="h-3.5 w-3.5" />
-                {course.duration}
+                {totalDuration}
               </span>
             </div>
 
@@ -195,17 +236,31 @@ function FeaturedHero({ course }: { course: Course }) {
   );
 }
 
-function PosterCard({ course, inGrid }: { course: Course; inGrid?: boolean }) {
+function PosterCard({
+  course,
+  progress,
+  inGrid,
+}: {
+  course: Course;
+  progress: ProgressByCourse;
+  inGrid?: boolean;
+}) {
   const expert = expertsById[course.expertId];
-  const firstLesson = course.modules?.[0]?.lessons?.[0];
+  const percent = Math.round(course.progress * 100);
+  const resumeLesson = resumeLessonOf(course, progress);
   const linkProps =
-    firstLesson && course.progress > 0
+    resumeLesson && percent > 0
       ? {
           to: "/academia/$courseId/$lessonId" as const,
-          params: { courseId: course.id, lessonId: firstLesson.id },
+          params: { courseId: course.id, lessonId: resumeLesson.id },
         }
       : { to: "/academia/$courseId" as const, params: { courseId: course.id } };
-  const percent = Math.round(course.progress * 100);
+  const totalDuration = computeCourseDuration(course);
+  const lessonsCount = computeLessonsCount(course);
+  const posterBackground =
+    percent > 0 && resumeLesson?.cover
+      ? `url(${resumeLesson.cover}) center/cover no-repeat, #000`
+      : course.cover;
 
   return (
     <Link
@@ -217,7 +272,7 @@ function PosterCard({ course, inGrid }: { course: Course; inGrid?: boolean }) {
     >
       <div
         className="relative aspect-[16/10] overflow-hidden"
-        style={{ background: course.cover }}
+        style={{ background: posterBackground }}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
         <div
@@ -230,7 +285,7 @@ function PosterCard({ course, inGrid }: { course: Course; inGrid?: boolean }) {
 
         <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/45 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-white backdrop-blur-md">
           <Clock className="h-3 w-3" />
-          {course.duration}
+          {totalDuration}
         </div>
 
         <div className="absolute right-3 top-3 flex h-11 w-11 translate-y-1 items-center justify-center rounded-full bg-primary opacity-0 shadow-[0_10px_30px_-8px_oklch(0.82_0.13_82_/_0.7)] transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
@@ -248,17 +303,22 @@ function PosterCard({ course, inGrid }: { course: Course; inGrid?: boolean }) {
         <h3 className="font-display text-lg leading-tight tracking-tight text-foreground line-clamp-2">
           {course.title}
         </h3>
-        {expert && (
+        {percent > 0 && resumeLesson ? (
+          <p className="line-clamp-1 text-xs text-muted-foreground">
+            Continuar em:{" "}
+            <span className="text-foreground">{resumeLesson.title}</span>
+          </p>
+        ) : expert ? (
           <p className="line-clamp-1 text-xs text-muted-foreground">
             <span className="text-foreground">{expert.name}</span>
             <span className="mx-1.5 text-muted-foreground/40">·</span>
             {expert.role}
           </p>
-        )}
+        ) : null}
         <div className="mt-auto flex items-center justify-between pt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
             <Play className="h-3 w-3" />
-            {course.lessonsCount} aulas
+            {lessonsCount} aulas
           </span>
           {percent > 0 && <span className="text-primary">{percent}%</span>}
         </div>
@@ -266,8 +326,6 @@ function PosterCard({ course, inGrid }: { course: Course; inGrid?: boolean }) {
     </Link>
   );
 }
-
-
 
 function ComingSoonCard({ course }: { course: Course }) {
   const expert = expertsById[course.expertId];
