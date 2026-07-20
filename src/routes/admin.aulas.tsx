@@ -186,6 +186,7 @@ function AdminAulas() {
 
     saveOverrides(clean);
     applyOverrides(clean);
+    void pushOverridesToServer(clean);
     setOverrides(clean);
     setSaved(true);
     router.invalidate();
