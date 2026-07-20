@@ -111,12 +111,11 @@ function AdminTranscricoes() {
 
   const merged: Row[] = useMemo(() => {
     if (!overridesLoaded) return [];
-    const overrides = applyOverrides(courses);
     const map = new Map<string, TranscriptRow>();
     for (const r of rows) map.set(`${r.course_id}::${r.lesson_id}`, r);
 
     const list: Row[] = [];
-    for (const c of overrides) {
+    for (const c of courses) {
       for (const mod of c.modules ?? []) {
         for (const l of mod.lessons) {
           const key = `${c.id}::${l.id}`;
