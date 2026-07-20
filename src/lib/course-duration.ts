@@ -9,6 +9,39 @@ import { parseVideoUrl } from "@/lib/video-source";
  *   4. Course logo (image asset) or course cover if that itself is an image URL
  * Returns an image URL suitable for `url(...)` backgrounds or <img src>.
  */
+export function bunnyThumbFromUrl(raw: string): string | null {
+  if (!raw) return null;
+  const pullZone = (import.meta.env.VITE_BUNNY_PULL_ZONE as string | undefined)?.trim();
+  try {
+    const u = new URL(raw);
+    // 1. Direct CDN URL: https://vz-xxx.b-cdn.net/{guid}/{playlist.m3u8|play_*.mp4|...}
+    if (u.hostname.endsWith("b-cdn.net")) {
+      const guid = u.pathname.split("/").filter(Boolean)[0];
+      if (guid) return `${u.origin}/${guid}/thumbnail.jpg`;
+    }
+    // 2. Bunny iframe/embed URL: https://iframe.mediadelivery.net/(embed|play|thumbnail)/{libraryId}/{guid}[/...]
+    if (u.hostname === "iframe.mediadelivery.net" || u.hostname.endsWith(".mediadelivery.net")) {
+      const parts = u.pathname.split("/").filter(Boolean);
+      const guidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const guid = parts.find((p) => guidRe.test(p));
+      if (guid && pullZone) {
+        const host = pullZone.includes(".") ? pullZone : `${pullZone}.b-cdn.net`;
+        return `https://${host}/${guid}/thumbnail.jpg`;
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+/**
+ * Best-effort thumbnail for a lesson. Falls back through:
+ *   1. Explicit lesson.cover
+ *   2. YouTube thumbnail derived from videoUrl
+ *   3. Bunny.net thumbnail (b-cdn.net or iframe.mediadelivery.net embed/play/playlist)
+ *   4. Course logo or extracted image URL from course.cover
+ */
 export function lessonThumb(
   lesson: Lesson | null | undefined,
   course: Course,
@@ -21,20 +54,10 @@ export function lessonThumb(
       const m = v.embedUrl.match(/embed\/([\w-]+)/);
       if (m) return `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg`;
     }
-    // Bunny.net Stream: full CDN URL like https://vz-abc-xyz.b-cdn.net/{guid}/playlist.m3u8
-    // → thumbnail at https://vz-abc-xyz.b-cdn.net/{guid}/thumbnail.jpg
-    try {
-      const u = new URL(raw);
-      if (u.hostname.endsWith("b-cdn.net")) {
-        const guid = u.pathname.split("/").filter(Boolean)[0];
-        if (guid) return `${u.origin}/${guid}/thumbnail.jpg`;
-      }
-    } catch {
-      /* ignore */
-    }
+    const bunny = bunnyThumbFromUrl(raw);
+    if (bunny) return bunny;
   }
   if (course.logo) return course.logo;
-  // Extract raw image URL from course.cover if it contains one
   const match = course.cover?.match(/url\(([^)]+)\)/);
   if (match) return match[1].replace(/["']/g, "");
   return null;
