@@ -21,6 +21,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
+import { Route as AdminTranscricoesRouteImport } from './routes/admin.transcricoes'
 import { Route as AdminLivesRouteImport } from './routes/admin.lives'
 import { Route as AdminFerramentasRouteImport } from './routes/admin.ferramentas'
 import { Route as AdminEventosRouteImport } from './routes/admin.eventos'
@@ -107,6 +108,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTranscricoesRoute = AdminTranscricoesRouteImport.update({
+  id: '/transcricoes',
+  path: '/transcricoes',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminLivesRoute = AdminLivesRouteImport.update({
   id: '/lives',
@@ -274,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/lives': typeof AdminLivesRouteWithChildren
+  '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/admin/': typeof AdminIndexRoute
@@ -310,6 +317,7 @@ export interface FileRoutesByTo {
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
+  '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/admin': typeof AdminIndexRoute
@@ -351,6 +359,7 @@ export interface FileRoutesById {
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/lives': typeof AdminLivesRouteWithChildren
+  '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/admin/': typeof AdminIndexRoute
@@ -393,6 +402,7 @@ export interface FileRouteTypes {
     | '/admin/eventos'
     | '/admin/ferramentas'
     | '/admin/lives'
+    | '/admin/transcricoes'
     | '/api/chat'
     | '/checkout/return'
     | '/admin/'
@@ -429,6 +439,7 @@ export interface FileRouteTypes {
     | '/admin/cursos'
     | '/admin/eventos'
     | '/admin/ferramentas'
+    | '/admin/transcricoes'
     | '/api/chat'
     | '/checkout/return'
     | '/admin'
@@ -469,6 +480,7 @@ export interface FileRouteTypes {
     | '/admin/eventos'
     | '/admin/ferramentas'
     | '/admin/lives'
+    | '/admin/transcricoes'
     | '/api/chat'
     | '/checkout/return'
     | '/admin/'
@@ -587,6 +599,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/chat'
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/transcricoes': {
+      id: '/admin/transcricoes'
+      path: '/transcricoes'
+      fullPath: '/admin/transcricoes'
+      preLoaderRoute: typeof AdminTranscricoesRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/lives': {
       id: '/admin/lives'
@@ -871,6 +890,7 @@ interface AdminRouteChildren {
   AdminEventosRoute: typeof AdminEventosRoute
   AdminFerramentasRoute: typeof AdminFerramentasRoute
   AdminLivesRoute: typeof AdminLivesRouteWithChildren
+  AdminTranscricoesRoute: typeof AdminTranscricoesRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -880,6 +900,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEventosRoute: AdminEventosRoute,
   AdminFerramentasRoute: AdminFerramentasRoute,
   AdminLivesRoute: AdminLivesRouteWithChildren,
+  AdminTranscricoesRoute: AdminTranscricoesRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 

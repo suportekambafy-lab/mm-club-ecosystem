@@ -11,6 +11,7 @@ import {
   Wrench,
   ArrowLeft,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 // Ensure admin overrides are applied
@@ -45,6 +46,7 @@ type AdminTo =
   | "/admin"
   | "/admin/cursos"
   | "/admin/aulas"
+  | "/admin/transcricoes"
   | "/admin/eventos"
   | "/admin/lives"
   | "/admin/ferramentas";
@@ -62,6 +64,7 @@ const nav: Array<{
     items: [
       { to: "/admin/cursos", label: "Cursos", icon: BookOpen },
       { to: "/admin/aulas", label: "Aulas", icon: PlayCircle },
+      { to: "/admin/transcricoes", label: "Transcrições", icon: Sparkles },
     ],
   },
   {
