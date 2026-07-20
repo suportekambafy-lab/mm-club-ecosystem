@@ -161,6 +161,7 @@ function PlansPage() {
           displayMode: "overlay",
           theme: "dark",
           successUrl,
+          showAddDiscounts: true,
         },
       });
     } catch (e) {
