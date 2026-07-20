@@ -100,8 +100,14 @@ function DashboardPage() {
           }
         >
           {cont.map((c) => (
-            <CourseCard key={c.id} course={c} className="w-[340px] shrink-0" />
+            <CourseCard
+              key={c.id}
+              course={c}
+              resumeLessonId={progress[c.id]?.lastLessonId ?? null}
+              className="w-[340px] shrink-0"
+            />
           ))}
+
         </Rail>
       )}
 
@@ -121,9 +127,11 @@ function DashboardPage() {
           <CourseCard
             key={c.id}
             course={applyProgress(c, progress)}
+            resumeLessonId={progress[c.id]?.lastLessonId ?? null}
             className="w-[340px] shrink-0"
           />
         ))}
+
       </Rail>
 
       {realFeaturedLive?.status !== "live" && realFeaturedLive && (
