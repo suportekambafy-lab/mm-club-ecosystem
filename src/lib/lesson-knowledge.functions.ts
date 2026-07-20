@@ -82,6 +82,13 @@ function resolveDirectMediaUrl(url: string): string {
       return `https://${pullZone}.b-cdn.net/${guid}/play_720p.mp4`;
     }
   }
+  // Bunny HLS playlist → MP4 rendition on the same pull zone.
+  // e.g. https://vz-xxx.b-cdn.net/{guid}/playlist.m3u8 → .../play_480p.mp4
+  const hls = url.match(/^(https?:\/\/[^/]+\/[0-9a-f-]{36})\/(?:playlist|[^/]+)\.m3u8/i);
+  if (hls) {
+    // 480p keeps the file small enough to fit under the 25MB STT cap for typical lessons.
+    return `${hls[1]}/play_480p.mp4`;
+  }
   return url;
 }
 
