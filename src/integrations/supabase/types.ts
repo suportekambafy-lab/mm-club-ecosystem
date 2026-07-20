@@ -298,6 +298,110 @@ export type Database = {
         }
         Relationships: []
       }
+      lesson_transcript_chunks: {
+        Row: {
+          chunk_index: number
+          content: string
+          course_id: string
+          course_title: string | null
+          created_at: string
+          embedding: string
+          end_seconds: number | null
+          id: string
+          lesson_id: string
+          lesson_title: string | null
+          start_seconds: number | null
+          transcript_id: string
+        }
+        Insert: {
+          chunk_index: number
+          content: string
+          course_id: string
+          course_title?: string | null
+          created_at?: string
+          embedding: string
+          end_seconds?: number | null
+          id?: string
+          lesson_id: string
+          lesson_title?: string | null
+          start_seconds?: number | null
+          transcript_id: string
+        }
+        Update: {
+          chunk_index?: number
+          content?: string
+          course_id?: string
+          course_title?: string | null
+          created_at?: string
+          embedding?: string
+          end_seconds?: number | null
+          id?: string
+          lesson_id?: string
+          lesson_title?: string | null
+          start_seconds?: number | null
+          transcript_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_transcript_chunks_transcript_id_fkey"
+            columns: ["transcript_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_transcripts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_transcripts: {
+        Row: {
+          course_id: string
+          course_title: string | null
+          created_at: string
+          duration_seconds: number | null
+          error: string | null
+          id: string
+          language: string | null
+          lesson_id: string
+          lesson_title: string | null
+          model: string | null
+          status: string
+          transcript: string | null
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          course_id: string
+          course_title?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          error?: string | null
+          id?: string
+          language?: string | null
+          lesson_id: string
+          lesson_title?: string | null
+          model?: string | null
+          status?: string
+          transcript?: string | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          course_id?: string
+          course_title?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          error?: string | null
+          id?: string
+          language?: string | null
+          lesson_id?: string
+          lesson_title?: string | null
+          model?: string | null
+          status?: string
+          transcript?: string | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       live_chat_messages: {
         Row: {
           body: string
@@ -736,6 +840,22 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      match_lesson_chunks: {
+        Args: {
+          match_count?: number
+          min_similarity?: number
+          query_embedding: string
+        }
+        Returns: {
+          content: string
+          course_id: string
+          course_title: string
+          id: string
+          lesson_id: string
+          lesson_title: string
+          similarity: number
+        }[]
       }
       mm_short_increment_view: {
         Args: { _short_id: string }
