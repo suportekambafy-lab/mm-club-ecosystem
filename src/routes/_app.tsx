@@ -408,7 +408,7 @@ function AppLayout() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
-                  <p className="truncate text-xs text-muted-foreground">Membro MM Club</p>
+                  <p className="truncate text-xs text-muted-foreground">{planLabel}</p>
                 </div>
               </Link>
               <button
