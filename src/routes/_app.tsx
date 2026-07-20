@@ -493,13 +493,6 @@ function AppLayout() {
               >
                 {themeMounted ? <ThemeIcon className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </button>
-              <Link
-                to="/checkout"
-                aria-label="Guardados"
-                className="hidden h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-muted-foreground transition hover:text-foreground md:flex"
-              >
-                <ShoppingBag className="h-4 w-4" />
-              </Link>
               <NotificationsBell />
               <Link
                 to="/perfil"
