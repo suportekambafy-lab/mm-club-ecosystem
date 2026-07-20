@@ -675,3 +675,18 @@ function Stat({
     </div>
   );
 }
+
+function formatPlanLabel(priceId: string | null): string {
+  if (!priceId) return "Plano MM Club";
+  const map: Record<string, string> = {
+    mm_club_start_monthly: "MM Club Start · Mensal",
+    mm_club_plus_semestral: "MM Club Plus · Semestral",
+    mm_club_elite_anual: "MM Club Elite · Anual",
+  };
+  if (map[priceId]) return map[priceId];
+  return priceId
+    .replace(/^mm_club_/, "MM Club ")
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
