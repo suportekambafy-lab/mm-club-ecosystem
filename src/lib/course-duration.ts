@@ -5,22 +5,41 @@ import { parseVideoUrl } from "@/lib/video-source";
  * Best-effort thumbnail for a lesson. Falls back through:
  *   1. Explicit lesson.cover
  *   2. YouTube video thumbnail derived from videoUrl
- *   3. Course logo (image asset)
+ *   3. Bunny.net Stream thumbnail derived from b-cdn.net pull zone
+ *   4. Course logo (image asset) or course cover if that itself is an image URL
  * Returns an image URL suitable for `url(...)` backgrounds or <img src>.
  */
 export function lessonThumb(
   lesson: Lesson | null | undefined,
   course: Course,
 ): string | null {
-  if (!lesson) return course.logo ?? null;
-  if (lesson.cover) return lesson.cover;
-  const v = parseVideoUrl(lesson.videoUrl);
-  if (v.kind === "youtube" && v.embedUrl) {
-    const m = v.embedUrl.match(/embed\/([\w-]+)/);
-    if (m) return `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg`;
+  if (lesson?.cover) return lesson.cover;
+  const raw = (lesson?.videoUrl ?? "").trim();
+  if (raw) {
+    const v = parseVideoUrl(raw);
+    if (v.kind === "youtube" && v.embedUrl) {
+      const m = v.embedUrl.match(/embed\/([\w-]+)/);
+      if (m) return `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg`;
+    }
+    // Bunny.net Stream: full CDN URL like https://vz-abc-xyz.b-cdn.net/{guid}/playlist.m3u8
+    // → thumbnail at https://vz-abc-xyz.b-cdn.net/{guid}/thumbnail.jpg
+    try {
+      const u = new URL(raw);
+      if (u.hostname.endsWith("b-cdn.net")) {
+        const guid = u.pathname.split("/").filter(Boolean)[0];
+        if (guid) return `${u.origin}/${guid}/thumbnail.jpg`;
+      }
+    } catch {
+      /* ignore */
+    }
   }
-  return course.logo ?? null;
+  if (course.logo) return course.logo;
+  // Extract raw image URL from course.cover if it contains one
+  const match = course.cover?.match(/url\(([^)]+)\)/);
+  if (match) return match[1].replace(/["']/g, "");
+  return null;
 }
+
 
 
 // Parse strings like "12m", "1h", "1h 20m", "90 min", "1:20" -> minutes
