@@ -163,40 +163,12 @@ function CourseDetail() {
                 </div>
                 <ul>
                   {m.lessons.map((l: Lesson, li: number) => (
-                    <li key={l.id}>
-                      <Link
-                        to="/academia/$courseId/$lessonId"
-                        params={{ courseId: course.id, lessonId: l.id }}
-                        className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/50 px-4 py-3 transition last:border-b-0 hover:bg-surface-2 sm:gap-4 sm:px-5"
-                      >
-                        <div className="relative h-14 w-24 shrink-0 overflow-hidden rounded-lg bg-surface-2 ring-1 ring-border sm:h-16 sm:w-28">
-                          {l.cover ? (
-                            <img
-                              src={l.cover}
-                              alt=""
-                              loading="lazy"
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="absolute inset-0" style={{ background: course.cover }} />
-                          )}
-                          <span className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition group-hover:opacity-100">
-                            <Play className="h-4 w-4 fill-white text-white" />
-                          </span>
-                          {l.completed && (
-                            <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                              <Check className="h-2.5 w-2.5" />
-                            </span>
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm text-foreground">
-                            {String(li + 1).padStart(2, "0")}. {l.title}
-                          </p>
-                        </div>
-                        <span className="shrink-0 text-xs text-muted-foreground">{l.duration}</span>
-                      </Link>
-                    </li>
+                    <CourseLessonRow
+                      key={l.id}
+                      lesson={l}
+                      course={course}
+                      index={li}
+                    />
                   ))}
 
                 </ul>
