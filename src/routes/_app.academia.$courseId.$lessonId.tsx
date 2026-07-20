@@ -80,10 +80,10 @@ function LessonPlayer() {
 
 
   return (
-    <div className="-mx-3 -my-4 h-[calc(100dvh-3.5rem)] max-w-[100vw] overflow-x-hidden bg-background sm:-mx-4 sm:-my-6 md:-mx-8 md:-my-8 lg:overflow-hidden">
-      <div className="mx-auto flex h-full max-w-[1440px] flex-col overflow-y-auto overflow-x-hidden px-3 py-4 sm:px-4 sm:py-6 md:px-6 md:py-6 lg:overflow-hidden">
+    <div className="-mx-3 -my-4 h-[calc(100dvh-3.5rem)] w-[calc(100%+1.5rem)] max-w-[100vw] touch-pan-y overflow-x-clip bg-background overscroll-x-none sm:-mx-4 sm:-my-6 sm:w-[calc(100%+2rem)] md:-mx-8 md:-my-8 md:w-[calc(100%+4rem)] lg:overflow-hidden">
+      <div className="mx-auto flex h-full w-full max-w-[1440px] min-w-0 flex-col overflow-y-auto overflow-x-clip px-3 py-4 overscroll-x-none sm:px-4 sm:py-6 md:px-6 md:py-6 lg:overflow-hidden">
         {/* Breadcrumb bar */}
-        <div className="mb-4 flex items-center gap-2 overflow-x-auto rounded-2xl border border-border bg-surface-1 px-4 py-2.5 text-sm md:mb-6 md:gap-3 md:px-5 md:py-3">
+        <div className="mb-4 flex max-w-full items-center gap-2 overflow-x-auto rounded-2xl border border-border bg-surface-1 px-4 py-2.5 text-sm [scrollbar-width:none] md:mb-6 md:gap-3 md:px-5 md:py-3 [&::-webkit-scrollbar]:hidden">
           <Link
             to="/academia"
             className="shrink-0 text-muted-foreground transition hover:text-foreground"
@@ -103,9 +103,9 @@ function LessonPlayer() {
         </div>
 
         {/* Layout: modules sidebar + main content */}
-        <div className="grid min-h-0 flex-1 gap-4 md:gap-6 lg:grid-cols-[330px_minmax(0,1fr)]">
+        <div className="grid min-h-0 min-w-0 flex-1 gap-4 md:gap-6 lg:grid-cols-[minmax(280px,330px)_minmax(0,1fr)]">
           {/* Modules sidebar — scrollable independently on desktop; below content on mobile */}
-          <aside className="order-2 flex min-h-0 flex-col rounded-3xl border border-border bg-surface-1 p-4 md:p-5 lg:order-1">
+          <aside className="order-2 flex min-h-0 min-w-0 flex-col rounded-2xl border border-border bg-surface-1 p-3 sm:p-4 md:rounded-3xl md:p-5 lg:order-1">
             <p className="mb-4 shrink-0 font-display text-lg text-foreground">Módulos</p>
             <div className="space-y-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
               {course.modules!.map((m: Module, mi: number) => (
@@ -121,7 +121,7 @@ function LessonPlayer() {
           </aside>
 
           {/* Main content: video + title/cta */}
-          <div className="order-1 flex min-h-0 flex-col gap-3 sm:gap-4 md:gap-6 lg:order-2 lg:overflow-y-auto lg:pr-1">
+          <div className="order-1 flex min-h-0 min-w-0 flex-col gap-3 sm:gap-4 md:gap-6 lg:order-2 lg:overflow-y-auto lg:pr-1">
             {/* Video player */}
             <TrackedVideoPlayer
               lessonId={current.lesson.id}
@@ -132,7 +132,7 @@ function LessonPlayer() {
             />
 
             {/* Title + CTA */}
-            <div className="flex flex-row items-center justify-between gap-2 rounded-xl bg-surface-2 px-2.5 py-2 sm:gap-3 sm:px-4 sm:py-3">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-xl bg-surface-2 px-2.5 py-2 sm:gap-3 sm:px-4 sm:py-3">
               <div className="min-w-0 flex-1">
                 <h1 className="truncate font-display text-sm text-foreground sm:text-base md:text-lg">
                   {current.lesson.title}
@@ -144,7 +144,7 @@ function LessonPlayer() {
                 </div>
               </div>
 
-              <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+              <div className="flex min-w-0 shrink-0 items-center gap-1 overflow-x-auto pl-1 [scrollbar-width:none] sm:gap-2 [&::-webkit-scrollbar]:hidden">
                 <button
                   type="button"
                   onClick={() => setCompleted(!completed)}
@@ -236,14 +236,14 @@ function ModuleAccordion({
   const Icon = open ? ChevronUp : ChevronDown;
 
   return (
-    <div className="rounded-2xl bg-surface-2 p-4">
+    <div className="min-w-0 rounded-2xl bg-surface-2 p-3 sm:p-4">
       <button
         type="button"
         onClick={() => setOpen((s) => !s)}
-        className="flex w-full items-start gap-2 text-left"
+        className="flex w-full min-w-0 items-start gap-2 text-left"
       >
-        <div className="flex-1">
-          <p className="text-[15px] leading-snug text-foreground">{module.title}</p>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[15px] leading-snug text-foreground">{module.title}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {module.lessons.length} {module.lessons.length === 1 ? "aula" : "aulas"}
           </p>
@@ -261,7 +261,7 @@ function ModuleAccordion({
                   to="/academia/$courseId/$lessonId"
                   params={{ courseId, lessonId: l.id }}
                   className={cn(
-                    "flex items-center gap-3 rounded-2xl px-4 py-3 transition",
+                    "flex min-w-0 items-center gap-3 rounded-2xl px-3 py-3 transition sm:px-4",
                     active
                       ? "bg-primary text-primary-foreground"
                       : "bg-surface-3 text-foreground hover:bg-surface-3/70",
@@ -450,7 +450,7 @@ function TrackedVideoPlayer({
 
   if (source.kind === "file" && source.fileUrl) {
     return (
-      <div className="relative aspect-video shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
+      <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
         <video
           key={lessonId}
           ref={videoRef}
@@ -475,7 +475,7 @@ function TrackedVideoPlayer({
 
   if (source.embedUrl) {
     return (
-      <div className="relative aspect-video shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
+      <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
         <iframe
           key={lessonId}
           ref={iframeRef}
@@ -492,7 +492,7 @@ function TrackedVideoPlayer({
   }
 
   return (
-    <div className="relative aspect-video shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
+    <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
       <div className="absolute inset-0 flex items-center justify-center text-sm text-white/60">
         Vídeo não configurado para esta aula.
       </div>

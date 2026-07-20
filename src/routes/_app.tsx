@@ -411,7 +411,7 @@ function AppLayout() {
 
   return (
     <div
-      className="min-h-screen bg-background text-foreground"
+      className="min-h-dvh max-w-full overflow-x-clip bg-background text-foreground"
       style={{ ["--mm-sidebar-w" as string]: collapsed ? "76px" : "256px" } as React.CSSProperties}
     >
 
@@ -451,10 +451,10 @@ function AppLayout() {
       </div>
 
       {/* Main */}
-      <div className={cn("transition-[padding] duration-200 ease-out", collapsed ? "lg:pl-[76px]" : "lg:pl-64")}>
+      <div className={cn("min-w-0 max-w-full overflow-x-clip transition-[padding] duration-200 ease-out", collapsed ? "lg:pl-[76px]" : "lg:pl-64")}>
         {/* Topbar — hidden on immersive routes */}
         {pathname !== "/shorts" && (
-        <header className="sticky top-0 z-30 flex items-center gap-2 bg-background/80 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 backdrop-blur-xl sm:gap-4 sm:px-4 sm:pt-[calc(env(safe-area-inset-top)+1rem)] sm:pb-4 md:px-8 md:pt-[calc(env(safe-area-inset-top)+1.5rem)]">
+        <header className="sticky top-0 z-30 grid max-w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 overflow-x-clip bg-background/80 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 backdrop-blur-xl sm:gap-4 sm:px-4 sm:pt-[calc(env(safe-area-inset-top)+1rem)] sm:pb-4 md:px-8 md:pt-[calc(env(safe-area-inset-top)+1.5rem)] lg:flex">
           {/* Mobile: menu button opens the slide-in sidebar */}
           <button
             type="button"
@@ -466,13 +466,13 @@ function AppLayout() {
           </button>
 
           {/* Mobile logo */}
-          <div className="flex shrink-0 items-center lg:hidden">
-            <MMLogo />
+          <div className="flex min-w-0 items-center lg:hidden">
+            <MMLogo className="min-w-0 max-[374px]:[&>span]:hidden" />
           </div>
 
           <div
             className={cn(
-              "flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-3",
+              "col-start-3 flex min-w-0 items-center justify-end gap-1.5 sm:gap-3 lg:col-start-auto lg:flex-1",
               pathname === "/dashboard" &&
                 "sm:rounded-2xl sm:border sm:border-border sm:bg-surface-1 sm:px-5 sm:py-3 md:py-4",
             )}
@@ -527,8 +527,8 @@ function AppLayout() {
 
         <main className={cn(
           pathname === "/shorts"
-            ? "relative"
-            : "relative mx-auto max-w-7xl px-3 pb-24 pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8 lg:pb-12 xl:max-w-[1600px] 2xl:max-w-[1760px]",
+            ? "relative min-w-0 max-w-full overflow-x-clip"
+            : "relative mx-auto min-w-0 max-w-7xl overflow-x-clip px-3 pb-24 pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8 lg:pb-12 xl:max-w-[1600px] 2xl:max-w-[1760px]",
         )}>
           {/* Ambient editorial glow — matches landing page atmosphere */}
           {pathname !== "/shorts" && (

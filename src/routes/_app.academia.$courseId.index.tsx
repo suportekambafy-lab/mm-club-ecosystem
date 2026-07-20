@@ -36,7 +36,7 @@ function CourseDetail() {
 
 
   return (
-    <div className="space-y-10">
+    <div className="max-w-full space-y-10 overflow-x-clip">
       <Link
         to="/academia"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
@@ -44,7 +44,7 @@ function CourseDetail() {
         <ArrowLeft className="h-4 w-4" /> Academia
       </Link>
 
-      <section className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
+      <section className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,1fr)]">
         {firstLesson ? (
           <Link
             to="/academia/$courseId/$lessonId"
@@ -75,7 +75,7 @@ function CourseDetail() {
         )}
 
 
-        <div className="flex flex-col gap-6">
+        <div className="flex min-w-0 flex-col gap-6">
           <div>
             <p className="text-xs font-medium uppercase tracking-[0.24em] text-primary">
               Curso · MM Club
@@ -119,8 +119,8 @@ function CourseDetail() {
 
           {percent > 0 && (
             <div>
-              <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-                <span>
+              <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 text-xs text-muted-foreground">
+                <span className="min-w-0 truncate">
                   Progresso
                   {resumeLesson && (
                     <span className="ml-2 text-foreground/80">
@@ -152,12 +152,12 @@ function CourseDetail() {
           <div className="space-y-3">
             {course.modules.map((m: Module, mi: number) => (
               <div key={m.id} className="overflow-hidden rounded-xl bg-surface-1 ring-1 ring-border">
-                <div className="border-b border-border px-5 py-4">
-                  <div className="flex items-center gap-3">
+                <div className="border-b border-border px-4 py-4 sm:px-5">
+                  <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
                     <span className="text-[11px] font-medium uppercase tracking-wider text-primary">
                       Módulo {String(mi + 1).padStart(2, "0")}
                     </span>
-                    <h3 className="font-display text-base text-foreground">{m.title}</h3>
+                    <h3 className="truncate font-display text-base text-foreground">{m.title}</h3>
                   </div>
                 </div>
                 <ul>
@@ -166,7 +166,7 @@ function CourseDetail() {
                       <Link
                         to="/academia/$courseId/$lessonId"
                         params={{ courseId: course.id, lessonId: l.id }}
-                        className="flex items-center gap-4 border-b border-border/50 px-5 py-3 transition last:border-b-0 hover:bg-surface-2"
+                        className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/50 px-4 py-3 transition last:border-b-0 hover:bg-surface-2 sm:gap-4 sm:px-5"
                       >
                         <div className="relative h-14 w-24 shrink-0 overflow-hidden rounded-lg bg-surface-2 ring-1 ring-border sm:h-16 sm:w-28">
                           {l.cover ? (
@@ -193,7 +193,7 @@ function CourseDetail() {
                             {String(li + 1).padStart(2, "0")}. {l.title}
                           </p>
                         </div>
-                        <span className="text-xs text-muted-foreground">{l.duration}</span>
+                        <span className="shrink-0 text-xs text-muted-foreground">{l.duration}</span>
                       </Link>
                     </li>
                   ))}
