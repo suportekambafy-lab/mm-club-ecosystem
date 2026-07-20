@@ -100,10 +100,10 @@ function CourseDetail() {
 
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5" /> {course.duration}
+              <Clock className="h-3.5 w-3.5" /> {totalDuration}
             </span>
             <span>·</span>
-            <span>{course.lessonsCount} aulas</span>
+            <span>{totalLessons} aulas</span>
           </div>
 
           {firstLesson && (
@@ -113,24 +113,29 @@ function CourseDetail() {
               className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
             >
               <Play className="h-4 w-4 fill-current" />
-              {course.progress > 0 ? "Continuar" : "Começar curso"}
+              {percent > 0 ? "Continuar" : "Começar curso"}
             </Link>
           )}
 
-          {course.progress > 0 && (
+          {percent > 0 && (
             <div>
               <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-                <span>Progresso</span>
-                <span className="text-primary">{Math.round(course.progress * 100)}%</span>
+                <span>
+                  Progresso
+                  {resumeLesson && (
+                    <span className="ml-2 text-foreground/80">
+                      · Próxima: {resumeLesson.title}
+                    </span>
+                  )}
+                </span>
+                <span className="text-primary">{percent}%</span>
               </div>
               <div className="h-1 overflow-hidden rounded-full bg-surface-3">
-                <div
-                  className="h-full bg-primary"
-                  style={{ width: `${Math.round(course.progress * 100)}%` }}
-                />
+                <div className="h-full bg-primary" style={{ width: `${percent}%` }} />
               </div>
             </div>
           )}
+
         </div>
       </section>
 
