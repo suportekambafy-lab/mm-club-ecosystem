@@ -258,10 +258,9 @@ function PosterCard({
       : { to: "/academia/$courseId" as const, params: { courseId: course.id } };
   const totalDuration = computeCourseDuration(course);
   const lessonsCount = computeLessonsCount(course);
-  const thumb = percent > 0 ? lessonThumb(resumeLesson, course) : null;
-  const posterBackground = thumb
-    ? `url(${thumb}) center/cover no-repeat, #000`
-    : course.cover;
+  // Catalog cards always show the course cover — lesson thumbs are reserved
+  // for the "Continua a assistir" hero.
+  const posterBackground = course.cover;
 
 
   return (
