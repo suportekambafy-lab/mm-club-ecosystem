@@ -243,8 +243,13 @@ async function transcribeFromHls(playlistUrl: string, apiKey: string): Promise<s
     const hasContent = batch.length > (initBytes ? 1 : 0);
     if (!hasContent) return;
     const out = concatBytes(batch);
-    const audioPayload = isFmp4 ? out : await transmuxTsToAudioMp4(out);
-    const t = await transcribeChunk(audioPayload, isFmp4 ? "chunk.mp4" : "chunk.m4a", "audio/mp4", apiKey);
+    const payload = isFmp4 ? out : await transmuxTsToAudioMp4(out);
+    const t = await transcribeChunk(
+      payload,
+      isFmp4 ? "chunk.mp4" : "chunk.m4a",
+      isFmp4 ? "video/mp4" : "audio/mp4",
+      apiKey,
+    );
     if (t.trim()) texts.push(t.trim());
     batch = initBytes ? [initBytes] : [];
     size = initBytes ? initBytes.byteLength : 0;
