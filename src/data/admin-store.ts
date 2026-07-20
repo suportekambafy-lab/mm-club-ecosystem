@@ -183,10 +183,51 @@ export function getOverridesVersion() {
   return version;
 }
 
-// Apply on load (browser only)
+// Apply on load (browser only) — first localStorage (instant), then pull the
+// shared server copy so admin edits show up in production for every visitor.
 if (typeof window !== "undefined") {
   applyOverrides(loadOverrides());
   window.addEventListener("storage", (e) => {
     if (e.key === STORAGE_KEY) applyOverrides(loadOverrides());
   });
+
+  void (async () => {
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data } = await supabase
+        .from("admin_overrides")
+        .select("data")
+        .eq("id", "courses")
+        .maybeSingle();
+      const remote = (data?.data ?? null) as Overrides | null;
+      if (remote && (remote.modulesByCourse || remote.courses || remote.experts)) {
+        saveOverrides(remote);
+        applyOverrides(remote);
+      }
+    } catch {
+      // offline / unauth — fall back to local + base data
+    }
+  })();
 }
+
+export async function pushOverridesToServer(o: Overrides) {
+  if (typeof window === "undefined") return { ok: false as const, error: "SSR" };
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { error } = await supabase
+      .from("admin_overrides")
+      .upsert(
+        {
+          id: "courses",
+          data: o as unknown as Record<string, unknown>,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "id" },
+      );
+    if (error) return { ok: false as const, error: error.message };
+    return { ok: true as const };
+  } catch (e) {
+    return { ok: false as const, error: (e as Error).message };
+  }
+}
+
