@@ -243,7 +243,7 @@ export const generateImages = createServerFn({ method: "POST" })
   });
 
 // ============ VIDEO GENERATION (Gemini Veo) ============
-const VEO_MODEL = "veo-3.0-fast-generate-001";
+const VEO_MODEL = "veo-2.0-generate-001";
 
 const StartVideoSchema = z.object({
   productId: z.string().uuid().nullable().optional(),
