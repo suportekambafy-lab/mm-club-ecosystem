@@ -467,20 +467,27 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
       ? `Layered ${data.music} background music track, well-mixed under the narration, dynamic build matching the edit.`
       : "";
 
+    const conversionBase = buildVideoPrompt({
+      style: data.style as VideoStyle,
+      format: data.format as VideoFormat,
+      duration: data.duration,
+      objective: data.objective ?? "high-conversion product ad",
+      people: data.people as PeoplePreset,
+      hook: data.hook as ConversionHook,
+      brand: brand as BrandDna,
+      product: product as ProductCtx,
+    });
+
     const basePrompt = [
-      `Cinematic ${data.style} commercial video`,
-      product?.name ? `featuring ${product.name}${product.category ? ` (${product.category})` : ""}` : null,
-      brand?.brand_name ? `for brand ${brand.brand_name}` : null,
-      brand?.tone ? `tone: ${brand.tone}` : null,
-      data.objective ? `objective: ${data.objective}` : null,
-      product?.notes ? `product notes: ${product.notes}` : null,
-      brand?.description ? `brand: ${brand.description}` : null,
-      data.notes ? `direction: ${data.notes}` : null,
+      conversionBase,
+      product?.notes ? `Product notes: ${product.notes}` : null,
+      brand?.description ? `Brand context: ${brand.description}` : null,
+      data.notes ? `Extra direction: ${data.notes}` : null,
       refClause,
       narrationClause,
       captionClause,
       musicClause || null,
-      `smooth camera motion, dramatic lighting, premium color grading, 4k.`,
+      "Smooth motivated camera motion, dramatic lighting, premium color grading, 4k.",
     ].filter(Boolean).join(". ");
 
     // Spend all credits upfront
