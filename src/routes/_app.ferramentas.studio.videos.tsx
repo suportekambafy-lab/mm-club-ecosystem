@@ -67,7 +67,7 @@ function VideosPage() {
 
   async function onGenerate() {
     setError(null);
-    setVideoUrl(null);
+    setVideoUrls(null);
     setBusy(true);
     setStatusText("A iniciar geração…");
     try {
