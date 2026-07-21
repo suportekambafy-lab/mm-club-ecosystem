@@ -249,7 +249,7 @@ const StartVideoSchema = z.object({
   productId: z.string().uuid().nullable().optional(),
   style: z.string().min(1),
   format: z.enum(["reels", "tiktok", "facebook", "stories", "shorts"]),
-  duration: z.number().int().min(8).max(10).default(8),
+  duration: z.number().int().refine((d) => [8, 10, 15, 30].includes(d), "Duração inválida.").default(8),
   objective: z.string().max(120).optional(),
   notes: z.string().max(1200).optional(),
 });
