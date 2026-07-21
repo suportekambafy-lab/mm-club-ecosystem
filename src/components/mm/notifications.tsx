@@ -330,13 +330,13 @@ export function NotificationsBell({ className }: { className?: string }) {
         )}
       </button>
 
-      {open && (
+      {open && typeof document !== "undefined" && createPortal(
         <div
           ref={popRef}
           role="dialog"
           aria-label="Notificações"
           style={popPos ? { top: popPos.top, right: popPos.right } : undefined}
-          className="fixed z-[100] w-[min(92vw,380px)] max-h-[min(80vh,560px)] flex flex-col origin-top-right overflow-hidden rounded-2xl border border-border bg-surface-1 shadow-2xl shadow-black/40 ring-1 ring-[color:var(--hairline)]"
+          className="fixed z-[9999] w-[min(92vw,380px)] max-h-[min(80vh,560px)] flex flex-col origin-top-right overflow-hidden rounded-2xl border border-border bg-surface-1 shadow-2xl shadow-black/40 ring-1 ring-[color:var(--hairline)]"
         >
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <div className="flex items-center gap-2">
