@@ -194,6 +194,8 @@ function StudioHome() {
           ))}
         </div>
       </section>
+
+      <CreditsTopupModal open={topupOpen} onClose={() => setTopupOpen(false)} />
     </div>
   );
 }
