@@ -190,7 +190,7 @@ function AssetModal({ asset, onClose, onDelete }: { asset: AssetRow; onClose: ()
     setError(null);
     setBusy(true);
     setStatus("A iniciar geração…");
-    const meta = (asset.meta ?? {}) as { productId?: string | null; duration?: number; objective?: string };
+    const meta = (asset.metadata ?? {}) as { productId?: string | null; duration?: number; objective?: string };
     try {
       const r = await start({
         data: {
