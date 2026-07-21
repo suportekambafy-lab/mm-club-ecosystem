@@ -197,102 +197,110 @@ function VideosPage() {
             )}
           </Field>
 
-          <Field label="Objetivo">
-            <div className="flex flex-wrap gap-2">
-              {VIDEO_OBJECTIVES.map((o) => (
-                <Chip key={o.id} active={objective === o.id} onClick={() => setObjective(o.id)}>{o.label}</Chip>
-              ))}
-            </div>
-          </Field>
+          <Section title="Objetivo & Pessoas" summary={`${VIDEO_OBJECTIVES.find(o=>o.id===objective)?.label ?? "—"} · ${PEOPLE_OPTIONS.find(p=>p.id===people)?.label ?? "—"} · ${CONVERSION_HOOKS.find(h=>h.id===hook)?.label ?? "—"}`}>
+            <Field label="Objetivo">
+              <div className="flex flex-wrap gap-2">
+                {VIDEO_OBJECTIVES.map((o) => (
+                  <Chip key={o.id} active={objective === o.id} onClick={() => setObjective(o.id)}>{o.label}</Chip>
+                ))}
+              </div>
+            </Field>
 
-          <Field label="Pessoas no vídeo">
-            <div className="flex flex-wrap gap-2">
-              {PEOPLE_OPTIONS.map((p) => (
-                <Chip key={p.id} active={people === p.id} onClick={() => setPeople(p.id)}>{p.label}</Chip>
-              ))}
-            </div>
-          </Field>
+            <Field label="Pessoas no vídeo">
+              <div className="flex flex-wrap gap-2">
+                {PEOPLE_OPTIONS.map((p) => (
+                  <Chip key={p.id} active={people === p.id} onClick={() => setPeople(p.id)}>{p.label}</Chip>
+                ))}
+              </div>
+            </Field>
 
-          <Field label="Ângulo de conversão">
-            <div className="flex flex-wrap gap-2">
-              {CONVERSION_HOOKS.map((h) => (
-                <Chip key={h.id} active={hook === h.id} onClick={() => setHook(h.id)}>{h.label}</Chip>
-              ))}
-            </div>
-          </Field>
+            <Field label="Ângulo de conversão">
+              <div className="flex flex-wrap gap-2">
+                {CONVERSION_HOOKS.map((h) => (
+                  <Chip key={h.id} active={hook === h.id} onClick={() => setHook(h.id)}>{h.label}</Chip>
+                ))}
+              </div>
+            </Field>
+          </Section>
 
+          <Section
+            title="Áudio & Legendas"
+            summary={`${narration === "none" ? "Sem narração" : "Narração"} · ${captions === "none" ? "Sem legendas" : captions.toUpperCase()} · ${music === "none" ? "Sem música" : music}`}
+          >
+            <Field label="Narração">
+              <div className="flex flex-wrap gap-2">
+                {([
+                  { id: "none", label: "Sem narração" },
+                  { id: "female_pt", label: "Voz feminina · PT" },
+                  { id: "male_pt", label: "Voz masculina · PT" },
+                  { id: "female_en", label: "Voz feminina · EN" },
+                  { id: "male_en", label: "Voz masculina · EN" },
+                  { id: "neutral", label: "Neutra premium" },
+                ] as const).map((n) => (
+                  <Chip key={n.id} active={narration === n.id} onClick={() => setNarration(n.id)}>{n.label}</Chip>
+                ))}
+              </div>
+              {narration !== "none" && (
+                <textarea
+                  value={narrationScript}
+                  onChange={(e) => setNarrationScript(e.target.value)}
+                  rows={2}
+                  placeholder="Guião da narração (opcional). Ex.: 'Redefinimos o luxo. Descobre a nova coleção.'"
+                  className="mt-2 w-full rounded-xl border border-[color:var(--hairline)] bg-background/40 px-3 py-2 text-sm"
+                />
+              )}
+            </Field>
 
-          <Field label="Narração">
-            <div className="flex flex-wrap gap-2">
-              {([
-                { id: "none", label: "Sem narração" },
-                { id: "female_pt", label: "Voz feminina · PT" },
-                { id: "male_pt", label: "Voz masculina · PT" },
-                { id: "female_en", label: "Voz feminina · EN" },
-                { id: "male_en", label: "Voz masculina · EN" },
-                { id: "neutral", label: "Neutra premium" },
-              ] as const).map((n) => (
-                <Chip key={n.id} active={narration === n.id} onClick={() => setNarration(n.id)}>{n.label}</Chip>
-              ))}
-            </div>
-            {narration !== "none" && (
+            <Field label="Legendas">
+              <div className="flex flex-wrap gap-2">
+                {([
+                  { id: "none", label: "Sem legendas" },
+                  { id: "pt", label: "Português" },
+                  { id: "en", label: "English" },
+                  { id: "es", label: "Español" },
+                ] as const).map((c) => (
+                  <Chip key={c.id} active={captions === c.id} onClick={() => setCaptions(c.id)}>{c.label}</Chip>
+                ))}
+              </div>
+              {captions !== "none" && (
+                <input
+                  value={captionText}
+                  onChange={(e) => setCaptionText(e.target.value)}
+                  placeholder="Texto exato da legenda (opcional)"
+                  className="mt-2 w-full rounded-xl border border-[color:var(--hairline)] bg-background/40 px-3 py-2 text-sm"
+                />
+              )}
+            </Field>
+
+            <Field label="Música">
+              <div className="flex flex-wrap gap-2">
+                {([
+                  { id: "none", label: "Sem música" },
+                  { id: "cinematic", label: "Cinematográfica" },
+                  { id: "upbeat", label: "Energética" },
+                  { id: "elegant", label: "Elegante" },
+                  { id: "epic", label: "Épica" },
+                  { id: "chill", label: "Chill" },
+                  { id: "corporate", label: "Corporate" },
+                ] as const).map((m) => (
+                  <Chip key={m.id} active={music === m.id} onClick={() => setMusic(m.id)}>{m.label}</Chip>
+                ))}
+              </div>
+            </Field>
+          </Section>
+
+          <Section title="Instruções extra" summary={notes ? `${notes.slice(0, 40)}${notes.length > 40 ? "…" : ""}` : "Opcional"}>
+            <Field label="Notas para o realizador">
               <textarea
-                value={narrationScript}
-                onChange={(e) => setNarrationScript(e.target.value)}
-                rows={2}
-                placeholder="Guião da narração (opcional). Ex.: 'Redefinimos o luxo. Descobre a nova coleção.'"
-                className="mt-2 w-full rounded-xl border border-[color:var(--hairline)] bg-background/40 px-3 py-2 text-sm"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+                placeholder="Ex.: câmara a orbitar, luz dourada ao pôr-do-sol, movimento lento…"
+                className="w-full rounded-xl border border-[color:var(--hairline)] bg-background/40 px-3 py-2 text-sm"
               />
-            )}
-          </Field>
+            </Field>
+          </Section>
 
-          <Field label="Legendas">
-            <div className="flex flex-wrap gap-2">
-              {([
-                { id: "none", label: "Sem legendas" },
-                { id: "pt", label: "Português" },
-                { id: "en", label: "English" },
-                { id: "es", label: "Español" },
-              ] as const).map((c) => (
-                <Chip key={c.id} active={captions === c.id} onClick={() => setCaptions(c.id)}>{c.label}</Chip>
-              ))}
-            </div>
-            {captions !== "none" && (
-              <input
-                value={captionText}
-                onChange={(e) => setCaptionText(e.target.value)}
-                placeholder="Texto exato da legenda (opcional)"
-                className="mt-2 w-full rounded-xl border border-[color:var(--hairline)] bg-background/40 px-3 py-2 text-sm"
-              />
-            )}
-          </Field>
-
-          <Field label="Música">
-            <div className="flex flex-wrap gap-2">
-              {([
-                { id: "none", label: "Sem música" },
-                { id: "cinematic", label: "Cinematográfica" },
-                { id: "upbeat", label: "Energética" },
-                { id: "elegant", label: "Elegante" },
-                { id: "epic", label: "Épica" },
-                { id: "chill", label: "Chill" },
-                { id: "corporate", label: "Corporate" },
-              ] as const).map((m) => (
-                <Chip key={m.id} active={music === m.id} onClick={() => setMusic(m.id)}>{m.label}</Chip>
-              ))}
-            </div>
-          </Field>
-
-
-          <Field label="Instruções extra (opcional)">
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-              placeholder="Ex.: câmara a orbitar, luz dourada ao pôr-do-sol, movimento lento…"
-              className="w-full rounded-xl border border-[color:var(--hairline)] bg-background/40 px-3 py-2 text-sm"
-            />
-          </Field>
 
           <button
             onClick={onGenerate}
