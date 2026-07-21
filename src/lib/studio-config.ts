@@ -1,10 +1,12 @@
 // MM Studio — configuração partilhada entre server e client.
 
 export const STUDIO_COSTS = {
-  imageBatch: 160, // 4 imagens por batch (40 cada)
+  imageBatch: 80, // 2 imagens por batch (40 cada)
   imageSingle: 40,
   video: 250,
 } as const;
+
+export const IMAGE_BATCH_SIZE = 2;
 
 export type ImageStyle =
   | "luxo"

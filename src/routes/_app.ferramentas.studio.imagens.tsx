@@ -32,7 +32,7 @@ function ImagensPage() {
           format: input.format,
           productId: input.productId,
           notes: input.notes || undefined,
-          count: 4,
+          count: 2,
         },
       }),
     onSuccess: (data) => {
@@ -166,8 +166,9 @@ function ImagensPage() {
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Custo</p>
           <p className="font-display text-xl text-foreground">
-            {cost} créditos <span className="text-xs font-normal text-muted-foreground">· 4 imagens</span>
+            {cost} créditos <span className="text-xs font-normal text-muted-foreground">· 2 imagens por geração</span>
           </p>
+          <p className="mt-1 text-[11px] text-muted-foreground">Cada geração produz 2 imagens para manter qualidade máxima e tempo de espera curto.</p>
         </div>
         <button
           type="button"
@@ -198,9 +199,9 @@ function ImagensPage() {
       {(mutation.isPending || assets.length > 0) && (
         <section>
           <h3 className="mb-3 font-display text-xl text-foreground">Resultado</h3>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {mutation.isPending && assets.length === 0
-              ? Array.from({ length: 4 }).map((_, i) => (
+              ? Array.from({ length: 2 }).map((_, i) => (
                   <div key={i} className="aspect-square animate-pulse rounded-2xl border border-[color:var(--hairline)] bg-surface-2" />
                 ))
               : assets.map((a) => (
