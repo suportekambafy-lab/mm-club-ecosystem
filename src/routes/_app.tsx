@@ -104,7 +104,7 @@ const navItems: NavItem[] = [
   { to: "/lives", label: "Ao Vivo", icon: Radio },
   { to: "/comunidade", label: "Comunidade", icon: Users },
   { to: "/shorts", label: "MM Shorts", icon: Clapperboard },
-  { to: "/ferramentas", label: "Ferramentas", icon: Wrench, soon: true },
+  { to: "/ferramentas", label: "Ferramentas", icon: Wrench },
   { to: "/eventos", label: "Eventos", icon: CalendarDays, soon: true },
   { to: "/codigo", label: "Código do Clube", icon: ShieldCheck },
 ];

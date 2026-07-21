@@ -607,6 +607,194 @@ export type Database = {
         }
         Relationships: []
       }
+      mm_studio_assets: {
+        Row: {
+          created_at: string
+          credits_used: number
+          format: string | null
+          id: string
+          kind: string
+          metadata: Json
+          product_id: string | null
+          style: string | null
+          thumb_url: string | null
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_used?: number
+          format?: string | null
+          id?: string
+          kind: string
+          metadata?: Json
+          product_id?: string | null
+          style?: string | null
+          thumb_url?: string | null
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_used?: number
+          format?: string | null
+          id?: string
+          kind?: string
+          metadata?: Json
+          product_id?: string | null
+          style?: string | null
+          thumb_url?: string | null
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mm_studio_assets_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "mm_studio_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mm_studio_brand: {
+        Row: {
+          audience: string | null
+          brand_name: string | null
+          colors: Json
+          created_at: string
+          description: string | null
+          logo_url: string | null
+          segment: string | null
+          socials: Json
+          tone: string | null
+          typography: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          audience?: string | null
+          brand_name?: string | null
+          colors?: Json
+          created_at?: string
+          description?: string | null
+          logo_url?: string | null
+          segment?: string | null
+          socials?: Json
+          tone?: string | null
+          typography?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          audience?: string | null
+          brand_name?: string | null
+          colors?: Json
+          created_at?: string
+          description?: string | null
+          logo_url?: string | null
+          segment?: string | null
+          socials?: Json
+          tone?: string | null
+          typography?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      mm_studio_credit_ledger: {
+        Row: {
+          created_at: string
+          delta: number
+          id: string
+          reason: string
+          ref_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          id?: string
+          reason: string
+          ref_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: string
+          reason?: string
+          ref_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mm_studio_credits: {
+        Row: {
+          balance: number
+          lifetime_granted: number
+          lifetime_spent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          lifetime_granted?: number
+          lifetime_spent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          lifetime_granted?: number
+          lifetime_spent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mm_studio_products: {
+        Row: {
+          brand_colors: Json
+          category: string | null
+          created_at: string
+          id: string
+          logo_url: string | null
+          name: string
+          notes: string | null
+          photos: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_colors?: Json
+          category?: string | null
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          notes?: string | null
+          photos?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand_colors?: Json
+          category?: string | null
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          notes?: string | null
+          photos?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           actor_id: string | null
@@ -860,6 +1048,24 @@ export type Database = {
       mm_short_increment_view: {
         Args: { _short_id: string }
         Returns: undefined
+      }
+      mm_studio_refund_credits: {
+        Args: {
+          _amount: number
+          _reason: string
+          _ref?: string
+          _user_id: string
+        }
+        Returns: number
+      }
+      mm_studio_spend_credits: {
+        Args: {
+          _amount: number
+          _reason: string
+          _ref?: string
+          _user_id: string
+        }
+        Returns: number
       }
     }
     Enums: {
