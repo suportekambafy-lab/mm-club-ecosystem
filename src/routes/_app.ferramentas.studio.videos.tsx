@@ -205,6 +205,23 @@ function VideosPage() {
             </div>
           </Field>
 
+          <Field label="Pessoas no vídeo">
+            <div className="flex flex-wrap gap-2">
+              {PEOPLE_OPTIONS.map((p) => (
+                <Chip key={p.id} active={people === p.id} onClick={() => setPeople(p.id)}>{p.label}</Chip>
+              ))}
+            </div>
+          </Field>
+
+          <Field label="Ângulo de conversão">
+            <div className="flex flex-wrap gap-2">
+              {CONVERSION_HOOKS.map((h) => (
+                <Chip key={h.id} active={hook === h.id} onClick={() => setHook(h.id)}>{h.label}</Chip>
+              ))}
+            </div>
+          </Field>
+
+
           <Field label="Narração">
             <div className="flex flex-wrap gap-2">
               {([
