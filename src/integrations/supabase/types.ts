@@ -1050,12 +1050,7 @@ export type Database = {
         Returns: undefined
       }
       mm_studio_grant_credits: {
-        Args: {
-          _amount: number
-          _reason: string
-          _ref_key: string
-          _user_id: string
-        }
+        Args: { _amount: number; _reason: string; _user_id: string }
         Returns: number
       }
       mm_studio_refund_credits: {
