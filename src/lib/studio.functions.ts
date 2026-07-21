@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { STUDIO_COSTS, IMAGE_FORMATS, type ImageFormat, type ImageStyle } from "./studio-config";
+import { STUDIO_COSTS, IMAGE_FORMATS, videoSegments, type ImageFormat, type ImageStyle } from "./studio-config";
 import { buildImagePrompt, type BrandDna, type ProductCtx } from "./studio-prompt";
 
 const BUCKET = "studio-media";
