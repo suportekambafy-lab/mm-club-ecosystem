@@ -132,7 +132,7 @@ function FerramentasLayout() {
               <ImageIcon className="h-5 w-5" />
             </span>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">IA de Imagens · OpenAI</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">MM Vision · Imagens</p>
               <h3 className="mt-1 font-display text-2xl text-foreground">Fotografias publicitárias</h3>
               <p className="mt-2 text-sm text-muted-foreground">
                 4 variações do teu produto por geração — modelos, lifestyle, still life, flat lay. Qualidade de agência criativa.
