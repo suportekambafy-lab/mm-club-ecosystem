@@ -57,22 +57,45 @@ function ImagensPage() {
   return (
     <div className="space-y-8">
       {/* STEP 1 — PRODUCT */}
-      <Step number="01" title="Escolhe o produto" description="Opcional — reutiliza um produto da tua biblioteca para maior fidelidade.">
+      <Step number="01" title="Escolhe o produto" description="Recomendado — as fotos do produto são enviadas à IA como referência real para manter a identidade visual.">
         {products.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-border bg-surface-1 p-6 text-sm text-muted-foreground">
             Ainda não tens produtos. Podes gerar sem produto, ou criar um na aba <span className="text-foreground">Produtos</span>.
           </p>
         ) : (
-          <div className="flex flex-wrap gap-2">
-            <Chip active={productId === null} onClick={() => setProductId(null)} label="Sem produto específico" />
-            {products.map((p) => (
-              <Chip
-                key={String(p.id)}
-                active={productId === p.id}
-                onClick={() => setProductId(String(p.id))}
-                label={String(p.name)}
-              />
-            ))}
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Chip active={productId === null} onClick={() => setProductId(null)} label="Sem produto específico" />
+              {products.map((p) => (
+                <Chip
+                  key={String(p.id)}
+                  active={productId === p.id}
+                  onClick={() => setProductId(String(p.id))}
+                  label={String(p.name)}
+                />
+              ))}
+            </div>
+            {productId && (() => {
+              const p = products.find((x) => x.id === productId) as { photos?: string[] } | undefined;
+              const photos = p?.photos ?? [];
+              if (photos.length === 0) {
+                return (
+                  <p className="text-xs text-amber-500">
+                    Este produto não tem fotos. Adiciona fotos em <span className="text-foreground">Produtos</span> para que a IA reconheça o produto real.
+                  </p>
+                );
+              }
+              return (
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Referências enviadas à IA:</span>
+                  <div className="flex gap-1.5">
+                    {photos.slice(0, 3).map((url, i) => (
+                      <img key={i} src={url} alt="" className="h-10 w-10 rounded-lg object-cover border border-[color:var(--hairline)]" />
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
       </Step>
