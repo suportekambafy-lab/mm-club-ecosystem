@@ -383,13 +383,7 @@ function Section({ title, summary, children, defaultOpen = false }: { title: str
   );
 }
 
-  return (
-    <div className="space-y-2">
-      <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
-      {children}
-    </div>
-  );
-}
+
 
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
