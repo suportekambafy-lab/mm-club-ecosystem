@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 // media from private buckets in <img>/<video> tags without auth headers.
 const SIGN_TTL = 60 * 60 * 24 * 365 * 10;
 
-export type MediaBucket = "course-media" | "lesson-videos";
+export type MediaBucket = "course-media" | "lesson-videos" | "studio-media" | "community-media" | "avatars";
 
 export async function uploadMedia(
   bucket: MediaBucket,

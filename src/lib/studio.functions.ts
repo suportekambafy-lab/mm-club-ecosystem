@@ -180,57 +180,64 @@ export const generateImages = createServerFn({ method: "POST" })
       notes: data.notes,
     });
 
+    const generateOne = async (i: number) => {
+      const b64 = await callImageModel(prompt, fmt.size);
+      const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const path = `${userId}/images/${Date.now()}-${i}-${Math.random().toString(36).slice(2, 8)}.png`;
+      const up = await supabase.storage.from(BUCKET).upload(path, bytes, {
+        contentType: "image/png",
+        upsert: false,
+      });
+      if (up.error) throw new Error(up.error.message);
+      const signed = await supabase.storage.from(BUCKET).createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (signed.error || !signed.data) throw new Error(signed.error?.message ?? "URL falhou");
+      const url = signed.data.signedUrl;
+      const { data: asset, error: aErr } = await supabase
+        .from("mm_studio_assets")
+        .insert({
+          user_id: userId,
+          kind: "image",
+          url,
+          thumb_url: url,
+          format: data.format,
+          style: data.style,
+          product_id: data.productId ?? null,
+          credits_used: STUDIO_COSTS.imageSingle,
+          metadata: { prompt, size: fmt.size, model: "openai/gpt-image-1-mini", storage_path: path },
+        })
+        .select("id, url")
+        .single();
+      if (aErr) throw new Error(aErr.message);
+      return { id: asset.id, url: asset.url };
+    };
+
+    const results = await Promise.allSettled(Array.from({ length: count }, (_, i) => generateOne(i)));
     const generated: { id: string; url: string }[] = [];
-    let succeeded = 0;
-
-    try {
-      for (let i = 0; i < count; i++) {
-        const b64 = await callImageModel(prompt, fmt.size);
-        const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-        const path = `${userId}/images/${Date.now()}-${i}-${Math.random().toString(36).slice(2, 8)}.png`;
-        const up = await supabase.storage.from(BUCKET).upload(path, bytes, {
-          contentType: "image/png",
-          upsert: false,
-        });
-        if (up.error) throw new Error(up.error.message);
-        const signed = await supabase.storage.from(BUCKET).createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-        if (signed.error || !signed.data) throw new Error(signed.error?.message ?? "URL falhou");
-        const url = signed.data.signedUrl;
-
-        const { data: asset, error: aErr } = await supabase
-          .from("mm_studio_assets")
-          .insert({
-            user_id: userId,
-            kind: "image",
-            url,
-            thumb_url: url,
-            format: data.format,
-            style: data.style,
-            product_id: data.productId ?? null,
-            credits_used: STUDIO_COSTS.imageSingle,
-            metadata: { prompt, size: fmt.size, model: "openai/gpt-image-1-mini", storage_path: path },
-          })
-          .select("id, url")
-          .single();
-        if (aErr) throw new Error(aErr.message);
-        generated.push({ id: asset.id, url: asset.url });
-        succeeded++;
-      }
-    } catch (err) {
-      // Refund unspent portion
-      const refund = (count - succeeded) * STUDIO_COSTS.imageSingle;
-      if (refund > 0) {
-        await supabase.rpc("mm_studio_refund_credits", {
-          _user_id: userId,
-          _amount: refund,
-          _reason: "image_generation_refund",
-        });
-      }
-      if (succeeded === 0) throw err;
+    let firstError: unknown = null;
+    for (const r of results) {
+      if (r.status === "fulfilled") generated.push(r.value);
+      else if (!firstError) firstError = r.reason;
     }
 
-    return { assets: generated, balance: newBal as number, cost };
+    // Refund unsucceeded
+    const refund = (count - generated.length) * STUDIO_COSTS.imageSingle;
+    let finalBalance = newBal as number;
+    if (refund > 0) {
+      const { data: refunded } = await supabase.rpc("mm_studio_refund_credits", {
+        _user_id: userId,
+        _amount: refund,
+        _reason: "image_generation_refund",
+      });
+      if (typeof refunded === "number") finalBalance = refunded;
+    }
+
+    if (generated.length === 0) {
+      throw firstError instanceof Error ? firstError : new Error("Falha ao gerar imagens.");
+    }
+
+    return { assets: generated, balance: finalBalance, cost: cost - refund };
   });
+
 
 // ============ ASSETS ============
 export const listAssets = createServerFn({ method: "GET" })
