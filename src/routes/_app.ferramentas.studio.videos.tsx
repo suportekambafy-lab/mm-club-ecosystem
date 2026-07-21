@@ -24,6 +24,11 @@ function VideosPage() {
   const [duration, setDuration] = useState<number>(8);
   const [objective, setObjective] = useState<string>(VIDEO_OBJECTIVES[0].id);
   const [notes, setNotes] = useState("");
+  const [captions, setCaptions] = useState<"none" | "pt" | "en" | "es">("none");
+  const [captionText, setCaptionText] = useState("");
+  const [narration, setNarration] = useState<"none" | "male_pt" | "female_pt" | "male_en" | "female_en" | "neutral">("none");
+  const [narrationScript, setNarrationScript] = useState("");
+  const [music, setMusic] = useState<"none" | "cinematic" | "upbeat" | "elegant" | "epic" | "chill" | "corporate">("none");
 
   const [busy, setBusy] = useState(false);
   const [statusText, setStatusText] = useState<string>("");
@@ -80,6 +85,11 @@ function VideosPage() {
           duration,
           objective,
           notes: notes || undefined,
+          captions,
+          captionText: captionText || undefined,
+          narration,
+          narrationScript: narrationScript || undefined,
+          music,
         },
       });
       refresh();
@@ -190,6 +200,68 @@ function VideosPage() {
               ))}
             </div>
           </Field>
+
+          <Field label="Narração">
+            <div className="flex flex-wrap gap-2">
+              {([
+                { id: "none", label: "Sem narração" },
+                { id: "female_pt", label: "Voz feminina · PT" },
+                { id: "male_pt", label: "Voz masculina · PT" },
+                { id: "female_en", label: "Voz feminina · EN" },
+                { id: "male_en", label: "Voz masculina · EN" },
+                { id: "neutral", label: "Neutra premium" },
+              ] as const).map((n) => (
+                <Chip key={n.id} active={narration === n.id} onClick={() => setNarration(n.id)}>{n.label}</Chip>
+              ))}
+            </div>
+            {narration !== "none" && (
+              <textarea
+                value={narrationScript}
+                onChange={(e) => setNarrationScript(e.target.value)}
+                rows={2}
+                placeholder="Guião da narração (opcional). Ex.: 'Redefinimos o luxo. Descobre a nova coleção.'"
+                className="mt-2 w-full rounded-xl border border-[color:var(--hairline)] bg-background/40 px-3 py-2 text-sm"
+              />
+            )}
+          </Field>
+
+          <Field label="Legendas">
+            <div className="flex flex-wrap gap-2">
+              {([
+                { id: "none", label: "Sem legendas" },
+                { id: "pt", label: "Português" },
+                { id: "en", label: "English" },
+                { id: "es", label: "Español" },
+              ] as const).map((c) => (
+                <Chip key={c.id} active={captions === c.id} onClick={() => setCaptions(c.id)}>{c.label}</Chip>
+              ))}
+            </div>
+            {captions !== "none" && (
+              <input
+                value={captionText}
+                onChange={(e) => setCaptionText(e.target.value)}
+                placeholder="Texto exato da legenda (opcional)"
+                className="mt-2 w-full rounded-xl border border-[color:var(--hairline)] bg-background/40 px-3 py-2 text-sm"
+              />
+            )}
+          </Field>
+
+          <Field label="Música">
+            <div className="flex flex-wrap gap-2">
+              {([
+                { id: "none", label: "Sem música" },
+                { id: "cinematic", label: "Cinematográfica" },
+                { id: "upbeat", label: "Energética" },
+                { id: "elegant", label: "Elegante" },
+                { id: "epic", label: "Épica" },
+                { id: "chill", label: "Chill" },
+                { id: "corporate", label: "Corporate" },
+              ] as const).map((m) => (
+                <Chip key={m.id} active={music === m.id} onClick={() => setMusic(m.id)}>{m.label}</Chip>
+              ))}
+            </div>
+          </Field>
+
 
           <Field label="Instruções extra (opcional)">
             <textarea

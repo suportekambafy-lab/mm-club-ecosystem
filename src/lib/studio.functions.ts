@@ -306,6 +306,11 @@ const StartVideoSchema = z.object({
   duration: z.number().int().refine((d) => [8, 10, 15, 30].includes(d), "Duração inválida.").default(8),
   objective: z.string().max(120).optional(),
   notes: z.string().max(1200).optional(),
+  captions: z.enum(["none", "pt", "en", "es"]).default("none"),
+  captionText: z.string().max(300).optional(),
+  narration: z.enum(["none", "male_pt", "female_pt", "male_en", "female_en", "neutral"]).default("none"),
+  narrationScript: z.string().max(800).optional(),
+  music: z.enum(["none", "cinematic", "upbeat", "elegant", "epic", "chill", "corporate"]).default("none"),
 });
 
 function aspectFromFormat(fmt: string): "16:9" | "9:16" | "1:1" {
@@ -431,6 +436,28 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
       ? "Use the attached reference image(s) as the EXACT product hero — keep the same shape, colours, label, packaging and proportions in every frame. Do not invent a different product."
       : null;
 
+    const captionLangMap: Record<string, string> = {
+      pt: "Portuguese", en: "English", es: "Spanish",
+    };
+    const captionClause = data.captions !== "none"
+      ? `Burn in bold, modern social-media captions in ${captionLangMap[data.captions]}, centered lower-third, high-contrast white text with subtle drop shadow, kinetic word-by-word reveal synced to voiceover${data.captionText ? `. Caption text: "${data.captionText}"` : ""}.`
+      : "no on-screen text, no captions, no logos.";
+
+    const narrationVoiceMap: Record<string, string> = {
+      male_pt: "confident male voice-over in Portuguese",
+      female_pt: "warm female voice-over in Portuguese",
+      male_en: "confident male voice-over in English",
+      female_en: "warm female voice-over in English",
+      neutral: "neutral premium voice-over",
+    };
+    const narrationClause = data.narration !== "none"
+      ? `Include a ${narrationVoiceMap[data.narration]}, cinematic advertising tone, perfectly lip-agnostic${data.narrationScript ? `. Voice-over script: "${data.narrationScript}"` : ", concise persuasive script matching the objective"}.`
+      : "no narration, ambient sound only.";
+
+    const musicClause = data.music !== "none"
+      ? `Layered ${data.music} background music track, well-mixed under the narration, dynamic build matching the edit.`
+      : "";
+
     const basePrompt = [
       `Cinematic ${data.style} commercial video`,
       product?.name ? `featuring ${product.name}${product.category ? ` (${product.category})` : ""}` : null,
@@ -441,7 +468,10 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
       brand?.description ? `brand: ${brand.description}` : null,
       data.notes ? `direction: ${data.notes}` : null,
       refClause,
-      `smooth camera motion, dramatic lighting, premium color grading, 4k, no on-screen text, no logos.`,
+      narrationClause,
+      captionClause,
+      musicClause || null,
+      `smooth camera motion, dramatic lighting, premium color grading, 4k.`,
     ].filter(Boolean).join(". ");
 
     // Spend all credits upfront
