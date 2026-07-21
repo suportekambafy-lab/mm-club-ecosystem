@@ -26,11 +26,12 @@ function VideosPage() {
 
   const [busy, setBusy] = useState(false);
   const [statusText, setStatusText] = useState<string>("");
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoUrls, setVideoUrls] = useState<string[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const cost = STUDIO_COSTS.video;
+  const segments = useMemo(() => videoSegments(duration), [duration]);
+  const cost = useMemo(() => videoCost(duration), [duration]);
   const canPay = balance >= cost;
 
   const aspect = useMemo(() => VIDEO_FORMATS.find((f) => f.id === format)?.aspect ?? "9:16", [format]);
@@ -39,8 +40,9 @@ function VideosPage() {
     if (pollTimer.current) clearTimeout(pollTimer.current);
     try {
       const r = await poll({ data: { assetId } });
-      if (r.status === "ready" && r.url) {
-        setVideoUrl(r.url);
+      if (r.status === "ready") {
+        const urls = (r as { urls?: string[] }).urls?.length ? (r as { urls: string[] }).urls : (r.url ? [r.url] : []);
+        setVideoUrls(urls);
         setBusy(false);
         setStatusText("");
         refresh();
@@ -53,7 +55,9 @@ function VideosPage() {
         refresh();
         return;
       }
-      setStatusText("A renderizar vídeo com Veo… pode demorar 1–3 minutos.");
+      setStatusText(segments.length > 1
+        ? `A renderizar ${segments.length} segmentos em paralelo (${duration}s totais)…`
+        : "A renderizar vídeo… pode demorar 1–3 minutos.");
       pollTimer.current = setTimeout(() => loopPoll(assetId), 8000);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro no polling");
