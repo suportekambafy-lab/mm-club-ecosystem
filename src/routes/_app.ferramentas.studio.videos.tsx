@@ -4,7 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { Film, Loader2, Sparkles, Play, Download } from "lucide-react";
 import { useStudio } from "@/lib/studio-context";
 import { startVideoGeneration, pollVideoGeneration } from "@/lib/studio.functions";
-import { VIDEO_STYLES, VIDEO_FORMATS, VIDEO_DURATIONS, VIDEO_OBJECTIVES, STUDIO_COSTS } from "@/lib/studio-config";
+import { VIDEO_STYLES, VIDEO_FORMATS, VIDEO_DURATIONS, VIDEO_OBJECTIVES, videoCost, videoSegments } from "@/lib/studio-config";
+import { VideoPlaylist } from "@/components/mm/video-playlist";
 
 export const Route = createFileRoute("/_app/ferramentas/studio/videos")({
   component: VideosPage,
@@ -25,11 +26,12 @@ function VideosPage() {
 
   const [busy, setBusy] = useState(false);
   const [statusText, setStatusText] = useState<string>("");
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoUrls, setVideoUrls] = useState<string[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const cost = STUDIO_COSTS.video;
+  const segments = useMemo(() => videoSegments(duration), [duration]);
+  const cost = useMemo(() => videoCost(duration), [duration]);
   const canPay = balance >= cost;
 
   const aspect = useMemo(() => VIDEO_FORMATS.find((f) => f.id === format)?.aspect ?? "9:16", [format]);
@@ -38,8 +40,9 @@ function VideosPage() {
     if (pollTimer.current) clearTimeout(pollTimer.current);
     try {
       const r = await poll({ data: { assetId } });
-      if (r.status === "ready" && r.url) {
-        setVideoUrl(r.url);
+      if (r.status === "ready") {
+        const urls = (r as { urls?: string[] }).urls?.length ? (r as { urls: string[] }).urls : (r.url ? [r.url] : []);
+        setVideoUrls(urls);
         setBusy(false);
         setStatusText("");
         refresh();
@@ -52,7 +55,9 @@ function VideosPage() {
         refresh();
         return;
       }
-      setStatusText("A renderizar vídeo com Veo… pode demorar 1–3 minutos.");
+      setStatusText(segments.length > 1
+        ? `A renderizar ${segments.length} segmentos em paralelo (${duration}s totais)…`
+        : "A renderizar vídeo… pode demorar 1–3 minutos.");
       pollTimer.current = setTimeout(() => loopPoll(assetId), 8000);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro no polling");
@@ -62,7 +67,7 @@ function VideosPage() {
 
   async function onGenerate() {
     setError(null);
-    setVideoUrl(null);
+    setVideoUrls(null);
     setBusy(true);
     setStatusText("A iniciar geração…");
     try {
@@ -140,10 +145,20 @@ function VideosPage() {
 
           <Field label="Duração">
             <div className="flex flex-wrap gap-2">
-              {VIDEO_DURATIONS.map((d) => (
-                <Chip key={d} active={duration === d} onClick={() => setDuration(d)}>{d}s</Chip>
-              ))}
+              {VIDEO_DURATIONS.map((d) => {
+                const segs = videoSegments(d);
+                return (
+                  <Chip key={d} active={duration === d} onClick={() => setDuration(d)}>
+                    {d}s{segs.length > 1 ? ` · ${segs.length}×` : ""}
+                  </Chip>
+                );
+              })}
             </div>
+            {segments.length > 1 && (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Gerado em {segments.length} segmentos ({segments.join("+")}s) em paralelo, com continuidade de cena. Reproduz em playlist contínua.
+              </p>
+            )}
           </Field>
 
           <Field label="Objetivo">
@@ -181,8 +196,8 @@ function VideosPage() {
             className="relative overflow-hidden rounded-2xl bg-background/60"
             style={{ aspectRatio: aspect.replace(":", " / ") }}
           >
-            {videoUrl ? (
-              <video src={videoUrl} controls autoPlay className="h-full w-full object-cover" />
+            {videoUrls && videoUrls.length > 0 ? (
+              <VideoPlaylist urls={videoUrls} className="h-full w-full" />
             ) : busy ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center px-4">
                 <Loader2 className="h-6 w-6 animate-spin text-secondary" />
@@ -195,14 +210,20 @@ function VideosPage() {
               </div>
             )}
           </div>
-          {videoUrl && (
-            <a
-              href={videoUrl}
-              download
-              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-[color:var(--hairline)] bg-background/40 px-4 py-2 text-xs font-semibold text-foreground"
-            >
-              <Download className="h-3.5 w-3.5" /> Descarregar MP4
-            </a>
+          {videoUrls && videoUrls.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {videoUrls.map((u, i) => (
+                <a
+                  key={u}
+                  href={u}
+                  download
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[color:var(--hairline)] bg-background/40 px-4 py-2 text-xs font-semibold text-foreground"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  {videoUrls.length > 1 ? `Descarregar parte ${i + 1}/${videoUrls.length}` : "Descarregar MP4"}
+                </a>
+              ))}
+            </div>
           )}
         </div>
       </section>

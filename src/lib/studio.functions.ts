@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { STUDIO_COSTS, IMAGE_FORMATS, type ImageFormat, type ImageStyle } from "./studio-config";
+import { STUDIO_COSTS, IMAGE_FORMATS, videoSegments, type ImageFormat, type ImageStyle } from "./studio-config";
 import { buildImagePrompt, type BrandDna, type ProductCtx } from "./studio-prompt";
 
 const BUCKET = "studio-media";
@@ -249,7 +249,7 @@ const StartVideoSchema = z.object({
   productId: z.string().uuid().nullable().optional(),
   style: z.string().min(1),
   format: z.enum(["reels", "tiktok", "facebook", "stories", "shorts"]),
-  duration: z.number().int().min(8).max(10).default(8),
+  duration: z.number().int().refine((d) => [8, 10, 15, 30].includes(d), "Duração inválida.").default(8),
   objective: z.string().max(120).optional(),
   notes: z.string().max(1200).optional(),
 });
@@ -292,6 +292,38 @@ function extractVideoFromInteraction(json: {
   return null;
 }
 
+type VideoSegment = {
+  index: number;
+  duration: number;
+  interaction_id: string;
+  status: "pending" | "ready" | "failed";
+  storage_path?: string;
+  url?: string;
+  error?: string;
+};
+
+async function startOmniInteraction(key: string, prompt: string, aspect: "9:16" | "1:1" | "16:9"): Promise<string> {
+  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+    body: JSON.stringify({
+      model: OMNI_MODEL,
+      input: prompt,
+      response_format: { type: "video", aspect_ratio: aspect, delivery: "uri" },
+      background: true,
+      store: true,
+      stream: false,
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Gemini Omni ${res.status}: ${text.slice(0, 240)}`);
+  }
+  const json = (await res.json()) as { id?: string };
+  if (!json.id) throw new Error("Omni não devolveu id de interação.");
+  return json.id;
+}
+
 export const startVideoGeneration = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((v: unknown) => StartVideoSchema.parse(v))
@@ -310,7 +342,12 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
     const brand = brandRes.data as { brand_name?: string; tone?: string; description?: string } | null;
     const product = productRes.data as { name?: string; category?: string; notes?: string } | null;
 
-    const parts = [
+    const segments = videoSegments(data.duration);
+    const multi = segments.length > 1;
+    const totalCost = segments.length * STUDIO_COSTS.video;
+    const aspect = aspectFromFormat(data.format);
+
+    const basePrompt = [
       `Cinematic ${data.style} commercial video`,
       product?.name ? `featuring ${product.name}${product.category ? ` (${product.category})` : ""}` : null,
       brand?.brand_name ? `for brand ${brand.brand_name}` : null,
@@ -319,14 +356,14 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
       product?.notes ? `product notes: ${product.notes}` : null,
       brand?.description ? `brand: ${brand.description}` : null,
       data.notes ? `direction: ${data.notes}` : null,
-      `about ${data.duration}s, smooth camera motion, dramatic lighting, premium color grading, 4k, no on-screen text, no logos.`,
+      `smooth camera motion, dramatic lighting, premium color grading, 4k, no on-screen text, no logos.`,
     ].filter(Boolean).join(". ");
 
-    // Spend credits upfront
+    // Spend all credits upfront
     const { data: newBal, error: spendErr } = await supabase.rpc("mm_studio_spend_credits", {
       _user_id: userId,
-      _amount: STUDIO_COSTS.video,
-      _reason: "video_generation",
+      _amount: totalCost,
+      _reason: multi ? `video_generation_${segments.length}x` : "video_generation",
     });
     if (spendErr) {
       if (String(spendErr.message).includes("insufficient_credits")) {
@@ -335,72 +372,136 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
       throw new Error(spendErr.message);
     }
 
-    // Start Omni Flash interaction (background)
-    const url = `https://generativelanguage.googleapis.com/v1beta/interactions`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": key,
-      },
-      body: JSON.stringify({
-        model: OMNI_MODEL,
-        input: parts,
-        response_format: {
-          type: "video",
-          aspect_ratio: aspectFromFormat(data.format),
-          delivery: "uri",
-        },
-        background: true,
-        store: true,
-        stream: false,
-      }),
-    });
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
+    // Start all segments in parallel with continuity prompt engineering
+    let startedIds: string[] = [];
+    try {
+      startedIds = await Promise.all(
+        segments.map((secs, i) => {
+          const continuity = multi
+            ? ` This is part ${i + 1} of ${segments.length} in one continuous cinematic scene — keep the exact same subject, wardrobe, environment, lighting, color palette and camera style as the other parts. ${
+                i === 0
+                  ? "Open the scene."
+                  : i === segments.length - 1
+                    ? "Close the scene naturally, resolving the motion started before."
+                    : "Continue the motion from the previous part seamlessly."
+              }`
+            : "";
+          const prompt = `${basePrompt}. About ${secs}s.${continuity}`;
+          return startOmniInteraction(key, prompt, aspect);
+        }),
+      );
+    } catch (err) {
       await supabase.rpc("mm_studio_refund_credits", {
         _user_id: userId,
-        _amount: STUDIO_COSTS.video,
+        _amount: totalCost,
         _reason: "video_generation_failed",
       });
-      throw new Error(`Gemini Omni ${res.status}: ${text.slice(0, 240)}`);
+      throw err;
     }
-    const json = (await res.json()) as { id?: string };
-    const interactionId = json.id;
-    if (!interactionId) {
-      await supabase.rpc("mm_studio_refund_credits", {
-        _user_id: userId,
-        _amount: STUDIO_COSTS.video,
-        _reason: "video_generation_failed",
-      });
-      throw new Error("Omni não devolveu id de interação.");
-    }
+
+    const segArr: VideoSegment[] = segments.map((secs, i) => ({
+      index: i,
+      duration: secs,
+      interaction_id: startedIds[i],
+      status: "pending",
+    }));
 
     const { data: asset, error: aErr } = await supabase
       .from("mm_studio_assets")
       .insert({
         user_id: userId,
         kind: "video",
-        url: `pending://${interactionId}`,
+        url: `pending://${startedIds[0]}`,
         format: data.format,
         style: data.style,
         product_id: data.productId ?? null,
-        credits_used: STUDIO_COSTS.video,
+        credits_used: totalCost,
         metadata: {
           status: "pending",
-          interaction_id: interactionId,
-          prompt: parts,
+          interaction_id: startedIds[0], // legacy compat
+          segments: segArr,
+          prompt: basePrompt,
           model: OMNI_MODEL,
-          aspect: aspectFromFormat(data.format),
+          aspect,
           duration: data.duration,
+          multi_segment: multi,
         },
       })
       .select("id")
       .single();
     if (aErr) throw new Error(aErr.message);
 
-    return { assetId: asset.id, operation: interactionId, balance: newBal as number };
+    return { assetId: asset.id, operation: startedIds[0], balance: newBal as number };
   });
+
+// Downloads the video bytes for a completed Omni interaction and uploads to storage.
+type SupabaseCtx = { storage: { from: (b: string) => { upload: (p: string, buf: Uint8Array, o: { contentType: string; upsert: boolean }) => Promise<{ error: { message: string } | null }>; createSignedUrl: (p: string, s: number) => Promise<{ data: { signedUrl: string } | null; error: { message: string } | null }> } } };
+
+async function materializeSegment(
+  key: string,
+  supabase: SupabaseCtx,
+  userId: string,
+  op: {
+    status?: string;
+    error?: { message?: string };
+    steps?: OmniStep[];
+    output_video?: { uri?: string; data?: string; mime_type?: string };
+  },
+): Promise<{ path: string; url: string }> {
+  const video = extractVideoFromInteraction(op);
+  if (!video || (!video.uri && !video.data)) throw new Error("Omni devolveu resposta sem vídeo.");
+  let buf: Uint8Array;
+  const mime = video.mime ?? "video/mp4";
+  if (video.uri) {
+    let dl = await fetch(video.uri, { headers: { "x-goog-api-key": key } });
+    if (!dl.ok && video.uri.includes("/files/")) {
+      const name = video.uri.split("/files/")[1]?.split("?")[0];
+      if (name) {
+        for (let i = 0; i < 20; i++) {
+          const info = await fetch(`https://generativelanguage.googleapis.com/v1beta/files/${name}`, {
+            headers: { "x-goog-api-key": key },
+          });
+          const j = (await info.json().catch(() => ({}))) as { state?: string; uri?: string };
+          if (j.state === "ACTIVE") {
+            dl = await fetch(j.uri ?? video.uri, { headers: { "x-goog-api-key": key } });
+            break;
+          }
+          if (j.state === "FAILED") throw new Error("Ficheiro de vídeo falhou.");
+          await new Promise((r) => setTimeout(r, 1500));
+        }
+      }
+    }
+    if (!dl.ok) throw new Error(`Download Omni falhou (${dl.status}).`);
+    buf = new Uint8Array(await dl.arrayBuffer());
+  } else {
+    const bin = atob(video.data!);
+    buf = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  }
+  const ext = mime.includes("webm") ? "webm" : "mp4";
+  const path = `${userId}/videos/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const up = await supabase.storage.from(BUCKET).upload(path, buf, { contentType: mime, upsert: false });
+  if (up.error) throw new Error(up.error.message);
+  const signed = await supabase.storage.from(BUCKET).createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+  if (signed.error || !signed.data) throw new Error(signed.error?.message ?? "URL falhou");
+  return { path, url: signed.data.signedUrl };
+}
+
+async function pollOmni(key: string, interactionId: string) {
+  const opRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/interactions/${interactionId}`, {
+    headers: { "x-goog-api-key": key },
+  });
+  if (!opRes.ok) {
+    const t = await opRes.text().catch(() => "");
+    throw new Error(`Poll Omni ${opRes.status}: ${t.slice(0, 200)}`);
+  }
+  return (await opRes.json()) as {
+    status?: string;
+    error?: { message?: string };
+    steps?: OmniStep[];
+    output_video?: { uri?: string; data?: string; mime_type?: string };
+  };
+}
 
 export const pollVideoGeneration = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -412,7 +513,7 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
 
     const { data: asset, error } = await supabase
       .from("mm_studio_assets")
-      .select("id, url, metadata")
+      .select("id, url, credits_used, metadata")
       .eq("id", data.assetId)
       .eq("user_id", userId)
       .maybeSingle();
@@ -422,112 +523,128 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
     const meta = (asset.metadata ?? {}) as {
       status?: string;
       interaction_id?: string;
-      operation?: string; // legacy
+      operation?: string;
+      segments?: VideoSegment[];
       prompt?: string;
       aspect?: string;
       duration?: number;
+      multi_segment?: boolean;
     };
 
     if (meta.status === "ready") {
-      return { status: "ready" as const, url: asset.url, id: asset.id };
+      return {
+        status: "ready" as const,
+        url: asset.url,
+        urls: (meta.segments ?? []).map((s) => s.url).filter(Boolean) as string[],
+        id: asset.id,
+      };
     }
     if (meta.status === "failed") {
       return { status: "failed" as const, id: asset.id, error: "Geração falhou." };
     }
-    const interactionId = meta.interaction_id ?? meta.operation;
-    if (!interactionId) throw new Error("Interação em falta.");
 
-    const opUrl = `https://generativelanguage.googleapis.com/v1beta/interactions/${interactionId}`;
-    const opRes = await fetch(opUrl, { headers: { "x-goog-api-key": key } });
-    if (!opRes.ok) {
-      const t = await opRes.text().catch(() => "");
-      throw new Error(`Poll Omni ${opRes.status}: ${t.slice(0, 200)}`);
-    }
-    const op = (await opRes.json()) as {
-      status?: string;
-      error?: { message?: string };
-      steps?: OmniStep[];
-      output_video?: { uri?: string; data?: string; mime_type?: string };
-    };
-
-    const status = op.status ?? "pending";
-    if (status === "failed" || status === "cancelled" || op.error) {
-      await supabase
-        .from("mm_studio_assets")
-        .update({ metadata: { ...meta, status: "failed", error: op.error?.message } })
-        .eq("id", asset.id);
-      await supabase.rpc("mm_studio_refund_credits", {
-        _user_id: userId,
-        _amount: STUDIO_COSTS.video,
-        _reason: "video_generation_failed",
-      });
-      return { status: "failed" as const, id: asset.id, error: op.error?.message ?? "Falhou." };
+    // Legacy: single interaction without segments array
+    let segs: VideoSegment[] = meta.segments ?? [];
+    if (segs.length === 0) {
+      const legacyId = meta.interaction_id ?? meta.operation;
+      if (!legacyId) throw new Error("Interação em falta.");
+      segs = [{ index: 0, duration: meta.duration ?? 8, interaction_id: legacyId, status: "pending" }];
     }
 
-    if (status !== "completed" && status !== "succeeded") {
+    // Poll every still-pending segment
+    let anyFailed = false;
+    let failureMsg = "";
+    for (const seg of segs) {
+      if (seg.status === "ready" || seg.status === "failed") continue;
+      const op = await pollOmni(key, seg.interaction_id);
+      const st = op.status ?? "pending";
+      if (st === "failed" || st === "cancelled" || op.error) {
+        seg.status = "failed";
+        seg.error = op.error?.message ?? "Falhou.";
+        anyFailed = true;
+        failureMsg = seg.error;
+        continue;
+      }
+      if (st !== "completed" && st !== "succeeded") continue;
+      try {
+        const mat = await materializeSegment(key, supabase as unknown as SupabaseCtx, userId, op);
+        seg.status = "ready";
+        seg.storage_path = mat.path;
+        seg.url = mat.url;
+      } catch (err) {
+        seg.status = "failed";
+        seg.error = err instanceof Error ? err.message : String(err);
+        anyFailed = true;
+        failureMsg = seg.error;
+      }
+    }
+
+    if (anyFailed) {
+      // Refund unpaid segments proportionally
+      const failedCount = segs.filter((s) => s.status === "failed").length;
+      const refund = failedCount * STUDIO_COSTS.video;
+      if (refund > 0) {
+        await supabase.rpc("mm_studio_refund_credits", {
+          _user_id: userId,
+          _amount: refund,
+          _reason: "video_generation_failed_partial",
+        });
+      }
+      const readySegs = segs.filter((s) => s.status === "ready");
+      const allDone = segs.every((s) => s.status !== "pending");
+      if (allDone && readySegs.length === 0) {
+        await supabase
+          .from("mm_studio_assets")
+          .update({ metadata: { ...meta, segments: segs, status: "failed", error: failureMsg } })
+          .eq("id", asset.id);
+        return { status: "failed" as const, id: asset.id, error: failureMsg };
+      }
+      if (allDone) {
+        // Some segments ready — publish partial
+        const first = readySegs[0];
+        await supabase
+          .from("mm_studio_assets")
+          .update({
+            url: first.url ?? asset.url,
+            thumb_url: first.url ?? null,
+            metadata: { ...meta, segments: segs, status: "ready", partial: true },
+          })
+          .eq("id", asset.id);
+        return {
+          status: "ready" as const,
+          url: first.url ?? asset.url,
+          urls: readySegs.map((s) => s.url!).filter(Boolean),
+          id: asset.id,
+          partial: true,
+        };
+      }
+      // still some pending
+      await supabase.from("mm_studio_assets").update({ metadata: { ...meta, segments: segs } }).eq("id", asset.id);
       return { status: "pending" as const, id: asset.id };
     }
 
-    const video = extractVideoFromInteraction(op);
-    if (!video || (!video.uri && !video.data)) {
-      throw new Error("Omni devolveu resposta sem vídeo.");
+    const allReady = segs.every((s) => s.status === "ready");
+    if (!allReady) {
+      await supabase.from("mm_studio_assets").update({ metadata: { ...meta, segments: segs } }).eq("id", asset.id);
+      return { status: "pending" as const, id: asset.id };
     }
 
-    // Materialize bytes
-    let buf: Uint8Array;
-    const mime = video.mime ?? "video/mp4";
-    if (video.uri) {
-      // If it's a Files API URI, may need to poll ACTIVE; try a direct download first.
-      let dl = await fetch(video.uri, { headers: { "x-goog-api-key": key } });
-      if (!dl.ok && video.uri.includes("/files/")) {
-        // Poll file state
-        const name = video.uri.split("/files/")[1]?.split("?")[0];
-        if (name) {
-          for (let i = 0; i < 20; i++) {
-            const info = await fetch(
-              `https://generativelanguage.googleapis.com/v1beta/files/${name}`,
-              { headers: { "x-goog-api-key": key } },
-            );
-            const j = (await info.json().catch(() => ({}))) as { state?: string; uri?: string };
-            if (j.state === "ACTIVE") {
-              dl = await fetch(j.uri ?? video.uri, { headers: { "x-goog-api-key": key } });
-              break;
-            }
-            if (j.state === "FAILED") throw new Error("Ficheiro de vídeo falhou.");
-            await new Promise((r) => setTimeout(r, 1500));
-          }
-        }
-      }
-      if (!dl.ok) throw new Error(`Download Omni falhou (${dl.status}).`);
-      buf = new Uint8Array(await dl.arrayBuffer());
-    } else {
-      // base64
-      const bin = atob(video.data!);
-      buf = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-    }
-
-    const ext = mime.includes("webm") ? "webm" : "mp4";
-    const path = `${userId}/videos/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const up = await supabase.storage.from(BUCKET).upload(path, buf, {
-      contentType: mime,
-      upsert: false,
-    });
-    if (up.error) throw new Error(up.error.message);
-    const signed = await supabase.storage.from(BUCKET).createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-    if (signed.error || !signed.data) throw new Error(signed.error?.message ?? "URL falhou");
-
-    const finalUrl = signed.data.signedUrl;
+    const first = segs[0];
     await supabase
       .from("mm_studio_assets")
       .update({
-        url: finalUrl,
-        thumb_url: finalUrl,
-        metadata: { ...meta, status: "ready", storage_path: path },
+        url: first.url ?? asset.url,
+        thumb_url: first.url ?? null,
+        metadata: { ...meta, segments: segs, status: "ready" },
       })
       .eq("id", asset.id);
 
-    return { status: "ready" as const, url: finalUrl, id: asset.id };
+    return {
+      status: "ready" as const,
+      url: first.url ?? asset.url,
+      urls: segs.map((s) => s.url!).filter(Boolean),
+      id: asset.id,
+    };
   });
 
 

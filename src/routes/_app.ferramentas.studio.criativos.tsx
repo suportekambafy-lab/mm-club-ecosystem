@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Download, Trash2, Image as ImageIcon, Film, X, Loader2, Sparkles, Play } from "lucide-react";
 import { listAssets, deleteAsset, startVideoGeneration, pollVideoGeneration } from "@/lib/studio.functions";
+import { VideoPlaylist } from "@/components/mm/video-playlist";
 import { useStudio } from "@/lib/studio-context";
 import { cn } from "@/lib/utils";
 
@@ -252,7 +253,11 @@ function AssetModal({ asset, onClose, onDelete }: { asset: AssetRow; onClose: ()
         <div className="grid gap-4 md:grid-cols-[1.4fr_1fr]">
           <div className="overflow-hidden rounded-2xl bg-black">
             {asset.kind === "video" ? (
-              <video src={asset.url} poster={asset.thumb_url ?? undefined} controls autoPlay playsInline className="h-full max-h-[70vh] w-full object-contain" />
+              (() => {
+                const segs = (asset.metadata as { segments?: Array<{ url?: string }> } | null)?.segments;
+                const urls = segs && segs.length > 0 ? segs.map((s) => s.url).filter((u): u is string => !!u) : [asset.url];
+                return <VideoPlaylist urls={urls} poster={asset.thumb_url ?? undefined} className="h-full max-h-[70vh] w-full" />;
+              })()
             ) : (
               <img src={asset.url} alt="" className="h-full max-h-[70vh] w-full object-contain" />
             )}
@@ -266,9 +271,22 @@ function AssetModal({ asset, onClose, onDelete }: { asset: AssetRow; onClose: ()
             </div>
 
             <div className="flex flex-col gap-2">
-              <a href={asset.url} download target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-full bg-secondary px-4 py-2.5 text-sm font-semibold text-background">
-                <Download className="h-4 w-4" /> Descarregar
-              </a>
+              {(() => {
+                const segs = (asset.metadata as { segments?: Array<{ url?: string }> } | null)?.segments;
+                const urls = segs && segs.length > 1 ? segs.map((s) => s.url).filter((u): u is string => !!u) : null;
+                if (urls && urls.length > 1) {
+                  return urls.map((u, i) => (
+                    <a key={u} href={u} download target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-full bg-secondary px-4 py-2.5 text-sm font-semibold text-background">
+                      <Download className="h-4 w-4" /> Parte {i + 1}/{urls.length}
+                    </a>
+                  ));
+                }
+                return (
+                  <a href={asset.url} download target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-full bg-secondary px-4 py-2.5 text-sm font-semibold text-background">
+                    <Download className="h-4 w-4" /> Descarregar
+                  </a>
+                );
+              })()}
               <button type="button" onClick={() => { if (confirm("Eliminar este criativo?")) onDelete(); }} className="inline-flex items-center justify-center gap-2 rounded-full border border-[color:var(--hairline)] bg-background/40 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10">
                 <Trash2 className="h-4 w-4" /> Eliminar
               </button>
