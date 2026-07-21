@@ -36,7 +36,7 @@ function StudioHome() {
           />
           <div className="relative">
             <div className="flex items-center gap-2 text-primary">
-              <Sparkles className="h-4 w-4" />
+              <Gem className="h-4 w-4" />
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em]">Saldo</p>
             </div>
             <p className="mt-2 font-display text-5xl text-foreground">{balance.toLocaleString("pt-PT")}</p>
