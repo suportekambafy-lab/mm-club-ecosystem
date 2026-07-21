@@ -145,10 +145,20 @@ function VideosPage() {
 
           <Field label="Duração">
             <div className="flex flex-wrap gap-2">
-              {VIDEO_DURATIONS.map((d) => (
-                <Chip key={d} active={duration === d} onClick={() => setDuration(d)}>{d}s</Chip>
-              ))}
+              {VIDEO_DURATIONS.map((d) => {
+                const segs = videoSegments(d);
+                return (
+                  <Chip key={d} active={duration === d} onClick={() => setDuration(d)}>
+                    {d}s{segs.length > 1 ? ` · ${segs.length}×` : ""}
+                  </Chip>
+                );
+              })}
             </div>
+            {segments.length > 1 && (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Gerado em {segments.length} segmentos ({segments.join("+")}s) em paralelo, com continuidade de cena. Reproduz em playlist contínua.
+              </p>
+            )}
           </Field>
 
           <Field label="Objetivo">
