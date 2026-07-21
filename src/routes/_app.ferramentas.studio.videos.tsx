@@ -4,7 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { Film, Loader2, Sparkles, Play, Download } from "lucide-react";
 import { useStudio } from "@/lib/studio-context";
 import { startVideoGeneration, pollVideoGeneration } from "@/lib/studio.functions";
-import { VIDEO_STYLES, VIDEO_FORMATS, VIDEO_DURATIONS, VIDEO_OBJECTIVES, STUDIO_COSTS } from "@/lib/studio-config";
+import { VIDEO_STYLES, VIDEO_FORMATS, VIDEO_DURATIONS, VIDEO_OBJECTIVES, videoCost, videoSegments } from "@/lib/studio-config";
+import { VideoPlaylist } from "@/components/mm/video-playlist";
 
 export const Route = createFileRoute("/_app/ferramentas/studio/videos")({
   component: VideosPage,
