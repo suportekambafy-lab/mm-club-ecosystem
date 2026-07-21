@@ -253,7 +253,11 @@ function AssetModal({ asset, onClose, onDelete }: { asset: AssetRow; onClose: ()
         <div className="grid gap-4 md:grid-cols-[1.4fr_1fr]">
           <div className="overflow-hidden rounded-2xl bg-black">
             {asset.kind === "video" ? (
-              <video src={asset.url} poster={asset.thumb_url ?? undefined} controls autoPlay playsInline className="h-full max-h-[70vh] w-full object-contain" />
+              (() => {
+                const segs = (asset.metadata as { segments?: Array<{ url?: string }> } | null)?.segments;
+                const urls = segs && segs.length > 0 ? segs.map((s) => s.url).filter((u): u is string => !!u) : [asset.url];
+                return <VideoPlaylist urls={urls} poster={asset.thumb_url ?? undefined} className="h-full max-h-[70vh] w-full" />;
+              })()
             ) : (
               <img src={asset.url} alt="" className="h-full max-h-[70vh] w-full object-contain" />
             )}
