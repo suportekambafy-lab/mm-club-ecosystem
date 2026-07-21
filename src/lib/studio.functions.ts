@@ -435,9 +435,11 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
   });
 
 // Downloads the video bytes for a completed Omni interaction and uploads to storage.
+type SupabaseCtx = { storage: { from: (b: string) => { upload: (p: string, buf: Uint8Array, o: { contentType: string; upsert: boolean }) => Promise<{ error: { message: string } | null }>; createSignedUrl: (p: string, s: number) => Promise<{ data: { signedUrl: string } | null; error: { message: string } | null }> } } };
+
 async function materializeSegment(
   key: string,
-  supabase: NonNullable<Parameters<typeof requireSupabaseAuth>[0]> extends never ? never : any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  supabase: SupabaseCtx,
   userId: string,
   op: {
     status?: string;
