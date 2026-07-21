@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile } from "lucide-react";
 import { cn } from "@/lib/utils";
