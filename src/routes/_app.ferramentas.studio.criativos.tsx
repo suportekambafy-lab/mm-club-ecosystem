@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Download, Trash2, Image as ImageIcon, Film, X, Loader2, Sparkles, Play } from "lucide-react";
+import { Download, Trash2, Image as ImageIcon, Film, X, Loader2, Wand2, Play } from "lucide-react";
 import { listAssets, deleteAsset, startVideoGeneration, pollVideoGeneration } from "@/lib/studio.functions";
 import { VideoPlaylist } from "@/components/mm/video-playlist";
 import { MergedDownloadButton } from "@/components/mm/merged-download-button";
@@ -292,7 +292,7 @@ function AssetModal({ asset, onClose, onDelete }: { asset: AssetRow; onClose: ()
             {asset.kind === "video" && (
               <div className="mt-2 rounded-2xl border border-[color:var(--hairline)] bg-background/40 p-3">
                 <div className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-secondary">
-                  <Sparkles className="h-3 w-3" /> Remix com prompt
+                  <Wand2 className="h-3 w-3" /> Remix com prompt
                 </div>
                 <textarea
                   value={prompt}
@@ -303,7 +303,7 @@ function AssetModal({ asset, onClose, onDelete }: { asset: AssetRow; onClose: ()
                   disabled={busy}
                 />
                 <button type="button" onClick={onRemix} disabled={busy || !prompt.trim()} className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-40">
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
                   {busy ? "A gerar…" : "Gerar novo vídeo"}
                 </button>
                 {status && !error && <p className="mt-2 text-[11px] text-muted-foreground">{status}</p>}

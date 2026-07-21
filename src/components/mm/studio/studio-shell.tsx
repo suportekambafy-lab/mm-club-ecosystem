@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Sparkles, Image as ImageIcon, Film, Library, Package, Gem, Coins } from "lucide-react";
+import { Compass, Image as ImageIcon, Film, Library, Package, Gem, Coins } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
@@ -12,12 +12,12 @@ type StudioNav = {
     | "/ferramentas/studio/produtos"
     | "/ferramentas/studio/marca";
   label: string;
-  icon: typeof Sparkles;
+  icon: typeof Compass;
   exact?: boolean;
 };
 
 const nav: StudioNav[] = [
-  { to: "/ferramentas/studio", label: "Descobrir", icon: Sparkles, exact: true },
+  { to: "/ferramentas/studio", label: "Descobrir", icon: Compass, exact: true },
   { to: "/ferramentas/studio/imagens", label: "IA de Imagens", icon: ImageIcon },
   { to: "/ferramentas/studio/videos", label: "IA de Vídeos", icon: Film },
   { to: "/ferramentas/studio/criativos", label: "Os meus criativos", icon: Library },
@@ -47,7 +47,6 @@ export function StudioShell({
         <div className="relative flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="space-y-2">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--hairline)] bg-background/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-              <Sparkles className="h-3 w-3" />
               MM Studio
             </span>
             <h1 className="font-display text-3xl leading-tight text-foreground md:text-5xl">
