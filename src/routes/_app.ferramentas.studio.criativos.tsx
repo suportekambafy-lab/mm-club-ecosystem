@@ -303,7 +303,7 @@ function AssetModal({ asset, onClose, onDelete }: { asset: AssetRow; onClose: ()
                   disabled={busy}
                 />
                 <button type="button" onClick={onRemix} disabled={busy || !prompt.trim()} className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-40">
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
                   {busy ? "A gerar…" : "Gerar novo vídeo"}
                 </button>
                 {status && !error && <p className="mt-2 text-[11px] text-muted-foreground">{status}</p>}
