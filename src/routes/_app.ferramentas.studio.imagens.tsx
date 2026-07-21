@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
-import { Loader2, Wand2, Download, RefreshCcw, Check } from "lucide-react";
+import { Loader2, Wand2, Download, RefreshCcw, Check, ChevronDown } from "lucide-react";
 import { generateImages } from "@/lib/studio.functions";
 import { IMAGE_STYLES, IMAGE_FORMATS, PEOPLE_OPTIONS, SCENE_MODES, CONVERSION_HOOKS, type ImageStyle, type ImageFormat, type PeoplePreset, type SceneMode, type ConversionHook, STUDIO_COSTS } from "@/lib/studio-config";
 import { useStudio } from "@/lib/studio-context";
@@ -156,37 +156,56 @@ function ImagensPage() {
         </div>
       </Step>
 
-      {/* STEP 4 — SCENE */}
-      <Step number="04" title="Cena / Fundo" description="E-commerce (fundo branco/preto), estúdio, lifestyle ou editorial.">
-        <div className="flex flex-wrap gap-2">
-          {SCENE_MODES.map((s) => (
-            <Chip key={s.id} active={scene === s.id} onClick={() => setScene(s.id)} label={s.label} />
-          ))}
+      {/* STEP 4 — SCENE & PEOPLE */}
+      <Collapsible
+        number="04"
+        title="Cena & Pessoas"
+        description="Fundo, ambiente e presença humana."
+        summary={`${SCENE_MODES.find((s) => s.id === scene)?.label ?? "—"} · ${PEOPLE_OPTIONS.find((p) => p.id === people)?.label ?? "—"}`}
+      >
+        <div className="space-y-5">
+          <div>
+            <p className="mb-2 text-[11px] uppercase tracking-widest text-muted-foreground">Cena / Fundo</p>
+            <div className="flex flex-wrap gap-2">
+              {SCENE_MODES.map((s) => (
+                <Chip key={s.id} active={scene === s.id} onClick={() => setScene(s.id)} label={s.label} />
+              ))}
+            </div>
+            <p className="mt-2 text-[11px] text-muted-foreground">{SCENE_MODES.find((s) => s.id === scene)?.hint}</p>
+          </div>
+          <div>
+            <p className="mb-2 text-[11px] uppercase tracking-widest text-muted-foreground">Pessoas na imagem</p>
+            <div className="flex flex-wrap gap-2">
+              {PEOPLE_OPTIONS.map((p) => (
+                <Chip key={p.id} active={people === p.id} onClick={() => setPeople(p.id)} label={p.label} />
+              ))}
+            </div>
+            <p className="mt-2 text-[11px] text-muted-foreground">{PEOPLE_OPTIONS.find((p) => p.id === people)?.hint}</p>
+          </div>
         </div>
-        <p className="mt-2 text-[11px] text-muted-foreground">{SCENE_MODES.find((s) => s.id === scene)?.hint}</p>
-      </Step>
+      </Collapsible>
 
-      {/* STEP 5 — PEOPLE */}
-      <Step number="05" title="Pessoas na imagem" description="Sem pessoas (produto puro), só mãos, mulher, homem, casal ou grupo.">
-        <div className="flex flex-wrap gap-2">
-          {PEOPLE_OPTIONS.map((p) => (
-            <Chip key={p.id} active={people === p.id} onClick={() => setPeople(p.id)} label={p.label} />
-          ))}
-        </div>
-        <p className="mt-2 text-[11px] text-muted-foreground">{PEOPLE_OPTIONS.find((p) => p.id === people)?.hint}</p>
-      </Step>
-
-      {/* STEP 6 — CONVERSION HOOK */}
-      <Step number="06" title="Ângulo de conversão" description="Gatilho psicológico que orienta a composição para vender.">
+      {/* STEP 5 — CONVERSION HOOK */}
+      <Collapsible
+        number="05"
+        title="Ângulo de conversão"
+        description="Gatilho psicológico que orienta a composição para vender."
+        summary={CONVERSION_HOOKS.find((h) => h.id === hook)?.label ?? "—"}
+      >
         <div className="flex flex-wrap gap-2">
           {CONVERSION_HOOKS.map((h) => (
             <Chip key={h.id} active={hook === h.id} onClick={() => setHook(h.id)} label={h.label} />
           ))}
         </div>
-      </Step>
+      </Collapsible>
 
-      {/* STEP 7 — NOTES */}
-      <Step number="07" title="Direção adicional" description="Opcional — uma frase para orientar a IA.">
+      {/* STEP 6 — NOTES */}
+      <Collapsible
+        number="06"
+        title="Direção adicional"
+        description="Opcional — uma frase para orientar a IA."
+        summary={notes ? `${notes.slice(0, 40)}${notes.length > 40 ? "…" : ""}` : "—"}
+      >
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
@@ -194,7 +213,7 @@ function ImagensPage() {
           rows={3}
           className="w-full resize-none rounded-2xl border border-border bg-surface-1 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
         />
-      </Step>
+      </Collapsible>
 
       {/* GENERATE */}
       <div className="sticky bottom-4 z-10 flex flex-col gap-3 rounded-2xl border border-[color:var(--hairline)] bg-background/80 p-4 backdrop-blur-xl md:flex-row md:items-center md:justify-between">
@@ -280,6 +299,41 @@ function Step({ number, title, description, children }: { number: string; title:
         </div>
       </div>
       {children}
+    </section>
+  );
+}
+
+function Collapsible({
+  number,
+  title,
+  description,
+  summary,
+  children,
+}: {
+  number: string;
+  title: string;
+  description: string;
+  summary: string;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <section className="rounded-2xl border border-[color:var(--hairline)] bg-surface-1/40">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+      >
+        <div className="min-w-0">
+          <p className="font-display text-[11px] text-primary">{number}</p>
+          <h2 className="font-display text-lg text-foreground">{title}</h2>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+            {open ? description : summary}
+          </p>
+        </div>
+        <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition", open && "rotate-180")} />
+      </button>
+      {open && <div className="border-t border-[color:var(--hairline)] px-5 py-5">{children}</div>}
     </section>
   );
 }
