@@ -160,7 +160,7 @@ function FerramentasLayout() {
               <Film className="h-5 w-5" />
             </span>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">IA de Vídeos · Google Veo 3</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">MM Motion · Vídeos</p>
               <h3 className="mt-1 font-display text-2xl text-foreground">Vídeos cinematográficos</h3>
               <p className="mt-2 text-sm text-muted-foreground">
                 Anúncios verticais e horizontais com movimento de câmara e storyboard automáticos — prontos a publicar em Reels, TikTok e Meta Ads.
