@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Download, Trash2, Image as ImageIcon, Film, X, Loader2, Sparkles, Play } from "lucide-react";
 import { listAssets, deleteAsset, startVideoGeneration, pollVideoGeneration } from "@/lib/studio.functions";
 import { VideoPlaylist } from "@/components/mm/video-playlist";
+import { MergedDownloadButton } from "@/components/mm/merged-download-button";
 import { useStudio } from "@/lib/studio-context";
 import { cn } from "@/lib/utils";
 
