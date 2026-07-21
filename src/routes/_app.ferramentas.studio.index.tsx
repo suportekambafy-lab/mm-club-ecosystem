@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, ImageIcon, Film, Package, Gem, Sparkles, Zap, Palette } from "lucide-react";
+import { ArrowRight, ImageIcon, Film, Package, Gem, Zap, Palette } from "lucide-react";
 import { useStudio } from "@/lib/studio-context";
 import showcase1 from "@/assets/studio-showcase-1.jpg";
 import showcase2 from "@/assets/studio-showcase-2.jpg";
@@ -36,7 +36,7 @@ function StudioHome() {
           />
           <div className="relative">
             <div className="flex items-center gap-2 text-primary">
-              <Sparkles className="h-4 w-4" />
+              <Gem className="h-4 w-4" />
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em]">Saldo</p>
             </div>
             <p className="mt-2 font-display text-5xl text-foreground">{balance.toLocaleString("pt-PT")}</p>
@@ -96,7 +96,7 @@ function StudioHome() {
               <ImageIcon className="h-5 w-5" />
             </span>
             <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">40 créditos · 4 imagens</p>
-            <h3 className="mt-1 font-display text-3xl text-white md:text-4xl">IA de Imagens</h3>
+            <h3 className="mt-1 font-display text-3xl text-white md:text-4xl">MM Vision</h3>
             <p className="mt-2 max-w-md text-sm text-white/80">
               Modelos reais a usar o teu produto. Beauty, tech, fitness, fashion — geração paralela em segundos.
             </p>
@@ -116,13 +116,13 @@ function StudioHome() {
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary text-secondary-foreground shadow-lg">
               <Film className="h-5 w-5" />
             </span>
-            <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-secondary">250 créditos · Veo 3</p>
-            <h3 className="mt-1 font-display text-3xl text-white md:text-4xl">IA de Vídeos</h3>
+            <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-secondary">250 créditos · cinematográfico</p>
+            <h3 className="mt-1 font-display text-3xl text-white md:text-4xl">MM Motion</h3>
             <p className="mt-2 max-w-md text-sm text-white/80">
               Anúncios cinematográficos verticais e horizontais. Storyboard automático, som ambiente, prontos para Reels e Ads.
             </p>
             <span className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-secondary">
-              Explorar Veo <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+              Começar geração <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
             </span>
           </div>
         </Link>

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Film, Loader2, Sparkles, Play, Download } from "lucide-react";
+import { Film, Loader2, Play, Download } from "lucide-react";
 import { useStudio } from "@/lib/studio-context";
 import { startVideoGeneration, pollVideoGeneration } from "@/lib/studio.functions";
 import { VIDEO_STYLES, VIDEO_FORMATS, VIDEO_DURATIONS, VIDEO_OBJECTIVES, PEOPLE_OPTIONS, CONVERSION_HOOKS, videoCost, videoSegments, type PeoplePreset, type ConversionHook } from "@/lib/studio-config";
@@ -97,7 +97,7 @@ function VideosPage() {
         },
       });
       refresh();
-      setStatusText("Vídeo em fila (Veo). A monitorizar…");
+      setStatusText("Vídeo em fila. A monitorizar…");
       loopPoll(r.assetId);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha ao iniciar");
@@ -111,10 +111,10 @@ function VideosPage() {
       <section className="rounded-3xl border border-[color:var(--hairline)] bg-surface-1 p-6 md:p-8">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="space-y-1">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--hairline)] bg-background/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-secondary">
-              <Sparkles className="h-3 w-3" /> Google Veo 3
+            <span className="inline-flex items-center rounded-full border border-[color:var(--hairline)] bg-background/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-secondary">
+              MM Motion
             </span>
-            <h1 className="font-display text-3xl text-foreground md:text-4xl">IA de Vídeos</h1>
+            <h1 className="font-display text-3xl text-foreground md:text-4xl">Vídeos</h1>
             <p className="text-sm text-muted-foreground">Vídeos cinematográficos com storyboard, câmara e iluminação automáticos.</p>
           </div>
           <div className="rounded-2xl border border-[color:var(--hairline)] bg-background/40 px-4 py-3 text-right">

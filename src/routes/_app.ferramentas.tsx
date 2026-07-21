@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { ArrowRight, Sparkles, ImageIcon, Film, Wand2, Package, Palette } from "lucide-react";
+import { ArrowRight, ImageIcon, Film, Wand2, Package, Palette } from "lucide-react";
 import showcase1 from "@/assets/studio-showcase-1.jpg";
 import showcase2 from "@/assets/studio-showcase-2.jpg";
 import showcase3 from "@/assets/studio-showcase-3.jpg";
@@ -49,9 +49,8 @@ function FerramentasLayout() {
           loading="eager"
         />
         <div className="relative z-20 flex flex-col gap-6 p-8 md:p-14 lg:p-16 min-h-[520px] md:min-h-[560px] justify-end md:justify-center max-w-[720px]">
-          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/90 backdrop-blur">
-            <Sparkles className="h-3 w-3 text-primary" />
-            MM Studio · IA Profissional
+          <span className="inline-flex w-fit items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/90 backdrop-blur">
+            MM Studio · Criativos de Alta Conversão
           </span>
           <h1 className="font-display text-5xl leading-[0.95] text-white md:text-7xl">
             O teu estúdio
@@ -133,7 +132,7 @@ function FerramentasLayout() {
               <ImageIcon className="h-5 w-5" />
             </span>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">IA de Imagens · OpenAI</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">MM Vision · Imagens</p>
               <h3 className="mt-1 font-display text-2xl text-foreground">Fotografias publicitárias</h3>
               <p className="mt-2 text-sm text-muted-foreground">
                 4 variações do teu produto por geração — modelos, lifestyle, still life, flat lay. Qualidade de agência criativa.
@@ -161,7 +160,7 @@ function FerramentasLayout() {
               <Film className="h-5 w-5" />
             </span>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">IA de Vídeos · Google Veo 3</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">MM Motion · Vídeos</p>
               <h3 className="mt-1 font-display text-2xl text-foreground">Vídeos cinematográficos</h3>
               <p className="mt-2 text-sm text-muted-foreground">
                 Anúncios verticais e horizontais com movimento de câmara e storyboard automáticos — prontos a publicar em Reels, TikTok e Meta Ads.
