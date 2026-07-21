@@ -363,6 +363,34 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+function Section({ title, summary, children, defaultOpen = false }: { title: string; summary?: string; children: ReactNode; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-2xl border border-[color:var(--hairline)] bg-background/30">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+      >
+        <div className="min-w-0">
+          <div className="text-sm font-medium text-foreground">{title}</div>
+          {summary && <div className="mt-0.5 truncate text-[11px] text-muted-foreground">{summary}</div>}
+        </div>
+        <ChevronDown className={"h-4 w-4 shrink-0 text-muted-foreground transition-transform " + (open ? "rotate-180" : "")} />
+      </button>
+      {open && <div className="space-y-5 border-t border-[color:var(--hairline)] px-4 py-4">{children}</div>}
+    </div>
+  );
+}
+
+  return (
+    <div className="space-y-2">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
+      {children}
+    </div>
+  );
+}
+
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
