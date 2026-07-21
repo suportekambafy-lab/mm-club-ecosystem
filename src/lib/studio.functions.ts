@@ -567,7 +567,7 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
       }
       if (st !== "completed" && st !== "succeeded") continue;
       try {
-        const mat = await materializeSegment(key, supabase, userId, op);
+        const mat = await materializeSegment(key, supabase as unknown as SupabaseCtx, userId, op);
         seg.status = "ready";
         seg.storage_path = mat.path;
         seg.url = mat.url;
