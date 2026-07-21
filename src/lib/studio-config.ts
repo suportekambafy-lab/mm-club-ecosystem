@@ -101,7 +101,27 @@ export const VIDEO_FORMATS: { id: VideoFormat; label: string; aspect: "9:16" | "
   { id: "shorts", label: "YouTube Shorts", aspect: "9:16" },
 ];
 
-export const VIDEO_DURATIONS = [8, 10] as const;
+export const VIDEO_DURATIONS = [8, 10, 15, 30] as const;
+
+// Split target duration into API segments (Omni caps at ~10s per call).
+export function videoSegments(duration: number): number[] {
+  if (duration <= 10) return [duration];
+  if (duration === 15) return [8, 7];
+  if (duration === 30) return [10, 10, 10];
+  // Fallback: chunks of 10s
+  const out: number[] = [];
+  let left = duration;
+  while (left > 0) {
+    const c = Math.min(10, left);
+    out.push(c);
+    left -= c;
+  }
+  return out;
+}
+
+export function videoCost(duration: number): number {
+  return videoSegments(duration).length * STUDIO_COSTS.video;
+}
 
 export const VIDEO_OBJECTIVES: { id: string; label: string }[] = [
   { id: "showcase", label: "Mostrar produto" },
