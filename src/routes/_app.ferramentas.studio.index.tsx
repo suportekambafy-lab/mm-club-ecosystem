@@ -96,7 +96,7 @@ function StudioHome() {
               <ImageIcon className="h-5 w-5" />
             </span>
             <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">40 créditos · 4 imagens</p>
-            <h3 className="mt-1 font-display text-3xl text-white md:text-4xl">IA de Imagens</h3>
+            <h3 className="mt-1 font-display text-3xl text-white md:text-4xl">MM Vision</h3>
             <p className="mt-2 max-w-md text-sm text-white/80">
               Modelos reais a usar o teu produto. Beauty, tech, fitness, fashion — geração paralela em segundos.
             </p>
