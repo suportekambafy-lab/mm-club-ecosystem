@@ -161,7 +161,7 @@ async function callImageModel(
         model: OPENAI_IMAGE_MODEL,
         prompt,
         size,
-        quality: "medium",
+        quality: OPENAI_IMAGE_QUALITY,
         n: 1,
       }),
     });
