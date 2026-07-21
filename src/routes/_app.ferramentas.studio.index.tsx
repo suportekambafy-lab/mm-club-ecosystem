@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, ImageIcon, Film, Package, Gem, Zap, Palette } from "lucide-react";
+import { ArrowRight, ImageIcon, Film, Package, Gem, Zap, Palette, Plus } from "lucide-react";
 import { useStudio } from "@/lib/studio-context";
+import { CreditsTopupModal } from "@/components/mm/studio/credits-topup-modal";
 import showcase1 from "@/assets/studio-showcase-1.jpg";
 import showcase2 from "@/assets/studio-showcase-2.jpg";
 import showcase3 from "@/assets/studio-showcase-3.jpg";
