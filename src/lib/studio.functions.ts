@@ -107,7 +107,8 @@ const GenerateImagesSchema = z.object({
   count: z.number().int().min(1).max(4).default(4),
 });
 
-const OPENAI_IMAGE_MODEL = "gpt-image-1";
+const OPENAI_IMAGE_MODEL = "gpt-image-2";
+const OPENAI_IMAGE_QUALITY = "high";
 
 async function fetchAsBytes(url: string): Promise<{ bytes: Uint8Array; mime: string }> {
   const r = await fetch(url);
@@ -137,7 +138,7 @@ async function callImageModel(
     form.append("model", OPENAI_IMAGE_MODEL);
     form.append("prompt", prompt);
     form.append("size", size);
-    form.append("quality", "medium");
+    form.append("quality", OPENAI_IMAGE_QUALITY);
     form.append("n", "1");
     refs.slice(0, 4).forEach((r, i) => {
       const ext = r.mime.includes("jpeg") ? "jpg" : r.mime.includes("webp") ? "webp" : "png";
@@ -160,7 +161,7 @@ async function callImageModel(
         model: OPENAI_IMAGE_MODEL,
         prompt,
         size,
-        quality: "medium",
+        quality: OPENAI_IMAGE_QUALITY,
         n: 1,
       }),
     });
