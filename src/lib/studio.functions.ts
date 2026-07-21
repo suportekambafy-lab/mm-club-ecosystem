@@ -207,7 +207,7 @@ export const generateImages = createServerFn({ method: "POST" })
           style: data.style,
           product_id: data.productId ?? null,
           credits_used: STUDIO_COSTS.imageSingle,
-          metadata: { prompt, size: fmt.size, model: "openai/gpt-image-1-mini", storage_path: path },
+          metadata: { prompt, size: fmt.size, model: OPENAI_IMAGE_MODEL, storage_path: path },
         })
         .select("id, url")
         .single();
