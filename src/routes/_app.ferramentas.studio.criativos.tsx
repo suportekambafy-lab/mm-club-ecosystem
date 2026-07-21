@@ -18,9 +18,10 @@ type AssetRow = {
   thumb_url: string | null;
   format: string | null;
   style: string | null;
+  product_id: string | null;
   credits_used: number;
   created_at: string;
-  meta?: Record<string, unknown> | null;
+  metadata?: Record<string, unknown> | null;
 };
 
 function CriativosPage() {
