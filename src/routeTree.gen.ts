@@ -45,11 +45,17 @@ import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
 import { Route as AppFerramentasStudioRouteImport } from './routes/_app.ferramentas.studio'
 import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
 import { Route as AppAcademiaCourseIdRouteImport } from './routes/_app.academia.$courseId'
+import { Route as AppFerramentasStudioIndexRouteImport } from './routes/_app.ferramentas.studio.index'
 import { Route as AppAcademiaCourseIdIndexRouteImport } from './routes/_app.academia.$courseId.index'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicHooksAutoTranscribeRouteImport } from './routes/api/public/hooks/auto-transcribe'
 import { Route as ApiPublicCloudflareStreamWebhookRouteImport } from './routes/api/public/cloudflare-stream/webhook'
 import { Route as AdminLivesLiveIdStudioRouteImport } from './routes/admin.lives.$liveId.studio'
+import { Route as AppFerramentasStudioVideosRouteImport } from './routes/_app.ferramentas.studio.videos'
+import { Route as AppFerramentasStudioProdutosRouteImport } from './routes/_app.ferramentas.studio.produtos'
+import { Route as AppFerramentasStudioMarcaRouteImport } from './routes/_app.ferramentas.studio.marca'
+import { Route as AppFerramentasStudioImagensRouteImport } from './routes/_app.ferramentas.studio.imagens'
+import { Route as AppFerramentasStudioCriativosRouteImport } from './routes/_app.ferramentas.studio.criativos'
 import { Route as AppAcademiaCourseIdLessonIdRouteImport } from './routes/_app.academia.$courseId.$lessonId'
 
 const VipRoute = VipRouteImport.update({
@@ -232,6 +238,12 @@ const AppAcademiaCourseIdRoute = AppAcademiaCourseIdRouteImport.update({
   path: '/$courseId',
   getParentRoute: () => AppAcademiaRoute,
 } as any)
+const AppFerramentasStudioIndexRoute =
+  AppFerramentasStudioIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AppFerramentasStudioRoute,
+  } as any)
 const AppAcademiaCourseIdIndexRoute =
   AppAcademiaCourseIdIndexRouteImport.update({
     id: '/',
@@ -261,6 +273,36 @@ const AdminLivesLiveIdStudioRoute = AdminLivesLiveIdStudioRouteImport.update({
   path: '/$liveId/studio',
   getParentRoute: () => AdminLivesRoute,
 } as any)
+const AppFerramentasStudioVideosRoute =
+  AppFerramentasStudioVideosRouteImport.update({
+    id: '/videos',
+    path: '/videos',
+    getParentRoute: () => AppFerramentasStudioRoute,
+  } as any)
+const AppFerramentasStudioProdutosRoute =
+  AppFerramentasStudioProdutosRouteImport.update({
+    id: '/produtos',
+    path: '/produtos',
+    getParentRoute: () => AppFerramentasStudioRoute,
+  } as any)
+const AppFerramentasStudioMarcaRoute =
+  AppFerramentasStudioMarcaRouteImport.update({
+    id: '/marca',
+    path: '/marca',
+    getParentRoute: () => AppFerramentasStudioRoute,
+  } as any)
+const AppFerramentasStudioImagensRoute =
+  AppFerramentasStudioImagensRouteImport.update({
+    id: '/imagens',
+    path: '/imagens',
+    getParentRoute: () => AppFerramentasStudioRoute,
+  } as any)
+const AppFerramentasStudioCriativosRoute =
+  AppFerramentasStudioCriativosRouteImport.update({
+    id: '/criativos',
+    path: '/criativos',
+    getParentRoute: () => AppFerramentasStudioRoute,
+  } as any)
 const AppAcademiaCourseIdLessonIdRoute =
   AppAcademiaCourseIdLessonIdRouteImport.update({
     id: '/$lessonId',
@@ -299,17 +341,23 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
-  '/ferramentas/studio': typeof AppFerramentasStudioRoute
+  '/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/academia/': typeof AppAcademiaIndexRoute
   '/lives/': typeof AppLivesIndexRoute
   '/admin/lives/': typeof AdminLivesIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
+  '/ferramentas/studio/criativos': typeof AppFerramentasStudioCriativosRoute
+  '/ferramentas/studio/imagens': typeof AppFerramentasStudioImagensRoute
+  '/ferramentas/studio/marca': typeof AppFerramentasStudioMarcaRoute
+  '/ferramentas/studio/produtos': typeof AppFerramentasStudioProdutosRoute
+  '/ferramentas/studio/videos': typeof AppFerramentasStudioVideosRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
+  '/ferramentas/studio/': typeof AppFerramentasStudioIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -337,17 +385,22 @@ export interface FileRoutesByTo {
   '/checkout/return': typeof CheckoutReturnRoute
   '/admin': typeof AdminIndexRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
-  '/ferramentas/studio': typeof AppFerramentasStudioRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/academia': typeof AppAcademiaIndexRoute
   '/lives': typeof AppLivesIndexRoute
   '/admin/lives': typeof AdminLivesIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
+  '/ferramentas/studio/criativos': typeof AppFerramentasStudioCriativosRoute
+  '/ferramentas/studio/imagens': typeof AppFerramentasStudioImagensRoute
+  '/ferramentas/studio/marca': typeof AppFerramentasStudioMarcaRoute
+  '/ferramentas/studio/produtos': typeof AppFerramentasStudioProdutosRoute
+  '/ferramentas/studio/videos': typeof AppFerramentasStudioVideosRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdIndexRoute
+  '/ferramentas/studio': typeof AppFerramentasStudioIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -382,17 +435,23 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/_app/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
   '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
-  '/_app/ferramentas/studio': typeof AppFerramentasStudioRoute
+  '/_app/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
   '/_app/academia/': typeof AppAcademiaIndexRoute
   '/_app/lives/': typeof AppLivesIndexRoute
   '/admin/lives/': typeof AdminLivesIndexRoute
   '/_app/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
+  '/_app/ferramentas/studio/criativos': typeof AppFerramentasStudioCriativosRoute
+  '/_app/ferramentas/studio/imagens': typeof AppFerramentasStudioImagensRoute
+  '/_app/ferramentas/studio/marca': typeof AppFerramentasStudioMarcaRoute
+  '/_app/ferramentas/studio/produtos': typeof AppFerramentasStudioProdutosRoute
+  '/_app/ferramentas/studio/videos': typeof AppFerramentasStudioVideosRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/_app/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
+  '/_app/ferramentas/studio/': typeof AppFerramentasStudioIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -433,11 +492,17 @@ export interface FileRouteTypes {
     | '/lives/'
     | '/admin/lives/'
     | '/academia/$courseId/$lessonId'
+    | '/ferramentas/studio/criativos'
+    | '/ferramentas/studio/imagens'
+    | '/ferramentas/studio/marca'
+    | '/ferramentas/studio/produtos'
+    | '/ferramentas/studio/videos'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
     | '/api/public/payments/webhook'
     | '/academia/$courseId/'
+    | '/ferramentas/studio/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -465,17 +530,22 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/admin'
     | '/especialistas/$expertId'
-    | '/ferramentas/studio'
     | '/lives/$liveId'
     | '/academia'
     | '/lives'
     | '/admin/lives'
     | '/academia/$courseId/$lessonId'
+    | '/ferramentas/studio/criativos'
+    | '/ferramentas/studio/imagens'
+    | '/ferramentas/studio/marca'
+    | '/ferramentas/studio/produtos'
+    | '/ferramentas/studio/videos'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
     | '/api/public/payments/webhook'
     | '/academia/$courseId'
+    | '/ferramentas/studio'
   id:
     | '__root__'
     | '/'
@@ -515,11 +585,17 @@ export interface FileRouteTypes {
     | '/_app/lives/'
     | '/admin/lives/'
     | '/_app/academia/$courseId/$lessonId'
+    | '/_app/ferramentas/studio/criativos'
+    | '/_app/ferramentas/studio/imagens'
+    | '/_app/ferramentas/studio/marca'
+    | '/_app/ferramentas/studio/produtos'
+    | '/_app/ferramentas/studio/videos'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
     | '/api/public/payments/webhook'
     | '/_app/academia/$courseId/'
+    | '/_app/ferramentas/studio/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -793,6 +869,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAcademiaCourseIdRouteImport
       parentRoute: typeof AppAcademiaRoute
     }
+    '/_app/ferramentas/studio/': {
+      id: '/_app/ferramentas/studio/'
+      path: '/'
+      fullPath: '/ferramentas/studio/'
+      preLoaderRoute: typeof AppFerramentasStudioIndexRouteImport
+      parentRoute: typeof AppFerramentasStudioRoute
+    }
     '/_app/academia/$courseId/': {
       id: '/_app/academia/$courseId/'
       path: '/'
@@ -827,6 +910,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/lives/$liveId/studio'
       preLoaderRoute: typeof AdminLivesLiveIdStudioRouteImport
       parentRoute: typeof AdminLivesRoute
+    }
+    '/_app/ferramentas/studio/videos': {
+      id: '/_app/ferramentas/studio/videos'
+      path: '/videos'
+      fullPath: '/ferramentas/studio/videos'
+      preLoaderRoute: typeof AppFerramentasStudioVideosRouteImport
+      parentRoute: typeof AppFerramentasStudioRoute
+    }
+    '/_app/ferramentas/studio/produtos': {
+      id: '/_app/ferramentas/studio/produtos'
+      path: '/produtos'
+      fullPath: '/ferramentas/studio/produtos'
+      preLoaderRoute: typeof AppFerramentasStudioProdutosRouteImport
+      parentRoute: typeof AppFerramentasStudioRoute
+    }
+    '/_app/ferramentas/studio/marca': {
+      id: '/_app/ferramentas/studio/marca'
+      path: '/marca'
+      fullPath: '/ferramentas/studio/marca'
+      preLoaderRoute: typeof AppFerramentasStudioMarcaRouteImport
+      parentRoute: typeof AppFerramentasStudioRoute
+    }
+    '/_app/ferramentas/studio/imagens': {
+      id: '/_app/ferramentas/studio/imagens'
+      path: '/imagens'
+      fullPath: '/ferramentas/studio/imagens'
+      preLoaderRoute: typeof AppFerramentasStudioImagensRouteImport
+      parentRoute: typeof AppFerramentasStudioRoute
+    }
+    '/_app/ferramentas/studio/criativos': {
+      id: '/_app/ferramentas/studio/criativos'
+      path: '/criativos'
+      fullPath: '/ferramentas/studio/criativos'
+      preLoaderRoute: typeof AppFerramentasStudioCriativosRouteImport
+      parentRoute: typeof AppFerramentasStudioRoute
     }
     '/_app/academia/$courseId/$lessonId': {
       id: '/_app/academia/$courseId/$lessonId'
@@ -865,12 +983,33 @@ const AppAcademiaRouteWithChildren = AppAcademiaRoute._addFileChildren(
   AppAcademiaRouteChildren,
 )
 
+interface AppFerramentasStudioRouteChildren {
+  AppFerramentasStudioCriativosRoute: typeof AppFerramentasStudioCriativosRoute
+  AppFerramentasStudioImagensRoute: typeof AppFerramentasStudioImagensRoute
+  AppFerramentasStudioMarcaRoute: typeof AppFerramentasStudioMarcaRoute
+  AppFerramentasStudioProdutosRoute: typeof AppFerramentasStudioProdutosRoute
+  AppFerramentasStudioVideosRoute: typeof AppFerramentasStudioVideosRoute
+  AppFerramentasStudioIndexRoute: typeof AppFerramentasStudioIndexRoute
+}
+
+const AppFerramentasStudioRouteChildren: AppFerramentasStudioRouteChildren = {
+  AppFerramentasStudioCriativosRoute: AppFerramentasStudioCriativosRoute,
+  AppFerramentasStudioImagensRoute: AppFerramentasStudioImagensRoute,
+  AppFerramentasStudioMarcaRoute: AppFerramentasStudioMarcaRoute,
+  AppFerramentasStudioProdutosRoute: AppFerramentasStudioProdutosRoute,
+  AppFerramentasStudioVideosRoute: AppFerramentasStudioVideosRoute,
+  AppFerramentasStudioIndexRoute: AppFerramentasStudioIndexRoute,
+}
+
+const AppFerramentasStudioRouteWithChildren =
+  AppFerramentasStudioRoute._addFileChildren(AppFerramentasStudioRouteChildren)
+
 interface AppFerramentasRouteChildren {
-  AppFerramentasStudioRoute: typeof AppFerramentasStudioRoute
+  AppFerramentasStudioRoute: typeof AppFerramentasStudioRouteWithChildren
 }
 
 const AppFerramentasRouteChildren: AppFerramentasRouteChildren = {
-  AppFerramentasStudioRoute: AppFerramentasStudioRoute,
+  AppFerramentasStudioRoute: AppFerramentasStudioRouteWithChildren,
 }
 
 const AppFerramentasRouteWithChildren = AppFerramentasRoute._addFileChildren(
