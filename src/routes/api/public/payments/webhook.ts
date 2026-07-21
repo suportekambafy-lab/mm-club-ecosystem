@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { EventName, type PaddleEnv, verifyWebhook } from "@/lib/paddle.server";
+import { packByPriceId } from "@/lib/studio-credit-packs";
 
 let _supabase: any = null;
 function getSupabase(): any {
@@ -106,13 +107,30 @@ async function handleCustomer(data: any, env: PaddleEnv) {
 }
 
 async function handleTransactionCompleted(data: any) {
-  // Fulfillment path is subscription-based; log for audit and stay idempotent.
-  console.log("transaction.completed", {
-    id: data.id,
-    subscriptionId: data.subscriptionId,
-    customerId: data.customerId,
-    status: data.status,
-  });
+  const userId = await resolveUserId(data.customerId, data.customData);
+  if (!userId) {
+    console.warn("transaction.completed: no userId", { id: data.id });
+    return;
+  }
+  const items: any[] = Array.isArray(data.items) ? data.items : [];
+  for (const item of items) {
+    const priceExternal = item?.price?.importMeta?.externalId as string | undefined;
+    const pack = packByPriceId(priceExternal);
+    if (!pack) continue;
+    const qty = Math.max(1, Number(item?.quantity) || 1);
+    const amount = pack.credits * qty;
+    const reason = `purchase:${data.id}:${pack.priceId}`;
+    const { error } = await getSupabase().rpc("mm_studio_grant_credits", {
+      _user_id: userId,
+      _amount: amount,
+      _reason: reason,
+    });
+    if (error) {
+      console.error("grant_credits failed", { reason, error: error.message });
+    } else {
+      console.log("granted credits", { userId, amount, pack: pack.priceId, txn: data.id });
+    }
+  }
 }
 
 async function handleWebhook(req: Request, env: PaddleEnv) {
