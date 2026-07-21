@@ -85,6 +85,11 @@ function VideosPage() {
           duration,
           objective,
           notes: notes || undefined,
+          captions,
+          captionText: captionText || undefined,
+          narration,
+          narrationScript: narrationScript || undefined,
+          music,
         },
       });
       refresh();
