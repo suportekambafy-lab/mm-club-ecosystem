@@ -303,6 +303,41 @@ function Step({ number, title, description, children }: { number: string; title:
   );
 }
 
+function Collapsible({
+  number,
+  title,
+  description,
+  summary,
+  children,
+}: {
+  number: string;
+  title: string;
+  description: string;
+  summary: string;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <section className="rounded-2xl border border-[color:var(--hairline)] bg-surface-1/40">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+      >
+        <div className="min-w-0">
+          <p className="font-display text-[11px] text-primary">{number}</p>
+          <h2 className="font-display text-lg text-foreground">{title}</h2>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+            {open ? description : summary}
+          </p>
+        </div>
+        <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition", open && "rotate-180")} />
+      </button>
+      {open && <div className="border-t border-[color:var(--hairline)] px-5 py-5">{children}</div>}
+    </section>
+  );
+}
+
 function Chip({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
   return (
     <button
