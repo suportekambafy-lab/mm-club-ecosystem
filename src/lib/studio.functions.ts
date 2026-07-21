@@ -107,7 +107,8 @@ const GenerateImagesSchema = z.object({
   count: z.number().int().min(1).max(4).default(4),
 });
 
-const OPENAI_IMAGE_MODEL = "gpt-image-1";
+const OPENAI_IMAGE_MODEL = "gpt-image-2";
+const OPENAI_IMAGE_QUALITY = "high";
 
 async function fetchAsBytes(url: string): Promise<{ bytes: Uint8Array; mime: string }> {
   const r = await fetch(url);
