@@ -224,7 +224,6 @@ export const generateImages = createServerFn({ method: "POST" })
           _user_id: userId,
           _amount: refund,
           _reason: "image_generation_refund",
-          _ref: null,
         });
       }
       if (succeeded === 0) throw err;
