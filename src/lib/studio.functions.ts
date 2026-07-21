@@ -410,7 +410,17 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
         : Promise.resolve({ data: null }),
     ]);
     const brand = brandRes.data as { brand_name?: string; tone?: string; description?: string } | null;
-    const product = productRes.data as { name?: string; category?: string; notes?: string } | null;
+    const product = productRes.data as { name?: string; category?: string; notes?: string; photos?: string[] } | null;
+
+    // Carregar fotos do produto para injectar como referência visual no Omni.
+    const refs: { bytes: Uint8Array; mime: string }[] = [];
+    for (const url of (product?.photos ?? []).slice(0, 3)) {
+      try {
+        refs.push(await fetchAsBytes(url));
+      } catch {
+        // ignora
+      }
+    }
 
     const segments = videoSegments(data.duration);
     const multi = segments.length > 1;
