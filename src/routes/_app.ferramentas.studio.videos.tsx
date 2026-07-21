@@ -6,6 +6,7 @@ import { useStudio } from "@/lib/studio-context";
 import { startVideoGeneration, pollVideoGeneration } from "@/lib/studio.functions";
 import { VIDEO_STYLES, VIDEO_FORMATS, VIDEO_DURATIONS, VIDEO_OBJECTIVES, videoCost, videoSegments } from "@/lib/studio-config";
 import { VideoPlaylist } from "@/components/mm/video-playlist";
+import { MergedDownloadButton } from "@/components/mm/merged-download-button";
 
 export const Route = createFileRoute("/_app/ferramentas/studio/videos")({
   component: VideosPage,
@@ -211,18 +212,18 @@ function VideosPage() {
             )}
           </div>
           {videoUrls && videoUrls.length > 0 && (
-            <div className="mt-3 space-y-2">
-              {videoUrls.map((u, i) => (
+            <div className="mt-3">
+              {videoUrls.length > 1 ? (
+                <MergedDownloadButton urls={videoUrls} filename={`mm-studio-${Date.now()}.mp4`} />
+              ) : (
                 <a
-                  key={u}
-                  href={u}
+                  href={videoUrls[0]}
                   download
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[color:var(--hairline)] bg-background/40 px-4 py-2 text-xs font-semibold text-foreground"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-secondary px-4 py-2 text-xs font-semibold text-background"
                 >
-                  <Download className="h-3.5 w-3.5" />
-                  {videoUrls.length > 1 ? `Descarregar parte ${i + 1}/${videoUrls.length}` : "Descarregar MP4"}
+                  <Download className="h-3.5 w-3.5" /> Descarregar MP4
                 </a>
-              ))}
+              )}
             </div>
           )}
         </div>

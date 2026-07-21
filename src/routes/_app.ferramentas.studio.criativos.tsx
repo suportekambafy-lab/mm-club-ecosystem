@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Download, Trash2, Image as ImageIcon, Film, X, Loader2, Sparkles, Play } from "lucide-react";
 import { listAssets, deleteAsset, startVideoGeneration, pollVideoGeneration } from "@/lib/studio.functions";
 import { VideoPlaylist } from "@/components/mm/video-playlist";
+import { MergedDownloadButton } from "@/components/mm/merged-download-button";
 import { useStudio } from "@/lib/studio-context";
 import { cn } from "@/lib/utils";
 
@@ -275,15 +276,11 @@ function AssetModal({ asset, onClose, onDelete }: { asset: AssetRow; onClose: ()
                 const segs = (asset.metadata as { segments?: Array<{ url?: string }> } | null)?.segments;
                 const urls = segs && segs.length > 1 ? segs.map((s) => s.url).filter((u): u is string => !!u) : null;
                 if (urls && urls.length > 1) {
-                  return urls.map((u, i) => (
-                    <a key={u} href={u} download target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-full bg-secondary px-4 py-2.5 text-sm font-semibold text-background">
-                      <Download className="h-4 w-4" /> Parte {i + 1}/{urls.length}
-                    </a>
-                  ));
+                  return <MergedDownloadButton urls={urls} filename={`mm-studio-${asset.id}.mp4`} />;
                 }
                 return (
                   <a href={asset.url} download target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-full bg-secondary px-4 py-2.5 text-sm font-semibold text-background">
-                    <Download className="h-4 w-4" /> Descarregar
+                    <Download className="h-4 w-4" /> Descarregar MP4
                   </a>
                 );
               })()}
