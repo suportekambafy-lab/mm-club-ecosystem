@@ -352,7 +352,7 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
           delivery: "uri",
         },
         background: true,
-        store: false,
+        store: true,
         stream: false,
       }),
     });
