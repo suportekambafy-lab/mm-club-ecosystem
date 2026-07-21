@@ -1,8 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { STUDIO_COSTS, IMAGE_FORMATS, videoSegments, type ImageFormat, type ImageStyle } from "./studio-config";
-import { buildImagePrompt, type BrandDna, type ProductCtx } from "./studio-prompt";
+import { STUDIO_COSTS, IMAGE_FORMATS, videoSegments, type ImageFormat, type ImageStyle, type PeoplePreset, type SceneMode, type ConversionHook, type VideoStyle, type VideoFormat } from "./studio-config";
+import { buildImagePrompt, buildVideoPrompt, type BrandDna, type ProductCtx } from "./studio-prompt";
 
 const BUCKET = "studio-media";
 
@@ -103,6 +103,9 @@ const GenerateImagesSchema = z.object({
   productId: z.string().uuid().nullable().optional(),
   style: z.string().min(1),
   format: z.string().min(1),
+  scene: z.enum(["ecommerce_white", "ecommerce_black", "ecommerce_gradient", "studio_seamless", "lifestyle", "editorial", "outdoor"]).optional(),
+  people: z.enum(["none", "man", "woman", "couple", "group", "hands"]).default("none"),
+  hook: z.enum(["none", "problem_solution", "before_after", "social_proof", "scarcity", "curiosity", "aspiration"]).default("none"),
   notes: z.string().max(1000).optional(),
   count: z.number().int().min(1).max(4).default(4),
 });
@@ -220,6 +223,9 @@ export const generateImages = createServerFn({ method: "POST" })
     const prompt = buildImagePrompt({
       style: data.style as ImageStyle,
       format: data.format as ImageFormat,
+      scene: data.scene as SceneMode | undefined,
+      people: data.people as PeoplePreset,
+      hook: data.hook as ConversionHook,
       brand,
       product,
       notes: data.notes,
@@ -306,6 +312,8 @@ const StartVideoSchema = z.object({
   format: z.enum(["reels", "tiktok", "facebook", "stories", "shorts"]),
   duration: z.number().int().refine((d) => [8, 10, 15, 30].includes(d), "Duração inválida.").default(8),
   objective: z.string().max(120).optional(),
+  people: z.enum(["none", "man", "woman", "couple", "group", "hands"]).default("none"),
+  hook: z.enum(["none", "problem_solution", "before_after", "social_proof", "scarcity", "curiosity", "aspiration"]).default("none"),
   notes: z.string().max(1200).optional(),
   captions: z.enum(["none", "pt", "en", "es"]).default("none"),
   captionText: z.string().max(300).optional(),
