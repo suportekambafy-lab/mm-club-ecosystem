@@ -156,8 +156,37 @@ function ImagensPage() {
         </div>
       </Step>
 
-      {/* STEP 4 — NOTES */}
-      <Step number="04" title="Direção adicional" description="Opcional — uma frase para orientar a IA.">
+      {/* STEP 4 — SCENE */}
+      <Step number="04" title="Cena / Fundo" description="E-commerce (fundo branco/preto), estúdio, lifestyle ou editorial.">
+        <div className="flex flex-wrap gap-2">
+          {SCENE_MODES.map((s) => (
+            <Chip key={s.id} active={scene === s.id} onClick={() => setScene(s.id)} label={s.label} />
+          ))}
+        </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">{SCENE_MODES.find((s) => s.id === scene)?.hint}</p>
+      </Step>
+
+      {/* STEP 5 — PEOPLE */}
+      <Step number="05" title="Pessoas na imagem" description="Sem pessoas (produto puro), só mãos, mulher, homem, casal ou grupo.">
+        <div className="flex flex-wrap gap-2">
+          {PEOPLE_OPTIONS.map((p) => (
+            <Chip key={p.id} active={people === p.id} onClick={() => setPeople(p.id)} label={p.label} />
+          ))}
+        </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">{PEOPLE_OPTIONS.find((p) => p.id === people)?.hint}</p>
+      </Step>
+
+      {/* STEP 6 — CONVERSION HOOK */}
+      <Step number="06" title="Ângulo de conversão" description="Gatilho psicológico que orienta a composição para vender.">
+        <div className="flex flex-wrap gap-2">
+          {CONVERSION_HOOKS.map((h) => (
+            <Chip key={h.id} active={hook === h.id} onClick={() => setHook(h.id)} label={h.label} />
+          ))}
+        </div>
+      </Step>
+
+      {/* STEP 7 — NOTES */}
+      <Step number="07" title="Direção adicional" description="Opcional — uma frase para orientar a IA.">
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
