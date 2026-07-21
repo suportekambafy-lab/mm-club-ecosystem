@@ -224,8 +224,22 @@ export const generateImages = createServerFn({ method: "POST" })
       notes: data.notes,
     });
 
+    // Carregar fotos do produto como referência real (mantém identidade visual).
+    const productPhotos = ((product as { photos?: string[] } | null)?.photos ?? []).slice(0, 3);
+    const refs: { bytes: Uint8Array; mime: string }[] = [];
+    for (const url of productPhotos) {
+      try {
+        refs.push(await fetchAsBytes(url));
+      } catch {
+        // ignora referência falhada; continua com as que carregaram
+      }
+    }
+    const refPrompt = refs.length > 0
+      ? `${prompt} Use the attached reference image(s) as the EXACT product — preserve shape, colours, label, packaging and proportions faithfully. Recompose it in the new scene; do not invent a different product.`
+      : prompt;
+
     const generateOne = async (i: number) => {
-      const b64 = await callImageModel(prompt, fmt.size);
+      const b64 = await callImageModel(refPrompt, fmt.size, refs);
       const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
       const path = `${userId}/images/${Date.now()}-${i}-${Math.random().toString(36).slice(2, 8)}.png`;
       const up = await supabase.storage.from(BUCKET).upload(path, bytes, {
