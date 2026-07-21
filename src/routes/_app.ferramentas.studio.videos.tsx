@@ -24,6 +24,11 @@ function VideosPage() {
   const [duration, setDuration] = useState<number>(8);
   const [objective, setObjective] = useState<string>(VIDEO_OBJECTIVES[0].id);
   const [notes, setNotes] = useState("");
+  const [captions, setCaptions] = useState<"none" | "pt" | "en" | "es">("none");
+  const [captionText, setCaptionText] = useState("");
+  const [narration, setNarration] = useState<"none" | "male_pt" | "female_pt" | "male_en" | "female_en" | "neutral">("none");
+  const [narrationScript, setNarrationScript] = useState("");
+  const [music, setMusic] = useState<"none" | "cinematic" | "upbeat" | "elegant" | "epic" | "chill" | "corporate">("none");
 
   const [busy, setBusy] = useState(false);
   const [statusText, setStatusText] = useState<string>("");
