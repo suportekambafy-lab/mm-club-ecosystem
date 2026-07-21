@@ -199,9 +199,9 @@ function ImagensPage() {
       {(mutation.isPending || assets.length > 0) && (
         <section>
           <h3 className="mb-3 font-display text-xl text-foreground">Resultado</h3>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {mutation.isPending && assets.length === 0
-              ? Array.from({ length: 4 }).map((_, i) => (
+              ? Array.from({ length: 2 }).map((_, i) => (
                   <div key={i} className="aspect-square animate-pulse rounded-2xl border border-[color:var(--hairline)] bg-surface-2" />
                 ))
               : assets.map((a) => (
