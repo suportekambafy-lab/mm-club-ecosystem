@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Loader2, Wand2, Download, RefreshCcw, Check } from "lucide-react";
 import { generateImages } from "@/lib/studio.functions";
 import { IMAGE_STYLES, IMAGE_FORMATS, type ImageStyle, type ImageFormat, STUDIO_COSTS } from "@/lib/studio-config";
-import { useStudio } from "./_app.ferramentas.studio";
+import { useStudio } from "@/lib/studio-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/ferramentas/studio/imagens")({

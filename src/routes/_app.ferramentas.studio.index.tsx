@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, ImageIcon, Film, Package, Gem, Sparkles } from "lucide-react";
-import { useStudio } from "./_app.ferramentas.studio";
+import { useStudio } from "@/lib/studio-context";
 
 export const Route = createFileRoute("/_app/ferramentas/studio/")({
   component: StudioHome,

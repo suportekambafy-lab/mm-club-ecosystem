@@ -6,7 +6,7 @@ import { Plus, Trash2, Package, Upload, X, Loader2 } from "lucide-react";
 import { upsertProduct, deleteProduct } from "@/lib/studio.functions";
 import { uploadMedia } from "@/lib/media-upload";
 import { supabase } from "@/integrations/supabase/client";
-import { useStudio } from "./_app.ferramentas.studio";
+import { useStudio } from "@/lib/studio-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/ferramentas/studio/produtos")({

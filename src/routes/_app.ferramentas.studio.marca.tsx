@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { saveBrandDna } from "@/lib/studio.functions";
-import { useStudio } from "./_app.ferramentas.studio";
+import { useStudio } from "@/lib/studio-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/ferramentas/studio/marca")({
