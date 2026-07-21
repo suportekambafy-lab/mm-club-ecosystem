@@ -109,23 +109,63 @@ const GenerateImagesSchema = z.object({
 
 const OPENAI_IMAGE_MODEL = "gpt-image-1";
 
-async function callImageModel(prompt: string, size: string): Promise<string> {
+async function fetchAsBytes(url: string): Promise<{ bytes: Uint8Array; mime: string }> {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`Não consegui carregar imagem de referência (${r.status}).`);
+  const mime = r.headers.get("content-type") ?? "image/png";
+  return { bytes: new Uint8Array(await r.arrayBuffer()), mime };
+}
+
+function bytesToB64(bytes: Uint8Array): string {
+  let bin = "";
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+async function callImageModel(
+  prompt: string,
+  size: string,
+  refs: { bytes: Uint8Array; mime: string }[] = [],
+): Promise<string> {
   const key = process.env.OPENAI_API_KEY;
   if (!key) throw new Error("OPENAI_API_KEY não configurada. Adiciona a chave nos secrets do backend.");
-  const res = await fetch("https://api.openai.com/v1/images/generations", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: OPENAI_IMAGE_MODEL,
-      prompt,
-      size,
-      quality: "medium",
-      n: 1,
-    }),
-  });
+
+  let res: Response;
+  if (refs.length > 0) {
+    // Image edit — usa o produto como referência real (mantém identidade).
+    const form = new FormData();
+    form.append("model", OPENAI_IMAGE_MODEL);
+    form.append("prompt", prompt);
+    form.append("size", size);
+    form.append("quality", "medium");
+    form.append("n", "1");
+    refs.slice(0, 4).forEach((r, i) => {
+      const ext = r.mime.includes("jpeg") ? "jpg" : r.mime.includes("webp") ? "webp" : "png";
+      const blob = new Blob([r.bytes as unknown as BlobPart], { type: r.mime });
+      form.append("image[]", blob, `ref-${i}.${ext}`);
+    });
+    res = await fetch("https://api.openai.com/v1/images/edits", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}` },
+      body: form,
+    });
+  } else {
+    res = await fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: OPENAI_IMAGE_MODEL,
+        prompt,
+        size,
+        quality: "medium",
+        n: 1,
+      }),
+    });
+  }
+
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     if (res.status === 401) throw new Error("Chave OpenAI inválida. Verifica OPENAI_API_KEY.");
@@ -184,8 +224,22 @@ export const generateImages = createServerFn({ method: "POST" })
       notes: data.notes,
     });
 
+    // Carregar fotos do produto como referência real (mantém identidade visual).
+    const productPhotos = ((product as { photos?: string[] } | null)?.photos ?? []).slice(0, 3);
+    const refs: { bytes: Uint8Array; mime: string }[] = [];
+    for (const url of productPhotos) {
+      try {
+        refs.push(await fetchAsBytes(url));
+      } catch {
+        // ignora referência falhada; continua com as que carregaram
+      }
+    }
+    const refPrompt = refs.length > 0
+      ? `${prompt} Use the attached reference image(s) as the EXACT product — preserve shape, colours, label, packaging and proportions faithfully. Recompose it in the new scene; do not invent a different product.`
+      : prompt;
+
     const generateOne = async (i: number) => {
-      const b64 = await callImageModel(prompt, fmt.size);
+      const b64 = await callImageModel(refPrompt, fmt.size, refs);
       const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
       const path = `${userId}/images/${Date.now()}-${i}-${Math.random().toString(36).slice(2, 8)}.png`;
       const up = await supabase.storage.from(BUCKET).upload(path, bytes, {
@@ -302,13 +356,29 @@ type VideoSegment = {
   error?: string;
 };
 
-async function startOmniInteraction(key: string, prompt: string, aspect: "9:16" | "1:1" | "16:9"): Promise<string> {
+async function startOmniInteraction(
+  key: string,
+  prompt: string,
+  aspect: "9:16" | "1:1" | "16:9",
+  refs: { bytes: Uint8Array; mime: string }[] = [],
+): Promise<string> {
+  const input = refs.length > 0
+    ? [
+        ...refs.slice(0, 3).map((r) => ({
+          type: "image",
+          data: bytesToB64(r.bytes),
+          mime_type: r.mime,
+        })),
+        { type: "text", text: prompt },
+      ]
+    : prompt;
+
   const res = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": key },
     body: JSON.stringify({
       model: OMNI_MODEL,
-      input: prompt,
+      input,
       response_format: { type: "video", aspect_ratio: aspect, delivery: "uri" },
       background: true,
       store: true,
@@ -340,12 +410,26 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
         : Promise.resolve({ data: null }),
     ]);
     const brand = brandRes.data as { brand_name?: string; tone?: string; description?: string } | null;
-    const product = productRes.data as { name?: string; category?: string; notes?: string } | null;
+    const product = productRes.data as { name?: string; category?: string; notes?: string; photos?: string[] } | null;
+
+    // Carregar fotos do produto para injectar como referência visual no Omni.
+    const refs: { bytes: Uint8Array; mime: string }[] = [];
+    for (const url of (product?.photos ?? []).slice(0, 3)) {
+      try {
+        refs.push(await fetchAsBytes(url));
+      } catch {
+        // ignora
+      }
+    }
 
     const segments = videoSegments(data.duration);
     const multi = segments.length > 1;
     const totalCost = segments.length * STUDIO_COSTS.video;
     const aspect = aspectFromFormat(data.format);
+
+    const refClause = refs.length > 0
+      ? "Use the attached reference image(s) as the EXACT product hero — keep the same shape, colours, label, packaging and proportions in every frame. Do not invent a different product."
+      : null;
 
     const basePrompt = [
       `Cinematic ${data.style} commercial video`,
@@ -356,6 +440,7 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
       product?.notes ? `product notes: ${product.notes}` : null,
       brand?.description ? `brand: ${brand.description}` : null,
       data.notes ? `direction: ${data.notes}` : null,
+      refClause,
       `smooth camera motion, dramatic lighting, premium color grading, 4k, no on-screen text, no logos.`,
     ].filter(Boolean).join(". ");
 
@@ -387,7 +472,7 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
               }`
             : "";
           const prompt = `${basePrompt}. About ${secs}s.${continuity}`;
-          return startOmniInteraction(key, prompt, aspect);
+          return startOmniInteraction(key, prompt, aspect, refs);
         }),
       );
     } catch (err) {
