@@ -124,6 +124,27 @@ function VideosPage() {
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </select>
+            {productId && (() => {
+              const p = (products as Array<{ id: string; photos?: string[] }>).find((x) => x.id === productId);
+              const photos = p?.photos ?? [];
+              if (photos.length === 0) {
+                return (
+                  <p className="mt-2 text-[11px] text-amber-500">
+                    Este produto não tem fotos. Adiciona fotos em Produtos para que o vídeo mostre o produto real.
+                  </p>
+                );
+              }
+              return (
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Referências:</span>
+                  <div className="flex gap-1.5">
+                    {photos.slice(0, 3).map((url, i) => (
+                      <img key={i} src={url} alt="" className="h-9 w-9 rounded-md object-cover border border-[color:var(--hairline)]" />
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </Field>
 
           <Field label="Estilo">
