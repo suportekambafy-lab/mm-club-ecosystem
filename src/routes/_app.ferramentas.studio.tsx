@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getStudioContext } from "@/lib/studio.functions";
 import { StudioShell } from "@/components/mm/studio/studio-shell";
-import { createContext, useContext } from "react";
+import { StudioContext, type StudioCtx } from "@/lib/studio-context";
 
 export const Route = createFileRoute("/_app/ferramentas/studio")({
   head: () => ({
@@ -14,21 +14,6 @@ export const Route = createFileRoute("/_app/ferramentas/studio")({
   }),
   component: StudioLayout,
 });
-
-type StudioCtx = {
-  balance: number;
-  brand: Record<string, unknown> | null;
-  products: Array<Record<string, unknown>>;
-  refresh: () => void;
-};
-
-const StudioContext = createContext<StudioCtx | null>(null);
-
-export function useStudio(): StudioCtx {
-  const v = useContext(StudioContext);
-  if (!v) throw new Error("useStudio deve estar dentro do StudioLayout");
-  return v;
-}
 
 function StudioLayout() {
   const fetchCtx = useServerFn(getStudioContext);
