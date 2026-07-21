@@ -194,7 +194,7 @@ function AssetModal({ asset, onClose, onDelete }: { asset: AssetRow; onClose: ()
     try {
       const r = await start({
         data: {
-          productId: meta.productId ?? null,
+          productId: meta.productId ?? asset.product_id ?? null,
           style: asset.style || "cinematic",
           format: (asset.format || "reels") as "reels" | "tiktok" | "facebook" | "stories" | "shorts",
           duration: typeof meta.duration === "number" ? meta.duration : 8,
