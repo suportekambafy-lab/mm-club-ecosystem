@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Download, Trash2, Image as ImageIcon, Film, X, Loader2, Sparkles, Play } from "lucide-react";
+import { Download, Trash2, Image as ImageIcon, Film, X, Loader2, Wand2, Play } from "lucide-react";
 import { listAssets, deleteAsset, startVideoGeneration, pollVideoGeneration } from "@/lib/studio.functions";
 import { VideoPlaylist } from "@/components/mm/video-playlist";
 import { MergedDownloadButton } from "@/components/mm/merged-download-button";
