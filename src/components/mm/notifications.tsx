@@ -184,6 +184,7 @@ export function NotificationsBell({ className }: { className?: string }) {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<StoredState>({ readIds: [], dismissedIds: [], lastOpenedAt: 0 });
   const [hydrated, setHydrated] = useState(false);
+  const [popPos, setPopPos] = useState<{ top: number; right: number } | null>(null);
   const popRef = useRef<HTMLDivElement | null>(null);
   const btnRef = useRef<HTMLButtonElement | null>(null);
 
@@ -191,6 +192,22 @@ export function NotificationsBell({ className }: { className?: string }) {
     setState(loadState());
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const update = () => {
+      const b = btnRef.current?.getBoundingClientRect();
+      if (!b) return;
+      setPopPos({ top: b.bottom + 8, right: Math.max(8, window.innerWidth - b.right) });
+    };
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
