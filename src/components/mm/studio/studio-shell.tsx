@@ -12,12 +12,12 @@ type StudioNav = {
     | "/ferramentas/studio/produtos"
     | "/ferramentas/studio/marca";
   label: string;
-  icon: typeof Sparkles;
+  icon: typeof Compass;
   exact?: boolean;
 };
 
 const nav: StudioNav[] = [
-  { to: "/ferramentas/studio", label: "Descobrir", icon: Sparkles, exact: true },
+  { to: "/ferramentas/studio", label: "Descobrir", icon: Compass, exact: true },
   { to: "/ferramentas/studio/imagens", label: "IA de Imagens", icon: ImageIcon },
   { to: "/ferramentas/studio/videos", label: "IA de Vídeos", icon: Film },
   { to: "/ferramentas/studio/criativos", label: "Os meus criativos", icon: Library },
