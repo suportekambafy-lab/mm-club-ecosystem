@@ -472,7 +472,7 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
               }`
             : "";
           const prompt = `${basePrompt}. About ${secs}s.${continuity}`;
-          return startOmniInteraction(key, prompt, aspect);
+          return startOmniInteraction(key, prompt, aspect, refs);
         }),
       );
     } catch (err) {
