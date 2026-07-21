@@ -1,8 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { STUDIO_COSTS, IMAGE_FORMATS, videoSegments, type ImageFormat, type ImageStyle } from "./studio-config";
-import { buildImagePrompt, type BrandDna, type ProductCtx } from "./studio-prompt";
+import { STUDIO_COSTS, IMAGE_FORMATS, videoSegments, type ImageFormat, type ImageStyle, type PeoplePreset, type SceneMode, type ConversionHook, type VideoStyle, type VideoFormat } from "./studio-config";
+import { buildImagePrompt, buildVideoPrompt, type BrandDna, type ProductCtx } from "./studio-prompt";
 
 const BUCKET = "studio-media";
 
@@ -103,6 +103,9 @@ const GenerateImagesSchema = z.object({
   productId: z.string().uuid().nullable().optional(),
   style: z.string().min(1),
   format: z.string().min(1),
+  scene: z.enum(["ecommerce_white", "ecommerce_black", "ecommerce_gradient", "studio_seamless", "lifestyle", "editorial", "outdoor"]).optional(),
+  people: z.enum(["none", "man", "woman", "couple", "group", "hands"]).default("none"),
+  hook: z.enum(["none", "problem_solution", "before_after", "social_proof", "scarcity", "curiosity", "aspiration"]).default("none"),
   notes: z.string().max(1000).optional(),
   count: z.number().int().min(1).max(4).default(4),
 });
@@ -220,6 +223,9 @@ export const generateImages = createServerFn({ method: "POST" })
     const prompt = buildImagePrompt({
       style: data.style as ImageStyle,
       format: data.format as ImageFormat,
+      scene: data.scene as SceneMode | undefined,
+      people: data.people as PeoplePreset,
+      hook: data.hook as ConversionHook,
       brand,
       product,
       notes: data.notes,
@@ -306,6 +312,8 @@ const StartVideoSchema = z.object({
   format: z.enum(["reels", "tiktok", "facebook", "stories", "shorts"]),
   duration: z.number().int().refine((d) => [8, 10, 15, 30].includes(d), "Duração inválida.").default(8),
   objective: z.string().max(120).optional(),
+  people: z.enum(["none", "man", "woman", "couple", "group", "hands"]).default("none"),
+  hook: z.enum(["none", "problem_solution", "before_after", "social_proof", "scarcity", "curiosity", "aspiration"]).default("none"),
   notes: z.string().max(1200).optional(),
   captions: z.enum(["none", "pt", "en", "es"]).default("none"),
   captionText: z.string().max(300).optional(),
@@ -459,20 +467,27 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
       ? `Layered ${data.music} background music track, well-mixed under the narration, dynamic build matching the edit.`
       : "";
 
+    const conversionBase = buildVideoPrompt({
+      style: data.style as VideoStyle,
+      format: data.format as VideoFormat,
+      duration: data.duration,
+      objective: data.objective ?? "high-conversion product ad",
+      people: data.people as PeoplePreset,
+      hook: data.hook as ConversionHook,
+      brand: brand as BrandDna,
+      product: product as ProductCtx,
+    });
+
     const basePrompt = [
-      `Cinematic ${data.style} commercial video`,
-      product?.name ? `featuring ${product.name}${product.category ? ` (${product.category})` : ""}` : null,
-      brand?.brand_name ? `for brand ${brand.brand_name}` : null,
-      brand?.tone ? `tone: ${brand.tone}` : null,
-      data.objective ? `objective: ${data.objective}` : null,
-      product?.notes ? `product notes: ${product.notes}` : null,
-      brand?.description ? `brand: ${brand.description}` : null,
-      data.notes ? `direction: ${data.notes}` : null,
+      conversionBase,
+      product?.notes ? `Product notes: ${product.notes}` : null,
+      brand?.description ? `Brand context: ${brand.description}` : null,
+      data.notes ? `Extra direction: ${data.notes}` : null,
       refClause,
       narrationClause,
       captionClause,
       musicClause || null,
-      `smooth camera motion, dramatic lighting, premium color grading, 4k.`,
+      "Smooth motivated camera motion, dramatic lighting, premium color grading, 4k.",
     ].filter(Boolean).join(". ");
 
     // Spend all credits upfront

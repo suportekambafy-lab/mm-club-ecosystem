@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { Loader2, Wand2, Download, RefreshCcw, Check } from "lucide-react";
 import { generateImages } from "@/lib/studio.functions";
-import { IMAGE_STYLES, IMAGE_FORMATS, type ImageStyle, type ImageFormat, STUDIO_COSTS } from "@/lib/studio-config";
+import { IMAGE_STYLES, IMAGE_FORMATS, PEOPLE_OPTIONS, SCENE_MODES, CONVERSION_HOOKS, type ImageStyle, type ImageFormat, type PeoplePreset, type SceneMode, type ConversionHook, STUDIO_COSTS } from "@/lib/studio-config";
 import { useStudio } from "@/lib/studio-context";
 import { cn } from "@/lib/utils";
 
@@ -19,17 +19,23 @@ function ImagensPage() {
   const [productId, setProductId] = useState<string | null>(null);
   const [style, setStyle] = useState<ImageStyle | null>(null);
   const [format, setFormat] = useState<ImageFormat | null>(null);
+  const [scene, setScene] = useState<SceneMode>("ecommerce_white");
+  const [people, setPeople] = useState<PeoplePreset>("none");
+  const [hook, setHook] = useState<ConversionHook>("none");
   const [notes, setNotes] = useState("");
   const [assets, setAssets] = useState<Asset[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const fn = useServerFn(generateImages);
   const mutation = useMutation({
-    mutationFn: (input: { style: ImageStyle; format: ImageFormat; productId: string | null; notes: string }) =>
+    mutationFn: (input: { style: ImageStyle; format: ImageFormat; productId: string | null; notes: string; scene: SceneMode; people: PeoplePreset; hook: ConversionHook }) =>
       fn({
         data: {
           style: input.style,
           format: input.format,
+          scene: input.scene,
+          people: input.people,
+          hook: input.hook,
           productId: input.productId,
           notes: input.notes || undefined,
           count: 2,
@@ -51,7 +57,7 @@ function ImagensPage() {
     if (!style || !format) return;
     setAssets([]);
     setError(null);
-    mutation.mutate({ style, format, productId, notes });
+    mutation.mutate({ style, format, productId, notes, scene, people, hook });
   };
 
   return (
@@ -150,8 +156,37 @@ function ImagensPage() {
         </div>
       </Step>
 
-      {/* STEP 4 — NOTES */}
-      <Step number="04" title="Direção adicional" description="Opcional — uma frase para orientar a IA.">
+      {/* STEP 4 — SCENE */}
+      <Step number="04" title="Cena / Fundo" description="E-commerce (fundo branco/preto), estúdio, lifestyle ou editorial.">
+        <div className="flex flex-wrap gap-2">
+          {SCENE_MODES.map((s) => (
+            <Chip key={s.id} active={scene === s.id} onClick={() => setScene(s.id)} label={s.label} />
+          ))}
+        </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">{SCENE_MODES.find((s) => s.id === scene)?.hint}</p>
+      </Step>
+
+      {/* STEP 5 — PEOPLE */}
+      <Step number="05" title="Pessoas na imagem" description="Sem pessoas (produto puro), só mãos, mulher, homem, casal ou grupo.">
+        <div className="flex flex-wrap gap-2">
+          {PEOPLE_OPTIONS.map((p) => (
+            <Chip key={p.id} active={people === p.id} onClick={() => setPeople(p.id)} label={p.label} />
+          ))}
+        </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">{PEOPLE_OPTIONS.find((p) => p.id === people)?.hint}</p>
+      </Step>
+
+      {/* STEP 6 — CONVERSION HOOK */}
+      <Step number="06" title="Ângulo de conversão" description="Gatilho psicológico que orienta a composição para vender.">
+        <div className="flex flex-wrap gap-2">
+          {CONVERSION_HOOKS.map((h) => (
+            <Chip key={h.id} active={hook === h.id} onClick={() => setHook(h.id)} label={h.label} />
+          ))}
+        </div>
+      </Step>
+
+      {/* STEP 7 — NOTES */}
+      <Step number="07" title="Direção adicional" description="Opcional — uma frase para orientar a IA.">
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}

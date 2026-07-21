@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Film, Loader2, Sparkles, Play, Download } from "lucide-react";
 import { useStudio } from "@/lib/studio-context";
 import { startVideoGeneration, pollVideoGeneration } from "@/lib/studio.functions";
-import { VIDEO_STYLES, VIDEO_FORMATS, VIDEO_DURATIONS, VIDEO_OBJECTIVES, videoCost, videoSegments } from "@/lib/studio-config";
+import { VIDEO_STYLES, VIDEO_FORMATS, VIDEO_DURATIONS, VIDEO_OBJECTIVES, PEOPLE_OPTIONS, CONVERSION_HOOKS, videoCost, videoSegments, type PeoplePreset, type ConversionHook } from "@/lib/studio-config";
 import { VideoPlaylist } from "@/components/mm/video-playlist";
 import { MergedDownloadButton } from "@/components/mm/merged-download-button";
 
@@ -23,6 +23,8 @@ function VideosPage() {
   const [format, setFormat] = useState<typeof VIDEO_FORMATS[number]["id"]>(VIDEO_FORMATS[0].id);
   const [duration, setDuration] = useState<number>(8);
   const [objective, setObjective] = useState<string>(VIDEO_OBJECTIVES[0].id);
+  const [people, setPeople] = useState<PeoplePreset>("none");
+  const [hook, setHook] = useState<ConversionHook>("none");
   const [notes, setNotes] = useState("");
   const [captions, setCaptions] = useState<"none" | "pt" | "en" | "es">("none");
   const [captionText, setCaptionText] = useState("");
@@ -84,6 +86,8 @@ function VideosPage() {
           format,
           duration,
           objective,
+          people,
+          hook,
           notes: notes || undefined,
           captions,
           captionText: captionText || undefined,
@@ -200,6 +204,23 @@ function VideosPage() {
               ))}
             </div>
           </Field>
+
+          <Field label="Pessoas no vídeo">
+            <div className="flex flex-wrap gap-2">
+              {PEOPLE_OPTIONS.map((p) => (
+                <Chip key={p.id} active={people === p.id} onClick={() => setPeople(p.id)}>{p.label}</Chip>
+              ))}
+            </div>
+          </Field>
+
+          <Field label="Ângulo de conversão">
+            <div className="flex flex-wrap gap-2">
+              {CONVERSION_HOOKS.map((h) => (
+                <Chip key={h.id} active={hook === h.id} onClick={() => setHook(h.id)}>{h.label}</Chip>
+              ))}
+            </div>
+          </Field>
+
 
           <Field label="Narração">
             <div className="flex flex-wrap gap-2">
