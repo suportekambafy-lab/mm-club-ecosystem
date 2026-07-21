@@ -26,6 +26,7 @@ const inspiration = [
 
 function StudioHome() {
   const { balance, brand, products } = useStudio();
+  const [topupOpen, setTopupOpen] = useState(false);
   const hasBrand = Boolean(brand?.brand_name);
 
   return (
