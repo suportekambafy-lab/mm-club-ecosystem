@@ -31,8 +31,7 @@ export function useStudio(): StudioCtx {
 }
 
 function StudioLayout() {
-  // useServerFn is exported from both; prefer @tanstack/react-start
-  const fetchCtx = useServerFnStart(getStudioContext);
+  const fetchCtx = useServerFn(getStudioContext);
   const qc = useQueryClient();
   const { data } = useQuery({
     queryKey: ["studio", "context"],
@@ -59,5 +58,3 @@ function StudioLayout() {
   );
 }
 
-// Silence unused import warning
-void useServerFn;
