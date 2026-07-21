@@ -114,7 +114,7 @@ function VideosPage() {
               className="w-full rounded-xl border border-[color:var(--hairline)] bg-background/40 px-3 py-2 text-sm"
             >
               <option value="">— Sem produto —</option>
-              {products.map((p) => (
+              {(products as Array<{ id: string; name: string }>).map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </select>
