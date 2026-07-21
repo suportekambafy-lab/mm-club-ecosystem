@@ -30,7 +30,7 @@ function VideosPage() {
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const cost = STUDIO_COSTS.video;
-  const canPay = (credits?.balance ?? 0) >= cost;
+  const canPay = balance >= cost;
 
   const aspect = useMemo(() => VIDEO_FORMATS.find((f) => f.id === format)?.aspect ?? "9:16", [format]);
 
