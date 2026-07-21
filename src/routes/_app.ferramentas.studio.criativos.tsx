@@ -292,7 +292,7 @@ function AssetModal({ asset, onClose, onDelete }: { asset: AssetRow; onClose: ()
             {asset.kind === "video" && (
               <div className="mt-2 rounded-2xl border border-[color:var(--hairline)] bg-background/40 p-3">
                 <div className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-secondary">
-                  <Sparkles className="h-3 w-3" /> Remix com prompt
+                  <Wand2 className="h-3 w-3" /> Remix com prompt
                 </div>
                 <textarea
                   value={prompt}
