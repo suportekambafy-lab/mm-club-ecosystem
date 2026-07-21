@@ -356,13 +356,29 @@ type VideoSegment = {
   error?: string;
 };
 
-async function startOmniInteraction(key: string, prompt: string, aspect: "9:16" | "1:1" | "16:9"): Promise<string> {
+async function startOmniInteraction(
+  key: string,
+  prompt: string,
+  aspect: "9:16" | "1:1" | "16:9",
+  refs: { bytes: Uint8Array; mime: string }[] = [],
+): Promise<string> {
+  const input = refs.length > 0
+    ? [
+        ...refs.slice(0, 3).map((r) => ({
+          type: "image",
+          data: bytesToB64(r.bytes),
+          mime_type: r.mime,
+        })),
+        { type: "text", text: prompt },
+      ]
+    : prompt;
+
   const res = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": key },
     body: JSON.stringify({
       model: OMNI_MODEL,
-      input: prompt,
+      input,
       response_format: { type: "video", aspect_ratio: aspect, delivery: "uri" },
       background: true,
       store: true,
