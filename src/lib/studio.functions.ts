@@ -306,6 +306,11 @@ const StartVideoSchema = z.object({
   duration: z.number().int().refine((d) => [8, 10, 15, 30].includes(d), "Duração inválida.").default(8),
   objective: z.string().max(120).optional(),
   notes: z.string().max(1200).optional(),
+  captions: z.enum(["none", "pt", "en", "es"]).default("none"),
+  captionText: z.string().max(300).optional(),
+  narration: z.enum(["none", "male_pt", "female_pt", "male_en", "female_en", "neutral"]).default("none"),
+  narrationScript: z.string().max(800).optional(),
+  music: z.enum(["none", "cinematic", "upbeat", "elegant", "epic", "chill", "corporate"]).default("none"),
 });
 
 function aspectFromFormat(fmt: string): "16:9" | "9:16" | "1:1" {
