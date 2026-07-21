@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, ImageIcon, Film, Package, Gem, Sparkles, Zap, Palette } from "lucide-react";
+import { ArrowRight, ImageIcon, Film, Package, Gem, Zap, Palette } from "lucide-react";
 import { useStudio } from "@/lib/studio-context";
 import showcase1 from "@/assets/studio-showcase-1.jpg";
 import showcase2 from "@/assets/studio-showcase-2.jpg";
