@@ -100,7 +100,7 @@ function VideosPage() {
           <div className="rounded-2xl border border-[color:var(--hairline)] bg-background/40 px-4 py-3 text-right">
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Custo</div>
             <div className="font-display text-2xl text-foreground">{cost}<span className="text-sm text-muted-foreground"> créditos</span></div>
-            <div className="text-[11px] text-muted-foreground">Saldo: {credits?.balance ?? 0}</div>
+            <div className="text-[11px] text-muted-foreground">Saldo: {balance}</div>
           </div>
         </div>
       </section>
