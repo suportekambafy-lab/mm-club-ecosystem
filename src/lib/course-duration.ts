@@ -46,7 +46,8 @@ export function lessonThumb(
   lesson: Lesson | null | undefined,
   course: Course,
 ): string | null {
-  if (lesson?.cover) return lesson.cover;
+  // Prefer real video-derived thumbnails (YouTube / Bunny) over any static cover
+  // so the sidebar shows actual frames from each lesson.
   const raw = (lesson?.videoUrl ?? "").trim();
   if (raw) {
     const v = parseVideoUrl(raw);
@@ -57,6 +58,8 @@ export function lessonThumb(
     const bunny = bunnyThumbFromUrl(raw);
     if (bunny) return bunny;
   }
+  // Fall back to an explicit lesson cover only when no video thumb is available.
+  if (lesson?.cover) return lesson.cover;
   if (course.logo) return course.logo;
   const match = course.cover?.match(/url\(([^)]+)\)/);
   if (match) return match[1].replace(/["']/g, "");
