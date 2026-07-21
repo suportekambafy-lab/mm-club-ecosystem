@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Sparkles, Image as ImageIcon, Film, Library, Package, Gem, Coins } from "lucide-react";
+import { Compass, Image as ImageIcon, Film, Library, Package, Gem, Coins } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
