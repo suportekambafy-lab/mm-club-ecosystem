@@ -107,32 +107,36 @@ const GenerateImagesSchema = z.object({
   count: z.number().int().min(1).max(4).default(4),
 });
 
+const OPENAI_IMAGE_MODEL = "gpt-image-1";
+
 async function callImageModel(prompt: string, size: string): Promise<string> {
-  const key = process.env.LOVABLE_API_KEY;
-  if (!key) throw new Error("Missing LOVABLE_API_KEY");
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) throw new Error("OPENAI_API_KEY não configurada. Adiciona a chave nos secrets do backend.");
+  const res = await fetch("https://api.openai.com/v1/images/generations", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "openai/gpt-image-1-mini",
+      model: OPENAI_IMAGE_MODEL,
       prompt,
       size,
-      quality: "low",
+      quality: "medium",
       n: 1,
     }),
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    if (res.status === 402) throw new Error("Créditos MM insuficientes para gerar. Contacta o suporte.");
-    if (res.status === 429) throw new Error("Muitos pedidos em simultâneo. Tenta novamente em segundos.");
-    throw new Error(`Falha na geração de imagem (${res.status}) ${text.slice(0, 200)}`);
+    if (res.status === 401) throw new Error("Chave OpenAI inválida. Verifica OPENAI_API_KEY.");
+    if (res.status === 402 || res.status === 429) {
+      throw new Error("OpenAI recusou o pedido (créditos ou rate limit). Tenta novamente daqui a pouco.");
+    }
+    throw new Error(`OpenAI ${res.status}: ${text.slice(0, 240)}`);
   }
   const json = (await res.json()) as { data?: { b64_json?: string }[] };
   const b64 = json.data?.[0]?.b64_json;
-  if (!b64) throw new Error("Resposta inesperada do gerador de imagem.");
+  if (!b64) throw new Error("Resposta inesperada da OpenAI.");
   return b64;
 }
 
@@ -203,7 +207,7 @@ export const generateImages = createServerFn({ method: "POST" })
           style: data.style,
           product_id: data.productId ?? null,
           credits_used: STUDIO_COSTS.imageSingle,
-          metadata: { prompt, size: fmt.size, model: "openai/gpt-image-1-mini", storage_path: path },
+          metadata: { prompt, size: fmt.size, model: OPENAI_IMAGE_MODEL, storage_path: path },
         })
         .select("id, url")
         .single();
@@ -237,6 +241,226 @@ export const generateImages = createServerFn({ method: "POST" })
 
     return { assets: generated, balance: finalBalance, cost: cost - refund };
   });
+
+// ============ VIDEO GENERATION (Gemini Veo) ============
+const VEO_MODEL = "veo-3.0-fast-generate-preview";
+
+const StartVideoSchema = z.object({
+  productId: z.string().uuid().nullable().optional(),
+  style: z.string().min(1),
+  format: z.enum(["reels", "tiktok", "facebook", "stories", "shorts"]),
+  duration: z.number().int().min(4).max(30).default(8),
+  objective: z.string().max(120).optional(),
+  notes: z.string().max(1200).optional(),
+});
+
+function aspectFromFormat(fmt: string): "16:9" | "9:16" | "1:1" {
+  if (fmt === "facebook") return "1:1";
+  return "9:16";
+}
+
+export const startVideoGeneration = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v: unknown) => StartVideoSchema.parse(v))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const key = process.env.GEMINI_API_KEY;
+    if (!key) throw new Error("GEMINI_API_KEY não configurada.");
+
+    // Load brand + product for a rich prompt
+    const [brandRes, productRes] = await Promise.all([
+      supabase.from("mm_studio_brand").select("*").eq("user_id", userId).maybeSingle(),
+      data.productId
+        ? supabase.from("mm_studio_products").select("*").eq("id", data.productId).eq("user_id", userId).maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
+    const brand = brandRes.data as { brand_name?: string; tone?: string; description?: string } | null;
+    const product = productRes.data as { name?: string; category?: string; notes?: string } | null;
+
+    const parts = [
+      `Cinematic ${data.style} commercial video`,
+      product?.name ? `featuring ${product.name}${product.category ? ` (${product.category})` : ""}` : null,
+      brand?.brand_name ? `for brand ${brand.brand_name}` : null,
+      brand?.tone ? `tone: ${brand.tone}` : null,
+      data.objective ? `objective: ${data.objective}` : null,
+      product?.notes ? `product notes: ${product.notes}` : null,
+      brand?.description ? `brand: ${brand.description}` : null,
+      data.notes ? `direction: ${data.notes}` : null,
+      "smooth camera motion, dramatic lighting, premium color grading, 4k, no on-screen text, no logos.",
+    ].filter(Boolean).join(". ");
+
+    // Spend credits upfront
+    const { data: newBal, error: spendErr } = await supabase.rpc("mm_studio_spend_credits", {
+      _user_id: userId,
+      _amount: STUDIO_COSTS.video,
+      _reason: "video_generation",
+    });
+    if (spendErr) {
+      if (String(spendErr.message).includes("insufficient_credits")) {
+        throw new Error("Créditos insuficientes para gerar vídeo.");
+      }
+      throw new Error(spendErr.message);
+    }
+
+    // Start Veo long-running operation
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${VEO_MODEL}:predictLongRunning?key=${key}`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        instances: [{ prompt: parts }],
+        parameters: {
+          aspectRatio: aspectFromFormat(data.format),
+          personGeneration: "allow_adult",
+          durationSeconds: data.duration,
+        },
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      // refund
+      await supabase.rpc("mm_studio_refund_credits", {
+        _user_id: userId,
+        _amount: STUDIO_COSTS.video,
+        _reason: "video_generation_failed",
+      });
+      throw new Error(`Gemini Veo ${res.status}: ${text.slice(0, 240)}`);
+    }
+    const json = (await res.json()) as { name?: string };
+    const operation = json.name;
+    if (!operation) {
+      await supabase.rpc("mm_studio_refund_credits", {
+        _user_id: userId,
+        _amount: STUDIO_COSTS.video,
+        _reason: "video_generation_failed",
+      });
+      throw new Error("Veo não devolveu operação.");
+    }
+
+    // Persist pending asset
+    const { data: asset, error: aErr } = await supabase
+      .from("mm_studio_assets")
+      .insert({
+        user_id: userId,
+        kind: "video",
+        url: `pending://${operation}`,
+        format: data.format,
+        style: data.style,
+        product_id: data.productId ?? null,
+        credits_used: STUDIO_COSTS.video,
+        metadata: {
+          status: "pending",
+          operation,
+          prompt: parts,
+          model: VEO_MODEL,
+          aspect: aspectFromFormat(data.format),
+          duration: data.duration,
+        },
+      })
+      .select("id")
+      .single();
+    if (aErr) throw new Error(aErr.message);
+
+    return { assetId: asset.id, operation, balance: newBal as number };
+  });
+
+export const pollVideoGeneration = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v: unknown) => z.object({ assetId: z.string().uuid() }).parse(v))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const key = process.env.GEMINI_API_KEY;
+    if (!key) throw new Error("GEMINI_API_KEY não configurada.");
+
+    const { data: asset, error } = await supabase
+      .from("mm_studio_assets")
+      .select("id, url, metadata")
+      .eq("id", data.assetId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!asset) throw new Error("Asset não encontrado.");
+
+    const meta = (asset.metadata ?? {}) as {
+      status?: string;
+      operation?: string;
+      prompt?: string;
+      aspect?: string;
+      duration?: number;
+    };
+
+    if (meta.status === "ready") {
+      return { status: "ready" as const, url: asset.url, id: asset.id };
+    }
+    if (meta.status === "failed") {
+      return { status: "failed" as const, id: asset.id, error: "Geração falhou." };
+    }
+    if (!meta.operation) throw new Error("Operação em falta.");
+
+    const opUrl = `https://generativelanguage.googleapis.com/v1beta/${meta.operation}?key=${key}`;
+    const opRes = await fetch(opUrl);
+    if (!opRes.ok) {
+      const t = await opRes.text().catch(() => "");
+      throw new Error(`Poll Veo ${opRes.status}: ${t.slice(0, 200)}`);
+    }
+    const op = (await opRes.json()) as {
+      done?: boolean;
+      error?: { message?: string };
+      response?: {
+        generateVideoResponse?: {
+          generatedSamples?: { video?: { uri?: string } }[];
+        };
+      };
+    };
+
+    if (!op.done) {
+      return { status: "pending" as const, id: asset.id };
+    }
+
+    if (op.error) {
+      await supabase
+        .from("mm_studio_assets")
+        .update({ metadata: { ...meta, status: "failed", error: op.error.message } })
+        .eq("id", asset.id);
+      // refund
+      await supabase.rpc("mm_studio_refund_credits", {
+        _user_id: userId,
+        _amount: STUDIO_COSTS.video,
+        _reason: "video_generation_failed",
+      });
+      return { status: "failed" as const, id: asset.id, error: op.error.message ?? "Falhou." };
+    }
+
+    const uri = op.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri;
+    if (!uri) throw new Error("Veo devolveu resposta sem vídeo.");
+
+    // Download from Google (requires key)
+    const dl = await fetch(`${uri}${uri.includes("?") ? "&" : "?"}key=${key}`);
+    if (!dl.ok) throw new Error(`Download Veo falhou (${dl.status}).`);
+    const buf = new Uint8Array(await dl.arrayBuffer());
+
+    const path = `${userId}/videos/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.mp4`;
+    const up = await supabase.storage.from(BUCKET).upload(path, buf, {
+      contentType: "video/mp4",
+      upsert: false,
+    });
+    if (up.error) throw new Error(up.error.message);
+    const signed = await supabase.storage.from(BUCKET).createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+    if (signed.error || !signed.data) throw new Error(signed.error?.message ?? "URL falhou");
+
+    const finalUrl = signed.data.signedUrl;
+    await supabase
+      .from("mm_studio_assets")
+      .update({
+        url: finalUrl,
+        thumb_url: finalUrl,
+        metadata: { ...meta, status: "ready", storage_path: path },
+      })
+      .eq("id", asset.id);
+
+    return { status: "ready" as const, url: finalUrl, id: asset.id };
+  });
+
 
 
 // ============ ASSETS ============
