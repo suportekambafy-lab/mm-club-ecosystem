@@ -101,7 +101,7 @@ export const VIDEO_FORMATS: { id: VideoFormat; label: string; aspect: "9:16" | "
   { id: "shorts", label: "YouTube Shorts", aspect: "9:16" },
 ];
 
-export const VIDEO_DURATIONS = [4, 6, 8] as const;
+export const VIDEO_DURATIONS = [8, 10] as const;
 
 export const VIDEO_OBJECTIVES: { id: string; label: string }[] = [
   { id: "showcase", label: "Mostrar produto" },
