@@ -242,8 +242,8 @@ export const generateImages = createServerFn({ method: "POST" })
     return { assets: generated, balance: finalBalance, cost: cost - refund };
   });
 
-// ============ VIDEO GENERATION (Gemini Veo) ============
-const VEO_MODEL = "veo-2.0-generate-001";
+// ============ VIDEO GENERATION (Gemini Omni Flash) ============
+const OMNI_MODEL = "gemini-omni-flash-preview";
 
 const StartVideoSchema = z.object({
   productId: z.string().uuid().nullable().optional(),
@@ -257,6 +257,39 @@ const StartVideoSchema = z.object({
 function aspectFromFormat(fmt: string): "16:9" | "9:16" | "1:1" {
   if (fmt === "facebook") return "1:1";
   return "9:16";
+}
+
+type OmniStep = {
+  type?: string;
+  content?: Array<{
+    type?: string;
+    uri?: string;
+    data?: string;
+    mime_type?: string;
+    mimeType?: string;
+  }>;
+};
+
+function extractVideoFromInteraction(json: {
+  status?: string;
+  steps?: OmniStep[];
+  output_video?: { uri?: string; data?: string; mime_type?: string };
+}): { uri?: string; data?: string; mime?: string } | null {
+  if (json.output_video?.uri || json.output_video?.data) {
+    return {
+      uri: json.output_video.uri,
+      data: json.output_video.data,
+      mime: json.output_video.mime_type,
+    };
+  }
+  for (const step of json.steps ?? []) {
+    for (const c of step.content ?? []) {
+      if (c.type === "video" || c.mime_type?.startsWith("video") || c.mimeType?.startsWith("video")) {
+        return { uri: c.uri, data: c.data, mime: c.mime_type ?? c.mimeType };
+      }
+    }
+  }
+  return null;
 }
 
 export const startVideoGeneration = createServerFn({ method: "POST" })
@@ -286,7 +319,7 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
       product?.notes ? `product notes: ${product.notes}` : null,
       brand?.description ? `brand: ${brand.description}` : null,
       data.notes ? `direction: ${data.notes}` : null,
-      "smooth camera motion, dramatic lighting, premium color grading, 4k, no on-screen text, no logos.",
+      `about ${data.duration}s, smooth camera motion, dramatic lighting, premium color grading, 4k, no on-screen text, no logos.`,
     ].filter(Boolean).join(". ");
 
     // Spend credits upfront
@@ -302,57 +335,62 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
       throw new Error(spendErr.message);
     }
 
-    // Start Veo long-running operation
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${VEO_MODEL}:predictLongRunning?key=${key}`;
+    // Start Omni Flash interaction (background)
+    const url = `https://generativelanguage.googleapis.com/v1beta/interactions`;
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": key,
+      },
       body: JSON.stringify({
-        instances: [{ prompt: parts }],
-        parameters: {
-          aspectRatio: aspectFromFormat(data.format),
-          personGeneration: "allow_adult",
-          durationSeconds: data.duration,
+        model: OMNI_MODEL,
+        input: parts,
+        response_format: {
+          type: "video",
+          aspect_ratio: aspectFromFormat(data.format),
+          delivery: "uri",
         },
+        background: true,
+        store: false,
+        stream: false,
       }),
     });
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      // refund
       await supabase.rpc("mm_studio_refund_credits", {
         _user_id: userId,
         _amount: STUDIO_COSTS.video,
         _reason: "video_generation_failed",
       });
-      throw new Error(`Gemini Veo ${res.status}: ${text.slice(0, 240)}`);
+      throw new Error(`Gemini Omni ${res.status}: ${text.slice(0, 240)}`);
     }
-    const json = (await res.json()) as { name?: string };
-    const operation = json.name;
-    if (!operation) {
+    const json = (await res.json()) as { id?: string };
+    const interactionId = json.id;
+    if (!interactionId) {
       await supabase.rpc("mm_studio_refund_credits", {
         _user_id: userId,
         _amount: STUDIO_COSTS.video,
         _reason: "video_generation_failed",
       });
-      throw new Error("Veo não devolveu operação.");
+      throw new Error("Omni não devolveu id de interação.");
     }
 
-    // Persist pending asset
     const { data: asset, error: aErr } = await supabase
       .from("mm_studio_assets")
       .insert({
         user_id: userId,
         kind: "video",
-        url: `pending://${operation}`,
+        url: `pending://${interactionId}`,
         format: data.format,
         style: data.style,
         product_id: data.productId ?? null,
         credits_used: STUDIO_COSTS.video,
         metadata: {
           status: "pending",
-          operation,
+          interaction_id: interactionId,
           prompt: parts,
-          model: VEO_MODEL,
+          model: OMNI_MODEL,
           aspect: aspectFromFormat(data.format),
           duration: data.duration,
         },
@@ -361,7 +399,7 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
       .single();
     if (aErr) throw new Error(aErr.message);
 
-    return { assetId: asset.id, operation, balance: newBal as number };
+    return { assetId: asset.id, operation: interactionId, balance: newBal as number };
   });
 
 export const pollVideoGeneration = createServerFn({ method: "POST" })
@@ -383,7 +421,8 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
 
     const meta = (asset.metadata ?? {}) as {
       status?: string;
-      operation?: string;
+      interaction_id?: string;
+      operation?: string; // legacy
       prompt?: string;
       aspect?: string;
       duration?: number;
@@ -395,53 +434,83 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
     if (meta.status === "failed") {
       return { status: "failed" as const, id: asset.id, error: "Geração falhou." };
     }
-    if (!meta.operation) throw new Error("Operação em falta.");
+    const interactionId = meta.interaction_id ?? meta.operation;
+    if (!interactionId) throw new Error("Interação em falta.");
 
-    const opUrl = `https://generativelanguage.googleapis.com/v1beta/${meta.operation}?key=${key}`;
-    const opRes = await fetch(opUrl);
+    const opUrl = `https://generativelanguage.googleapis.com/v1beta/interactions/${interactionId}`;
+    const opRes = await fetch(opUrl, { headers: { "x-goog-api-key": key } });
     if (!opRes.ok) {
       const t = await opRes.text().catch(() => "");
-      throw new Error(`Poll Veo ${opRes.status}: ${t.slice(0, 200)}`);
+      throw new Error(`Poll Omni ${opRes.status}: ${t.slice(0, 200)}`);
     }
     const op = (await opRes.json()) as {
-      done?: boolean;
+      status?: string;
       error?: { message?: string };
-      response?: {
-        generateVideoResponse?: {
-          generatedSamples?: { video?: { uri?: string } }[];
-        };
-      };
+      steps?: OmniStep[];
+      output_video?: { uri?: string; data?: string; mime_type?: string };
     };
 
-    if (!op.done) {
-      return { status: "pending" as const, id: asset.id };
-    }
-
-    if (op.error) {
+    const status = op.status ?? "pending";
+    if (status === "failed" || status === "cancelled" || op.error) {
       await supabase
         .from("mm_studio_assets")
-        .update({ metadata: { ...meta, status: "failed", error: op.error.message } })
+        .update({ metadata: { ...meta, status: "failed", error: op.error?.message } })
         .eq("id", asset.id);
-      // refund
       await supabase.rpc("mm_studio_refund_credits", {
         _user_id: userId,
         _amount: STUDIO_COSTS.video,
         _reason: "video_generation_failed",
       });
-      return { status: "failed" as const, id: asset.id, error: op.error.message ?? "Falhou." };
+      return { status: "failed" as const, id: asset.id, error: op.error?.message ?? "Falhou." };
     }
 
-    const uri = op.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri;
-    if (!uri) throw new Error("Veo devolveu resposta sem vídeo.");
+    if (status !== "completed" && status !== "succeeded") {
+      return { status: "pending" as const, id: asset.id };
+    }
 
-    // Download from Google (requires key)
-    const dl = await fetch(`${uri}${uri.includes("?") ? "&" : "?"}key=${key}`);
-    if (!dl.ok) throw new Error(`Download Veo falhou (${dl.status}).`);
-    const buf = new Uint8Array(await dl.arrayBuffer());
+    const video = extractVideoFromInteraction(op);
+    if (!video || (!video.uri && !video.data)) {
+      throw new Error("Omni devolveu resposta sem vídeo.");
+    }
 
-    const path = `${userId}/videos/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.mp4`;
+    // Materialize bytes
+    let buf: Uint8Array;
+    const mime = video.mime ?? "video/mp4";
+    if (video.uri) {
+      // If it's a Files API URI, may need to poll ACTIVE; try a direct download first.
+      let dl = await fetch(video.uri, { headers: { "x-goog-api-key": key } });
+      if (!dl.ok && video.uri.includes("/files/")) {
+        // Poll file state
+        const name = video.uri.split("/files/")[1]?.split("?")[0];
+        if (name) {
+          for (let i = 0; i < 20; i++) {
+            const info = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/files/${name}`,
+              { headers: { "x-goog-api-key": key } },
+            );
+            const j = (await info.json().catch(() => ({}))) as { state?: string; uri?: string };
+            if (j.state === "ACTIVE") {
+              dl = await fetch(j.uri ?? video.uri, { headers: { "x-goog-api-key": key } });
+              break;
+            }
+            if (j.state === "FAILED") throw new Error("Ficheiro de vídeo falhou.");
+            await new Promise((r) => setTimeout(r, 1500));
+          }
+        }
+      }
+      if (!dl.ok) throw new Error(`Download Omni falhou (${dl.status}).`);
+      buf = new Uint8Array(await dl.arrayBuffer());
+    } else {
+      // base64
+      const bin = atob(video.data!);
+      buf = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    }
+
+    const ext = mime.includes("webm") ? "webm" : "mp4";
+    const path = `${userId}/videos/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const up = await supabase.storage.from(BUCKET).upload(path, buf, {
-      contentType: "video/mp4",
+      contentType: mime,
       upsert: false,
     });
     if (up.error) throw new Error(up.error.message);
@@ -460,6 +529,7 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
 
     return { status: "ready" as const, url: finalUrl, id: asset.id };
   });
+
 
 
 
