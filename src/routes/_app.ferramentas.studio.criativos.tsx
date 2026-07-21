@@ -29,6 +29,7 @@ function CriativosPage() {
   const [active, setActive] = useState<AssetRow | null>(null);
   const fn = useServerFn(listAssets);
   const del = useServerFn(deleteAsset);
+  const poll = useServerFn(pollVideoGeneration);
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -45,6 +46,36 @@ function CriativosPage() {
   });
 
   const rows = (data ?? []) as AssetRow[];
+
+  // Auto-poll any pending video assets so progress continues even after leaving the videos page.
+  useEffect(() => {
+    const pendings = rows.filter(
+      (r) => r.kind === "video" && (r.metadata as { status?: string } | null)?.status === "pending",
+    );
+    if (pendings.length === 0) return;
+    let cancelled = false;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    async function tick(id: string) {
+      if (cancelled) return;
+      try {
+        const r = await poll({ data: { assetId: id } });
+        if (cancelled) return;
+        if (r.status === "ready" || r.status === "failed") {
+          qc.invalidateQueries({ queryKey: ["studio", "assets"] });
+          return;
+        }
+      } catch {
+        /* keep trying */
+      }
+      timers.push(setTimeout(() => tick(id), 8000));
+    }
+    for (const p of pendings) tick(p.id);
+    return () => {
+      cancelled = true;
+      for (const t of timers) clearTimeout(t);
+    };
+  }, [rows, poll, qc]);
+
 
   return (
     <div className="space-y-6">
