@@ -45,6 +45,14 @@ function StudioHome() {
             </div>
             <p className="mt-2 font-display text-5xl text-foreground">{balance.toLocaleString("pt-PT")}</p>
             <p className="mt-1 text-xs text-muted-foreground">créditos disponíveis</p>
+            <button
+              type="button"
+              onClick={() => setTopupOpen(true)}
+              className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition hover:brightness-110"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Carregar créditos
+            </button>
           </div>
         </div>
 
