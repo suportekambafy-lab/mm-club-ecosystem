@@ -138,7 +138,7 @@ function ProductDrawer({ initial, onClose, onSaved }: { initial?: Product; onClo
       const uid = u.user?.id ?? "anon";
       const uploaded: string[] = [];
       for (const f of Array.from(files).slice(0, 10)) {
-        const { url } = await uploadMedia("course-media" as never, f, `${uid}/studio/products`);
+        const { url } = await uploadMedia("studio-media", f, `${uid}/products`);
         uploaded.push(url);
       }
       setPhotos((prev) => [...prev, ...uploaded].slice(0, 10));
