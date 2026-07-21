@@ -109,23 +109,63 @@ const GenerateImagesSchema = z.object({
 
 const OPENAI_IMAGE_MODEL = "gpt-image-1";
 
-async function callImageModel(prompt: string, size: string): Promise<string> {
+async function fetchAsBytes(url: string): Promise<{ bytes: Uint8Array; mime: string }> {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`Não consegui carregar imagem de referência (${r.status}).`);
+  const mime = r.headers.get("content-type") ?? "image/png";
+  return { bytes: new Uint8Array(await r.arrayBuffer()), mime };
+}
+
+function bytesToB64(bytes: Uint8Array): string {
+  let bin = "";
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+async function callImageModel(
+  prompt: string,
+  size: string,
+  refs: { bytes: Uint8Array; mime: string }[] = [],
+): Promise<string> {
   const key = process.env.OPENAI_API_KEY;
   if (!key) throw new Error("OPENAI_API_KEY não configurada. Adiciona a chave nos secrets do backend.");
-  const res = await fetch("https://api.openai.com/v1/images/generations", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: OPENAI_IMAGE_MODEL,
-      prompt,
-      size,
-      quality: "medium",
-      n: 1,
-    }),
-  });
+
+  let res: Response;
+  if (refs.length > 0) {
+    // Image edit — usa o produto como referência real (mantém identidade).
+    const form = new FormData();
+    form.append("model", OPENAI_IMAGE_MODEL);
+    form.append("prompt", prompt);
+    form.append("size", size);
+    form.append("quality", "medium");
+    form.append("n", "1");
+    refs.slice(0, 4).forEach((r, i) => {
+      const ext = r.mime.includes("jpeg") ? "jpg" : r.mime.includes("webp") ? "webp" : "png";
+      const blob = new Blob([r.bytes as unknown as BlobPart], { type: r.mime });
+      form.append("image[]", blob, `ref-${i}.${ext}`);
+    });
+    res = await fetch("https://api.openai.com/v1/images/edits", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}` },
+      body: form,
+    });
+  } else {
+    res = await fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: OPENAI_IMAGE_MODEL,
+        prompt,
+        size,
+        quality: "medium",
+        n: 1,
+      }),
+    });
+  }
+
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     if (res.status === 401) throw new Error("Chave OpenAI inválida. Verifica OPENAI_API_KEY.");
