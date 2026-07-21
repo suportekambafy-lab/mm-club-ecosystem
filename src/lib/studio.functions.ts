@@ -107,32 +107,36 @@ const GenerateImagesSchema = z.object({
   count: z.number().int().min(1).max(4).default(4),
 });
 
+const OPENAI_IMAGE_MODEL = "gpt-image-1";
+
 async function callImageModel(prompt: string, size: string): Promise<string> {
-  const key = process.env.LOVABLE_API_KEY;
-  if (!key) throw new Error("Missing LOVABLE_API_KEY");
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) throw new Error("OPENAI_API_KEY não configurada. Adiciona a chave nos secrets do backend.");
+  const res = await fetch("https://api.openai.com/v1/images/generations", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "openai/gpt-image-1-mini",
+      model: OPENAI_IMAGE_MODEL,
       prompt,
       size,
-      quality: "low",
+      quality: "medium",
       n: 1,
     }),
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    if (res.status === 402) throw new Error("Créditos MM insuficientes para gerar. Contacta o suporte.");
-    if (res.status === 429) throw new Error("Muitos pedidos em simultâneo. Tenta novamente em segundos.");
-    throw new Error(`Falha na geração de imagem (${res.status}) ${text.slice(0, 200)}`);
+    if (res.status === 401) throw new Error("Chave OpenAI inválida. Verifica OPENAI_API_KEY.");
+    if (res.status === 402 || res.status === 429) {
+      throw new Error("OpenAI recusou o pedido (créditos ou rate limit). Tenta novamente daqui a pouco.");
+    }
+    throw new Error(`OpenAI ${res.status}: ${text.slice(0, 240)}`);
   }
   const json = (await res.json()) as { data?: { b64_json?: string }[] };
   const b64 = json.data?.[0]?.b64_json;
-  if (!b64) throw new Error("Resposta inesperada do gerador de imagem.");
+  if (!b64) throw new Error("Resposta inesperada da OpenAI.");
   return b64;
 }
 
