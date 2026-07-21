@@ -352,7 +352,7 @@ export function NotificationsBell({ className }: { className?: string }) {
             )}
           </div>
 
-          <div className="max-h-[min(70vh,480px)] overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             {visible.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-muted-foreground">
