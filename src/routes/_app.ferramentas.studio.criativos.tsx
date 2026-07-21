@@ -271,9 +271,22 @@ function AssetModal({ asset, onClose, onDelete }: { asset: AssetRow; onClose: ()
             </div>
 
             <div className="flex flex-col gap-2">
-              <a href={asset.url} download target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-full bg-secondary px-4 py-2.5 text-sm font-semibold text-background">
-                <Download className="h-4 w-4" /> Descarregar
-              </a>
+              {(() => {
+                const segs = (asset.metadata as { segments?: Array<{ url?: string }> } | null)?.segments;
+                const urls = segs && segs.length > 1 ? segs.map((s) => s.url).filter((u): u is string => !!u) : null;
+                if (urls && urls.length > 1) {
+                  return urls.map((u, i) => (
+                    <a key={u} href={u} download target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-full bg-secondary px-4 py-2.5 text-sm font-semibold text-background">
+                      <Download className="h-4 w-4" /> Parte {i + 1}/{urls.length}
+                    </a>
+                  ));
+                }
+                return (
+                  <a href={asset.url} download target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-full bg-secondary px-4 py-2.5 text-sm font-semibold text-background">
+                    <Download className="h-4 w-4" /> Descarregar
+                  </a>
+                );
+              })()}
               <button type="button" onClick={() => { if (confirm("Eliminar este criativo?")) onDelete(); }} className="inline-flex items-center justify-center gap-2 rounded-full border border-[color:var(--hairline)] bg-background/40 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10">
                 <Trash2 className="h-4 w-4" /> Eliminar
               </button>
