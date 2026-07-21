@@ -164,7 +164,6 @@ export const generateImages = createServerFn({ method: "POST" })
       _user_id: userId,
       _amount: cost,
       _reason: "image_generation",
-      _ref: null,
     });
     if (spendErr) {
       if (String(spendErr.message).includes("insufficient_credits")) {
