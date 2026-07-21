@@ -97,7 +97,7 @@ function VideosPage() {
         },
       });
       refresh();
-      setStatusText("Vídeo em fila (Veo). A monitorizar…");
+      setStatusText("Vídeo em fila. A monitorizar…");
       loopPoll(r.assetId);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha ao iniciar");
