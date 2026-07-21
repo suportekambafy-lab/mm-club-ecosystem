@@ -32,7 +32,7 @@ function ImagensPage() {
           format: input.format,
           productId: input.productId,
           notes: input.notes || undefined,
-          count: 4,
+          count: 2,
         },
       }),
     onSuccess: (data) => {
