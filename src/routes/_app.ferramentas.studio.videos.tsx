@@ -6,6 +6,7 @@ import { useStudio } from "@/lib/studio-context";
 import { startVideoGeneration, pollVideoGeneration } from "@/lib/studio.functions";
 import { VIDEO_STYLES, VIDEO_FORMATS, VIDEO_DURATIONS, VIDEO_OBJECTIVES, videoCost, videoSegments } from "@/lib/studio-config";
 import { VideoPlaylist } from "@/components/mm/video-playlist";
+import { MergedDownloadButton } from "@/components/mm/merged-download-button";
 
 export const Route = createFileRoute("/_app/ferramentas/studio/videos")({
   component: VideosPage,
