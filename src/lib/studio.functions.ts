@@ -138,7 +138,7 @@ async function callImageModel(
     form.append("model", OPENAI_IMAGE_MODEL);
     form.append("prompt", prompt);
     form.append("size", size);
-    form.append("quality", "medium");
+    form.append("quality", OPENAI_IMAGE_QUALITY);
     form.append("n", "1");
     refs.slice(0, 4).forEach((r, i) => {
       const ext = r.mime.includes("jpeg") ? "jpg" : r.mime.includes("webp") ? "webp" : "png";
