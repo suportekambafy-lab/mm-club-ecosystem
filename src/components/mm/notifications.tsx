@@ -184,6 +184,7 @@ export function NotificationsBell({ className }: { className?: string }) {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<StoredState>({ readIds: [], dismissedIds: [], lastOpenedAt: 0 });
   const [hydrated, setHydrated] = useState(false);
+  const [popPos, setPopPos] = useState<{ top: number; right: number } | null>(null);
   const popRef = useRef<HTMLDivElement | null>(null);
   const btnRef = useRef<HTMLButtonElement | null>(null);
 
@@ -191,6 +192,22 @@ export function NotificationsBell({ className }: { className?: string }) {
     setState(loadState());
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const update = () => {
+      const b = btnRef.current?.getBoundingClientRect();
+      if (!b) return;
+      setPopPos({ top: b.bottom + 8, right: Math.max(8, window.innerWidth - b.right) });
+    };
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -317,7 +334,8 @@ export function NotificationsBell({ className }: { className?: string }) {
           ref={popRef}
           role="dialog"
           aria-label="Notificações"
-          className="absolute right-0 z-50 mt-2 w-[min(92vw,380px)] origin-top-right overflow-hidden rounded-2xl border border-border bg-surface-1 shadow-2xl shadow-black/40 ring-1 ring-[color:var(--hairline)]"
+          style={popPos ? { top: popPos.top, right: popPos.right } : undefined}
+          className="fixed z-[100] w-[min(92vw,380px)] max-h-[min(80vh,560px)] flex flex-col origin-top-right overflow-hidden rounded-2xl border border-border bg-surface-1 shadow-2xl shadow-black/40 ring-1 ring-[color:var(--hairline)]"
         >
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <div className="flex items-center gap-2">
@@ -334,7 +352,7 @@ export function NotificationsBell({ className }: { className?: string }) {
             )}
           </div>
 
-          <div className="max-h-[min(70vh,480px)] overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             {visible.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-muted-foreground">
