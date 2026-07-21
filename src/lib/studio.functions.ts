@@ -427,6 +427,10 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
     const totalCost = segments.length * STUDIO_COSTS.video;
     const aspect = aspectFromFormat(data.format);
 
+    const refClause = refs.length > 0
+      ? "Use the attached reference image(s) as the EXACT product hero — keep the same shape, colours, label, packaging and proportions in every frame. Do not invent a different product."
+      : null;
+
     const basePrompt = [
       `Cinematic ${data.style} commercial video`,
       product?.name ? `featuring ${product.name}${product.category ? ` (${product.category})` : ""}` : null,
@@ -436,6 +440,7 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
       product?.notes ? `product notes: ${product.notes}` : null,
       brand?.description ? `brand: ${brand.description}` : null,
       data.notes ? `direction: ${data.notes}` : null,
+      refClause,
       `smooth camera motion, dramatic lighting, premium color grading, 4k, no on-screen text, no logos.`,
     ].filter(Boolean).join(". ");
 
