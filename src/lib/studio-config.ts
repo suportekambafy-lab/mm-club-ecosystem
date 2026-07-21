@@ -133,3 +133,52 @@ export const VIDEO_OBJECTIVES: { id: string; label: string }[] = [
   { id: "unboxing", label: "Unboxing" },
   { id: "lifestyle", label: "Lifestyle" },
 ];
+
+// ============ People / Scene shared ============
+export type PeoplePreset = "none" | "man" | "woman" | "couple" | "group" | "hands";
+export const PEOPLE_OPTIONS: { id: PeoplePreset; label: string; hint: string }[] = [
+  { id: "none", label: "Sem pessoas", hint: "Apenas o produto" },
+  { id: "hands", label: "Só mãos", hint: "Mãos a segurar / usar" },
+  { id: "woman", label: "Mulher", hint: "Modelo feminina" },
+  { id: "man", label: "Homem", hint: "Modelo masculino" },
+  { id: "couple", label: "Casal", hint: "Homem + mulher" },
+  { id: "group", label: "Grupo", hint: "3–4 pessoas diversas" },
+];
+
+// Cena / ambiente para imagens
+export type SceneMode =
+  | "ecommerce_white"
+  | "ecommerce_black"
+  | "ecommerce_gradient"
+  | "studio_seamless"
+  | "lifestyle"
+  | "editorial"
+  | "outdoor";
+export const SCENE_MODES: { id: SceneMode; label: string; hint: string }[] = [
+  { id: "ecommerce_white", label: "E-commerce · Branco", hint: "Fundo branco puro, catálogo" },
+  { id: "ecommerce_black", label: "E-commerce · Preto", hint: "Fundo preto, luxo/tech" },
+  { id: "ecommerce_gradient", label: "E-commerce · Gradient", hint: "Gradiente premium" },
+  { id: "studio_seamless", label: "Estúdio", hint: "Ciclorama, softbox, sombra suave" },
+  { id: "lifestyle", label: "Lifestyle", hint: "Ambiente real com contexto" },
+  { id: "editorial", label: "Editorial", hint: "Composição de revista" },
+  { id: "outdoor", label: "Exterior", hint: "Luz natural, cena aberta" },
+];
+
+// Conversion hooks — headline framing that lifts CTR
+export type ConversionHook =
+  | "problem_solution"
+  | "before_after"
+  | "social_proof"
+  | "scarcity"
+  | "curiosity"
+  | "aspiration"
+  | "none";
+export const CONVERSION_HOOKS: { id: ConversionHook; label: string }[] = [
+  { id: "none", label: "Sem hook" },
+  { id: "problem_solution", label: "Problema → Solução" },
+  { id: "before_after", label: "Antes / Depois" },
+  { id: "social_proof", label: "Prova social" },
+  { id: "scarcity", label: "Escassez / Urgência" },
+  { id: "curiosity", label: "Curiosidade" },
+  { id: "aspiration", label: "Aspiracional" },
+];
