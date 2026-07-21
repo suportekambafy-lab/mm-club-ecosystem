@@ -62,8 +62,9 @@ export async function mergeVideos(
   try { await ff.deleteFile("list.txt"); } catch { /* ignore */ }
   try { await ff.deleteFile("output.mp4"); } catch { /* ignore */ }
 
+  if (typeof data === "string") throw new Error("Falha ao ler saída");
   const arr = data instanceof Uint8Array ? data : new Uint8Array(data as ArrayBuffer);
-  return new Blob([arr.buffer as ArrayBuffer], { type: "video/mp4" });
+  return new Blob([arr as BlobPart], { type: "video/mp4" });
 }
 
 export function downloadBlob(blob: Blob, filename: string) {
