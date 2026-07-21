@@ -442,7 +442,8 @@ export function NotificationsBell({ className }: { className?: string }) {
               Ver toda a atividade do clube
             </Link>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
