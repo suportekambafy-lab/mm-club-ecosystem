@@ -42,6 +42,7 @@ import { Route as AdminLivesIndexRouteImport } from './routes/admin.lives.index'
 import { Route as AppLivesIndexRouteImport } from './routes/_app.lives.index'
 import { Route as AppAcademiaIndexRouteImport } from './routes/_app.academia.index'
 import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
+import { Route as AppFerramentasStudioRouteImport } from './routes/_app.ferramentas.studio'
 import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
 import { Route as AppAcademiaCourseIdRouteImport } from './routes/_app.academia.$courseId'
 import { Route as AppAcademiaCourseIdIndexRouteImport } from './routes/_app.academia.$courseId.index'
@@ -215,6 +216,11 @@ const AppLivesLiveIdRoute = AppLivesLiveIdRouteImport.update({
   path: '/$liveId',
   getParentRoute: () => AppLivesRoute,
 } as any)
+const AppFerramentasStudioRoute = AppFerramentasStudioRouteImport.update({
+  id: '/studio',
+  path: '/studio',
+  getParentRoute: () => AppFerramentasRoute,
+} as any)
 const AppEspecialistasExpertIdRoute =
   AppEspecialistasExpertIdRouteImport.update({
     id: '/especialistas/$expertId',
@@ -277,7 +283,7 @@ export interface FileRoutesByFullPath {
   '/comunidade': typeof AppComunidadeRoute
   '/dashboard': typeof AppDashboardRoute
   '/eventos': typeof AppEventosRoute
-  '/ferramentas': typeof AppFerramentasRoute
+  '/ferramentas': typeof AppFerramentasRouteWithChildren
   '/jade': typeof AppJadeRoute
   '/lives': typeof AppLivesRouteWithChildren
   '/perfil': typeof AppPerfilRoute
@@ -293,6 +299,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
+  '/ferramentas/studio': typeof AppFerramentasStudioRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/academia/': typeof AppAcademiaIndexRoute
   '/lives/': typeof AppLivesIndexRoute
@@ -317,7 +324,7 @@ export interface FileRoutesByTo {
   '/comunidade': typeof AppComunidadeRoute
   '/dashboard': typeof AppDashboardRoute
   '/eventos': typeof AppEventosRoute
-  '/ferramentas': typeof AppFerramentasRoute
+  '/ferramentas': typeof AppFerramentasRouteWithChildren
   '/jade': typeof AppJadeRoute
   '/perfil': typeof AppPerfilRoute
   '/shorts': typeof AppShortsRoute
@@ -330,6 +337,7 @@ export interface FileRoutesByTo {
   '/checkout/return': typeof CheckoutReturnRoute
   '/admin': typeof AdminIndexRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
+  '/ferramentas/studio': typeof AppFerramentasStudioRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/academia': typeof AppAcademiaIndexRoute
   '/lives': typeof AppLivesIndexRoute
@@ -358,7 +366,7 @@ export interface FileRoutesById {
   '/_app/comunidade': typeof AppComunidadeRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/eventos': typeof AppEventosRoute
-  '/_app/ferramentas': typeof AppFerramentasRoute
+  '/_app/ferramentas': typeof AppFerramentasRouteWithChildren
   '/_app/jade': typeof AppJadeRoute
   '/_app/lives': typeof AppLivesRouteWithChildren
   '/_app/perfil': typeof AppPerfilRoute
@@ -374,6 +382,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/_app/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
   '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
+  '/_app/ferramentas/studio': typeof AppFerramentasStudioRoute
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
   '/_app/academia/': typeof AppAcademiaIndexRoute
   '/_app/lives/': typeof AppLivesIndexRoute
@@ -418,6 +427,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/academia/$courseId'
     | '/especialistas/$expertId'
+    | '/ferramentas/studio'
     | '/lives/$liveId'
     | '/academia/'
     | '/lives/'
@@ -455,6 +465,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/admin'
     | '/especialistas/$expertId'
+    | '/ferramentas/studio'
     | '/lives/$liveId'
     | '/academia'
     | '/lives'
@@ -498,6 +509,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/_app/academia/$courseId'
     | '/_app/especialistas/$expertId'
+    | '/_app/ferramentas/studio'
     | '/_app/lives/$liveId'
     | '/_app/academia/'
     | '/_app/lives/'
@@ -760,6 +772,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLivesLiveIdRouteImport
       parentRoute: typeof AppLivesRoute
     }
+    '/_app/ferramentas/studio': {
+      id: '/_app/ferramentas/studio'
+      path: '/studio'
+      fullPath: '/ferramentas/studio'
+      preLoaderRoute: typeof AppFerramentasStudioRouteImport
+      parentRoute: typeof AppFerramentasRoute
+    }
     '/_app/especialistas/$expertId': {
       id: '/_app/especialistas/$expertId'
       path: '/especialistas/$expertId'
@@ -846,6 +865,18 @@ const AppAcademiaRouteWithChildren = AppAcademiaRoute._addFileChildren(
   AppAcademiaRouteChildren,
 )
 
+interface AppFerramentasRouteChildren {
+  AppFerramentasStudioRoute: typeof AppFerramentasStudioRoute
+}
+
+const AppFerramentasRouteChildren: AppFerramentasRouteChildren = {
+  AppFerramentasStudioRoute: AppFerramentasStudioRoute,
+}
+
+const AppFerramentasRouteWithChildren = AppFerramentasRoute._addFileChildren(
+  AppFerramentasRouteChildren,
+)
+
 interface AppLivesRouteChildren {
   AppLivesLiveIdRoute: typeof AppLivesLiveIdRoute
   AppLivesIndexRoute: typeof AppLivesIndexRoute
@@ -866,7 +897,7 @@ interface AppRouteChildren {
   AppComunidadeRoute: typeof AppComunidadeRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppEventosRoute: typeof AppEventosRoute
-  AppFerramentasRoute: typeof AppFerramentasRoute
+  AppFerramentasRoute: typeof AppFerramentasRouteWithChildren
   AppJadeRoute: typeof AppJadeRoute
   AppLivesRoute: typeof AppLivesRouteWithChildren
   AppPerfilRoute: typeof AppPerfilRoute
@@ -880,7 +911,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppComunidadeRoute: AppComunidadeRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppEventosRoute: AppEventosRoute,
-  AppFerramentasRoute: AppFerramentasRoute,
+  AppFerramentasRoute: AppFerramentasRouteWithChildren,
   AppJadeRoute: AppJadeRoute,
   AppLivesRoute: AppLivesRouteWithChildren,
   AppPerfilRoute: AppPerfilRoute,
