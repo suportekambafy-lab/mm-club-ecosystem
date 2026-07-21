@@ -1049,6 +1049,15 @@ export type Database = {
         Args: { _short_id: string }
         Returns: undefined
       }
+      mm_studio_grant_credits: {
+        Args: {
+          _amount: number
+          _reason: string
+          _ref_key: string
+          _user_id: string
+        }
+        Returns: number
+      }
       mm_studio_refund_credits: {
         Args: {
           _amount: number
