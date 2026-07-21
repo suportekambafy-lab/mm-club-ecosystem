@@ -116,13 +116,13 @@ function StudioHome() {
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary text-secondary-foreground shadow-lg">
               <Film className="h-5 w-5" />
             </span>
-            <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-secondary">250 créditos · Veo 3</p>
-            <h3 className="mt-1 font-display text-3xl text-white md:text-4xl">IA de Vídeos</h3>
+            <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-secondary">250 créditos · cinematográfico</p>
+            <h3 className="mt-1 font-display text-3xl text-white md:text-4xl">MM Motion</h3>
             <p className="mt-2 max-w-md text-sm text-white/80">
               Anúncios cinematográficos verticais e horizontais. Storyboard automático, som ambiente, prontos para Reels e Ads.
             </p>
             <span className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-secondary">
-              Explorar Veo <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+              Começar geração <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
             </span>
           </div>
         </Link>
