@@ -49,9 +49,8 @@ function FerramentasLayout() {
           loading="eager"
         />
         <div className="relative z-20 flex flex-col gap-6 p-8 md:p-14 lg:p-16 min-h-[520px] md:min-h-[560px] justify-end md:justify-center max-w-[720px]">
-          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/90 backdrop-blur">
-            <Sparkles className="h-3 w-3 text-primary" />
-            MM Studio · IA Profissional
+          <span className="inline-flex w-fit items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/90 backdrop-blur">
+            MM Studio · Criativos de Alta Conversão
           </span>
           <h1 className="font-display text-5xl leading-[0.95] text-white md:text-7xl">
             O teu estúdio
