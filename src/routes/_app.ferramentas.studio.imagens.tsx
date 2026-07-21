@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
-import { Loader2, Wand2, Download, RefreshCcw, Check } from "lucide-react";
+import { Loader2, Wand2, Download, RefreshCcw, Check, ChevronDown } from "lucide-react";
 import { generateImages } from "@/lib/studio.functions";
 import { IMAGE_STYLES, IMAGE_FORMATS, PEOPLE_OPTIONS, SCENE_MODES, CONVERSION_HOOKS, type ImageStyle, type ImageFormat, type PeoplePreset, type SceneMode, type ConversionHook, STUDIO_COSTS } from "@/lib/studio-config";
 import { useStudio } from "@/lib/studio-context";
