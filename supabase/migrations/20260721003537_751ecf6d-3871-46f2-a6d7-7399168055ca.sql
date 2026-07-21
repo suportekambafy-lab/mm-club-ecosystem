@@ -1,0 +1,2 @@
+GRANT EXECUTE ON FUNCTION public.mm_studio_spend_credits(uuid, integer, text, uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.mm_studio_refund_credits(uuid, integer, text, uuid) TO authenticated, service_role;
