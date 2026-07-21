@@ -7,6 +7,7 @@ import showcase3 from "@/assets/studio-showcase-3.jpg";
 import showcase4 from "@/assets/studio-showcase-4.jpg";
 import showcase5 from "@/assets/studio-showcase-5.jpg";
 import showcase6 from "@/assets/studio-showcase-6.jpg";
+import motionExample from "@/assets/mm-motion-example.mp4.asset.json";
 
 export const Route = createFileRoute("/_app/ferramentas/studio/")({
   component: StudioHome,
