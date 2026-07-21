@@ -111,7 +111,16 @@ function StudioHome() {
           to="/ferramentas/studio/videos"
           className="group relative aspect-[4/3] overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-black md:aspect-[5/3]"
         >
-          <img src={showcase4} alt="Vídeos publicitários com IA" loading="lazy" className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
+          <video
+            src={motionExample.url}
+            poster={showcase4}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/0" />
           <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-8">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary text-secondary-foreground shadow-lg">
