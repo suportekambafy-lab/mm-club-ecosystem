@@ -11,15 +11,16 @@ export const Route = createFileRoute("/_app/ferramentas/studio/videos")({
 });
 
 function VideosPage() {
-  const { products, credits, refresh } = useStudio();
+  const { products, balance, refresh } = useStudio();
   const start = useServerFn(startVideoGeneration);
   const poll = useServerFn(pollVideoGeneration);
 
-  const [productId, setProductId] = useState<string | null>(products[0]?.id ?? null);
-  const [style, setStyle] = useState(VIDEO_STYLES[0].id);
-  const [format, setFormat] = useState(VIDEO_FORMATS[0].id);
+  const firstProductId = (products[0] as { id?: string } | undefined)?.id ?? null;
+  const [productId, setProductId] = useState<string | null>(firstProductId);
+  const [style, setStyle] = useState<string>(VIDEO_STYLES[0].id);
+  const [format, setFormat] = useState<typeof VIDEO_FORMATS[number]["id"]>(VIDEO_FORMATS[0].id);
   const [duration, setDuration] = useState<number>(8);
-  const [objective, setObjective] = useState(VIDEO_OBJECTIVES[0].id);
+  const [objective, setObjective] = useState<string>(VIDEO_OBJECTIVES[0].id);
   const [notes, setNotes] = useState("");
 
   const [busy, setBusy] = useState(false);
