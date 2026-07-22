@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Film, Loader2, Play, Download, ChevronDown } from "lucide-react";
 import { useStudio } from "@/lib/studio-context";
-import { startVideoGeneration, pollVideoGeneration } from "@/lib/studio.functions";
+import { startVideoGeneration, pollVideoGeneration, listAssets } from "@/lib/studio.functions";
 import { VIDEO_STYLES, VIDEO_FORMATS, VIDEO_DURATIONS, VIDEO_OBJECTIVES, PEOPLE_OPTIONS, CONVERSION_HOOKS, videoCost, videoSegments, type PeoplePreset, type ConversionHook } from "@/lib/studio-config";
 import { VideoPlaylist } from "@/components/mm/video-playlist";
 import { MergedDownloadButton } from "@/components/mm/merged-download-button";
+
 
 export const Route = createFileRoute("/_app/ferramentas/studio/videos")({
   component: VideosPage,
