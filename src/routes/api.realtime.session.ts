@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const MODEL = "gpt-4o-realtime-preview-2024-12-17";
+const MODEL = "gpt-realtime";
 const VOICE = "alloy";
 
 const INSTRUCTIONS = `És o MM Intelligence, o consultor de elite do MM Club — comunidade de empreendedores digitais.
@@ -15,23 +15,20 @@ export const Route = createFileRoute("/api/realtime/session")({
         const key = process.env.OPENAI_API_KEY;
         if (!key) return new Response("Missing OPENAI_API_KEY", { status: 500 });
 
-        const res = await fetch("https://api.openai.com/v1/realtime/sessions", {
+        const res = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${key}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: MODEL,
-            voice: VOICE,
-            modalities: ["audio", "text"],
-            instructions: INSTRUCTIONS,
-            input_audio_transcription: { model: "whisper-1" },
-            turn_detection: {
-              type: "server_vad",
-              threshold: 0.5,
-              prefix_padding_ms: 300,
-              silence_duration_ms: 500,
+            session: {
+              type: "realtime",
+              model: MODEL,
+              instructions: INSTRUCTIONS,
+              audio: {
+                output: { voice: VOICE },
+              },
             },
           }),
         });
@@ -45,7 +42,11 @@ export const Route = createFileRoute("/api/realtime/session")({
         }
 
         const data = await res.json();
-        return Response.json({ ...data, model: MODEL });
+        // New endpoint returns { value, expires_at, session: {...} }
+        return Response.json({
+          client_secret: { value: data.value ?? data.client_secret?.value },
+          model: MODEL,
+        });
       },
     },
   },
