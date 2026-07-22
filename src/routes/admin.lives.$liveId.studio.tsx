@@ -423,6 +423,23 @@ function LiveStudio() {
                 >
                   {camOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4 text-red-300" />}
                 </button>
+                <button
+                  type="button"
+                  onClick={toggleScreenShare}
+                  disabled={!streamRef.current}
+                  className={
+                    "inline-flex h-9 items-center gap-2 rounded-full border px-3 text-xs font-medium transition disabled:opacity-40 " +
+                    (sharing
+                      ? "border-primary/60 bg-primary/15 text-primary"
+                      : "border-border hover:border-primary/40")
+                  }
+                  title={sharing ? "Parar partilha de ecrã" : "Partilhar ecrã"}
+                >
+                  {sharing ? <MonitorOff className="h-4 w-4" /> : <MonitorUp className="h-4 w-4" />}
+                  <span className="hidden sm:inline">
+                    {sharing ? "Parar partilha" : "Partilhar ecrã"}
+                  </span>
+                </button>
               </div>
 
               <div className="flex items-center gap-2">
