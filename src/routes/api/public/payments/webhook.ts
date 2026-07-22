@@ -185,8 +185,30 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
     });
     if (error) {
       console.error("grant_credits failed", { reason, error: error.message });
-    } else {
-      console.log("granted credits", { userId, amount, pack: pack.priceId, txn: data.id });
+      continue;
+    }
+    console.log("granted credits", { userId, amount, pack: pack.priceId, txn: data.id });
+
+    if (env === "live") {
+      try {
+        const { sendEmail, emailTemplates, getUserEmailAndName } = await import(
+          "@/lib/email.server"
+        );
+        const u = await getUserEmailAndName(userId);
+        if (u) {
+          const tpl = emailTemplates.creditsTopup(u.name, amount, pack.name);
+          await sendEmail({
+            to: u.email,
+            subject: tpl.subject,
+            html: tpl.html,
+            userId,
+            kind: "credits_topup",
+            ref: `${data.id}:${pack.priceId}`,
+          });
+        }
+      } catch (e) {
+        console.error("[webhook] credits email failed", e);
+      }
     }
   }
 }
