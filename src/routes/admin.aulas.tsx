@@ -9,7 +9,10 @@ import {
   ArrowUp,
   ArrowDown,
   FolderPlus,
+  Send,
 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { MediaField } from "@/components/mm/media-field";
 import { LessonKnowledgePanel } from "@/components/mm/lesson-knowledge-panel";
@@ -24,6 +27,7 @@ import {
 import type { Module, Lesson } from "@/data/types";
 import { parseVideoUrl } from "@/lib/video-source";
 import { cn } from "@/lib/utils";
+import { notifyNewLesson } from "@/lib/broadcasts.functions";
 
 export const Route = createFileRoute("/admin/aulas")({
   component: AdminAulas,
