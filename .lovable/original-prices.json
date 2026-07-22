@@ -1,0 +1,12 @@
+{
+  "note": "Preços originais em cêntimos EUR. Restaurar via PATCH /prices/{id} com unit_price.amount.",
+  "prices": {
+    "mm_credits_starter":         { "id": "pri_01ky3hrz92w5j9htrayxd6de20", "amount": "990",   "display": "€9,90" },
+    "mm_credits_plus":            { "id": "pri_01ky3hrz5bxdmcg4v2c58yd21v", "amount": "2490",  "display": "€24,90" },
+    "mm_credits_pro":             { "id": "pri_01ky3hrz1e4pzpm23d1vpkybbp", "amount": "4990",  "display": "€49,90" },
+    "mm_credits_max":             { "id": "pri_01ky3hryxjsja59y7sn9wwv56h", "amount": "9990",  "display": "€99,90" },
+    "mm_club_start_monthly":      { "id": "pri_01kxrtajjkgezhmnyh4tzsaryv", "amount": "2990",  "display": "29,90 €" },
+    "mm_club_plus_semestral":     { "id": "pri_01kxws2b1mdg7h6b4tgta60q19", "amount": "14990", "display": "149,90 €" },
+    "mm_club_elite_yearly":       { "id": "pri_01kxrtajatjqy956f9vc2f1rzc", "amount": "24990", "display": "249,90 €" }
+  }
+}
