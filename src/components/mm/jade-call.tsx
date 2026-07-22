@@ -38,7 +38,7 @@ export function JadeCallOverlay({ onClose }: { onClose: () => void }) {
 
         const audioEl = document.createElement("audio");
         audioEl.autoplay = true;
-        (audioEl as HTMLAudioElement).playsInline = true;
+        audioEl.setAttribute("playsinline", "");
         audioElRef.current = audioEl;
 
         pc.ontrack = (e) => {
