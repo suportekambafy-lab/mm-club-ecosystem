@@ -16,6 +16,26 @@ export function getPaddleEnvironment(): "sandbox" | "live" {
 
 let paddleInitialized = false;
 
+type PaddleEventHandler = (event: { name?: string; data?: any }) => void;
+const eventHandlers = new Set<PaddleEventHandler>();
+
+export function onPaddleEvent(handler: PaddleEventHandler): () => void {
+  eventHandlers.add(handler);
+  return () => {
+    eventHandlers.delete(handler);
+  };
+}
+
+function dispatchPaddleEvent(event: any) {
+  eventHandlers.forEach((h) => {
+    try {
+      h(event);
+    } catch (e) {
+      console.error("Paddle event handler error", e);
+    }
+  });
+}
+
 export async function initializePaddle(): Promise<void> {
   if (paddleInitialized) return;
   if (!clientToken) {
@@ -23,27 +43,25 @@ export async function initializePaddle(): Promise<void> {
   }
 
   return new Promise<void>((resolve, reject) => {
-    if (window.Paddle) {
+    const doInit = () => {
       window.Paddle.Environment.set(
         getPaddleEnvironment() === "sandbox" ? "sandbox" : "production",
       );
-      window.Paddle.Initialize({ token: clientToken });
+      window.Paddle.Initialize({
+        token: clientToken,
+        eventCallback: dispatchPaddleEvent,
+      });
       paddleInitialized = true;
       resolve();
+    };
+    if (window.Paddle) {
+      doInit();
       return;
     }
     const script = document.createElement("script");
     script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
-    script.onload = () => {
-      const paddleJsEnv =
-        getPaddleEnvironment() === "sandbox" ? "sandbox" : "production";
-      window.Paddle.Environment.set(paddleJsEnv);
-      window.Paddle.Initialize({ token: clientToken });
-      paddleInitialized = true;
-      resolve();
-    };
-    script.onerror = () =>
-      reject(new Error("Failed to load Paddle.js"));
+    script.onload = doInit;
+    script.onerror = () => reject(new Error("Failed to load Paddle.js"));
     document.head.appendChild(script);
   });
 }
