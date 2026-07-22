@@ -17,6 +17,8 @@ function VideosPage() {
   const { products, balance, refresh } = useStudio();
   const start = useServerFn(startVideoGeneration);
   const poll = useServerFn(pollVideoGeneration);
+  const list = useServerFn(listAssets);
+
 
   const firstProductId = (products[0] as { id?: string } | undefined)?.id ?? null;
   const [productId, setProductId] = useState<string | null>(firstProductId);
