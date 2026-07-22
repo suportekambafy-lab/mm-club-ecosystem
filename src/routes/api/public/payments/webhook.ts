@@ -80,6 +80,14 @@ async function handleSubscriptionCreatedOrUpdated(
 
   const scheduledChange = data.scheduledChange ?? null;
 
+  // Detect first-time subscription for welcome email trigger
+  const { data: existingSub } = await getSupabase()
+    .from("subscriptions")
+    .select("id")
+    .eq("paddle_subscription_id", data.id)
+    .maybeSingle();
+  const isFirstTime = !existingSub;
+
   await getSupabase()
     .from("subscriptions")
     .upsert(
@@ -101,6 +109,27 @@ async function handleSubscriptionCreatedOrUpdated(
       },
       { onConflict: "paddle_subscription_id" },
     );
+
+  if (isFirstTime && env === "live" && (data.status === "active" || data.status === "trialing")) {
+    try {
+      const { sendEmail, emailTemplates, getUserEmailAndName, planLabelFromPriceId } =
+        await import("@/lib/email.server");
+      const u = await getUserEmailAndName(userId);
+      if (u) {
+        const tpl = emailTemplates.welcome(u.name, planLabelFromPriceId(priceExternal));
+        await sendEmail({
+          to: u.email,
+          subject: tpl.subject,
+          html: tpl.html,
+          userId,
+          kind: "welcome",
+          ref: data.id,
+        });
+      }
+    } catch (e) {
+      console.error("[webhook] welcome email failed", e);
+    }
+  }
 }
 
 async function handleSubscriptionCanceled(data: any, env: PaddleEnv) {
@@ -156,8 +185,30 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
     });
     if (error) {
       console.error("grant_credits failed", { reason, error: error.message });
-    } else {
-      console.log("granted credits", { userId, amount, pack: pack.priceId, txn: data.id });
+      continue;
+    }
+    console.log("granted credits", { userId, amount, pack: pack.priceId, txn: data.id });
+
+    if (env === "live") {
+      try {
+        const { sendEmail, emailTemplates, getUserEmailAndName } = await import(
+          "@/lib/email.server"
+        );
+        const u = await getUserEmailAndName(userId);
+        if (u) {
+          const tpl = emailTemplates.creditsTopup(u.name, amount, pack.name);
+          await sendEmail({
+            to: u.email,
+            subject: tpl.subject,
+            html: tpl.html,
+            userId,
+            kind: "credits_topup",
+            ref: `${data.id}:${pack.priceId}`,
+          });
+        }
+      } catch (e) {
+        console.error("[webhook] credits email failed", e);
+      }
     }
   }
 }

@@ -262,6 +262,42 @@ export type Database = {
           },
         ]
       }
+      email_log: {
+        Row: {
+          error: string | null
+          id: string
+          kind: string
+          provider_id: string | null
+          recipient: string
+          ref: string | null
+          sent_at: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          error?: string | null
+          id?: string
+          kind: string
+          provider_id?: string | null
+          recipient: string
+          ref?: string | null
+          sent_at?: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          error?: string | null
+          id?: string
+          kind?: string
+          provider_id?: string | null
+          recipient?: string
+          ref?: string | null
+          sent_at?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       lesson_progress: {
         Row: {
           completed: boolean
