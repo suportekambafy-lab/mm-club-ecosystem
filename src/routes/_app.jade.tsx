@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect, useMemo } from "react";
-import { ArrowUp, Square } from "lucide-react";
+import { ArrowUp, Square, Mic, Loader2 } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import ReactMarkdown from "react-markdown";
@@ -32,6 +32,12 @@ function SuporteIAPage() {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [recError, setRecError] = useState<string | null>(null);
 
   const transport = useMemo(
     () => new DefaultChatTransport({ api: "/api/chat" }),
@@ -79,6 +85,83 @@ function SuporteIAPage() {
     setInput("");
     void sendMessage({ text: trimmed });
     requestAnimationFrame(() => textareaRef.current?.focus());
+  }
+
+  function pickMimeType(): string {
+    const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/mpeg"];
+    for (const t of candidates) {
+      if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(t)) return t;
+    }
+    return "";
+  }
+
+  async function startRecording() {
+    setRecError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const mimeType = pickMimeType();
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      recorder.onstop = async () => {
+        const type = recorder.mimeType || "audio/webm";
+        const blob = new Blob(audioChunksRef.current, { type });
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+        if (blob.size < 2048) {
+          setRecError("Gravação demasiado curta. Tenta novamente.");
+          setIsTranscribing(false);
+          return;
+        }
+        await transcribeAndFill(blob);
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+    } catch (err) {
+      setRecError(
+        err instanceof Error && err.name === "NotAllowedError"
+          ? "Permissão do microfone negada."
+          : "Não foi possível iniciar a gravação.",
+      );
+    }
+  }
+
+  function stopRecording() {
+    const rec = mediaRecorderRef.current;
+    if (rec && rec.state !== "inactive") {
+      setIsRecording(false);
+      setIsTranscribing(true);
+      rec.stop();
+    }
+  }
+
+  async function transcribeAndFill(blob: Blob) {
+    try {
+      const form = new FormData();
+      const ext = (blob.type.split(";")[0].split("/")[1] || "webm").replace("mpeg", "mp3");
+      form.append("file", blob, `recording.${ext}`);
+      const res = await fetch("/api/transcribe", { method: "POST", body: form });
+      if (!res.ok) {
+        const t = await res.text().catch(() => "");
+        throw new Error(t || `Falha na transcrição (${res.status})`);
+      }
+      const data = (await res.json()) as { text?: string };
+      const text = (data.text ?? "").trim();
+      if (!text) {
+        setRecError("Não foi possível transcrever o áudio.");
+        return;
+      }
+      setInput((prev) => (prev ? `${prev} ${text}` : text));
+      requestAnimationFrame(() => textareaRef.current?.focus());
+    } catch (e) {
+      setRecError(e instanceof Error ? e.message : "Erro ao transcrever.");
+    } finally {
+      setIsTranscribing(false);
+    }
   }
 
   function newConversation() {
@@ -171,6 +254,28 @@ function SuporteIAPage() {
             style={{ fontSize: "16px" }}
             autoFocus
           />
+          {!isBusy && !input.trim() && (
+            <button
+              type="button"
+              onClick={isRecording ? stopRecording : startRecording}
+              disabled={isTranscribing}
+              className={cn(
+                "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 transition disabled:opacity-40",
+                isRecording
+                  ? "bg-destructive/15 text-destructive ring-destructive/40 animate-pulse"
+                  : "bg-surface-2 text-foreground ring-border hover:bg-surface-3",
+              )}
+              aria-label={isRecording ? "Parar gravação" : "Gravar áudio"}
+            >
+              {isTranscribing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isRecording ? (
+                <Square className="h-3.5 w-3.5" />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
+            </button>
+          )}
           {isBusy ? (
             <button
               type="button"
@@ -191,6 +296,9 @@ function SuporteIAPage() {
             </button>
           )}
         </form>
+        {recError && (
+          <p className="mx-auto mt-2 max-w-2xl text-center text-[11px] text-destructive">{recError}</p>
+        )}
         <p className="mx-auto mt-2 max-w-2xl text-center text-[10px] text-muted-foreground">
           Suporte IA pode cometer erros. Verifica informação importante.
         </p>
