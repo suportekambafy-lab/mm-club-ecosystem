@@ -35,6 +35,7 @@ function LiveStudio() {
   const [error, setError] = useState<string | null>(null);
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
+  const [sharing, setSharing] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
 
