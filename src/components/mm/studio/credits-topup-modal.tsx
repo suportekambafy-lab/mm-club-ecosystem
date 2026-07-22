@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { X, ChevronDown, Check, Zap, Image as ImageIcon, Video } from "lucide-react";
 import { STUDIO_COSTS } from "@/lib/studio-config";
 import { supabase } from "@/integrations/supabase/client";
-import { initializePaddle, onPaddleEvent, resolvePriceId } from "@/lib/paddle";
+import { createMollieCreditOrder } from "@/lib/mollie.functions";
 import { CREDIT_PACKS, type CreditPack } from "@/lib/studio-credit-packs";
 import { useStudio } from "@/lib/studio-context";
 import { CreditsCelebration } from "./credits-celebration";
