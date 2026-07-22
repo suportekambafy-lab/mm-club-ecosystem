@@ -536,6 +536,51 @@ export type Database = {
         }
         Relationships: []
       }
+      mm_credit_orders: {
+        Row: {
+          amount_eur: number
+          created_at: string
+          credits: number
+          fulfilled_at: string | null
+          id: string
+          pack_id: string
+          provider: string
+          provider_payment_id: string
+          raw: Json | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_eur: number
+          created_at?: string
+          credits: number
+          fulfilled_at?: string | null
+          id?: string
+          pack_id: string
+          provider?: string
+          provider_payment_id: string
+          raw?: Json | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_eur?: number
+          created_at?: string
+          credits?: number
+          fulfilled_at?: string | null
+          id?: string
+          pack_id?: string
+          provider?: string
+          provider_payment_id?: string
+          raw?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       mm_short_comments: {
         Row: {
           body: string
