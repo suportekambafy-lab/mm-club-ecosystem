@@ -254,6 +254,28 @@ function SuporteIAPage() {
             style={{ fontSize: "16px" }}
             autoFocus
           />
+          {!isBusy && !input.trim() && (
+            <button
+              type="button"
+              onClick={isRecording ? stopRecording : startRecording}
+              disabled={isTranscribing}
+              className={cn(
+                "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 transition disabled:opacity-40",
+                isRecording
+                  ? "bg-destructive/15 text-destructive ring-destructive/40 animate-pulse"
+                  : "bg-surface-2 text-foreground ring-border hover:bg-surface-3",
+              )}
+              aria-label={isRecording ? "Parar gravação" : "Gravar áudio"}
+            >
+              {isTranscribing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isRecording ? (
+                <Square className="h-3.5 w-3.5" />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
+            </button>
+          )}
           {isBusy ? (
             <button
               type="button"
@@ -274,6 +296,9 @@ function SuporteIAPage() {
             </button>
           )}
         </form>
+        {recError && (
+          <p className="mx-auto mt-2 max-w-2xl text-center text-[11px] text-destructive">{recError}</p>
+        )}
         <p className="mx-auto mt-2 max-w-2xl text-center text-[10px] text-muted-foreground">
           Suporte IA pode cometer erros. Verifica informação importante.
         </p>
