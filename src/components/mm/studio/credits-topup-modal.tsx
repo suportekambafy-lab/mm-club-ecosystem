@@ -51,7 +51,6 @@ export function CreditsTopupModal({ open, onClose }: Props) {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) setUser({ id: data.user.id, email: data.user.email ?? undefined });
     });
-    initializePaddle().catch((e) => console.error("Paddle init failed", e));
   }, [open]);
 
   useEffect(() => {
@@ -77,55 +76,53 @@ export function CreditsTopupModal({ open, onClose }: Props) {
     return () => window.removeEventListener("mousedown", onClick);
   }, [dropOpen]);
 
-  // Paddle events → optimistic bump + poll until webhook fulfills.
+  // When the user returns from Mollie with ?topup=success, celebrate and
+  // poll the backend until the webhook credits the balance.
   useEffect(() => {
-    const unsubscribe = onPaddleEvent((event) => {
-      if (event?.name !== "checkout.completed") return;
-      const pack = lastPackRef.current;
-      if (!pack) return;
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("topup") !== "success") return;
 
-      const baseline = baselineBalanceRef.current;
-      const optimistic = baseline + pack.credits;
+    // Clean the URL so a refresh doesn't retrigger.
+    params.delete("topup");
+    const clean = window.location.pathname + (params.toString() ? `?${params}` : "");
+    window.history.replaceState({}, "", clean);
 
-      qc.setQueryData<StudioContextData | undefined>(
-        ["studio", "context"],
-        (prev) => {
-          if (!prev) return prev;
-          const currentBalance = prev.credits?.balance ?? baseline;
-          return {
-            ...prev,
-            credits: {
-              ...(prev.credits ?? {}),
-              balance: Math.max(currentBalance, optimistic),
-            },
-          };
-        },
-      );
+    // Try to recall the last pack the user selected before redirect.
+    let pack: CreditPack | null = null;
+    try {
+      const stored = window.sessionStorage.getItem("mm:lastTopupPackId");
+      if (stored) pack = CREDIT_PACKS.find((p) => p.id === stored) ?? null;
+      window.sessionStorage.removeItem("mm:lastTopupPackId");
+    } catch { /* ignore */ }
+    if (!pack) pack = CREDIT_PACKS.find((p) => p.highlight) ?? CREDIT_PACKS[0];
 
-      onClose();
-      setCelebrateCredits(pack.credits);
-      setCelebrateBalance(optimistic);
-      setCelebrateOpen(true);
+    const baseline = balance ?? 0;
+    const optimistic = baseline + pack.credits;
 
-      let attempts = 0;
-      const maxAttempts = 20;
-      const poll = async () => {
-        attempts += 1;
-        await refresh();
-        const data = qc.getQueryData<StudioContextData>(["studio", "context"]);
-        const current = data?.credits?.balance ?? 0;
-        if (current >= optimistic) {
-          setCelebrateBalance(current);
-          return;
-        }
-        if (attempts < maxAttempts) {
-          window.setTimeout(poll, 2000);
-        }
-      };
-      window.setTimeout(poll, 1500);
-    });
-    return unsubscribe;
-  }, [qc, onClose, refresh]);
+    setCelebrateCredits(pack.credits);
+    setCelebrateBalance(optimistic);
+    setCelebrateOpen(true);
+
+    let attempts = 0;
+    const maxAttempts = 30;
+    const poll = async () => {
+      attempts += 1;
+      await refresh();
+      const data = qc.getQueryData<StudioContextData>(["studio", "context"]);
+      const current = data?.credits?.balance ?? 0;
+      if (current >= optimistic) {
+        setCelebrateBalance(current);
+        return;
+      }
+      if (attempts < maxAttempts) {
+        window.setTimeout(poll, 2000);
+      }
+    };
+    window.setTimeout(poll, 800);
+    // Run once on mount only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleBuy = async () => {
     if (!user?.id) {
@@ -135,32 +132,24 @@ export function CreditsTopupModal({ open, onClose }: Props) {
     setPending(true);
     setError(null);
     try {
-      await initializePaddle();
-      const paddlePriceId = await resolvePriceId(selected.priceId);
       lastPackRef.current = selected;
       baselineBalanceRef.current = balance ?? 0;
-      const successUrl = `${window.location.origin}/ferramentas/studio?topup=success`;
-      window.Paddle.Checkout.open({
-        items: [{ priceId: paddlePriceId, quantity: 1 }],
-        customer: user.email ? { email: user.email } : undefined,
-        customData: {
-          userId: user.id,
-          pack: selected.priceId,
-          credits: String(selected.credits),
-        },
-        settings: {
-          displayMode: "overlay",
-          theme: "dark",
-          successUrl,
-          showAddDiscounts: false,
+      try {
+        window.sessionStorage.setItem("mm:lastTopupPackId", selected.id);
+      } catch { /* ignore */ }
+      const res = await createMollieCreditOrder({
+        data: {
+          packId: selected.id,
+          origin: window.location.origin,
         },
       });
+      window.location.href = res.checkoutUrl;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível abrir o checkout.");
-    } finally {
       setPending(false);
     }
   };
+
 
   return (
     <>
