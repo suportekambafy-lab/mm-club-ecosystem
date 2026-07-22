@@ -297,8 +297,16 @@ export function CreditsTopupModal({ open, onClose }: Props) {
                                   </span>
                                 )}
                               </div>
-                              <p className="truncate text-[11px] text-muted-foreground">
-                                {pack.name} · {pack.videos} vídeos IA
+                              <p className="mt-0.5 flex items-center gap-2 truncate text-[11px] text-muted-foreground">
+                                <span className="inline-flex items-center gap-1">
+                                  <ImageIcon className="h-3 w-3" />
+                                  {Math.floor(pack.credits / STUDIO_COSTS.imageSingle)} img
+                                </span>
+                                <span className="text-muted-foreground/40">·</span>
+                                <span className="inline-flex items-center gap-1">
+                                  <Video className="h-3 w-3" />
+                                  {Math.floor(pack.credits / STUDIO_COSTS.video)} vídeos
+                                </span>
                               </p>
                             </div>
                             <span className="shrink-0 text-sm font-semibold text-foreground">
