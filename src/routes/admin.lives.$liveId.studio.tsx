@@ -11,6 +11,8 @@ import {
   VideoOff,
   ExternalLink,
   AlertTriangle,
+  MonitorUp,
+  MonitorOff,
 } from "lucide-react";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { LiveChat } from "@/components/mm/live-chat";
@@ -33,6 +35,7 @@ function LiveStudio() {
   const [error, setError] = useState<string | null>(null);
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
+  const [sharing, setSharing] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -41,8 +44,11 @@ function LiveStudio() {
   }, []);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const pipRef = useRef<HTMLVideoElement | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const screenStreamRef = useRef<MediaStream | null>(null);
+  const videoSenderRef = useRef<RTCRtpSender | null>(null);
   const startedAtRef = useRef<number | null>(null);
 
   // Detect if we're running inside an iframe (e.g. Lovable preview) — many
@@ -136,7 +142,8 @@ function LiveStudio() {
       pcRef.current = pc;
 
       for (const track of streamRef.current.getTracks()) {
-        pc.addTransceiver(track, { direction: "sendonly", streams: [streamRef.current] });
+        const tx = pc.addTransceiver(track, { direction: "sendonly", streams: [streamRef.current] });
+        if (track.kind === "video") videoSenderRef.current = tx.sender;
       }
 
       pc.oniceconnectionstatechange = () => {
@@ -217,14 +224,68 @@ function LiveStudio() {
     setCamOn(t.enabled);
   }
 
+  async function toggleScreenShare() {
+    if (sharing) {
+      await stopScreenShare();
+      return;
+    }
+    try {
+      const display = await navigator.mediaDevices.getDisplayMedia({
+        video: { frameRate: { ideal: 30 } },
+        audio: false,
+      });
+      screenStreamRef.current = display;
+      const screenTrack = display.getVideoTracks()[0];
+      if (!screenTrack) throw new Error("Sem faixa de vídeo do ecrã.");
+
+      // Replace outgoing track (if already live) with the screen track.
+      if (videoSenderRef.current) {
+        await videoSenderRef.current.replaceTrack(screenTrack);
+      }
+
+      // Main preview shows the screen; camera moves to PiP.
+      if (videoRef.current) videoRef.current.srcObject = display;
+      if (pipRef.current && streamRef.current) pipRef.current.srcObject = streamRef.current;
+
+      // Auto-stop when user clicks "Stop sharing" in the browser bar.
+      screenTrack.addEventListener("ended", () => {
+        void stopScreenShare();
+      });
+
+      setSharing(true);
+    } catch (e) {
+      const err = e as DOMException;
+      if (err.name !== "NotAllowedError") {
+        setError((e as Error).message);
+      }
+    }
+  }
+
+  async function stopScreenShare() {
+    const camTrack = streamRef.current?.getVideoTracks()[0];
+    if (videoSenderRef.current && camTrack) {
+      await videoSenderRef.current.replaceTrack(camTrack).catch(() => {});
+    }
+    screenStreamRef.current?.getTracks().forEach((t) => t.stop());
+    screenStreamRef.current = null;
+    if (videoRef.current && streamRef.current) videoRef.current.srcObject = streamRef.current;
+    if (pipRef.current) pipRef.current.srcObject = null;
+    setSharing(false);
+  }
+
   function teardown() {
     pcRef.current?.getSenders().forEach((s) => s.track?.stop());
     pcRef.current?.close();
     pcRef.current = null;
+    videoSenderRef.current = null;
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
+    screenStreamRef.current?.getTracks().forEach((t) => t.stop());
+    screenStreamRef.current = null;
+    setSharing(false);
     startedAtRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
+    if (pipRef.current) pipRef.current.srcObject = null;
   }
 
   async function endLive() {
@@ -325,6 +386,21 @@ function LiveStudio() {
                   {status === "live" ? `AO VIVO · ${mmss}` : "A ligar…"}
                 </div>
               )}
+
+              {sharing && (
+                <div className="absolute bottom-4 right-4 z-10 h-32 w-48 overflow-hidden rounded-xl border border-white/20 bg-black shadow-2xl ring-1 ring-black/40 sm:h-40 sm:w-60">
+                  <video
+                    ref={pipRef}
+                    autoPlay
+                    muted
+                    playsInline
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="pointer-events-none absolute left-1.5 top-1.5 rounded-full bg-black/70 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-white">
+                    Câmara
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-surface-1 px-5 py-4">
@@ -346,6 +422,23 @@ function LiveStudio() {
                   title={camOn ? "Desligar câmara" : "Ligar câmara"}
                 >
                   {camOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4 text-red-300" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleScreenShare}
+                  disabled={!streamRef.current}
+                  className={
+                    "inline-flex h-9 items-center gap-2 rounded-full border px-3 text-xs font-medium transition disabled:opacity-40 " +
+                    (sharing
+                      ? "border-primary/60 bg-primary/15 text-primary"
+                      : "border-border hover:border-primary/40")
+                  }
+                  title={sharing ? "Parar partilha de ecrã" : "Partilhar ecrã"}
+                >
+                  {sharing ? <MonitorOff className="h-4 w-4" /> : <MonitorUp className="h-4 w-4" />}
+                  <span className="hidden sm:inline">
+                    {sharing ? "Parar partilha" : "Partilhar ecrã"}
+                  </span>
                 </button>
               </div>
 
