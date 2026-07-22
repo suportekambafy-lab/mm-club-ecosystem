@@ -137,7 +137,7 @@ export const Route = createFileRoute("/api/public/payments/mollie-webhook")({
                   subject: tpl.subject,
                   html: tpl.html,
                   userId,
-                  kind: "vip_welcome",
+                  kind: "vip_welcome" as any,
                   ref: `mollie_vip:${paymentId}`,
                 });
               }
