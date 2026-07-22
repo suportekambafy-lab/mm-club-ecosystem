@@ -460,6 +460,57 @@ function IconBtn({
   );
 }
 
+function NotifyLessonButton(props: {
+  courseId: string;
+  courseTitle: string;
+  lessonId: string;
+  lessonTitle: string;
+  visibility: string;
+}) {
+  const notify = useServerFn(notifyNewLesson);
+  const [sending, setSending] = useState(false);
+  const onClick = async () => {
+    if (sending) return;
+    if (!confirm(`Enviar email "Nova aula: ${props.lessonTitle}" para todos os alunos com acesso?`)) return;
+    setSending(true);
+    try {
+      const vis = (["public", "club", "premium", "purchased"] as const).includes(
+        props.visibility as any,
+      )
+        ? (props.visibility as "public" | "club" | "premium" | "purchased")
+        : "club";
+      const res = await notify({
+        data: {
+          courseId: props.courseId,
+          courseTitle: props.courseTitle,
+          lessonId: props.lessonId,
+          lessonTitle: props.lessonTitle,
+          visibility: vis,
+        },
+      });
+      toast.success(`Emails enviados: ${res.sent} · ignorados: ${res.skipped}`);
+    } catch (e: any) {
+      toast.error(`Falha ao enviar: ${e?.message ?? e}`);
+    } finally {
+      setSending(false);
+    }
+  };
+  return (
+    <div className="mt-3 flex items-center justify-end">
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={sending}
+        className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition hover:bg-primary/20 disabled:opacity-50"
+      >
+        <Send className="h-3.5 w-3.5" />
+        {sending ? "A enviar..." : "Notificar alunos por email"}
+      </button>
+    </div>
+  );
+}
+
+
 const inputCls =
   "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
 const labelCls =
