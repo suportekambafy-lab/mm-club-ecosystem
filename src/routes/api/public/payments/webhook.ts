@@ -1,7 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
-import { EventName, type PaddleEnv, verifyWebhook } from "@/lib/paddle.server";
+import { EventName, gatewayFetch, type PaddleEnv, verifyWebhook } from "@/lib/paddle.server";
 import { packByPriceId } from "@/lib/studio-credit-packs";
+
+/**
+ * Resolve a Paddle price's human-readable external_id.
+ * transaction.completed webhook payloads omit `import_meta` on the price
+ * object, so we look it up via the API when it's missing.
+ */
+async function resolveExternalPriceId(
+  item: any,
+  env: PaddleEnv,
+): Promise<string | undefined> {
+  const inline = item?.price?.importMeta?.externalId as string | undefined;
+  if (inline) return inline;
+  const paddlePriceId = item?.price?.id as string | undefined;
+  if (!paddlePriceId) return undefined;
+  try {
+    const res = await gatewayFetch(env, `/prices/${paddlePriceId}`);
+    const body = await res.json();
+    return body?.data?.import_meta?.external_id ?? undefined;
+  } catch (e) {
+    console.error("resolveExternalPriceId failed", { paddlePriceId, e });
+    return undefined;
+  }
+}
 
 let _supabase: any = null;
 function getSupabase(): any {
@@ -106,7 +129,7 @@ async function handleCustomer(data: any, env: PaddleEnv) {
     );
 }
 
-async function handleTransactionCompleted(data: any) {
+async function handleTransactionCompleted(data: any, env: PaddleEnv) {
   const userId = await resolveUserId(data.customerId, data.customData);
   if (!userId) {
     console.warn("transaction.completed: no userId", { id: data.id });
@@ -114,9 +137,15 @@ async function handleTransactionCompleted(data: any) {
   }
   const items: any[] = Array.isArray(data.items) ? data.items : [];
   for (const item of items) {
-    const priceExternal = item?.price?.importMeta?.externalId as string | undefined;
+    const priceExternal = await resolveExternalPriceId(item, env);
     const pack = packByPriceId(priceExternal);
-    if (!pack) continue;
+    if (!pack) {
+      console.warn("transaction.completed: no pack match", {
+        rawPriceId: item?.price?.id,
+        priceExternal,
+      });
+      continue;
+    }
     const qty = Math.max(1, Number(item?.quantity) || 1);
     const amount = pack.credits * qty;
     const reason = `purchase:${data.id}:${pack.priceId}`;
@@ -154,7 +183,7 @@ async function handleWebhook(req: Request, env: PaddleEnv) {
       await handleCustomer(event.data, env);
       break;
     case EventName.TransactionCompleted:
-      await handleTransactionCompleted(event.data);
+      await handleTransactionCompleted(event.data, env);
       break;
     default:
       console.log("Unhandled event:", event.eventType);
