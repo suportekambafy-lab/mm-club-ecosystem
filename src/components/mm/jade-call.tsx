@@ -87,9 +87,69 @@ export function JadeCallOverlay({ onClose }: { onClose: () => void }) {
               setTimeout(() => setCaption(""), 2500);
             } else if (evt.type === "input_audio_buffer.speech_started") {
               setCaption("");
+            } else if (
+              evt.type === "response.function_call_arguments.done" ||
+              (evt.type === "response.output_item.done" &&
+                evt.item?.type === "function_call")
+            ) {
+              const item = evt.item ?? evt;
+              const name = item.name ?? evt.name;
+              const callId = item.call_id ?? evt.call_id;
+              const argsRaw = item.arguments ?? evt.arguments ?? "{}";
+              if (name === "search_mm_knowledge" && callId) {
+                void handleKnowledgeCall(callId, argsRaw);
+              }
             }
           } catch {}
         };
+
+        async function handleKnowledgeCall(callId: string, argsRaw: string) {
+          let query = "";
+          try {
+            const parsed = JSON.parse(argsRaw);
+            query = typeof parsed?.query === "string" ? parsed.query : "";
+          } catch {}
+          let output = "";
+          try {
+            const r = await fetch("/api/knowledge/search", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ query, match_count: 6 }),
+            });
+            if (r.ok) {
+              const data = (await r.json()) as {
+                results?: Array<{ course?: string | null; lesson?: string | null; content?: string }>;
+              };
+              const results = data.results ?? [];
+              output = results.length
+                ? results
+                    .map((m, i) => {
+                      const label = [m.course, m.lesson].filter(Boolean).join(" · ") || "Aula";
+                      return `[${i + 1}] ${label}\n${m.content ?? ""}`;
+                    })
+                    .join("\n\n")
+                : "Sem resultados relevantes na memória das aulas.";
+            } else {
+              output = "Sem resultados.";
+            }
+          } catch {
+            output = "Sem resultados.";
+          }
+          try {
+            dc.send(
+              JSON.stringify({
+                type: "conversation.item.create",
+                item: {
+                  type: "function_call_output",
+                  call_id: callId,
+                  output,
+                },
+              }),
+            );
+            dc.send(JSON.stringify({ type: "response.create" }));
+          } catch {}
+        }
+
 
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
