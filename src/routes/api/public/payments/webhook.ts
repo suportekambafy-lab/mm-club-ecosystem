@@ -183,7 +183,7 @@ async function handleWebhook(req: Request, env: PaddleEnv) {
       await handleCustomer(event.data, env);
       break;
     case EventName.TransactionCompleted:
-      await handleTransactionCompleted(event.data);
+      await handleTransactionCompleted(event.data, env);
       break;
     default:
       console.log("Unhandled event:", event.eventType);
