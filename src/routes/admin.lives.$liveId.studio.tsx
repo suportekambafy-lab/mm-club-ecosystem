@@ -142,7 +142,8 @@ function LiveStudio() {
       pcRef.current = pc;
 
       for (const track of streamRef.current.getTracks()) {
-        pc.addTransceiver(track, { direction: "sendonly", streams: [streamRef.current] });
+        const tx = pc.addTransceiver(track, { direction: "sendonly", streams: [streamRef.current] });
+        if (track.kind === "video") videoSenderRef.current = tx.sender;
       }
 
       pc.oniceconnectionstatechange = () => {
