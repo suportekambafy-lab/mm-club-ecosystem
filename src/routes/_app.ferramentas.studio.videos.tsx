@@ -73,6 +73,8 @@ function VideosPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro no polling");
       setBusy(false);
+      setStatusText("");
+    }
   }
 
   // On mount: hydrate preview from the most recent video asset so users
@@ -111,8 +113,6 @@ function VideosPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  }
 
   async function onGenerate() {
     setError(null);
