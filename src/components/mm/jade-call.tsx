@@ -94,7 +94,7 @@ export function JadeCallOverlay({ onClose }: { onClose: () => void }) {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
 
-        const sdpRes = await fetch(`https://api.openai.com/v1/realtime?model=${model}`, {
+        const sdpRes = await fetch(`https://api.openai.com/v1/realtime/calls?model=${model}`, {
           method: "POST",
           body: offer.sdp,
           headers: {
