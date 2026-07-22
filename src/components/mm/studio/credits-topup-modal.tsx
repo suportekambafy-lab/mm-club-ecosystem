@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { X, Check, Sparkles } from "lucide-react";
+import { X, ChevronDown, Check, Sparkles, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { initializePaddle, onPaddleEvent, resolvePriceId } from "@/lib/paddle";
 import { CREDIT_PACKS, type CreditPack } from "@/lib/studio-credit-packs";
@@ -21,8 +21,21 @@ export function CreditsTopupModal({ open, onClose }: Props) {
   const { refresh, balance } = useStudio();
   const qc = useQueryClient();
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
-  const [pending, setPending] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const defaultPack = useMemo(
+    () => CREDIT_PACKS.find((p) => p.highlight) ?? CREDIT_PACKS[0],
+    [],
+  );
+  const [selectedId, setSelectedId] = useState<string>(defaultPack.id);
+  const [dropOpen, setDropOpen] = useState(false);
+  const dropRef = useRef<HTMLDivElement>(null);
+
+  const selected = useMemo(
+    () => CREDIT_PACKS.find((p) => p.id === selectedId) ?? defaultPack,
+    [selectedId, defaultPack],
+  );
 
   const [celebrateOpen, setCelebrateOpen] = useState(false);
   const [celebrateCredits, setCelebrateCredits] = useState<number | null>(null);
@@ -33,6 +46,7 @@ export function CreditsTopupModal({ open, onClose }: Props) {
   useEffect(() => {
     if (!open) return;
     setError(null);
+    setDropOpen(false);
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) setUser({ id: data.user.id, email: data.user.email ?? undefined });
     });
@@ -42,13 +56,27 @@ export function CreditsTopupModal({ open, onClose }: Props) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        if (dropOpen) setDropOpen(false);
+        else onClose();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  }, [open, onClose, dropOpen]);
 
-  // Listen to Paddle events → optimistic bump + poll until webhook fulfills.
+  useEffect(() => {
+    if (!dropOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (dropRef.current && !dropRef.current.contains(e.target as Node)) {
+        setDropOpen(false);
+      }
+    };
+    window.addEventListener("mousedown", onClick);
+    return () => window.removeEventListener("mousedown", onClick);
+  }, [dropOpen]);
+
+  // Paddle events → optimistic bump + poll until webhook fulfills.
   useEffect(() => {
     const unsubscribe = onPaddleEvent((event) => {
       if (event?.name !== "checkout.completed") return;
@@ -58,8 +86,6 @@ export function CreditsTopupModal({ open, onClose }: Props) {
       const baseline = baselineBalanceRef.current;
       const optimistic = baseline + pack.credits;
 
-      // Optimistically bump the balance in the react-query cache so the UI
-      // updates instantly.
       qc.setQueryData<StudioContextData | undefined>(
         ["studio", "context"],
         (prev) => {
@@ -75,13 +101,11 @@ export function CreditsTopupModal({ open, onClose }: Props) {
         },
       );
 
-      // Close the topup modal and celebrate.
       onClose();
       setCelebrateCredits(pack.credits);
       setCelebrateBalance(optimistic);
       setCelebrateOpen(true);
 
-      // Poll to reconcile with the webhook.
       let attempts = 0;
       const maxAttempts = 20;
       const poll = async () => {
@@ -102,23 +126,27 @@ export function CreditsTopupModal({ open, onClose }: Props) {
     return unsubscribe;
   }, [qc, onClose, refresh]);
 
-  const handleBuy = async (pack: CreditPack) => {
+  const handleBuy = async () => {
     if (!user?.id) {
       setError("Precisas de sessão iniciada para carregar créditos.");
       return;
     }
-    setPending(pack.priceId);
+    setPending(true);
     setError(null);
     try {
       await initializePaddle();
-      const paddlePriceId = await resolvePriceId(pack.priceId);
-      lastPackRef.current = pack;
+      const paddlePriceId = await resolvePriceId(selected.priceId);
+      lastPackRef.current = selected;
       baselineBalanceRef.current = balance ?? 0;
       const successUrl = `${window.location.origin}/ferramentas/studio?topup=success`;
       window.Paddle.Checkout.open({
         items: [{ priceId: paddlePriceId, quantity: 1 }],
         customer: user.email ? { email: user.email } : undefined,
-        customData: { userId: user.id, pack: pack.priceId, credits: String(pack.credits) },
+        customData: {
+          userId: user.id,
+          pack: selected.priceId,
+          credits: String(selected.credits),
+        },
         settings: {
           displayMode: "overlay",
           theme: "dark",
@@ -129,7 +157,7 @@ export function CreditsTopupModal({ open, onClose }: Props) {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível abrir o checkout.");
     } finally {
-      setPending(null);
+      setPending(false);
     }
   };
 
@@ -143,7 +171,7 @@ export function CreditsTopupModal({ open, onClose }: Props) {
           <div
             role="dialog"
             aria-modal="true"
-            className="relative w-full max-w-4xl overflow-hidden rounded-t-3xl border border-[color:var(--hairline)] bg-surface-1 md:rounded-3xl"
+            className="relative w-full max-w-md overflow-hidden rounded-t-3xl border border-[color:var(--hairline)] bg-surface-1 md:rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -155,79 +183,167 @@ export function CreditsTopupModal({ open, onClose }: Props) {
               <X className="h-4 w-4" />
             </button>
 
-            <div className="border-b border-[color:var(--hairline)] p-6 md:p-8">
+            {/* Header */}
+            <div className="px-6 pb-4 pt-7 md:px-8">
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
                 Carregar créditos
               </p>
-              <h2 className="mt-2 font-display text-2xl text-foreground md:text-3xl">
-                Escolhe o teu pack.
+              <h2 className="mt-2 font-display text-2xl text-foreground">
+                Adiciona créditos ao MM Studio
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Pagamento seguro via cartão ou MB Way. Os créditos aparecem no teu saldo em segundos após a confirmação.
+                Saldo atual{" "}
+                <span className="font-semibold text-foreground">
+                  {(balance ?? 0).toLocaleString("pt-PT")}
+                </span>{" "}
+                créditos.
               </p>
             </div>
 
-            <div className="grid gap-3 p-6 md:grid-cols-4 md:p-8">
-              {CREDIT_PACKS.map((pack) => {
-                const isPending = pending === pack.priceId;
-                return (
+            {/* Content */}
+            <div className="space-y-5 px-6 pb-6 md:px-8">
+              {/* Pack selector */}
+              <div>
+                <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  Pack
+                </label>
+                <div ref={dropRef} className="relative">
                   <button
-                    key={pack.id}
                     type="button"
-                    disabled={isPending}
-                    onClick={() => handleBuy(pack)}
-                    className={
-                      "group relative flex flex-col rounded-2xl border p-5 text-left transition disabled:opacity-60 " +
-                      (pack.highlight
-                        ? "border-primary/60 bg-primary/5 hover:border-primary"
-                        : "border-[color:var(--hairline)] bg-background/40 hover:border-primary/50")
-                    }
+                    onClick={() => setDropOpen((v) => !v)}
+                    aria-haspopup="listbox"
+                    aria-expanded={dropOpen}
+                    className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-[color:var(--hairline)] bg-background/40 px-4 py-3.5 text-left transition hover:border-primary/50"
                   >
-                    {pack.highlight && (
-                      <span className="absolute -top-2 right-4 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary-foreground">
-                        <Sparkles className="h-3 w-3" /> Popular
-                      </span>
-                    )}
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                      {pack.name}
-                    </p>
-                    <p className="mt-2 font-display text-3xl text-foreground">{pack.price}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{pack.tagline}</p>
-
-                    <div className="mt-4 space-y-2 text-sm text-foreground/90">
+                    <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-primary" />
-                        <span className="font-medium">{pack.credits.toLocaleString("pt-PT")} créditos</span>
+                        <span className="truncate font-display text-lg text-foreground">
+                          {selected.credits.toLocaleString("pt-PT")} créditos
+                        </span>
+                        {selected.highlight && (
+                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary">
+                            <Sparkles className="h-2.5 w-2.5" /> Popular
+                          </span>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-primary" />
-                        <span>{pack.videos} vídeos IA</span>
-                      </div>
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                        {selected.name} · {selected.tagline}
+                      </p>
                     </div>
-
-                    <span
-                      className={
-                        "mt-5 inline-flex items-center justify-center rounded-xl px-3 py-2 text-xs font-semibold transition " +
-                        (pack.highlight
-                          ? "bg-primary text-primary-foreground group-hover:brightness-110"
-                          : "bg-foreground text-background group-hover:opacity-90")
-                      }
-                    >
-                      {isPending ? "A abrir…" : "Carregar"}
-                    </span>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="font-display text-lg text-foreground">
+                        {selected.price}
+                      </span>
+                      <ChevronDown
+                        className={
+                          "h-4 w-4 text-muted-foreground transition " +
+                          (dropOpen ? "rotate-180" : "")
+                        }
+                      />
+                    </div>
                   </button>
-                );
-              })}
-            </div>
 
-            {error && (
-              <div className="border-t border-[color:var(--hairline)] bg-destructive/10 px-6 py-3 text-xs text-destructive md:px-8">
-                {error}
+                  {dropOpen && (
+                    <div
+                      role="listbox"
+                      className="absolute left-0 right-0 top-[calc(100%+6px)] z-20 max-h-72 overflow-auto rounded-2xl border border-[color:var(--hairline)] bg-surface-1 p-1 shadow-2xl"
+                    >
+                      {CREDIT_PACKS.map((pack) => {
+                        const active = pack.id === selectedId;
+                        return (
+                          <button
+                            key={pack.id}
+                            type="button"
+                            role="option"
+                            aria-selected={active}
+                            onClick={() => {
+                              setSelectedId(pack.id);
+                              setDropOpen(false);
+                            }}
+                            className={
+                              "grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-3 py-2.5 text-left transition " +
+                              (active
+                                ? "bg-primary/10"
+                                : "hover:bg-foreground/5")
+                            }
+                          >
+                            <span
+                              className={
+                                "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border " +
+                                (active
+                                  ? "border-primary bg-primary text-primary-foreground"
+                                  : "border-[color:var(--hairline)]")
+                              }
+                            >
+                              {active && <Check className="h-3 w-3" />}
+                            </span>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="truncate text-sm font-semibold text-foreground">
+                                  {pack.credits.toLocaleString("pt-PT")} créditos
+                                </span>
+                                {pack.highlight && (
+                                  <span className="inline-flex shrink-0 items-center rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary">
+                                    Popular
+                                  </span>
+                                )}
+                              </div>
+                              <p className="truncate text-[11px] text-muted-foreground">
+                                {pack.name} · {pack.videos} vídeos IA
+                              </p>
+                            </div>
+                            <span className="shrink-0 text-sm font-semibold text-foreground">
+                              {pack.price}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
 
-            <div className="border-t border-[color:var(--hairline)] px-6 py-3 text-[10px] uppercase tracking-[0.22em] text-muted-foreground md:px-8">
-              Métodos: Cartão · MB Way · Apple Pay · Google Pay · PayPal
+              {/* Summary */}
+              <div className="rounded-2xl border border-[color:var(--hairline)] bg-background/40 p-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">A adicionar</span>
+                  <span className="inline-flex items-center gap-1 font-semibold text-foreground">
+                    <Zap className="h-3.5 w-3.5 text-primary" />
+                    {selected.credits.toLocaleString("pt-PT")}
+                  </span>
+                </div>
+                <div className="mt-2 flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Novo saldo</span>
+                  <span className="font-semibold text-foreground">
+                    {((balance ?? 0) + selected.credits).toLocaleString("pt-PT")}
+                  </span>
+                </div>
+                <div className="mt-3 border-t border-[color:var(--hairline)] pt-3 flex items-center justify-between">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                    Total
+                  </span>
+                  <span className="font-display text-xl text-foreground">
+                    {selected.price}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleBuy}
+                disabled={pending}
+                className="inline-flex w-full items-center justify-center rounded-2xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground transition hover:brightness-110 disabled:opacity-60"
+              >
+                {pending ? "A abrir checkout…" : `Carregar ${selected.price}`}
+              </button>
+
+              {error && (
+                <p className="text-xs text-destructive">{error}</p>
+              )}
+
+              <p className="text-center text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                Cartão · MB Way · Apple Pay · Google Pay · PayPal
+              </p>
             </div>
           </div>
         </div>
