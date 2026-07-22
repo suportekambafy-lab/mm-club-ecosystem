@@ -8,7 +8,7 @@ const notifyNewLessonSchema = z.object({
   lessonId: z.string().min(1),
   courseTitle: z.string().min(1),
   lessonTitle: z.string().min(1),
-  visibility: z.enum(["public", "club", "vip", "internal"]).default("club"),
+  visibility: z.enum(["public", "club", "premium", "purchased"]).default("club"),
 });
 
 export const notifyNewLesson = createServerFn({ method: "POST" })
