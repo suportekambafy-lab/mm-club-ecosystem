@@ -1,0 +1,1 @@
+UPDATE public.mm_studio_credits SET balance = 0, updated_at = now() WHERE user_id = 'e78f7368-de84-4550-aefc-1d5c41192c86';
