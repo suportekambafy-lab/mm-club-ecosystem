@@ -3,10 +3,8 @@ import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { initializePaddle, resolvePriceId } from "@/lib/paddle";
+import { createMollieVipSubscription } from "@/lib/mollie.functions";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
-
-const VIP_DISCOUNT_CODE = "MMVIP3";
 
 export const Route = createFileRoute("/vip")({
   head: () => ({
@@ -41,6 +39,7 @@ function VipPage() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -48,28 +47,24 @@ function VipPage() {
         setUser({ id: data.user.id, email: data.user.email ?? undefined });
       }
     });
-    initializePaddle().catch((e) => console.error("Paddle init failed", e));
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("vip") === "success") setSuccess(true);
+    }
   }, []);
 
   const handleStart = async () => {
+    if (!user) {
+      window.location.href = `/auth?redirect=${encodeURIComponent("/vip")}`;
+      return;
+    }
     setPending(true);
     setError(null);
     try {
-      await initializePaddle();
-      const paddlePriceId = await resolvePriceId("mm_club_start_monthly");
-      const successUrl = `${window.location.origin}/checkout/return`;
-      window.Paddle.Checkout.open({
-        items: [{ priceId: paddlePriceId, quantity: 1 }],
-        discountCode: VIP_DISCOUNT_CODE,
-        customer: user?.email ? { email: user.email } : undefined,
-        customData: user?.id ? { userId: user.id } : undefined,
-        settings: {
-          displayMode: "overlay",
-          theme: "dark",
-          successUrl,
-          showAddDiscounts: false,
-        },
+      const { checkoutUrl } = await createMollieVipSubscription({
+        data: { origin: window.location.origin },
       });
+      window.location.href = checkoutUrl;
     } catch (e) {
       console.error(e);
       setError(
@@ -77,7 +72,6 @@ function VipPage() {
           ? e.message
           : "Não foi possível abrir o checkout. Tenta novamente.",
       );
-    } finally {
       setPending(false);
     }
   };
@@ -120,10 +114,20 @@ function VipPage() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="mt-4 max-w-lg text-center text-base text-muted-foreground md:text-lg"
           >
-            Acesso completo ao ecossistema MM Club durante 90 dias, sem cobrança
-            imediata. Depois do trial, continua por 29,90 €/mês — cancelas
-            quando quiseres.
+            Acesso completo ao ecossistema MM Club durante 90 dias. Depois do
+            trial, continua por 29,90 €/mês — cancelas quando quiseres.
           </motion.p>
+
+          {success ? (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6 rounded-2xl border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-primary"
+            >
+              Recebemos o teu pagamento. A tua conta VIP será ativada em
+              segundos.
+            </motion.div>
+          ) : null}
 
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -144,7 +148,7 @@ function VipPage() {
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
               Depois, 29,90 €/mês. Cancelas a qualquer momento antes do fim do
-              trial e não é cobrado nada.
+              trial.
             </p>
 
             <ul className="mt-8 space-y-3">
@@ -173,8 +177,8 @@ function VipPage() {
             ) : null}
 
             <p className="mt-4 text-center text-[11px] text-muted-foreground">
-              O cupom VIP é aplicado automaticamente. Precisas de um cartão para
-              iniciar, mas nada é cobrado durante os 3 meses.
+              Pagamento seguro via Mollie. Aceitamos cartão, MB WAY, Multibanco
+              e mais.
             </p>
           </motion.div>
 

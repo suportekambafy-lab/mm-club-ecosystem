@@ -36,11 +36,124 @@ export const Route = createFileRoute("/api/public/payments/mollie-webhook")({
 
           const payment = await getMolliePayment(paymentId);
           const meta = (payment.metadata ?? {}) as {
+            kind?: string;
             userId?: string;
             packId?: string;
             credits?: number | string;
+            planId?: string;
+            recurringEUR?: number | string;
+            interval?: string;
+            startDate?: string;
           };
 
+          const kind = meta.kind ?? (meta.credits ? "credits" : undefined);
+
+          // ---------- VIP subscription first payment ----------
+          if (kind === "vip_first") {
+            const {
+              listValidMandates,
+              createMollieSubscription,
+            } = await import("@/lib/mollie.server");
+
+            await supabaseAdmin
+              .from("mm_mollie_subscriptions")
+              .update({
+                status: payment.status,
+                raw: JSON.parse(JSON.stringify(payment)),
+                updated_at: new Date().toISOString(),
+              })
+              .eq("first_payment_id", paymentId);
+
+            if (payment.status !== "paid") {
+              return Response.json({ received: true });
+            }
+
+            const userId = meta.userId;
+            const planId = meta.planId ?? "mm_club_vip_monthly";
+            const recurringEUR = Number(meta.recurringEUR ?? 29.9);
+            const interval = String(meta.interval ?? "1 month");
+            const startDate = String(meta.startDate ?? "");
+            if (!userId) {
+              return new Response("Bad metadata", { status: 400 });
+            }
+
+            // Idempotency: skip if we already created the subscription
+            const { data: row } = await supabaseAdmin
+              .from("mm_mollie_subscriptions")
+              .select("mollie_customer_id, mollie_subscription_id")
+              .eq("first_payment_id", paymentId)
+              .maybeSingle();
+
+            if (row?.mollie_subscription_id) {
+              return Response.json({ received: true });
+            }
+
+            const customerId = row?.mollie_customer_id;
+            if (!customerId) {
+              console.error("[mollie-webhook] vip_first missing customerId");
+              return new Response("Missing customer", { status: 500 });
+            }
+
+            const mandates = await listValidMandates(customerId);
+            const mandate = mandates[0];
+            if (!mandate) {
+              console.error("[mollie-webhook] no valid mandate");
+              return new Response("No mandate", { status: 500 });
+            }
+
+            const url = new URL(request.url);
+            const webhookUrl = `${url.origin}/api/public/payments/mollie-webhook`;
+
+            const sub = await createMollieSubscription({
+              customerId,
+              mandateId: mandate.id,
+              amountEUR: recurringEUR,
+              interval,
+              description: `MM Club — VIP mensal (após 3 meses grátis)`,
+              webhookUrl,
+              startDate: startDate || undefined,
+              metadata: { kind: "vip_recurring", userId, planId },
+            });
+
+            await supabaseAdmin
+              .from("mm_mollie_subscriptions")
+              .update({
+                mollie_mandate_id: mandate.id,
+                mollie_subscription_id: sub.id,
+                status: "active",
+                updated_at: new Date().toISOString(),
+              })
+              .eq("first_payment_id", paymentId);
+
+            // Welcome email
+            try {
+              const { sendEmail, emailTemplates, getUserEmailAndName } =
+                await import("@/lib/email.server");
+              const u = await getUserEmailAndName(userId);
+              if (u && (emailTemplates as any).vipWelcome) {
+                const tpl = (emailTemplates as any).vipWelcome(u.name);
+                await sendEmail({
+                  to: u.email,
+                  subject: tpl.subject,
+                  html: tpl.html,
+                  userId,
+                  kind: "vip_welcome" as any,
+                  ref: `mollie_vip:${paymentId}`,
+                });
+              }
+            } catch (e) {
+              console.error("[mollie-webhook] vip email failed", e);
+            }
+
+            return Response.json({ received: true });
+          }
+
+          // ---------- VIP recurring payment (informational) ----------
+          if (kind === "vip_recurring") {
+            return Response.json({ received: true });
+          }
+
+          // ---------- Credit pack (default) ----------
           // Update tracked status (best-effort)
           await supabaseAdmin
             .from("mm_credit_orders")
