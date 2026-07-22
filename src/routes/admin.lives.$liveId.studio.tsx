@@ -44,8 +44,11 @@ function LiveStudio() {
   }, []);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const pipRef = useRef<HTMLVideoElement | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const screenStreamRef = useRef<MediaStream | null>(null);
+  const videoSenderRef = useRef<RTCRtpSender | null>(null);
   const startedAtRef = useRef<number | null>(null);
 
   // Detect if we're running inside an iframe (e.g. Lovable preview) — many
