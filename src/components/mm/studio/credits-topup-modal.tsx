@@ -358,9 +358,6 @@ export function CreditsTopupModal({ open, onClose }: Props) {
                 <p className="text-xs text-destructive">{error}</p>
               )}
 
-              <p className="text-center text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                Cartão · MB Way · Apple Pay · Google Pay · PayPal
-              </p>
             </div>
           </div>
         </div>
