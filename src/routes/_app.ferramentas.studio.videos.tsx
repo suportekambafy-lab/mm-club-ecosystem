@@ -73,7 +73,45 @@ function VideosPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro no polling");
       setBusy(false);
-    }
+  }
+
+  // On mount: hydrate preview from the most recent video asset so users
+  // see their last generation after navigating away, and resume polling
+  // if it's still pending.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = await list({ data: { kind: "video" } });
+        if (cancelled || !Array.isArray(rows) || rows.length === 0) return;
+        const latest = rows[0] as {
+          id: string;
+          url: string | null;
+          metadata: { status?: string; segments?: Array<{ url?: string }> } | null;
+        };
+        const status = latest.metadata?.status;
+        if (status === "ready") {
+          const urls = (latest.metadata?.segments ?? [])
+            .map((s) => s.url)
+            .filter((u): u is string => Boolean(u));
+          const finalUrls = urls.length > 0 ? urls : latest.url ? [latest.url] : [];
+          if (finalUrls.length > 0) setVideoUrls(finalUrls);
+        } else if (status === "pending" || !status) {
+          setBusy(true);
+          setStatusText("A retomar geração anterior…");
+          loopPoll(latest.id);
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+      if (pollTimer.current) clearTimeout(pollTimer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   }
 
   async function onGenerate() {
