@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { X, ChevronDown, Check, Sparkles, Zap } from "lucide-react";
+import { X, ChevronDown, Check, Zap, Image as ImageIcon, Video } from "lucide-react";
+import { STUDIO_COSTS } from "@/lib/studio-config";
 import { supabase } from "@/integrations/supabase/client";
 import { initializePaddle, onPaddleEvent, resolvePriceId } from "@/lib/paddle";
 import { CREDIT_PACKS, type CreditPack } from "@/lib/studio-credit-packs";
@@ -221,13 +222,21 @@ export function CreditsTopupModal({ open, onClose }: Props) {
                           {selected.credits.toLocaleString("pt-PT")} créditos
                         </span>
                         {selected.highlight && (
-                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary">
-                            <Sparkles className="h-2.5 w-2.5" /> Popular
+                          <span className="inline-flex shrink-0 items-center rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary">
+                            Popular
                           </span>
                         )}
                       </div>
-                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                        {selected.name} · {selected.tagline}
+                      <p className="mt-0.5 flex items-center gap-2 truncate text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1">
+                          <ImageIcon className="h-3 w-3" />
+                          {Math.floor(selected.credits / STUDIO_COSTS.imageSingle)} imagens
+                        </span>
+                        <span className="text-muted-foreground/40">·</span>
+                        <span className="inline-flex items-center gap-1">
+                          <Video className="h-3 w-3" />
+                          {Math.floor(selected.credits / STUDIO_COSTS.video)} vídeos
+                        </span>
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
@@ -288,8 +297,16 @@ export function CreditsTopupModal({ open, onClose }: Props) {
                                   </span>
                                 )}
                               </div>
-                              <p className="truncate text-[11px] text-muted-foreground">
-                                {pack.name} · {pack.videos} vídeos IA
+                              <p className="mt-0.5 flex items-center gap-2 truncate text-[11px] text-muted-foreground">
+                                <span className="inline-flex items-center gap-1">
+                                  <ImageIcon className="h-3 w-3" />
+                                  {Math.floor(pack.credits / STUDIO_COSTS.imageSingle)} img
+                                </span>
+                                <span className="text-muted-foreground/40">·</span>
+                                <span className="inline-flex items-center gap-1">
+                                  <Video className="h-3 w-3" />
+                                  {Math.floor(pack.credits / STUDIO_COSTS.video)} vídeos
+                                </span>
                               </p>
                             </div>
                             <span className="shrink-0 text-sm font-semibold text-foreground">
@@ -341,9 +358,6 @@ export function CreditsTopupModal({ open, onClose }: Props) {
                 <p className="text-xs text-destructive">{error}</p>
               )}
 
-              <p className="text-center text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                Cartão · MB Way · Apple Pay · Google Pay · PayPal
-              </p>
             </div>
           </div>
         </div>
