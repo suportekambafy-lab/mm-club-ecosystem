@@ -51,6 +51,7 @@ import { Route as AppAcademiaCourseIdRouteImport } from './routes/_app.academia.
 import { Route as AppFerramentasStudioIndexRouteImport } from './routes/_app.ferramentas.studio.index'
 import { Route as AppAcademiaCourseIdIndexRouteImport } from './routes/_app.academia.$courseId.index'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicPaymentsMollieWebhookRouteImport } from './routes/api/public/payments/mollie-webhook'
 import { Route as ApiPublicHooksWeeklySummaryRouteImport } from './routes/api/public/hooks/weekly-summary'
 import { Route as ApiPublicHooksAutoTranscribeRouteImport } from './routes/api/public/hooks/auto-transcribe'
 import { Route as ApiPublicCloudflareStreamWebhookRouteImport } from './routes/api/public/cloudflare-stream/webhook'
@@ -275,6 +276,12 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPaymentsMollieWebhookRoute =
+  ApiPublicPaymentsMollieWebhookRouteImport.update({
+    id: '/api/public/payments/mollie-webhook',
+    path: '/api/public/payments/mollie-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksWeeklySummaryRoute =
   ApiPublicHooksWeeklySummaryRouteImport.update({
     id: '/api/public/hooks/weekly-summary',
@@ -384,6 +391,7 @@ export interface FileRoutesByFullPath {
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
+  '/api/public/payments/mollie-webhook': typeof ApiPublicPaymentsMollieWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
   '/ferramentas/studio/': typeof AppFerramentasStudioIndexRoute
@@ -431,6 +439,7 @@ export interface FileRoutesByTo {
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
+  '/api/public/payments/mollie-webhook': typeof ApiPublicPaymentsMollieWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdIndexRoute
   '/ferramentas/studio': typeof AppFerramentasStudioIndexRoute
@@ -486,6 +495,7 @@ export interface FileRoutesById {
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
+  '/api/public/payments/mollie-webhook': typeof ApiPublicPaymentsMollieWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/_app/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
   '/_app/ferramentas/studio/': typeof AppFerramentasStudioIndexRoute
@@ -541,6 +551,7 @@ export interface FileRouteTypes {
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
     | '/api/public/hooks/weekly-summary'
+    | '/api/public/payments/mollie-webhook'
     | '/api/public/payments/webhook'
     | '/academia/$courseId/'
     | '/ferramentas/studio/'
@@ -588,6 +599,7 @@ export interface FileRouteTypes {
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
     | '/api/public/hooks/weekly-summary'
+    | '/api/public/payments/mollie-webhook'
     | '/api/public/payments/webhook'
     | '/academia/$courseId'
     | '/ferramentas/studio'
@@ -642,6 +654,7 @@ export interface FileRouteTypes {
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
     | '/api/public/hooks/weekly-summary'
+    | '/api/public/payments/mollie-webhook'
     | '/api/public/payments/webhook'
     | '/_app/academia/$courseId/'
     | '/_app/ferramentas/studio/'
@@ -665,6 +678,7 @@ export interface RootRouteChildren {
   ApiPublicCloudflareStreamWebhookRoute: typeof ApiPublicCloudflareStreamWebhookRoute
   ApiPublicHooksAutoTranscribeRoute: typeof ApiPublicHooksAutoTranscribeRoute
   ApiPublicHooksWeeklySummaryRoute: typeof ApiPublicHooksWeeklySummaryRoute
+  ApiPublicPaymentsMollieWebhookRoute: typeof ApiPublicPaymentsMollieWebhookRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -964,6 +978,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/mollie-webhook': {
+      id: '/api/public/payments/mollie-webhook'
+      path: '/api/public/payments/mollie-webhook'
+      fullPath: '/api/public/payments/mollie-webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsMollieWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/weekly-summary': {
       id: '/api/public/hooks/weekly-summary'
       path: '/api/public/hooks/weekly-summary'
@@ -1207,6 +1228,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCloudflareStreamWebhookRoute: ApiPublicCloudflareStreamWebhookRoute,
   ApiPublicHooksAutoTranscribeRoute: ApiPublicHooksAutoTranscribeRoute,
   ApiPublicHooksWeeklySummaryRoute: ApiPublicHooksWeeklySummaryRoute,
+  ApiPublicPaymentsMollieWebhookRoute: ApiPublicPaymentsMollieWebhookRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport

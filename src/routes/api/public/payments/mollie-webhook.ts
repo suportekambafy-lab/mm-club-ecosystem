@@ -46,7 +46,7 @@ export const Route = createFileRoute("/api/public/payments/mollie-webhook")({
             .from("mm_credit_orders")
             .update({
               status: payment.status,
-              raw: payment as unknown as Record<string, unknown>,
+              raw: JSON.parse(JSON.stringify(payment)),
               updated_at: new Date().toISOString(),
             })
             .eq("provider_payment_id", paymentId);
