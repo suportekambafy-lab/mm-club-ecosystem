@@ -42,6 +42,7 @@ import { Route as AppAcademiaRouteImport } from './routes/_app.academia'
 import { Route as AdminLivesIndexRouteImport } from './routes/admin.lives.index'
 import { Route as AppLivesIndexRouteImport } from './routes/_app.lives.index'
 import { Route as AppAcademiaIndexRouteImport } from './routes/_app.academia.index'
+import { Route as ApiRealtimeSessionRouteImport } from './routes/api.realtime.session'
 import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
 import { Route as AppFerramentasStudioRouteImport } from './routes/_app.ferramentas.studio'
 import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
@@ -223,6 +224,11 @@ const AppAcademiaIndexRoute = AppAcademiaIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppAcademiaRoute,
 } as any)
+const ApiRealtimeSessionRoute = ApiRealtimeSessionRouteImport.update({
+  id: '/api/realtime/session',
+  path: '/api/realtime/session',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppLivesLiveIdRoute = AppLivesLiveIdRouteImport.update({
   id: '/$liveId',
   path: '/$liveId',
@@ -350,6 +356,7 @@ export interface FileRoutesByFullPath {
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
   '/lives/$liveId': typeof AppLivesLiveIdRoute
+  '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia/': typeof AppAcademiaIndexRoute
   '/lives/': typeof AppLivesIndexRoute
   '/admin/lives/': typeof AdminLivesIndexRoute
@@ -394,6 +401,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
+  '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia': typeof AppAcademiaIndexRoute
   '/lives': typeof AppLivesIndexRoute
   '/admin/lives': typeof AdminLivesIndexRoute
@@ -446,6 +454,7 @@ export interface FileRoutesById {
   '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/_app/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
+  '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/_app/academia/': typeof AppAcademiaIndexRoute
   '/_app/lives/': typeof AppLivesIndexRoute
   '/admin/lives/': typeof AdminLivesIndexRoute
@@ -498,6 +507,7 @@ export interface FileRouteTypes {
     | '/especialistas/$expertId'
     | '/ferramentas/studio'
     | '/lives/$liveId'
+    | '/api/realtime/session'
     | '/academia/'
     | '/lives/'
     | '/admin/lives/'
@@ -542,6 +552,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/especialistas/$expertId'
     | '/lives/$liveId'
+    | '/api/realtime/session'
     | '/academia'
     | '/lives'
     | '/admin/lives'
@@ -593,6 +604,7 @@ export interface FileRouteTypes {
     | '/_app/especialistas/$expertId'
     | '/_app/ferramentas/studio'
     | '/_app/lives/$liveId'
+    | '/api/realtime/session'
     | '/_app/academia/'
     | '/_app/lives/'
     | '/admin/lives/'
@@ -623,6 +635,7 @@ export interface RootRouteChildren {
   VipRoute: typeof VipRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiTranscribeRoute: typeof ApiTranscribeRoute
+  ApiRealtimeSessionRoute: typeof ApiRealtimeSessionRoute
   ApiPublicCloudflareStreamWebhookRoute: typeof ApiPublicCloudflareStreamWebhookRoute
   ApiPublicHooksAutoTranscribeRoute: typeof ApiPublicHooksAutoTranscribeRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -860,6 +873,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/academia/'
       preLoaderRoute: typeof AppAcademiaIndexRouteImport
       parentRoute: typeof AppAcademiaRoute
+    }
+    '/api/realtime/session': {
+      id: '/api/realtime/session'
+      path: '/api/realtime/session'
+      fullPath: '/api/realtime/session'
+      preLoaderRoute: typeof ApiRealtimeSessionRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_app/lives/$liveId': {
       id: '/_app/lives/$liveId'
@@ -1141,6 +1161,7 @@ const rootRouteChildren: RootRouteChildren = {
   VipRoute: VipRoute,
   ApiChatRoute: ApiChatRoute,
   ApiTranscribeRoute: ApiTranscribeRoute,
+  ApiRealtimeSessionRoute: ApiRealtimeSessionRoute,
   ApiPublicCloudflareStreamWebhookRoute: ApiPublicCloudflareStreamWebhookRoute,
   ApiPublicHooksAutoTranscribeRoute: ApiPublicHooksAutoTranscribeRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
