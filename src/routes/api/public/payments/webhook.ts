@@ -1,7 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
-import { EventName, type PaddleEnv, verifyWebhook } from "@/lib/paddle.server";
+import { EventName, gatewayFetch, type PaddleEnv, verifyWebhook } from "@/lib/paddle.server";
 import { packByPriceId } from "@/lib/studio-credit-packs";
+
+/**
+ * Resolve a Paddle price's human-readable external_id.
+ * transaction.completed webhook payloads omit `import_meta` on the price
+ * object, so we look it up via the API when it's missing.
+ */
+async function resolveExternalPriceId(
+  item: any,
+  env: PaddleEnv,
+): Promise<string | undefined> {
+  const inline = item?.price?.importMeta?.externalId as string | undefined;
+  if (inline) return inline;
+  const paddlePriceId = item?.price?.id as string | undefined;
+  if (!paddlePriceId) return undefined;
+  try {
+    const res = await gatewayFetch(env, `/prices/${paddlePriceId}`);
+    const body = await res.json();
+    return body?.data?.import_meta?.external_id ?? undefined;
+  } catch (e) {
+    console.error("resolveExternalPriceId failed", { paddlePriceId, e });
+    return undefined;
+  }
+}
 
 let _supabase: any = null;
 function getSupabase(): any {
