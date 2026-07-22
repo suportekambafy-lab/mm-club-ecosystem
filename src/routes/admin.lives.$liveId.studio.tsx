@@ -224,14 +224,68 @@ function LiveStudio() {
     setCamOn(t.enabled);
   }
 
+  async function toggleScreenShare() {
+    if (sharing) {
+      await stopScreenShare();
+      return;
+    }
+    try {
+      const display = await navigator.mediaDevices.getDisplayMedia({
+        video: { frameRate: { ideal: 30 } },
+        audio: false,
+      });
+      screenStreamRef.current = display;
+      const screenTrack = display.getVideoTracks()[0];
+      if (!screenTrack) throw new Error("Sem faixa de vídeo do ecrã.");
+
+      // Replace outgoing track (if already live) with the screen track.
+      if (videoSenderRef.current) {
+        await videoSenderRef.current.replaceTrack(screenTrack);
+      }
+
+      // Main preview shows the screen; camera moves to PiP.
+      if (videoRef.current) videoRef.current.srcObject = display;
+      if (pipRef.current && streamRef.current) pipRef.current.srcObject = streamRef.current;
+
+      // Auto-stop when user clicks "Stop sharing" in the browser bar.
+      screenTrack.addEventListener("ended", () => {
+        void stopScreenShare();
+      });
+
+      setSharing(true);
+    } catch (e) {
+      const err = e as DOMException;
+      if (err.name !== "NotAllowedError") {
+        setError((e as Error).message);
+      }
+    }
+  }
+
+  async function stopScreenShare() {
+    const camTrack = streamRef.current?.getVideoTracks()[0];
+    if (videoSenderRef.current && camTrack) {
+      await videoSenderRef.current.replaceTrack(camTrack).catch(() => {});
+    }
+    screenStreamRef.current?.getTracks().forEach((t) => t.stop());
+    screenStreamRef.current = null;
+    if (videoRef.current && streamRef.current) videoRef.current.srcObject = streamRef.current;
+    if (pipRef.current) pipRef.current.srcObject = null;
+    setSharing(false);
+  }
+
   function teardown() {
     pcRef.current?.getSenders().forEach((s) => s.track?.stop());
     pcRef.current?.close();
     pcRef.current = null;
+    videoSenderRef.current = null;
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
+    screenStreamRef.current?.getTracks().forEach((t) => t.stop());
+    screenStreamRef.current = null;
+    setSharing(false);
     startedAtRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
+    if (pipRef.current) pipRef.current.srcObject = null;
   }
 
   async function endLive() {
