@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { X, ChevronDown, Check, Sparkles, Zap } from "lucide-react";
+import { X, ChevronDown, Check, Zap, Image as ImageIcon, Video } from "lucide-react";
+import { STUDIO_COSTS } from "@/lib/studio-config";
 import { supabase } from "@/integrations/supabase/client";
 import { initializePaddle, onPaddleEvent, resolvePriceId } from "@/lib/paddle";
 import { CREDIT_PACKS, type CreditPack } from "@/lib/studio-credit-packs";
