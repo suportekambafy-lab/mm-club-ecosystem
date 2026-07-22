@@ -26,6 +26,7 @@ export function VideoPlaylist({
   const [fading, setFading] = useState(false);
   const [muted, setMuted] = useState(true);
   const [playing, setPlaying] = useState(autoPlay);
+  const [loadError, setLoadError] = useState(false);
   const aRef = useRef<HTMLVideoElement | null>(null);
   const bRef = useRef<HTMLVideoElement | null>(null);
   // Which slot (a or b) is currently the "front" (visible) video
@@ -36,6 +37,7 @@ export function VideoPlaylist({
     setIdx(0);
     setFront("a");
     setFading(false);
+    setLoadError(false);
     scheduledRef.current = false;
   }, [urls.join("|")]);
 
@@ -113,6 +115,8 @@ export function VideoPlaylist({
         muted={muted}
         playsInline={playsInline}
         onTimeUpdate={front === "a" ? onTimeUpdate : undefined}
+        onCanPlay={() => setLoadError(false)}
+        onError={() => front === "a" && setLoadError(true)}
         onEnded={front === "a" && single ? (loop ? () => { const v = aRef.current; if (v) { v.currentTime = 0; v.play().catch(() => {}); } } : undefined) : undefined}
         className="absolute inset-0 h-full w-full object-contain transition-opacity duration-[450ms] ease-linear"
         style={{ opacity: front === "a" ? 1 : (fading ? 0 : 0) }}
@@ -122,9 +126,25 @@ export function VideoPlaylist({
         muted={muted}
         playsInline={playsInline}
         onTimeUpdate={front === "b" ? onTimeUpdate : undefined}
+        onCanPlay={() => setLoadError(false)}
+        onError={() => front === "b" && setLoadError(true)}
         className="absolute inset-0 h-full w-full object-contain transition-opacity duration-[450ms] ease-linear"
         style={{ opacity: front === "b" ? 1 : (fading ? 0 : 0) }}
       />
+
+      {loadError && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black px-6 text-center text-white">
+          <p className="text-sm font-semibold">Este browser não conseguiu reproduzir a pré-visualização.</p>
+          <a
+            href={urls[idx]}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-black"
+          >
+            Abrir vídeo
+          </a>
+        </div>
+      )}
 
       {/* Minimal controls overlay */}
       <div className="pointer-events-none absolute inset-0 flex flex-col justify-between">
