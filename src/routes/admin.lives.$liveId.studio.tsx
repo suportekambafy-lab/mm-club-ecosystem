@@ -11,6 +11,8 @@ import {
   VideoOff,
   ExternalLink,
   AlertTriangle,
+  MonitorUp,
+  MonitorOff,
 } from "lucide-react";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { LiveChat } from "@/components/mm/live-chat";
