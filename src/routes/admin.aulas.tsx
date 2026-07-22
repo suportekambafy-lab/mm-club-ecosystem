@@ -392,6 +392,14 @@ function AdminAulas() {
                         videoUrl={l.videoUrl}
                       />
 
+                      <NotifyLessonButton
+                        courseId={current.id}
+                        courseTitle={current.title}
+                        lessonId={l.id}
+                        lessonTitle={l.title}
+                        visibility={current.visibility}
+                      />
+
                     </div>
                   );
                 })}
