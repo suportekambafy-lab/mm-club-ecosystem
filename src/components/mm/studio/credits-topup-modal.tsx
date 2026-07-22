@@ -222,13 +222,21 @@ export function CreditsTopupModal({ open, onClose }: Props) {
                           {selected.credits.toLocaleString("pt-PT")} créditos
                         </span>
                         {selected.highlight && (
-                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary">
-                            <Sparkles className="h-2.5 w-2.5" /> Popular
+                          <span className="inline-flex shrink-0 items-center rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary">
+                            Popular
                           </span>
                         )}
                       </div>
-                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                        {selected.name} · {selected.tagline}
+                      <p className="mt-0.5 flex items-center gap-2 truncate text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1">
+                          <ImageIcon className="h-3 w-3" />
+                          {Math.floor(selected.credits / STUDIO_COSTS.imageSingle)} imagens
+                        </span>
+                        <span className="text-muted-foreground/40">·</span>
+                        <span className="inline-flex items-center gap-1">
+                          <Video className="h-3 w-3" />
+                          {Math.floor(selected.credits / STUDIO_COSTS.video)} vídeos
+                        </span>
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
