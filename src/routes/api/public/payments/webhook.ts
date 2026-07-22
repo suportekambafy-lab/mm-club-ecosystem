@@ -129,7 +129,7 @@ async function handleCustomer(data: any, env: PaddleEnv) {
     );
 }
 
-async function handleTransactionCompleted(data: any) {
+async function handleTransactionCompleted(data: any, env: PaddleEnv) {
   const userId = await resolveUserId(data.customerId, data.customData);
   if (!userId) {
     console.warn("transaction.completed: no userId", { id: data.id });
@@ -137,9 +137,15 @@ async function handleTransactionCompleted(data: any) {
   }
   const items: any[] = Array.isArray(data.items) ? data.items : [];
   for (const item of items) {
-    const priceExternal = item?.price?.importMeta?.externalId as string | undefined;
+    const priceExternal = await resolveExternalPriceId(item, env);
     const pack = packByPriceId(priceExternal);
-    if (!pack) continue;
+    if (!pack) {
+      console.warn("transaction.completed: no pack match", {
+        rawPriceId: item?.price?.id,
+        priceExternal,
+      });
+      continue;
+    }
     const qty = Math.max(1, Number(item?.quantity) || 1);
     const amount = pack.credits * qty;
     const reason = `purchase:${data.id}:${pack.priceId}`;
