@@ -386,6 +386,21 @@ function LiveStudio() {
                   {status === "live" ? `AO VIVO · ${mmss}` : "A ligar…"}
                 </div>
               )}
+
+              {sharing && (
+                <div className="absolute bottom-4 right-4 z-10 h-32 w-48 overflow-hidden rounded-xl border border-white/20 bg-black shadow-2xl ring-1 ring-black/40 sm:h-40 sm:w-60">
+                  <video
+                    ref={pipRef}
+                    autoPlay
+                    muted
+                    playsInline
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="pointer-events-none absolute left-1.5 top-1.5 rounded-full bg-black/70 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-white">
+                    Câmara
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-surface-1 px-5 py-4">
