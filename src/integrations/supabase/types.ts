@@ -581,6 +581,60 @@ export type Database = {
         }
         Relationships: []
       }
+      mm_mollie_subscriptions: {
+        Row: {
+          amount_eur: number
+          created_at: string
+          first_payment_id: string
+          id: string
+          interval: string
+          mollie_customer_id: string
+          mollie_mandate_id: string | null
+          mollie_subscription_id: string | null
+          plan_id: string
+          raw: Json | null
+          starts_at: string | null
+          status: string
+          trial_ends_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_eur: number
+          created_at?: string
+          first_payment_id: string
+          id?: string
+          interval?: string
+          mollie_customer_id: string
+          mollie_mandate_id?: string | null
+          mollie_subscription_id?: string | null
+          plan_id: string
+          raw?: Json | null
+          starts_at?: string | null
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_eur?: number
+          created_at?: string
+          first_payment_id?: string
+          id?: string
+          interval?: string
+          mollie_customer_id?: string
+          mollie_mandate_id?: string | null
+          mollie_subscription_id?: string | null
+          plan_id?: string
+          raw?: Json | null
+          starts_at?: string | null
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       mm_short_comments: {
         Row: {
           body: string
