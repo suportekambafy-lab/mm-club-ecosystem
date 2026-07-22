@@ -87,6 +87,83 @@ function SuporteIAPage() {
     requestAnimationFrame(() => textareaRef.current?.focus());
   }
 
+  function pickMimeType(): string {
+    const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/mpeg"];
+    for (const t of candidates) {
+      if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(t)) return t;
+    }
+    return "";
+  }
+
+  async function startRecording() {
+    setRecError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const mimeType = pickMimeType();
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      recorder.onstop = async () => {
+        const type = recorder.mimeType || "audio/webm";
+        const blob = new Blob(audioChunksRef.current, { type });
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+        if (blob.size < 2048) {
+          setRecError("Gravação demasiado curta. Tenta novamente.");
+          setIsTranscribing(false);
+          return;
+        }
+        await transcribeAndFill(blob);
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+    } catch (err) {
+      setRecError(
+        err instanceof Error && err.name === "NotAllowedError"
+          ? "Permissão do microfone negada."
+          : "Não foi possível iniciar a gravação.",
+      );
+    }
+  }
+
+  function stopRecording() {
+    const rec = mediaRecorderRef.current;
+    if (rec && rec.state !== "inactive") {
+      setIsRecording(false);
+      setIsTranscribing(true);
+      rec.stop();
+    }
+  }
+
+  async function transcribeAndFill(blob: Blob) {
+    try {
+      const form = new FormData();
+      const ext = (blob.type.split(";")[0].split("/")[1] || "webm").replace("mpeg", "mp3");
+      form.append("file", blob, `recording.${ext}`);
+      const res = await fetch("/api/transcribe", { method: "POST", body: form });
+      if (!res.ok) {
+        const t = await res.text().catch(() => "");
+        throw new Error(t || `Falha na transcrição (${res.status})`);
+      }
+      const data = (await res.json()) as { text?: string };
+      const text = (data.text ?? "").trim();
+      if (!text) {
+        setRecError("Não foi possível transcrever o áudio.");
+        return;
+      }
+      setInput((prev) => (prev ? `${prev} ${text}` : text));
+      requestAnimationFrame(() => textareaRef.current?.focus());
+    } catch (e) {
+      setRecError(e instanceof Error ? e.message : "Erro ao transcrever.");
+    } finally {
+      setIsTranscribing(false);
+    }
+  }
+
   function newConversation() {
     stop();
     setMessages([]);
