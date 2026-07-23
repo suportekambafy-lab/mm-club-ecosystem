@@ -55,8 +55,8 @@ const PLANS: Plan[] = [
     priceId: "mm_club_start_monthly",
     name: "MM Club Start",
     icon: <Star className="h-5 w-5" />,
-    price: "1,00 €",
-    cadence: "/ mês (teste)",
+    price: "29,90 €",
+    cadence: "/ mês",
     bestFor: "Para quem quer começar hoje sem compromisso.",
     cta: "Começar agora",
     benefits: [
