@@ -38,7 +38,10 @@ function AdminLives() {
   const [duration, setDuration] = useState(60);
   const [coverUrl, setCoverUrl] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [speakerUrl, setSpeakerUrl] = useState("");
+  const [uploadingSpeaker, setUploadingSpeaker] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const speakerFileRef = useRef<HTMLInputElement>(null);
 
   const refresh = async () => {
     setLoading(true);
@@ -70,6 +73,19 @@ function AdminLives() {
     }
   }
 
+  async function handleSpeakerUpload(file: File) {
+    setError(null);
+    setUploadingSpeaker(true);
+    try {
+      const { url } = await uploadMedia("course-media", file, "lives-speakers");
+      setSpeakerUrl(url);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setUploadingSpeaker(false);
+    }
+  }
+
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
@@ -90,6 +106,7 @@ function AdminLives() {
         duration_minutes: schedule ? duration : 60,
         visibility,
         cover_url: coverUrl || undefined,
+        speaker_image_url: speakerUrl || undefined,
       };
       const res = await create({ data: payload });
       setIngest({ id: res.id, url: res.rtmps.url, key: res.rtmps.streamKey });
@@ -100,7 +117,9 @@ function AdminLives() {
       setStartsAt("");
       setDuration(60);
       setCoverUrl("");
+      setSpeakerUrl("");
       if (fileRef.current) fileRef.current.value = "";
+      if (speakerFileRef.current) speakerFileRef.current.value = "";
       await refresh();
     } catch (err) {
       setError((err as Error).message);
