@@ -258,7 +258,7 @@ function AdminLives() {
                 <p className="truncate">Capa personalizada carregada.</p>
               ) : (
                 <p>
-                  Sem capa? Geramos automaticamente uma capa MM Club com o nome da live.
+                  Sem capa? Geramos automaticamente uma capa cinematográfica MM Club com IA e o nome da live.
                   Podes carregar a tua se preferires.
                 </p>
               )}
@@ -318,7 +318,7 @@ function AdminLives() {
             className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
           >
             {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            {schedule ? "Agendar live" : "Criar e começar"}
+            {creating ? "A criar capa…" : schedule ? "Agendar live" : "Criar e começar"}
           </button>
         </div>
       </form>
