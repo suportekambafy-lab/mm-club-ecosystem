@@ -115,6 +115,8 @@ function LiveDetail() {
           <div className="relative">
             {videoUid ? (
               <LivePlayer videoUid={videoUid} playbackToken={playbackToken} live={isLive} />
+            ) : isReplay ? (
+              <NoReplayPoster live={live} />
             ) : (
               <PrelivePoster live={live} countdown={countdown} />
             )}
