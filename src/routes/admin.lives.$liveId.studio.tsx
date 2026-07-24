@@ -64,6 +64,7 @@ function LiveStudio() {
   const recordingCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const recordingAnimationRef = useRef<number | null>(null);
   const recordingAudioContextRef = useRef<AudioContext | null>(null);
+  const sharingRef = useRef(false);
 
   // Detect if we're running inside an iframe (e.g. Lovable preview) — many
   // preview iframes disable getUserMedia via Permissions-Policy, so we surface
@@ -267,6 +268,7 @@ function LiveStudio() {
         void stopScreenShare();
       });
 
+      sharingRef.current = true;
       setSharing(true);
     } catch (e) {
       const err = e as DOMException;
@@ -285,10 +287,15 @@ function LiveStudio() {
     screenStreamRef.current = null;
     if (videoRef.current && streamRef.current) videoRef.current.srcObject = streamRef.current;
     if (pipRef.current) pipRef.current.srcObject = null;
+    sharingRef.current = false;
     setSharing(false);
   }
 
   function teardown() {
+    if (recorderRef.current && recorderRef.current.state !== "inactive") {
+      recorderRef.current.stop();
+    }
+    recorderRef.current = null;
     stopCanvasRecordingLoop();
     pcRef.current?.getSenders().forEach((s) => s.track?.stop());
     pcRef.current?.close();
@@ -298,6 +305,7 @@ function LiveStudio() {
     streamRef.current = null;
     screenStreamRef.current?.getTracks().forEach((t) => t.stop());
     screenStreamRef.current = null;
+    sharingRef.current = false;
     setSharing(false);
     startedAtRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
@@ -384,7 +392,7 @@ function LiveStudio() {
       drawCover(ctx, video, 0, 0, canvas.width, canvas.height);
     }
     const pip = pipRef.current;
-    if (sharing && pip && pip.videoWidth > 0 && pip.videoHeight > 0) {
+    if (sharingRef.current && pip && pip.videoWidth > 0 && pip.videoHeight > 0) {
       const w = 300;
       const h = 170;
       const x = canvas.width - w - 32;
