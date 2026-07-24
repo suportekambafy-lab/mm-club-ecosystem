@@ -34,6 +34,13 @@ function CourseDetail() {
   const firstLesson = resumeLesson;
   const totalDuration = computeCourseDuration(course);
   const totalLessons = computeLessonsCount(course);
+  const heroSyncThumb = lessonThumb(firstLesson, course);
+  const { thumb: heroOembedThumb } = useBunnyThumb(heroSyncThumb ? null : firstLesson?.videoUrl);
+  const heroThumb = heroSyncThumb ?? heroOembedThumb;
+  const heroBg = heroThumb
+    ? `url(${heroThumb}) center/cover no-repeat, #000`
+    : course.cover;
+
 
 
   return (
