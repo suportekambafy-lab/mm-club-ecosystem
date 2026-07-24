@@ -62,6 +62,7 @@ function LiveStudio() {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const recordingCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const recordingCanvasTrackRef = useRef<MediaStreamTrack | null>(null);
   const recordingAnimationRef = useRef<number | null>(null);
   const recordingTickTimerRef = useRef<number | null>(null);
   const recordingAudioContextRef = useRef<AudioContext | null>(null);
@@ -438,7 +439,8 @@ function LiveStudio() {
       canvas.width = 1280;
       canvas.height = 720;
       recordingCanvasRef.current = canvas;
-      const canvasStream = canvas.captureStream(30);
+      const canvasStream = canvas.captureStream(0);
+      recordingCanvasTrackRef.current = canvasStream.getVideoTracks()[0] ?? null;
       const audioContext = new AudioContext();
       recordingAudioContextRef.current = audioContext;
       const audioDestination = audioContext.createMediaStreamDestination();
@@ -528,6 +530,9 @@ function LiveStudio() {
       ctx.fill();
       drawCover(ctx, cameraVideo, x, y, w, h);
     }
+
+    const requestableTrack = recordingCanvasTrackRef.current as (MediaStreamTrack & { requestFrame?: () => void }) | null;
+    requestableTrack?.requestFrame?.();
   }
 
   function ensureLiveCompositeTrack() {
@@ -540,7 +545,7 @@ function LiveStudio() {
     if (typeof canvas.captureStream !== "function") return null;
 
     liveCompositeCanvasRef.current = canvas;
-    const compositeStream = canvas.captureStream(30);
+    const compositeStream = canvas.captureStream(0);
     const track = compositeStream.getVideoTracks()[0];
     if (!track) {
       liveCompositeCanvasRef.current = null;
@@ -670,6 +675,8 @@ function LiveStudio() {
     recordingAudioNodeRef.current = null;
     void recordingAudioContextRef.current?.close().catch(() => {});
     recordingAudioContextRef.current = null;
+    recordingCanvasTrackRef.current?.stop();
+    recordingCanvasTrackRef.current = null;
     recordingCanvasRef.current = null;
     void wakeLockRef.current?.release().catch(() => {});
     wakeLockRef.current = null;
