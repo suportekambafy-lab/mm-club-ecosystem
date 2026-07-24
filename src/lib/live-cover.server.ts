@@ -22,38 +22,72 @@ export async function generateAndStoreLiveCover({
   title,
   startsAt,
   supabaseAdmin,
+  speakerImageUrl,
 }: {
   liveId: string;
   title: string;
   startsAt: string;
   supabaseAdmin: SupabaseAdminLike;
+  speakerImageUrl?: string;
 }): Promise<string> {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada para gerar capas.");
 
-  const prompt = buildLiveCoverPrompt(title, startsAt);
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "openai/gpt-image-2",
-      prompt,
-      size: "1536x1024",
-      quality: "high",
-      n: 1,
-    }),
-  });
+  const prompt = buildLiveCoverPrompt(title, startsAt, Boolean(speakerImageUrl));
 
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`Falha ao gerar capa (${res.status}): ${text.slice(0, 220)}`);
+  let b64: string | undefined;
+
+  if (speakerImageUrl) {
+    // Fetch speaker image and inline it as data URL for reliable multimodal input.
+    const imgRes = await fetch(speakerImageUrl);
+    if (!imgRes.ok) throw new Error(`Falha ao carregar foto do palestrante (${imgRes.status}).`);
+    const buf = new Uint8Array(await imgRes.arrayBuffer());
+    const mime = imgRes.headers.get("content-type")?.split(";")[0] || "image/jpeg";
+    const dataUrl = `data:${mime};base64,${Buffer.from(buf).toString("base64")}`;
+
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-3.1-flash-image",
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: prompt },
+              { type: "image_url", image_url: { url: dataUrl } },
+            ],
+          },
+        ],
+        modalities: ["image", "text"],
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`Falha ao gerar capa com palestrante (${res.status}): ${text.slice(0, 220)}`);
+    }
+    const json = (await res.json()) as { data?: Array<{ b64_json?: string }> };
+    b64 = json.data?.[0]?.b64_json;
+  } else {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "openai/gpt-image-2",
+        prompt,
+        size: "1536x1024",
+        quality: "high",
+        n: 1,
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`Falha ao gerar capa (${res.status}): ${text.slice(0, 220)}`);
+    }
+    const json = (await res.json()) as { data?: Array<{ b64_json?: string }> };
+    b64 = json.data?.[0]?.b64_json;
   }
 
-  const json = (await res.json()) as { data?: Array<{ b64_json?: string }> };
-  const b64 = json.data?.[0]?.b64_json;
   if (!b64) throw new Error("A IA não devolveu imagem para a capa.");
 
   const bytes = Uint8Array.from(Buffer.from(b64, "base64"));
@@ -70,7 +104,7 @@ export async function generateAndStoreLiveCover({
   return signed.data.signedUrl;
 }
 
-function buildLiveCoverPrompt(title: string, startsAt: string): string {
+function buildLiveCoverPrompt(title: string, startsAt: string, withSpeaker: boolean): string {
   const date = new Intl.DateTimeFormat("pt-PT", {
     day: "2-digit",
     month: "long",
@@ -78,13 +112,24 @@ function buildLiveCoverPrompt(title: string, startsAt: string): string {
     minute: "2-digit",
   }).format(new Date(startsAt));
 
-  return [
+  const base = [
     "Premium cinematic 16:9 livestream cover for MM Club, a luxury digital entrepreneurs community.",
-    "Visual direction: deep black stage, warm golden spotlights, subtle gold dust, elegant Apple TV / MasterClass energy, high-end Portuguese business event, dramatic depth, refined contrast, no cartoon, no generic stock-photo look.",
+    "Visual direction: deep black stage, warm golden spotlights, subtle gold dust, elegant Apple TV / MasterClass energy, dramatic depth, refined contrast, no cartoon, no generic stock-photo look.",
     `Main typography must be large, modern, crisp and readable with the exact Portuguese title: “${title}”.`,
     "Add a polished red live badge with the exact words “AO VIVO AGORA” and a small refined “MM CLUB” brand mark.",
     `If a date appears, use: “${date}”.`,
-    "Use beautiful editorial typography, generous spacing, black/gold palette, professional event poster composition, enough dark negative space so app overlays remain readable.",
-    "Do not create fake product covers, fake course screenshots, fake logos beyond MM CLUB, watermarks, misspelled text, random people, or clutter.",
-  ].join(" ");
+    "Beautiful editorial typography, generous spacing, black/gold palette, professional event poster composition, enough dark negative space so app overlays remain readable.",
+    "Do not create fake product covers, fake logos beyond MM CLUB, watermarks, misspelled text or clutter.",
+  ];
+
+  if (withSpeaker) {
+    base.splice(
+      1,
+      0,
+      "Use the person in the provided reference photo as the main speaker of the cover. Keep their face, hairstyle, ethnicity, skin tone and identity 100% recognizable — do not invent a different person.",
+      "Place the speaker on the right side of the composition, cinematic half-body portrait, dramatic golden rim light on their silhouette, blurred stage background, MasterClass-style keynote framing. Leave the left side for the title typography with dark negative space.",
+    );
+  }
+
+  return base.join(" ");
 }

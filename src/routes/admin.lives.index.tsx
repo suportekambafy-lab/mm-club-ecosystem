@@ -38,7 +38,10 @@ function AdminLives() {
   const [duration, setDuration] = useState(60);
   const [coverUrl, setCoverUrl] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [speakerUrl, setSpeakerUrl] = useState("");
+  const [uploadingSpeaker, setUploadingSpeaker] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const speakerFileRef = useRef<HTMLInputElement>(null);
 
   const refresh = async () => {
     setLoading(true);
@@ -70,6 +73,19 @@ function AdminLives() {
     }
   }
 
+  async function handleSpeakerUpload(file: File) {
+    setError(null);
+    setUploadingSpeaker(true);
+    try {
+      const { url } = await uploadMedia("course-media", file, "lives-speakers");
+      setSpeakerUrl(url);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setUploadingSpeaker(false);
+    }
+  }
+
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
@@ -90,6 +106,7 @@ function AdminLives() {
         duration_minutes: schedule ? duration : 60,
         visibility,
         cover_url: coverUrl || undefined,
+        speaker_image_url: speakerUrl || undefined,
       };
       const res = await create({ data: payload });
       setIngest({ id: res.id, url: res.rtmps.url, key: res.rtmps.streamKey });
@@ -100,7 +117,9 @@ function AdminLives() {
       setStartsAt("");
       setDuration(60);
       setCoverUrl("");
+      setSpeakerUrl("");
       if (fileRef.current) fileRef.current.value = "";
+      if (speakerFileRef.current) speakerFileRef.current.value = "";
       await refresh();
     } catch (err) {
       setError((err as Error).message);
@@ -293,6 +312,63 @@ function AdminLives() {
                   className="text-[11px] text-muted-foreground underline"
                 >
                   Usar auto
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs uppercase tracking-widest text-muted-foreground">
+            Foto do palestrante (opcional)
+          </label>
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface-2 p-3">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-surface-1">
+              {speakerUrl ? (
+                <img src={speakerUrl} alt="Palestrante" className="h-full w-full object-cover" />
+              ) : (
+                <Sparkles className="h-4 w-4 text-primary" />
+              )}
+            </div>
+            <div className="min-w-0 flex-1 text-xs text-muted-foreground">
+              {speakerUrl ? (
+                <p className="truncate">Foto do palestrante carregada. A IA vai criar a capa com esta pessoa.</p>
+              ) : (
+                <p>
+                  Envia uma foto do palestrante (retrato nítido) e a IA cria a capa MM Club com ele/ela em destaque.
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                ref={speakerFileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleSpeakerUpload(f);
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => speakerFileRef.current?.click()}
+                disabled={uploadingSpeaker}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-1 px-3 py-1.5 text-xs hover:border-primary/40 disabled:opacity-60"
+              >
+                {uploadingSpeaker ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                {speakerUrl ? "Trocar" : "Carregar foto"}
+              </button>
+              {speakerUrl && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSpeakerUrl("");
+                    if (speakerFileRef.current) speakerFileRef.current.value = "";
+                  }}
+                  className="text-[11px] text-muted-foreground underline"
+                >
+                  Remover
                 </button>
               )}
             </div>

@@ -157,6 +157,11 @@ export const adminCreateLive = createServerFn({ method: "POST" })
           .url()
           .optional()
           .or(z.literal("").transform(() => undefined)),
+        speaker_image_url: z
+          .string()
+          .url()
+          .optional()
+          .or(z.literal("").transform(() => undefined)),
       })
       .parse(i),
   )
@@ -200,6 +205,7 @@ export const adminCreateLive = createServerFn({ method: "POST" })
           title: data.title,
           startsAt,
           supabaseAdmin,
+          speakerImageUrl: data.speaker_image_url,
         });
       } catch (e) {
         console.error("[lives] AI cover generation failed, using fallback", e);
