@@ -63,7 +63,10 @@ function LiveStudio() {
   const recordedChunksRef = useRef<Blob[]>([]);
   const recordingCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const recordingAnimationRef = useRef<number | null>(null);
+  const recordingTickTimerRef = useRef<number | null>(null);
   const recordingAudioContextRef = useRef<AudioContext | null>(null);
+  const recordingAudioNodeRef = useRef<ScriptProcessorNode | null>(null);
+  const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null);
   const sharingRef = useRef(false);
 
   // Detect if we're running inside an iframe (e.g. Lovable preview) — many
