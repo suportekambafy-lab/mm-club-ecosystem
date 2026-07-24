@@ -6,6 +6,7 @@ import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { LiveHeroBanner } from "@/components/mm/live-hero-banner";
 import { expertsById } from "@/data/experts";
 import { cn } from "@/lib/utils";
+import { LiveCountdown } from "@/components/mm/live-countdown";
 
 type Live = Awaited<ReturnType<typeof listLives>>[number];
 
