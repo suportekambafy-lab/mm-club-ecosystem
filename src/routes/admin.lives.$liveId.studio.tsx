@@ -63,7 +63,10 @@ function LiveStudio() {
   const recordedChunksRef = useRef<Blob[]>([]);
   const recordingCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const recordingAnimationRef = useRef<number | null>(null);
+  const recordingTickTimerRef = useRef<number | null>(null);
   const recordingAudioContextRef = useRef<AudioContext | null>(null);
+  const recordingAudioNodeRef = useRef<ScriptProcessorNode | null>(null);
+  const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null);
   const sharingRef = useRef(false);
 
   // Detect if we're running inside an iframe (e.g. Lovable preview) — many
@@ -157,9 +160,31 @@ function LiveStudio() {
       pcRef.current = pc;
 
       for (const track of streamRef.current.getTracks()) {
+        if (track.kind === "video") {
+          try {
+            (track as MediaStreamTrack & { contentHint?: string }).contentHint = "motion";
+          } catch {}
+        }
         const tx = pc.addTransceiver(track, { direction: "sendonly", streams: [streamRef.current] });
-        if (track.kind === "video") videoSenderRef.current = tx.sender;
+        if (track.kind === "video") {
+          videoSenderRef.current = tx.sender;
+          // Ask the encoder to keep framerate over resolution when the tab is
+          // backgrounded — prevents the viewer from seeing a frozen frame.
+          try {
+            const params = tx.sender.getParameters();
+            params.degradationPreference = "maintain-framerate";
+            void tx.sender.setParameters(params).catch(() => {});
+          } catch {}
+        }
       }
+
+      // Try to keep the screen awake so mobile browsers don't suspend capture.
+      try {
+        const nav = navigator as Navigator & {
+          wakeLock?: { request: (t: "screen") => Promise<{ release: () => Promise<void> }> };
+        };
+        wakeLockRef.current = (await nav.wakeLock?.request("screen")) ?? null;
+      } catch {}
 
       pc.oniceconnectionstatechange = () => {
         const s = pc.iceConnectionState;
@@ -253,15 +278,21 @@ function LiveStudio() {
       screenStreamRef.current = display;
       const screenTrack = display.getVideoTracks()[0];
       if (!screenTrack) throw new Error("Sem faixa de vídeo do ecrã.");
+      // Hint the encoder to keep framerate over resolution.
+      try {
+        (screenTrack as MediaStreamTrack & { contentHint?: string }).contentHint = "detail";
+      } catch {}
 
       // Replace outgoing track (if already live) with the screen track.
       if (videoSenderRef.current) {
         await videoSenderRef.current.replaceTrack(screenTrack);
       }
 
-      // Main preview shows the screen; camera moves to PiP.
-      if (videoRef.current) videoRef.current.srcObject = display;
-      if (pipRef.current && streamRef.current) pipRef.current.srcObject = streamRef.current;
+      // Main preview shows the screen.
+      if (videoRef.current) {
+        videoRef.current.srcObject = display;
+        try { await videoRef.current.play(); } catch {}
+      }
 
       // Auto-stop when user clicks "Stop sharing" in the browser bar.
       screenTrack.addEventListener("ended", () => {
@@ -270,6 +301,14 @@ function LiveStudio() {
 
       sharingRef.current = true;
       setSharing(true);
+      // PiP <video> mounts AFTER this render; attach the camera stream on the
+      // next microtask so pipRef.current is available.
+      requestAnimationFrame(() => {
+        if (pipRef.current && streamRef.current) {
+          pipRef.current.srcObject = streamRef.current;
+          pipRef.current.play().catch(() => {});
+        }
+      });
     } catch (e) {
       const err = e as DOMException;
       if (err.name !== "NotAllowedError") {
@@ -285,7 +324,10 @@ function LiveStudio() {
     }
     screenStreamRef.current?.getTracks().forEach((t) => t.stop());
     screenStreamRef.current = null;
-    if (videoRef.current && streamRef.current) videoRef.current.srcObject = streamRef.current;
+    if (videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      try { await videoRef.current.play(); } catch {}
+    }
     if (pipRef.current) pipRef.current.srcObject = null;
     sharingRef.current = false;
     setSharing(false);
@@ -372,10 +414,46 @@ function LiveStudio() {
         if (event.data.size > 0) recordedChunksRef.current.push(event.data);
       };
       recorderRef.current = recorder;
-      drawRecordingFrame();
+      startRecordingTick(audioContext);
       recorder.start(5000);
     } catch (err) {
       console.error("[live-studio] failed to start local recording", err);
+    }
+  }
+
+  // Drive canvas redraws from two independent clocks so the local recording
+  // keeps producing frames even when the tab is backgrounded (where rAF is
+  // throttled to ~1fps). The ScriptProcessorNode fires on the audio thread and
+  // isn't subject to hidden-tab throttling.
+  function startRecordingTick(audioContext: AudioContext) {
+    let lastTick = 0;
+    const targetInterval = 1000 / 30;
+
+    const tick = () => {
+      const now = performance.now();
+      if (now - lastTick >= targetInterval) {
+        lastTick = now;
+        drawRecordingFrame();
+      }
+    };
+
+    const rafLoop = () => {
+      tick();
+      recordingAnimationRef.current = requestAnimationFrame(rafLoop);
+    };
+    recordingAnimationRef.current = requestAnimationFrame(rafLoop);
+
+    try {
+      const node = audioContext.createScriptProcessor(2048, 1, 1);
+      node.onaudioprocess = () => tick();
+      const silent = audioContext.createConstantSource();
+      silent.offset.value = 0;
+      silent.connect(node);
+      node.connect(audioContext.destination);
+      silent.start();
+      recordingAudioNodeRef.current = node;
+    } catch (err) {
+      console.warn("[live-studio] audio timer unavailable, relying on rAF only", err);
     }
   }
 
@@ -402,8 +480,6 @@ function LiveStudio() {
       ctx.fill();
       drawCover(ctx, pip, x, y, w, h);
     }
-
-    recordingAnimationRef.current = requestAnimationFrame(drawRecordingFrame);
   }
 
   function stopCanvasRecordingLoop() {
@@ -411,10 +487,21 @@ function LiveStudio() {
       cancelAnimationFrame(recordingAnimationRef.current);
       recordingAnimationRef.current = null;
     }
+    if (recordingTickTimerRef.current !== null) {
+      clearInterval(recordingTickTimerRef.current);
+      recordingTickTimerRef.current = null;
+    }
+    try {
+      recordingAudioNodeRef.current?.disconnect();
+    } catch {}
+    recordingAudioNodeRef.current = null;
     void recordingAudioContextRef.current?.close().catch(() => {});
     recordingAudioContextRef.current = null;
     recordingCanvasRef.current = null;
+    void wakeLockRef.current?.release().catch(() => {});
+    wakeLockRef.current = null;
   }
+
 
   async function stopLocalReplayRecording(): Promise<Blob | null> {
     const recorder = recorderRef.current;
