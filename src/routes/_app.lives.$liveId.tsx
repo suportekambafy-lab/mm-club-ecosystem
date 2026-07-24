@@ -295,6 +295,36 @@ function PrelivePoster({
   );
 }
 
+function NoReplayPoster({ live }: { live: LoaderData["live"] }) {
+  const cover = live.cover_url;
+  return (
+    <div
+      className="relative aspect-video w-full overflow-hidden rounded-3xl border border-border bg-black shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)]"
+      style={
+        cover
+          ? {
+              backgroundImage: `url(${cover})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }
+          : undefined
+      }
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-black/85 via-black/75 to-black/90" />
+      <div className="relative flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+        <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80 ring-1 ring-white/15">
+          <Lock className="h-3 w-3" />
+          Sem gravação
+        </span>
+        <h2 className="font-display text-2xl text-white md:text-3xl">Este direto não ficou gravado</h2>
+        <p className="max-w-md text-sm text-white/70">
+          A sessão terminou sem uma gravação disponível. Fica atento aos próximos diretos na tua agenda.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function diff(iso: string): string | null {
   const t = new Date(iso).getTime() - Date.now();
   if (t <= 0) return null;
