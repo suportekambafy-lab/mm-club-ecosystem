@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { ArrowRight, ArrowLeft, Mail, Lock, User } from "lucide-react";
+import { AlertCircle, ArrowRight, ArrowLeft, Mail, Lock, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MMLogo } from "@/components/mm/logo";
 import { toast } from "sonner";
@@ -32,6 +32,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -42,15 +43,17 @@ function AuthPage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setFormError(null);
     setLoading(true);
     try {
+      const cleanEmail = email.trim().toLowerCase();
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
-          email,
+          email: cleanEmail,
           password,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { display_name: displayName || email.split("@")[0] },
+            data: { display_name: displayName || cleanEmail.split("@")[0] },
           },
         });
         if (error) throw error;
@@ -58,12 +61,15 @@ function AuthPage() {
         navigate({ to: "/checkout" });
         return;
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (error) throw error;
+        if (!data.session) throw new Error("Sessão não criada. Tenta novamente.");
       }
       navigate({ to: redirect ?? "/dashboard" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro inesperado");
+      const message = getAuthErrorMessage(err);
+      setFormError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -185,7 +191,10 @@ function AuthPage() {
                   label="Nome"
                   icon={User}
                   value={displayName}
-                  onChange={setDisplayName}
+                  onChange={(value) => {
+                    setDisplayName(value);
+                    setFormError(null);
+                  }}
                   autoComplete="name"
                   required
                 />
@@ -195,7 +204,10 @@ function AuthPage() {
                 icon={Mail}
                 type="email"
                 value={email}
-                onChange={setEmail}
+                onChange={(value) => {
+                  setEmail(value);
+                  setFormError(null);
+                }}
                 autoComplete="email"
                 required
               />
@@ -204,11 +216,24 @@ function AuthPage() {
                 icon={Lock}
                 type="password"
                 value={password}
-                onChange={setPassword}
+                onChange={(value) => {
+                  setPassword(value);
+                  setFormError(null);
+                }}
                 autoComplete={mode === "signin" ? "current-password" : "new-password"}
                 required
                 minLength={6}
               />
+
+              {formError && (
+                <div
+                  role="alert"
+                  className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                >
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{formError}</span>
+                </div>
+              )}
 
               <button
                 type="submit"
@@ -256,6 +281,23 @@ function AuthPage() {
       </div>
     </div>
   );
+}
+
+function getAuthErrorMessage(err: unknown) {
+  const raw = err instanceof Error ? err.message : "Erro inesperado";
+  const normalized = raw.toLowerCase();
+
+  if (normalized.includes("invalid login credentials")) {
+    return "Email ou palavra-passe incorretos. Confirma os dados e tenta novamente.";
+  }
+  if (normalized.includes("email not confirmed")) {
+    return "Confirma o teu email antes de entrar.";
+  }
+  if (normalized.includes("rate limit") || normalized.includes("too many")) {
+    return "Muitas tentativas seguidas. Espera alguns minutos e tenta novamente.";
+  }
+
+  return raw;
 }
 
 function Field({

@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ComingSoon } from "../components/mm/coming-soon";
+import { Toaster } from "../components/ui/sonner";
 
 const COMING_SOON_HOSTS = new Set([
   "mmclub.pt",
@@ -170,6 +171,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {showComingSoon ? <ComingSoon /> : <Outlet />}
+      <Toaster position="top-center" richColors />
     </QueryClientProvider>
   );
 }
