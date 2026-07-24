@@ -53,6 +53,7 @@ import { Route as AppAcademiaCourseIdIndexRouteImport } from './routes/_app.acad
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicPaymentsMollieWebhookRouteImport } from './routes/api/public/payments/mollie-webhook'
 import { Route as ApiPublicHooksWeeklySummaryRouteImport } from './routes/api/public/hooks/weekly-summary'
+import { Route as ApiPublicHooksLivesRecordingCheckRouteImport } from './routes/api/public/hooks/lives-recording-check'
 import { Route as ApiPublicHooksAutoTranscribeRouteImport } from './routes/api/public/hooks/auto-transcribe'
 import { Route as ApiPublicCloudflareStreamWebhookRouteImport } from './routes/api/public/cloudflare-stream/webhook'
 import { Route as AdminLivesLiveIdStudioRouteImport } from './routes/admin.lives.$liveId.studio'
@@ -288,6 +289,12 @@ const ApiPublicHooksWeeklySummaryRoute =
     path: '/api/public/hooks/weekly-summary',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksLivesRecordingCheckRoute =
+  ApiPublicHooksLivesRecordingCheckRouteImport.update({
+    id: '/api/public/hooks/lives-recording-check',
+    path: '/api/public/hooks/lives-recording-check',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksAutoTranscribeRoute =
   ApiPublicHooksAutoTranscribeRouteImport.update({
     id: '/api/public/hooks/auto-transcribe',
@@ -390,6 +397,7 @@ export interface FileRoutesByFullPath {
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
+  '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
   '/api/public/payments/mollie-webhook': typeof ApiPublicPaymentsMollieWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -438,6 +446,7 @@ export interface FileRoutesByTo {
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
+  '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
   '/api/public/payments/mollie-webhook': typeof ApiPublicPaymentsMollieWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -494,6 +503,7 @@ export interface FileRoutesById {
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
+  '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
   '/api/public/payments/mollie-webhook': typeof ApiPublicPaymentsMollieWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -550,6 +560,7 @@ export interface FileRouteTypes {
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
+    | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/weekly-summary'
     | '/api/public/payments/mollie-webhook'
     | '/api/public/payments/webhook'
@@ -598,6 +609,7 @@ export interface FileRouteTypes {
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
+    | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/weekly-summary'
     | '/api/public/payments/mollie-webhook'
     | '/api/public/payments/webhook'
@@ -653,6 +665,7 @@ export interface FileRouteTypes {
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
+    | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/weekly-summary'
     | '/api/public/payments/mollie-webhook'
     | '/api/public/payments/webhook'
@@ -677,6 +690,7 @@ export interface RootRouteChildren {
   ApiRealtimeSessionRoute: typeof ApiRealtimeSessionRoute
   ApiPublicCloudflareStreamWebhookRoute: typeof ApiPublicCloudflareStreamWebhookRoute
   ApiPublicHooksAutoTranscribeRoute: typeof ApiPublicHooksAutoTranscribeRoute
+  ApiPublicHooksLivesRecordingCheckRoute: typeof ApiPublicHooksLivesRecordingCheckRoute
   ApiPublicHooksWeeklySummaryRoute: typeof ApiPublicHooksWeeklySummaryRoute
   ApiPublicPaymentsMollieWebhookRoute: typeof ApiPublicPaymentsMollieWebhookRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -992,6 +1006,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksWeeklySummaryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/lives-recording-check': {
+      id: '/api/public/hooks/lives-recording-check'
+      path: '/api/public/hooks/lives-recording-check'
+      fullPath: '/api/public/hooks/lives-recording-check'
+      preLoaderRoute: typeof ApiPublicHooksLivesRecordingCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/auto-transcribe': {
       id: '/api/public/hooks/auto-transcribe'
       path: '/api/public/hooks/auto-transcribe'
@@ -1227,6 +1248,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRealtimeSessionRoute: ApiRealtimeSessionRoute,
   ApiPublicCloudflareStreamWebhookRoute: ApiPublicCloudflareStreamWebhookRoute,
   ApiPublicHooksAutoTranscribeRoute: ApiPublicHooksAutoTranscribeRoute,
+  ApiPublicHooksLivesRecordingCheckRoute:
+    ApiPublicHooksLivesRecordingCheckRoute,
   ApiPublicHooksWeeklySummaryRoute: ApiPublicHooksWeeklySummaryRoute,
   ApiPublicPaymentsMollieWebhookRoute: ApiPublicPaymentsMollieWebhookRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
