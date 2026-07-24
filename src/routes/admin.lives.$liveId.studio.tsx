@@ -256,15 +256,21 @@ function LiveStudio() {
       screenStreamRef.current = display;
       const screenTrack = display.getVideoTracks()[0];
       if (!screenTrack) throw new Error("Sem faixa de vídeo do ecrã.");
+      // Hint the encoder to keep framerate over resolution.
+      try {
+        (screenTrack as MediaStreamTrack & { contentHint?: string }).contentHint = "detail";
+      } catch {}
 
       // Replace outgoing track (if already live) with the screen track.
       if (videoSenderRef.current) {
         await videoSenderRef.current.replaceTrack(screenTrack);
       }
 
-      // Main preview shows the screen; camera moves to PiP.
-      if (videoRef.current) videoRef.current.srcObject = display;
-      if (pipRef.current && streamRef.current) pipRef.current.srcObject = streamRef.current;
+      // Main preview shows the screen.
+      if (videoRef.current) {
+        videoRef.current.srcObject = display;
+        try { await videoRef.current.play(); } catch {}
+      }
 
       // Auto-stop when user clicks "Stop sharing" in the browser bar.
       screenTrack.addEventListener("ended", () => {
@@ -273,6 +279,14 @@ function LiveStudio() {
 
       sharingRef.current = true;
       setSharing(true);
+      // PiP <video> mounts AFTER this render; attach the camera stream on the
+      // next microtask so pipRef.current is available.
+      requestAnimationFrame(() => {
+        if (pipRef.current && streamRef.current) {
+          pipRef.current.srcObject = streamRef.current;
+          pipRef.current.play().catch(() => {});
+        }
+      });
     } catch (e) {
       const err = e as DOMException;
       if (err.name !== "NotAllowedError") {
@@ -288,7 +302,10 @@ function LiveStudio() {
     }
     screenStreamRef.current?.getTracks().forEach((t) => t.stop());
     screenStreamRef.current = null;
-    if (videoRef.current && streamRef.current) videoRef.current.srcObject = streamRef.current;
+    if (videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      try { await videoRef.current.play(); } catch {}
+    }
     if (pipRef.current) pipRef.current.srcObject = null;
     sharingRef.current = false;
     setSharing(false);
