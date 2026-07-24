@@ -414,10 +414,46 @@ function LiveStudio() {
         if (event.data.size > 0) recordedChunksRef.current.push(event.data);
       };
       recorderRef.current = recorder;
-      drawRecordingFrame();
+      startRecordingTick(audioContext);
       recorder.start(5000);
     } catch (err) {
       console.error("[live-studio] failed to start local recording", err);
+    }
+  }
+
+  // Drive canvas redraws from two independent clocks so the local recording
+  // keeps producing frames even when the tab is backgrounded (where rAF is
+  // throttled to ~1fps). The ScriptProcessorNode fires on the audio thread and
+  // isn't subject to hidden-tab throttling.
+  function startRecordingTick(audioContext: AudioContext) {
+    let lastTick = 0;
+    const targetInterval = 1000 / 30;
+
+    const tick = () => {
+      const now = performance.now();
+      if (now - lastTick >= targetInterval) {
+        lastTick = now;
+        drawRecordingFrame();
+      }
+    };
+
+    const rafLoop = () => {
+      tick();
+      recordingAnimationRef.current = requestAnimationFrame(rafLoop);
+    };
+    recordingAnimationRef.current = requestAnimationFrame(rafLoop);
+
+    try {
+      const node = audioContext.createScriptProcessor(2048, 1, 1);
+      node.onaudioprocess = () => tick();
+      const silent = audioContext.createConstantSource();
+      silent.offset.value = 0;
+      silent.connect(node);
+      node.connect(audioContext.destination);
+      silent.start();
+      recordingAudioNodeRef.current = node;
+    } catch (err) {
+      console.warn("[live-studio] audio timer unavailable, relying on rAF only", err);
     }
   }
 
@@ -444,8 +480,6 @@ function LiveStudio() {
       ctx.fill();
       drawCover(ctx, pip, x, y, w, h);
     }
-
-    recordingAnimationRef.current = requestAnimationFrame(drawRecordingFrame);
   }
 
   function stopCanvasRecordingLoop() {
@@ -453,10 +487,21 @@ function LiveStudio() {
       cancelAnimationFrame(recordingAnimationRef.current);
       recordingAnimationRef.current = null;
     }
+    if (recordingTickTimerRef.current !== null) {
+      clearInterval(recordingTickTimerRef.current);
+      recordingTickTimerRef.current = null;
+    }
+    try {
+      recordingAudioNodeRef.current?.disconnect();
+    } catch {}
+    recordingAudioNodeRef.current = null;
     void recordingAudioContextRef.current?.close().catch(() => {});
     recordingAudioContextRef.current = null;
     recordingCanvasRef.current = null;
+    void wakeLockRef.current?.release().catch(() => {});
+    wakeLockRef.current = null;
   }
+
 
   async function stopLocalReplayRecording(): Promise<Blob | null> {
     const recorder = recorderRef.current;
