@@ -23,6 +23,7 @@ import { expertsById } from "@/data/experts";
 import { courses } from "@/data/courses";
 import { computeCourseDuration } from "@/lib/course-duration";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
+import marcaMilionariaCover from "@/assets/marca-milionaria-cover.png";
 
 import { supabase } from "@/integrations/supabase/client";
 
