@@ -162,9 +162,14 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  const showComingSoon =
+    typeof window !== "undefined" &&
+    COMING_SOON_HOSTS.has(window.location.hostname) &&
+    !window.location.search.includes("preview=1");
+
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      {showComingSoon ? <ComingSoon /> : <Outlet />}
     </QueryClientProvider>
   );
 }
