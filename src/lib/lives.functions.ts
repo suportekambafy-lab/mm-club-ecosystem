@@ -246,6 +246,57 @@ export const adminSetLiveBroadcastState = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const adminCreateReplayUpload = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        sizeBytes: z.number().int().positive().max(8 * 1024 * 1024 * 1024).optional(),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: live, error } = await supabaseAdmin
+      .from("lives")
+      .select("id,title")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!live) throw new Error("Live não encontrada.");
+
+    const { createDirectUpload } = await import("@/lib/cloudflare-stream.server");
+    const upload = await createDirectUpload({
+      name: `Replay — ${live.title}`,
+      liveId: live.id,
+      source: "mm-browser-recorder",
+    });
+    return upload;
+  });
+
+export const adminAttachReplayRecording = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        videoUid: z.string().min(8).max(200),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("lives")
+      .update({ recording_video_uid: data.videoUid, status: "published" })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const adminListLives = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

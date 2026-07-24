@@ -63,6 +63,22 @@ export async function listVideosForLiveInput(uid: string): Promise<Array<{ uid: 
   return cfFetch(`/stream/live_inputs/${uid}/videos`);
 }
 
+export type CfDirectUpload = {
+  uid: string;
+  uploadURL: string;
+};
+
+export async function createDirectUpload(meta: Record<string, string>): Promise<CfDirectUpload> {
+  return cfFetch<CfDirectUpload>("/stream/direct_upload", {
+    method: "POST",
+    body: JSON.stringify({
+      maxDurationSeconds: 21600,
+      requireSignedURLs: true,
+      meta,
+    }),
+  });
+}
+
 /**
  * Sign a JWT to allow playback of a Cloudflare Stream video / live playback ID.
  * Requires a Stream Signing Key (PEM private key + key ID).

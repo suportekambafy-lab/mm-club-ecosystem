@@ -17,18 +17,25 @@ import {
 import { SectionHeading } from "@/components/mm/section-heading";
 import { LiveChat } from "@/components/mm/live-chat";
 import { supabase } from "@/integrations/supabase/client";
-import { adminGetLiveIngest, adminSetLiveBroadcastState } from "@/lib/lives.functions";
+import {
+  adminAttachReplayRecording,
+  adminCreateReplayUpload,
+  adminGetLiveIngest,
+  adminSetLiveBroadcastState,
+} from "@/lib/lives.functions";
 
 export const Route = createFileRoute("/admin/lives/$liveId/studio")({
   component: LiveStudio,
 });
 
-type Status = "idle" | "requesting-media" | "ready" | "connecting" | "live" | "ended" | "error";
+type Status = "idle" | "requesting-media" | "ready" | "connecting" | "live" | "ending" | "ended" | "error";
 
 function LiveStudio() {
   const { liveId } = Route.useParams();
   const getIngest = useServerFn(adminGetLiveIngest);
   const setBroadcastState = useServerFn(adminSetLiveBroadcastState);
+  const createReplayUpload = useServerFn(adminCreateReplayUpload);
+  const attachReplayRecording = useServerFn(adminAttachReplayRecording);
 
   const [whipUrl, setWhipUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>("idle");
@@ -38,6 +45,8 @@ function LiveStudio() {
   const [sharing, setSharing] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
+  const [uploadingReplay, setUploadingReplay] = useState(false);
+  const [replayUploadProgress, setReplayUploadProgress] = useState<number | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
@@ -50,6 +59,11 @@ function LiveStudio() {
   const screenStreamRef = useRef<MediaStream | null>(null);
   const videoSenderRef = useRef<RTCRtpSender | null>(null);
   const startedAtRef = useRef<number | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const recordingCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const recordingAnimationRef = useRef<number | null>(null);
+  const recordingAudioContextRef = useRef<AudioContext | null>(null);
 
   // Detect if we're running inside an iframe (e.g. Lovable preview) — many
   // preview iframes disable getUserMedia via Permissions-Policy, so we surface
@@ -180,6 +194,7 @@ function LiveStudio() {
         throw new Error(`WHIP HTTP ${res.status}: ${await res.text().catch(() => res.statusText)}`);
       }
       setStatus("live");
+      startLocalReplayRecording();
       await setBroadcastState({ data: { id: liveId, status: "live" } }).catch((err) => {
         console.error("[live-studio] failed to mark live", err);
       });
@@ -274,6 +289,7 @@ function LiveStudio() {
   }
 
   function teardown() {
+    stopCanvasRecordingLoop();
     pcRef.current?.getSenders().forEach((s) => s.track?.stop());
     pcRef.current?.close();
     pcRef.current = null;
@@ -289,11 +305,156 @@ function LiveStudio() {
   }
 
   async function endLive() {
+    setStatus("ending");
+    const replayBlob = await stopLocalReplayRecording();
     teardown();
-    setStatus("ended");
     setElapsed(0);
     await setBroadcastState({ data: { id: liveId, status: "ended" } }).catch((err) => {
       console.error("[live-studio] failed to mark ended", err);
+    });
+    if (replayBlob && replayBlob.size > 1024 * 1024) {
+      await uploadReplayBlob(replayBlob).catch((err) => {
+        console.error("[live-studio] replay upload failed", err);
+        setError(
+          "A live terminou, mas a gravação local não conseguiu ser enviada. Tenta manter a janela aberta e usa RTMP/OBS para máxima garantia.",
+        );
+      });
+    } else {
+      setError("A live terminou, mas o navegador não conseguiu gerar um ficheiro de gravação válido.");
+    }
+    setStatus("ended");
+  }
+
+  function startLocalReplayRecording() {
+    if (!streamRef.current || !videoRef.current || recorderRef.current) return;
+    const supportedTypes = [
+      "video/webm;codecs=vp9,opus",
+      "video/webm;codecs=vp8,opus",
+      "video/webm",
+    ];
+    const mimeType = supportedTypes.find((type) => MediaRecorder.isTypeSupported(type));
+    if (!mimeType) {
+      console.warn("[live-studio] MediaRecorder WebM não suportado neste navegador");
+      return;
+    }
+
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1280;
+      canvas.height = 720;
+      recordingCanvasRef.current = canvas;
+      const canvasStream = canvas.captureStream(30);
+      const audioContext = new AudioContext();
+      recordingAudioContextRef.current = audioContext;
+      const audioDestination = audioContext.createMediaStreamDestination();
+      const audioTracks = streamRef.current.getAudioTracks();
+      if (audioTracks.length > 0) {
+        const audioSource = audioContext.createMediaStreamSource(new MediaStream(audioTracks));
+        audioSource.connect(audioDestination);
+      }
+
+      const mixedStream = new MediaStream([
+        ...canvasStream.getVideoTracks(),
+        ...audioDestination.stream.getAudioTracks(),
+      ]);
+
+      recordedChunksRef.current = [];
+      const recorder = new MediaRecorder(mixedStream, { mimeType, videoBitsPerSecond: 4_500_000 });
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) recordedChunksRef.current.push(event.data);
+      };
+      recorderRef.current = recorder;
+      drawRecordingFrame();
+      recorder.start(5000);
+    } catch (err) {
+      console.error("[live-studio] failed to start local recording", err);
+    }
+  }
+
+  function drawRecordingFrame() {
+    const canvas = recordingCanvasRef.current;
+    const video = videoRef.current;
+    if (!canvas || !video) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (video.videoWidth > 0 && video.videoHeight > 0) {
+      drawCover(ctx, video, 0, 0, canvas.width, canvas.height);
+    }
+    const pip = pipRef.current;
+    if (sharing && pip && pip.videoWidth > 0 && pip.videoHeight > 0) {
+      const w = 300;
+      const h = 170;
+      const x = canvas.width - w - 32;
+      const y = canvas.height - h - 32;
+      ctx.fillStyle = "rgba(0,0,0,0.65)";
+      roundRect(ctx, x - 6, y - 6, w + 12, h + 12, 18);
+      ctx.fill();
+      drawCover(ctx, pip, x, y, w, h);
+    }
+
+    recordingAnimationRef.current = requestAnimationFrame(drawRecordingFrame);
+  }
+
+  function stopCanvasRecordingLoop() {
+    if (recordingAnimationRef.current !== null) {
+      cancelAnimationFrame(recordingAnimationRef.current);
+      recordingAnimationRef.current = null;
+    }
+    void recordingAudioContextRef.current?.close().catch(() => {});
+    recordingAudioContextRef.current = null;
+    recordingCanvasRef.current = null;
+  }
+
+  async function stopLocalReplayRecording(): Promise<Blob | null> {
+    const recorder = recorderRef.current;
+    if (!recorder) return null;
+    return await new Promise((resolve) => {
+      const timeout = window.setTimeout(() => {
+        stopCanvasRecordingLoop();
+        recorderRef.current = null;
+        resolve(new Blob(recordedChunksRef.current, { type: recorder.mimeType || "video/webm" }));
+      }, 6000);
+      recorder.onstop = () => {
+        window.clearTimeout(timeout);
+        stopCanvasRecordingLoop();
+        recorderRef.current = null;
+        resolve(new Blob(recordedChunksRef.current, { type: recorder.mimeType || "video/webm" }));
+      };
+      if (recorder.state !== "inactive") recorder.stop();
+    });
+  }
+
+  async function uploadReplayBlob(blob: Blob) {
+    setUploadingReplay(true);
+    setReplayUploadProgress(0);
+    try {
+      const upload = await createReplayUpload({ data: { id: liveId, sizeBytes: blob.size } });
+      await uploadWithProgress(upload.uploadURL, blob, (progress) => setReplayUploadProgress(progress));
+      await attachReplayRecording({ data: { id: liveId, videoUid: upload.uid } });
+      setReplayUploadProgress(100);
+    } finally {
+      setUploadingReplay(false);
+    }
+  }
+
+  function uploadWithProgress(url: string, blob: Blob, onProgress: (progress: number) => void) {
+    return new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const form = new FormData();
+      form.append("file", blob, `mm-live-${liveId}.webm`);
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100));
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve();
+        else reject(new Error(`Upload HTTP ${xhr.status}: ${xhr.responseText || xhr.statusText}`));
+      };
+      xhr.onerror = () => reject(new Error("Falha de rede ao enviar a gravação."));
+      xhr.open("POST", url);
+      xhr.send(form);
     });
   }
 
@@ -380,10 +541,10 @@ function LiveStudio() {
                 </div>
               )}
 
-              {(status === "live" || status === "connecting") && (
+                {(status === "live" || status === "connecting" || status === "ending") && (
                 <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-red-500/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-white">
                   <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
-                  {status === "live" ? `AO VIVO · ${mmss}` : "A ligar…"}
+                    {status === "live" ? `AO VIVO · ${mmss}` : status === "ending" ? "A guardar replay…" : "A ligar…"}
                 </div>
               )}
 
@@ -467,9 +628,17 @@ function LiveStudio() {
                     Terminar transmissão
                   </button>
                 )}
+                {status === "ending" && (
+                  <span className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    {uploadingReplay
+                      ? `A enviar replay${replayUploadProgress !== null ? ` · ${replayUploadProgress}%` : ""}`
+                      : "A finalizar gravação…"}
+                  </span>
+                )}
                 {status === "ended" && (
                   <span className="text-xs text-muted-foreground">
-                    Transmissão terminada. A gravação será publicada automaticamente.
+                    Transmissão terminada. O replay fica disponível assim que o processamento concluir.
                   </span>
                 )}
               </div>
@@ -481,7 +650,7 @@ function LiveStudio() {
             <ul className="list-disc space-y-1 pl-5">
               <li>A câmara/micro deste separador ligam-se ao Cloudflare Stream via WebRTC (WHIP).</li>
               <li>Os alunos vêem a live em <code className="rounded bg-surface-2 px-1">/lives/{liveId}</code> (HLS baixa latência).</li>
-              <li>Ao terminar, a gravação fica automaticamente disponível na página da live.</li>
+              <li>Ao terminar, o navegador envia uma cópia local da transmissão para garantir o replay.</li>
               <li>Não fechar o separador durante a transmissão. Se cair a rede, volta a esta página e prime <em>Ir para o ar</em>.</li>
             </ul>
           </div>
@@ -493,4 +662,30 @@ function LiveStudio() {
       </div>
     </div>
   );
+}
+
+function drawCover(
+  ctx: CanvasRenderingContext2D,
+  source: CanvasImageSource & { videoWidth?: number; videoHeight?: number },
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  const sourceWidth = source.videoWidth || width;
+  const sourceHeight = source.videoHeight || height;
+  const scale = Math.max(width / sourceWidth, height / sourceHeight);
+  const drawWidth = sourceWidth * scale;
+  const drawHeight = sourceHeight * scale;
+  ctx.drawImage(source, x + (width - drawWidth) / 2, y + (height - drawHeight) / 2, drawWidth, drawHeight);
+}
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.arcTo(x + width, y, x + width, y + height, radius);
+  ctx.arcTo(x + width, y + height, x, y + height, radius);
+  ctx.arcTo(x, y + height, x, y, radius);
+  ctx.arcTo(x, y, x + width, y, radius);
+  ctx.closePath();
 }
