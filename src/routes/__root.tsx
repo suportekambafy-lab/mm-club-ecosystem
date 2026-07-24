@@ -11,6 +11,15 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { ComingSoon } from "../components/mm/coming-soon";
+
+const COMING_SOON_HOSTS = new Set([
+  "mmclub.pt",
+  "mmclub.online",
+  "www.mmclub.online",
+  "www.mmclub.pt",
+  "mm-club-ecosystem.lovable.app",
+]);
 
 function NotFoundComponent() {
   return (
@@ -153,9 +162,14 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  const showComingSoon =
+    typeof window !== "undefined" &&
+    COMING_SOON_HOSTS.has(window.location.hostname) &&
+    !window.location.search.includes("preview=1");
+
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      {showComingSoon ? <ComingSoon /> : <Outlet />}
     </QueryClientProvider>
   );
 }
