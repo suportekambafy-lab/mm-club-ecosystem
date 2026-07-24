@@ -34,6 +34,13 @@ function CourseDetail() {
   const firstLesson = resumeLesson;
   const totalDuration = computeCourseDuration(course);
   const totalLessons = computeLessonsCount(course);
+  const heroSyncThumb = lessonThumb(firstLesson, course);
+  const { thumb: heroOembedThumb } = useBunnyThumb(heroSyncThumb ? null : firstLesson?.videoUrl);
+  const heroThumb = heroSyncThumb ?? heroOembedThumb;
+  const heroBg = heroThumb
+    ? `url(${heroThumb}) center/cover no-repeat, #000`
+    : course.cover;
+
 
 
   return (
@@ -52,12 +59,8 @@ function CourseDetail() {
             params={{ courseId: course.id, lessonId: firstLesson.id }}
             aria-label={percent > 0 ? "Continuar aula" : "Reproduzir primeira aula"}
             className="group relative aspect-video overflow-hidden rounded-2xl ring-1 ring-border"
-            style={{
-              background:
-                percent > 0 && firstLesson.cover
-                  ? `url(${firstLesson.cover}) center/cover no-repeat, #000`
-                  : course.cover,
-            }}
+            style={{ background: heroBg }}
+
           >
             <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-black/10 to-transparent" />
             <span className="absolute inset-0 flex items-center justify-center">
