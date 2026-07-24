@@ -126,9 +126,15 @@ export function ComingSoon() {
 
 
       <main className="relative z-10 mx-auto flex min-h-[100dvh] max-w-3xl flex-col items-center justify-center px-6 py-16 text-center">
-        <span className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/85 backdrop-blur">
-          MM Club · Em breve
+        <span className="relative inline-flex items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/85 backdrop-blur animate-fade-in">
+          <span
+            aria-hidden
+            className="absolute -left-1 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-primary"
+            style={{ boxShadow: "0 0 0 0 oklch(0.82 0.13 82 / 0.7)", animation: "mmPulseRing 2s ease-out infinite" }}
+          />
+          <span className="ml-3">MM Club · Em breve</span>
         </span>
+
 
         <h1
           className="mt-8 font-display text-5xl leading-[0.95] tracking-tight md:text-7xl"
