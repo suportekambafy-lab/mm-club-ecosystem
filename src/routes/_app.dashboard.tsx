@@ -231,9 +231,11 @@ function ContinueHero({ course }: { course: import("@/data/types").Course }) {
         params: { courseId: course.id },
       };
   const coverImage =
-    typeof course.cover === "string" && /^(https?:|\/|data:)/.test(course.cover)
-      ? course.cover
-      : null;
+    course.id === "marca-milionaria"
+      ? marcaMilionariaCover
+      : typeof course.cover === "string" && /^(https?:|\/|data:)/.test(course.cover)
+        ? course.cover
+        : null;
   return (
     <Link
       {...linkProps}
