@@ -22,6 +22,7 @@ import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { expertsById } from "@/data/experts";
 import { courses } from "@/data/courses";
 import { computeCourseDuration } from "@/lib/course-duration";
+import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -217,7 +218,9 @@ function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
 function ContinueHero({ course }: { course: import("@/data/types").Course }) {
 
   const expert = expertsById[course.expertId];
-  const firstLessonId = course.modules?.[0]?.lessons?.[0]?.id;
+  const firstLesson = course.modules?.[0]?.lessons?.[0];
+  const firstLessonId = firstLesson?.id;
+  const { thumb } = useBunnyThumb(firstLesson?.videoUrl);
   const linkProps = firstLessonId
     ? {
         to: "/academia/$courseId/$lessonId" as const,
@@ -233,10 +236,18 @@ function ContinueHero({ course }: { course: import("@/data/types").Course }) {
       className="group relative flex flex-col overflow-hidden rounded-2xl ring-1 ring-border transition hover:ring-[color:var(--hairline)] md:flex-row"
     >
       <div
-        className="aspect-[16/9] md:aspect-auto md:h-[280px] md:w-[55%]"
-        style={{ background: course.cover }}
+        className="relative aspect-[16/9] overflow-hidden md:aspect-auto md:h-[280px] md:w-[55%]"
+        style={thumb ? undefined : { background: course.cover }}
       >
-        <div className="h-full w-full bg-gradient-to-tr from-black/60 via-black/10 to-transparent" />
+        {thumb && (
+          <img
+            src={thumb}
+            alt={course.title}
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="lazy"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-black/10 to-transparent" />
       </div>
       <div className="flex flex-1 flex-col justify-between gap-6 bg-surface-1 p-6 md:p-8">
         <div>
