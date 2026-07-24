@@ -28,24 +28,113 @@ export function ComingSoon() {
 
   return (
     <div className="relative min-h-[100dvh] overflow-hidden bg-black text-white">
+      <style>{`
+        @keyframes mmAurora {
+          0%,100% { transform: translate3d(-6%, -4%, 0) scale(1); opacity: .75; }
+          50%     { transform: translate3d(6%, 4%, 0) scale(1.15); opacity: 1; }
+        }
+        @keyframes mmAurora2 {
+          0%,100% { transform: translate3d(5%, 6%, 0) scale(1.1); opacity: .7; }
+          50%     { transform: translate3d(-5%, -6%, 0) scale(1); opacity: .95; }
+        }
+        @keyframes mmSheen {
+          0%   { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        @keyframes mmFloat {
+          0%   { transform: translateY(100vh) translateX(0); opacity: 0; }
+          10%  { opacity: .9; }
+          90%  { opacity: .9; }
+          100% { transform: translateY(-10vh) translateX(20px); opacity: 0; }
+        }
+        @keyframes mmPulseRing {
+          0%   { transform: scale(0.6); opacity: .6; }
+          100% { transform: scale(2.2); opacity: 0; }
+        }
+        @keyframes mmGridDrift {
+          0%   { background-position: 0 0; }
+          100% { background-position: 60px 60px; }
+        }
+      `}</style>
+
+      {/* Animated aurora blobs */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute -top-1/3 left-1/2 h-[80vh] w-[80vh] -translate-x-1/2 rounded-full blur-3xl"
         style={{
-          background:
-            "radial-gradient(ellipse 60% 50% at 50% 20%, oklch(0.82 0.13 82 / 0.28), transparent 60%), radial-gradient(ellipse 80% 60% at 50% 100%, oklch(0.35 0.08 60 / 0.35), transparent 60%)",
+          background: "radial-gradient(circle, oklch(0.82 0.13 82 / 0.45), transparent 65%)",
+          animation: "mmAurora 12s ease-in-out infinite",
         }}
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-px"
-        style={{ background: "linear-gradient(90deg, transparent, oklch(0.82 0.13 82 / 0.6), transparent)" }}
+        className="pointer-events-none absolute -bottom-1/3 left-1/2 h-[90vh] w-[90vh] -translate-x-1/2 rounded-full blur-3xl"
+        style={{
+          background: "radial-gradient(circle, oklch(0.35 0.08 60 / 0.55), transparent 60%)",
+          animation: "mmAurora2 14s ease-in-out infinite",
+        }}
       />
 
+      {/* Drifting grid */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.08]"
+        style={{
+          backgroundImage:
+            "linear-gradient(oklch(0.82 0.13 82) 1px, transparent 1px), linear-gradient(90deg, oklch(0.82 0.13 82) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+          animation: "mmGridDrift 18s linear infinite",
+          maskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)",
+        }}
+      />
+
+      {/* Floating particles */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        {Array.from({ length: 18 }).map((_, i) => {
+          const left = (i * 53) % 100;
+          const delay = (i * 0.7) % 12;
+          const dur = 10 + ((i * 1.3) % 10);
+          const size = 2 + (i % 3);
+          return (
+            <span
+              key={i}
+              className="absolute rounded-full"
+              style={{
+                left: `${left}%`,
+                bottom: `-10vh`,
+                width: size,
+                height: size,
+                background: "oklch(0.92 0.14 88)",
+                boxShadow: "0 0 12px oklch(0.82 0.13 82 / 0.9)",
+                animation: `mmFloat ${dur}s linear ${delay}s infinite`,
+              }}
+            />
+          );
+        })}
+      </div>
+
+      {/* Top sheen line */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px overflow-hidden">
+        <div
+          className="h-full w-1/2"
+          style={{
+            background: "linear-gradient(90deg, transparent, oklch(0.82 0.13 82 / 0.9), transparent)",
+            animation: "mmSheen 5s ease-in-out infinite",
+          }}
+        />
+      </div>
+
+
       <main className="relative z-10 mx-auto flex min-h-[100dvh] max-w-3xl flex-col items-center justify-center px-6 py-16 text-center">
-        <span className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/85 backdrop-blur">
-          MM Club · Em breve
+        <span className="relative inline-flex items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/85 backdrop-blur animate-fade-in">
+          <span
+            aria-hidden
+            className="absolute -left-1 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-primary"
+            style={{ boxShadow: "0 0 0 0 oklch(0.82 0.13 82 / 0.7)", animation: "mmPulseRing 2s ease-out infinite" }}
+          />
+          <span className="ml-3">MM Club · Em breve</span>
         </span>
+
 
         <h1
           className="mt-8 font-display text-5xl leading-[0.95] tracking-tight md:text-7xl"
