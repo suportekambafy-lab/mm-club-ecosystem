@@ -190,9 +190,20 @@ export const adminCreateLive = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    // Auto-generate MM Club cover when the admin didn't upload one.
+    // Auto-generate a premium MM Club cover when the admin didn't upload one.
     if (!data.cover_url) {
-      const autoCover = `/api/public/lives/${row.id}/cover.svg`;
+      let autoCover = `/api/public/lives/${row.id}/cover/svg`;
+      try {
+        const { generateAndStoreLiveCover } = await import("@/lib/live-cover.server");
+        autoCover = await generateAndStoreLiveCover({
+          liveId: row.id,
+          title: data.title,
+          startsAt,
+          supabaseAdmin,
+        });
+      } catch (e) {
+        console.error("[lives] AI cover generation failed, using fallback", e);
+      }
       await supabaseAdmin
         .from("lives")
         .update({ cover_url: autoCover })
@@ -321,7 +332,7 @@ export const adminListLives = createServerFn({ method: "GET" })
     await requireAdmin(context.supabase, context.userId);
     const { data, error } = await context.supabase
       .from("lives")
-      .select("id,title,expert_id,starts_at,duration_minutes,visibility,status,cf_live_input_id")
+      .select("id,title,expert_id,starts_at,duration_minutes,visibility,status,cf_live_input_id,cover_url")
       .order("starts_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
