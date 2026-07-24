@@ -80,9 +80,9 @@ export const getLive = createServerFn({ method: "GET" })
     }
 
     // Determine the playback UID (live vs. recording).
-    const videoUid = isReplay
-      ? recordingUid ?? live.cf_playback_id
-      : live.cf_playback_id;
+    // For replays we require an actual recording UID — falling back to the
+    // live-input UID would render a black player (input has no video).
+    const videoUid = isReplay ? recordingUid ?? null : live.cf_playback_id;
 
     let playbackToken: string | null = null;
     if (videoUid) {
