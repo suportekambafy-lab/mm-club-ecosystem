@@ -75,6 +75,7 @@ function LiveStudio() {
   const liveCompositeTrackRef = useRef<MediaStreamTrack | null>(null);
   const liveCompositeAnimationRef = useRef<number | null>(null);
   const liveCompositeIntervalRef = useRef<number | null>(null);
+  const reconnectGraceTimerRef = useRef<number | null>(null);
 
   // Detect if we're running inside an iframe (e.g. Lovable preview) — many
   // preview iframes disable getUserMedia via Permissions-Policy, so we surface
@@ -131,7 +132,7 @@ function LiveStudio() {
       attachCameraPip();
       ensureCameraSource();
       if (screenStreamRef.current) ensureScreenSource(screenStreamRef.current);
-      drawLiveCompositeFrame();
+      void keepLiveVideoStable();
       drawRecordingFrame();
     };
     document.addEventListener("visibilitychange", refreshMedia);
@@ -193,28 +194,21 @@ function LiveStudio() {
       });
       pcRef.current = pc;
 
-      for (const track of streamRef.current.getTracks()) {
+      const outgoingVideoTrack = getStableOutgoingVideoTrack();
+      const tracksToSend = [
+        ...streamRef.current.getAudioTracks(),
+        ...(outgoingVideoTrack ? [outgoingVideoTrack] : []),
+      ];
+
+      for (const track of tracksToSend) {
         if (track.kind === "video") {
-          try {
-            (track as MediaStreamTrack & { contentHint?: string }).contentHint = "motion";
-          } catch {}
+          applyVideoTrackHint(track);
         }
         const tx = pc.addTransceiver(track, { direction: "sendonly", streams: [streamRef.current] });
         if (track.kind === "video") {
           videoSenderRef.current = tx.sender;
-          // Ask the encoder to keep framerate over resolution when the tab is
-          // backgrounded — prevents the viewer from seeing a frozen frame.
-          try {
-            const params = tx.sender.getParameters();
-            params.degradationPreference = "maintain-framerate";
-            void tx.sender.setParameters(params).catch(() => {});
-          } catch {}
+          applyVideoSenderParams(tx.sender);
         }
-      }
-
-      if (sharingRef.current && videoSenderRef.current) {
-        const compositeTrack = ensureLiveCompositeTrack();
-        if (compositeTrack) await videoSenderRef.current.replaceTrack(compositeTrack).catch(() => {});
       }
 
       // Try to keep the screen awake so mobile browsers don't suspend capture.
@@ -227,8 +221,25 @@ function LiveStudio() {
 
       pc.oniceconnectionstatechange = () => {
         const s = pc.iceConnectionState;
-        if (s === "connected" || s === "completed") setStatus("live");
-        if (s === "failed" || s === "disconnected") {
+        if (s === "connected" || s === "completed") {
+          clearReconnectGraceTimer();
+          setStatus("live");
+          setError(null);
+        }
+        if (s === "disconnected") {
+          // Hidden tabs can briefly report disconnected while the browser
+          // deprioritises rendering. Do not kill the live instantly; give WebRTC
+          // time to recover and keep sending the native capture track.
+          clearReconnectGraceTimer();
+          reconnectGraceTimerRef.current = window.setTimeout(() => {
+            if (pcRef.current?.iceConnectionState === "disconnected") {
+              setStatus("error");
+              setError("Ligação WebRTC instável. Mantém esta janela aberta e partilha ecrã inteiro/janela, não uma aba do browser.");
+            }
+          }, 15000);
+        }
+        if (s === "failed") {
+          clearReconnectGraceTimer();
           setStatus("error");
           setError("Ligação WebRTC perdida.");
         }
@@ -311,7 +322,12 @@ function LiveStudio() {
     }
     try {
       const display = await navigator.mediaDevices.getDisplayMedia({
-        video: { frameRate: { ideal: 30 } },
+        video: {
+          frameRate: { ideal: 30, max: 30 },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          displaySurface: "monitor",
+        } as MediaTrackConstraints,
         audio: false,
       });
       screenStreamRef.current = display;
@@ -319,18 +335,21 @@ function LiveStudio() {
       ensureCameraSource();
       const screenTrack = display.getVideoTracks()[0];
       if (!screenTrack) throw new Error("Sem faixa de vídeo do ecrã.");
+      const displaySurface = (screenTrack.getSettings() as MediaTrackSettings & { displaySurface?: string }).displaySurface;
+      if (displaySurface === "browser") {
+        display.getTracks().forEach((t) => t.stop());
+        screenStreamRef.current = null;
+        clearSourceVideo(screenSourceVideoRef);
+        throw new Error("Para a live não travar, partilha o ecrã inteiro ou uma janela. Não uses partilha de aba do browser.");
+      }
       // Hint the encoder to keep framerate over resolution.
-      try {
-        (screenTrack as MediaStreamTrack & { contentHint?: string }).contentHint = "detail";
-      } catch {}
+      applyVideoTrackHint(screenTrack);
 
-      // Replace outgoing track (if already live) with a composed canvas track:
-      // screen full-frame + camera PiP. Sending the raw screen track makes the
-      // camera disappear for viewers and is more likely to look frozen when the
-      // browser deprioritises the tab.
+      // Replace outgoing track with the native screen capture. Canvas-composited
+      // tracks freeze when the studio tab goes to background; native capture is
+      // the stable path for uninterrupted WebRTC.
       if (videoSenderRef.current) {
-        const compositeTrack = ensureLiveCompositeTrack();
-        await videoSenderRef.current.replaceTrack(compositeTrack ?? screenTrack);
+        await replaceOutgoingVideoTrack(screenTrack);
       }
 
       // Main preview shows the screen.
@@ -346,7 +365,6 @@ function LiveStudio() {
 
       sharingRef.current = true;
       setSharing(true);
-      drawLiveCompositeFrame();
       window.setTimeout(() => attachCameraPip(), 0);
     } catch (e) {
       const err = e as DOMException;
@@ -384,6 +402,7 @@ function LiveStudio() {
     pcRef.current?.close();
     pcRef.current = null;
     videoSenderRef.current = null;
+    clearReconnectGraceTimer();
     stopLiveCompositeTrack();
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
@@ -502,6 +521,47 @@ function LiveStudio() {
       recordingAudioNodeRef.current = node;
     } catch (err) {
       console.warn("[live-studio] audio timer unavailable, relying on rAF only", err);
+    }
+  }
+
+  function getStableOutgoingVideoTrack() {
+    return screenStreamRef.current?.getVideoTracks()[0] ?? streamRef.current?.getVideoTracks()[0] ?? null;
+  }
+
+  function applyVideoTrackHint(track: MediaStreamTrack) {
+    try {
+      const isScreen = screenStreamRef.current?.getVideoTracks()[0] === track;
+      (track as MediaStreamTrack & { contentHint?: string }).contentHint = isScreen ? "detail" : "motion";
+    } catch {}
+  }
+
+  function applyVideoSenderParams(sender: RTCRtpSender) {
+    try {
+      const params = sender.getParameters();
+      params.degradationPreference = "maintain-framerate";
+      void sender.setParameters(params).catch(() => {});
+    } catch {}
+  }
+
+  async function replaceOutgoingVideoTrack(track: MediaStreamTrack) {
+    if (!videoSenderRef.current) return;
+    applyVideoTrackHint(track);
+    if (videoSenderRef.current.track !== track) {
+      await videoSenderRef.current.replaceTrack(track).catch(() => {});
+    }
+    applyVideoSenderParams(videoSenderRef.current);
+  }
+
+  async function keepLiveVideoStable() {
+    const track = getStableOutgoingVideoTrack();
+    if (!track || !videoSenderRef.current) return;
+    await replaceOutgoingVideoTrack(track);
+  }
+
+  function clearReconnectGraceTimer() {
+    if (reconnectGraceTimerRef.current !== null) {
+      window.clearTimeout(reconnectGraceTimerRef.current);
+      reconnectGraceTimerRef.current = null;
     }
   }
 
