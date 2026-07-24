@@ -82,8 +82,8 @@ function DashboardPage() {
       {/* Cinematic hero — full bleed, autoplay muted loop, editorial overlay */}
       <CinematicHero name={sessionUser?.name ?? ""} loading={userLoading && !sessionUser} />
 
-      {/* Live activa em destaque */}
-      {realFeaturedLive?.status === "live" && (
+      {/* Live activa ou próxima em destaque (com contador) */}
+      {realFeaturedLive && (realFeaturedLive.status === "live" || realFeaturedLive.status === "scheduled") && (
         <LiveHeroBanner live={realFeaturedLive} />
       )}
 

@@ -6,6 +6,7 @@ import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { LiveHeroBanner } from "@/components/mm/live-hero-banner";
 import { expertsById } from "@/data/experts";
 import { cn } from "@/lib/utils";
+import { LiveCountdown } from "@/components/mm/live-countdown";
 
 type Live = Awaited<ReturnType<typeof listLives>>[number];
 
@@ -137,6 +138,7 @@ function LiveCard({ live }: { live: Live }) {
     minute: "2-digit",
   }).format(date);
   const isReplay = live.status === "published" || live.status === "ended";
+  const isUpcoming = live.status === "scheduled" && date.getTime() > Date.now();
   const expert = live.expert_id ? expertsById[live.expert_id] : undefined;
 
   return (
@@ -162,6 +164,11 @@ function LiveCard({ live }: { live: Live }) {
           <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-black/70 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest text-white backdrop-blur">
             <PlayCircle className="h-3 w-3" /> Replay
           </span>
+        )}
+        {isUpcoming && (
+          <div className="absolute left-3 top-3">
+            <LiveCountdown startsAt={live.starts_at} />
+          </div>
         )}
         {live.visibility !== "public" && (
           <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] uppercase tracking-widest text-white backdrop-blur">

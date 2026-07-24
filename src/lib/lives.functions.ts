@@ -149,10 +149,14 @@ export const adminCreateLive = createServerFn({ method: "POST" })
         title: z.string().min(3).max(180),
         description: z.string().max(2000).optional(),
         expert_id: z.string().max(120).optional(),
-        starts_at: z.string(), // ISO
-        duration_minutes: z.number().int().min(5).max(600),
+        starts_at: z.string().optional(), // ISO; empty = start now
+        duration_minutes: z.number().int().min(5).max(600).optional(),
         visibility: z.enum(["public", "club", "premium"]),
-        cover_url: z.string().url().optional().or(z.literal("").transform(() => undefined)),
+        cover_url: z
+          .string()
+          .url()
+          .optional()
+          .or(z.literal("").transform(() => undefined)),
       })
       .parse(i),
   )
@@ -161,6 +165,9 @@ export const adminCreateLive = createServerFn({ method: "POST" })
     const { createLiveInput } = await import("@/lib/cloudflare-stream.server");
     const input = await createLiveInput({ title: data.title });
 
+    const startsAt = data.starts_at ?? new Date().toISOString();
+    const duration = data.duration_minutes ?? 60;
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("lives")
@@ -168,8 +175,8 @@ export const adminCreateLive = createServerFn({ method: "POST" })
         title: data.title,
         description: data.description ?? null,
         expert_id: data.expert_id ?? null,
-        starts_at: data.starts_at,
-        duration_minutes: data.duration_minutes,
+        starts_at: startsAt,
+        duration_minutes: duration,
         visibility: data.visibility,
         cover_url: data.cover_url ?? null,
         cf_live_input_id: input.uid,
@@ -182,12 +189,23 @@ export const adminCreateLive = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+
+    // Auto-generate MM Club cover when the admin didn't upload one.
+    if (!data.cover_url) {
+      const autoCover = `/api/public/lives/${row.id}/cover.svg`;
+      await supabaseAdmin
+        .from("lives")
+        .update({ cover_url: autoCover })
+        .eq("id", row.id);
+    }
+
     return {
       id: row.id,
       rtmps: input.rtmps,
       webRTC: input.webRTC ?? null,
     };
   });
+
 
 export const adminDeleteLive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
