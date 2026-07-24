@@ -34,11 +34,12 @@ export function CourseCard({ course, className, variant = "default", resumeLesso
           params: { courseId: course.id, lessonId: resumeLesson.id },
         }
       : { to: "/academia/$courseId" as const, params: { courseId: course.id } };
-  const syncThumb = showResumeThumb && course.progress > 0 ? lessonThumb(resumeLesson, course) : null;
-  const { thumb: oembedThumb } = useBunnyThumb(
-    showResumeThumb && course.progress > 0 && !syncThumb ? resumeLesson?.videoUrl : null,
-  );
+  // Always prefer a real lesson thumbnail (Bunny/YouTube frame) over any static cover.
+  const thumbLesson = showResumeThumb && course.progress > 0 ? resumeLesson : firstLesson;
+  const syncThumb = lessonThumb(thumbLesson, course);
+  const { thumb: oembedThumb } = useBunnyThumb(syncThumb ? null : thumbLesson?.videoUrl);
   const thumb = syncThumb ?? oembedThumb;
+
 
 
   return (
