@@ -329,7 +329,12 @@ function LiveStudio() {
       let bytes = 0;
       let frames = 0;
       stats.forEach((report) => {
-        const r = report as RTCOutboundRtpStreamStats & { kind?: string; mediaType?: string; framesSent?: number };
+        const r = report as RTCOutboundRtpStreamStats & {
+          kind?: string;
+          mediaType?: string;
+          framesSent?: number;
+          isRemote?: boolean;
+        };
         if (r.type === "outbound-rtp" && (r.kind === "video" || r.mediaType === "video") && !r.isRemote) {
           bytes = Math.max(bytes, Number(r.bytesSent ?? 0));
           frames = Math.max(frames, Number(r.framesSent ?? 0));
