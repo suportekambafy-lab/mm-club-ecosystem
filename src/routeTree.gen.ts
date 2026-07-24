@@ -63,6 +63,7 @@ import { Route as AppFerramentasStudioMarcaRouteImport } from './routes/_app.fer
 import { Route as AppFerramentasStudioImagensRouteImport } from './routes/_app.ferramentas.studio.imagens'
 import { Route as AppFerramentasStudioCriativosRouteImport } from './routes/_app.ferramentas.studio.criativos'
 import { Route as AppAcademiaCourseIdLessonIdRouteImport } from './routes/_app.academia.$courseId.$lessonId'
+import { Route as ApiPublicLivesLiveIdCoverSvgRouteImport } from './routes/api/public/lives.$liveId.cover.svg'
 
 const VipRoute = VipRouteImport.update({
   id: '/vip',
@@ -348,6 +349,12 @@ const AppAcademiaCourseIdLessonIdRoute =
     path: '/$lessonId',
     getParentRoute: () => AppAcademiaCourseIdRoute,
   } as any)
+const ApiPublicLivesLiveIdCoverSvgRoute =
+  ApiPublicLivesLiveIdCoverSvgRouteImport.update({
+    id: '/api/public/lives/$liveId/cover/svg',
+    path: '/api/public/lives/$liveId/cover/svg',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -403,6 +410,7 @@ export interface FileRoutesByFullPath {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
   '/ferramentas/studio/': typeof AppFerramentasStudioIndexRoute
+  '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -452,6 +460,7 @@ export interface FileRoutesByTo {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdIndexRoute
   '/ferramentas/studio': typeof AppFerramentasStudioIndexRoute
+  '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -509,6 +518,7 @@ export interface FileRoutesById {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/_app/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
   '/_app/ferramentas/studio/': typeof AppFerramentasStudioIndexRoute
+  '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -566,6 +576,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/academia/$courseId/'
     | '/ferramentas/studio/'
+    | '/api/public/lives/$liveId/cover/svg'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -615,6 +626,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/academia/$courseId'
     | '/ferramentas/studio'
+    | '/api/public/lives/$liveId/cover/svg'
   id:
     | '__root__'
     | '/'
@@ -671,6 +683,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/_app/academia/$courseId/'
     | '/_app/ferramentas/studio/'
+    | '/api/public/lives/$liveId/cover/svg'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -694,6 +707,7 @@ export interface RootRouteChildren {
   ApiPublicHooksWeeklySummaryRoute: typeof ApiPublicHooksWeeklySummaryRoute
   ApiPublicPaymentsMollieWebhookRoute: typeof ApiPublicPaymentsMollieWebhookRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
+  ApiPublicLivesLiveIdCoverSvgRoute: typeof ApiPublicLivesLiveIdCoverSvgRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1076,6 +1090,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAcademiaCourseIdLessonIdRouteImport
       parentRoute: typeof AppAcademiaCourseIdRoute
     }
+    '/api/public/lives/$liveId/cover/svg': {
+      id: '/api/public/lives/$liveId/cover/svg'
+      path: '/api/public/lives/$liveId/cover/svg'
+      fullPath: '/api/public/lives/$liveId/cover/svg'
+      preLoaderRoute: typeof ApiPublicLivesLiveIdCoverSvgRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1253,6 +1274,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksWeeklySummaryRoute: ApiPublicHooksWeeklySummaryRoute,
   ApiPublicPaymentsMollieWebhookRoute: ApiPublicPaymentsMollieWebhookRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
+  ApiPublicLivesLiveIdCoverSvgRoute: ApiPublicLivesLiveIdCoverSvgRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

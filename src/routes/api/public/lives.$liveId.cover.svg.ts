@@ -5,7 +5,7 @@ import { createFileRoute } from "@tanstack/react-router";
  * Returns an SVG rendered with the live title, styled with MM Club tokens.
  * Public: no auth (covers are shown on public listings when applicable).
  */
-export const Route = createFileRoute("/api/public/lives/$liveId/cover.svg")({
+export const Route = createFileRoute("/api/public/lives/$liveId/cover/svg")({
   server: {
     handlers: {
       GET: async ({ params }) => {
