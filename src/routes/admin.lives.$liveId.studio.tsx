@@ -160,9 +160,31 @@ function LiveStudio() {
       pcRef.current = pc;
 
       for (const track of streamRef.current.getTracks()) {
+        if (track.kind === "video") {
+          try {
+            (track as MediaStreamTrack & { contentHint?: string }).contentHint = "motion";
+          } catch {}
+        }
         const tx = pc.addTransceiver(track, { direction: "sendonly", streams: [streamRef.current] });
-        if (track.kind === "video") videoSenderRef.current = tx.sender;
+        if (track.kind === "video") {
+          videoSenderRef.current = tx.sender;
+          // Ask the encoder to keep framerate over resolution when the tab is
+          // backgrounded — prevents the viewer from seeing a frozen frame.
+          try {
+            const params = tx.sender.getParameters();
+            params.degradationPreference = "maintain-framerate";
+            void tx.sender.setParameters(params).catch(() => {});
+          } catch {}
+        }
       }
+
+      // Try to keep the screen awake so mobile browsers don't suspend capture.
+      try {
+        const nav = navigator as Navigator & {
+          wakeLock?: { request: (t: "screen") => Promise<{ release: () => Promise<void> }> };
+        };
+        wakeLockRef.current = (await nav.wakeLock?.request("screen")) ?? null;
+      } catch {}
 
       pc.oniceconnectionstatechange = () => {
         const s = pc.iceConnectionState;
