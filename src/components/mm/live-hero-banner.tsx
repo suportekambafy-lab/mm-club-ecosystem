@@ -80,7 +80,7 @@ export function LiveHeroBanner({ live, className }: { live: LiveLike; className?
             ? {
                 backgroundImage: `url(${coverUrl})`,
                 backgroundSize: "cover",
-                backgroundPosition: "center",
+                backgroundPosition: "right center",
               }
             : {
                 background:

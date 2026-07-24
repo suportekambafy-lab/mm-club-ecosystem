@@ -104,32 +104,26 @@ export async function generateAndStoreLiveCover({
   return signed.data.signedUrl;
 }
 
-function buildLiveCoverPrompt(title: string, startsAt: string, withSpeaker: boolean): string {
-  const date = new Intl.DateTimeFormat("pt-PT", {
-    day: "2-digit",
-    month: "long",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(startsAt));
-
+function buildLiveCoverPrompt(_title: string, _startsAt: string, withSpeaker: boolean): string {
   const base = [
-    "Premium cinematic 16:9 livestream cover for MM Club, a luxury digital entrepreneurs community.",
-    "Visual direction: deep black stage, warm golden spotlights, subtle gold dust, elegant Apple TV / MasterClass energy, dramatic depth, refined contrast, no cartoon, no generic stock-photo look.",
-    `Main typography must be large, modern, crisp and readable with the exact Portuguese title: “${title}”.`,
-    "Add a polished red live badge with the exact words “AO VIVO AGORA” and a small refined “MM CLUB” brand mark.",
-    `If a date appears, use: “${date}”.`,
-    "Beautiful editorial typography, generous spacing, black/gold palette, professional event poster composition, enough dark negative space so app overlays remain readable.",
-    "Do not create fake product covers, fake logos beyond MM CLUB, watermarks, misspelled text or clutter.",
+    "Ultra-premium cinematic 16:9 background image for a livestream cover in the MM Club luxury digital entrepreneurs brand.",
+    "Visual direction: deep matte black stage, warm golden spotlights, soft golden bokeh, subtle floating gold dust particles, elegant Apple TV / MasterClass energy, dramatic depth, refined contrast, editorial fashion-photography quality.",
+    "Composition: subject and lighting kept centered and balanced so the image works when cropped both as a wide 21:9 hero banner and as a smaller card, with enough dark negative space on the left and bottom for app UI overlays.",
+    "ABSOLUTELY NO TEXT of any kind in the image: no titles, no captions, no letters, no numbers, no dates, no timers, no watermarks, no signatures.",
+    "ABSOLUTELY NO LOGOS or brand marks of any kind, including no 'MM CLUB' logo, no crown, no monogram, no badge, no shield.",
+    "ABSOLUTELY NO 'AO VIVO' / 'LIVE' / 'NOW' badges, no red pills, no broadcast indicators, no UI elements — those are added on top by the app.",
+    "Do not invent fake product covers, fake screenshots, or clutter.",
   ];
 
   if (withSpeaker) {
     base.splice(
       1,
       0,
-      "Use the person in the provided reference photo as the main speaker of the cover. Keep their face, hairstyle, ethnicity, skin tone and identity 100% recognizable — do not invent a different person.",
-      "Place the speaker on the right side of the composition, cinematic half-body portrait, dramatic golden rim light on their silhouette, blurred stage background, MasterClass-style keynote framing. Leave the left side for the title typography with dark negative space.",
+      "Use the person in the provided reference photo as the main subject. Keep their face, hairstyle, ethnicity, skin tone and identity 100% recognizable — do not invent a different person, do not stylize into illustration.",
+      "Frame the subject as a full head-and-shoulders cinematic portrait, fully inside the image with clear margin on all sides — never crop the head, hair, hands or shoulders. Position the subject slightly right of center so the left third stays as dark cinematic negative space for app UI. Dramatic golden rim light on the silhouette, blurred golden bokeh stage background, MasterClass-style keynote framing.",
     );
   }
 
   return base.join(" ");
 }
+
