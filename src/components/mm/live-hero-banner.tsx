@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { expertsById } from "@/data/experts";
 import { formatDistanceToNow } from "date-fns";
 import { pt } from "date-fns/locale";
+import { resolveLiveCoverUrl } from "@/lib/live-cover-url";
 
 type LiveLike = {
   id: string;
@@ -28,6 +29,7 @@ export function LiveHeroBanner({ live, className }: { live: LiveLike; className?
   const isReplay = live.status === "published" || live.status === "ended";
   const [distance, setDistance] = useState<string>("");
   const [countdown, setCountdown] = useState<{ d: number; h: number; m: number; s: number } | null>(null);
+  const coverUrl = resolveLiveCoverUrl(live.cover_url);
 
   useEffect(() => {
     if (isLive || isReplay) return;
@@ -74,9 +76,9 @@ export function LiveHeroBanner({ live, className }: { live: LiveLike; className?
       <div
         className="absolute inset-0"
         style={
-          live.cover_url
+          coverUrl
             ? {
-                backgroundImage: `url(${live.cover_url})`,
+                backgroundImage: `url(${coverUrl})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
               }

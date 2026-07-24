@@ -18,6 +18,7 @@ import { LiveChat } from "@/components/mm/live-chat";
 import { useLivePresence } from "@/hooks/use-live-presence";
 import { expertsById } from "@/data/experts";
 import { cn } from "@/lib/utils";
+import { resolveLiveCoverUrl } from "@/lib/live-cover-url";
 
 export const Route = createFileRoute("/_app/lives/$liveId")({
   loader: async ({ params }) => {
@@ -262,7 +263,7 @@ function PrelivePoster({
   live: LoaderData["live"];
   countdown: string | null;
 }) {
-  const cover = live.cover_url;
+  const cover = resolveLiveCoverUrl(live.cover_url);
   return (
     <div
       className="relative aspect-video w-full overflow-hidden rounded-3xl border border-border bg-black shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)]"
@@ -296,7 +297,7 @@ function PrelivePoster({
 }
 
 function NoReplayPoster({ live }: { live: LoaderData["live"] }) {
-  const cover = live.cover_url;
+  const cover = resolveLiveCoverUrl(live.cover_url);
   return (
     <div
       className="relative aspect-video w-full overflow-hidden rounded-3xl border border-border bg-black shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)]"

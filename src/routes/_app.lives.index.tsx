@@ -7,6 +7,7 @@ import { LiveHeroBanner } from "@/components/mm/live-hero-banner";
 import { expertsById } from "@/data/experts";
 import { cn } from "@/lib/utils";
 import { LiveCountdown } from "@/components/mm/live-countdown";
+import { resolveLiveCoverUrl } from "@/lib/live-cover-url";
 
 type Live = Awaited<ReturnType<typeof listLives>>[number];
 
@@ -140,6 +141,7 @@ function LiveCard({ live }: { live: Live }) {
   const isReplay = live.status === "published" || live.status === "ended";
   const isUpcoming = live.status === "scheduled" && date.getTime() > Date.now();
   const expert = live.expert_id ? expertsById[live.expert_id] : undefined;
+  const coverUrl = resolveLiveCoverUrl(live.cover_url);
 
   return (
     <Link
@@ -153,8 +155,8 @@ function LiveCard({ live }: { live: Live }) {
       <div
         className="relative aspect-video w-full"
         style={
-          live.cover_url
-            ? { backgroundImage: `url(${live.cover_url})`, backgroundSize: "cover", backgroundPosition: "center" }
+          coverUrl
+            ? { backgroundImage: `url(${coverUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
             : { background: "linear-gradient(135deg, oklch(0.55 0.12 60), oklch(0.15 0.03 60))" }
         }
       >
