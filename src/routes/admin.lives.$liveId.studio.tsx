@@ -76,6 +76,12 @@ function LiveStudio() {
   const liveCompositeAnimationRef = useRef<number | null>(null);
   const liveCompositeIntervalRef = useRef<number | null>(null);
   const reconnectGraceTimerRef = useRef<number | null>(null);
+  const statusRef = useRef<Status>("idle");
+  const reconnectingRef = useRef(false);
+
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
 
   // Detect if we're running inside an iframe (e.g. Lovable preview) — many
   // preview iframes disable getUserMedia via Permissions-Policy, so we surface
@@ -133,6 +139,14 @@ function LiveStudio() {
       ensureCameraSource();
       if (screenStreamRef.current) ensureScreenSource(screenStreamRef.current);
       void keepLiveVideoStable();
+      void requestWakeLock();
+      const iceState = pcRef.current?.iceConnectionState;
+      if (
+        (statusRef.current === "live" || statusRef.current === "connecting" || statusRef.current === "error") &&
+        (iceState === "disconnected" || iceState === "failed" || iceState === "closed")
+      ) {
+        void reconnectWhip("A transmissão foi religada automaticamente ao voltar para esta aba.");
+      }
       drawRecordingFrame();
     };
     document.addEventListener("visibilitychange", refreshMedia);
@@ -188,98 +202,12 @@ function LiveStudio() {
     setError(null);
     setStatus("connecting");
     try {
-      const pc = new RTCPeerConnection({
-        iceServers: [{ urls: "stun:stun.cloudflare.com:3478" }],
-        bundlePolicy: "max-bundle",
-      });
-      pcRef.current = pc;
-
-      const outgoingVideoTrack = getStableOutgoingVideoTrack();
-      const tracksToSend = [
-        ...streamRef.current.getAudioTracks(),
-        ...(outgoingVideoTrack ? [outgoingVideoTrack] : []),
-      ];
-
-      for (const track of tracksToSend) {
-        if (track.kind === "video") {
-          applyVideoTrackHint(track);
-        }
-        const tx = pc.addTransceiver(track, { direction: "sendonly", streams: [streamRef.current] });
-        if (track.kind === "video") {
-          videoSenderRef.current = tx.sender;
-          applyVideoSenderParams(tx.sender);
-        }
-      }
-
-      // Try to keep the screen awake so mobile browsers don't suspend capture.
-      try {
-        const nav = navigator as Navigator & {
-          wakeLock?: { request: (t: "screen") => Promise<{ release: () => Promise<void> }> };
-        };
-        wakeLockRef.current = (await nav.wakeLock?.request("screen")) ?? null;
-      } catch {}
-
-      pc.oniceconnectionstatechange = () => {
-        const s = pc.iceConnectionState;
-        if (s === "connected" || s === "completed") {
-          clearReconnectGraceTimer();
-          setStatus("live");
-          setError(null);
-        }
-        if (s === "disconnected") {
-          // Hidden tabs can briefly report disconnected while the browser
-          // deprioritises rendering. Do not kill the live instantly; give WebRTC
-          // time to recover and keep sending the native capture track.
-          clearReconnectGraceTimer();
-          reconnectGraceTimerRef.current = window.setTimeout(() => {
-            if (pcRef.current?.iceConnectionState === "disconnected") {
-              setStatus("error");
-              setError("Ligação WebRTC instável. Mantém esta janela aberta e partilha ecrã inteiro/janela, não uma aba do browser.");
-            }
-          }, 15000);
-        }
-        if (s === "failed") {
-          clearReconnectGraceTimer();
-          setStatus("error");
-          setError("Ligação WebRTC perdida.");
-        }
-      };
-
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-
-      // Wait for ICE gathering to complete so the SDP has candidates (Cloudflare WHIP prefers this).
-      await new Promise<void>((resolve) => {
-        if (pc.iceGatheringState === "complete") return resolve();
-        const check = () => {
-          if (pc.iceGatheringState === "complete") {
-            pc.removeEventListener("icegatheringstatechange", check);
-            resolve();
-          }
-        };
-        pc.addEventListener("icegatheringstatechange", check);
-        setTimeout(() => resolve(), 2000);
-      });
-
-      const res = await fetch(whipUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/sdp" },
-        body: pc.localDescription?.sdp ?? "",
-      });
-      if (!res.ok) {
-        throw new Error(`WHIP HTTP ${res.status}: ${await res.text().catch(() => res.statusText)}`);
-      }
+      await openWhipPeer();
       setStatus("live");
       startLocalReplayRecording();
       await setBroadcastState({ data: { id: liveId, status: "live" } }).catch((err) => {
         console.error("[live-studio] failed to mark live", err);
       });
-      const answerSdp = await readTextWithTimeout(res, 5000);
-      if (answerSdp.trim()) {
-        pc.setRemoteDescription({ type: "answer", sdp: answerSdp }).catch((err) => {
-          console.error("[live-studio] failed to apply WebRTC answer", err);
-        });
-      }
     } catch (e) {
       setError((e as Error).message);
       setStatus("error");
@@ -299,6 +227,109 @@ function LiveStudio() {
     } finally {
       if (timeoutId) clearTimeout(timeoutId);
     }
+  }
+
+  async function openWhipPeer() {
+    if (!whipUrl || !streamRef.current) throw new Error("Transmissão sem URL WebRTC ou sem câmara activa.");
+    closePeerConnection(false);
+
+    const pc = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.cloudflare.com:3478" }],
+      bundlePolicy: "max-bundle",
+    });
+    pcRef.current = pc;
+
+    const outgoingVideoTrack = getStableOutgoingVideoTrack();
+    const tracksToSend = [
+      ...streamRef.current.getAudioTracks(),
+      ...(outgoingVideoTrack ? [outgoingVideoTrack] : []),
+    ];
+
+    for (const track of tracksToSend) {
+      if (track.kind === "video") applyVideoTrackHint(track);
+      const tx = pc.addTransceiver(track, { direction: "sendonly", streams: [streamRef.current] });
+      if (track.kind === "video") {
+        videoSenderRef.current = tx.sender;
+        applyVideoSenderParams(tx.sender);
+      }
+    }
+
+    await requestWakeLock();
+
+    pc.oniceconnectionstatechange = () => {
+      const s = pc.iceConnectionState;
+      if (s === "connected" || s === "completed") {
+        clearReconnectGraceTimer();
+        setStatus("live");
+        setError(null);
+      }
+      if (s === "disconnected") {
+        clearReconnectGraceTimer();
+        reconnectGraceTimerRef.current = window.setTimeout(() => {
+          if (pcRef.current === pc && pc.iceConnectionState === "disconnected") {
+            void reconnectWhip("A ligação ficou instável em background e foi religada automaticamente.");
+          }
+        }, 45_000);
+      }
+      if (s === "failed") {
+        clearReconnectGraceTimer();
+        void reconnectWhip("A ligação caiu e foi religada automaticamente.");
+      }
+    };
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    await new Promise<void>((resolve) => {
+      if (pc.iceGatheringState === "complete") return resolve();
+      const check = () => {
+        if (pc.iceGatheringState === "complete") {
+          pc.removeEventListener("icegatheringstatechange", check);
+          resolve();
+        }
+      };
+      pc.addEventListener("icegatheringstatechange", check);
+      setTimeout(() => resolve(), 2000);
+    });
+
+    const res = await fetch(whipUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/sdp" },
+      body: pc.localDescription?.sdp ?? "",
+    });
+    if (!res.ok) throw new Error(`WHIP HTTP ${res.status}: ${await res.text().catch(() => res.statusText)}`);
+
+    const answerSdp = await readTextWithTimeout(res, 8000);
+    if (answerSdp.trim()) await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
+  }
+
+  async function reconnectWhip(message?: string) {
+    if (reconnectingRef.current || !streamRef.current || !whipUrl) return;
+    if (statusRef.current === "ending" || statusRef.current === "ended") return;
+    reconnectingRef.current = true;
+    clearReconnectGraceTimer();
+    setStatus("connecting");
+    if (message) setError(message);
+    try {
+      await openWhipPeer();
+      setStatus("live");
+      setError(null);
+    } catch (e) {
+      setStatus("error");
+      setError(`Não consegui religar automaticamente: ${(e as Error).message}`);
+    } finally {
+      reconnectingRef.current = false;
+    }
+  }
+
+  async function requestWakeLock() {
+    try {
+      if (wakeLockRef.current) return;
+      const nav = navigator as Navigator & {
+        wakeLock?: { request: (t: "screen") => Promise<{ release: () => Promise<void> }> };
+      };
+      wakeLockRef.current = (await nav.wakeLock?.request("screen")) ?? null;
+    } catch {}
   }
 
   function toggleMic() {
@@ -398,10 +429,7 @@ function LiveStudio() {
     }
     recorderRef.current = null;
     stopCanvasRecordingLoop();
-    pcRef.current?.getSenders().forEach((s) => s.track?.stop());
-    pcRef.current?.close();
-    pcRef.current = null;
-    videoSenderRef.current = null;
+    closePeerConnection(true);
     clearReconnectGraceTimer();
     stopLiveCompositeTrack();
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -415,6 +443,16 @@ function LiveStudio() {
     startedAtRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
     if (pipRef.current) pipRef.current.srcObject = null;
+  }
+
+  function closePeerConnection(stopSenderTracks: boolean) {
+    const pc = pcRef.current;
+    if (!pc) return;
+    pc.oniceconnectionstatechange = null;
+    if (stopSenderTracks) pc.getSenders().forEach((s) => s.track?.stop());
+    pc.close();
+    pcRef.current = null;
+    videoSenderRef.current = null;
   }
 
   async function endLive() {
