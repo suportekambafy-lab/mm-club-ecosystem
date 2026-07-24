@@ -23,6 +23,7 @@ import { expertsById } from "@/data/experts";
 import { courses } from "@/data/courses";
 import { computeCourseDuration } from "@/lib/course-duration";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
+import marcaMilionariaCover from "@/assets/marca-milionaria-cover.png";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -220,7 +221,6 @@ function ContinueHero({ course }: { course: import("@/data/types").Course }) {
   const expert = expertsById[course.expertId];
   const firstLesson = course.modules?.[0]?.lessons?.[0];
   const firstLessonId = firstLesson?.id;
-  const { thumb } = useBunnyThumb(firstLesson?.videoUrl);
   const linkProps = firstLessonId
     ? {
         to: "/academia/$courseId/$lessonId" as const,
@@ -230,6 +230,12 @@ function ContinueHero({ course }: { course: import("@/data/types").Course }) {
         to: "/academia/$courseId" as const,
         params: { courseId: course.id },
       };
+  const coverImage =
+    course.id === "marca-milionaria"
+      ? marcaMilionariaCover
+      : typeof course.cover === "string" && /^(https?:|\/|data:)/.test(course.cover)
+        ? course.cover
+        : null;
   return (
     <Link
       {...linkProps}
@@ -237,11 +243,11 @@ function ContinueHero({ course }: { course: import("@/data/types").Course }) {
     >
       <div
         className="relative aspect-[16/9] overflow-hidden md:aspect-auto md:h-[280px] md:w-[55%]"
-        style={thumb ? undefined : { background: course.cover }}
+        style={coverImage ? undefined : { background: course.cover }}
       >
-        {thumb && (
+        {coverImage && (
           <img
-            src={thumb}
+            src={coverImage}
             alt={course.title}
             className="absolute inset-0 h-full w-full object-cover"
             loading="lazy"
