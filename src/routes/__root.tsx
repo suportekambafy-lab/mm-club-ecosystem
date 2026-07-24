@@ -11,6 +11,15 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { ComingSoon } from "../components/mm/coming-soon";
+
+const COMING_SOON_HOSTS = new Set([
+  "mmclub.pt",
+  "mmclub.online",
+  "www.mmclub.online",
+  "www.mmclub.pt",
+  "mm-club-ecosystem.lovable.app",
+]);
 
 function NotFoundComponent() {
   return (
