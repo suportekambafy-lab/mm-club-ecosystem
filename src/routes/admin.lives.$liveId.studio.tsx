@@ -62,12 +62,19 @@ function LiveStudio() {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const recordingCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const recordingCanvasTrackRef = useRef<MediaStreamTrack | null>(null);
   const recordingAnimationRef = useRef<number | null>(null);
   const recordingTickTimerRef = useRef<number | null>(null);
   const recordingAudioContextRef = useRef<AudioContext | null>(null);
   const recordingAudioNodeRef = useRef<ScriptProcessorNode | null>(null);
   const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null);
   const sharingRef = useRef(false);
+  const cameraSourceVideoRef = useRef<HTMLVideoElement | null>(null);
+  const screenSourceVideoRef = useRef<HTMLVideoElement | null>(null);
+  const liveCompositeCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const liveCompositeTrackRef = useRef<MediaStreamTrack | null>(null);
+  const liveCompositeAnimationRef = useRef<number | null>(null);
+  const liveCompositeIntervalRef = useRef<number | null>(null);
 
   // Detect if we're running inside an iframe (e.g. Lovable preview) — many
   // preview iframes disable getUserMedia via Permissions-Policy, so we surface
@@ -110,6 +117,31 @@ function LiveStudio() {
     return () => clearInterval(t);
   }, [status]);
 
+  useEffect(() => {
+    if (!sharing) return;
+    attachCameraPip();
+    const id = window.setTimeout(() => attachCameraPip(), 120);
+    return () => window.clearTimeout(id);
+  }, [sharing]);
+
+  useEffect(() => {
+    const refreshMedia = () => {
+      if (document.visibilityState !== "visible") return;
+      if (videoRef.current?.srcObject) void videoRef.current.play().catch(() => {});
+      attachCameraPip();
+      ensureCameraSource();
+      if (screenStreamRef.current) ensureScreenSource(screenStreamRef.current);
+      drawLiveCompositeFrame();
+      drawRecordingFrame();
+    };
+    document.addEventListener("visibilitychange", refreshMedia);
+    window.addEventListener("focus", refreshMedia);
+    return () => {
+      document.removeEventListener("visibilitychange", refreshMedia);
+      window.removeEventListener("focus", refreshMedia);
+    };
+  }, []);
+
   async function requestMedia() {
     setError(null);
     setStatus("requesting-media");
@@ -127,8 +159,10 @@ function LiveStudio() {
         audio: { echoCancellation: true, noiseSuppression: true },
       });
       streamRef.current = stream;
+      ensureCameraSource(stream);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        void videoRef.current.play().catch(() => {});
       }
       setStatus("ready");
     } catch (e) {
@@ -176,6 +210,11 @@ function LiveStudio() {
             void tx.sender.setParameters(params).catch(() => {});
           } catch {}
         }
+      }
+
+      if (sharingRef.current && videoSenderRef.current) {
+        const compositeTrack = ensureLiveCompositeTrack();
+        if (compositeTrack) await videoSenderRef.current.replaceTrack(compositeTrack).catch(() => {});
       }
 
       // Try to keep the screen awake so mobile browsers don't suspend capture.
@@ -276,6 +315,8 @@ function LiveStudio() {
         audio: false,
       });
       screenStreamRef.current = display;
+      ensureScreenSource(display);
+      ensureCameraSource();
       const screenTrack = display.getVideoTracks()[0];
       if (!screenTrack) throw new Error("Sem faixa de vídeo do ecrã.");
       // Hint the encoder to keep framerate over resolution.
@@ -283,9 +324,13 @@ function LiveStudio() {
         (screenTrack as MediaStreamTrack & { contentHint?: string }).contentHint = "detail";
       } catch {}
 
-      // Replace outgoing track (if already live) with the screen track.
+      // Replace outgoing track (if already live) with a composed canvas track:
+      // screen full-frame + camera PiP. Sending the raw screen track makes the
+      // camera disappear for viewers and is more likely to look frozen when the
+      // browser deprioritises the tab.
       if (videoSenderRef.current) {
-        await videoSenderRef.current.replaceTrack(screenTrack);
+        const compositeTrack = ensureLiveCompositeTrack();
+        await videoSenderRef.current.replaceTrack(compositeTrack ?? screenTrack);
       }
 
       // Main preview shows the screen.
@@ -301,14 +346,8 @@ function LiveStudio() {
 
       sharingRef.current = true;
       setSharing(true);
-      // PiP <video> mounts AFTER this render; attach the camera stream on the
-      // next microtask so pipRef.current is available.
-      requestAnimationFrame(() => {
-        if (pipRef.current && streamRef.current) {
-          pipRef.current.srcObject = streamRef.current;
-          pipRef.current.play().catch(() => {});
-        }
-      });
+      drawLiveCompositeFrame();
+      window.setTimeout(() => attachCameraPip(), 0);
     } catch (e) {
       const err = e as DOMException;
       if (err.name !== "NotAllowedError") {
@@ -324,6 +363,8 @@ function LiveStudio() {
     }
     screenStreamRef.current?.getTracks().forEach((t) => t.stop());
     screenStreamRef.current = null;
+    clearSourceVideo(screenSourceVideoRef);
+    stopLiveCompositeTrack();
     if (videoRef.current && streamRef.current) {
       videoRef.current.srcObject = streamRef.current;
       try { await videoRef.current.play(); } catch {}
@@ -343,10 +384,13 @@ function LiveStudio() {
     pcRef.current?.close();
     pcRef.current = null;
     videoSenderRef.current = null;
+    stopLiveCompositeTrack();
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     screenStreamRef.current?.getTracks().forEach((t) => t.stop());
     screenStreamRef.current = null;
+    clearSourceVideo(cameraSourceVideoRef);
+    clearSourceVideo(screenSourceVideoRef);
     sharingRef.current = false;
     setSharing(false);
     startedAtRef.current = null;
@@ -377,6 +421,8 @@ function LiveStudio() {
 
   function startLocalReplayRecording() {
     if (!streamRef.current || !videoRef.current || recorderRef.current) return;
+    ensureCameraSource();
+    if (screenStreamRef.current) ensureScreenSource(screenStreamRef.current);
     const supportedTypes = [
       "video/webm;codecs=vp9,opus",
       "video/webm;codecs=vp8,opus",
@@ -393,7 +439,8 @@ function LiveStudio() {
       canvas.width = 1280;
       canvas.height = 720;
       recordingCanvasRef.current = canvas;
-      const canvasStream = canvas.captureStream(30);
+      const canvasStream = canvas.captureStream(0);
+      recordingCanvasTrackRef.current = canvasStream.getVideoTracks()[0] ?? null;
       const audioContext = new AudioContext();
       recordingAudioContextRef.current = audioContext;
       const audioDestination = audioContext.createMediaStreamDestination();
@@ -433,6 +480,7 @@ function LiveStudio() {
       const now = performance.now();
       if (now - lastTick >= targetInterval) {
         lastTick = now;
+        if (liveCompositeTrackRef.current) drawLiveCompositeFrame();
         drawRecordingFrame();
       }
     };
@@ -459,18 +507,20 @@ function LiveStudio() {
 
   function drawRecordingFrame() {
     const canvas = recordingCanvasRef.current;
-    const video = videoRef.current;
-    if (!canvas || !video) return;
+    if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    if (video.videoWidth > 0 && video.videoHeight > 0) {
-      drawCover(ctx, video, 0, 0, canvas.width, canvas.height);
+    const mainVideo = sharingRef.current
+      ? screenSourceVideoRef.current ?? videoRef.current
+      : cameraSourceVideoRef.current ?? videoRef.current;
+    if (mainVideo && mainVideo.videoWidth > 0 && mainVideo.videoHeight > 0) {
+      drawCover(ctx, mainVideo, 0, 0, canvas.width, canvas.height);
     }
-    const pip = pipRef.current;
-    if (sharingRef.current && pip && pip.videoWidth > 0 && pip.videoHeight > 0) {
+    const cameraVideo = cameraSourceVideoRef.current ?? pipRef.current;
+    if (sharingRef.current && cameraVideo && cameraVideo.videoWidth > 0 && cameraVideo.videoHeight > 0) {
       const w = 300;
       const h = 170;
       const x = canvas.width - w - 32;
@@ -478,8 +528,136 @@ function LiveStudio() {
       ctx.fillStyle = "rgba(0,0,0,0.65)";
       roundRect(ctx, x - 6, y - 6, w + 12, h + 12, 18);
       ctx.fill();
-      drawCover(ctx, pip, x, y, w, h);
+      drawCover(ctx, cameraVideo, x, y, w, h);
     }
+
+    const requestableTrack = recordingCanvasTrackRef.current as (MediaStreamTrack & { requestFrame?: () => void }) | null;
+    requestableTrack?.requestFrame?.();
+  }
+
+  function ensureLiveCompositeTrack() {
+    if (liveCompositeTrackRef.current) return liveCompositeTrackRef.current;
+    if (!screenStreamRef.current) return null;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 1280;
+    canvas.height = 720;
+    if (typeof canvas.captureStream !== "function") return null;
+
+    liveCompositeCanvasRef.current = canvas;
+    const compositeStream = canvas.captureStream(0);
+    const track = compositeStream.getVideoTracks()[0];
+    if (!track) {
+      liveCompositeCanvasRef.current = null;
+      return null;
+    }
+    try {
+      (track as MediaStreamTrack & { contentHint?: string }).contentHint = "detail";
+    } catch {}
+    liveCompositeTrackRef.current = track;
+    startLiveCompositeLoop();
+    drawLiveCompositeFrame();
+    return track;
+  }
+
+  function startLiveCompositeLoop() {
+    if (liveCompositeAnimationRef.current !== null || liveCompositeIntervalRef.current !== null) return;
+    const tick = () => drawLiveCompositeFrame();
+    const rafLoop = () => {
+      tick();
+      liveCompositeAnimationRef.current = requestAnimationFrame(rafLoop);
+    };
+    liveCompositeAnimationRef.current = requestAnimationFrame(rafLoop);
+    liveCompositeIntervalRef.current = window.setInterval(tick, 1000 / 15);
+  }
+
+  function drawLiveCompositeFrame() {
+    const canvas = liveCompositeCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const screenVideo = screenSourceVideoRef.current ?? videoRef.current;
+    if (screenVideo && screenVideo.videoWidth > 0 && screenVideo.videoHeight > 0) {
+      drawCover(ctx, screenVideo, 0, 0, canvas.width, canvas.height);
+    }
+
+    const cameraVideo = cameraSourceVideoRef.current ?? pipRef.current;
+    if (cameraVideo && cameraVideo.videoWidth > 0 && cameraVideo.videoHeight > 0) {
+      const w = 300;
+      const h = 170;
+      const x = canvas.width - w - 32;
+      const y = canvas.height - h - 32;
+      ctx.fillStyle = "rgba(0,0,0,0.65)";
+      roundRect(ctx, x - 6, y - 6, w + 12, h + 12, 18);
+      ctx.fill();
+      drawCover(ctx, cameraVideo, x, y, w, h);
+    }
+
+    const requestableTrack = liveCompositeTrackRef.current as (MediaStreamTrack & { requestFrame?: () => void }) | null;
+    requestableTrack?.requestFrame?.();
+  }
+
+  function stopLiveCompositeTrack() {
+    if (liveCompositeAnimationRef.current !== null) {
+      cancelAnimationFrame(liveCompositeAnimationRef.current);
+      liveCompositeAnimationRef.current = null;
+    }
+    if (liveCompositeIntervalRef.current !== null) {
+      clearInterval(liveCompositeIntervalRef.current);
+      liveCompositeIntervalRef.current = null;
+    }
+    liveCompositeTrackRef.current?.stop();
+    liveCompositeTrackRef.current = null;
+    liveCompositeCanvasRef.current = null;
+  }
+
+  function ensureCameraSource(stream = streamRef.current) {
+    if (!stream) return null;
+    if (cameraSourceVideoRef.current?.srcObject !== stream) {
+      clearSourceVideo(cameraSourceVideoRef);
+      cameraSourceVideoRef.current = createMutedVideo(stream);
+    }
+    return cameraSourceVideoRef.current;
+  }
+
+  function ensureScreenSource(stream: MediaStream) {
+    if (screenSourceVideoRef.current?.srcObject !== stream) {
+      clearSourceVideo(screenSourceVideoRef);
+      screenSourceVideoRef.current = createMutedVideo(stream);
+    }
+    return screenSourceVideoRef.current;
+  }
+
+  function createMutedVideo(stream: MediaStream) {
+    const video = document.createElement("video");
+    video.autoplay = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.srcObject = stream;
+    void video.play().catch(() => {});
+    return video;
+  }
+
+  function attachCameraPip() {
+    const stream = streamRef.current;
+    const pip = pipRef.current;
+    if (!stream || !pip) return;
+    if (pip.srcObject !== stream) pip.srcObject = stream;
+    pip.muted = true;
+    pip.playsInline = true;
+    ensureCameraSource(stream);
+    void pip.play().catch(() => {});
+  }
+
+  function clearSourceVideo(ref: { current: HTMLVideoElement | null }) {
+    const video = ref.current;
+    if (!video) return;
+    video.pause();
+    video.srcObject = null;
+    ref.current = null;
   }
 
   function stopCanvasRecordingLoop() {
@@ -497,6 +675,8 @@ function LiveStudio() {
     recordingAudioNodeRef.current = null;
     void recordingAudioContextRef.current?.close().catch(() => {});
     recordingAudioContextRef.current = null;
+    recordingCanvasTrackRef.current?.stop();
+    recordingCanvasTrackRef.current = null;
     recordingCanvasRef.current = null;
     void wakeLockRef.current?.release().catch(() => {});
     wakeLockRef.current = null;
@@ -650,6 +830,7 @@ function LiveStudio() {
                     autoPlay
                     muted
                     playsInline
+                    onLoadedMetadata={() => pipRef.current?.play().catch(() => {})}
                     className="h-full w-full object-cover"
                   />
                   <div className="pointer-events-none absolute left-1.5 top-1.5 rounded-full bg-black/70 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-white">
