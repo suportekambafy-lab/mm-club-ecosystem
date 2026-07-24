@@ -78,6 +78,11 @@ function LiveStudio() {
   const reconnectGraceTimerRef = useRef<number | null>(null);
   const statusRef = useRef<Status>("idle");
   const reconnectingRef = useRef(false);
+  const outboundHealthRef = useRef<{ bytes: number; frames: number; stagnantSince: number | null }>({
+    bytes: 0,
+    frames: 0,
+    stagnantSince: null,
+  });
 
   useEffect(() => {
     statusRef.current = status;
@@ -122,6 +127,14 @@ function LiveStudio() {
       if (startedAtRef.current) setElapsed(Math.floor((Date.now() - startedAtRef.current) / 1000));
     }, 1000);
     return () => clearInterval(t);
+  }, [status]);
+
+  useEffect(() => {
+    if (status !== "live") return;
+    const t = window.setInterval(() => {
+      void checkOutboundHealth();
+    }, 5000);
+    return () => window.clearInterval(t);
   }, [status]);
 
   useEffect(() => {
@@ -238,6 +251,7 @@ function LiveStudio() {
       bundlePolicy: "max-bundle",
     });
     pcRef.current = pc;
+    outboundHealthRef.current = { bytes: 0, frames: 0, stagnantSince: null };
 
     const outgoingVideoTrack = getStableOutgoingVideoTrack();
     const tracksToSend = [
@@ -301,6 +315,44 @@ function LiveStudio() {
 
     const answerSdp = await readTextWithTimeout(res, 8000);
     if (answerSdp.trim()) await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
+  }
+
+  async function checkOutboundHealth() {
+    const pc = pcRef.current;
+    if (!pc || reconnectingRef.current || statusRef.current !== "live") return;
+    if (pc.iceConnectionState === "failed" || pc.iceConnectionState === "closed") {
+      await reconnectWhip("A ligação da live caiu e foi religada automaticamente.");
+      return;
+    }
+    try {
+      const stats = await pc.getStats();
+      let bytes = 0;
+      let frames = 0;
+      stats.forEach((report) => {
+        const r = report as RTCOutboundRtpStreamStats & { kind?: string; mediaType?: string; framesSent?: number };
+        if (r.type === "outbound-rtp" && (r.kind === "video" || r.mediaType === "video") && !r.isRemote) {
+          bytes = Math.max(bytes, Number(r.bytesSent ?? 0));
+          frames = Math.max(frames, Number(r.framesSent ?? 0));
+        }
+      });
+      if (!bytes && !frames) return;
+
+      const last = outboundHealthRef.current;
+      const advanced = bytes > last.bytes || frames > last.frames;
+      if (advanced) {
+        outboundHealthRef.current = { bytes, frames, stagnantSince: null };
+        return;
+      }
+
+      const now = Date.now();
+      const stagnantSince = last.stagnantSince ?? now;
+      outboundHealthRef.current = { bytes, frames, stagnantSince };
+      if (document.visibilityState === "visible" && now - stagnantSince > 15_000) {
+        await reconnectWhip("O vídeo parou de enviar frames e foi religado automaticamente.");
+      }
+    } catch (err) {
+      console.warn("[live-studio] outbound health check failed", err);
+    }
   }
 
   async function reconnectWhip(message?: string) {
