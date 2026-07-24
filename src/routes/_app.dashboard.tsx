@@ -22,6 +22,7 @@ import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { expertsById } from "@/data/experts";
 import { courses } from "@/data/courses";
 import { computeCourseDuration } from "@/lib/course-duration";
+import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 
 import { supabase } from "@/integrations/supabase/client";
 
