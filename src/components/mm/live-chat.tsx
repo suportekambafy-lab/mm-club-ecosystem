@@ -42,7 +42,7 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
       .catch((e) => setError((e as Error).message));
 
     const channel = supabase
-      .channel(`live-chat:${liveId}`)
+      .channel(`live-chat:${liveId}:${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "live_chat_messages", filter: `live_id=eq.${liveId}` },
