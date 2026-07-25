@@ -252,12 +252,11 @@ function LiveDetail() {
         {/* Video — capped so it never overflows the viewport width or height */}
         <div className="relative shrink-0 bg-black">
           <div className="relative mx-auto w-full max-h-[42dvh] aspect-video overflow-hidden">
-            <div className="absolute inset-0 [&_.rounded-3xl]:!rounded-none [&_.ring-1]:!ring-0 [&_.shadow-\[0_40px_120px_-20px_rgba\(0\,0\,0\,0\.8\)\]]:!shadow-none">
-              {playerSlot}
-            </div>
+            {playerSlot(true)}
             {overlayStats}
           </div>
         </div>
+
 
         {/* Ultra-compact session header — single title + one meta line */}
         <div className="shrink-0 border-b border-border/60 bg-background/95 px-4 pt-2.5 pb-2">
