@@ -346,7 +346,12 @@ export const adminSetLiveBroadcastState = createServerFn({ method: "POST" })
         .maybeSingle();
       if (readErr) throw new Error(readErr.message);
 
-      const startedAt: string = current?.started_at ?? new Date().toISOString();
+      // Only preserve started_at when the live is already broadcasting; a
+      // previously ended live must not inherit its old start time.
+      const startedAt: string =
+        current?.status === "live" && current?.started_at
+          ? current.started_at
+          : new Date().toISOString();
       const nextGen: number = (current?.stream_generation ?? 0) + 1;
       const { error } = await supabaseAdmin
         .from("lives")
@@ -356,8 +361,12 @@ export const adminSetLiveBroadcastState = createServerFn({ method: "POST" })
       return { ok: true as const, started_at: startedAt, stream_generation: nextGen };
     }
 
-    const { error } = await supabaseAdmin.from("lives").update({ status: "ended" }).eq("id", data.id);
+    const { error } = await supabaseAdmin
+      .from("lives")
+      .update({ status: "ended", started_at: null })
+      .eq("id", data.id);
     if (error) throw new Error(error.message);
+
     return { ok: true as const, started_at: null as string | null, stream_generation: null as number | null };
   });
 
