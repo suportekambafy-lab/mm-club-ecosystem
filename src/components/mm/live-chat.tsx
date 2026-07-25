@@ -55,6 +55,9 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
 
   const fetchInitial = useServerFn(listChatMessages);
   const send = useServerFn(sendChatMessage);
+  const setPinned = useServerFn(setChatMessagePinned);
+  const adminIds = useAdminIds();
+  const isAdmin = currentUserId ? adminIds.has(currentUserId) : false;
 
   useEffect(() => {
     let cancelled = false;
@@ -77,6 +80,14 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
           });
         },
       )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "live_chat_messages", filter: `live_id=eq.${liveId}` },
+        (payload) => {
+          const m = payload.new as Message;
+          setMessages((prev) => prev.map((x) => (x.id === m.id ? { ...x, ...m } : x)));
+        },
+      )
       .subscribe();
 
     return () => {
@@ -84,6 +95,27 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
       supabase.removeChannel(channel);
     };
   }, [liveId, fetchInitial]);
+
+  async function handleTogglePin(m: Message) {
+    const next = !m.pinned_at;
+    // Optimistic update
+    setMessages((prev) =>
+      prev.map((x) =>
+        x.id === m.id
+          ? { ...x, pinned_at: next ? new Date().toISOString() : null, pinned_by: next ? currentUserId : null }
+          : x,
+      ),
+    );
+    try {
+      await setPinned({ data: { id: m.id, pinned: next } });
+    } catch (e) {
+      setError((e as Error).message);
+      // Revert
+      setMessages((prev) =>
+        prev.map((x) => (x.id === m.id ? { ...x, pinned_at: m.pinned_at, pinned_by: m.pinned_by } : x)),
+      );
+    }
+  }
 
   // Fetch profiles for any user_ids we don't have yet.
   useEffect(() => {
