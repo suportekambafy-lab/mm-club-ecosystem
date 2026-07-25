@@ -339,9 +339,6 @@ export const adminSetLiveBroadcastState = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     if (data.status === "live") {
-      // Read the existing row to preserve started_at across reconnects and
-      // to increment the stream generation used by viewers to remount the
-      // player when the host re-attaches to the same live input.
       const { data: current, error: readErr } = await supabaseAdmin
         .from("lives")
         .select("started_at,stream_generation,status")
@@ -349,20 +346,21 @@ export const adminSetLiveBroadcastState = createServerFn({ method: "POST" })
         .maybeSingle();
       if (readErr) throw new Error(readErr.message);
 
-      const patch: Record<string, unknown> = {
-        status: "live",
-        started_at: current?.started_at ?? new Date().toISOString(),
-        stream_generation: (current?.stream_generation ?? 0) + 1,
-      };
-      const { error } = await supabaseAdmin.from("lives").update(patch).eq("id", data.id);
+      const startedAt: string = current?.started_at ?? new Date().toISOString();
+      const nextGen: number = (current?.stream_generation ?? 0) + 1;
+      const { error } = await supabaseAdmin
+        .from("lives")
+        .update({ status: "live", started_at: startedAt, stream_generation: nextGen })
+        .eq("id", data.id);
       if (error) throw new Error(error.message);
-      return { ok: true, started_at: patch.started_at, stream_generation: patch.stream_generation };
+      return { ok: true as const, started_at: startedAt, stream_generation: nextGen };
     }
 
     const { error } = await supabaseAdmin.from("lives").update({ status: "ended" }).eq("id", data.id);
     if (error) throw new Error(error.message);
-    return { ok: true };
+    return { ok: true as const, started_at: null as string | null, stream_generation: null as number | null };
   });
+
 
 
 export const adminCreateReplayUpload = createServerFn({ method: "POST" })
