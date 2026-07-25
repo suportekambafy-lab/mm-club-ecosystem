@@ -1,7 +1,9 @@
 import { Stream, type StreamPlayerApi } from "@cloudflare/stream-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+export type ReplaySegment = { uid: string; token: string | null; duration: number | null };
 
 type Props = {
   videoUid: string;
@@ -9,13 +11,31 @@ type Props = {
   live?: boolean;
   poster?: string;
   className?: string;
+  // For replays: full list of recording segments in chronological order.
+  // If provided and > 1, the player auto-advances through them so the whole
+  // session plays even when the host reconnected mid-stream.
+  segments?: ReplaySegment[];
 };
 
-export function LivePlayer({ videoUid, playbackToken, live, poster, className }: Props) {
-  // If we have a signed token, use it as the source. Otherwise fall back to the UID
-  // (only works while `requireSignedURLs` is disabled on the input).
-  const src = playbackToken ?? videoUid;
+export function LivePlayer({ videoUid, playbackToken, live, poster, className, segments }: Props) {
   const isLive = !!live;
+
+  // Normalise segments: for live sessions we always play the input directly.
+  const effectiveSegments = useMemo<ReplaySegment[]>(() => {
+    if (isLive) return [];
+    if (segments && segments.length > 0) return segments;
+    return [{ uid: videoUid, token: playbackToken, duration: null }];
+  }, [isLive, segments, videoUid, playbackToken]);
+
+  const [segIndex, setSegIndex] = useState(0);
+  useEffect(() => {
+    setSegIndex(0);
+  }, [effectiveSegments]);
+
+  const current = effectiveSegments[segIndex];
+  const src = isLive
+    ? (playbackToken ?? videoUid)
+    : (current?.token ?? current?.uid ?? videoUid);
 
   const streamRef = useRef<StreamPlayerApi | undefined>(undefined);
   const [needsUnmute, setNeedsUnmute] = useState(false);
@@ -63,6 +83,24 @@ export function LivePlayer({ videoUid, playbackToken, live, poster, className }:
     }
   };
 
+  // Replay: when a segment ends, advance to the next one automatically.
+  const hasMultiSegments = !isLive && effectiveSegments.length > 1;
+  const handleEnded = () => {
+    if (!hasMultiSegments) return;
+    setSegIndex((i) => (i < effectiveSegments.length - 1 ? i + 1 : i));
+  };
+
+  // Auto-play the next segment once it loads (user already pressed play once).
+  useEffect(() => {
+    if (isLive) return;
+    if (segIndex === 0) return; // don't force autoplay on first segment
+    const api = streamRef.current;
+    if (!api) return;
+    void api.play().catch(() => {
+      /* browsers may block; user can press play */
+    });
+  }, [isLive, segIndex]);
+
   return (
     <div
       className={cn(
@@ -71,6 +109,7 @@ export function LivePlayer({ videoUid, playbackToken, live, poster, className }:
       )}
     >
       <Stream
+        key={`seg-${segIndex}-${src}`}
         src={src}
         streamRef={streamRef}
         controls
@@ -79,6 +118,7 @@ export function LivePlayer({ videoUid, playbackToken, live, poster, className }:
         preload={isLive ? "auto" : "metadata"}
         poster={isLive ? undefined : poster}
         responsive
+        onEnded={handleEnded}
       />
       {isLive && needsUnmute && (
         <button
@@ -90,6 +130,11 @@ export function LivePlayer({ videoUid, playbackToken, live, poster, className }:
           Ativar som
           <Volume2 className="h-4 w-4 opacity-70" />
         </button>
+      )}
+      {hasMultiSegments && (
+        <div className="pointer-events-none absolute bottom-14 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-widest text-white/85 backdrop-blur">
+          Parte {segIndex + 1} / {effectiveSegments.length}
+        </div>
       )}
     </div>
   );
