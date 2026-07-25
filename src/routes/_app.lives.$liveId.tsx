@@ -85,7 +85,7 @@ function LiveDetail() {
     return () => clearInterval(t);
   }, [data.live.id, data.live.status]);
 
-  const { live, playbackToken, videoUid } = data;
+  const { live, playbackToken, videoUid, actualDurationSeconds } = data;
   const isLive = live.status === "live";
   const isReplay = live.status === "ended" || live.status === "published";
   const expert = live.expert_id ? expertsById[live.expert_id] : undefined;
@@ -181,8 +181,9 @@ function LiveDetail() {
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5" />
-                {live.duration_minutes} min
+                {formatDuration(isReplay, actualDurationSeconds, live.duration_minutes)}
               </span>
+
             </div>
 
             {live.description && (
@@ -345,6 +346,20 @@ function formatElapsed(s: number): string {
   if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
   return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
+
+function formatDuration(isReplay: boolean, actualSec: number | null | undefined, scheduledMin: number): string {
+  if (isReplay && actualSec && actualSec > 0) {
+    if (actualSec < 60) return `${actualSec} s`;
+    const m = Math.floor(actualSec / 60);
+    const s = actualSec % 60;
+    if (m < 60) return s > 0 ? `${m} min ${s} s` : `${m} min`;
+    const h = Math.floor(m / 60);
+    const rm = m % 60;
+    return rm > 0 ? `${h} h ${rm} min` : `${h} h`;
+  }
+  return `${scheduledMin} min`;
+}
+
 
 // Silence unused import warning when cn is not needed
 void cn;
