@@ -62,27 +62,62 @@ export const getLive = createServerFn({ method: "GET" })
     // Backfill recording UID for ended/published lives when the webhook didn't fire.
     let recordingUid = live.recording_video_uid;
     const isReplay = live.status === "published" || live.status === "ended";
-    // Also re-pick when we have a UID but multiple longer recordings exist
-    // (host reconnected several times → CF creates one video per session and
-    // we previously saved just the first/last short one).
+
+    // Replay segments — Cloudflare creates ONE recording per broadcast
+    // connection. When the host disconnects and reconnects (power loss, etc.),
+    // the session ends up as multiple videos. We list them all in chronological
+    // order and let the player advance through them, so the replay covers the
+    // whole session instead of the last connection only.
+    type ReplaySegment = { uid: string; token: string | null; duration: number | null };
+    let replaySegments: ReplaySegment[] = [];
+    let actualDurationSeconds: number | null = null;
+
     if (isReplay && live.cf_live_input_id) {
       try {
-        const { listVideosForLiveInput } = await import("@/lib/cloudflare-stream.server");
+        const { listVideosForLiveInput, signPlaybackToken } = await import("@/lib/cloudflare-stream.server");
         const videos = await listVideosForLiveInput(live.cf_live_input_id);
-        const ready = videos.filter((v) => v.readyToStream);
-        // Pick the longest ready recording — reconnects create multiple videos.
-        const best = ready.sort((a, b) => (b.duration ?? 0) - (a.duration ?? 0))[0]
-          ?? videos.sort((a, b) => (b.duration ?? 0) - (a.duration ?? 0))[0];
-        if (best?.uid && best.uid !== recordingUid) {
-          recordingUid = best.uid;
-          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-          await supabaseAdmin
-            .from("lives")
-            .update({ recording_video_uid: best.uid, status: "published" })
-            .eq("id", live.id);
+        const ready = videos
+          .filter((v) => v.readyToStream)
+          .sort((a, b) => {
+            const at = a.created ? new Date(a.created).getTime() : 0;
+            const bt = b.created ? new Date(b.created).getTime() : 0;
+            return at - bt;
+          });
+
+        if (ready.length > 0) {
+          replaySegments = await Promise.all(
+            ready.map(async (v) => {
+              let token: string | null = null;
+              try {
+                token = await signPlaybackToken(v.uid, { ttlSeconds: 7200 });
+              } catch (e) {
+                console.error("[lives] signPlaybackToken failed", v.uid, e);
+              }
+              return {
+                uid: v.uid,
+                token,
+                duration: typeof v.duration === "number" ? v.duration : null,
+              };
+            }),
+          );
+          actualDurationSeconds = Math.round(
+            replaySegments.reduce((sum, s) => sum + (s.duration ?? 0), 0),
+          ) || null;
+
+          // Persist the first segment as the canonical recording_video_uid so
+          // list views and cards still work.
+          const first = replaySegments[0];
+          if (first && first.uid !== recordingUid) {
+            recordingUid = first.uid;
+            const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+            await supabaseAdmin
+              .from("lives")
+              .update({ recording_video_uid: first.uid, status: "published" })
+              .eq("id", live.id);
+          }
         }
       } catch (e) {
-        console.error("[lives] backfill recording_video_uid failed", e);
+        console.error("[lives] replay segments fetch failed", e);
       }
     }
 
@@ -92,7 +127,9 @@ export const getLive = createServerFn({ method: "GET" })
     const videoUid = isReplay ? recordingUid ?? null : live.cf_playback_id;
 
     let playbackToken: string | null = null;
-    if (videoUid) {
+    if (isReplay) {
+      playbackToken = replaySegments[0]?.token ?? null;
+    } else if (videoUid) {
       try {
         const { signPlaybackToken } = await import("@/lib/cloudflare-stream.server");
         playbackToken = await signPlaybackToken(videoUid, { ttlSeconds: 7200 });
@@ -101,21 +138,7 @@ export const getLive = createServerFn({ method: "GET" })
       }
     }
 
-    // For replays, fetch the actual recording duration from Cloudflare.
-    let actualDurationSeconds: number | null = null;
-    if (isReplay && recordingUid) {
-      try {
-        const { getVideoDetails } = await import("@/lib/cloudflare-stream.server");
-        const details = await getVideoDetails(recordingUid);
-        if (typeof details.duration === "number" && details.duration > 0) {
-          actualDurationSeconds = Math.round(details.duration);
-        }
-      } catch (e) {
-        console.error("[lives] getVideoDetails failed", e);
-      }
-    }
-
-    return { live, playbackToken, videoUid, actualDurationSeconds };
+    return { live, playbackToken, videoUid, actualDurationSeconds, replaySegments };
   });
 
 
