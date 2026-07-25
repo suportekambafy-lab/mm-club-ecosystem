@@ -697,11 +697,34 @@ function LiveStudio() {
   function startLiveCompositeLoop() {
     if (liveCompositeAnimationRef.current !== null || liveCompositeIntervalRef.current !== null) return;
     const tick = () => drawLiveCompositeFrame();
-    const rafLoop = () => {
-      tick();
-      liveCompositeAnimationRef.current = requestAnimationFrame(rafLoop);
+
+    // Prefer requestVideoFrameCallback on the camera track: getUserMedia tracks
+    // keep producing frames at ~30fps even when the tab is backgrounded, so the
+    // composite (and therefore the outgoing WebRTC stream) never freezes.
+    const scheduleFromCamera = () => {
+      const cam = cameraSourceVideoRef.current as
+        | (HTMLVideoElement & { requestVideoFrameCallback?: (cb: () => void) => number })
+        | null;
+      if (cam?.requestVideoFrameCallback) {
+        const loop = () => {
+          tick();
+          if (liveCompositeTrackRef.current) cam.requestVideoFrameCallback!(loop);
+        };
+        cam.requestVideoFrameCallback(loop);
+        return true;
+      }
+      return false;
     };
-    liveCompositeAnimationRef.current = requestAnimationFrame(rafLoop);
+
+    if (!scheduleFromCamera()) {
+      const rafLoop = () => {
+        tick();
+        liveCompositeAnimationRef.current = requestAnimationFrame(rafLoop);
+      };
+      liveCompositeAnimationRef.current = requestAnimationFrame(rafLoop);
+    }
+    // Safety net for browsers where rVFC pauses; setInterval still fires
+    // (throttled to ~1Hz in background), keeping the encoder alive.
     liveCompositeIntervalRef.current = window.setInterval(tick, 1000 / 15);
   }
 
