@@ -131,22 +131,30 @@ function LiveDetail() {
     const el = document.documentElement;
     el.setAttribute("data-live-immersive", "1");
     const vv = window.visualViewport;
-    const setVh = () => {
+    const measure = () => {
       const h = vv?.height ?? window.innerHeight;
-      el.style.setProperty("--live-vh", `${h}px`);
+      const header = document.querySelector<HTMLElement>("header[data-app-topbar]");
+      const topH = header?.getBoundingClientRect().height ?? 0;
+      el.style.setProperty("--live-vh", `${Math.max(0, h - topH)}px`);
+      el.style.setProperty("--app-topbar-h", `${topH}px`);
     };
-    setVh();
-    vv?.addEventListener("resize", setVh);
-    vv?.addEventListener("scroll", setVh);
-    window.addEventListener("resize", setVh);
+    measure();
+    vv?.addEventListener("resize", measure);
+    vv?.addEventListener("scroll", measure);
+    window.addEventListener("resize", measure);
+    // Re-measure once after fonts/layout settle
+    const t = window.setTimeout(measure, 200);
     return () => {
       el.removeAttribute("data-live-immersive");
       el.style.removeProperty("--live-vh");
-      vv?.removeEventListener("resize", setVh);
-      vv?.removeEventListener("scroll", setVh);
-      window.removeEventListener("resize", setVh);
+      el.style.removeProperty("--app-topbar-h");
+      vv?.removeEventListener("resize", measure);
+      vv?.removeEventListener("scroll", measure);
+      window.removeEventListener("resize", measure);
+      window.clearTimeout(t);
     };
   }, []);
+
 
 
   const { live, playbackToken, videoUid, actualDurationSeconds } = data;
@@ -202,13 +210,14 @@ function LiveDetail() {
     </div>
   );
 
-  const playerSlot =
+  const playerSlot = (mobile?: boolean) =>
     (isLive || isReplay) && videoUid ? (
       <LivePlayer
         key={`gen-${live.stream_generation ?? 0}`}
         videoUid={videoUid}
         playbackToken={playbackToken}
         live={isLive}
+        className={mobile ? "aspect-video w-full max-w-full rounded-none shadow-none ring-0" : undefined}
       />
     ) : isReplay ? (
       <NoReplayPoster live={live} />
@@ -216,16 +225,16 @@ function LiveDetail() {
       <PrelivePoster live={live} countdown={countdown} />
     );
 
+
   return (
     <div
       className="
-        -mx-4 flex flex-col lg:mx-0 lg:block
+        flex flex-col lg:block
         lg:h-auto lg:space-y-8
       "
       style={
         {
           height: "var(--live-vh, calc(100dvh - var(--app-topbar-h, 4rem)))",
-          "--app-topbar-h": "4rem",
         } as React.CSSProperties
       }
     >
@@ -238,13 +247,20 @@ function LiveDetail() {
         Voltar às Lives
       </Link>
 
-      {/* -------- MOBILE LAYOUT (locked to visualViewport, only chat flexes) -------- */}
-      <div className="flex min-h-0 flex-1 flex-col lg:hidden">
-        {/* Video — the star. Overlay stats sit inside it. */}
+      {/* -------- MOBILE LAYOUT (fully locked; only the chat list scrolls) -------- */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:hidden">
+        {/* Video — capped so it never overflows the viewport width or height */}
         <div className="relative shrink-0 bg-black">
-          {playerSlot}
-          {overlayStats}
+          <div
+            className="relative mx-auto aspect-video overflow-hidden"
+            style={{ width: "min(100%, calc(42dvh * 16 / 9))" }}
+          >
+            {playerSlot(true)}
+            {overlayStats}
+          </div>
         </div>
+
+
 
         {/* Ultra-compact session header — single title + one meta line */}
         <div className="shrink-0 border-b border-border/60 bg-background/95 px-4 pt-2.5 pb-2">
@@ -298,7 +314,7 @@ function LiveDetail() {
           )}
         </div>
 
-        {/* Chat fills remaining space — only this region reflows with keyboard */}
+        {/* Chat fills remaining space — only the message list scrolls */}
         <div
           className="min-h-0 flex-1 px-2 pt-2"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)" }}
@@ -307,13 +323,15 @@ function LiveDetail() {
         </div>
       </div>
 
+
       {/* -------- DESKTOP LAYOUT (unchanged split) -------- */}
       <div className="hidden lg:grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-5">
           <div className="relative">
-            {playerSlot}
+            {playerSlot(false)}
             {overlayStats}
           </div>
+
 
 
           <div className="rounded-3xl border border-border bg-gradient-to-br from-surface-1 to-surface-2/40 p-6 md:p-8">
