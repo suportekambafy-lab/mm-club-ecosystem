@@ -125,11 +125,29 @@ function LiveDetail() {
 
   // Immersive layout: hide the app's mobile tabbar so it can never overlap
   // the chat composer or push the video off-screen when the keyboard opens.
+  // Also lock the container height to `visualViewport.height` so opening the
+  // iOS keyboard never resizes the video area — only the chat reflows.
   useEffect(() => {
     const el = document.documentElement;
     el.setAttribute("data-live-immersive", "1");
-    return () => el.removeAttribute("data-live-immersive");
+    const vv = window.visualViewport;
+    const setVh = () => {
+      const h = vv?.height ?? window.innerHeight;
+      el.style.setProperty("--live-vh", `${h}px`);
+    };
+    setVh();
+    vv?.addEventListener("resize", setVh);
+    vv?.addEventListener("scroll", setVh);
+    window.addEventListener("resize", setVh);
+    return () => {
+      el.removeAttribute("data-live-immersive");
+      el.style.removeProperty("--live-vh");
+      vv?.removeEventListener("resize", setVh);
+      vv?.removeEventListener("scroll", setVh);
+      window.removeEventListener("resize", setVh);
+    };
   }, []);
+
 
   const { live, playbackToken, videoUid, actualDurationSeconds } = data;
   const isLive = live.status === "live";
