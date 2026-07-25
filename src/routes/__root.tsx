@@ -163,12 +163,17 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
-  const showComingSoon =
-    typeof window !== "undefined" &&
-    COMING_SOON_HOSTS.has(window.location.hostname) &&
-    !window.location.search.includes("preview=1") &&
-    window.localStorage.getItem("mm_bypass") !== "1";
-
+  // Compute coming-soon gate only after hydration to avoid SSR/CSR mismatch
+  // (React error #418) — server always renders <Outlet />, client swaps in
+  // after mount if the host requires it.
+  const [showComingSoon, setShowComingSoon] = useState(false);
+  useEffect(() => {
+    setShowComingSoon(
+      COMING_SOON_HOSTS.has(window.location.hostname) &&
+        !window.location.search.includes("preview=1") &&
+        window.localStorage.getItem("mm_bypass") !== "1",
+    );
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
