@@ -211,6 +211,7 @@ export const adminCreateLive = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     // Auto-generate a premium MM Club cover when the admin didn't upload one.
+    let finalCoverUrl: string | null = data.cover_url ?? null;
     if (!data.cover_url) {
       let autoCover = `/api/public/lives/${row.id}/cover/svg`;
       try {
@@ -229,6 +230,50 @@ export const adminCreateLive = createServerFn({ method: "POST" })
         .from("lives")
         .update({ cover_url: autoCover })
         .eq("id", row.id);
+      finalCoverUrl = autoCover;
+    }
+
+    // Fire email announcements to all confirmed users (idempotent via email_log).
+    try {
+      const { sendEmail, emailTemplates } = await import("@/lib/email.server");
+      const isScheduled = new Date(startsAt).getTime() > Date.now() + 5 * 60 * 1000;
+      let page = 1;
+      // Bounded loop to avoid runaway execution.
+      for (let i = 0; i < 20; i++) {
+        const { data: list, error: listErr } = await supabaseAdmin.auth.admin.listUsers({
+          page,
+          perPage: 100,
+        });
+        if (listErr || !list?.users?.length) break;
+        for (const u of list.users) {
+          if (!u.email || !u.email_confirmed_at) continue;
+          const name =
+            ((u.user_metadata as { display_name?: string } | null)?.display_name) ??
+            u.email.split("@")[0] ??
+            "amigo";
+          const tpl = emailTemplates.liveAnnouncement({
+            name,
+            title: data.title,
+            description: data.description ?? null,
+            startsAt,
+            coverUrl: finalCoverUrl,
+            liveId: row.id,
+            isScheduled,
+          });
+          await sendEmail({
+            to: u.email,
+            subject: tpl.subject,
+            html: tpl.html,
+            userId: u.id,
+            kind: "live_announcement",
+            ref: row.id,
+          }).catch((e) => console.error("[lives] announce email failed", u.email, e));
+        }
+        if (list.users.length < 100) break;
+        page += 1;
+      }
+    } catch (e) {
+      console.error("[lives] announce dispatch failed", e);
     }
 
     return {
