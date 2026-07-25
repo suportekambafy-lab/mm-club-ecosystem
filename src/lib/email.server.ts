@@ -10,7 +10,8 @@ export type EmailKind =
   | "welcome"
   | "credits_topup"
   | "new_lesson"
-  | "weekly_summary";
+  | "weekly_summary"
+  | "live_announcement";
 
 type SendOpts = {
   to: string;
