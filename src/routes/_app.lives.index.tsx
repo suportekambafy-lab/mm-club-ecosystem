@@ -8,6 +8,7 @@ import { expertsById } from "@/data/experts";
 import { cn } from "@/lib/utils";
 import { LiveCountdown } from "@/components/mm/live-countdown";
 import { resolveLiveCoverUrl } from "@/lib/live-cover-url";
+import { supabase } from "@/integrations/supabase/client";
 
 type Live = Awaited<ReturnType<typeof listLives>>[number];
 
