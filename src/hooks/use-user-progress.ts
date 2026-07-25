@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { courses as allCourses } from "@/data/courses";
 import type { Course } from "@/data/types";
@@ -29,6 +29,7 @@ function lessonDurationSeconds(course: Course, lessonId: string): number {
 }
 
 export function useUserProgress() {
+  const currentUserIdRef = useRef<string | null>(null);
   const [progress, setProgress] = useState<ProgressByCourse>({});
   const [loaded, setLoaded] = useState(false);
 
@@ -38,6 +39,7 @@ export function useUserProgress() {
     async function load() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) {
+        currentUserIdRef.current = null;
         if (!cancelled) {
           setProgress({});
           setLoaded(true);
@@ -94,14 +96,39 @@ export function useUserProgress() {
         bucket.progress = total > 0 ? Math.min(completedUnits / total, 1) : 0;
       }
       if (!cancelled) {
+        currentUserIdRef.current = u.user.id;
         setProgress(byCourse);
         setLoaded(true);
       }
     }
 
     load();
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        currentUserIdRef.current = null;
+        setProgress({});
+        setLoaded(true);
+        return;
+      }
+      if (event === "USER_UPDATED") {
+        load();
+        return;
+      }
+      if (event === "SIGNED_IN") {
+        const nextUserId = session?.user?.id ?? null;
+        if (nextUserId && nextUserId !== currentUserIdRef.current) {
+          load();
+        }
+      }
+    });
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+
+  return { progress, loaded };
+}
         load();
       }
     });

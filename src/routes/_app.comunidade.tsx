@@ -88,7 +88,20 @@ function useUser() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      if (event === "SIGNED_OUT") {
+        setUser(null);
+        return;
+      }
+      if (event === "SIGNED_IN" || event === "USER_UPDATED") {
+        const nextUser = s?.user ?? null;
+        if (!nextUser) return;
+        setUser((current) => {
+          if (current?.id === nextUser.id && event !== "USER_UPDATED") return current;
+          return nextUser;
+        });
+      }
+    });
     return () => sub.subscription.unsubscribe();
   }, []);
   return user;
