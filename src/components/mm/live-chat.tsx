@@ -260,6 +260,39 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
         )}
       </div>
 
+      {(() => {
+        const pinned = messages.find((m) => m.pinned_at);
+        if (!pinned) return null;
+        const p = profiles[pinned.user_id];
+        const pname = p?.display_name || (pinned.user_id === currentUserId ? "Tu" : pinned.user_id.slice(0, 6));
+        return (
+          <div className="flex shrink-0 items-start gap-2 border-b border-border/60 bg-primary/5 px-3 py-2">
+            <Pin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1 text-[10px] uppercase tracking-widest text-primary/80">
+                <span>Fixada</span>
+                <span className="opacity-60">·</span>
+                <span className="normal-case tracking-normal text-foreground/85">{pname}</span>
+                {adminIds.has(pinned.user_id) && <VerifiedBadge size={10} />}
+              </div>
+              <p className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-foreground/90 break-words">
+                {renderBody(pinned.body)}
+              </p>
+            </div>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => handleTogglePin(pinned)}
+                aria-label="Remover fixação"
+                className="shrink-0 rounded-md p-1 text-muted-foreground transition hover:bg-surface-2 hover:text-foreground"
+              >
+                <PinOff className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        );
+      })()}
+
       <div className="relative min-h-0 flex-1">
         <div
           ref={scrollRef}
@@ -277,11 +310,12 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
                 const profile = profiles[m.user_id];
                 const name = profile?.display_name || (mine ? "Tu" : m.user_id.slice(0, 6));
                 const time = formatTime(m.created_at);
+                const authorIsAdmin = adminIds.has(m.user_id);
                 return (
                   <div
                     key={m.id}
                     className={cn(
-                      "live-chat-msg flex gap-2",
+                      "live-chat-msg group/msg flex gap-2",
                       mine ? "flex-row-reverse" : "flex-row",
                       showHeader ? "mt-2 first:mt-0" : "mt-0.5",
                     )}
@@ -309,20 +343,40 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
                             mine ? "flex-row-reverse" : "flex-row",
                           )}
                         >
-                          <span className="font-medium text-foreground/85">{name}</span>
+                          <span className="flex items-baseline gap-1 font-medium text-foreground/85">
+                            {name}
+                            {authorIsAdmin && <VerifiedBadge size={11} />}
+                          </span>
                           <span className="opacity-60">·</span>
                           <span className="tabular-nums opacity-70">{time}</span>
                         </div>
                       )}
-                      <div
-                        className={cn(
-                          "rounded-2xl px-3 py-1.5 text-[13.5px] leading-snug break-words",
-                          mine
-                            ? "bg-primary text-primary-foreground rounded-tr-sm"
-                            : "bg-surface-2 text-foreground rounded-tl-sm",
+                      <div className={cn("flex items-center gap-1", mine ? "flex-row-reverse" : "flex-row")}>
+                        <div
+                          className={cn(
+                            "rounded-2xl px-3 py-1.5 text-[13.5px] leading-snug break-words whitespace-pre-wrap",
+                            mine
+                              ? "bg-primary text-primary-foreground rounded-tr-sm"
+                              : "bg-surface-2 text-foreground rounded-tl-sm",
+                          )}
+                        >
+                          {renderBody(m.body)}
+                        </div>
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => handleTogglePin(m)}
+                            aria-label={m.pinned_at ? "Remover fixação" : "Fixar mensagem"}
+                            className={cn(
+                              "shrink-0 rounded-md p-1 text-muted-foreground transition hover:bg-surface-2 hover:text-foreground",
+                              m.pinned_at
+                                ? "opacity-100 text-primary"
+                                : "opacity-0 group-hover/msg:opacity-100 focus:opacity-100",
+                            )}
+                          >
+                            {m.pinned_at ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
+                          </button>
                         )}
-                      >
-                        {m.body}
                       </div>
                     </div>
                   </div>
@@ -331,6 +385,8 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
             )}
           </div>
         </div>
+
+
 
         {unread > 0 && (
           <button
