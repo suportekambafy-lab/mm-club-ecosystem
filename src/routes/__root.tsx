@@ -166,7 +166,9 @@ function RootComponent() {
   const showComingSoon =
     typeof window !== "undefined" &&
     COMING_SOON_HOSTS.has(window.location.hostname) &&
-    !window.location.search.includes("preview=1");
+    !window.location.search.includes("preview=1") &&
+    window.localStorage.getItem("mm_bypass") !== "1";
+
 
   return (
     <QueryClientProvider client={queryClient}>
