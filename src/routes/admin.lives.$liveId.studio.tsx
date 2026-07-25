@@ -101,6 +101,7 @@ function LiveStudio() {
     }
   }, []);
 
+  const autoResumedRef = useRef(false);
   useEffect(() => {
     (async () => {
       try {
@@ -111,6 +112,21 @@ function LiveStudio() {
           return;
         }
         setWhipUrl(r.cf_webrtc_url);
+        // Persistent session: if the live is already broadcasting server-side
+        // (e.g. host reloaded), use the server-persisted started_at so the
+        // elapsed timer does not restart, and auto-request media so the host
+        // only has to accept the camera prompt to be back on air.
+        if (r.started_at) {
+          startedAtRef.current = new Date(r.started_at).getTime();
+          setElapsed(Math.max(0, Math.floor((Date.now() - startedAtRef.current) / 1000)));
+        }
+        if (r.status === "live" && !autoResumedRef.current) {
+          autoResumedRef.current = true;
+          setError(
+            "A retomar a transmissão a partir da sessão anterior. Autoriza câmara e microfone para continuar.",
+          );
+          await requestMedia();
+        }
       } catch (e) {
         setError((e as Error).message);
         setStatus("error");
@@ -122,14 +138,26 @@ function LiveStudio() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [liveId]);
 
+  // Once media is ready after an auto-resume, re-open the WHIP peer without
+  // waiting for a manual click — this is the whole point of resume.
+  useEffect(() => {
+    if (autoResumedRef.current && status === "ready" && whipUrl && streamRef.current) {
+      void goLive();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, whipUrl]);
+
   useEffect(() => {
     if (status !== "live") return;
-    startedAtRef.current = Date.now();
+    // Preserve server-persisted start time; only stamp if we don't have one.
+    if (!startedAtRef.current) startedAtRef.current = Date.now();
+    setElapsed(Math.max(0, Math.floor((Date.now() - startedAtRef.current) / 1000)));
     const t = setInterval(() => {
       if (startedAtRef.current) setElapsed(Math.floor((Date.now() - startedAtRef.current) / 1000));
     }, 1000);
     return () => clearInterval(t);
   }, [status]);
+
 
   useEffect(() => {
     if (status !== "live") return;
