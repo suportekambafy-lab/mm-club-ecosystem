@@ -157,7 +157,7 @@ function LiveDetail() {
 
 
 
-  const { live, playbackToken, videoUid, actualDurationSeconds } = data;
+  const { live, playbackToken, videoUid, actualDurationSeconds, replaySegments } = data;
   const isLive = live.status === "live";
   const isReplay = live.status === "ended" || live.status === "published";
   const expert = live.expert_id ? expertsById[live.expert_id] : undefined;
@@ -216,9 +216,11 @@ function LiveDetail() {
         key={`gen-${live.stream_generation ?? 0}`}
         videoUid={videoUid}
         playbackToken={playbackToken}
+        segments={replaySegments}
         live={isLive}
         className={mobile ? "aspect-video w-full max-w-full rounded-none shadow-none ring-0" : undefined}
       />
+
     ) : isReplay ? (
       <NoReplayPoster live={live} />
     ) : (
