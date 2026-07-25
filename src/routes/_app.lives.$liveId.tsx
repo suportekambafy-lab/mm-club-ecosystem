@@ -131,22 +131,30 @@ function LiveDetail() {
     const el = document.documentElement;
     el.setAttribute("data-live-immersive", "1");
     const vv = window.visualViewport;
-    const setVh = () => {
+    const measure = () => {
       const h = vv?.height ?? window.innerHeight;
-      el.style.setProperty("--live-vh", `${h}px`);
+      const header = document.querySelector<HTMLElement>("header[data-app-topbar]");
+      const topH = header?.getBoundingClientRect().height ?? 0;
+      el.style.setProperty("--live-vh", `${Math.max(0, h - topH)}px`);
+      el.style.setProperty("--app-topbar-h", `${topH}px`);
     };
-    setVh();
-    vv?.addEventListener("resize", setVh);
-    vv?.addEventListener("scroll", setVh);
-    window.addEventListener("resize", setVh);
+    measure();
+    vv?.addEventListener("resize", measure);
+    vv?.addEventListener("scroll", measure);
+    window.addEventListener("resize", measure);
+    // Re-measure once after fonts/layout settle
+    const t = window.setTimeout(measure, 200);
     return () => {
       el.removeAttribute("data-live-immersive");
       el.style.removeProperty("--live-vh");
-      vv?.removeEventListener("resize", setVh);
-      vv?.removeEventListener("scroll", setVh);
-      window.removeEventListener("resize", setVh);
+      el.style.removeProperty("--app-topbar-h");
+      vv?.removeEventListener("resize", measure);
+      vv?.removeEventListener("scroll", measure);
+      window.removeEventListener("resize", measure);
+      window.clearTimeout(t);
     };
   }, []);
+
 
 
   const { live, playbackToken, videoUid, actualDurationSeconds } = data;
