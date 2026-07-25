@@ -467,6 +467,50 @@ function AdminLives() {
   );
 }
 
+function LivesSection({
+  title,
+  loading,
+  rows,
+  emptyText,
+  renderActions,
+  statusBadge,
+}: {
+  title: string;
+  loading: boolean;
+  rows: LiveRow[];
+  emptyText: string;
+  renderActions: (r: LiveRow) => React.ReactNode;
+  statusBadge?: (r: LiveRow) => string;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-surface-1">
+      <div className="border-b border-border px-5 py-3">
+        <p className="font-display text-sm">{title}</p>
+      </div>
+      {loading ? (
+        <p className="px-5 py-6 text-sm text-muted-foreground">A carregar…</p>
+      ) : rows.length === 0 ? (
+        <p className="px-5 py-6 text-sm text-muted-foreground">{emptyText}</p>
+      ) : (
+        <ul className="divide-y divide-border">
+          {rows.map((r) => (
+            <li key={r.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm text-foreground">{r.title}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {new Date(r.starts_at).toLocaleString("pt-PT")} · {r.visibility}
+                  {statusBadge ? ` · ${statusBadge(r)}` : ` · ${r.status}`}
+                </p>
+              </div>
+              {renderActions(r)}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function ModeButton({
   active,
   onClick,
