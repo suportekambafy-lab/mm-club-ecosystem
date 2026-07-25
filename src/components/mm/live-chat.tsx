@@ -1,8 +1,10 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowDown, Send, MessagesSquare, Lock } from "lucide-react";
+import { ArrowDown, Send, MessagesSquare, Lock, Pin, PinOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { listChatMessages, sendChatMessage } from "@/lib/lives.functions";
+import { listChatMessages, sendChatMessage, setChatMessagePinned } from "@/lib/lives.functions";
+import { useAdminIds } from "@/hooks/use-admin-ids";
+import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { cn } from "@/lib/utils";
 
 type Message = {
@@ -11,6 +13,8 @@ type Message = {
   user_id: string;
   body: string;
   created_at: string;
+  pinned_at?: string | null;
+  pinned_by?: string | null;
 };
 
 type Profile = {
