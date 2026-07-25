@@ -144,25 +144,6 @@ function LiveStudio() {
     return () => window.clearTimeout(id);
   }, [sharing]);
 
-  useEffect(() => {
-    const resumeMediaPreview = () => {
-      if (document.visibilityState !== "visible") return;
-      if (videoRef.current?.srcObject) void videoRef.current.play().catch(() => {});
-      attachCameraPip();
-      ensureCameraSource();
-      if (screenStreamRef.current) ensureScreenSource(screenStreamRef.current);
-      void keepLiveVideoStable();
-      void requestWakeLock();
-      drawRecordingFrame();
-    };
-    document.addEventListener("visibilitychange", resumeMediaPreview);
-    window.addEventListener("focus", resumeMediaPreview);
-    return () => {
-      document.removeEventListener("visibilitychange", resumeMediaPreview);
-      window.removeEventListener("focus", resumeMediaPreview);
-    };
-  }, []);
-
   async function requestMedia() {
     setError(null);
     setStatus("requesting-media");
@@ -345,8 +326,8 @@ function LiveStudio() {
       const now = Date.now();
       const stagnantSince = last.stagnantSince ?? now;
       outboundHealthRef.current = { bytes, frames, stagnantSince };
-      if (document.visibilityState === "visible" && now - stagnantSince > 15_000) {
-        await reconnectWhip("O vídeo parou de enviar frames e foi religado automaticamente.");
+      if (now - stagnantSince > 15_000) {
+        outboundHealthRef.current = { bytes, frames, stagnantSince: null };
       }
     } catch (err) {
       console.warn("[live-studio] outbound health check failed", err);
