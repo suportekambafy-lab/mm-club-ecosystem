@@ -48,7 +48,9 @@ export const Route = createFileRoute("/api/public/hooks/lives-recording-check")(
             }
             try {
               const videos = await listVideosForLiveInput(row.cf_live_input_id);
-              const ready = videos.find((v) => v.readyToStream);
+              const readyVids = videos.filter((v) => v.readyToStream);
+              // Pick the longest ready recording (reconnects create multiple).
+              const ready = readyVids.sort((a, b) => (b.duration ?? 0) - (a.duration ?? 0))[0];
               if (ready?.uid) {
                 const { error: upErr } = await supabaseAdmin
                   .from("lives")

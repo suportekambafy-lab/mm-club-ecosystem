@@ -62,17 +62,23 @@ export const getLive = createServerFn({ method: "GET" })
     // Backfill recording UID for ended/published lives when the webhook didn't fire.
     let recordingUid = live.recording_video_uid;
     const isReplay = live.status === "published" || live.status === "ended";
-    if (isReplay && !recordingUid && live.cf_live_input_id) {
+    // Also re-pick when we have a UID but multiple longer recordings exist
+    // (host reconnected several times → CF creates one video per session and
+    // we previously saved just the first/last short one).
+    if (isReplay && live.cf_live_input_id) {
       try {
         const { listVideosForLiveInput } = await import("@/lib/cloudflare-stream.server");
         const videos = await listVideosForLiveInput(live.cf_live_input_id);
-        const ready = videos.find((v) => v.readyToStream) ?? videos[0];
-        if (ready?.uid) {
-          recordingUid = ready.uid;
+        const ready = videos.filter((v) => v.readyToStream);
+        // Pick the longest ready recording — reconnects create multiple videos.
+        const best = ready.sort((a, b) => (b.duration ?? 0) - (a.duration ?? 0))[0]
+          ?? videos.sort((a, b) => (b.duration ?? 0) - (a.duration ?? 0))[0];
+        if (best?.uid && best.uid !== recordingUid) {
+          recordingUid = best.uid;
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           await supabaseAdmin
             .from("lives")
-            .update({ recording_video_uid: ready.uid, status: "published" })
+            .update({ recording_video_uid: best.uid, status: "published" })
             .eq("id", live.id);
         }
       } catch (e) {
