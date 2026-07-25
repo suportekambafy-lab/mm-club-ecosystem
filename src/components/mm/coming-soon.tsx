@@ -207,9 +207,35 @@ export function ComingSoon() {
 
         {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
 
+        {showPass ? (
+          <form onSubmit={onPassSubmit} className="mt-8 flex w-full max-w-sm flex-col gap-2 sm:flex-row">
+            <input
+              type="password"
+              autoFocus
+              value={pass}
+              onChange={(e) => { setPass(e.target.value); setPassError(null); }}
+              placeholder="Senha de acesso"
+              className="flex-1 rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm text-white placeholder:text-white/40 outline-none backdrop-blur focus:border-primary/60"
+            />
+            <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-5 py-3 text-sm font-semibold text-primary hover:bg-primary/20">
+              Entrar
+            </button>
+          </form>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowPass(true)}
+            className="mt-8 inline-flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-white/60 hover:text-white"
+          >
+            <Lock className="h-3 w-3" /> Entrar com senha
+          </button>
+        )}
+        {passError && <p className="mt-2 text-xs text-red-400">{passError}</p>}
+
         <p className="mt-14 text-[10px] uppercase tracking-[0.28em] text-white/40">
           © Marca Milionária
         </p>
+
       </main>
     </div>
   );
