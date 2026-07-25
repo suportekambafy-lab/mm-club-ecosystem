@@ -486,8 +486,10 @@ export type Database = {
           id: string
           published_lesson_id: string | null
           recording_video_uid: string | null
+          started_at: string | null
           starts_at: string
           status: Database["public"]["Enums"]["live_status"]
+          stream_generation: number
           title: string
           updated_at: string
           visibility: string
@@ -507,8 +509,10 @@ export type Database = {
           id?: string
           published_lesson_id?: string | null
           recording_video_uid?: string | null
+          started_at?: string | null
           starts_at: string
           status?: Database["public"]["Enums"]["live_status"]
+          stream_generation?: number
           title: string
           updated_at?: string
           visibility?: string
@@ -528,8 +532,10 @@ export type Database = {
           id?: string
           published_lesson_id?: string | null
           recording_video_uid?: string | null
+          started_at?: string | null
           starts_at?: string
           status?: Database["public"]["Enums"]["live_status"]
+          stream_generation?: number
           title?: string
           updated_at?: string
           visibility?: string
