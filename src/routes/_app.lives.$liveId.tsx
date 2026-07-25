@@ -157,7 +157,7 @@ function LiveDetail() {
 
 
 
-  const { live, playbackToken, videoUid, actualDurationSeconds } = data;
+  const { live, playbackToken, videoUid, actualDurationSeconds, replaySegments } = data;
   const isLive = live.status === "live";
   const isReplay = live.status === "ended" || live.status === "published";
   const expert = live.expert_id ? expertsById[live.expert_id] : undefined;
