@@ -409,11 +409,14 @@ function LiveStudio() {
       // Hint the encoder to keep framerate over resolution.
       applyVideoTrackHint(screenTrack);
 
-      // Replace outgoing track with the native screen capture. Canvas-composited
-      // tracks freeze when the studio tab goes to background; native capture is
-      // the stable path for uninterrupted WebRTC.
+      // Send a canvas-composited track (screen + camera PiP) so the presenter
+      // stays visible during the share. The composite loop is driven by the
+      // camera's requestVideoFrameCallback, which keeps firing even when the
+      // studio tab is backgrounded — this avoids the rAF/setInterval throttling
+      // that used to freeze the outgoing frames.
       if (videoSenderRef.current) {
-        await replaceOutgoingVideoTrack(screenTrack);
+        const composite = ensureLiveCompositeTrack();
+        await replaceOutgoingVideoTrack(composite ?? screenTrack);
       }
 
       // Main preview shows the screen.
