@@ -164,36 +164,42 @@ function LiveDetail() {
   const visibilityLabel =
     live.visibility === "public" ? "Aberta" : live.visibility === "premium" ? "Premium" : "MM Club";
 
-  const statusChips = (
-    <>
-      {isLive && (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white shadow-lg shadow-red-500/30">
-          <span className="relative inline-flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
+  const overlayStats = (isLive || isReplay) && (
+    <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between p-2.5 sm:p-3">
+      {/* Left — live/replay badge */}
+      <div className="flex items-center">
+        {isLive && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white shadow-lg shadow-red-500/30">
+            <span className="relative inline-flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
+            </span>
+            Ao vivo
           </span>
-          Ao vivo
-        </span>
-      )}
-      {isReplay && (
-        <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white backdrop-blur">
-          <Play className="h-3 w-3" />
-          Replay
-        </span>
-      )}
+        )}
+        {isReplay && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white backdrop-blur">
+            <Play className="h-3 w-3" />
+            Replay
+          </span>
+        )}
+      </div>
+
+      {/* Right — unified glass pill with presence + elapsed */}
       {isLive && (
-        <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2.5 py-1 text-[10px] font-medium text-white backdrop-blur">
-          <Users className="h-3 w-3" />
-          {presenceCount}
-        </span>
+        <div className="inline-flex items-center gap-3 rounded-full bg-black/45 px-3 py-1 text-[11px] font-medium text-white backdrop-blur-md ring-1 ring-white/10">
+          <span className="inline-flex items-center gap-1">
+            <Users className="h-3 w-3 opacity-80" />
+            {presenceCount}
+          </span>
+          <span className="h-3 w-px bg-white/20" />
+          <span className="inline-flex items-center gap-1 tabular-nums">
+            <Clock className="h-3 w-3 opacity-80" />
+            {formatElapsed(elapsed)}
+          </span>
+        </div>
       )}
-      {isLive && (
-        <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2.5 py-1 text-[10px] font-medium text-white backdrop-blur tabular-nums">
-          <Clock className="h-3 w-3" />
-          {formatElapsed(elapsed)}
-        </span>
-      )}
-    </>
+    </div>
   );
 
   const playerSlot =
@@ -214,10 +220,14 @@ function LiveDetail() {
     <div
       className="
         -mx-4 flex flex-col lg:mx-0 lg:block
-        h-[calc(100dvh-var(--app-topbar-h,4rem))]
         lg:h-auto lg:space-y-8
       "
-      style={{ "--app-topbar-h": "4rem" } as React.CSSProperties}
+      style={
+        {
+          height: "var(--live-vh, calc(100dvh - var(--app-topbar-h, 4rem)))",
+          "--app-topbar-h": "4rem",
+        } as React.CSSProperties
+      }
     >
       {/* Back link — desktop only (mobile keeps every pixel for the stream) */}
       <Link
@@ -228,61 +238,57 @@ function LiveDetail() {
         Voltar às Lives
       </Link>
 
-      {/* -------- MOBILE LAYOUT (locked height, only chat flexes) -------- */}
+      {/* -------- MOBILE LAYOUT (locked to visualViewport, only chat flexes) -------- */}
       <div className="flex min-h-0 flex-1 flex-col lg:hidden">
-        {/* Sticky video */}
+        {/* Video — the star. Overlay stats sit inside it. */}
         <div className="relative shrink-0 bg-black">
           {playerSlot}
-          <div className="pointer-events-none absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
-            {statusChips}
-          </div>
+          {overlayStats}
         </div>
 
-        {/* Compact session header */}
-        <div className="shrink-0 border-b border-border bg-background/95 px-4 py-3">
-          <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-            <Radio className="h-3 w-3 text-primary" />
-            <span>Sessão MM Club</span>
-            <span>·</span>
-            <Lock className="h-3 w-3" />
-            <span>{visibilityLabel}</span>
+        {/* Ultra-compact session header — single title + one meta line */}
+        <div className="shrink-0 border-b border-border/60 bg-background/95 px-4 pt-2.5 pb-2">
+          <div className="flex items-center gap-2">
+            <h1 className="min-w-0 flex-1 truncate font-display text-[17px] leading-tight text-foreground">
+              {live.title}
+            </h1>
+            <button
+              type="button"
+              onClick={() => setMaterialsOpen((v) => !v)}
+              aria-expanded={materialsOpen}
+              aria-label="Materiais da sessão"
+              className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full border border-border/60 bg-surface-1/60 px-2.5 text-[10px] font-medium text-muted-foreground transition active:scale-[0.97]"
+            >
+              <FileText className="h-3 w-3 text-primary" />
+              Materiais
+              <ChevronDown
+                className={cn(
+                  "h-3 w-3 transition-transform duration-200",
+                  materialsOpen && "rotate-180",
+                )}
+              />
+            </button>
           </div>
-          <h1 className="mt-1 truncate font-display text-xl leading-tight text-foreground">
-            {live.title}
-          </h1>
-          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+          <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
             <span className="inline-flex items-center gap-1">
               <CalendarDays className="h-3 w-3" />
               {dateStr}
             </span>
+            <span className="opacity-40">•</span>
+            <span className="inline-flex items-center gap-1">
+              <Lock className="h-3 w-3" />
+              {visibilityLabel}
+            </span>
             {isReplay && actualDurationSeconds && actualDurationSeconds > 0 && (
-              <span className="inline-flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                {formatDuration(actualDurationSeconds)}
-              </span>
+              <>
+                <span className="opacity-40">•</span>
+                <span className="inline-flex items-center gap-1 tabular-nums">
+                  <Clock className="h-3 w-3" />
+                  {formatDuration(actualDurationSeconds)}
+                </span>
+              </>
             )}
           </div>
-
-          {/* Collapsible materials */}
-          <button
-            type="button"
-            onClick={() => setMaterialsOpen((v) => !v)}
-            aria-expanded={materialsOpen}
-            className="mt-2 flex w-full items-center justify-between gap-2 rounded-xl border border-border/60 bg-surface-1/60 px-3 py-1.5 text-left transition active:scale-[0.99]"
-          >
-            <span className="flex min-w-0 items-center gap-2">
-              <FileText className="h-3.5 w-3.5 shrink-0 text-primary" />
-              <span className="truncate text-xs font-medium text-foreground">
-                Materiais da sessão
-              </span>
-            </span>
-            <ChevronDown
-              className={cn(
-                "h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200",
-                materialsOpen && "rotate-180",
-              )}
-            />
-          </button>
           {materialsOpen && (
             <p className="mt-2 rounded-xl border border-dashed border-border bg-surface-1/40 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
               {isReplay
@@ -294,7 +300,7 @@ function LiveDetail() {
 
         {/* Chat fills remaining space — only this region reflows with keyboard */}
         <div
-          className="min-h-0 flex-1 p-2"
+          className="min-h-0 flex-1 px-2 pt-2"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)" }}
         >
           <LiveChat liveId={live.id} currentUserId={userId} readOnly={isReplay} />
@@ -306,12 +312,9 @@ function LiveDetail() {
         <div className="space-y-5">
           <div className="relative">
             {playerSlot}
-            {(isLive || isReplay) && (
-              <div className="pointer-events-none absolute left-4 top-4 flex flex-wrap items-center gap-2">
-                {statusChips}
-              </div>
-            )}
+            {overlayStats}
           </div>
+
 
           <div className="rounded-3xl border border-border bg-gradient-to-br from-surface-1 to-surface-2/40 p-6 md:p-8">
             <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
