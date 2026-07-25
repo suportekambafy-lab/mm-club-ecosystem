@@ -1,11 +1,27 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Check } from "lucide-react";
+import { Loader2, Check, Lock } from "lucide-react";
+
+const ACCESS_PASSWORD = "Vivi19";
 
 export function ComingSoon() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [showPass, setShowPass] = useState(false);
+  const [pass, setPass] = useState("");
+  const [passError, setPassError] = useState<string | null>(null);
+
+  function onPassSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (pass === ACCESS_PASSWORD) {
+      window.localStorage.setItem("mm_bypass", "1");
+      window.location.reload();
+      return;
+    }
+    setPassError("Senha incorreta.");
+  }
+
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
