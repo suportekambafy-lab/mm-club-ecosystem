@@ -141,9 +141,10 @@ function AppLayout() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setAuthUser(data.session?.user ?? null));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       setAuthUser(s?.user ?? null);
-      router.invalidate();
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") router.invalidate();
     });
     return () => sub.subscription.unsubscribe();
   }, [router]);
