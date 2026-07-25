@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowDown, Send, MessagesSquare, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,12 @@ type Message = {
   created_at: string;
 };
 
+type Profile = {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+};
+
 type Props = {
   liveId: string;
   currentUserId: string | null;
@@ -21,8 +27,21 @@ type Props = {
 
 const NEAR_BOTTOM_PX = 80;
 
+function initialsOf(name: string | null | undefined, fallback: string): string {
+  const src = (name && name.trim()) || fallback;
+  const parts = src.split(/\s+/).filter(Boolean).slice(0, 2);
+  const letters = parts.map((p) => p[0]).join("");
+  return (letters || src.slice(0, 2)).toUpperCase();
+}
+
+function formatTime(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" });
+}
+
 export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,8 +81,30 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
     };
   }, [liveId, fetchInitial]);
 
-  // Track whether the user is near the bottom so we only auto-scroll when
-  // it won't fight against a manual scroll-up (reading history).
+  // Fetch profiles for any user_ids we don't have yet.
+  useEffect(() => {
+    const missing = Array.from(
+      new Set(messages.map((m) => m.user_id).filter((id) => id && !profiles[id])),
+    );
+    if (missing.length === 0) return;
+    let cancelled = false;
+    supabase
+      .from("profiles")
+      .select("id,display_name,avatar_url")
+      .in("id", missing)
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        setProfiles((prev) => {
+          const next = { ...prev };
+          for (const p of data) next[p.id] = p as Profile;
+          return next;
+        });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [messages, profiles]);
+
   function onScroll() {
     const el = scrollRef.current;
     if (!el) return;
@@ -110,6 +151,19 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
     }
   }
 
+  // Group consecutive messages from the same author so we only show the
+  // header (avatar + name + time) once per burst — feels closer to native
+  // chat apps and keeps the list tidy.
+  const grouped = useMemo(() => {
+    return messages.map((m, i) => {
+      const prev = messages[i - 1];
+      const sameAuthor = prev && prev.user_id === m.user_id;
+      const closeInTime =
+        prev && new Date(m.created_at).getTime() - new Date(prev.created_at).getTime() < 5 * 60 * 1000;
+      return { m, showHeader: !(sameAuthor && closeInTime) };
+    });
+  }, [messages]);
+
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-surface-1/60 backdrop-blur-sm">
       <div className="flex shrink-0 items-center justify-between border-b border-border/60 px-4 py-2">
@@ -133,35 +187,64 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
           onScroll={onScroll}
           className="absolute inset-0 overflow-y-auto overscroll-contain px-3 py-2 [scrollbar-width:thin]"
         >
-          {/* Bottom-anchor: messages sit at the bottom when the list is short,
-              and still scroll naturally when it overflows. */}
-          <div className="flex min-h-full flex-col justify-end gap-1.5">
+          <div className="flex min-h-full flex-col justify-end gap-1">
             {messages.length === 0 ? (
               <p className="pb-2 text-center text-[11px] text-muted-foreground/70">
                 {readOnly ? "Nenhuma mensagem gravada nesta sessão." : "Sê o primeiro a comentar."}
               </p>
             ) : (
-              messages.map((m) => {
+              grouped.map(({ m, showHeader }) => {
                 const mine = m.user_id === currentUserId;
+                const profile = profiles[m.user_id];
+                const name = profile?.display_name || (mine ? "Tu" : m.user_id.slice(0, 6));
+                const time = formatTime(m.created_at);
                 return (
                   <div
                     key={m.id}
-                    className={cn("live-chat-msg flex", mine ? "justify-end" : "justify-start")}
+                    className={cn(
+                      "live-chat-msg flex gap-2",
+                      mine ? "flex-row-reverse" : "flex-row",
+                      showHeader ? "mt-2 first:mt-0" : "mt-0.5",
+                    )}
                   >
-                    <div
-                      className={cn(
-                        "max-w-[82%] rounded-2xl px-3 py-1.5 text-[13.5px] leading-snug",
-                        mine
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-surface-2 text-foreground",
+                    <div className="w-8 shrink-0">
+                      {showHeader ? (
+                        <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-surface-2 text-[10px] font-semibold text-muted-foreground ring-1 ring-border/60">
+                          {profile?.avatar_url ? (
+                            <img
+                              src={profile.avatar_url}
+                              alt=""
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            initialsOf(profile?.display_name, mine ? "Tu" : m.user_id)
+                          )}
+                        </div>
+                      ) : null}
+                    </div>
+                    <div className={cn("flex min-w-0 max-w-[78%] flex-col", mine ? "items-end" : "items-start")}>
+                      {showHeader && (
+                        <div
+                          className={cn(
+                            "mb-0.5 flex items-baseline gap-1.5 text-[10.5px] text-muted-foreground",
+                            mine ? "flex-row-reverse" : "flex-row",
+                          )}
+                        >
+                          <span className="font-medium text-foreground/85">{name}</span>
+                          <span className="opacity-60">·</span>
+                          <span className="tabular-nums opacity-70">{time}</span>
+                        </div>
                       )}
-                    >
-                      {!mine && (
-                        <p className="mb-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">
-                          {m.user_id.slice(0, 6)}
-                        </p>
-                      )}
-                      <p className="break-words">{m.body}</p>
+                      <div
+                        className={cn(
+                          "rounded-2xl px-3 py-1.5 text-[13.5px] leading-snug break-words",
+                          mine
+                            ? "bg-primary text-primary-foreground rounded-tr-sm"
+                            : "bg-surface-2 text-foreground rounded-tl-sm",
+                        )}
+                      >
+                        {m.body}
+                      </div>
                     </div>
                   </div>
                 );
