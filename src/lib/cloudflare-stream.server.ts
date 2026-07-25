@@ -59,7 +59,7 @@ export async function deleteLiveInput(uid: string): Promise<void> {
   await cfFetch(`/stream/live_inputs/${uid}`, { method: "DELETE" });
 }
 
-export async function listVideosForLiveInput(uid: string): Promise<Array<{ uid: string; readyToStream: boolean; duration?: number }>> {
+export async function listVideosForLiveInput(uid: string): Promise<Array<{ uid: string; readyToStream: boolean; duration?: number; created?: string; status?: { state?: string } }>> {
   return cfFetch(`/stream/live_inputs/${uid}/videos`);
 }
 
