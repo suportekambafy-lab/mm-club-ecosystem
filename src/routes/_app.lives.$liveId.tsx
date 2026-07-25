@@ -324,9 +324,10 @@ function LiveDetail() {
       <div className="hidden lg:grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-5">
           <div className="relative">
-            {playerSlot}
+            {playerSlot(false)}
             {overlayStats}
           </div>
+
 
 
           <div className="rounded-3xl border border-border bg-gradient-to-br from-surface-1 to-surface-2/40 p-6 md:p-8">
