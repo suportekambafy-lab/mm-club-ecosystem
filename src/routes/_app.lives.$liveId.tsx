@@ -181,8 +181,9 @@ function LiveDetail() {
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5" />
-                {live.duration_minutes} min
+                {formatDuration(isReplay, actualDurationSeconds, live.duration_minutes)}
               </span>
+
             </div>
 
             {live.description && (
