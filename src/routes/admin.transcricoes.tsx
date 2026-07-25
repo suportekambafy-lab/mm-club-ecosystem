@@ -101,10 +101,8 @@ function AdminTranscricoes() {
       .channel("admin-transcricoes")
       .on("postgres_changes", { event: "*", schema: "public", table: "lesson_transcripts" }, () => fetchRows())
       .subscribe();
-    const interval = setInterval(fetchRows, 15000);
     return () => {
       supabase.removeChannel(ch);
-      clearInterval(interval);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
