@@ -8,6 +8,7 @@ import { expertsById } from "@/data/experts";
 import { cn } from "@/lib/utils";
 import { LiveCountdown } from "@/components/mm/live-countdown";
 import { resolveLiveCoverUrl } from "@/lib/live-cover-url";
+import { supabase } from "@/integrations/supabase/client";
 
 type Live = Awaited<ReturnType<typeof listLives>>[number];
 
@@ -33,12 +34,18 @@ function LivesPage() {
   }, []);
 
   useEffect(() => {
-    const t = setInterval(() => {
+    const refreshLives = () => {
       listLives()
         .then((r) => setLives(r as Live[]))
         .catch(() => {});
-    }, 20_000);
-    return () => clearInterval(t);
+    };
+    const channel = supabase
+      .channel("lives-index-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "lives" }, refreshLives)
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const liveNow = lives.filter((l) => l.status === "live");
@@ -199,8 +206,6 @@ function LiveCard({ live }: { live: Live }) {
         <div className="mt-auto flex items-center gap-2 text-[11px] uppercase tracking-widest text-muted-foreground">
           <CalendarDays className="h-3 w-3" />
           <span>{dateStr}</span>
-          <span>·</span>
-          <span>{live.duration_minutes}m</span>
         </div>
       </div>
     </Link>

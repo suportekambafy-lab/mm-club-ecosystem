@@ -70,10 +70,13 @@ function DashboardPage() {
         .catch(() => {});
     };
     load();
-    const t = setInterval(load, 20_000);
+    const channel = supabase
+      .channel("dashboard-lives-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "lives" }, load)
+      .subscribe();
     return () => {
       cancelled = true;
-      clearInterval(t);
+      supabase.removeChannel(channel);
     };
   }, []);
 

@@ -145,7 +145,7 @@ function LiveStudio() {
   }, [sharing]);
 
   useEffect(() => {
-    const refreshMedia = () => {
+    const resumeMediaPreview = () => {
       if (document.visibilityState !== "visible") return;
       if (videoRef.current?.srcObject) void videoRef.current.play().catch(() => {});
       attachCameraPip();
@@ -153,20 +153,13 @@ function LiveStudio() {
       if (screenStreamRef.current) ensureScreenSource(screenStreamRef.current);
       void keepLiveVideoStable();
       void requestWakeLock();
-      const iceState = pcRef.current?.iceConnectionState;
-      if (
-        (statusRef.current === "live" || statusRef.current === "connecting" || statusRef.current === "error") &&
-        (iceState === "disconnected" || iceState === "failed" || iceState === "closed")
-      ) {
-        void reconnectWhip("A transmissão foi religada automaticamente ao voltar para esta aba.");
-      }
       drawRecordingFrame();
     };
-    document.addEventListener("visibilitychange", refreshMedia);
-    window.addEventListener("focus", refreshMedia);
+    document.addEventListener("visibilitychange", resumeMediaPreview);
+    window.addEventListener("focus", resumeMediaPreview);
     return () => {
-      document.removeEventListener("visibilitychange", refreshMedia);
-      window.removeEventListener("focus", refreshMedia);
+      document.removeEventListener("visibilitychange", resumeMediaPreview);
+      window.removeEventListener("focus", resumeMediaPreview);
     };
   }, []);
 

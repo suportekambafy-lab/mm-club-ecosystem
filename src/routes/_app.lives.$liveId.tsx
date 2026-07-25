@@ -73,17 +73,22 @@ function LiveDetail() {
 
   // Auto-refresh status transitions (scheduled → live → ended → published)
   useEffect(() => {
-    if (data.live.status === "published") return;
-    const t = setInterval(async () => {
+    const refreshLive = async () => {
       try {
         const fresh = await getLive({ data: { id: data.live.id } });
         setData(fresh);
       } catch {
         /* ignore transient errors */
       }
-    }, 15000);
-    return () => clearInterval(t);
-  }, [data.live.id, data.live.status]);
+    };
+    const channel = supabase
+      .channel(`live-detail-${data.live.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "lives", filter: `id=eq.${data.live.id}` }, refreshLive)
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [data.live.id]);
 
   const { live, playbackToken, videoUid, actualDurationSeconds } = data;
   const isLive = live.status === "live";
@@ -179,10 +184,12 @@ function LiveDetail() {
                 <CalendarDays className="h-3.5 w-3.5" />
                 {dateStr}
               </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5" />
-                {formatDuration(isReplay, actualDurationSeconds, live.duration_minutes)}
-              </span>
+              {isReplay && actualDurationSeconds && actualDurationSeconds > 0 && (
+                <span className="inline-flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" />
+                  {formatDuration(actualDurationSeconds)}
+                </span>
+              )}
 
             </div>
 
@@ -347,17 +354,14 @@ function formatElapsed(s: number): string {
   return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
 
-function formatDuration(isReplay: boolean, actualSec: number | null | undefined, scheduledMin: number): string {
-  if (isReplay && actualSec && actualSec > 0) {
-    if (actualSec < 60) return `${actualSec} s`;
-    const m = Math.floor(actualSec / 60);
-    const s = actualSec % 60;
-    if (m < 60) return s > 0 ? `${m} min ${s} s` : `${m} min`;
-    const h = Math.floor(m / 60);
-    const rm = m % 60;
-    return rm > 0 ? `${h} h ${rm} min` : `${h} h`;
-  }
-  return `${scheduledMin} min`;
+function formatDuration(actualSec: number): string {
+  if (actualSec < 60) return `${actualSec} s`;
+  const m = Math.floor(actualSec / 60);
+  const s = actualSec % 60;
+  if (m < 60) return s > 0 ? `${m} min ${s} s` : `${m} min`;
+  const h = Math.floor(m / 60);
+  const rm = m % 60;
+  return rm > 0 ? `${h} h ${rm} min` : `${h} h`;
 }
 
 
