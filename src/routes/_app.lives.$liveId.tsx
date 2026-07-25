@@ -227,13 +227,12 @@ function LiveDetail() {
   return (
     <div
       className="
-        -mx-4 flex flex-col lg:mx-0 lg:block
+        flex flex-col lg:block
         lg:h-auto lg:space-y-8
       "
       style={
         {
           height: "var(--live-vh, calc(100dvh - var(--app-topbar-h, 4rem)))",
-          "--app-topbar-h": "4rem",
         } as React.CSSProperties
       }
     >
@@ -246,12 +245,16 @@ function LiveDetail() {
         Voltar às Lives
       </Link>
 
-      {/* -------- MOBILE LAYOUT (locked to visualViewport, only chat flexes) -------- */}
-      <div className="flex min-h-0 flex-1 flex-col lg:hidden">
-        {/* Video — the star. Overlay stats sit inside it. */}
+      {/* -------- MOBILE LAYOUT (fully locked; only the chat list scrolls) -------- */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:hidden">
+        {/* Video — capped so it never overflows the viewport width or height */}
         <div className="relative shrink-0 bg-black">
-          {playerSlot}
-          {overlayStats}
+          <div className="relative mx-auto w-full max-h-[42dvh] aspect-video overflow-hidden">
+            <div className="absolute inset-0 [&_.rounded-3xl]:!rounded-none [&_.ring-1]:!ring-0 [&_.shadow-\[0_40px_120px_-20px_rgba\(0\,0\,0\,0\.8\)\]]:!shadow-none">
+              {playerSlot}
+            </div>
+            {overlayStats}
+          </div>
         </div>
 
         {/* Ultra-compact session header — single title + one meta line */}
@@ -306,7 +309,7 @@ function LiveDetail() {
           )}
         </div>
 
-        {/* Chat fills remaining space — only this region reflows with keyboard */}
+        {/* Chat fills remaining space — only the message list scrolls */}
         <div
           className="min-h-0 flex-1 px-2 pt-2"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)" }}
@@ -314,6 +317,7 @@ function LiveDetail() {
           <LiveChat liveId={live.id} currentUserId={userId} readOnly={isReplay} />
         </div>
       </div>
+
 
       {/* -------- DESKTOP LAYOUT (unchanged split) -------- */}
       <div className="hidden lg:grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
