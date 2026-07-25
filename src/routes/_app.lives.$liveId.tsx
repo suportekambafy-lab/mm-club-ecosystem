@@ -251,11 +251,15 @@ function LiveDetail() {
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:hidden">
         {/* Video — capped so it never overflows the viewport width or height */}
         <div className="relative shrink-0 bg-black">
-          <div className="relative mx-auto w-full max-h-[42dvh] aspect-video overflow-hidden">
+          <div
+            className="relative mx-auto aspect-video overflow-hidden"
+            style={{ width: "min(100%, calc(42dvh * 16 / 9))" }}
+          >
             {playerSlot(true)}
             {overlayStats}
           </div>
         </div>
+
 
 
         {/* Ultra-compact session header — single title + one meta line */}
