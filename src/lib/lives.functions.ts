@@ -51,12 +51,13 @@ export const getLive = createServerFn({ method: "GET" })
     const { data: live, error } = await context.supabase
       .from("lives")
       .select(
-        "id,title,description,expert_id,starts_at,duration_minutes,visibility,cover_url,status,cf_playback_id,cf_live_input_id,recording_video_uid",
+        "id,title,description,expert_id,starts_at,started_at,stream_generation,duration_minutes,visibility,cover_url,status,cf_playback_id,cf_live_input_id,recording_video_uid",
       )
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!live) throw new Error("Live não encontrada ou sem acesso.");
+
 
     // Backfill recording UID for ended/published lives when the webhook didn't fire.
     let recordingUid = live.recording_video_uid;
@@ -316,7 +317,7 @@ export const adminGetLiveIngest = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("lives")
-      .select("cf_rtmps_url,cf_stream_key,cf_live_input_id,cf_webrtc_url")
+      .select("cf_rtmps_url,cf_stream_key,cf_live_input_id,cf_webrtc_url,status,started_at,stream_generation")
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -336,10 +337,33 @@ export const adminSetLiveBroadcastState = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await requireAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("lives").update({ status: data.status }).eq("id", data.id);
+
+    if (data.status === "live") {
+      // Read the existing row to preserve started_at across reconnects and
+      // to increment the stream generation used by viewers to remount the
+      // player when the host re-attaches to the same live input.
+      const { data: current, error: readErr } = await supabaseAdmin
+        .from("lives")
+        .select("started_at,stream_generation,status")
+        .eq("id", data.id)
+        .maybeSingle();
+      if (readErr) throw new Error(readErr.message);
+
+      const patch: Record<string, unknown> = {
+        status: "live",
+        started_at: current?.started_at ?? new Date().toISOString(),
+        stream_generation: (current?.stream_generation ?? 0) + 1,
+      };
+      const { error } = await supabaseAdmin.from("lives").update(patch).eq("id", data.id);
+      if (error) throw new Error(error.message);
+      return { ok: true, started_at: patch.started_at, stream_generation: patch.stream_generation };
+    }
+
+    const { error } = await supabaseAdmin.from("lives").update({ status: "ended" }).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
 
 export const adminCreateReplayUpload = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
