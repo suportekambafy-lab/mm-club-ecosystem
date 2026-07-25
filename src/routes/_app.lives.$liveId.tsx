@@ -71,15 +71,17 @@ function LiveDetail() {
     return () => clearInterval(t);
   }, [data.live.starts_at, data.live.status]);
 
-  // Elapsed time while live
+  // Elapsed time while live — use the server-persisted started_at so the
+  // timer stays accurate across host reloads and reconnections.
   useEffect(() => {
     if (data.live.status !== "live") return;
-    const startedAt = new Date(data.live.starts_at).getTime();
-    const t = setInterval(() => {
-      setElapsed(Math.max(0, Math.floor((Date.now() - startedAt) / 1000)));
-    }, 1000);
+    const startedAt = new Date(data.live.started_at ?? data.live.starts_at).getTime();
+    const tick = () => setElapsed(Math.max(0, Math.floor((Date.now() - startedAt) / 1000)));
+    tick();
+    const t = setInterval(tick, 1000);
     return () => clearInterval(t);
-  }, [data.live.starts_at, data.live.status]);
+  }, [data.live.started_at, data.live.starts_at, data.live.status]);
+
 
   // Auto-refresh status transitions (scheduled → live → ended → published)
   useEffect(() => {
