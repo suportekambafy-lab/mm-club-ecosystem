@@ -88,18 +88,33 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
     );
     if (missing.length === 0) return;
     let cancelled = false;
-    supabase
-      .from("profiles")
-      .select("id,display_name,avatar_url")
-      .in("id", missing)
-      .then(({ data }) => {
-        if (cancelled || !data) return;
-        setProfiles((prev) => {
-          const next = { ...prev };
-          for (const p of data) next[p.id] = p as Profile;
-          return next;
-        });
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id,display_name,avatar_url")
+        .in("id", missing);
+      if (cancelled || !data) return;
+      // Resolve storage paths to signed URLs when needed.
+      const resolved = await Promise.all(
+        data.map(async (p) => {
+          const raw = p.avatar_url;
+          if (!raw) return { ...p } as Profile;
+          if (/^https?:\/\//i.test(raw) || raw.startsWith("data:")) {
+            return { ...p } as Profile;
+          }
+          const { data: signed } = await supabase.storage
+            .from("avatars")
+            .createSignedUrl(raw, 60 * 60);
+          return { ...p, avatar_url: signed?.signedUrl ?? null } as Profile;
+        }),
+      );
+      if (cancelled) return;
+      setProfiles((prev) => {
+        const next = { ...prev };
+        for (const p of resolved) next[p.id] = p;
+        return next;
       });
+    })();
     return () => {
       cancelled = true;
     };
