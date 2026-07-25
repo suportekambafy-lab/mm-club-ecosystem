@@ -216,9 +216,11 @@ function LiveDetail() {
         key={`gen-${live.stream_generation ?? 0}`}
         videoUid={videoUid}
         playbackToken={playbackToken}
+        segments={replaySegments}
         live={isLive}
         className={mobile ? "aspect-video w-full max-w-full rounded-none shadow-none ring-0" : undefined}
       />
+
     ) : isReplay ? (
       <NoReplayPoster live={live} />
     ) : (
