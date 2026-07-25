@@ -1,6 +1,5 @@
 import { createFileRoute, Link, Outlet, redirect, useRouter, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import type { User } from "@supabase/supabase-js";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard,
@@ -14,7 +13,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { mmDebug } from "@/lib/refresh-debug";
 // Ensure admin overrides are applied
 import "@/data/admin-store";
 
@@ -29,6 +27,15 @@ export const Route = createFileRoute("/admin")({
         search: { redirect: location.pathname } as never,
         replace: true,
       });
+    }
+
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: data.session.user.id,
+      _role: "admin",
+    });
+
+    if (!isAdmin) {
+      throw redirect({ to: "/", replace: true });
     }
 
     return { authUser: data.session.user };
@@ -84,55 +91,18 @@ const nav: Array<{
 function AdminLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
-  const { authUser: initialAuthUser } = Route.useRouteContext() as { authUser: User };
-  const [authUser, setAuthUser] = useState<User | null>(initialAuthUser);
-  const [checking, setChecking] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    mmDebug("admin:mount", { initialUserId: initialAuthUser?.id });
-    return () => mmDebug("admin:unmount");
-  }, [initialAuthUser?.id]);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setAuthUser(data.session?.user ?? null));
-    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
-      mmDebug("admin:auth", { event, userId: s?.user?.id ?? null });
-      setAuthUser(s?.user ?? null);
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        router.navigate({ to: "/auth", search: { redirect: pathname } as never, replace: true });
+      }
     });
     return () => sub.subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (authUser === null) {
-      router.navigate({ to: "/auth", search: { redirect: pathname } as never, replace: true });
-      return;
-    }
-    let cancelled = false;
-    mmDebug("admin:checking->true", { userId: authUser.id });
-    setChecking(true);
-    supabase
-      .rpc("has_role", { _user_id: authUser.id, _role: "admin" })
-      .then(({ data }) => {
-        if (cancelled) return;
-        const ok = Boolean(data);
-        mmDebug("admin:checking->false", { isAdmin: ok });
-        setIsAdmin(ok);
-        setChecking(false);
-        if (!ok) router.navigate({ to: "/", replace: true });
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [authUser, pathname, router]);
+  }, [pathname, router]);
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
-
-  if (!authUser || checking || !isAdmin) {
-    mmDebug("admin:render:fallback", { hasUser: !!authUser, checking, isAdmin });
-    return <div className="min-h-screen bg-background" />;
-  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">

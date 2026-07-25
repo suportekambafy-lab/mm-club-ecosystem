@@ -50,7 +50,17 @@ function LiveDetail() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUserId(s?.user?.id ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      if (event === "SIGNED_OUT") {
+        setUserId(null);
+        return;
+      }
+      if (event === "SIGNED_IN" || event === "USER_UPDATED") {
+        const nextUserId = s?.user?.id ?? null;
+        if (!nextUserId) return;
+        setUserId((current) => (current === nextUserId ? current : nextUserId));
+      }
+    });
     return () => sub.subscription.unsubscribe();
   }, []);
 

@@ -30,7 +30,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { MMLogo } from "@/components/mm/logo";
 import { GlobalSearch } from "@/components/mm/global-search";
 import { NotificationsBell } from "@/components/mm/notifications";
-import { mmDebug } from "@/lib/refresh-debug";
 
 import { cn } from "@/lib/utils";
 // Boot-time: apply admin overrides to in-memory data
@@ -122,11 +121,9 @@ function AppLayout() {
   const [avatarSrc, setAvatarSrc] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setCollapsed(window.localStorage.getItem("mm.sidebar.collapsed") === "1");
-    setMounted(true);
   }, []);
 
   // Close mobile drawer on route change
@@ -141,23 +138,22 @@ function AppLayout() {
   }, [collapsed]);
 
   useEffect(() => {
-    mmDebug("app:mount", { initialUserId: initialAuthUser?.id });
-    return () => mmDebug("app:unmount");
-  }, [initialAuthUser?.id]);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setAuthUser(data.session?.user ?? null));
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
-      mmDebug("app:auth", { event, userId: s?.user?.id ?? null });
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      setAuthUser(s?.user ?? null);
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
-        mmDebug("app:router.invalidate", { event });
-        router.invalidate();
+      if (event === "SIGNED_OUT") {
+        setAuthUser(null);
+        return;
+      }
+      if (event === "USER_UPDATED" || event === "SIGNED_IN") {
+        const nextUser = s?.user ?? null;
+        if (!nextUser) return;
+        setAuthUser((current) => {
+          if (current?.id === nextUser.id && event !== "USER_UPDATED") return current;
+          return nextUser;
+        });
       }
     });
     return () => sub.subscription.unsubscribe();
-  }, [router]);
+  }, []);
 
   // Load user's avatar from private bucket
   useEffect(() => {
@@ -576,7 +572,7 @@ function AppLayout() {
             }}
           />
           )}
-          {mounted && authUser ? <Outlet /> : <div className="min-h-[60vh]" />}
+          {authUser ? <Outlet /> : <div className="min-h-[60vh]" />}
         </main>
       </div>
 

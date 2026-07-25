@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { CurrentUser, DashboardBlockId, Visibility } from "@/data/types";
 
@@ -20,6 +20,7 @@ export type CurrentUserState = {
 };
 
 export function useCurrentUser(): CurrentUserState {
+  const currentUserIdRef = useRef<string | null>(null);
   const [state, setState] = useState<CurrentUserState>({
     user: null,
     isAdmin: false,
@@ -33,6 +34,7 @@ export function useCurrentUser(): CurrentUserState {
       const { data: u } = await supabase.auth.getUser();
       const authUser = u.user;
       if (!authUser) {
+        currentUserIdRef.current = null;
         if (!cancelled) setState({ user: null, isAdmin: false, loading: false });
         return;
       }
@@ -69,6 +71,7 @@ export function useCurrentUser(): CurrentUserState {
         .toUpperCase();
 
       if (cancelled) return;
+      currentUserIdRef.current = authUser.id;
       setState({
         user: {
           id: authUser.id,
@@ -84,9 +87,21 @@ export function useCurrentUser(): CurrentUserState {
     }
 
     load();
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        currentUserIdRef.current = null;
+        setState({ user: null, isAdmin: false, loading: false });
+        return;
+      }
+      if (event === "USER_UPDATED") {
         load();
+        return;
+      }
+      if (event === "SIGNED_IN") {
+        const nextUserId = session?.user?.id ?? null;
+        if (nextUserId && nextUserId !== currentUserIdRef.current) {
+          load();
+        }
       }
     });
     return () => {
