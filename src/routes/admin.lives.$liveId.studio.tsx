@@ -17,6 +17,7 @@ import {
 import { SectionHeading } from "@/components/mm/section-heading";
 import { LiveChat } from "@/components/mm/live-chat";
 import { supabase } from "@/integrations/supabase/client";
+import { mmDebug } from "@/lib/refresh-debug";
 import {
   adminAttachReplayRecording,
   adminCreateReplayUpload,
@@ -102,6 +103,7 @@ function LiveStudio() {
   }, []);
 
   useEffect(() => {
+    mmDebug("studio:mount", { liveId });
     (async () => {
       try {
         const r = await getIngest({ data: { id: liveId } });
@@ -116,7 +118,10 @@ function LiveStudio() {
         setStatus("error");
       }
     })();
-    return () => teardown();
+    return () => {
+      mmDebug("studio:cleanup->teardown", { status: statusRef.current });
+      teardown();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [liveId]);
 
@@ -455,6 +460,11 @@ function LiveStudio() {
   }
 
   function teardown() {
+    mmDebug("studio:teardown", {
+      hasStream: !!streamRef.current,
+      hasPc: !!pcRef.current,
+      status: statusRef.current,
+    });
     if (recorderRef.current && recorderRef.current.state !== "inactive") {
       recorderRef.current.stop();
     }

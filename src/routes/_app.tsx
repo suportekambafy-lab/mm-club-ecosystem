@@ -30,6 +30,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MMLogo } from "@/components/mm/logo";
 import { GlobalSearch } from "@/components/mm/global-search";
 import { NotificationsBell } from "@/components/mm/notifications";
+import { mmDebug } from "@/lib/refresh-debug";
 
 import { cn } from "@/lib/utils";
 // Boot-time: apply admin overrides to in-memory data
@@ -140,11 +141,20 @@ function AppLayout() {
   }, [collapsed]);
 
   useEffect(() => {
+    mmDebug("app:mount", { initialUserId: initialAuthUser?.id });
+    return () => mmDebug("app:unmount");
+  }, [initialAuthUser?.id]);
+
+  useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setAuthUser(data.session?.user ?? null));
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      mmDebug("app:auth", { event, userId: s?.user?.id ?? null });
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       setAuthUser(s?.user ?? null);
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT") router.invalidate();
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+        mmDebug("app:router.invalidate", { event });
+        router.invalidate();
+      }
     });
     return () => sub.subscription.unsubscribe();
   }, [router]);
