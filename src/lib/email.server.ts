@@ -204,6 +204,50 @@ export const emailTemplates = {
       ),
     };
   },
+
+  liveAnnouncement(opts: {
+    name: string;
+    title: string;
+    description?: string | null;
+    startsAt: string;
+    coverUrl?: string | null;
+    liveId: string;
+    isScheduled: boolean;
+  }) {
+    const safe = escapeHtml(opts.name);
+    const title = escapeHtml(opts.title);
+    const desc = opts.description ? escapeHtml(opts.description) : "";
+    const dateFmt = new Intl.DateTimeFormat("pt-PT", {
+      dateStyle: "full",
+      timeStyle: "short",
+      timeZone: "Europe/Lisbon",
+    }).format(new Date(opts.startsAt));
+    const cover = opts.coverUrl
+      ? (opts.coverUrl.startsWith("http") ? opts.coverUrl : `${APP_URL}${opts.coverUrl}`)
+      : null;
+    const kicker = opts.isScheduled ? "Nova live agendada" : "Estamos AO VIVO";
+    const eyebrow = opts.isScheduled ? "MM Club · Direto" : "MM Club · AO VIVO agora";
+    const cta = opts.isScheduled ? "Ver detalhes da live →" : "Entrar na live →";
+    const subject = opts.isScheduled
+      ? `Nova live agendada: ${opts.title}`
+      : `AO VIVO agora: ${opts.title}`;
+    const heroImg = cover
+      ? `<div style="margin:0 -40px 24px;"><img src="${cover}" alt="${title}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;text-decoration:none;"></div>`
+      : "";
+    return {
+      subject,
+      html: layout(
+        `${kicker}: ${opts.title} — ${dateFmt}`,
+        `${heroImg}
+         <div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">${escapeHtml(eyebrow)}</div>
+         <h1 style="font-size:26px;color:#ffffff;margin:0 0 12px;font-weight:600;line-height:1.25;">${title}</h1>
+         <p style="font-size:14px;line-height:1.6;color:#c9a961;margin:0 0 16px;font-weight:500;">${escapeHtml(dateFmt)} (Lisboa)</p>
+         ${desc ? `<p style="font-size:15px;line-height:1.7;color:#d4d4d4;margin:0 0 20px;">${desc}</p>` : ""}
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Olá ${safe}, ${opts.isScheduled ? "guarda a data. Vais receber o link direto do direto na comunidade e no dashboard." : "o direto começou. Entra agora para não perderes."}</p>
+         <p style="margin:0 0 8px;">${btn(cta, `${APP_URL}/lives/${opts.liveId}`)}</p>`,
+      ),
+    };
+  },
 };
 
 // ---------- helpers ----------
