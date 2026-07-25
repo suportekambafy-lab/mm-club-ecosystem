@@ -111,11 +111,11 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-surface-1/80 backdrop-blur-sm">
-      <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-2.5">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-surface-1/60 backdrop-blur-sm">
+      <div className="flex shrink-0 items-center justify-between border-b border-border/60 px-4 py-2">
         <div className="flex items-center gap-2">
-          <MessagesSquare className="h-4 w-4 text-primary" />
-          <p className="font-display text-sm">
+          <MessagesSquare className="h-3.5 w-3.5 text-primary" />
+          <p className="font-display text-[13px]">
             {readOnly ? "Conversa da sessão" : "Chat ao vivo"}
           </p>
         </div>
@@ -131,34 +131,43 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
         <div
           ref={scrollRef}
           onScroll={onScroll}
-          className="absolute inset-0 space-y-2 overflow-y-auto overscroll-contain px-4 py-3 [scrollbar-width:thin]"
+          className="absolute inset-0 overflow-y-auto overscroll-contain px-3 py-2 [scrollbar-width:thin]"
         >
-          {messages.length === 0 ? (
-            <p className="pt-6 text-center text-xs text-muted-foreground">
-              {readOnly ? "Nenhuma mensagem gravada nesta sessão." : "Sê o primeiro a comentar."}
-            </p>
-          ) : (
-            messages.map((m) => {
-              const mine = m.user_id === currentUserId;
-              return (
-                <div key={m.id} className={cn("live-chat-msg flex", mine ? "justify-end" : "justify-start")}>
+          {/* Bottom-anchor: messages sit at the bottom when the list is short,
+              and still scroll naturally when it overflows. */}
+          <div className="flex min-h-full flex-col justify-end gap-1.5">
+            {messages.length === 0 ? (
+              <p className="pb-2 text-center text-[11px] text-muted-foreground/70">
+                {readOnly ? "Nenhuma mensagem gravada nesta sessão." : "Sê o primeiro a comentar."}
+              </p>
+            ) : (
+              messages.map((m) => {
+                const mine = m.user_id === currentUserId;
+                return (
                   <div
-                    className={cn(
-                      "max-w-[85%] rounded-2xl px-3 py-1.5 text-sm",
-                      mine ? "bg-primary text-primary-foreground" : "bg-surface-2 text-foreground",
-                    )}
+                    key={m.id}
+                    className={cn("live-chat-msg flex", mine ? "justify-end" : "justify-start")}
                   >
-                    {!mine && (
-                      <p className="mb-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">
-                        {m.user_id.slice(0, 6)}
-                      </p>
-                    )}
-                    <p className="break-words leading-snug">{m.body}</p>
+                    <div
+                      className={cn(
+                        "max-w-[82%] rounded-2xl px-3 py-1.5 text-[13.5px] leading-snug",
+                        mine
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-surface-2 text-foreground",
+                      )}
+                    >
+                      {!mine && (
+                        <p className="mb-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+                          {m.user_id.slice(0, 6)}
+                        </p>
+                      )}
+                      <p className="break-words">{m.body}</p>
+                    </div>
                   </div>
-                </div>
-              );
-            })
-          )}
+                );
+              })
+            )}
+          </div>
         </div>
 
         {unread > 0 && (
@@ -174,10 +183,10 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
       </div>
 
       {!readOnly && (
-        <form onSubmit={handleSend} className="shrink-0 border-t border-border p-2.5">
+        <form onSubmit={handleSend} className="shrink-0 border-t border-border/60 px-2.5 py-2">
           {error && <p className="mb-1.5 text-[11px] text-red-400">{error}</p>}
           {currentUserId ? (
-            <div className="flex items-center gap-2">
+            <div className="relative">
               <input
                 type="text"
                 value={text}
@@ -188,13 +197,13 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
                 autoCorrect="on"
                 autoCapitalize="sentences"
                 enterKeyHint="send"
-                className="live-chat-input flex-1 rounded-full bg-surface-2 px-4 py-2 text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40"
+                className="live-chat-input w-full rounded-2xl bg-surface-2/80 pl-4 pr-12 py-3 text-foreground outline-none ring-1 ring-border/40 transition placeholder:text-muted-foreground/60 focus:ring-primary/50"
               />
               <button
                 type="submit"
                 disabled={sending || !text.trim()}
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition active:scale-95 disabled:opacity-50"
                 aria-label="Enviar"
+                className="absolute right-1.5 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/25 transition active:scale-95 disabled:opacity-40 disabled:shadow-none"
               >
                 <Send className="h-4 w-4" />
               </button>
