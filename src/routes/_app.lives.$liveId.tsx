@@ -210,19 +210,21 @@ function LiveDetail() {
     </div>
   );
 
-  const playerSlot =
+  const playerSlot = (mobile?: boolean) =>
     (isLive || isReplay) && videoUid ? (
       <LivePlayer
         key={`gen-${live.stream_generation ?? 0}`}
         videoUid={videoUid}
         playbackToken={playbackToken}
         live={isLive}
+        className={mobile ? "aspect-video w-full max-w-full rounded-none shadow-none ring-0" : undefined}
       />
     ) : isReplay ? (
       <NoReplayPoster live={live} />
     ) : (
       <PrelivePoster live={live} countdown={countdown} />
     );
+
 
   return (
     <div
