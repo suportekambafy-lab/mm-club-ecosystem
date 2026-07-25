@@ -119,7 +119,7 @@ function LiveDetail() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-5">
           <div className="relative">
-            {videoUid ? (
+            {(isLive || isReplay) && videoUid ? (
               <LivePlayer videoUid={videoUid} playbackToken={playbackToken} live={isLive} />
             ) : isReplay ? (
               <NoReplayPoster live={live} />
