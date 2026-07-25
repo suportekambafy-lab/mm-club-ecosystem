@@ -43,6 +43,34 @@ function formatTime(iso: string): string {
   return d.toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" });
 }
 
+// Render message body with clickable links. Any http(s):// URL becomes an
+// anchor; everything else is escaped as plain text (React handles escaping).
+function renderBody(body: string): React.ReactNode {
+  const parts: React.ReactNode[] = [];
+  const re = /(https?:\/\/[^\s<>"']+)/gi;
+  let last = 0;
+  let match: RegExpExecArray | null;
+  let idx = 0;
+  while ((match = re.exec(body)) !== null) {
+    if (match.index > last) parts.push(body.slice(last, match.index));
+    const url = match[0];
+    parts.push(
+      <a
+        key={`l-${idx++}`}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer nofollow"
+        className="underline decoration-current/60 underline-offset-2 hover:decoration-current break-all"
+      >
+        {url}
+      </a>,
+    );
+    last = match.index + url.length;
+  }
+  if (last < body.length) parts.push(body.slice(last));
+  return parts;
+}
+
 export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
