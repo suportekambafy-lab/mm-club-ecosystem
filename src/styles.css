@@ -311,6 +311,18 @@
   }
 }
 
-/* Hide mobile tab bar when shorts comments are open */
+/* Hide mobile tab bar in immersive surfaces where it would overlap the chat */
 html[data-shorts-comments="open"] [data-mobile-tabbar],
-html[data-shorts-composer="open"] [data-mobile-tabbar] { display: none !important; }
+html[data-shorts-composer="open"] [data-mobile-tabbar],
+html[data-live-immersive="1"] [data-mobile-tabbar] { display: none !important; }
+
+/* Live viewer: prevent iOS input zoom on the chat composer. */
+.live-chat-input { font-size: 16px; }
+
+/* Smooth entrance for new chat messages. */
+@keyframes live-chat-msg-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.live-chat-msg { animation: live-chat-msg-in 220ms cubic-bezier(0.22, 1, 0.36, 1); }
+
