@@ -291,13 +291,15 @@ function PrelivePoster({
           <Sparkles className="h-3 w-3" />
           Em breve
         </span>
-        <h2 className="font-display text-2xl text-white md:text-3xl">A sessão começa em</h2>
         {countdown ? (
-          <p className="font-mono text-4xl font-semibold tracking-widest text-white md:text-6xl">
-            {countdown}
-          </p>
+          <>
+            <h2 className="font-display text-2xl text-white md:text-3xl">A sessão começa em</h2>
+            <p className="font-mono text-4xl font-semibold tracking-widest text-white md:text-6xl">
+              {countdown}
+            </p>
+          </>
         ) : (
-          <p className="text-sm text-white/70">A começar a qualquer momento…</p>
+          <h2 className="font-display text-2xl text-white md:text-3xl">Começamos em breve</h2>
         )}
       </div>
     </div>
