@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ComingSoon } from "../components/mm/coming-soon";
 import { Toaster } from "../components/ui/sonner";
+import { installRefreshDebug, mmDebug } from "../lib/refresh-debug";
 
 const COMING_SOON_HOSTS = new Set([
   "mmclub.pt",
@@ -162,6 +163,12 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    installRefreshDebug();
+    mmDebug("root:mount");
+    return () => mmDebug("root:unmount");
+  }, []);
 
   const showComingSoon =
     typeof window !== "undefined" &&

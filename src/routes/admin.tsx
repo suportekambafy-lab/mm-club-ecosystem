@@ -14,6 +14,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { mmDebug } from "@/lib/refresh-debug";
 // Ensure admin overrides are applied
 import "@/data/admin-store";
 
@@ -89,8 +90,16 @@ function AdminLayout() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    mmDebug("admin:mount", { initialUserId: initialAuthUser?.id });
+    return () => mmDebug("admin:unmount");
+  }, [initialAuthUser?.id]);
+
+  useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setAuthUser(data.session?.user ?? null));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setAuthUser(s?.user ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      mmDebug("admin:auth", { event, userId: s?.user?.id ?? null });
+      setAuthUser(s?.user ?? null);
+    });
     return () => sub.subscription.unsubscribe();
   }, []);
 
@@ -100,12 +109,14 @@ function AdminLayout() {
       return;
     }
     let cancelled = false;
+    mmDebug("admin:checking->true", { userId: authUser.id });
     setChecking(true);
     supabase
       .rpc("has_role", { _user_id: authUser.id, _role: "admin" })
       .then(({ data }) => {
         if (cancelled) return;
         const ok = Boolean(data);
+        mmDebug("admin:checking->false", { isAdmin: ok });
         setIsAdmin(ok);
         setChecking(false);
         if (!ok) router.navigate({ to: "/", replace: true });
@@ -119,6 +130,7 @@ function AdminLayout() {
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 
   if (!authUser || checking || !isAdmin) {
+    mmDebug("admin:render:fallback", { hasUser: !!authUser, checking, isAdmin });
     return <div className="min-h-screen bg-background" />;
   }
 
