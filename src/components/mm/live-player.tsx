@@ -9,10 +9,11 @@ type Props = {
   className?: string;
 };
 
-export function LivePlayer({ videoUid, playbackToken, poster, className }: Props) {
+export function LivePlayer({ videoUid, playbackToken, live, poster, className }: Props) {
   // If we have a signed token, use it as the source. Otherwise fall back to the UID
   // (only works while `requireSignedURLs` is disabled on the input).
   const src = playbackToken ?? videoUid;
+  const isLive = !!live;
 
   return (
     <div
@@ -24,10 +25,10 @@ export function LivePlayer({ videoUid, playbackToken, poster, className }: Props
       <Stream
         src={src}
         controls
-        autoplay={false}
-        muted={false}
-        preload="metadata"
-        poster={poster}
+        autoplay={isLive}
+        muted={isLive}
+        preload={isLive ? "auto" : "metadata"}
+        poster={isLive ? undefined : poster}
         responsive
       />
     </div>
