@@ -399,50 +399,114 @@ function AdminLives() {
         </div>
       </form>
 
-      <div className="rounded-2xl border border-border bg-surface-1">
-        <div className="border-b border-border px-5 py-3">
-          <p className="font-display text-sm">Lives programadas</p>
-        </div>
-        {loading ? (
-          <p className="px-5 py-6 text-sm text-muted-foreground">A carregar…</p>
-        ) : rows.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-muted-foreground">Ainda não criaste nenhuma live.</p>
-        ) : (
-          <ul className="divide-y divide-border">
-            {rows.map((r) => (
-              <li key={r.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm text-foreground">{r.title}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {new Date(r.starts_at).toLocaleString("pt-PT")} · {r.duration_minutes}m · {r.visibility} · {r.status}
-                  </p>
-                </div>
-                <Link
-                  to="/admin/lives/$liveId/studio"
-                  params={{ liveId: r.id }}
-                  className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
-                >
-                  <Video className="h-3 w-3" /> Transmitir do navegador
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => handleShowIngest(r.id)}
-                  className="rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40"
-                >
-                  Ver RTMPS
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(r.id)}
-                  className="inline-flex items-center gap-1 rounded-full border border-red-500/40 px-3 py-1.5 text-xs text-red-300 hover:bg-red-500/10"
-                >
-                  <Trash2 className="h-3 w-3" /> Apagar
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+      {(() => {
+        const active = rows.filter((r) => r.status === "scheduled" || r.status === "live");
+        const finished = rows.filter((r) => r.status === "ended" || r.status === "published");
+        return (
+          <>
+            <LivesSection
+              title="Lives programadas"
+              loading={loading}
+              rows={active}
+              emptyText="Ainda não tens lives agendadas ou a decorrer."
+              renderActions={(r) => (
+                <>
+                  <Link
+                    to="/admin/lives/$liveId/studio"
+                    params={{ liveId: r.id }}
+                    className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                  >
+                    <Video className="h-3 w-3" /> Transmitir do navegador
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => handleShowIngest(r.id)}
+                    className="rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40"
+                  >
+                    Ver RTMPS
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(r.id)}
+                    className="inline-flex items-center gap-1 rounded-full border border-red-500/40 px-3 py-1.5 text-xs text-red-300 hover:bg-red-500/10"
+                  >
+                    <Trash2 className="h-3 w-3" /> Apagar
+                  </button>
+                </>
+              )}
+            />
+            <LivesSection
+              title="Lives terminadas"
+              loading={loading}
+              rows={finished}
+              emptyText="Ainda não há lives terminadas."
+              renderActions={(r) => (
+                <>
+                  <Link
+                    to="/lives/$liveId"
+                    params={{ liveId: r.id }}
+                    className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40"
+                  >
+                    Ver gravação
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(r.id)}
+                    className="inline-flex items-center gap-1 rounded-full border border-red-500/40 px-3 py-1.5 text-xs text-red-300 hover:bg-red-500/10"
+                  >
+                    <Trash2 className="h-3 w-3" /> Apagar
+                  </button>
+                </>
+              )}
+              statusBadge={(r) => (r.status === "published" ? "Gravação publicada" : "Terminada")}
+            />
+          </>
+        );
+      })()}
+    </div>
+  );
+}
+
+function LivesSection({
+  title,
+  loading,
+  rows,
+  emptyText,
+  renderActions,
+  statusBadge,
+}: {
+  title: string;
+  loading: boolean;
+  rows: LiveRow[];
+  emptyText: string;
+  renderActions: (r: LiveRow) => React.ReactNode;
+  statusBadge?: (r: LiveRow) => string;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-surface-1">
+      <div className="border-b border-border px-5 py-3">
+        <p className="font-display text-sm">{title}</p>
       </div>
+      {loading ? (
+        <p className="px-5 py-6 text-sm text-muted-foreground">A carregar…</p>
+      ) : rows.length === 0 ? (
+        <p className="px-5 py-6 text-sm text-muted-foreground">{emptyText}</p>
+      ) : (
+        <ul className="divide-y divide-border">
+          {rows.map((r) => (
+            <li key={r.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm text-foreground">{r.title}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {new Date(r.starts_at).toLocaleString("pt-PT")} · {r.visibility}
+                  {statusBadge ? ` · ${statusBadge(r)}` : ` · ${r.status}`}
+                </p>
+              </div>
+              {renderActions(r)}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
