@@ -132,7 +132,12 @@ function LiveDetail() {
         <div className="space-y-5">
           <div className="relative">
             {(isLive || isReplay) && videoUid ? (
-              <LivePlayer videoUid={videoUid} playbackToken={playbackToken} live={isLive} />
+              <LivePlayer
+                key={`gen-${live.stream_generation ?? 0}`}
+                videoUid={videoUid}
+                playbackToken={playbackToken}
+                live={isLive}
+              />
             ) : isReplay ? (
               <NoReplayPoster live={live} />
             ) : (
