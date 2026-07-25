@@ -1,8 +1,10 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowDown, Send, MessagesSquare, Lock } from "lucide-react";
+import { ArrowDown, Send, MessagesSquare, Lock, Pin, PinOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { listChatMessages, sendChatMessage } from "@/lib/lives.functions";
+import { listChatMessages, sendChatMessage, setChatMessagePinned } from "@/lib/lives.functions";
+import { useAdminIds } from "@/hooks/use-admin-ids";
+import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { cn } from "@/lib/utils";
 
 type Message = {
@@ -11,6 +13,8 @@ type Message = {
   user_id: string;
   body: string;
   created_at: string;
+  pinned_at?: string | null;
+  pinned_by?: string | null;
 };
 
 type Profile = {
@@ -39,6 +43,34 @@ function formatTime(iso: string): string {
   return d.toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" });
 }
 
+// Render message body with clickable links. Any http(s):// URL becomes an
+// anchor; everything else is escaped as plain text (React handles escaping).
+function renderBody(body: string): React.ReactNode {
+  const parts: React.ReactNode[] = [];
+  const re = /(https?:\/\/[^\s<>"']+)/gi;
+  let last = 0;
+  let match: RegExpExecArray | null;
+  let idx = 0;
+  while ((match = re.exec(body)) !== null) {
+    if (match.index > last) parts.push(body.slice(last, match.index));
+    const url = match[0];
+    parts.push(
+      <a
+        key={`l-${idx++}`}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer nofollow"
+        className="underline decoration-current/60 underline-offset-2 hover:decoration-current break-all"
+      >
+        {url}
+      </a>,
+    );
+    last = match.index + url.length;
+  }
+  if (last < body.length) parts.push(body.slice(last));
+  return parts;
+}
+
 export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
@@ -51,6 +83,9 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
 
   const fetchInitial = useServerFn(listChatMessages);
   const send = useServerFn(sendChatMessage);
+  const setPinned = useServerFn(setChatMessagePinned);
+  const adminIds = useAdminIds();
+  const isAdmin = currentUserId ? adminIds.has(currentUserId) : false;
 
   useEffect(() => {
     let cancelled = false;
@@ -73,6 +108,14 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
           });
         },
       )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "live_chat_messages", filter: `live_id=eq.${liveId}` },
+        (payload) => {
+          const m = payload.new as Message;
+          setMessages((prev) => prev.map((x) => (x.id === m.id ? { ...x, ...m } : x)));
+        },
+      )
       .subscribe();
 
     return () => {
@@ -80,6 +123,27 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
       supabase.removeChannel(channel);
     };
   }, [liveId, fetchInitial]);
+
+  async function handleTogglePin(m: Message) {
+    const next = !m.pinned_at;
+    // Optimistic update
+    setMessages((prev) =>
+      prev.map((x) =>
+        x.id === m.id
+          ? { ...x, pinned_at: next ? new Date().toISOString() : null, pinned_by: next ? currentUserId : null }
+          : x,
+      ),
+    );
+    try {
+      await setPinned({ data: { id: m.id, pinned: next } });
+    } catch (e) {
+      setError((e as Error).message);
+      // Revert
+      setMessages((prev) =>
+        prev.map((x) => (x.id === m.id ? { ...x, pinned_at: m.pinned_at, pinned_by: m.pinned_by } : x)),
+      );
+    }
+  }
 
   // Fetch profiles for any user_ids we don't have yet.
   useEffect(() => {
@@ -196,6 +260,39 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
         )}
       </div>
 
+      {(() => {
+        const pinned = messages.find((m) => m.pinned_at);
+        if (!pinned) return null;
+        const p = profiles[pinned.user_id];
+        const pname = p?.display_name || (pinned.user_id === currentUserId ? "Tu" : pinned.user_id.slice(0, 6));
+        return (
+          <div className="flex shrink-0 items-start gap-2 border-b border-border/60 bg-primary/5 px-3 py-2">
+            <Pin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1 text-[10px] uppercase tracking-widest text-primary/80">
+                <span>Fixada</span>
+                <span className="opacity-60">·</span>
+                <span className="normal-case tracking-normal text-foreground/85">{pname}</span>
+                {adminIds.has(pinned.user_id) && <VerifiedBadge size={10} />}
+              </div>
+              <p className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-foreground/90 break-words">
+                {renderBody(pinned.body)}
+              </p>
+            </div>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => handleTogglePin(pinned)}
+                aria-label="Remover fixação"
+                className="shrink-0 rounded-md p-1 text-muted-foreground transition hover:bg-surface-2 hover:text-foreground"
+              >
+                <PinOff className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        );
+      })()}
+
       <div className="relative min-h-0 flex-1">
         <div
           ref={scrollRef}
@@ -213,11 +310,12 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
                 const profile = profiles[m.user_id];
                 const name = profile?.display_name || (mine ? "Tu" : m.user_id.slice(0, 6));
                 const time = formatTime(m.created_at);
+                const authorIsAdmin = adminIds.has(m.user_id);
                 return (
                   <div
                     key={m.id}
                     className={cn(
-                      "live-chat-msg flex gap-2",
+                      "live-chat-msg group/msg flex gap-2",
                       mine ? "flex-row-reverse" : "flex-row",
                       showHeader ? "mt-2 first:mt-0" : "mt-0.5",
                     )}
@@ -245,20 +343,40 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
                             mine ? "flex-row-reverse" : "flex-row",
                           )}
                         >
-                          <span className="font-medium text-foreground/85">{name}</span>
+                          <span className="flex items-baseline gap-1 font-medium text-foreground/85">
+                            {name}
+                            {authorIsAdmin && <VerifiedBadge size={11} />}
+                          </span>
                           <span className="opacity-60">·</span>
                           <span className="tabular-nums opacity-70">{time}</span>
                         </div>
                       )}
-                      <div
-                        className={cn(
-                          "rounded-2xl px-3 py-1.5 text-[13.5px] leading-snug break-words",
-                          mine
-                            ? "bg-primary text-primary-foreground rounded-tr-sm"
-                            : "bg-surface-2 text-foreground rounded-tl-sm",
+                      <div className={cn("flex items-center gap-1", mine ? "flex-row-reverse" : "flex-row")}>
+                        <div
+                          className={cn(
+                            "rounded-2xl px-3 py-1.5 text-[13.5px] leading-snug break-words whitespace-pre-wrap",
+                            mine
+                              ? "bg-primary text-primary-foreground rounded-tr-sm"
+                              : "bg-surface-2 text-foreground rounded-tl-sm",
+                          )}
+                        >
+                          {renderBody(m.body)}
+                        </div>
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => handleTogglePin(m)}
+                            aria-label={m.pinned_at ? "Remover fixação" : "Fixar mensagem"}
+                            className={cn(
+                              "shrink-0 rounded-md p-1 text-muted-foreground transition hover:bg-surface-2 hover:text-foreground",
+                              m.pinned_at
+                                ? "opacity-100 text-primary"
+                                : "opacity-0 group-hover/msg:opacity-100 focus:opacity-100",
+                            )}
+                          >
+                            {m.pinned_at ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
+                          </button>
                         )}
-                      >
-                        {m.body}
                       </div>
                     </div>
                   </div>
@@ -267,6 +385,8 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
             )}
           </div>
         </div>
+
+
 
         {unread > 0 && (
           <button

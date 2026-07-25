@@ -444,6 +444,8 @@ export type Database = {
           created_at: string
           id: string
           live_id: string
+          pinned_at: string | null
+          pinned_by: string | null
           user_id: string
         }
         Insert: {
@@ -451,6 +453,8 @@ export type Database = {
           created_at?: string
           id?: string
           live_id: string
+          pinned_at?: string | null
+          pinned_by?: string | null
           user_id: string
         }
         Update: {
@@ -458,6 +462,8 @@ export type Database = {
           created_at?: string
           id?: string
           live_id?: string
+          pinned_at?: string | null
+          pinned_by?: string | null
           user_id?: string
         }
         Relationships: [
