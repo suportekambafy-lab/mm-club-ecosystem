@@ -1,6 +1,5 @@
 import { createFileRoute, Link, Outlet, redirect, useRouter, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
-import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard,
@@ -92,7 +91,6 @@ const nav: Array<{
 function AdminLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
-  const { authUser: initialAuthUser } = Route.useRouteContext() as { authUser: User };
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {

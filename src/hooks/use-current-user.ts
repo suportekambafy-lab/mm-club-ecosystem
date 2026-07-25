@@ -112,14 +112,3 @@ export function useCurrentUser(): CurrentUserState {
 
   return state;
 }
-        load();
-      }
-    });
-    return () => {
-      cancelled = true;
-      sub.subscription.unsubscribe();
-    };
-  }, []);
-
-  return state;
-}

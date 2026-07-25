@@ -129,17 +129,6 @@ export function useUserProgress() {
 
   return { progress, loaded };
 }
-        load();
-      }
-    });
-    return () => {
-      cancelled = true;
-      sub.subscription.unsubscribe();
-    };
-  }, []);
-
-  return { progress, loaded };
-}
 
 export function applyProgress(course: Course, progress: ProgressByCourse): Course {
   const p = progress[course.id];
