@@ -94,8 +94,23 @@ export const getLive = createServerFn({ method: "GET" })
       }
     }
 
-    return { live, playbackToken, videoUid };
+    // For replays, fetch the actual recording duration from Cloudflare.
+    let actualDurationSeconds: number | null = null;
+    if (isReplay && recordingUid) {
+      try {
+        const { getVideoDetails } = await import("@/lib/cloudflare-stream.server");
+        const details = await getVideoDetails(recordingUid);
+        if (typeof details.duration === "number" && details.duration > 0) {
+          actualDurationSeconds = Math.round(details.duration);
+        }
+      } catch (e) {
+        console.error("[lives] getVideoDetails failed", e);
+      }
+    }
+
+    return { live, playbackToken, videoUid, actualDurationSeconds };
   });
+
 
 
 // Chat messages: initial fetch + send.
