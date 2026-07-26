@@ -743,8 +743,12 @@ export async function resolveRecoveryForPayment(args: {
 
   if (classification.category === "fraud") {
     await cancelRecovery(cycleKey, "fraud");
+    await refreshCustomerProfile(userId, "payment_failed");
     return;
   }
+
+  // Continuous learning: the next attempts adapt to what just happened.
+  await rescoreOpenCycles(userId, "payment_failed");
 
   await emitEvent({
     type: "DunningEscalated",
@@ -773,6 +777,8 @@ async function closeCycle(
     .eq("cycle_key", cycleKey)
     .eq("status", "scheduled");
   await cancelPendingJobs(cycleKey);
+
+  await refreshCustomerProfile(userId, reason === "recovered" ? "debt_recovered" : "manual");
 
   if (reason === "recovered") {
     await emitEvent({
@@ -858,6 +864,7 @@ export async function runRecoveryEscalation(payload: RecoveryJobPayload): Promis
       idempotencyKey: `suspend:${cycleKey}`,
       payload: { userId, subscriptionId, stage: "suspended" },
     });
+    await refreshCustomerProfile(userId, "suspended");
     return;
   }
 
@@ -882,6 +889,7 @@ export async function runRecoveryEscalation(payload: RecoveryJobPayload): Promis
       endsAt: now,
     },
   });
+  await refreshCustomerProfile(userId, "cancelled");
 }
 
 // ----------------------------------------------------------- event triggers
@@ -896,6 +904,10 @@ export async function triggerRecoveryNow(
   trigger: string,
 ): Promise<{ triggered: number }> {
   if (await isUserBlockedByPending(userId)) return { triggered: 0 };
+
+  // Every trigger is also a learning event: refresh the profile and re-score
+  // the open debt before deciding when to charge again.
+  await rescoreOpenCycles(userId, profileTriggerFor(trigger));
 
   const { data: rows } = await supabaseAdmin
     .from("billing_dunning_attempts")
@@ -945,6 +957,13 @@ export async function triggerRecoveryNow(
     });
   }
   return { triggered };
+}
+
+function profileTriggerFor(trigger: string): ProfileTrigger {
+  if (trigger === "login") return "login";
+  if (trigger.includes("payment_method")) return "method_updated";
+  if (trigger.includes("plan")) return "plan_changed";
+  return "manual";
 }
 
 async function isUserBlockedByPending(userId: string): Promise<boolean> {
