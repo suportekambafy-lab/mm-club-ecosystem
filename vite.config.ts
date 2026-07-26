@@ -26,6 +26,21 @@ export default defineConfig({
           find: /^tslib$/,
           replacement: path.resolve(rootDir, "node_modules/tslib/tslib.es6.mjs"),
         },
+        // Pin `entities` to the hoisted v4 copy (react-email renderer needs
+        // ./lib/decode.js, removed in v7).
+        {
+          find: "entities/lib/decode.js",
+          replacement: path.resolve(rootDir, "node_modules/entities/lib/decode.js"),
+        },
+        {
+          find: "entities/lib/encode.js",
+          replacement: path.resolve(rootDir, "node_modules/entities/lib/encode.js"),
+        },
+        {
+          find: /^entities$/,
+          replacement: path.resolve(rootDir, "node_modules/entities"),
+        },
+
       ],
     },
   },
