@@ -89,7 +89,8 @@ export async function startGuestCheckout(
   }
 
   const payment = await gw.createCharge({
-    amountCents: price.amountCents,
+    // Trial prices only validate the card (0,01 €); the plan starts free.
+    amountCents: price.trialDays > 0 ? 1 : price.amountCents,
     currency: price.currency,
     description: `${APP_NAME} — ${price.product.name}`,
     redirectUrl: `${origin}/checkout/return?intent=${intent.id}`,
