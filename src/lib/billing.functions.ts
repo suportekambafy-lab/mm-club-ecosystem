@@ -88,6 +88,18 @@ export const getBillingOverview = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<BillingOverview> => {
     const { supabase, userId } = context;
 
+    // Opening the billing page is a recovery trigger.
+    try {
+      const { triggerRecoveryNow } = await import(
+        "@/lib/billing/recovery/engine.server"
+      );
+      await triggerRecoveryNow(userId, "billing_page");
+    } catch (err) {
+      console.error("[recovery] trigger on billing page", err);
+    }
+
+
+
     const [subRes, timelineRes, ledgerRes, pmRes, featRes] = await Promise.all([
       supabase
         .from("billing_subscriptions")
