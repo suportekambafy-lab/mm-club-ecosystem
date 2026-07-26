@@ -203,7 +203,25 @@ function ShortsPage() {
     <div className="fixed inset-0 z-30 h-[100dvh] max-h-[100dvh] overflow-hidden bg-black">
       {/* Feed */}
       {shortsQuery.isLoading ? (
-        <div className="flex h-[100dvh] items-center justify-center text-sm text-white/60">A carregar…</div>
+        <div className="flex h-[100dvh] items-center justify-center">
+          <div className="relative h-[100dvh] w-full max-w-[520px] overflow-hidden">
+            <div className="absolute inset-0 animate-pulse bg-white/[0.06]" />
+            <div className="absolute bottom-24 left-4 right-20 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 animate-pulse rounded-full bg-white/15" />
+                <div className="h-3 w-28 animate-pulse rounded bg-white/15" />
+              </div>
+              <div className="h-3 w-4/5 animate-pulse rounded bg-white/10" />
+              <div className="h-3 w-2/3 animate-pulse rounded bg-white/10" />
+            </div>
+            <div className="absolute bottom-28 right-4 space-y-5">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-10 w-10 animate-pulse rounded-full bg-white/15" />
+              ))}
+            </div>
+          </div>
+        </div>
+
       ) : shorts.length === 0 ? (
         <EmptyState onCreate={() => setUploaderOpen(true)} />
       ) : (
