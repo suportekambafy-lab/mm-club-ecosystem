@@ -32,7 +32,7 @@ const BENEFITS = [
   "Comunidade privada, lives e ferramentas",
   "Suporte MM Intelligence 24/7",
   "Cancelas quando quiseres antes do fim do trial",
-  "Depois do 3.º mês, apenas 49 €/mês",
+  "Depois do 3.º mês, apenas 29,90 €/mês",
 ];
 
 function VipPage() {
