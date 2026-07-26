@@ -17,6 +17,7 @@ import {
   GENERIC_AUTH_DENY,
   GENERIC_DENY,
   GENERIC_LIMIT_DENY,
+  READ_ONLY_DENY,
   SecurityError,
   type RateLimitRule,
   type SecurityPolicy,
@@ -40,14 +41,23 @@ async function requestMeta() {
   }
   let userAgent: string | null = null;
   let route: string | null = null;
+  let country: string | null = null;
+  let city: string | null = null;
+  let requestId = crypto.randomUUID();
   try {
     const req = getRequest();
     userAgent = req?.headers.get("user-agent") ?? null;
     route = req ? new URL(req.url).pathname : null;
+    country = req?.headers.get("cf-ipcountry") ?? null;
+    city = req?.headers.get("cf-ipcity") ?? null;
+    requestId =
+      req?.headers.get("cf-ray") ??
+      req?.headers.get("x-request-id") ??
+      requestId;
   } catch {
     /* no request context */
   }
-  return { ip, userAgent, route };
+  return { ip, userAgent, route, country, city, requestId };
 }
 
 /**
@@ -58,6 +68,9 @@ export interface SecurityContext {
   ip: string | null;
   userAgent: string | null;
   route: string | null;
+  country: string | null;
+  city: string | null;
+  requestId: string;
   policy: string;
 }
 
