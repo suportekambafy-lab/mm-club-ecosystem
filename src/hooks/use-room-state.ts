@@ -421,6 +421,14 @@ export function useRoomState({
   const leave = useCallback(async () => {
     await roomRef.current?.disconnect();
   }, []);
+  const startAudio = useCallback(async () => {
+    try {
+      await roomRef.current?.startAudio();
+      setAudioBlocked(!(roomRef.current?.canPlaybackAudio ?? true));
+    } catch (e) {
+      console.warn("[useRoomState] startAudio failed", e);
+    }
+  }, []);
 
   const attachTrack = useCallback((trackId: string, el: HTMLMediaElement) => {
     const room = roomRef.current;
@@ -446,16 +454,24 @@ export function useRoomState({
     }
   }, []);
 
-  const actions: RoomActions = {
-    toggleMic,
-    toggleCam,
-    startScreenShare,
-    stopScreenShare,
-    leave,
-    attachTrack,
-    detachTrack,
-    ...serverActions,
-  };
+  // Memoize the actions object so children that depend on it (MediaTile
+  // useEffects that attach/detach tracks) don't re-run on every state tick
+  // — that was causing the video tile flicker on speaker/mute events.
+  const actions: RoomActions = useMemo(
+    () => ({
+      toggleMic,
+      toggleCam,
+      startScreenShare,
+      stopScreenShare,
+      startAudio,
+      leave,
+      attachTrack,
+      detachTrack,
+      ...serverActions,
+    }),
+    [toggleMic, toggleCam, startScreenShare, stopScreenShare, startAudio, leave, attachTrack, detachTrack, serverActions],
+  );
 
   return { state, actions };
 }
+
