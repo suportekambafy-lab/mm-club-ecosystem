@@ -16,7 +16,7 @@ import { useServerFn } from "@tanstack/react-start";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export const Route = createFileRoute("/_app/lives/$liveId/sala")({
+export const Route = createFileRoute("/_app/lives_/$liveId/sala")({
   loader: ({ params }) => {
     if (!UUID_RE.test(params.liveId)) throw notFound();
     return { liveId: params.liveId };
@@ -24,6 +24,11 @@ export const Route = createFileRoute("/_app/lives/$liveId/sala")({
   head: () => ({
     meta: [
       { title: "Sala Interativa — MM Club" },
+      { name: "description", content: "Sala interativa do MM Club para lives com host, palco e participantes em tempo real." },
+      { property: "og:title", content: "Sala Interativa — MM Club" },
+      { property: "og:description", content: "Sala interativa do MM Club para lives com host, palco e participantes em tempo real." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
