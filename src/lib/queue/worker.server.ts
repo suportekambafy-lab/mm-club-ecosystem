@@ -44,7 +44,7 @@ export async function drainQueue(limit = 25): Promise<DrainResult> {
     const { data: claimed } = await supabaseAdmin
       .from("job_queue")
       .update({
-        status: "processing",
+        status: "running",
         locked_at: new Date().toISOString(),
         attempts: raw.attempts + 1,
       })
@@ -61,7 +61,7 @@ export async function drainQueue(limit = 25): Promise<DrainResult> {
       await supabaseAdmin
         .from("job_queue")
         .update({
-          status: "completed",
+          status: "done",
           completed_at: new Date().toISOString(),
           locked_at: null,
           last_error: null,
@@ -98,7 +98,7 @@ export async function requeueStaleJobs(olderThanMinutes = 10): Promise<number> {
   const { data } = await supabaseAdmin
     .from("job_queue")
     .update({ status: "pending", locked_at: null })
-    .eq("status", "processing")
+    .eq("status", "running")
     .lt("locked_at", cutoff)
     .select("id");
   return data?.length ?? 0;
