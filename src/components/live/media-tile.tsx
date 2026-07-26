@@ -2,7 +2,7 @@
  * MediaTile — pure UI. Attaches a MediaTrack to a <video>/<audio> element
  * via the adapter. Never touches LiveKit types directly.
  */
-import { memo, useEffect, useRef } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import type { MediaTrack, RoomActions, RoomParticipant } from "@/lib/room-state";
 import { Mic, MicOff, Wifi, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
