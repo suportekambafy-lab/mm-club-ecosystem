@@ -265,3 +265,33 @@ export const setEmergencyMode = createServerFn({ method: "POST" })
 
     return after;
   });
+
+/**
+ * Public, IP-rate-limited signal so failed logins show up in the dashboard.
+ * Never stores the email or password — only the fact and the origin.
+ */
+export const reportAuthFailure = createServerFn({ method: "POST" })
+  .middleware([
+    ...secured({
+      name: "security.reportAuthFailure",
+      auth: false,
+      limit: { bucket: "auth-failure", max: 40, windowSeconds: 3600, scope: "ip" },
+    }),
+  ])
+  .inputValidator((input: unknown) =>
+    z
+      .object({ stage: z.enum(["login", "signup", "recovery"]) })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { recordSecurityEvent } = await import("@/lib/security/runtime.server");
+    await recordSecurityEvent({
+      kind: "login_failed",
+      severity: "warn",
+      ip: context.security.ip,
+      userAgent: context.security.userAgent,
+      outcome: "blocked",
+      reason: data.stage,
+    });
+    return { ok: true };
+  });
