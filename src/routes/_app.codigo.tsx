@@ -168,59 +168,52 @@ function CodigoDoClube() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl">
-      {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl border border-hairline bg-surface-1 px-6 py-14 sm:px-12 sm:py-20">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10"
-          style={{
-            background:
-              "radial-gradient(60% 40% at 50% 0%, oklch(0.82 0.13 82 / 0.16), transparent 70%)",
-          }}
-        />
-        <div className="flex flex-col items-start gap-6">
-          <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            Comunidade Privada
-          </span>
-          <h1 className="font-display text-4xl leading-tight tracking-tight text-foreground sm:text-6xl">
-            Código do Clube
-          </h1>
-          <p className="max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            O MM Club é uma comunidade privada construída para empreendedores
-            que valorizam respeito, colaboração e crescimento. Para preservar a
-            qualidade do clube, todos os membros devem aceitar este Código de
-            Conduta.
+    <div className="mx-auto max-w-3xl">
+      {/* Aviso topo — apenas se ainda não aceitou */}
+      {!alreadyAccepted && (
+        <div className="mb-8 flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3">
+          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+          <p className="text-sm leading-relaxed text-foreground">
+            Lê o Código até ao fim e concorda em baixo para teres acesso
+            completo ao MM Club.
           </p>
         </div>
-      </section>
+      )}
 
-      {/* Rules */}
-      <section className="mt-10 grid gap-4 sm:mt-14 sm:grid-cols-2">
+      {/* Cabeçalho simples */}
+      <header className="border-b border-hairline pb-8">
+        <p className="font-display text-[11px] uppercase tracking-[0.22em] text-primary">
+          Comunidade Privada
+        </p>
+        <h1 className="mt-3 font-display text-3xl leading-tight tracking-tight text-foreground sm:text-4xl">
+          Código do Clube
+        </h1>
+        <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
+          O MM Club é uma comunidade privada construída para empreendedores que
+          valorizam respeito, colaboração e crescimento. Para preservar a
+          qualidade do clube, todos os membros devem aceitar este Código de
+          Conduta.
+        </p>
+      </header>
+
+      {/* Regras */}
+      <section className="divide-y divide-hairline">
         {rules.map((rule, i) => {
           const Icon = rule.icon;
           return (
-            <article
-              key={rule.title}
-              className="group relative overflow-hidden rounded-2xl border border-hairline bg-surface-1 p-6 transition hover:border-primary/30"
-            >
-              <div className="flex items-start gap-4">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
-                  <Icon className="h-5 w-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-display text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/80">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                  </div>
-                  <h3 className="mt-1 font-display text-lg tracking-tight text-foreground">
-                    {rule.title}
-                  </h3>
-                  <div className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    {rule.body}
-                  </div>
+            <article key={rule.title} className="flex items-start gap-4 py-7">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Icon className="h-4.5 w-4.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-display text-base tracking-tight text-foreground sm:text-lg">
+                  <span className="mr-2 text-primary/70">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  {rule.title}
+                </h3>
+                <div className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                  {rule.body}
                 </div>
               </div>
             </article>
@@ -229,18 +222,14 @@ function CodigoDoClube() {
       </section>
 
       {/* Filosofia */}
-      <section className="relative mt-10 overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-surface-1 to-surface-1 px-6 py-12 sm:mt-14 sm:px-12 sm:py-16">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-primary/20 blur-3xl"
-        />
-        <p className="font-display text-[11px] uppercase tracking-[0.28em] text-primary">
+      <section className="border-t border-hairline pt-8">
+        <p className="font-display text-[11px] uppercase tracking-[0.22em] text-primary">
           Filosofia MM Club
         </p>
-        <h2 className="mt-3 font-display text-3xl leading-tight tracking-tight text-foreground sm:text-4xl">
+        <h2 className="mt-3 font-display text-xl tracking-tight text-foreground sm:text-2xl">
           A qualidade da comunidade está acima de tudo.
         </h2>
-        <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
           O MM Club não foi criado para ter milhares de membros. Foi criado para
           reunir os empreendedores certos. Cada membro influencia diretamente a
           qualidade da comunidade. Queremos um espaço onde exista respeito,
@@ -249,7 +238,7 @@ function CodigoDoClube() {
       </section>
 
       {/* Aceitação */}
-      <section className="mt-10 rounded-3xl border border-hairline bg-surface-1 p-6 sm:mt-14 sm:p-10">
+      <section className="mt-8 rounded-2xl border border-hairline bg-surface-1 p-6 sm:p-8">
         {alreadyAccepted ? (
           <div className="flex flex-col items-start gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/30">
