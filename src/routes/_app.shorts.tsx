@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Heart, Volume2, VolumeX, Plus, X, Upload, Trash2, Eye, Play, MessageCircle, ArrowUp, CornerDownRight, MoreHorizontal, Share2, Link2, Flag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { assertUploadAllowed } from "@/lib/security/uploads";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { cn } from "@/lib/utils";
@@ -55,6 +56,7 @@ function ShortsPage() {
       if (!user) return;
       setUpload({ progress: 0, status: "uploading" });
       try {
+        assertUploadAllowed(file, "video");
         const ext = file.name.split(".").pop() || "mp4";
         const path = `shorts/${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 

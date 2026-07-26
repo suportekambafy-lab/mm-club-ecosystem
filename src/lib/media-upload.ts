@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { assertUploadAllowed } from "@/lib/security/uploads";
 
 // 10 years in seconds — signed URLs are the only reliable way to serve
 // media from private buckets in <img>/<video> tags without auth headers.
@@ -11,6 +12,8 @@ export async function uploadMedia(
   file: File,
   keyPrefix: string,
 ): Promise<{ url: string; path: string }> {
+  assertUploadAllowed(file, bucket === "lesson-videos" ? "video" : "media");
+
   const ext = file.name.split(".").pop() || "bin";
   const safe = keyPrefix.replace(/[^a-zA-Z0-9-_/]/g, "-");
   const path = `${safe}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;

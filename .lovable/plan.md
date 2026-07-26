@@ -1,155 +1,70 @@
-# MM Club Salas — Plataforma de Eventos Interativos (v2)
+## Estado verificado (auditoria já feita)
 
-Aprovado **LiveKit Cloud**, com 3 alterações do utilizador:
-1. **Adiar** Breakout Rooms + Speed Networking (fase posterior).
-2. **Arquitetura modular** — cada feature (reactions, polls, questions, backstage, IA, futuros breakouts/networking) é um módulo independente, ativável/desativável por evento sem tocar no core.
-3. **Modo Backstage** — sala privada pré-live para host + co-hosts + oradores testarem equipamento antes de entrar em direto.
+Base sólida: 79/83 funções de servidor exigem sessão válida; todas as ações admin verificam o papel no backend; RLS ativo em todas as tabelas; segredos (Mollie, LiveKit, Cloudflare, OpenAI, Service Role) só existem em ficheiros de servidor.
 
-## Arquitetura
+Falhas reais encontradas:
 
-```text
-┌─ Publishers (host/co-host/oradores) ─┐
-│ cam / mic / screen / audio sistema   │──┐
-└──────────────────────────────────────┘  │
-                                          ▼
-                                  ┌──────────────────┐
-                                  │ LiveKit Cloud    │
-                                  │ SFU + Egress     │
-                                  │ (2 rooms/live:   │
-                                  │  backstage +     │
-                                  │  main stage)     │
-                                  └────────┬─────────┘
-                                           │
-        ┌──────────────────────────────────┼──────────────────────────┐
-        ▼                                  ▼                          ▼
-  Espectadores (subscrevem)     Supabase (estado da sala)     CF Stream
-                                módulos: reactions/polls/           replays
-                                questions/backstage/…
-```
-
-LiveKit gere media + presença técnica; Supabase é source of truth do estado de produto e da configuração de módulos por sala.
-
-## Core vs Módulos (modular por design)
-
-**Core (imutável, mínimo)**
-- Sala + participantes + papéis + tokens
-- Palco (join/leave, mic/cam/screen)
-- Spotlight + layout
-- Moderação (mute, kick, ban)
-- Gravação + replay
-- Backstage (sala pré-live)
-
-**Módulos (opt-in por sala)** — registados num `roomModules` registry:
-- `reactions`
-- `questions`
-- `polls`
-- `chat` (já existe)
-- `ai-assistant` (futuro)
-- `breakouts` (futuro — adiado)
-- `speed-networking` (futuro — adiado)
-
-Contrato uniforme:
-```ts
-interface RoomModule {
-  id: string;
-  enabledByDefaultFor: LiveMode[]; // broadcast | interactive
-  ServerRPC?: Record<string, ServerFn>;
-  Panel?: ComponentType<RoomModuleProps>;   // painel lateral
-  Overlay?: ComponentType<RoomModuleProps>;  // camada sobre o stage
-  requires?: ("host" | "publisher")[];
-}
-```
-
-Config guardada em `lives.enabled_modules` (jsonb). UI de criação lista os módulos com toggles. Adicionar breakouts/networking mais tarde = registar módulo novo, sem tocar em core.
-
-## Modos + Backstage
-
-- **Broadcast** (mantém stack CF Stream atual).
-- **Interactive** (LiveKit).
-
-Backstage aplica-se aos dois modos:
-- Cada `live` interativa tem duas rooms LiveKit lógicas: `mmclub_live_<id>_backstage` e `mmclub_live_<id>_main`.
-- Host + co-hosts + oradores entram primeiro no backstage: mic/cam/screen preview, chat privado, checklist de equipamento (mic level meter, câmara ok, screen share test), latência/bandwidth check.
-- Participantes veem contador "A sessão está a ser preparada".
-- Host clica **"Entrar em direto"** → server fn move os publishers para a room `main`, define `lives.status = 'live'` e `started_at`, dispara gravação Egress. Backstage fica disponível em paralelo (bastidores durante a live: sussurros entre oradores fora do ar). Módulos configurados aparecem no painel.
-- Gravação apenas cobre a room `main`.
-
-## Papéis
-
-| Papel | Backstage | Palco Main | Modera |
+| Risco | Gravidade | Localização | Impacto |
 |---|---|---|---|
-| Host | ✅ | ✅ | ✅ total |
-| Co-host | ✅ | ✅ | ✅ (não encerra) |
-| Orador | ✅ | ✅ (promovido) | ❌ |
-| Participante | ❌ | ⚠️ via mão/convite | ❌ |
-| Espectador | ❌ | ❌ | ❌ |
+| Configuração interna do admin legível sem login | Alta | leitura de `admin_overrides` | Exposição de configuração e estrutura interna |
+| Media de cursos/vídeos descarregável por qualquer conta autenticada | Alta | regras de `course-media`, `lesson-videos` | Conta grátis acede a conteúdo pago |
+| Upload livre para os buckets de cursos | Média | mesmas regras | Abuso de armazenamento |
+| Sem limites de utilização em lado nenhum | Média | toda a API | Força bruta, abuso financeiro |
+| Proteção contra passwords vazadas desligada | Média | definições de autenticação | Contas fracas |
+| Webhook de pagamentos sem assinatura/anti-replay explícitos | Média | endpoint de webhook | Reprocessamento de eventos |
+| Uploads sem validação de tipo/tamanho no servidor | Média | shorts, avatares, comunidade | Ficheiros maliciosos |
 
-Se host cai >30s → co-host mais antigo promovido a host automaticamente.
+## Plano (7 fases)
 
-## Schema (migration)
+**Fase 1 — Security Gate único (a camada comum que pediu)**
 
-- `lives.mode` (`broadcast|interactive`), `lives.enabled_modules` (jsonb), `lives.spotlight_user_id`, `lives.stage_layout` (`solo|host_guest|spotlight|grid`), `lives.backstage_started_at`, `lives.went_live_at`.
-- `live_participants` — role, room (`backstage|main`), on_stage, mic/cam/screen_allowed, hand_raised_at, invited_at, connection_quality, joined_at, kicked_at, banned.
-- `live_stage_events` — auditoria (raise/invite/approve/promote/mute/kick/…).
-- Tabelas por módulo (isoladas, só criadas se módulo ativo no projeto):
-  - `live_reactions`
-  - `live_questions`
-  - `live_polls` + `live_poll_options` + `live_poll_votes`
-- RLS: host/co-host escrevem tudo; participantes escrevem só o seu; banned bloqueados; backstage só visível a role ≥ orador.
+Uma única cadeia de segurança que todas as funções de servidor e endpoints atravessam, pela ordem: autenticação → autorização (papel/entitlement) → limite de utilização → WAF lógico → validação de entrada → regras de negócio → função.
 
-## Server
+- Cada função passa a declarar apenas a sua política (`{ auth: true, role: 'admin', limit: '10/min', schema }`); nunca reescreve segurança.
+- Uma função sem política declarada é rejeitada por omissão (fail-closed) — impossível "esquecer" uma validação.
+- Os mesmos controlos aplicam-se aos endpoints públicos (webhooks, cron), com verificação de assinatura em vez de sessão.
 
-`src/lib/livekit.server.ts` — SDK LiveKit isolado; emite tokens com `VideoGrant` por papel + sala (backstage/main); re-emite em cada promoção.
+**Fase 2 — Fechar os buracos críticos**
+- `admin_overrides` legível só por administradores.
+- Media de cursos e vídeos: leitura só com o direito correspondente, escrita só admin; downloads sempre por link assinado de curta duração.
+- Validação de tipo real, extensão e tamanho no servidor antes de qualquer upload.
+- Proteção contra passwords vazadas ativada.
 
-`src/lib/live-room.functions.ts` — **core apenas**:
-- `joinRoom({liveId, target: 'backstage'|'main'})`
-- `goLive({liveId})` — host-only; move publishers para main, marca started_at, arranca Egress.
-- `endLive({liveId})` — para Egress, publica replay.
-- `raiseHand`, `inviteToStage`, `approveHand`, `denyHand`, `promoteToStage`, `demoteFromStage`, `setRole`
-- `setMic`, `setCam`, `setScreen`, `muteAll`
-- `setSpotlight`, `setStageLayout`
-- `kick`, `ban`
+**Fase 3 — Billing, Mollie e anti-abuso financeiro**
+- Preços, planos, descontos, cupões, faturas, créditos e permissões calculados sempre no servidor a partir do catálogo; nada aceite do pedido.
+- Verificação de propriedade em cada operação (a fatura/subscrição é mesmo do requerente).
+- Limites financeiros por utilizador **e** por IP: número máximo de checkouts por hora/dia, de tentativas de pagamento, de métodos adicionados, de emails e de jobs gerados. Checkout repetido reutiliza a intenção existente em vez de criar nova.
+- Webhooks: assinatura verificada, janela de tempo, proteção contra reenvio e idempotência por evento.
 
-Módulos vivem em `src/lib/room-modules/<id>/` — cada um exporta `functions.ts` (RPCs), `Panel.tsx`, `Overlay.tsx`, `schema.sql`.
+**Fase 4 — WAF lógico e Kill Switch**
+- Deteção de padrões suspeitos por utilizador, não só volume: upgrades repetidos, ciclos cancelar/reativar, alternância de métodos de pagamento, tentativas repetidas de acesso negado. Escalada automática: abrandar → exigir confirmação → bloquear e registar.
+- **Modo de Emergência** com um botão no painel admin: bloqueia em segundos novos checkouts, novas cobranças, criação de contas, uploads e endpoints públicos não essenciais, mantendo o acesso de leitura a membros autenticados. Estado guardado nas definições e lido pelo Security Gate a cada pedido, com registo de quem ativou e porquê.
 
-## Frontend (`src/components/mm/room/`)
+**Fase 5 — Proteção contra enumeração**
+- Respostas uniformes em recuperação de password, registo, verificação de email e login: sempre "Se existir uma conta com esse email, enviaremos instruções."
+- Sem distinção entre "não existe" e "sem permissão" em faturas, subscrições, perfis e IDs: a mesma resposta genérica e o mesmo tempo de resposta.
 
-- `interactive-room.tsx` — LiveKit `<Room>` provider + orquestração de módulos ativos.
-- `backstage.tsx` — preview grid, mic level meter, device selectors, network stats, checklist, botão "Entrar em direto" (host).
-- `stage.tsx` — grelha adaptativa + layouts (solo, host_guest, spotlight, grid); troca sem reconectar.
-- `participant-tile.tsx` — vídeo/avatar + verified + indicadores + menu contextual do host.
-- `local-controls.tsx` — mic/cam/screen (com áudio sistema onde possível), mão, sair, seletor de dispositivos inline (sem sair da sala).
-- `host-panel.tsx` — participantes, qualidade (`ConnectionQuality`), voz ativa, pedidos de palco, ações completas, toggle de módulos ao vivo.
-- `invitation-toast.tsx` — "O anfitrião convidou-te para o palco".
-- `module-slot.tsx` — renderiza `Panel`/`Overlay` dos módulos ativos.
+**Fase 6 — Auditoria de Service Role e registo de ações admin**
+- Inventário completo de cada utilização da chave privilegiada: onde, porquê e se pode ser substituída pela sessão do utilizador. Substituir sempre que possível; o que ficar tem justificação escrita no relatório.
+- Todas as ações administrativas registadas com autor, data/hora, IP, browser, localização aproximada, valor anterior e valor novo (ex.: alteração de preço fica com o antes e o depois).
 
-Módulos incluídos na v1:
-- `reactions` — overlay flutuante (👏 ❤️ 🔥 😂 👍) + throttle server 1/s.
-- `questions` — separador com upvote, marcar respondida, destacar (banner sobre stage).
-- `polls` — criar/lançar/fechar + barras em tempo real + projetar resultado no stage.
-- `chat` — atualiza componente existente para consumir novo estado.
+**Fase 7 — Security Dashboard, monitorização e resposta a incidentes**
+- Tabela de eventos de segurança alimentada automaticamente pelo Security Gate: falhas de login, acessos admin, pedidos bloqueados por autorização, bloqueios por limite ou WAF, falhas de webhook e eventos de cobrança anómalos.
+- Página `/admin/seguranca` (só admin): estado do Modo de Emergência, alertas ativos, gráfico de falhas, top IPs, últimos bloqueios, histórico pesquisável e exportável.
+- Regras de alerta com email ao administrador (picos de falhas de login, série de acessos negados, criação anormal de checkouts, alterações admin invulgares).
+- Procedimento escrito de resposta a incidentes: como detetar, conter (Modo de Emergência), investigar pelo histórico, recuperar e comunicar.
+- Nunca são registados passwords, tokens, chaves ou dados de cartão.
 
-## Resiliência
+## Pen test e relatório final
 
-- LiveKit reconecta sozinho (Wi-Fi ↔ 5G, sleep, refresh).
-- Gravação **server-side via LiveKit Egress** — imune a refresh/queda do host.
-- Watchdog server: retry Egress + alerta.
-- Replay: Egress → MP4 → upload CF Stream (usa `cloudflare-stream.server.ts`) → `recording_video_uid` → replay unificado.
+Simulação de ataque via browser controlado e chamadas diretas tipo Postman: escalar privilégios, ler dados de outros utilizadores, manipular preço/fatura/subscrição/pagamento, marcar fatura como paga, criar créditos, descarregar media privada, chamar APIs internas, reutilizar webhooks e sessões expiradas, enumerar emails e IDs.
 
-## Fases
+Relatório em `docs/security-audit.md` com, para cada vulnerabilidade: risco, gravidade, localização, impacto, solução e prova do teste — mais uma **classificação OWASP Top 10** em formato PASS/FAIL (Broken Access Control, Falhas Criptográficas, Injeção, Design Inseguro, Configuração, Componentes Vulneráveis, Autenticação, Integridade de Dados, Falhas de Registo/Monitorização, SSRF).
 
-1. **Fase 1** — Infra LiveKit + core (rooms backstage+main, papéis, tokens) + wizard de modo/módulos + coexistência com Broadcast.
-2. **Fase 2** — Backstage completo (preview, device checks, "Entrar em direto") + palco (mão/convite/spotlight/layouts).
-3. **Fase 3** — Moderação completa + qualidade + transferência automática de host.
-4. **Fase 4** — Módulos: reactions, questions, polls.
-5. **Fase 5** — Gravação Egress + replay unificado.
-6. **Fase 6 (adiado)** — Módulos breakouts + speed-networking, quando core estiver estável em produção.
+## Notas técnicas
 
-## Preciso de ti para arrancar a Fase 1
-
-1. Cria projeto em **LiveKit Cloud** → https://cloud.livekit.io (grátis, sem cartão).
-2. Em Settings → Keys, cria uma API Key. Precisamos de 3 valores:
-   - `LIVEKIT_URL` (ex: `wss://mmclub-xxxxx.livekit.cloud`)
-   - `LIVEKIT_API_KEY`
-   - `LIVEKIT_API_SECRET`
-3. Diz-me "avança" e eu abro o formulário seguro para colares os 3 valores. Depois começo pela migration + `livekit.server.ts` + wizard de modo/módulos.
+- Alterações de acesso a dados e storage feitas por migrações; nada validado apenas no frontend.
+- Limites de utilização implementados à medida (contadores em base de dados com janela deslizante) — a plataforma não oferece um mecanismo padrão.
+- XSS: revisão de todos os pontos onde é mostrado conteúdo de utilizador (comentários, chat, perfis, lives, shorts), com sanitização de markdown se aplicável.
+- CSRF: as chamadas são same-origin e autenticadas por cabeçalho, não por cookie — será confirmado que nenhuma operação crítica depende de cookies.
+- SQL sempre parametrizado, sem concatenação.

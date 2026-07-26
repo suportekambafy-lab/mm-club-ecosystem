@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MMLogo } from "@/components/mm/logo";
 import { toast } from "sonner";
 import authCover from "@/assets/auth-cover.jpg";
+import { reportAuthFailure } from "@/lib/security.functions";
 
 
 type Search = { redirect?: string };
@@ -62,12 +63,16 @@ function AuthPage() {
       const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
-      if (error) throw error;
-      toast.success("Enviámos-te um email para definires uma nova palavra-passe.");
+      // Uniform response: never reveal whether the email exists.
+      if (error && /rate limit|too many/i.test(error.message)) throw error;
+      toast.success(
+        "Se existir uma conta com esse email, enviámos instruções para definir uma nova palavra-passe.",
+      );
     } catch (err) {
       const message = getAuthErrorMessage(err);
       setFormError(message);
       toast.error(message);
+      void reportAuthFailure({ data: { stage: "recovery" } }).catch(() => {});
     } finally {
       setLoading(false);
     }
@@ -103,6 +108,9 @@ function AuthPage() {
       const message = getAuthErrorMessage(err);
       setFormError(message);
       toast.error(message);
+      void reportAuthFailure({
+        data: { stage: mode === "signup" ? "signup" : "login" },
+      }).catch(() => {});
     } finally {
       setLoading(false);
     }
@@ -367,8 +375,23 @@ function getAuthErrorMessage(err: unknown) {
   if (normalized.includes("rate limit") || normalized.includes("too many")) {
     return "Muitas tentativas seguidas. Espera alguns minutos e tenta novamente.";
   }
+  if (
+    normalized.includes("already registered") ||
+    normalized.includes("already exists") ||
+    normalized.includes("user already")
+  ) {
+    // Uniform message: never confirm whether an email is registered.
+    return "Não foi possível concluir o registo com esses dados. Se já tens conta, entra ou recupera a palavra-passe.";
+  }
+  if (normalized.includes("password") && normalized.includes("weak")) {
+    return "Escolhe uma palavra-passe mais forte (mínimo 8 caracteres, evita passwords comuns).";
+  }
+  if (normalized.includes("pwned") || normalized.includes("compromised")) {
+    return "Essa palavra-passe apareceu em fugas de dados conhecidas. Escolhe outra.";
+  }
 
-  return raw;
+  // Never surface raw backend errors to the browser.
+  return "Não foi possível concluir a operação. Confirma os dados e tenta novamente.";
 }
 
 function Field({
