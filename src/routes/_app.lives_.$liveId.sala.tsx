@@ -7,11 +7,12 @@
  */
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, Loader2 } from "lucide-react";
+import { ChevronLeft, Loader2, Users, MessageSquare, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getLive } from "@/lib/lives.functions";
 import { joinRoom } from "@/lib/live-room.functions";
 import { InteractiveRoom } from "@/components/live/interactive-room";
+import { LiveChat } from "@/components/mm/live-chat";
 import { useServerFn } from "@tanstack/react-start";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
