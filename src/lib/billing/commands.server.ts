@@ -155,9 +155,21 @@ export async function handleGatewayPayment(
     .maybeSingle();
 
   const meta = payment.metadata ?? {};
-  const userId =
+  let userId =
     (meta.userId as string | undefined) ?? existing?.user_id ?? null;
+
+  // Guest checkout: the account only exists once the payment is confirmed.
+  if (!userId && meta.intentId) {
+    if (payment.status !== "paid") return;
+    const { provisionAccountForIntent } = await import("./guest.server");
+    userId = await provisionAccountForIntent(
+      String(meta.intentId),
+      gw.name,
+      payment.id,
+    );
+  }
   if (!userId) return;
+
 
   let priceId = (meta.priceId as string | undefined) ?? existing?.price_id ?? null;
   let subscriptionId = existing?.subscription_id ?? null;
