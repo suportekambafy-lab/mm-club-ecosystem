@@ -175,8 +175,41 @@ export const getLive = createServerFn({ method: "GET" })
       }
     }
 
-    return { live: { ...live, mode: effectiveMode }, playbackToken, videoUid, actualDurationSeconds, replaySegments };
+    // Replay availability state, used by the UI:
+    //  - "ready"       → playable recording
+    //  - "processing"  → Cloudflare is still encoding, or the session ended
+    //                    recently (grace window) so a recording may still land
+    //  - "unavailable" → genuinely no recording for this session
+    let replayStatus: "ready" | "processing" | "unavailable" = "ready";
+    if (isReplay) {
+      if (videoUid && playbackToken) {
+        replayStatus = "ready";
+        // Announce the replay once, the first time it is actually playable.
+        try {
+          const { notifyReplayReady } = await import("@/lib/live-replay-notify.server");
+          await notifyReplayReady(live.id);
+        } catch (e) {
+          console.error("[lives] replay notify failed", e);
+        }
+      } else {
+        const endedRef = live.ended_at ?? live.updated_at ?? null;
+        const withinGrace = endedRef
+          ? Date.now() - new Date(endedRef).getTime() < 45 * 60 * 1000
+          : false;
+        replayStatus = pendingRecording || withinGrace ? "processing" : "unavailable";
+      }
+    }
+
+    return {
+      live: { ...live, mode: effectiveMode },
+      playbackToken,
+      videoUid,
+      actualDurationSeconds,
+      replaySegments,
+      replayStatus,
+    };
   });
+
 
 
 
