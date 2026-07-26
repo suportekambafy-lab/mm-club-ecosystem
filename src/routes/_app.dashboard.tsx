@@ -173,26 +173,22 @@ function DashboardPage() {
   );
 }
 
-// Vídeo de fundo (loop, mute) do hero
-const HERO_BG_VIDEO_ID = "J-ivFkMIHCQ";
-
 function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
-  const src = `https://www.youtube-nocookie.com/embed/${HERO_BG_VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${HERO_BG_VIDEO_ID}&controls=0&modestbranding=1&playsinline=1&rel=0&showinfo=0&iv_load_policy=3&disablekb=1`;
   const firstName = name.split(" ")[0];
 
   return (
     <section className="relative -mx-3 overflow-hidden sm:-mx-4 md:-mx-8">
       <div className="relative aspect-[16/9] w-full bg-black md:aspect-[21/9]">
-        <iframe
-          src={src}
-          title="MM Club"
-          allow="autoplay; encrypted-media; picture-in-picture"
-          allowFullScreen
-          className="absolute inset-0 h-full w-full scale-[1.5] border-0"
-          loading="lazy"
+        <img
+          src={dashboardHero}
+          alt="MM Club"
+          width={1920}
+          height={832}
+          className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/10" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-transparent to-background/30" />
+
         <div className="absolute inset-0 flex items-end">
           <div className="w-full px-6 pb-8 md:px-14 md:pb-16">
             <p className="font-display text-[10px] uppercase tracking-[0.32em] text-primary md:text-xs">
