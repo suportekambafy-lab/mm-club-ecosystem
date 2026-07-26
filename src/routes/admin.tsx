@@ -196,22 +196,50 @@ function AdminLayout() {
 
       {/* Main */}
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-30 flex items-center gap-4 border-b border-border bg-background/80 px-4 py-4 backdrop-blur-xl md:px-8">
+        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/80 px-4 py-2.5 backdrop-blur-xl md:px-6">
           <div className="flex items-center gap-2 lg:hidden">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/30">
-              <ShieldCheck className="h-4 w-4" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/30">
+              <ShieldCheck className="h-3.5 w-3.5" />
             </div>
             <span className="font-display text-sm font-semibold">MM Admin</span>
           </div>
+          <div className="hidden items-center gap-1 lg:flex">
+            <button
+              type="button"
+              onClick={() => window.history.back()}
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground"
+              aria-label="Voltar"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => window.history.forward()}
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground"
+              aria-label="Avançar"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            <span className="ml-2 text-xs text-muted-foreground">
+              {pathname === "/admin" ? "Início" : pathname.replace("/admin/", "")}
+            </span>
+          </div>
           <div className="flex-1" />
           <Link
+            to="/admin/saude"
+            className="hidden rounded-lg border border-border bg-surface-1 px-3 py-1.5 text-xs text-muted-foreground transition hover:text-foreground md:inline-flex"
+          >
+            Saúde
+          </Link>
+          <Link
             to="/"
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-1 px-3 py-1.5 text-xs text-muted-foreground transition hover:text-foreground"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background transition hover:opacity-90"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Voltar ao site
+            Site
           </Link>
         </header>
+
 
         {/* Mobile nav */}
         <nav className="sticky top-16 z-20 flex gap-1 overflow-x-auto border-b border-border bg-background/80 px-4 py-2 backdrop-blur-xl lg:hidden">
