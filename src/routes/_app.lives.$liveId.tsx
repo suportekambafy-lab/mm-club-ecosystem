@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_app/lives/$liveId")({
     // viewers on this route so they see the replay instead of bouncing
     // back into the (now closed) room.
     const liveRow = result.live as { mode?: string; status?: string };
-    if (liveRow.mode === "interactive" && liveRow.status !== "ended") {
+    if (liveRow.mode === "interactive" && liveRow.status !== "ended" && liveRow.status !== "published") {
       throw redirect({ to: "/lives/$liveId/sala", params: { liveId: params.liveId } });
     }
     return result;
@@ -67,7 +67,7 @@ function LiveDetail() {
   // participant sees the same experience.
   useEffect(() => {
     const row = data.live as { mode?: string; status?: string };
-    if (row.mode === "interactive" && row.status !== "ended") {
+    if (row.mode === "interactive" && row.status !== "ended" && row.status !== "published") {
       navigate({ to: "/lives/$liveId/sala", params: { liveId: data.live.id }, replace: true });
     }
   }, [data.live, navigate]);

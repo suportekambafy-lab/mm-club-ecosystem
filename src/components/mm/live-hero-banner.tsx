@@ -62,7 +62,9 @@ export function LiveHeroBanner({ live, className }: { live: LiveLike; className?
 
   const cta = isLive ? "Entrar na sessão" : isReplay ? "Ver replay" : "Ver detalhes";
   const CtaIcon = isLive ? Radio : isReplay ? Play : ArrowRight;
-  const liveRoute = live.mode === "interactive" ? "/lives/$liveId/sala" : "/lives/$liveId";
+  // Ended/published interactive lives should open the replay page, not the LiveKit room.
+  const liveRoute =
+    live.mode === "interactive" && !isReplay ? "/lives/$liveId/sala" : "/lives/$liveId";
 
   return (
     <Link
