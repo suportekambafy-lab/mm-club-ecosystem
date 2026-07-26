@@ -41,7 +41,10 @@ export type FinanceOverview = {
   revenueByMonth: MoneyPoint[];
   revenueByCountry: MoneyPoint[];
   revenueByCoupon: MoneyPoint[];
+  /** Daily net revenue, current month vs. same days of previous month. */
+  dailySeries: { day: number; cents: number; prevCents: number }[];
   dunningRecoveredCents: number;
+
 };
 
 export type AdminSubscriptionRow = {

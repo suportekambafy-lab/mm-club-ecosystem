@@ -164,6 +164,9 @@ export async function collectFinanceOverview(): Promise<FinanceOverview> {
   const byCountry = new Map<string, MoneyPoint>();
   const byCoupon = new Map<string, MoneyPoint>();
   const byMethod = new Map<string, { count: number; cents: number }>();
+  const dayCurrent = new Map<number, number>();
+  const dayPrev = new Map<number, number>();
+
 
   for (const p of paid) {
     const at = new Date(p.paid_at as string);
@@ -172,9 +175,15 @@ export async function collectFinanceOverview(): Promise<FinanceOverview> {
       todayCents += value;
       todayCount += 1;
     }
-    if (at >= startOfMonth) monthCents += value;
-    else if (at >= startOfPrevMonth) prevMonthCents += value;
+    if (at >= startOfMonth) {
+      monthCents += value;
+      dayCurrent.set(at.getUTCDate(), (dayCurrent.get(at.getUTCDate()) ?? 0) + value);
+    } else if (at >= startOfPrevMonth) {
+      prevMonthCents += value;
+      dayPrev.set(at.getUTCDate(), (dayPrev.get(at.getUTCDate()) ?? 0) + value);
+    }
     if (at >= since30) last30Cents += value;
+
 
     const price = p.price_id ? priceById.get(p.price_id) : null;
     const planName = price
@@ -301,6 +310,23 @@ export async function collectFinanceOverview(): Promise<FinanceOverview> {
     ),
     revenueByCountry: sortDesc(byCountry),
     revenueByCoupon: sortDesc(byCoupon),
+    dailySeries: Array.from(
+      {
+        length: new Date(
+          Date.UTC(
+            startOfMonth.getUTCFullYear(),
+            startOfMonth.getUTCMonth() + 1,
+            0,
+          ),
+        ).getUTCDate(),
+      },
+      (_, i) => ({
+        day: i + 1,
+        cents: dayCurrent.get(i + 1) ?? 0,
+        prevCents: dayPrev.get(i + 1) ?? 0,
+      }),
+    ),
+
     // Money that only arrived because a failed charge was retried: a paid
     // payment on a subscription that also failed at least once in the window.
     dunningRecoveredCents: (() => {
