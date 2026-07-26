@@ -15,7 +15,7 @@ import type { RoomActions, RoomState, StageLayout } from "@/lib/room-state";
 import { Stage } from "./stage";
 import { Backstage } from "./backstage";
 import { RoomControls } from "./room-controls";
-import { Hand, Radio, Volume2, X, UserPlus } from "lucide-react";
+import { Hand, Radio, X, UserPlus, Users } from "lucide-react";
 
 import {
   goLive,
