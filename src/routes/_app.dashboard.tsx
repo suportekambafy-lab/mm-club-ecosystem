@@ -381,11 +381,14 @@ function CommunityBlock() {
           <Bell className="h-4 w-4 text-primary" />
           <h3 className="font-display text-lg text-foreground">Atividade recente</h3>
         </div>
-        {hydrated && posts.length === 0 ? (
+        {!hydrated ? (
+          <TextLines lines={3} className="mt-4" />
+        ) : posts.length === 0 ? (
           <p className="mt-3 text-sm text-muted-foreground">
             Ainda sem publicações. Sê o primeiro a partilhar na comunidade.
           </p>
         ) : (
+
           <ul className="mt-3 space-y-2.5">
             {posts.map((p) => (
               <li key={p.id} className="text-sm">
