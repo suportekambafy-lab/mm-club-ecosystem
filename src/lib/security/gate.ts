@@ -54,9 +54,14 @@ async function requestMeta() {
  * Builds the gate middleware for a policy. Compose it with
  * `securedMiddleware(policy)` rather than using it directly.
  */
-export function securityGate(policy: SecurityPolicy) {
-  return createMiddleware({ type: "function" }).server(
-    async ({ next, context }) => {
+type GateOptions = {
+  next: (opts?: { context?: unknown }) => unknown;
+  context: unknown;
+};
+
+function gateHandler(policy: SecurityPolicy) {
+  return async ({ next, context }: GateOptions) => {
+
       const ctx = context as unknown as {
         userId?: string;
         supabase?: {
