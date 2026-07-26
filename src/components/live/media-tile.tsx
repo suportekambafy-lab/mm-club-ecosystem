@@ -2,7 +2,7 @@
  * MediaTile — pure UI. Attaches a MediaTrack to a <video>/<audio> element
  * via the adapter. Never touches LiveKit types directly.
  */
-import { memo, useEffect, useRef } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import type { MediaTrack, RoomActions, RoomParticipant } from "@/lib/room-state";
 import { Mic, MicOff, Wifi, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,7 @@ interface Props {
 function MediaTileBase({ participant, actions, className, preferScreen, showName = true }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [avatarBroken, setAvatarBroken] = useState(false);
 
   const videoTrack: MediaTrack | undefined =
     (preferScreen && participant.tracks.find((t) => t.kind === "video" && t.source === "screen")) ||
@@ -46,7 +47,12 @@ function MediaTileBase({ participant, actions, className, preferScreen, showName
     };
   }, [audioTrack?.id, actions]);
 
-  const hasVideo = Boolean(videoTrack) && !videoTrack?.muted;
+  // Consider camera on when we have a video track that isn't muted AND the
+  // participant hasn't explicitly disabled the camera.
+  const hasVideo = Boolean(videoTrack) && !videoTrack?.muted && participant.camOn !== false;
+
+  const initials = (participant.displayName || "?").trim().split(/\s+/).slice(0, 2).map((s) => s[0]).join("").toUpperCase() || "?";
+  const showAvatarImage = Boolean(participant.avatarUrl) && !avatarBroken;
 
   return (
     <div
@@ -65,20 +71,19 @@ function MediaTileBase({ participant, actions, className, preferScreen, showName
           className="h-full w-full object-cover"
         />
       ) : (
-        <div className="flex h-full w-full items-center justify-center">
-          <div className="flex flex-col items-center gap-2">
-            {participant.avatarUrl ? (
-              <img
-                src={participant.avatarUrl}
-                alt=""
-                className="h-16 w-16 rounded-full object-cover ring-2 ring-white/10"
-              />
-            ) : (
-              <div className="grid h-16 w-16 place-items-center rounded-full bg-white/5 text-lg font-semibold text-white/80 ring-2 ring-white/10">
-                {participant.displayName.slice(0, 1).toUpperCase()}
-              </div>
-            )}
-          </div>
+        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-900 to-neutral-950">
+          {showAvatarImage ? (
+            <img
+              src={participant.avatarUrl ?? ""}
+              alt=""
+              onError={() => setAvatarBroken(true)}
+              className="h-24 w-24 rounded-full object-cover ring-2 ring-white/10 shadow-2xl sm:h-32 sm:w-32"
+            />
+          ) : (
+            <div className="grid h-24 w-24 place-items-center rounded-full bg-white/[0.06] text-2xl font-semibold text-white/85 ring-2 ring-white/10 shadow-2xl sm:h-32 sm:w-32 sm:text-3xl">
+              {initials}
+            </div>
+          )}
         </div>
       )}
 

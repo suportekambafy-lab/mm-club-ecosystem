@@ -7,12 +7,14 @@
  */
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, Loader2 } from "lucide-react";
+import { ChevronLeft, Loader2, Users, MessageSquare, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getLive } from "@/lib/lives.functions";
 import { joinRoom } from "@/lib/live-room.functions";
 import { InteractiveRoom } from "@/components/live/interactive-room";
+import { LiveChat } from "@/components/mm/live-chat";
 import { useServerFn } from "@tanstack/react-start";
+import { cn } from "@/lib/utils";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -184,28 +186,172 @@ function SalaRoute() {
   }
 
   return (
+    <SalaShell liveId={live.id} userId={userId} onLeave={handleLeave}>
+      <InteractiveRoom
+        liveId={live.id}
+        localUserId={userId}
+        token={session.token}
+        url={session.url}
+        target={target}
+        onLeave={handleLeave}
+      />
+    </SalaShell>
+  );
+}
+
+function SalaShell({
+  liveId,
+  userId,
+  onLeave,
+  children,
+}: {
+  liveId: string;
+  userId: string;
+  onLeave: () => void;
+  children: React.ReactNode;
+}) {
+  const [chatOpen, setChatOpen] = useState(true);
+  const [viewerCount, setViewerCount] = useState<number>(0);
+  const [elapsed, setElapsed] = useState<string>("");
+  const [wentLiveAt, setWentLiveAt] = useState<string | null>(null);
+
+  // Track live status timestamp (went_live_at) directly, incl. realtime updates.
+  useEffect(() => {
+    let cancelled = false;
+    async function refresh() {
+      const { data } = await supabase.from("lives").select("went_live_at").eq("id", liveId).maybeSingle();
+      if (!cancelled) setWentLiveAt((data?.went_live_at as string | null) ?? null);
+    }
+    refresh();
+    const suffix = Math.random().toString(36).slice(2, 8);
+    const ch = supabase
+      .channel(`sala-live:${liveId}:${suffix}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "lives", filter: `id=eq.${liveId}` },
+        (payload) => {
+          const next = (payload.new as { went_live_at?: string | null })?.went_live_at ?? null;
+          setWentLiveAt(next);
+        },
+      )
+      .subscribe();
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(ch);
+    };
+  }, [liveId]);
+
+  // Real-time viewer/participant count (all rows without left_at).
+  useEffect(() => {
+    let cancelled = false;
+    async function refresh() {
+      const { count } = await supabase
+        .from("live_participants")
+        .select("id", { count: "exact", head: true })
+        .eq("live_id", liveId)
+        .is("left_at", null);
+      if (!cancelled) setViewerCount(count ?? 0);
+    }
+    refresh();
+    const suffix = Math.random().toString(36).slice(2, 8);
+    const ch = supabase
+      .channel(`sala-count:${liveId}:${suffix}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "live_participants", filter: `live_id=eq.${liveId}` },
+        () => refresh(),
+      )
+      .subscribe();
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(ch);
+    };
+  }, [liveId]);
+
+  // Elapsed timer since wentLiveAt.
+  useEffect(() => {
+    if (!wentLiveAt) {
+      setElapsed("");
+      return;
+    }
+    const start = new Date(wentLiveAt).getTime();
+    const tick = () => {
+      const s = Math.max(0, Math.floor((Date.now() - start) / 1000));
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const sec = s % 60;
+      const pad = (n: number) => n.toString().padStart(2, "0");
+      setElapsed(h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`);
+    };
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [wentLiveAt]);
+
+  return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black text-white">
-      <header className="flex items-center justify-between border-b border-white/5 px-4 py-3">
+      <header className="flex items-center justify-between gap-3 border-b border-white/5 px-3 py-2.5 sm:px-4">
         <button
           type="button"
-          onClick={handleLeave}
-          className="inline-flex items-center gap-1.5 text-sm text-white/70 hover:text-white"
+          onClick={onLeave}
+          className="inline-flex shrink-0 items-center gap-1.5 text-sm text-white/70 hover:text-white"
         >
           <ChevronLeft className="h-4 w-4" />
-          Sair da sala
+          <span className="hidden sm:inline">Sair da sala</span>
         </button>
-        <div className="text-xs uppercase tracking-[0.2em] text-white/40">Sala interativa · Beta</div>
-        <div className="w-24" />
+        <div className="flex min-w-0 items-center gap-2 text-xs">
+          {wentLiveAt && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-2.5 py-1 font-medium text-red-300 ring-1 ring-red-500/30">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
+              AO VIVO
+              <span className="tabular-nums text-red-200/90">· {elapsed}</span>
+            </span>
+          )}
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-2.5 py-1 text-white/80 ring-1 ring-white/10">
+            <Users className="h-3.5 w-3.5" />
+            <span className="tabular-nums">{viewerCount}</span>
+          </span>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="hidden text-[10px] uppercase tracking-[0.2em] text-white/40 sm:block">Sala · Beta</div>
+          <button
+            type="button"
+            onClick={() => setChatOpen((v) => !v)}
+            aria-label={chatOpen ? "Fechar chat" : "Abrir chat"}
+            className={cn(
+              "inline-flex h-8 w-8 items-center justify-center rounded-lg ring-1 transition",
+              chatOpen ? "bg-white/10 text-white ring-white/15" : "bg-white/5 text-white/70 ring-white/10 hover:text-white",
+            )}
+          >
+            <MessageSquare className="h-4 w-4" />
+          </button>
+        </div>
       </header>
-      <div className="relative flex-1 overflow-hidden">
-        <InteractiveRoom
-          liveId={live.id}
-          localUserId={userId}
-          token={session.token}
-          url={session.url}
-          target={target}
-          onLeave={handleLeave}
-        />
+      <div className="relative flex flex-1 min-h-0 overflow-hidden">
+        <div className="relative flex-1 min-w-0">{children}</div>
+        {chatOpen && (
+          <aside className="hidden w-[340px] shrink-0 border-l border-white/5 bg-neutral-950/60 p-2 md:block">
+            <LiveChat liveId={liveId} currentUserId={userId} />
+          </aside>
+        )}
+        {chatOpen && (
+          <div className="absolute inset-0 z-40 flex flex-col bg-black/70 backdrop-blur-sm md:hidden">
+            <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
+              <div className="text-sm font-medium">Chat</div>
+              <button
+                type="button"
+                onClick={() => setChatOpen(false)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-white/80"
+                aria-label="Fechar chat"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex-1 min-h-0 p-2">
+              <LiveChat liveId={liveId} currentUserId={userId} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
