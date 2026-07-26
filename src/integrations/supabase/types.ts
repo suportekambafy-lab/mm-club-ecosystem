@@ -804,6 +804,10 @@ export type Database = {
           livekit_room_prefix: string | null
           mode: Database["public"]["Enums"]["live_mode"]
           published_lesson_id: string | null
+          recording_egress_id: string | null
+          recording_filepath: string | null
+          recording_started_at: string | null
+          recording_stopped_at: string | null
           recording_video_uid: string | null
           spotlight_user_id: string | null
           stage_layout: Database["public"]["Enums"]["live_stage_layout"]
@@ -834,6 +838,10 @@ export type Database = {
           livekit_room_prefix?: string | null
           mode?: Database["public"]["Enums"]["live_mode"]
           published_lesson_id?: string | null
+          recording_egress_id?: string | null
+          recording_filepath?: string | null
+          recording_started_at?: string | null
+          recording_stopped_at?: string | null
           recording_video_uid?: string | null
           spotlight_user_id?: string | null
           stage_layout?: Database["public"]["Enums"]["live_stage_layout"]
@@ -864,6 +872,10 @@ export type Database = {
           livekit_room_prefix?: string | null
           mode?: Database["public"]["Enums"]["live_mode"]
           published_lesson_id?: string | null
+          recording_egress_id?: string | null
+          recording_filepath?: string | null
+          recording_started_at?: string | null
+          recording_stopped_at?: string | null
           recording_video_uid?: string | null
           spotlight_user_id?: string | null
           stage_layout?: Database["public"]["Enums"]["live_stage_layout"]
