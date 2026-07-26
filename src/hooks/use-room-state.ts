@@ -111,7 +111,7 @@ export interface UseRoomStateArgs {
   token: string;
   url: string;
   /** Called after the room actions dispatch to hit server RPCs. */
-  serverActions: Omit<RoomActions, "toggleMic" | "toggleCam" | "startScreenShare" | "stopScreenShare" | "leave" | "attachTrack" | "detachTrack">;
+  serverActions: Omit<RoomActions, "toggleMic" | "toggleCam" | "startScreenShare" | "stopScreenShare" | "startAudio" | "leave" | "attachTrack" | "detachTrack">;
 }
 
 export function useRoomState({
@@ -136,6 +136,8 @@ export function useRoomState({
   const [screenOn, setScreenOn] = useState<Record<string, boolean>>({});
   const [quality, setQuality] = useState<Record<string, RoomParticipant["connectionQuality"]>>({});
   const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null);
+  const [audioBlocked, setAudioBlocked] = useState(false);
+
 
   // ---------- initial fetch + realtime for live + participants ----------
   useEffect(() => {
@@ -263,15 +265,21 @@ export function useRoomState({
     on(RoomEvent.ActiveSpeakersChanged, (speakers: Participant[]) => {
       setActiveSpeakerId(speakers[0]?.identity ?? null);
     });
+    on(RoomEvent.AudioPlaybackStatusChanged, () => {
+      setAudioBlocked(!room.canPlaybackAudio);
+    });
+
 
     (async () => {
       try {
         setConnState("connecting");
         await room.connect(url, token, { autoSubscribe: true });
         setConnState("connected");
+        setAudioBlocked(!room.canPlaybackAudio);
         // Snapshot existing remotes
         room.remoteParticipants.forEach((p) => rebuildParticipantTracks(p));
         rebuildParticipantTracks(room.localParticipant);
+
 
         // Auto-publish mic + camera if the local participant is a publisher.
         // LiveKit does not carry local tracks across Room instances, so when
@@ -380,12 +388,14 @@ export function useRoomState({
       state: connState,
       quality: quality[localUserId] ?? "good",
     },
+    audioBlocked,
     enabledModules: Array.isArray(live?.enabled_modules)
       ? (live!.enabled_modules as string[])
       : live?.enabled_modules
       ? Object.keys(live.enabled_modules)
       : ["chat"],
   };
+
 
   // ---------- media actions ----------
   const toggleMic = useCallback(async () => {
@@ -410,6 +420,14 @@ export function useRoomState({
   }, []);
   const leave = useCallback(async () => {
     await roomRef.current?.disconnect();
+  }, []);
+  const startAudio = useCallback(async () => {
+    try {
+      await roomRef.current?.startAudio();
+      setAudioBlocked(!(roomRef.current?.canPlaybackAudio ?? true));
+    } catch (e) {
+      console.warn("[useRoomState] startAudio failed", e);
+    }
   }, []);
 
   const attachTrack = useCallback((trackId: string, el: HTMLMediaElement) => {
@@ -436,16 +454,24 @@ export function useRoomState({
     }
   }, []);
 
-  const actions: RoomActions = {
-    toggleMic,
-    toggleCam,
-    startScreenShare,
-    stopScreenShare,
-    leave,
-    attachTrack,
-    detachTrack,
-    ...serverActions,
-  };
+  // Memoize the actions object so children that depend on it (MediaTile
+  // useEffects that attach/detach tracks) don't re-run on every state tick
+  // — that was causing the video tile flicker on speaker/mute events.
+  const actions: RoomActions = useMemo(
+    () => ({
+      toggleMic,
+      toggleCam,
+      startScreenShare,
+      stopScreenShare,
+      startAudio,
+      leave,
+      attachTrack,
+      detachTrack,
+      ...serverActions,
+    }),
+    [toggleMic, toggleCam, startScreenShare, stopScreenShare, startAudio, leave, attachTrack, detachTrack, serverActions],
+  );
 
   return { state, actions };
 }
+

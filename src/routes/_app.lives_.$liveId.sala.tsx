@@ -119,9 +119,11 @@ function SalaRoute() {
     };
   }, [liveId]);
 
-  // (Re)join the room whenever target changes.
+  // (Re)join the room whenever target changes OR the session is cleared
+  // (e.g. after being promoted to the stage — we need a new publisher token).
   useEffect(() => {
     if (!authReady || !userId || !live) return;
+    if (session) return;
     if (joinLockRef.current) return;
     joinLockRef.current = true;
     setError(null);
@@ -131,7 +133,8 @@ function SalaRoute() {
       .finally(() => {
         joinLockRef.current = false;
       });
-  }, [authReady, userId, target, liveId, joinRoomFn, live]);
+  }, [authReady, userId, target, liveId, joinRoomFn, live, session]);
+
 
   // If the room went live while we're still in backstage as publisher, move to main.
   useEffect(() => {
@@ -140,6 +143,38 @@ function SalaRoute() {
       setTarget("main");
     }
   }, [liveStatus, target]);
+
+  // Auto-refresh the LiveKit token when the local participant is promoted to
+  // the stage. LiveKit tokens embed publish permissions, so the initial
+  // viewer token has to be replaced before we can actually publish mic/cam.
+  useEffect(() => {
+    if (!authReady || !userId) return;
+    const ch = supabase
+      .channel(`sala-me:${liveId}:${userId}:${Math.random().toString(36).slice(2, 6)}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "live_participants",
+          filter: `live_id=eq.${liveId}`,
+        },
+        (payload) => {
+          const row = payload.new as { user_id: string; on_stage: boolean; mic_allowed: boolean; cam_allowed: boolean };
+          if (row.user_id !== userId) return;
+          if (row.on_stage && (row.mic_allowed || row.cam_allowed)) {
+            // Force reissue of publisher token.
+            setSession(null);
+          }
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [authReady, userId, liveId]);
+
+
 
   const handleLeave = () => {
     navigate({ to: "/lives/$liveId", params: { liveId } });
