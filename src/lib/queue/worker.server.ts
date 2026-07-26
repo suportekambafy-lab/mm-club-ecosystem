@@ -9,6 +9,7 @@ import { creditsConsumer } from "./handlers/credits.server";
 import { emailConsumer } from "./handlers/email.server";
 import { entitlementsConsumer } from "./handlers/entitlements.server";
 import { notificationsConsumer } from "./handlers/notifications.server";
+import { recoveryConsumer } from "./handlers/recovery.server";
 import { timelineConsumer } from "./handlers/timeline.server";
 import type { JobPayload, JobRow } from "./types";
 
@@ -18,6 +19,7 @@ const HANDLERS: Record<ConsumerName, (p: JobPayload) => Promise<void>> = {
   timeline: timelineConsumer,
   email: emailConsumer,
   notifications: notificationsConsumer,
+  recovery: recoveryConsumer,
 };
 
 const BACKOFF_SECONDS = [10, 60, 300, 1800, 7200];

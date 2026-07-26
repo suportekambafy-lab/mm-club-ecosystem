@@ -10,6 +10,7 @@ export const CONSUMERS = [
   "timeline",
   "email",
   "notifications",
+  "recovery",
 ] as const;
 
 export type ConsumerName = (typeof CONSUMERS)[number];
