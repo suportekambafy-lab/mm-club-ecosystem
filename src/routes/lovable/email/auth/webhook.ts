@@ -9,22 +9,23 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "mm-club-ecosystem"
+const SITE_NAME = "MM Club"
 const SENDER_DOMAIN = "notify.mmclub.pt"
 const ROOT_DOMAIN = "mmclub.pt"
 const FROM_DOMAIN = "mmclub.pt"
-const SITE_URL = `https://${ROOT_DOMAIN}`
+const SITE_URL = "https://mmclub.online"
 
 // The SDK handler owns verification, dispatch, and retry semantics; this file
 // owns only the email decisions: subjects, templates, and per-type props.
 const handler = createAuthEmailHandler({
   apiKey: process.env.LOVABLE_API_KEY!,
-  from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+  from: `${SITE_NAME} <geral@${FROM_DOMAIN}>`,
   senderDomain: SENDER_DOMAIN,
   sendUrl: process.env.LOVABLE_SEND_URL,
   emails: {
     signup: {
-      subject: 'Confirm your email',
+      subject: 'Confirma o teu email — MM Club',
+
       render: (data) =>
         React.createElement(SignupEmail, {
           siteName: SITE_NAME,
