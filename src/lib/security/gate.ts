@@ -155,7 +155,7 @@ export function securityGate(policy: SecurityPolicy) {
         if (scope !== "ip" && userId) subjects.push(`user:${userId}`);
         if (scope !== "user" && meta.ip) subjects.push(`ip:${meta.ip}`);
         for (const subject of subjects) {
-          let count: number;
+          let count = 0;
           try {
             count = await runtime.bumpCounter(
               rule.bucket,
@@ -185,7 +185,7 @@ export function securityGate(policy: SecurityPolicy) {
       // 5. Logical WAF — abusive *behaviour*, not just volume.
       for (const rule of asArray<WafRule>(policy.waf)) {
         if (!userId) continue;
-        let count: number;
+        let count = 0;
         try {
           count = await runtime.bumpCounter(
             `waf:${rule.bucket}`,
