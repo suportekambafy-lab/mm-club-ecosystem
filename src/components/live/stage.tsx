@@ -47,9 +47,38 @@ function StageBase({ state, actions, className }: StageProps) {
 
   if (screenSharer || effectiveLayout === "spotlight") {
     const primary = spotlightPerson!;
+    // When a screen share is active, the primary tile shows the screen.
+    // We overlay the sharer's camera (if enabled) as a golden-framed PiP so
+    // the audience keeps seeing the presenter's face — Meet/Zoom convention.
+    const sharerHasCam = Boolean(
+      screenSharer &&
+        screenSharer.camOn !== false &&
+        screenSharer.tracks.some((t) => t.kind === "video" && t.source === "camera" && !t.muted),
+    );
     return (
       <div className={cn("grid h-full w-full gap-2 lg:grid-cols-[1fr_auto]", className)}>
-        <MediaTile participant={primary} actions={actions} preferScreen={Boolean(screenSharer)} className="h-full min-h-[240px]" />
+        <div className="relative h-full min-h-[240px]">
+          <MediaTile
+            participant={primary}
+            actions={actions}
+            preferScreen={Boolean(screenSharer)}
+            className="h-full w-full"
+          />
+          {screenSharer && sharerHasCam && (
+            <div className="pointer-events-none absolute bottom-3 right-3 z-10 aspect-video w-32 overflow-hidden rounded-xl shadow-2xl ring-2 ring-[hsl(45_86%_60%)] sm:w-44 md:w-56">
+              {/* Force camera-only view for the PiP by rendering a second tile
+                  with preferScreen=false. The Stage <MediaTile> shows screen;
+                  this one shows the same participant's camera. */}
+              <MediaTile
+                participant={screenSharer}
+                actions={actions}
+                preferScreen={false}
+                showName={false}
+                className="h-full w-full"
+              />
+            </div>
+          )}
+        </div>
         {others.length > 0 && (
           <div className="flex flex-row gap-2 overflow-x-auto lg:flex-col lg:overflow-y-auto lg:w-[180px]">
             {others.map((p) => (
