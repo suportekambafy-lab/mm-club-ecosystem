@@ -280,11 +280,11 @@ export function useRoomState({
         try {
           const lp = room.localParticipant;
           const canPublish = lp.permissions?.canPublish ?? false;
-          const allowedSources = lp.permissions?.canPublishSources ?? [];
-          const allowsMic =
-            allowedSources.length === 0 || allowedSources.includes(Track.Source.Microphone);
-          const allowsCam =
-            allowedSources.length === 0 || allowedSources.includes(Track.Source.Camera);
+          const allowedSources = (lp.permissions?.canPublishSources ?? []) as unknown as number[];
+          // Empty list means "all sources allowed" per LiveKit server semantics.
+          const allowsAll = allowedSources.length === 0;
+          const allowsMic = allowsAll || allowedSources.some((s) => Number(s) === Number(Track.Source.Microphone));
+          const allowsCam = allowsAll || allowedSources.some((s) => Number(s) === Number(Track.Source.Camera));
           if (canPublish) {
             if (allowsMic && !lp.isMicrophoneEnabled) {
               await lp.setMicrophoneEnabled(true).catch((e) => {
