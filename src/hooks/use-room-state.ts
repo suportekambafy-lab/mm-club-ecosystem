@@ -272,6 +272,35 @@ export function useRoomState({
         // Snapshot existing remotes
         room.remoteParticipants.forEach((p) => rebuildParticipantTracks(p));
         rebuildParticipantTracks(room.localParticipant);
+
+        // Auto-publish mic + camera if the local participant is a publisher.
+        // LiveKit does not carry local tracks across Room instances, so when
+        // the host transitions backstage → main we need to explicitly (re)enable
+        // capture — otherwise viewers see a black tile and hear silence.
+        try {
+          const lp = room.localParticipant;
+          const canPublish = lp.permissions?.canPublish ?? false;
+          const allowedSources = lp.permissions?.canPublishSources ?? [];
+          const allowsMic =
+            allowedSources.length === 0 || allowedSources.includes(Track.Source.Microphone);
+          const allowsCam =
+            allowedSources.length === 0 || allowedSources.includes(Track.Source.Camera);
+          if (canPublish) {
+            if (allowsMic && !lp.isMicrophoneEnabled) {
+              await lp.setMicrophoneEnabled(true).catch((e) => {
+                console.warn("[useRoomState] mic auto-enable failed", e);
+              });
+            }
+            if (allowsCam && !lp.isCameraEnabled) {
+              await lp.setCameraEnabled(true).catch((e) => {
+                console.warn("[useRoomState] cam auto-enable failed", e);
+              });
+            }
+            rebuildParticipantTracks(lp);
+          }
+        } catch (err) {
+          console.warn("[useRoomState] auto-publish skipped", err);
+        }
       } catch (err) {
         console.error("[useRoomState] connect failed", err);
         setConnState("disconnected");
