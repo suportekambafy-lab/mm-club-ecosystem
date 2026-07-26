@@ -255,8 +255,12 @@ async function runGate(
         ip: meta.ip,
         userAgent: meta.userAgent,
         route: meta.route,
+        country: meta.country,
+        city: meta.city,
+        requestId: meta.requestId,
         policy: policy.name,
       };
+
   }
 }
 
