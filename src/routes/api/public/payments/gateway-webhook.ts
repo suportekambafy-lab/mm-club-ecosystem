@@ -63,8 +63,9 @@ export const Route = createFileRoute("/api/public/payments/gateway-webhook")({
               userAgent: request.headers.get("user-agent"),
               route: "/api/public/payments/gateway-webhook",
               outcome: "blocked",
-              reason: err instanceof Error ? err.message.slice(0, 200) : "erro",
-              meta: { gateway: gatewayName },
+              reason: `${gatewayName}: ${
+                err instanceof Error ? err.message.slice(0, 180) : "erro"
+              }`,
             });
           } catch {
             /* logging must never break the webhook response */
