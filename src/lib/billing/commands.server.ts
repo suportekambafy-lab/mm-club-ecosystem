@@ -231,6 +231,16 @@ export async function handleGatewayPayment(
   const alreadyPaid = existing?.status === "paid";
 
   if (payment.status === "paid" && !alreadyPaid) {
+    // Whatever card the member just used becomes a saved method, so it can be
+    // reused for future charges (credit packs, renewals, retries…).
+    if (payment.customerId) {
+      try {
+        const { syncPaymentMethods } = await import("./payment-methods.server");
+        await syncPaymentMethods(userId);
+      } catch (err) {
+        console.error("[billing] syncPaymentMethods after payment", err);
+      }
+    }
     await onPaymentPaid({ payment, userId, priceId, paymentRowId, customerId: customer?.id ?? null, subscriptionId });
   } else if (payment.status === "failed" || payment.status === "expired") {
     await emitEvent({
@@ -246,8 +256,16 @@ export async function handleGatewayPayment(
         subscriptionId,
       },
     });
-    if (subscriptionId) await markPastDue(subscriptionId, userId);
+    if (subscriptionId) {
+      const retried = await retryWithAlternateCard({
+        payment,
+        userId,
+        subscriptionId,
+      });
+      if (!retried) await markPastDue(subscriptionId, userId);
+    }
   } else if (payment.refundedCents > 0) {
+
     await onRefund({ payment, userId, paymentRowId, customerId: customer?.id ?? null, subscriptionId });
   }
 }
