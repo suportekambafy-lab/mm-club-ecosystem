@@ -16,23 +16,48 @@ export type GrantInput = {
 };
 
 export async function grantFeature(input: GrantInput): Promise<void> {
-  const { error } = await supabaseAdmin.from("entitlement_grants").upsert(
-    {
-      user_id: input.userId,
-      feature_key: input.featureKey,
-      source: input.source,
-      source_id: input.sourceId ?? null,
-      quota: input.quota ?? null,
-      expires_at: input.expiresAt ?? null,
-      revoked_at: null,
-      metadata: (input.metadata ?? {}) as never,
-    },
-    { onConflict: "user_id,feature_key,source,source_id", ignoreDuplicates: false },
-  );
+  // The uniqueness index on entitlement_grants uses COALESCE(source_id, ...),
+  // an expression index PostgREST cannot target with ON CONFLICT — so we do an
+  // explicit find-then-update/insert instead of upsert.
+  const row = {
+    user_id: input.userId,
+    feature_key: input.featureKey,
+    source: input.source,
+    source_id: input.sourceId ?? null,
+    quota: input.quota ?? null,
+    expires_at: input.expiresAt ?? null,
+    revoked_at: null,
+    metadata: (input.metadata ?? {}) as never,
+  };
+
+  let existing = supabaseAdmin
+    .from("entitlement_grants")
+    .select("id")
+    .eq("user_id", input.userId)
+    .eq("feature_key", input.featureKey)
+    .eq("source", input.source);
+  existing = input.sourceId
+    ? existing.eq("source_id", input.sourceId)
+    : existing.is("source_id", null);
+
+  const { data: found } = await existing.maybeSingle();
+
+  if (found?.id) {
+    const { error } = await supabaseAdmin
+      .from("entitlement_grants")
+      .update(row)
+      .eq("id", found.id);
+    if (error) throw new Error(`grantFeature failed: ${error.message}`);
+    return;
+  }
+
+  const { error } = await supabaseAdmin.from("entitlement_grants").insert(row);
+  // 23505 = concurrent insert won the race; the row exists, which is the goal.
   if (error && error.code !== "23505") {
     throw new Error(`grantFeature failed: ${error.message}`);
   }
 }
+
 
 export async function grantProductFeatures(input: {
   userId: string;
