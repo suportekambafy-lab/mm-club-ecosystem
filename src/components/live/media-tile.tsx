@@ -67,8 +67,19 @@ function MediaTileBase({ participant, actions, className, preferScreen, showName
           ref={videoRef}
           autoPlay
           playsInline
-          muted={participant.isLocal}
-          className="h-full w-full object-cover"
+          // Always mute the <video>: remote audio is bound to a separate
+          // <audio> element (see below). Muting eliminates the browser's
+          // autoplay-blocked "play" overlay on toggling the camera back on
+          // and mirrors what Meet/Zoom do.
+          muted
+          disablePictureInPicture
+          controls={false}
+          className={cn(
+            "h-full w-full object-cover",
+            // Mirror the local camera so users see themselves like a mirror —
+            // Meet/Zoom convention. Never mirror screen shares.
+            participant.isLocal && videoTrack?.source === "camera" && "scale-x-[-1]",
+          )}
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-900 to-neutral-950">
