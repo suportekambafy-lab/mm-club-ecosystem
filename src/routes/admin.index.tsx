@@ -281,7 +281,7 @@ function AdminDashboard() {
       </section>
 
       {error ? (
-        <p className="rounded-2xl border border-border bg-surface-1 p-5 text-[13px] text-admin-muted">
+        <p className="rounded-xl bg-admin-panel p-5 text-[13px] text-admin-muted">
           Não foi possível carregar as métricas.
         </p>
       ) : null}
