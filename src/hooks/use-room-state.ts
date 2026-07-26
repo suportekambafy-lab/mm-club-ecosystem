@@ -136,6 +136,8 @@ export function useRoomState({
   const [screenOn, setScreenOn] = useState<Record<string, boolean>>({});
   const [quality, setQuality] = useState<Record<string, RoomParticipant["connectionQuality"]>>({});
   const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null);
+  const [audioBlocked, setAudioBlocked] = useState(false);
+
 
   // ---------- initial fetch + realtime for live + participants ----------
   useEffect(() => {
