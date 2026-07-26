@@ -217,8 +217,24 @@ function SubscriptionPage() {
       return diff !== 0 ? diff : a.price.amountCents - b.price.amountCents;
     });
 
-  const currentMonths = sub ? cycleMonths(sub.interval) : null;
-  const currentMonthly = sub ? monthly(sub.amountCents, sub.interval) : null;
+  // O plano atual pode ser semestral (mês × 6): usa o catálogo para saber
+  // o ciclo real, já que a subscrição só guarda o intervalo base.
+  const currentPrice =
+    planOptions.find((o) => o.price.slug === sub?.priceSlug)?.price ?? null;
+  const currentMonths = sub
+    ? cycleMonths(
+        currentPrice?.interval ?? sub.interval,
+        currentPrice?.intervalCount ?? 1,
+      )
+    : null;
+  const currentMonthly = sub
+    ? monthly(
+        sub.amountCents,
+        currentPrice?.interval ?? sub.interval,
+        currentPrice?.intervalCount ?? 1,
+      )
+    : null;
+
 
   const planSection = (
     <div className="grid gap-3 sm:grid-cols-2">
