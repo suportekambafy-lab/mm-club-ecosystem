@@ -26,6 +26,7 @@ import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AdminTranscricoesRouteImport } from './routes/admin.transcricoes'
 import { Route as AdminSaudeRouteImport } from './routes/admin.saude'
 import { Route as AdminLivesRouteImport } from './routes/admin.lives'
+import { Route as AdminFinanceiroRouteImport } from './routes/admin.financeiro'
 import { Route as AdminFerramentasRouteImport } from './routes/admin.ferramentas'
 import { Route as AdminEventosRouteImport } from './routes/admin.eventos'
 import { Route as AdminCursosRouteImport } from './routes/admin.cursos'
@@ -41,10 +42,15 @@ import { Route as AppComunidadeRouteImport } from './routes/_app.comunidade'
 import { Route as AppCodigoRouteImport } from './routes/_app.codigo'
 import { Route as AppAcademiaRouteImport } from './routes/_app.academia'
 import { Route as AdminLivesIndexRouteImport } from './routes/admin.lives.index'
+import { Route as AdminFinanceiroIndexRouteImport } from './routes/admin.financeiro.index'
 import { Route as AppLivesIndexRouteImport } from './routes/_app.lives.index'
 import { Route as AppAcademiaIndexRouteImport } from './routes/_app.academia.index'
 import { Route as ApiRealtimeSessionRouteImport } from './routes/api.realtime.session'
 import { Route as ApiKnowledgeSearchRouteImport } from './routes/api.knowledge.search'
+import { Route as AdminFinanceiroSubscricoesRouteImport } from './routes/admin.financeiro.subscricoes'
+import { Route as AdminFinanceiroReceitaRouteImport } from './routes/admin.financeiro.receita'
+import { Route as AdminFinanceiroCupoesRouteImport } from './routes/admin.financeiro.cupoes'
+import { Route as AdminFinanceiroCatalogoRouteImport } from './routes/admin.financeiro.catalogo'
 import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
 import { Route as AppFerramentasStudioRouteImport } from './routes/_app.ferramentas.studio'
 import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
@@ -59,6 +65,7 @@ import { Route as ApiPublicHooksBillingTickRouteImport } from './routes/api/publ
 import { Route as ApiPublicHooksAutoTranscribeRouteImport } from './routes/api/public/hooks/auto-transcribe'
 import { Route as ApiPublicCloudflareStreamWebhookRouteImport } from './routes/api/public/cloudflare-stream/webhook'
 import { Route as AdminLivesLiveIdStudioRouteImport } from './routes/admin.lives.$liveId.studio'
+import { Route as AdminFinanceiroClienteUserIdRouteImport } from './routes/admin.financeiro.cliente.$userId'
 import { Route as AppLivesLiveIdSalaRouteImport } from './routes/_app.lives_.$liveId.sala'
 import { Route as AppFerramentasStudioVideosRouteImport } from './routes/_app.ferramentas.studio.videos'
 import { Route as AppFerramentasStudioProdutosRouteImport } from './routes/_app.ferramentas.studio.produtos'
@@ -152,6 +159,11 @@ const AdminLivesRoute = AdminLivesRouteImport.update({
   path: '/lives',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFinanceiroRoute = AdminFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminFerramentasRoute = AdminFerramentasRouteImport.update({
   id: '/ferramentas',
   path: '/ferramentas',
@@ -227,6 +239,11 @@ const AdminLivesIndexRoute = AdminLivesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminLivesRoute,
 } as any)
+const AdminFinanceiroIndexRoute = AdminFinanceiroIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminFinanceiroRoute,
+} as any)
 const AppLivesIndexRoute = AppLivesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -246,6 +263,27 @@ const ApiKnowledgeSearchRoute = ApiKnowledgeSearchRouteImport.update({
   id: '/api/knowledge/search',
   path: '/api/knowledge/search',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminFinanceiroSubscricoesRoute =
+  AdminFinanceiroSubscricoesRouteImport.update({
+    id: '/subscricoes',
+    path: '/subscricoes',
+    getParentRoute: () => AdminFinanceiroRoute,
+  } as any)
+const AdminFinanceiroReceitaRoute = AdminFinanceiroReceitaRouteImport.update({
+  id: '/receita',
+  path: '/receita',
+  getParentRoute: () => AdminFinanceiroRoute,
+} as any)
+const AdminFinanceiroCupoesRoute = AdminFinanceiroCupoesRouteImport.update({
+  id: '/cupoes',
+  path: '/cupoes',
+  getParentRoute: () => AdminFinanceiroRoute,
+} as any)
+const AdminFinanceiroCatalogoRoute = AdminFinanceiroCatalogoRouteImport.update({
+  id: '/catalogo',
+  path: '/catalogo',
+  getParentRoute: () => AdminFinanceiroRoute,
 } as any)
 const AppLivesLiveIdRoute = AppLivesLiveIdRouteImport.update({
   id: '/$liveId',
@@ -327,6 +365,12 @@ const AdminLivesLiveIdStudioRoute = AdminLivesLiveIdStudioRouteImport.update({
   path: '/$liveId/studio',
   getParentRoute: () => AdminLivesRoute,
 } as any)
+const AdminFinanceiroClienteUserIdRoute =
+  AdminFinanceiroClienteUserIdRouteImport.update({
+    id: '/cliente/$userId',
+    path: '/cliente/$userId',
+    getParentRoute: () => AdminFinanceiroRoute,
+  } as any)
 const AppLivesLiveIdSalaRoute = AppLivesLiveIdSalaRouteImport.update({
   id: '/lives_/$liveId/sala',
   path: '/lives/$liveId/sala',
@@ -399,6 +443,7 @@ export interface FileRoutesByFullPath {
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
+  '/admin/financeiro': typeof AdminFinanceiroRouteWithChildren
   '/admin/lives': typeof AdminLivesRouteWithChildren
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
@@ -410,10 +455,15 @@ export interface FileRoutesByFullPath {
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
   '/lives/$liveId': typeof AppLivesLiveIdRoute
+  '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
+  '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
+  '/admin/financeiro/receita': typeof AdminFinanceiroReceitaRoute
+  '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia/': typeof AppAcademiaIndexRoute
   '/lives/': typeof AppLivesIndexRoute
+  '/admin/financeiro/': typeof AdminFinanceiroIndexRoute
   '/admin/lives/': typeof AdminLivesIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
   '/ferramentas/studio/criativos': typeof AppFerramentasStudioCriativosRoute
@@ -422,6 +472,7 @@ export interface FileRoutesByFullPath {
   '/ferramentas/studio/produtos': typeof AppFerramentasStudioProdutosRoute
   '/ferramentas/studio/videos': typeof AppFerramentasStudioVideosRoute
   '/lives/$liveId/sala': typeof AppLivesLiveIdSalaRoute
+  '/admin/financeiro/cliente/$userId': typeof AdminFinanceiroClienteUserIdRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
@@ -463,10 +514,15 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
+  '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
+  '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
+  '/admin/financeiro/receita': typeof AdminFinanceiroReceitaRoute
+  '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia': typeof AppAcademiaIndexRoute
   '/lives': typeof AppLivesIndexRoute
+  '/admin/financeiro': typeof AdminFinanceiroIndexRoute
   '/admin/lives': typeof AdminLivesIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
   '/ferramentas/studio/criativos': typeof AppFerramentasStudioCriativosRoute
@@ -475,6 +531,7 @@ export interface FileRoutesByTo {
   '/ferramentas/studio/produtos': typeof AppFerramentasStudioProdutosRoute
   '/ferramentas/studio/videos': typeof AppFerramentasStudioVideosRoute
   '/lives/$liveId/sala': typeof AppLivesLiveIdSalaRoute
+  '/admin/financeiro/cliente/$userId': typeof AdminFinanceiroClienteUserIdRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
@@ -513,6 +570,7 @@ export interface FileRoutesById {
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
+  '/admin/financeiro': typeof AdminFinanceiroRouteWithChildren
   '/admin/lives': typeof AdminLivesRouteWithChildren
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
@@ -524,10 +582,15 @@ export interface FileRoutesById {
   '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/_app/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
+  '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
+  '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
+  '/admin/financeiro/receita': typeof AdminFinanceiroReceitaRoute
+  '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/_app/academia/': typeof AppAcademiaIndexRoute
   '/_app/lives/': typeof AppLivesIndexRoute
+  '/admin/financeiro/': typeof AdminFinanceiroIndexRoute
   '/admin/lives/': typeof AdminLivesIndexRoute
   '/_app/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
   '/_app/ferramentas/studio/criativos': typeof AppFerramentasStudioCriativosRoute
@@ -536,6 +599,7 @@ export interface FileRoutesById {
   '/_app/ferramentas/studio/produtos': typeof AppFerramentasStudioProdutosRoute
   '/_app/ferramentas/studio/videos': typeof AppFerramentasStudioVideosRoute
   '/_app/lives_/$liveId/sala': typeof AppLivesLiveIdSalaRoute
+  '/admin/financeiro/cliente/$userId': typeof AdminFinanceiroClienteUserIdRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
@@ -574,6 +638,7 @@ export interface FileRouteTypes {
     | '/admin/cursos'
     | '/admin/eventos'
     | '/admin/ferramentas'
+    | '/admin/financeiro'
     | '/admin/lives'
     | '/admin/saude'
     | '/admin/transcricoes'
@@ -585,10 +650,15 @@ export interface FileRouteTypes {
     | '/especialistas/$expertId'
     | '/ferramentas/studio'
     | '/lives/$liveId'
+    | '/admin/financeiro/catalogo'
+    | '/admin/financeiro/cupoes'
+    | '/admin/financeiro/receita'
+    | '/admin/financeiro/subscricoes'
     | '/api/knowledge/search'
     | '/api/realtime/session'
     | '/academia/'
     | '/lives/'
+    | '/admin/financeiro/'
     | '/admin/lives/'
     | '/academia/$courseId/$lessonId'
     | '/ferramentas/studio/criativos'
@@ -597,6 +667,7 @@ export interface FileRouteTypes {
     | '/ferramentas/studio/produtos'
     | '/ferramentas/studio/videos'
     | '/lives/$liveId/sala'
+    | '/admin/financeiro/cliente/$userId'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
@@ -638,10 +709,15 @@ export interface FileRouteTypes {
     | '/admin'
     | '/especialistas/$expertId'
     | '/lives/$liveId'
+    | '/admin/financeiro/catalogo'
+    | '/admin/financeiro/cupoes'
+    | '/admin/financeiro/receita'
+    | '/admin/financeiro/subscricoes'
     | '/api/knowledge/search'
     | '/api/realtime/session'
     | '/academia'
     | '/lives'
+    | '/admin/financeiro'
     | '/admin/lives'
     | '/academia/$courseId/$lessonId'
     | '/ferramentas/studio/criativos'
@@ -650,6 +726,7 @@ export interface FileRouteTypes {
     | '/ferramentas/studio/produtos'
     | '/ferramentas/studio/videos'
     | '/lives/$liveId/sala'
+    | '/admin/financeiro/cliente/$userId'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
@@ -687,6 +764,7 @@ export interface FileRouteTypes {
     | '/admin/cursos'
     | '/admin/eventos'
     | '/admin/ferramentas'
+    | '/admin/financeiro'
     | '/admin/lives'
     | '/admin/saude'
     | '/admin/transcricoes'
@@ -698,10 +776,15 @@ export interface FileRouteTypes {
     | '/_app/especialistas/$expertId'
     | '/_app/ferramentas/studio'
     | '/_app/lives/$liveId'
+    | '/admin/financeiro/catalogo'
+    | '/admin/financeiro/cupoes'
+    | '/admin/financeiro/receita'
+    | '/admin/financeiro/subscricoes'
     | '/api/knowledge/search'
     | '/api/realtime/session'
     | '/_app/academia/'
     | '/_app/lives/'
+    | '/admin/financeiro/'
     | '/admin/lives/'
     | '/_app/academia/$courseId/$lessonId'
     | '/_app/ferramentas/studio/criativos'
@@ -710,6 +793,7 @@ export interface FileRouteTypes {
     | '/_app/ferramentas/studio/produtos'
     | '/_app/ferramentas/studio/videos'
     | '/_app/lives_/$liveId/sala'
+    | '/admin/financeiro/cliente/$userId'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
@@ -869,6 +953,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLivesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/financeiro': {
+      id: '/admin/financeiro'
+      path: '/financeiro'
+      fullPath: '/admin/financeiro'
+      preLoaderRoute: typeof AdminFinanceiroRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/ferramentas': {
       id: '/admin/ferramentas'
       path: '/ferramentas'
@@ -974,6 +1065,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLivesIndexRouteImport
       parentRoute: typeof AdminLivesRoute
     }
+    '/admin/financeiro/': {
+      id: '/admin/financeiro/'
+      path: '/'
+      fullPath: '/admin/financeiro/'
+      preLoaderRoute: typeof AdminFinanceiroIndexRouteImport
+      parentRoute: typeof AdminFinanceiroRoute
+    }
     '/_app/lives/': {
       id: '/_app/lives/'
       path: '/'
@@ -1001,6 +1099,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/knowledge/search'
       preLoaderRoute: typeof ApiKnowledgeSearchRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/financeiro/subscricoes': {
+      id: '/admin/financeiro/subscricoes'
+      path: '/subscricoes'
+      fullPath: '/admin/financeiro/subscricoes'
+      preLoaderRoute: typeof AdminFinanceiroSubscricoesRouteImport
+      parentRoute: typeof AdminFinanceiroRoute
+    }
+    '/admin/financeiro/receita': {
+      id: '/admin/financeiro/receita'
+      path: '/receita'
+      fullPath: '/admin/financeiro/receita'
+      preLoaderRoute: typeof AdminFinanceiroReceitaRouteImport
+      parentRoute: typeof AdminFinanceiroRoute
+    }
+    '/admin/financeiro/cupoes': {
+      id: '/admin/financeiro/cupoes'
+      path: '/cupoes'
+      fullPath: '/admin/financeiro/cupoes'
+      preLoaderRoute: typeof AdminFinanceiroCupoesRouteImport
+      parentRoute: typeof AdminFinanceiroRoute
+    }
+    '/admin/financeiro/catalogo': {
+      id: '/admin/financeiro/catalogo'
+      path: '/catalogo'
+      fullPath: '/admin/financeiro/catalogo'
+      preLoaderRoute: typeof AdminFinanceiroCatalogoRouteImport
+      parentRoute: typeof AdminFinanceiroRoute
     }
     '/_app/lives/$liveId': {
       id: '/_app/lives/$liveId'
@@ -1099,6 +1225,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/lives/$liveId/studio'
       preLoaderRoute: typeof AdminLivesLiveIdStudioRouteImport
       parentRoute: typeof AdminLivesRoute
+    }
+    '/admin/financeiro/cliente/$userId': {
+      id: '/admin/financeiro/cliente/$userId'
+      path: '/cliente/$userId'
+      fullPath: '/admin/financeiro/cliente/$userId'
+      preLoaderRoute: typeof AdminFinanceiroClienteUserIdRouteImport
+      parentRoute: typeof AdminFinanceiroRoute
     }
     '/_app/lives_/$liveId/sala': {
       id: '/_app/lives_/$liveId/sala'
@@ -1265,6 +1398,28 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface AdminFinanceiroRouteChildren {
+  AdminFinanceiroCatalogoRoute: typeof AdminFinanceiroCatalogoRoute
+  AdminFinanceiroCupoesRoute: typeof AdminFinanceiroCupoesRoute
+  AdminFinanceiroReceitaRoute: typeof AdminFinanceiroReceitaRoute
+  AdminFinanceiroSubscricoesRoute: typeof AdminFinanceiroSubscricoesRoute
+  AdminFinanceiroIndexRoute: typeof AdminFinanceiroIndexRoute
+  AdminFinanceiroClienteUserIdRoute: typeof AdminFinanceiroClienteUserIdRoute
+}
+
+const AdminFinanceiroRouteChildren: AdminFinanceiroRouteChildren = {
+  AdminFinanceiroCatalogoRoute: AdminFinanceiroCatalogoRoute,
+  AdminFinanceiroCupoesRoute: AdminFinanceiroCupoesRoute,
+  AdminFinanceiroReceitaRoute: AdminFinanceiroReceitaRoute,
+  AdminFinanceiroSubscricoesRoute: AdminFinanceiroSubscricoesRoute,
+  AdminFinanceiroIndexRoute: AdminFinanceiroIndexRoute,
+  AdminFinanceiroClienteUserIdRoute: AdminFinanceiroClienteUserIdRoute,
+}
+
+const AdminFinanceiroRouteWithChildren = AdminFinanceiroRoute._addFileChildren(
+  AdminFinanceiroRouteChildren,
+)
+
 interface AdminLivesRouteChildren {
   AdminLivesIndexRoute: typeof AdminLivesIndexRoute
   AdminLivesLiveIdStudioRoute: typeof AdminLivesLiveIdStudioRoute
@@ -1284,6 +1439,7 @@ interface AdminRouteChildren {
   AdminCursosRoute: typeof AdminCursosRoute
   AdminEventosRoute: typeof AdminEventosRoute
   AdminFerramentasRoute: typeof AdminFerramentasRoute
+  AdminFinanceiroRoute: typeof AdminFinanceiroRouteWithChildren
   AdminLivesRoute: typeof AdminLivesRouteWithChildren
   AdminSaudeRoute: typeof AdminSaudeRoute
   AdminTranscricoesRoute: typeof AdminTranscricoesRoute
@@ -1295,6 +1451,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCursosRoute: AdminCursosRoute,
   AdminEventosRoute: AdminEventosRoute,
   AdminFerramentasRoute: AdminFerramentasRoute,
+  AdminFinanceiroRoute: AdminFinanceiroRouteWithChildren,
   AdminLivesRoute: AdminLivesRouteWithChildren,
   AdminSaudeRoute: AdminSaudeRoute,
   AdminTranscricoesRoute: AdminTranscricoesRoute,

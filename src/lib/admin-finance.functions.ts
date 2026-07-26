@@ -1,0 +1,253 @@
+/**
+ * Admin Finance API — every function is gated on the `admin` role.
+ * Thin wrappers only: all logic lives in `src/lib/admin/finance.server.ts`.
+ */
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type {
+  AdminSubscriptionRow,
+  CatalogProductRow,
+  CouponRow,
+  CustomerDetail,
+  FinanceOverview,
+  SearchHit,
+} from "@/lib/admin/finance-types";
+import type { SubscriptionStatus } from "@/lib/billing/types";
+
+async function assertAdmin(context: {
+  supabase: { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown }> };
+  userId: string;
+}) {
+  const { data } = await context.supabase.rpc("has_role", {
+    _user_id: context.userId,
+    _role: "admin",
+  });
+  if (!data) throw new Error("Forbidden");
+}
+
+export const getFinanceOverview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<FinanceOverview> => {
+    await assertAdmin(context as never);
+    const { collectFinanceOverview } = await import(
+      "@/lib/admin/finance.server"
+    );
+    return collectFinanceOverview();
+  });
+
+export const listAdminSubscriptions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        status: z.string().max(30).nullable().optional(),
+        search: z.string().max(120).nullable().optional(),
+      })
+      .default({})
+      .parse(input ?? {}),
+  )
+  .handler(async ({ data, context }): Promise<AdminSubscriptionRow[]> => {
+    await assertAdmin(context as never);
+    const { listSubscriptions } = await import("@/lib/admin/finance.server");
+    return listSubscriptions({
+      status: (data.status as SubscriptionStatus | null) ?? null,
+      search: data.search ?? null,
+    });
+  });
+
+export const getCustomerDetail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ userId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }): Promise<CustomerDetail> => {
+    await assertAdmin(context as never);
+    const { collectCustomerDetail } = await import(
+      "@/lib/admin/finance.server"
+    );
+    return collectCustomerDetail(data.userId);
+  });
+
+export const searchBilling = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ term: z.string().min(2).max(120) }).parse(input),
+  )
+  .handler(async ({ data, context }): Promise<SearchHit[]> => {
+    await assertAdmin(context as never);
+    const { globalSearch } = await import("@/lib/admin/finance.server");
+    return globalSearch(data.term);
+  });
+
+export const listAdminCoupons = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<CouponRow[]> => {
+    await assertAdmin(context as never);
+    const { listCoupons } = await import("@/lib/admin/finance.server");
+    return listCoupons();
+  });
+
+export const createCoupon = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        code: z
+          .string()
+          .trim()
+          .min(2)
+          .max(40)
+          .regex(/^[A-Za-z0-9_-]+$/, "Apenas letras, números, _ e -"),
+        name: z.string().trim().max(120).nullable().optional(),
+        percentOff: z.number().min(1).max(100).nullable().optional(),
+        amountOffCents: z.number().int().min(1).max(1_000_000).nullable().optional(),
+        trialDaysOverride: z.number().int().min(1).max(365).nullable().optional(),
+        duration: z.enum(["once", "repeating", "forever"]).default("once"),
+        durationInMonths: z.number().int().min(1).max(60).nullable().optional(),
+        maxRedemptions: z.number().int().min(1).max(100_000).nullable().optional(),
+        validUntil: z.string().datetime().nullable().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+    const { error } = await supabaseAdmin.from("billing_coupons").insert({
+      code: data.code.toUpperCase(),
+      name: data.name ?? null,
+      percent_off: data.percentOff ?? null,
+      amount_off_cents: data.amountOffCents ?? null,
+      trial_days_override: data.trialDaysOverride ?? null,
+      duration: data.duration,
+      duration_in_months: data.durationInMonths ?? null,
+      max_redemptions: data.maxRedemptions ?? null,
+      valid_until: data.validUntil ?? null,
+      active: true,
+    });
+    if (error) {
+      throw new Error(
+        error.code === "23505"
+          ? "Já existe um cupão com esse código."
+          : error.message,
+      );
+    }
+    return { ok: true };
+  });
+
+export const setCouponActive = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ id: z.string().uuid(), active: z.boolean() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+    const { error } = await supabaseAdmin
+      .from("billing_coupons")
+      .update({ active: data.active })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const listAdminCatalog = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<CatalogProductRow[]> => {
+    await assertAdmin(context as never);
+    const { listCatalogAdmin } = await import("@/lib/admin/finance.server");
+    return listCatalogAdmin();
+  });
+
+export const setProductActive = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ id: z.string().uuid(), active: z.boolean() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+    const { error } = await supabaseAdmin
+      .from("catalog_products")
+      .update({ active: data.active })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const setPriceActive = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ id: z.string().uuid(), active: z.boolean() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+    const { error } = await supabaseAdmin
+      .from("catalog_prices")
+      .update({ active: data.active })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Cancels or resumes any member's subscription from the backoffice. */
+export const adminCancelSubscription = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        subscriptionId: z.string().uuid(),
+        userId: z.string().uuid(),
+        immediate: z.boolean().default(false),
+        reason: z.string().max(500).nullable().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const { cancelSubscription } = await import(
+      "@/lib/billing/commands.server"
+    );
+    await cancelSubscription({
+      subscriptionId: data.subscriptionId,
+      userId: data.userId,
+      immediate: data.immediate,
+      reason: data.reason ?? "admin",
+    });
+    const { drainQueue } = await import("@/lib/queue/worker.server");
+    await drainQueue(10);
+    return { ok: true };
+  });
+
+export const adminResumeSubscription = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        subscriptionId: z.string().uuid(),
+        userId: z.string().uuid(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const { resumeSubscription } = await import(
+      "@/lib/billing/commands.server"
+    );
+    await resumeSubscription({
+      subscriptionId: data.subscriptionId,
+      userId: data.userId,
+    });
+    const { drainQueue } = await import("@/lib/queue/worker.server");
+    await drainQueue(10);
+    return { ok: true };
+  });

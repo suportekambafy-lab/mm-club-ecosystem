@@ -7,6 +7,7 @@ import {
   PlayCircle,
   CalendarDays,
   Radio,
+  Wallet,
   Wrench,
   ArrowLeft,
   ShieldCheck,
@@ -59,7 +60,8 @@ type AdminTo =
   | "/admin/eventos"
   | "/admin/lives"
   | "/admin/ferramentas"
-  | "/admin/saude";
+  | "/admin/saude"
+  | "/admin/financeiro";
 
 const nav: Array<{
   label: string;
@@ -89,6 +91,12 @@ const nav: Array<{
     items: [
       { to: "/admin/ferramentas", label: "Ferramentas", icon: Wrench },
       { to: "/admin/saude", label: "Saúde do Billing", icon: HeartPulse },
+    ],
+  },
+  {
+    label: "Negócio",
+    items: [
+      { to: "/admin/financeiro", label: "Financeiro", icon: Wallet },
     ],
   },
 ];
