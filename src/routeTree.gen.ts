@@ -48,6 +48,7 @@ import { Route as AdminFinanceiroIndexRouteImport } from './routes/admin.finance
 import { Route as AppLivesIndexRouteImport } from './routes/_app.lives.index'
 import { Route as AppAcademiaIndexRouteImport } from './routes/_app.academia.index'
 import { Route as ApiRealtimeSessionRouteImport } from './routes/api.realtime.session'
+import { Route as ApiPublicPdfSelftestRouteImport } from './routes/api/public/pdf-selftest'
 import { Route as ApiKnowledgeSearchRouteImport } from './routes/api.knowledge.search'
 import { Route as AdminFinanceiroSubscricoesRouteImport } from './routes/admin.financeiro.subscricoes'
 import { Route as AdminFinanceiroReceitaRouteImport } from './routes/admin.financeiro.receita'
@@ -275,6 +276,11 @@ const ApiRealtimeSessionRoute = ApiRealtimeSessionRouteImport.update({
   path: '/api/realtime/session',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPdfSelftestRoute = ApiPublicPdfSelftestRouteImport.update({
+  id: '/api/public/pdf-selftest',
+  path: '/api/public/pdf-selftest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiKnowledgeSearchRoute = ApiKnowledgeSearchRouteImport.update({
   id: '/api/knowledge/search',
   path: '/api/knowledge/search',
@@ -500,6 +506,7 @@ export interface FileRoutesByFullPath {
   '/admin/financeiro/receita': typeof AdminFinanceiroReceitaRoute
   '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
+  '/api/public/pdf-selftest': typeof ApiPublicPdfSelftestRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia/': typeof AppAcademiaIndexRoute
   '/lives/': typeof AppLivesIndexRoute
@@ -565,6 +572,7 @@ export interface FileRoutesByTo {
   '/admin/financeiro/receita': typeof AdminFinanceiroReceitaRoute
   '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
+  '/api/public/pdf-selftest': typeof ApiPublicPdfSelftestRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia': typeof AppAcademiaIndexRoute
   '/lives': typeof AppLivesIndexRoute
@@ -639,6 +647,7 @@ export interface FileRoutesById {
   '/admin/financeiro/receita': typeof AdminFinanceiroReceitaRoute
   '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
+  '/api/public/pdf-selftest': typeof ApiPublicPdfSelftestRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/_app/academia/': typeof AppAcademiaIndexRoute
   '/_app/lives/': typeof AppLivesIndexRoute
@@ -713,6 +722,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro/receita'
     | '/admin/financeiro/subscricoes'
     | '/api/knowledge/search'
+    | '/api/public/pdf-selftest'
     | '/api/realtime/session'
     | '/academia/'
     | '/lives/'
@@ -778,6 +788,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro/receita'
     | '/admin/financeiro/subscricoes'
     | '/api/knowledge/search'
+    | '/api/public/pdf-selftest'
     | '/api/realtime/session'
     | '/academia'
     | '/lives'
@@ -851,6 +862,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro/receita'
     | '/admin/financeiro/subscricoes'
     | '/api/knowledge/search'
+    | '/api/public/pdf-selftest'
     | '/api/realtime/session'
     | '/_app/academia/'
     | '/_app/lives/'
@@ -896,6 +908,7 @@ export interface RootRouteChildren {
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   CheckoutIndexRoute: typeof CheckoutIndexRoute
   ApiKnowledgeSearchRoute: typeof ApiKnowledgeSearchRoute
+  ApiPublicPdfSelftestRoute: typeof ApiPublicPdfSelftestRoute
   ApiRealtimeSessionRoute: typeof ApiRealtimeSessionRoute
   ApiPublicCloudflareStreamWebhookRoute: typeof ApiPublicCloudflareStreamWebhookRoute
   ApiPublicHooksAutoTranscribeRoute: typeof ApiPublicHooksAutoTranscribeRoute
@@ -1183,6 +1196,13 @@ declare module '@tanstack/react-router' {
       path: '/api/realtime/session'
       fullPath: '/api/realtime/session'
       preLoaderRoute: typeof ApiRealtimeSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pdf-selftest': {
+      id: '/api/public/pdf-selftest'
+      path: '/api/public/pdf-selftest'
+      fullPath: '/api/public/pdf-selftest'
+      preLoaderRoute: typeof ApiPublicPdfSelftestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/knowledge/search': {
@@ -1600,6 +1620,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutReturnRoute: CheckoutReturnRoute,
   CheckoutIndexRoute: CheckoutIndexRoute,
   ApiKnowledgeSearchRoute: ApiKnowledgeSearchRoute,
+  ApiPublicPdfSelftestRoute: ApiPublicPdfSelftestRoute,
   ApiRealtimeSessionRoute: ApiRealtimeSessionRoute,
   ApiPublicCloudflareStreamWebhookRoute: ApiPublicCloudflareStreamWebhookRoute,
   ApiPublicHooksAutoTranscribeRoute: ApiPublicHooksAutoTranscribeRoute,
@@ -1618,3 +1639,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
