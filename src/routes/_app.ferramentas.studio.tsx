@@ -4,6 +4,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { getStudioContext } from "@/lib/studio.functions";
 import { StudioShell } from "@/components/mm/studio/studio-shell";
 import { StudioContext, type StudioCtx } from "@/lib/studio-context";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CardGridSkeleton } from "@/components/mm/skeletons";
+
 
 export const Route = createFileRoute("/_app/ferramentas/studio")({
   head: () => ({
