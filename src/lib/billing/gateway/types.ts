@@ -102,6 +102,10 @@ export interface PaymentGateway {
 
   listMandates(customerId: string): Promise<GatewayMandate[]>;
 
+  /** Charge an existing mandate without the member being present. */
+  chargeWithMandate(input: ChargeMandateInput): Promise<GatewayPayment>;
+
+
   createSubscription(
     input: CreateSubscriptionInput,
   ): Promise<GatewaySubscription>;
