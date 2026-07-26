@@ -246,6 +246,67 @@ export const syncCheckout = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// ------------------------------------------------------- payment methods
+
+export const addPaymentMethod = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        origin: z.string().url(),
+        returnPath: z.string().max(200).optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { startAddPaymentMethod } = await import(
+      "@/lib/billing/payment-methods.server"
+    );
+    return startAddPaymentMethod({
+      userId: context.userId,
+      email: (context.claims as { email?: string } | null)?.email ?? null,
+      origin: data.origin,
+      returnPath: data.returnPath,
+    });
+  });
+
+export const syncPaymentMethods = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { syncPaymentMethods: cmd } = await import(
+      "@/lib/billing/payment-methods.server"
+    );
+    await cmd(context.userId);
+    return { ok: true };
+  });
+
+export const setDefaultPaymentMethod = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ paymentMethodId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { setDefaultPaymentMethod: cmd } = await import(
+      "@/lib/billing/payment-methods.server"
+    );
+    await cmd({ userId: context.userId, paymentMethodId: data.paymentMethodId });
+    return { ok: true };
+  });
+
+export const removePaymentMethod = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ paymentMethodId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { removePaymentMethod: cmd } = await import(
+      "@/lib/billing/payment-methods.server"
+    );
+    await cmd({ userId: context.userId, paymentMethodId: data.paymentMethodId });
+    return { ok: true };
+  });
+
+
 // ------------------------------------------------- guest checkout (no account)
 
 /**
