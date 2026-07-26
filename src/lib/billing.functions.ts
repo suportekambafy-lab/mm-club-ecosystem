@@ -245,3 +245,77 @@ export const syncCheckout = createServerFn({ method: "POST" })
     await drainQueue(25);
     return { ok: true };
   });
+
+// ------------------------------------------------- guest checkout (no account)
+
+/**
+ * Pay first, account after: starts a checkout for a visitor with no account.
+ * The auth user is only created once the gateway confirms the payment.
+ */
+export const startGuestCheckout = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        email: z.string().email().max(200),
+        name: z.string().max(120).nullable().optional(),
+        priceSlug: z.string().min(1).max(120),
+        origin: z.string().url(),
+        couponCode: z.string().max(60).nullable().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { startGuestCheckout: cmd } = await import("@/lib/billing/guest.server");
+    return cmd({
+      email: data.email,
+      name: data.name ?? null,
+      priceSlug: data.priceSlug,
+      origin: data.origin,
+      couponCode: data.couponCode ?? null,
+    });
+  });
+
+/** Status of a guest checkout intent (used by the return page to poll). */
+export const getGuestCheckoutStatus = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) =>
+    z.object({ intentId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+
+    const { data: intent } = await supabaseAdmin
+      .from("billing_checkout_intents")
+      .select("id, email, status, account_created, gateway, gateway_payment_id")
+      .eq("id", data.intentId)
+      .maybeSingle();
+    if (!intent) return { found: false as const };
+
+    // Reconcile straight away so the user does not wait for the webhook.
+    if (intent.status !== "provisioned" && intent.gateway_payment_id) {
+      const { handleGatewayPayment } = await import(
+        "@/lib/billing/commands.server"
+      );
+      await handleGatewayPayment(
+        intent.gateway!,
+        intent.gateway_payment_id,
+      ).catch((e) => console.error("[getGuestCheckoutStatus]", e));
+      const { drainQueue } = await import("@/lib/queue/worker.server");
+      await drainQueue(25);
+    }
+
+    const { data: fresh } = await supabaseAdmin
+      .from("billing_checkout_intents")
+      .select("status, account_created, email")
+      .eq("id", data.intentId)
+      .maybeSingle();
+
+    return {
+      found: true as const,
+      email: fresh?.email ?? intent.email,
+      status: fresh?.status ?? intent.status,
+      ready: (fresh?.status ?? intent.status) === "provisioned",
+      accountCreated: Boolean(fresh?.account_created ?? intent.account_created),
+    };
+  });
