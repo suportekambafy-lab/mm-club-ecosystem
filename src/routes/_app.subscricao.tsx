@@ -150,6 +150,144 @@ function SubscriptionPage() {
     }
   };
 
+  const onSelectPlan = async (priceSlug: string) => {
+    setBusy(`plan-${priceSlug}`);
+    setError(null);
+    try {
+      const { checkoutUrl } = await startCheckout({
+        data: {
+          priceSlug,
+          origin: window.location.origin,
+          successPath: "/subscricao",
+        },
+      });
+      window.location.href = checkoutUrl;
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Não foi possível mudar de plano.",
+      );
+      setBusy(null);
+    }
+  };
+
+  /** Monthly-equivalent value, so yearly and monthly prices compare fairly. */
+  const monthly = (amountCents: number, interval: string, count = 1) => {
+    const months =
+      (interval === "year" ? 12 : interval === "week" ? 0.25 : 1) * (count || 1);
+    return amountCents / months;
+  };
+
+  const planOptions = plans
+    .flatMap((p) =>
+      p.prices.map((price) => ({
+        productName: p.name,
+        tagline: p.tagline,
+        badge: p.badge,
+        price,
+      })),
+    )
+    .sort(
+      (a, b) =>
+        monthly(a.price.amountCents, a.price.interval, a.price.intervalCount) -
+        monthly(b.price.amountCents, b.price.interval, b.price.intervalCount),
+    );
+
+  const currentMonthly = sub
+    ? monthly(sub.amountCents, sub.interval)
+    : null;
+
+  const planSection = (
+    <div className="grid gap-3 sm:grid-cols-2">
+      {planOptions.map(({ productName, tagline, badge, price }) => {
+        const isCurrent = sub?.priceSlug === price.slug;
+        const value = monthly(
+          price.amountCents,
+          price.interval,
+          price.intervalCount,
+        );
+        const change =
+          currentMonthly === null || isCurrent
+            ? null
+            : value > currentMonthly
+              ? "Upgrade"
+              : value < currentMonthly
+                ? "Downgrade"
+                : "Alterar ciclo";
+        return (
+          <div
+            key={price.slug}
+            className={cn(
+              "flex flex-col rounded-2xl p-5 ring-1 transition",
+              isCurrent
+                ? "bg-primary/5 ring-primary/40"
+                : "bg-surface-2 ring-border hover:ring-primary/30",
+            )}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <p className="font-display text-lg text-foreground">
+                {productName}
+              </p>
+              {isCurrent ? (
+                <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-primary">
+                  Plano atual
+                </span>
+              ) : change ? (
+                <span
+                  className={cn(
+                    "rounded-full px-2.5 py-1 text-[10px] uppercase tracking-[0.14em]",
+                    change === "Upgrade"
+                      ? "bg-emerald-500/10 text-emerald-400"
+                      : "bg-surface-3 text-muted-foreground",
+                  )}
+                >
+                  {change}
+                </span>
+              ) : badge ? (
+                <span className="rounded-full bg-surface-3 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                  {badge}
+                </span>
+              ) : null}
+            </div>
+
+            <p className="mt-2 text-sm text-muted-foreground">
+              {price.displayLabel ?? tagline ?? "Acesso MM Club"}
+            </p>
+
+            <p className="mt-4 text-xl text-foreground">
+              {formatMoney(price.amountCents, price.currency)}
+              <span className="text-sm text-muted-foreground">
+                {price.interval === "year"
+                  ? " / ano"
+                  : price.interval === "month"
+                    ? " / mês"
+                    : ""}
+              </span>
+            </p>
+
+            <button
+              type="button"
+              disabled={isCurrent || busy === `plan-${price.slug}`}
+              onClick={() => onSelectPlan(price.slug)}
+              className={cn(
+                "mt-5 inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition",
+                isCurrent
+                  ? "cursor-default bg-surface-3 text-muted-foreground"
+                  : "bg-primary text-primary-foreground hover:bg-gold-soft disabled:opacity-60",
+              )}
+            >
+              {busy === `plan-${price.slug}` ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : null}
+              {isCurrent ? "Estás neste plano" : (change ?? "Escolher plano")}
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+
+
   return (
     <div className="mx-auto w-full max-w-4xl space-y-8 pb-16">
       <header className="space-y-3">
