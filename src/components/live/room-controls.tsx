@@ -102,15 +102,19 @@ export function RoomControls({ state, actions, onLeave }: Props) {
         <LayoutMenu state={state} actions={actions} />
       )}
 
-      <Button
-        variant="destructive"
-        size="sm"
-        onClick={onLeave ?? (() => actions.leave())}
-        className="ml-1 h-9 rounded-xl bg-red-500 px-3 text-white hover:bg-red-500/90"
-      >
-        <PhoneOff className="mr-1 h-4 w-4" />
-        Sair
-      </Button>
+      {state.localRole === "host" ? (
+        <HostLeaveMenu state={state} actions={actions} onLeave={onLeave} />
+      ) : (
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={onLeave ?? (() => actions.leave())}
+          className="ml-1 h-9 rounded-xl bg-red-500 px-3 text-white hover:bg-red-500/90"
+        >
+          <PhoneOff className="mr-1 h-4 w-4" />
+          Sair
+        </Button>
+      )}
     </div>
   );
 }
