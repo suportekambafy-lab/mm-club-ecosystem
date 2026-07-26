@@ -31,6 +31,7 @@ const BENEFITS = [
   "Todos os cursos, aulas e novos lançamentos",
   "Comunidade privada, lives e ferramentas",
   "Suporte MM Intelligence 24/7",
+  "Apenas 0,01 € de validação do cartão — sem mensalidade nos 3 meses",
   "Cancelas quando quiseres antes do fim do trial",
   "Depois do 3.º mês, apenas 29,90 €/mês",
 ];
