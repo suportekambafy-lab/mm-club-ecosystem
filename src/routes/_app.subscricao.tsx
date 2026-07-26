@@ -273,7 +273,7 @@ function SubscriptionPage() {
           >
             <div className="flex items-start justify-between gap-3">
               <p className="font-display text-lg text-foreground">
-                {productName}
+                {price.displayLabel ?? productName}
               </p>
               {isCurrent ? (
                 <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-primary">
@@ -298,8 +298,15 @@ function SubscriptionPage() {
             </div>
 
             <p className="mt-2 text-sm text-muted-foreground">
-              {price.displayLabel ?? tagline ?? "Acesso MM Club"}
+              {months === 12
+                ? "Anual"
+                : months === 6
+                  ? "Semestral"
+                  : months === 1
+                    ? "Mensal"
+                    : (tagline ?? "Acesso MM Club")}
             </p>
+
 
             <p className="mt-4 text-xl text-foreground">
               {formatMoney(price.amountCents, price.currency)}
