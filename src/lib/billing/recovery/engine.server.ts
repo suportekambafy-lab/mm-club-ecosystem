@@ -604,7 +604,7 @@ export async function resolveRecoveryForPayment(args: {
   }
 
 
-  if (args.outcome === "partially_paid") {
+  if (outcome === "partially_paid") {
     const owed = Math.max(0, (attempt.amount_cents ?? 0) - (args.paidCents ?? 0));
     await supabaseAdmin
       .from("billing_dunning_attempts")
@@ -624,16 +624,16 @@ export async function resolveRecoveryForPayment(args: {
     return;
   }
 
-  if (args.outcome === "refunded" || args.outcome === "chargeback") {
+  if (outcome === "refunded" || outcome === "chargeback") {
     await supabaseAdmin
       .from("billing_dunning_attempts")
       .update({
         status: "cancelled",
-        error: args.outcome === "chargeback" ? "chargeback" : "refunded",
+        error: outcome === "chargeback" ? "chargeback" : "refunded",
       })
       .eq("id", attempt.id);
-    await cancelRecovery(cycleKey, args.outcome);
-    if (args.outcome === "chargeback") {
+    await cancelRecovery(cycleKey, outcome);
+    if (outcome === "chargeback") {
       await supabaseAdmin.from("security_alerts").insert({
         category: "billing",
         level: "critical",
