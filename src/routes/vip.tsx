@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { startCheckout } from "@/lib/billing.functions";
+import { startCheckout, startGuestCheckout } from "@/lib/billing.functions";
 
 
 export const Route = createFileRoute("/vip")({
@@ -40,6 +40,8 @@ function VipPage() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [askEmail, setAskEmail] = useState(false);
+  const [guestEmail, setGuestEmail] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -54,13 +56,32 @@ function VipPage() {
   }, []);
 
   const handleStart = async () => {
-    if (!user) {
-      window.location.href = `/auth?redirect=${encodeURIComponent("/vip")}`;
+    // Pay first, account after: guests only need to leave an email.
+    if (!user && !askEmail) {
+      setAskEmail(true);
       return;
     }
     setPending(true);
     setError(null);
     try {
+      if (!user) {
+        const res = await startGuestCheckout({
+          data: {
+            email: guestEmail.trim(),
+            priceSlug: "mm_club_monthly",
+            origin: window.location.origin,
+          },
+        });
+        if (res.status === "account_exists") {
+          setPending(false);
+          setError(
+            "Já existe uma conta com este email. Inicia sessão para continuares.",
+          );
+          return;
+        }
+        window.location.href = res.checkoutUrl;
+        return;
+      }
       const { checkoutUrl } = await startCheckout({
         data: {
           priceSlug: "mm_club_monthly",
