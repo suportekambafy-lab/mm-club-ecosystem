@@ -6,6 +6,15 @@ import type { RoomActions, RoomState } from "@/lib/room-state";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Video, VideoOff, ScreenShare, Hand, PhoneOff, Layout } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+
+// getDisplayMedia is not implemented on mobile browsers (iOS Safari,
+// Chrome Android, etc.). Detect once so we can show a helpful hint
+// instead of firing a hard error when the user taps the button.
+const canScreenShare =
+  typeof navigator !== "undefined" &&
+  typeof navigator.mediaDevices !== "undefined" &&
+  typeof navigator.mediaDevices.getDisplayMedia === "function";
 
 interface Props {
   state: RoomState;
@@ -51,17 +60,32 @@ export function RoomControls({ state, actions, onLeave }: Props) {
         />
       )}
       {isPublisher && local?.screenAllowed && (
-        <IconButton
-          active={local?.isScreenSharing}
-          onClick={() =>
-            run("screen", () =>
-              local?.isScreenSharing ? actions.stopScreenShare() : actions.startScreenShare(),
-            )
-          }
-          busy={busy === "screen"}
-          label={local?.isScreenSharing ? "Parar partilha" : "Partilhar ecrã"}
-          icon={<ScreenShare className={cn("h-4 w-4", local?.isScreenSharing && "text-emerald-400")} />}
-        />
+        canScreenShare ? (
+          <IconButton
+            active={local?.isScreenSharing}
+            onClick={() =>
+              run("screen", () =>
+                local?.isScreenSharing ? actions.stopScreenShare() : actions.startScreenShare(),
+              )
+            }
+            busy={busy === "screen"}
+            label={local?.isScreenSharing ? "Parar partilha" : "Partilhar ecrã"}
+            icon={<ScreenShare className={cn("h-4 w-4", local?.isScreenSharing && "text-emerald-400")} />}
+          />
+        ) : (
+          <IconButton
+            active={false}
+            onClick={() =>
+              toast.info("Partilha de ecrã indisponível no telemóvel", {
+                description:
+                  "Esta funcionalidade só está disponível em computador. Abre a sala num browser desktop para partilhar o teu ecrã.",
+                duration: 5000,
+              })
+            }
+            label="Partilha de ecrã disponível apenas em computador"
+            icon={<ScreenShare className="h-4 w-4 text-white/40" />}
+          />
+        )
       )}
 
       {!isPublisher && (
