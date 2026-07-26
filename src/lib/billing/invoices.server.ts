@@ -125,7 +125,70 @@ export async function ensureInvoiceForPayment(
     .update({ invoice_id: invoice.id })
     .eq("id", payment.id);
 
+  if (options.notify !== false) {
+    await sendInvoiceEmail(invoice.id).catch((e) =>
+      console.error("[billing] invoice email", e),
+    );
+  }
+
   return invoice.id;
+}
+
+/** Emails the invoice/receipt summary to the member (idempotent per invoice). */
+export async function sendInvoiceEmail(invoiceId: string) {
+  const { data: invoice } = await supabaseAdmin
+    .from("billing_invoices")
+    .select(
+      "id, number, currency, total_cents, issued_at, lines, user_id, customer_id",
+    )
+    .eq("id", invoiceId)
+    .maybeSingle();
+  if (!invoice) return;
+
+  const { data: customer } = invoice.customer_id
+    ? await supabaseAdmin
+        .from("billing_customers")
+        .select("email, name")
+        .eq("id", invoice.customer_id)
+        .maybeSingle()
+    : { data: null };
+
+  let email = customer?.email ?? null;
+  let name = customer?.name ?? null;
+  if (!email && invoice.user_id) {
+    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(
+      invoice.user_id,
+    );
+    email = authUser?.user?.email ?? null;
+    name =
+      name ??
+      ((authUser?.user?.user_metadata?.display_name as string | undefined) ??
+        null);
+  }
+  if (!email) return;
+
+  const lines = Array.isArray(invoice.lines)
+    ? (invoice.lines as unknown as InvoiceLine[])
+    : [];
+
+  const { sendTemplateEmail } = await import(
+    "@/lib/email-templates/send-email"
+  );
+
+  await sendTemplateEmail("invoice-receipt", email, {
+    idempotencyKey: `invoice-receipt-${invoice.id}`,
+    templateData: {
+      name: name ?? undefined,
+      invoiceNumber: invoice.number ?? "—",
+      issuedAt: fmtDate(invoice.issued_at),
+      total: money(invoice.total_cents, invoice.currency),
+      lines: lines.map((l) => ({
+        description: l.description,
+        quantity: l.quantity,
+        amount: money(l.amountCents, invoice.currency),
+      })),
+    },
+  });
 }
 
 /** Creates any missing invoices for a member's paid payments. */
@@ -139,11 +202,13 @@ export async function backfillInvoicesForUser(userId: string) {
     .order("created_at", { ascending: true })
     .limit(50);
   for (const r of rows ?? []) {
-    await ensureInvoiceForPayment(r.id).catch((e) =>
+    // Historic documents are created silently — no retroactive emails.
+    await ensureInvoiceForPayment(r.id, { notify: false }).catch((e) =>
       console.error("[billing] backfill invoice", e),
     );
   }
 }
+
 
 export function money(cents: number, currency: string): string {
   const value = (cents / 100).toFixed(2).replace(".", ",");
