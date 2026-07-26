@@ -476,8 +476,318 @@ export type Database = {
           },
         ]
       }
+      live_participants: {
+        Row: {
+          banned: boolean
+          banned_at: string | null
+          cam_allowed: boolean
+          connection_quality: string | null
+          created_at: string
+          hand_raised_at: string | null
+          id: string
+          invited_by: string | null
+          invited_to_stage_at: string | null
+          joined_at: string
+          kicked_at: string | null
+          left_at: string | null
+          live_id: string
+          mic_allowed: boolean
+          on_stage: boolean
+          role: Database["public"]["Enums"]["live_role"]
+          room: Database["public"]["Enums"]["live_room_target"]
+          screen_allowed: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          banned?: boolean
+          banned_at?: string | null
+          cam_allowed?: boolean
+          connection_quality?: string | null
+          created_at?: string
+          hand_raised_at?: string | null
+          id?: string
+          invited_by?: string | null
+          invited_to_stage_at?: string | null
+          joined_at?: string
+          kicked_at?: string | null
+          left_at?: string | null
+          live_id: string
+          mic_allowed?: boolean
+          on_stage?: boolean
+          role?: Database["public"]["Enums"]["live_role"]
+          room?: Database["public"]["Enums"]["live_room_target"]
+          screen_allowed?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          banned?: boolean
+          banned_at?: string | null
+          cam_allowed?: boolean
+          connection_quality?: string | null
+          created_at?: string
+          hand_raised_at?: string | null
+          id?: string
+          invited_by?: string | null
+          invited_to_stage_at?: string | null
+          joined_at?: string
+          kicked_at?: string | null
+          left_at?: string | null
+          live_id?: string
+          mic_allowed?: boolean
+          on_stage?: boolean
+          role?: Database["public"]["Enums"]["live_role"]
+          room?: Database["public"]["Enums"]["live_room_target"]
+          screen_allowed?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_participants_live_id_fkey"
+            columns: ["live_id"]
+            isOneToOne: false
+            referencedRelation: "lives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_poll_options: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          poll_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          poll_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          poll_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_poll_options_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "live_polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_poll_votes: {
+        Row: {
+          created_at: string
+          option_id: string
+          poll_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          option_id: string
+          poll_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          option_id?: string
+          poll_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_poll_votes_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "live_poll_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "live_polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_polls: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          created_by: string
+          id: string
+          live_id: string
+          opened_at: string | null
+          question: string
+          spotlight: boolean
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          live_id: string
+          opened_at?: string | null
+          question: string
+          spotlight?: boolean
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          live_id?: string
+          opened_at?: string | null
+          question?: string
+          spotlight?: boolean
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_polls_live_id_fkey"
+            columns: ["live_id"]
+            isOneToOne: false
+            referencedRelation: "lives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_questions: {
+        Row: {
+          answered_at: string | null
+          author_id: string
+          body: string
+          created_at: string
+          highlighted_at: string | null
+          id: string
+          live_id: string
+          status: string
+          updated_at: string
+          upvotes: number
+        }
+        Insert: {
+          answered_at?: string | null
+          author_id: string
+          body: string
+          created_at?: string
+          highlighted_at?: string | null
+          id?: string
+          live_id: string
+          status?: string
+          updated_at?: string
+          upvotes?: number
+        }
+        Update: {
+          answered_at?: string | null
+          author_id?: string
+          body?: string
+          created_at?: string
+          highlighted_at?: string | null
+          id?: string
+          live_id?: string
+          status?: string
+          updated_at?: string
+          upvotes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_questions_live_id_fkey"
+            columns: ["live_id"]
+            isOneToOne: false
+            referencedRelation: "lives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          live_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          live_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          live_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_reactions_live_id_fkey"
+            columns: ["live_id"]
+            isOneToOne: false
+            referencedRelation: "lives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_stage_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          kind: string
+          live_id: string
+          payload: Json
+          target_user_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          live_id: string
+          payload?: Json
+          target_user_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          live_id?: string
+          payload?: Json
+          target_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_stage_events_live_id_fkey"
+            columns: ["live_id"]
+            isOneToOne: false
+            referencedRelation: "lives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lives: {
         Row: {
+          backstage_started_at: string | null
           cf_live_input_id: string | null
           cf_playback_id: string | null
           cf_rtmps_url: string | null
@@ -488,10 +798,15 @@ export type Database = {
           created_by: string | null
           description: string | null
           duration_minutes: number
+          enabled_modules: Json
           expert_id: string | null
           id: string
+          livekit_room_prefix: string | null
+          mode: Database["public"]["Enums"]["live_mode"]
           published_lesson_id: string | null
           recording_video_uid: string | null
+          spotlight_user_id: string | null
+          stage_layout: Database["public"]["Enums"]["live_stage_layout"]
           started_at: string | null
           starts_at: string
           status: Database["public"]["Enums"]["live_status"]
@@ -499,8 +814,10 @@ export type Database = {
           title: string
           updated_at: string
           visibility: string
+          went_live_at: string | null
         }
         Insert: {
+          backstage_started_at?: string | null
           cf_live_input_id?: string | null
           cf_playback_id?: string | null
           cf_rtmps_url?: string | null
@@ -511,10 +828,15 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           duration_minutes?: number
+          enabled_modules?: Json
           expert_id?: string | null
           id?: string
+          livekit_room_prefix?: string | null
+          mode?: Database["public"]["Enums"]["live_mode"]
           published_lesson_id?: string | null
           recording_video_uid?: string | null
+          spotlight_user_id?: string | null
+          stage_layout?: Database["public"]["Enums"]["live_stage_layout"]
           started_at?: string | null
           starts_at: string
           status?: Database["public"]["Enums"]["live_status"]
@@ -522,8 +844,10 @@ export type Database = {
           title: string
           updated_at?: string
           visibility?: string
+          went_live_at?: string | null
         }
         Update: {
+          backstage_started_at?: string | null
           cf_live_input_id?: string | null
           cf_playback_id?: string | null
           cf_rtmps_url?: string | null
@@ -534,10 +858,15 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           duration_minutes?: number
+          enabled_modules?: Json
           expert_id?: string | null
           id?: string
+          livekit_room_prefix?: string | null
+          mode?: Database["public"]["Enums"]["live_mode"]
           published_lesson_id?: string | null
           recording_video_uid?: string | null
+          spotlight_user_id?: string | null
+          stage_layout?: Database["public"]["Enums"]["live_stage_layout"]
           started_at?: string | null
           starts_at?: string
           status?: Database["public"]["Enums"]["live_status"]
@@ -545,6 +874,7 @@ export type Database = {
           title?: string
           updated_at?: string
           visibility?: string
+          went_live_at?: string | null
         }
         Relationships: []
       }
@@ -1197,6 +1527,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_live_cohost: {
+        Args: { _live_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_live_publisher: {
+        Args: { _live_id: string; _user_id: string }
+        Returns: boolean
+      }
       match_lesson_chunks: {
         Args: {
           match_count?: number
@@ -1243,6 +1581,10 @@ export type Database = {
     Enums: {
       app_role: "admin" | "moderator" | "user"
       content_visibility: "public" | "purchased" | "club" | "premium"
+      live_mode: "broadcast" | "interactive"
+      live_role: "host" | "cohost" | "speaker" | "participant" | "viewer"
+      live_room_target: "backstage" | "main"
+      live_stage_layout: "solo" | "host_guest" | "spotlight" | "grid"
       live_status: "scheduled" | "live" | "ended" | "published"
     }
     CompositeTypes: {
@@ -1373,6 +1715,10 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "moderator", "user"],
       content_visibility: ["public", "purchased", "club", "premium"],
+      live_mode: ["broadcast", "interactive"],
+      live_role: ["host", "cohost", "speaker", "participant", "viewer"],
+      live_room_target: ["backstage", "main"],
+      live_stage_layout: ["solo", "host_guest", "spotlight", "grid"],
       live_status: ["scheduled", "live", "ended", "published"],
     },
   },
