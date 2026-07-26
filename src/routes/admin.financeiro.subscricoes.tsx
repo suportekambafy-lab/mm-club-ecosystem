@@ -158,7 +158,7 @@ function SubscriptionsPage() {
                   <td className="px-4 py-3">
                     <StatusBadge status={r.status} />
                     {r.cancelAtPeriodEnd ? (
-                      <p className="mt-1 text-[10px] uppercase tracking-wider text-amber-300">
+                      <p className="mt-1 text-[10px] uppercase tracking-wider text-admin-muted">
                         Cancela no fim
                       </p>
                     ) : null}

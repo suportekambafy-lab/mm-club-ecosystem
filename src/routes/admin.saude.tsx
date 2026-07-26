@@ -44,7 +44,7 @@ export const Route = createFileRoute("/admin/saude")({
 
 const DOT: Record<HealthLevel, string> = {
   ok: "bg-emerald-400",
-  warn: "bg-amber-400",
+  warn: "bg-admin-accent",
   down: "bg-red-500",
 };
 
@@ -52,7 +52,7 @@ function LevelIcon({ level }: { level: HealthLevel }) {
   if (level === "ok")
     return <CheckCircle2 className="h-4 w-4 text-emerald-400" />;
   if (level === "warn")
-    return <AlertTriangle className="h-4 w-4 text-amber-400" />;
+    return <AlertTriangle className="h-4 w-4 text-admin-accent" />;
   return <XCircle className="h-4 w-4 text-red-500" />;
 }
 
