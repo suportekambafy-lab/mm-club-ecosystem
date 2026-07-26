@@ -12,6 +12,7 @@ import type { GatewayPayment } from "./gateway/types";
 import { recordLedgerEntry } from "./ledger.server";
 import { assertTransition } from "./state-machine";
 import type { SubscriptionStatus } from "./types";
+import { buildCheckoutDescription } from "./description";
 
 // ---------------------------------------------------------------- customers
 
@@ -112,7 +113,7 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
     // Trial prices only validate the card: charge the smallest amount possible.
     amountCents: price.trialDays > 0 ? 1 : price.amountCents,
     currency: price.currency,
-    description: `MM Club — ${price.product.name}`,
+    description: buildCheckoutDescription(price),
     redirectUrl: `${origin}${successPath}`,
     webhookUrl: `${origin}/api/public/payments/gateway-webhook`,
     customerId: customer.gatewayCustomerId,
