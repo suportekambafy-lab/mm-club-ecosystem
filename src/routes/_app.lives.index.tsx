@@ -9,6 +9,13 @@ import { cn } from "@/lib/utils";
 import { LiveCountdown } from "@/components/mm/live-countdown";
 import { resolveLiveCoverUrl } from "@/lib/live-cover-url";
 import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  BannerSkeleton,
+  CardGridSkeleton,
+  SectionHeadingSkeleton,
+} from "@/components/mm/skeletons";
+
 
 type Live = Awaited<ReturnType<typeof listLives>>[number];
 
@@ -20,8 +27,35 @@ export const Route = createFileRoute("/_app/lives/")({
       { name: "description", content: "Sessões ao vivo e replays exclusivos do MM Club." },
     ],
   }),
+  pendingMs: 0,
+  pendingMinMs: 200,
+  pendingComponent: LivesSkeleton,
   component: LivesPage,
 });
+
+function LivesSkeleton() {
+  return (
+    <div className="space-y-14">
+      <SectionHeadingSkeleton />
+      <BannerSkeleton />
+      <section className="space-y-5">
+        <div className="space-y-2.5">
+          <Skeleton className="h-2.5 w-20" />
+          <Skeleton className="h-7 w-56" />
+        </div>
+        <CardGridSkeleton cards={3} className="grid gap-5 md:grid-cols-2 xl:grid-cols-3" />
+      </section>
+      <section className="space-y-5">
+        <div className="space-y-2.5">
+          <Skeleton className="h-2.5 w-20" />
+          <Skeleton className="h-7 w-40" />
+        </div>
+        <CardGridSkeleton cards={3} className="grid gap-5 md:grid-cols-2 xl:grid-cols-3" />
+      </section>
+    </div>
+  );
+}
+
 
 function LivesPage() {
   const initial = Route.useLoaderData();

@@ -25,6 +25,14 @@ import { courses } from "@/data/courses";
 import { computeCourseDuration } from "@/lib/course-duration";
 import { courseCoverImage } from "@/lib/course-cover";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
+import {
+  BannerSkeleton,
+  CinematicHeroSkeleton,
+  PanelSkeleton,
+  RailSkeleton,
+  TextLines,
+} from "@/components/mm/skeletons";
+
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -46,7 +54,7 @@ export const Route = createFileRoute("/_app/dashboard")({
 function DashboardPage() {
   const { user: sessionUser, loading: userLoading } = useCurrentUser();
   const user = sessionUser ?? fallbackUser;
-  const { progress } = useUserProgress();
+  const { progress, loaded: progressLoaded } = useUserProgress();
   const cont = continueFromProgress(progress);
   const featured = cont[0];
   const recommended = recommendedFromProgress(progress);
@@ -54,6 +62,7 @@ function DashboardPage() {
   // Real live from backend — takes priority over static nextLive placeholder.
   type RealLive = Awaited<ReturnType<typeof listLives>>[number];
   const [realFeaturedLive, setRealFeaturedLive] = useState<RealLive | null>(null);
+  const [livesLoaded, setLivesLoaded] = useState(false);
   useEffect(() => {
     let cancelled = false;
     const load = () => {
@@ -66,8 +75,11 @@ function DashboardPage() {
             .filter((l) => l.status === "scheduled" && new Date(l.starts_at).getTime() > Date.now() - 3600_000)
             .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0];
           setRealFeaturedLive(active ?? upcoming ?? null);
+          setLivesLoaded(true);
         })
-        .catch(() => {});
+        .catch(() => {
+          if (!cancelled) setLivesLoaded(true);
+        });
     };
     load();
     const channel = supabase
@@ -80,6 +92,11 @@ function DashboardPage() {
     };
   }, []);
 
+  // Only paint the dashboard when every essential source is resolved — avoids
+  // empty covers and the "wrong content → right content" flash.
+  const ready = !userLoading && progressLoaded && livesLoaded;
+  if (!ready) return <DashboardSkeleton />;
+
   return (
     <div className="space-y-16">
       {/* Cinematic hero — full bleed, autoplay muted loop, editorial overlay */}
@@ -89,6 +106,7 @@ function DashboardPage() {
       {realFeaturedLive && (realFeaturedLive.status === "live" || realFeaturedLive.status === "scheduled") && (
         <LiveHeroBanner live={realFeaturedLive} />
       )}
+
 
       {/* Continuar a construir */}
       {featured && <ContinueHero course={featured} />}
@@ -371,11 +389,14 @@ function CommunityBlock() {
           <Bell className="h-4 w-4 text-primary" />
           <h3 className="font-display text-lg text-foreground">Atividade recente</h3>
         </div>
-        {hydrated && posts.length === 0 ? (
+        {!hydrated ? (
+          <TextLines lines={3} className="mt-4" />
+        ) : posts.length === 0 ? (
           <p className="mt-3 text-sm text-muted-foreground">
             Ainda sem publicações. Sê o primeiro a partilhar na comunidade.
           </p>
         ) : (
+
           <ul className="mt-3 space-y-2.5">
             {posts.map((p) => (
               <li key={p.id} className="text-sm">
@@ -397,3 +418,19 @@ function CommunityBlock() {
   );
 }
 
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-16">
+      <CinematicHeroSkeleton />
+      <BannerSkeleton />
+      <RailSkeleton cards={3} />
+      <RailSkeleton cards={3} />
+      <PanelSkeleton lines={2} />
+      <section className="grid gap-4 md:grid-cols-2">
+        <PanelSkeleton lines={2} />
+        <PanelSkeleton lines={3} />
+      </section>
+    </div>
+  );
+}

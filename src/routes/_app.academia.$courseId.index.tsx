@@ -10,6 +10,8 @@ import { useUserProgress } from "@/hooks/use-user-progress";
 import { courseCoverBackground } from "@/lib/course-cover";
 import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb } from "@/lib/course-duration";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 export const Route = createFileRoute("/_app/academia/$courseId/")({
   loader: ({ params }) => {
@@ -25,8 +27,9 @@ function CourseDetail() {
   useAdminOverridesVersion(); // re-render when admin overrides change
   const course = coursesById[courseId];
   const expert = expertsById[course.expertId];
-  const { progress } = useUserProgress();
+  const { progress, loaded } = useUserProgress();
   const p = progress[course.id];
+
   const percent = Math.round((p?.progress ?? 0) * 100);
   const resumeLesson =
     (p?.lastLessonId ? findLesson(course, p.lastLessonId) : null) ??
@@ -43,6 +46,8 @@ function CourseDetail() {
     : courseCoverBackground(course);
 
 
+
+  if (!loaded) return <CourseDetailSkeleton />;
 
   return (
     <div className="max-w-full space-y-10 overflow-x-clip">
@@ -228,5 +233,41 @@ function CourseLessonRow({
         <span className="shrink-0 text-xs text-muted-foreground">{lesson.duration}</span>
       </Link>
     </li>
+  );
+}
+function CourseDetailSkeleton() {
+  return (
+    <div className="max-w-full space-y-10 overflow-x-clip">
+      <Skeleton className="h-4 w-24" />
+      <section className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,1fr)]">
+        <Skeleton className="aspect-video w-full rounded-2xl" />
+        <div className="space-y-4">
+          <Skeleton className="h-2.5 w-24" />
+          <Skeleton className="h-9 w-4/5" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+          <div className="flex items-center gap-3 pt-2">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-2.5 w-20" />
+            </div>
+          </div>
+          <Skeleton className="h-1 w-full rounded-full" />
+          <Skeleton className="h-11 w-40 rounded-full" />
+        </div>
+      </section>
+      <div className="space-y-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-4 rounded-2xl bg-surface-1 p-4 ring-1 ring-border">
+            <Skeleton className="h-16 w-28 shrink-0 rounded-lg" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
