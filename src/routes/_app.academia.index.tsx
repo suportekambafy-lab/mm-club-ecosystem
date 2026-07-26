@@ -34,7 +34,7 @@ function resumeLessonOf(course: Course, progress: ProgressByCourse) {
 }
 
 function AcademiaPage() {
-  const { progress } = useUserProgress();
+  const { progress, loaded } = useUserProgress();
 
   const { continuing, enrolled, featured } = useMemo(() => {
     const enrolled = liveCourses.map((c) => ({
@@ -50,6 +50,12 @@ function AcademiaPage() {
       });
     return { continuing, enrolled, featured: continuing[0] ?? enrolled[0] };
   }, [progress]);
+
+  // Wait for real progress before painting hero/cards, so covers and
+  // "continua onde ficaste" never flash the wrong state.
+  if (!loaded) return <AcademiaSkeleton />;
+
+
 
   return (
     <div className="max-w-full space-y-16 overflow-x-clip">
