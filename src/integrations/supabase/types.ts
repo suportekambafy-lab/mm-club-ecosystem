@@ -2530,6 +2530,129 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_log: {
+        Row: {
+          category: string
+          channel: string
+          clicked_at: string | null
+          context: Json
+          created_at: string
+          dedupe_key: string | null
+          event_type: string | null
+          id: string
+          opened_at: string | null
+          provider_id: string | null
+          reason: string | null
+          recipient: string
+          resent_by: string | null
+          resent_of: string | null
+          status: string
+          subject: string
+          template_key: string
+          user_id: string | null
+        }
+        Insert: {
+          category?: string
+          channel?: string
+          clicked_at?: string | null
+          context?: Json
+          created_at?: string
+          dedupe_key?: string | null
+          event_type?: string | null
+          id?: string
+          opened_at?: string | null
+          provider_id?: string | null
+          reason?: string | null
+          recipient: string
+          resent_by?: string | null
+          resent_of?: string | null
+          status?: string
+          subject: string
+          template_key: string
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          channel?: string
+          clicked_at?: string | null
+          context?: Json
+          created_at?: string
+          dedupe_key?: string | null
+          event_type?: string | null
+          id?: string
+          opened_at?: string | null
+          provider_id?: string | null
+          reason?: string | null
+          recipient?: string
+          resent_by?: string | null
+          resent_of?: string | null
+          status?: string
+          subject?: string
+          template_key?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      notification_templates: {
+        Row: {
+          active: boolean
+          body_html: string
+          category: string
+          channel: string
+          created_at: string
+          cta_label: string | null
+          cta_url: string | null
+          heading: string | null
+          key: string
+          locale: string
+          preview_text: string
+          subject: string
+          text_body: string | null
+          updated_at: string
+          updated_by: string | null
+          variables: Json
+          version: number
+        }
+        Insert: {
+          active?: boolean
+          body_html: string
+          category?: string
+          channel?: string
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          heading?: string | null
+          key: string
+          locale?: string
+          preview_text?: string
+          subject: string
+          text_body?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          variables?: Json
+          version?: number
+        }
+        Update: {
+          active?: boolean
+          body_html?: string
+          category?: string
+          channel?: string
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          heading?: string | null
+          key?: string
+          locale?: string
+          preview_text?: string
+          subject?: string
+          text_body?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          variables?: Json
+          version?: number
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           actor_id: string | null
