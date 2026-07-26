@@ -239,7 +239,15 @@ export function securityGate(policy: SecurityPolicy) {
     .middleware([requireSupabaseAuth])
     .server(async ({ next, context }) => {
       const security = await runGate(policy, context);
-      return next({ context: { security } });
+      // Re-expose the authenticated context so handlers keep full typing.
+      return next({
+        context: {
+          security,
+          supabase: context.supabase,
+          userId: context.userId,
+          claims: context.claims,
+        },
+      });
     });
 }
 
