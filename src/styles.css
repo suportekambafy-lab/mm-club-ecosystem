@@ -401,8 +401,25 @@ html[data-live-immersive="1"] [data-mobile-tabbar] { display: none !important; }
   --gold-soft: var(--admin-accent);
   --gold-deep: var(--admin-accent);
 }
+/* Light mode for the admin shell (Stripe light) */
+.admin-shell.admin-light {
+  color-scheme: light;
+  --admin-bg: oklch(1 0 0);
+  --admin-sidebar: oklch(0.985 0 0);
+  --admin-panel: oklch(0.968 0 0);
+  --admin-panel-2: oklch(0.945 0 0);
+  --admin-hover: oklch(0.915 0 0);
+  --admin-border: oklch(0 0 0 / 10%);
+  --admin-fg: oklch(0.2 0 0);
+  --admin-muted: oklch(0.45 0 0);
+  --admin-faint: oklch(0.58 0 0);
+  --admin-accent: oklch(0.53 0.23 264);
+  --admin-grid: oklch(0 0 0 / 8%);
+  --input: oklch(0 0 0 / 12%);
+}
 .admin-shell .font-display { font-family: var(--font-admin); letter-spacing: -0.02em; }
 .admin-shell, .admin-shell h1, .admin-shell h2, .admin-shell h3,
 .admin-shell h4, .admin-shell h5, .admin-shell h6, .admin-shell .font-display {
   font-family: var(--font-admin) !important;
 }
+
