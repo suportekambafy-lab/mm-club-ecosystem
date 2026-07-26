@@ -79,6 +79,7 @@ type AdminTo =
   | "/admin/eventos"
   | "/admin/lives"
   | "/admin/ferramentas"
+  | "/admin/comunicacao"
   | "/admin/seguranca";
 
 type NavItem = { to: AdminTo; label: string; icon: typeof Home; exact?: boolean };
