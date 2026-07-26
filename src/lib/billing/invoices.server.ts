@@ -389,6 +389,7 @@ export async function buildInvoicePdf(inv: InvoicePdfData) {
     const f = strong ? bold : regular;
     const size = strong ? 13 : 10;
     if (strong) {
+      ty -= 12;
       page.drawLine({
         start: { x: width - M - 220, y: ty + 18 },
         end: { x: width - M, y: ty + 18 },
@@ -409,7 +410,7 @@ export async function buildInvoicePdf(inv: InvoicePdfData) {
   }
 
   if (paid) {
-    text(`Pago em ${fmtDate(inv.paidAt)}`, M, ty + 24, {
+    text(`Pago em ${fmtDate(inv.paidAt)}`, M, ty + 30, {
       size: 10,
       color: muted,
     });
