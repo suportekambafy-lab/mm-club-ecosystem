@@ -109,7 +109,8 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
       : "/dashboard?checkout=success");
 
   const payment = await gw.createCharge({
-    amountCents: price.amountCents,
+    // Trial prices only validate the card: charge the smallest amount possible.
+    amountCents: price.trialDays > 0 ? 1 : price.amountCents,
     currency: price.currency,
     description: `MM Club — ${price.product.name}`,
     redirectUrl: `${origin}${successPath}`,
