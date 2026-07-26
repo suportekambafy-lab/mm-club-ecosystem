@@ -32,6 +32,7 @@ import { Route as AdminFinanceiroRouteImport } from './routes/admin.financeiro'
 import { Route as AdminFerramentasRouteImport } from './routes/admin.ferramentas'
 import { Route as AdminEventosRouteImport } from './routes/admin.eventos'
 import { Route as AdminCursosRouteImport } from './routes/admin.cursos'
+import { Route as AdminComunicacaoRouteImport } from './routes/admin.comunicacao'
 import { Route as AdminAulasRouteImport } from './routes/admin.aulas'
 import { Route as AppSubscricaoRouteImport } from './routes/_app.subscricao'
 import { Route as AppShortsRouteImport } from './routes/_app.shorts'
@@ -197,6 +198,11 @@ const AdminEventosRoute = AdminEventosRouteImport.update({
 const AdminCursosRoute = AdminCursosRouteImport.update({
   id: '/cursos',
   path: '/cursos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminComunicacaoRoute = AdminComunicacaoRouteImport.update({
+  id: '/comunicacao',
+  path: '/comunicacao',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAulasRoute = AdminAulasRouteImport.update({
@@ -504,6 +510,7 @@ export interface FileRoutesByFullPath {
   '/shorts': typeof AppShortsRoute
   '/subscricao': typeof AppSubscricaoRoute
   '/admin/aulas': typeof AdminAulasRoute
+  '/admin/comunicacao': typeof AdminComunicacaoRoute
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
@@ -577,6 +584,7 @@ export interface FileRoutesByTo {
   '/shorts': typeof AppShortsRoute
   '/subscricao': typeof AppSubscricaoRoute
   '/admin/aulas': typeof AdminAulasRoute
+  '/admin/comunicacao': typeof AdminComunicacaoRoute
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
@@ -651,6 +659,7 @@ export interface FileRoutesById {
   '/_app/shorts': typeof AppShortsRoute
   '/_app/subscricao': typeof AppSubscricaoRoute
   '/admin/aulas': typeof AdminAulasRoute
+  '/admin/comunicacao': typeof AdminComunicacaoRoute
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
@@ -729,6 +738,7 @@ export interface FileRouteTypes {
     | '/shorts'
     | '/subscricao'
     | '/admin/aulas'
+    | '/admin/comunicacao'
     | '/admin/cursos'
     | '/admin/eventos'
     | '/admin/ferramentas'
@@ -802,6 +812,7 @@ export interface FileRouteTypes {
     | '/shorts'
     | '/subscricao'
     | '/admin/aulas'
+    | '/admin/comunicacao'
     | '/admin/cursos'
     | '/admin/eventos'
     | '/admin/ferramentas'
@@ -875,6 +886,7 @@ export interface FileRouteTypes {
     | '/_app/shorts'
     | '/_app/subscricao'
     | '/admin/aulas'
+    | '/admin/comunicacao'
     | '/admin/cursos'
     | '/admin/eventos'
     | '/admin/ferramentas'
@@ -1122,6 +1134,13 @@ declare module '@tanstack/react-router' {
       path: '/cursos'
       fullPath: '/admin/cursos'
       preLoaderRoute: typeof AdminCursosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/comunicacao': {
+      id: '/admin/comunicacao'
+      path: '/comunicacao'
+      fullPath: '/admin/comunicacao'
+      preLoaderRoute: typeof AdminComunicacaoRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/aulas': {
@@ -1643,6 +1662,7 @@ const AdminLivesRouteWithChildren = AdminLivesRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminAulasRoute: typeof AdminAulasRoute
+  AdminComunicacaoRoute: typeof AdminComunicacaoRoute
   AdminCursosRoute: typeof AdminCursosRoute
   AdminEventosRoute: typeof AdminEventosRoute
   AdminFerramentasRoute: typeof AdminFerramentasRoute
@@ -1656,6 +1676,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAulasRoute: AdminAulasRoute,
+  AdminComunicacaoRoute: AdminComunicacaoRoute,
   AdminCursosRoute: AdminCursosRoute,
   AdminEventosRoute: AdminEventosRoute,
   AdminFerramentasRoute: AdminFerramentasRoute,
