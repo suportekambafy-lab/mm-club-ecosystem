@@ -195,7 +195,32 @@ function AuthPage() {
               </p>
             </motion.div>
 
+            {activeEmail && (
+              <div className="mt-6 rounded-xl border border-border bg-muted/30 p-4">
+                <p className="text-sm text-muted-foreground">
+                  Sessão ativa como <span className="font-medium text-foreground">{activeEmail}</span>
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => navigate({ to: redirect ?? "/dashboard" })}
+                    className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+                  >
+                    Continuar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={switchAccount}
+                    className="rounded-lg border border-border px-4 py-2 text-sm font-medium"
+                  >
+                    Entrar com outra conta
+                  </button>
+                </div>
+              </div>
+            )}
+
             <form onSubmit={onSubmit} className="mt-8 space-y-4">
+
               {mode === "signup" && (
                 <Field
                   label="Nome"
