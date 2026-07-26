@@ -8,6 +8,8 @@ import { useUserProgress, type ProgressByCourse } from "@/hooks/use-user-progres
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 import { courseCoverBackground } from "@/lib/course-cover";
 import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb, parseDurationToMinutes, formatMinutes } from "@/lib/course-duration";
+import { BannerSkeleton, CardGridSkeleton, RailSkeleton } from "@/components/mm/skeletons";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_app/academia/")({
   head: () => ({
@@ -389,6 +391,23 @@ function ComingSoonCard({ course }: { course: Course }) {
         )}
         <p className="text-xs text-muted-foreground line-clamp-2">{course.description}</p>
       </div>
+    </div>
+  );
+}
+
+function AcademiaSkeleton() {
+  return (
+    <div className="max-w-full space-y-16 overflow-x-clip">
+      <BannerSkeleton />
+      <RailSkeleton cards={3} cardClassName="w-[300px] shrink-0" />
+      <section className="space-y-5">
+        <div className="space-y-2.5 px-1">
+          <Skeleton className="h-2.5 w-20" />
+          <Skeleton className="h-8 w-72 max-w-full" />
+          <Skeleton className="h-4 w-80 max-w-full" />
+        </div>
+        <CardGridSkeleton cards={8} />
+      </section>
     </div>
   );
 }
