@@ -41,16 +41,19 @@ export type SecurityAlert = {
 
 export type SecurityOverview = {
   emergency: { enabled: boolean; reason: string | null; since: string | null };
+  readOnly: { enabled: boolean; reason: string | null; since: string | null };
   counts24h: Record<string, number>;
   failedLogins24h: number;
   blocked24h: number;
   adminAccess24h: number;
   webhookFailures24h: number;
+  newDevices24h: number;
   topIps: Array<{ ip: string; count: number }>;
   alerts: SecurityAlert[];
   events: SecurityEventRow[];
   adminActions: AdminActionRow[];
 };
+
 
 export const getSecurityOverview = createServerFn({ method: "POST" })
   .middleware([
