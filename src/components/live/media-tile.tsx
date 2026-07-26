@@ -51,12 +51,7 @@ function MediaTileBase({ participant, actions, className, preferScreen, showName
     };
   }, [audioTrack?.id, actions]);
 
-  // Consider camera on when we have a video track that isn't muted AND the
-  // participant hasn't explicitly disabled the camera.
   const hasVideo = Boolean(videoTrack) && !videoTrack?.muted && participant.camOn !== false;
-
-  const initials = (participant.displayName || "?").trim().split(/\s+/).slice(0, 2).map((s) => s[0]).join("").toUpperCase() || "?";
-  const showAvatarImage = Boolean(participant.avatarUrl) && !avatarBroken;
 
   return (
     <div
@@ -71,34 +66,23 @@ function MediaTileBase({ participant, actions, className, preferScreen, showName
           ref={videoRef}
           autoPlay
           playsInline
-          // Always mute the <video>: remote audio is bound to a separate
-          // <audio> element (see below). Muting eliminates the browser's
-          // autoplay-blocked "play" overlay on toggling the camera back on
-          // and mirrors what Meet/Zoom do.
           muted
           disablePictureInPicture
           controls={false}
           className={cn(
             "h-full w-full object-cover",
-            // Mirror the local camera so users see themselves like a mirror —
-            // Meet/Zoom convention. Never mirror screen shares.
             participant.isLocal && videoTrack?.source === "camera" && "scale-x-[-1]",
           )}
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-900 to-neutral-950">
-          {showAvatarImage ? (
-            <img
-              src={participant.avatarUrl ?? ""}
-              alt=""
-              onError={() => setAvatarBroken(true)}
-              className="h-24 w-24 rounded-full object-cover ring-2 ring-white/10 shadow-2xl sm:h-32 sm:w-32"
-            />
-          ) : (
-            <div className="grid h-24 w-24 place-items-center rounded-full bg-white/[0.06] text-2xl font-semibold text-white/85 ring-2 ring-white/10 shadow-2xl sm:h-32 sm:w-32 sm:text-3xl">
-              {initials}
-            </div>
-          )}
+          <MemberAvatar
+            name={participant.displayName}
+            avatarUrl={participant.avatarUrl}
+            verified={participant.role === "host"}
+            size={128}
+            className="shadow-2xl"
+          />
         </div>
       )}
 
