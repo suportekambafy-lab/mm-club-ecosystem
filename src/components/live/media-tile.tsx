@@ -14,9 +14,12 @@ interface Props {
   /** When true, treat screen share as primary. */
   preferScreen?: boolean;
   showName?: boolean;
+  /** Skip binding the audio track (useful for a PiP overlay where the primary
+   *  tile already plays the participant's audio). */
+  suppressAudio?: boolean;
 }
 
-function MediaTileBase({ participant, actions, className, preferScreen, showName = true }: Props) {
+function MediaTileBase({ participant, actions, className, preferScreen, showName = true, suppressAudio }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [avatarBroken, setAvatarBroken] = useState(false);
@@ -25,9 +28,9 @@ function MediaTileBase({ participant, actions, className, preferScreen, showName
     (preferScreen && participant.tracks.find((t) => t.kind === "video" && t.source === "screen")) ||
     participant.tracks.find((t) => t.kind === "video" && t.source === "camera") ||
     participant.tracks.find((t) => t.kind === "video");
-  const audioTrack: MediaTrack | undefined = participant.tracks.find(
-    (t) => t.kind === "audio" && !participant.isLocal,
-  );
+  const audioTrack: MediaTrack | undefined = suppressAudio
+    ? undefined
+    : participant.tracks.find((t) => t.kind === "audio" && !participant.isLocal);
 
   useEffect(() => {
     const el = videoRef.current;
@@ -67,8 +70,19 @@ function MediaTileBase({ participant, actions, className, preferScreen, showName
           ref={videoRef}
           autoPlay
           playsInline
-          muted={participant.isLocal}
-          className="h-full w-full object-cover"
+          // Always mute the <video>: remote audio is bound to a separate
+          // <audio> element (see below). Muting eliminates the browser's
+          // autoplay-blocked "play" overlay on toggling the camera back on
+          // and mirrors what Meet/Zoom do.
+          muted
+          disablePictureInPicture
+          controls={false}
+          className={cn(
+            "h-full w-full object-cover",
+            // Mirror the local camera so users see themselves like a mirror —
+            // Meet/Zoom convention. Never mirror screen shares.
+            participant.isLocal && videoTrack?.source === "camera" && "scale-x-[-1]",
+          )}
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-900 to-neutral-950">
@@ -136,6 +150,7 @@ export const MediaTile = memo(MediaTileBase, (a, b) => {
     pa.connectionQuality === pb.connectionQuality &&
     a.preferScreen === b.preferScreen &&
     a.showName === b.showName &&
+    a.suppressAudio === b.suppressAudio &&
     a.className === b.className
   );
 });

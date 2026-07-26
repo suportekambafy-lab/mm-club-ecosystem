@@ -254,7 +254,11 @@ function SalaShell({
   children: React.ReactNode;
 }) {
   const [chatOpen, setChatOpen] = useState(true);
+  const [peopleOpen, setPeopleOpen] = useState(false);
   const [viewerCount, setViewerCount] = useState<number>(0);
+  const [people, setPeople] = useState<
+    Array<{ user_id: string; role: string; on_stage: boolean; hand_raised_at: string | null; display_name: string; avatar_url: string | null }>
+  >([]);
   const [elapsed, setElapsed] = useState<string>("");
   const [wentLiveAt, setWentLiveAt] = useState<string | null>(null);
 
@@ -284,16 +288,34 @@ function SalaShell({
     };
   }, [liveId]);
 
-  // Real-time viewer/participant count (all rows without left_at).
+  // Real-time viewer/participant list + count (all rows without left_at).
   useEffect(() => {
     let cancelled = false;
     async function refresh() {
-      const { count } = await supabase
+      const { data, count } = await supabase
         .from("live_participants")
-        .select("id", { count: "exact", head: true })
+        .select("user_id, role, on_stage, hand_raised_at", { count: "exact" })
         .eq("live_id", liveId)
         .is("left_at", null);
-      if (!cancelled) setViewerCount(count ?? 0);
+      if (cancelled) return;
+      setViewerCount(count ?? 0);
+      const rows = (data ?? []) as Array<{ user_id: string; role: string; on_stage: boolean; hand_raised_at: string | null }>;
+      const ids = Array.from(new Set(rows.map((r) => r.user_id)));
+      let profs: Record<string, { display_name: string; avatar_url: string | null }> = {};
+      if (ids.length) {
+        const { data: p } = await supabase.from("profiles").select("id, display_name, avatar_url").in("id", ids);
+        for (const row of (p ?? []) as Array<{ id: string; display_name: string; avatar_url: string | null }>) {
+          profs[row.id] = { display_name: row.display_name, avatar_url: row.avatar_url };
+        }
+      }
+      if (cancelled) return;
+      setPeople(
+        rows.map((r) => ({
+          ...r,
+          display_name: profs[r.user_id]?.display_name ?? "Membro",
+          avatar_url: profs[r.user_id]?.avatar_url ?? null,
+        })),
+      );
     }
     refresh();
     const suffix = Math.random().toString(36).slice(2, 8);
@@ -350,10 +372,15 @@ function SalaShell({
               <span className="tabular-nums text-red-200/90">· {elapsed}</span>
             </span>
           )}
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-2.5 py-1 text-white/80 ring-1 ring-white/10">
+          <button
+            type="button"
+            onClick={() => setPeopleOpen(true)}
+            aria-label="Ver participantes"
+            className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-2.5 py-1 text-white/80 ring-1 ring-white/10 transition hover:bg-white/10 hover:text-white"
+          >
             <Users className="h-3.5 w-3.5" />
             <span className="tabular-nums">{viewerCount}</span>
-          </span>
+          </button>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <div className="hidden text-[10px] uppercase tracking-[0.2em] text-white/40 sm:block">Sala · Beta</div>
@@ -392,6 +419,60 @@ function SalaShell({
             </div>
             <div className="flex-1 min-h-0 p-2">
               <LiveChat liveId={liveId} currentUserId={userId} />
+            </div>
+          </div>
+        )}
+        {peopleOpen && (
+          <div className="absolute inset-y-0 right-0 z-50 flex w-full max-w-sm flex-col border-l border-white/10 bg-neutral-950/95 backdrop-blur-md md:w-[340px]">
+            <div className="flex items-center justify-between border-b border-white/5 px-3 py-2.5">
+              <div className="text-sm font-semibold">
+                Participantes <span className="text-white/40">· {people.length}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPeopleOpen(false)}
+                className="grid h-8 w-8 place-items-center rounded-lg bg-white/5 hover:bg-white/10"
+                aria-label="Fechar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2">
+              {people.length === 0 ? (
+                <div className="grid h-full place-items-center px-4 text-center text-xs text-white/50">
+                  Ainda ninguém aqui.
+                </div>
+              ) : (
+                <ul className="space-y-1">
+                  {people
+                    .slice()
+                    .sort((a, b) => Number(b.on_stage) - Number(a.on_stage) || a.display_name.localeCompare(b.display_name))
+                    .map((p) => (
+                      <li
+                        key={p.user_id}
+                        className="flex items-center gap-2 rounded-xl bg-white/[0.03] px-2.5 py-2 ring-1 ring-white/5"
+                      >
+                        <div className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-white/10 text-xs font-semibold text-white/80">
+                          {p.avatar_url ? (
+                            <img src={p.avatar_url} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            (p.display_name || "?").slice(0, 2).toUpperCase()
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm text-white">{p.display_name}</div>
+                          <div className="flex items-center gap-1.5 text-[10.5px] text-white/50">
+                            {p.role === "host" && <span className="text-[hsl(45_86%_60%)]">Host</span>}
+                            {p.role === "cohost" && <span className="text-[hsl(45_86%_60%)]">Co-host</span>}
+                            {p.on_stage && p.role !== "host" && p.role !== "cohost" && <span>No palco</span>}
+                            {!p.on_stage && p.role !== "host" && p.role !== "cohost" && <span>Espectador</span>}
+                            {p.hand_raised_at && <span className="text-amber-300">· mão levantada</span>}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                </ul>
+              )}
             </div>
           </div>
         )}
