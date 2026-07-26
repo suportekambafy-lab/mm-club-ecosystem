@@ -14,6 +14,17 @@ import { uploadMedia } from "@/lib/media-upload";
 type LiveRow = Awaited<ReturnType<typeof adminListLives>>[number];
 
 export const Route = createFileRoute("/admin/lives/")({
+  head: () => ({
+    meta: [
+      { title: "Admin Lives — MM Club" },
+      { name: "description", content: "Gerir sessões ao vivo, transmissões e salas interativas do MM Club." },
+      { property: "og:title", content: "Admin Lives — MM Club" },
+      { property: "og:description", content: "Gerir sessões ao vivo, transmissões e salas interativas do MM Club." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
   component: AdminLives,
 });
 
@@ -421,6 +432,7 @@ function AdminLives() {
                   <Link
                     to="/lives/$liveId/sala"
                     params={{ liveId: r.id }}
+                    reloadDocument
                     className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-400/20"
                     title="Modo interativo (Beta) — LiveKit"
                   >
