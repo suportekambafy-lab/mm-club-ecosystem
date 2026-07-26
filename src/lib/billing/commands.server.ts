@@ -371,18 +371,23 @@ async function activateSubscription(args: {
     const m = mandates.find((x) => x.id === args.payment.mandateId);
     const { data: pm } = await supabaseAdmin
       .from("billing_payment_methods")
-      .insert({
-        customer_id: args.customerId,
-        user_id: args.userId,
-        gateway: gw.name,
-        gateway_mandate_id: args.payment.mandateId,
-        method: m?.method ?? args.payment.method,
-        brand: m?.brand ?? null,
-        last4: m?.last4 ?? null,
-        is_default: true,
-      })
+      .upsert(
+        {
+          customer_id: args.customerId,
+          user_id: args.userId,
+          gateway: gw.name,
+          gateway_mandate_id: args.payment.mandateId,
+          method: m?.method ?? args.payment.method,
+          brand: m?.brand ?? null,
+          last4: m?.last4 ?? null,
+          is_default: true,
+          status: "active",
+        },
+        { onConflict: "user_id,gateway_mandate_id" },
+      )
       .select("id")
       .maybeSingle();
+
     paymentMethodId = pm?.id ?? null;
   }
 

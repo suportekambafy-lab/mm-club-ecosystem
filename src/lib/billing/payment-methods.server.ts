@@ -54,18 +54,25 @@ export async function syncPaymentMethods(userId: string): Promise<void> {
         })
         .eq("id", existing.id);
     } else {
-      await supabaseAdmin.from("billing_payment_methods").insert({
-        customer_id: customer.id,
-        user_id: userId,
-        gateway: gw.name,
-        gateway_mandate_id: m.id,
-        method: m.method,
-        brand: m.brand,
-        last4: m.last4,
-        is_default: !hasDefault && first,
-        status: "active",
-      });
+      // Upsert (not insert): concurrent syncs would otherwise duplicate the
+      // same mandate. The unique index on (user_id, gateway_mandate_id) makes
+      // the second writer update instead of inserting a twin row.
+      await supabaseAdmin.from("billing_payment_methods").upsert(
+        {
+          customer_id: customer.id,
+          user_id: userId,
+          gateway: gw.name,
+          gateway_mandate_id: m.id,
+          method: m.method,
+          brand: m.brand,
+          last4: m.last4,
+          is_default: !hasDefault && first,
+          status: "active",
+        },
+        { onConflict: "user_id,gateway_mandate_id" },
+      );
     }
+
     first = false;
   }
 
