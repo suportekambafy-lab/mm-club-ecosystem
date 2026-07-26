@@ -582,7 +582,15 @@ export async function resolveRecoveryForPayment(args: {
   const subscriptionId = attempt.subscription_id as string;
   const userId = attempt.user_id as string;
 
-  if (args.outcome === "paid") {
+  const owedForCycle = attempt.amount_cents ?? 0;
+  const settledShort =
+    args.outcome === "paid" &&
+    typeof args.paidCents === "number" &&
+    owedForCycle > 0 &&
+    args.paidCents < owedForCycle;
+  const outcome = settledShort ? "partially_paid" : args.outcome;
+
+  if (outcome === "paid") {
     await supabaseAdmin
       .from("billing_dunning_attempts")
       .update({
@@ -594,6 +602,7 @@ export async function resolveRecoveryForPayment(args: {
     await closeCycle(cycleKey, subscriptionId, userId, "recovered");
     return;
   }
+
 
   if (args.outcome === "partially_paid") {
     const owed = Math.max(0, (attempt.amount_cents ?? 0) - (args.paidCents ?? 0));
