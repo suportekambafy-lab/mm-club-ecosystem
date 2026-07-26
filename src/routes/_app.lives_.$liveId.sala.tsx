@@ -119,9 +119,11 @@ function SalaRoute() {
     };
   }, [liveId]);
 
-  // (Re)join the room whenever target changes.
+  // (Re)join the room whenever target changes OR the session is cleared
+  // (e.g. after being promoted to the stage — we need a new publisher token).
   useEffect(() => {
     if (!authReady || !userId || !live) return;
+    if (session) return;
     if (joinLockRef.current) return;
     joinLockRef.current = true;
     setError(null);
@@ -131,7 +133,8 @@ function SalaRoute() {
       .finally(() => {
         joinLockRef.current = false;
       });
-  }, [authReady, userId, target, liveId, joinRoomFn, live]);
+  }, [authReady, userId, target, liveId, joinRoomFn, live, session]);
+
 
   // If the room went live while we're still in backstage as publisher, move to main.
   useEffect(() => {
