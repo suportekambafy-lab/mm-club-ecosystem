@@ -411,12 +411,21 @@ export function useRoomState({
   const startScreenShare = useCallback(async () => {
     const lp = roomRef.current?.localParticipant;
     if (!lp) return;
-    await lp.setScreenShareEnabled(true, { audio: true });
+    try {
+      await lp.setScreenShareEnabled(true, { audio: true, selfBrowserSurface: "include" });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      // NotAllowedError => user cancelled the OS picker; anything else is a real failure.
+      if (!/NotAllowedError|Permission denied/i.test(msg)) {
+        console.error("[useRoomState] startScreenShare failed", err);
+        alert(`Não foi possível partilhar o ecrã: ${msg}`);
+      }
+    }
   }, []);
   const stopScreenShare = useCallback(async () => {
     const lp = roomRef.current?.localParticipant;
     if (!lp) return;
-    await lp.setScreenShareEnabled(false);
+    await lp.setScreenShareEnabled(false).catch((e) => console.warn("[useRoomState] stopScreenShare", e));
   }, []);
   const leave = useCallback(async () => {
     await roomRef.current?.disconnect();
