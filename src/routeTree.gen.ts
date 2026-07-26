@@ -42,6 +42,7 @@ import { Route as AppComunidadeRouteImport } from './routes/_app.comunidade'
 import { Route as AppCodigoRouteImport } from './routes/_app.codigo'
 import { Route as AppAcademiaRouteImport } from './routes/_app.academia'
 import { Route as AdminLivesIndexRouteImport } from './routes/admin.lives.index'
+import { Route as AdminFinanceiroIndexRouteImport } from './routes/admin.financeiro.index'
 import { Route as AppLivesIndexRouteImport } from './routes/_app.lives.index'
 import { Route as AppAcademiaIndexRouteImport } from './routes/_app.academia.index'
 import { Route as ApiRealtimeSessionRouteImport } from './routes/api.realtime.session'
@@ -233,6 +234,11 @@ const AdminLivesIndexRoute = AdminLivesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminLivesRoute,
 } as any)
+const AdminFinanceiroIndexRoute = AdminFinanceiroIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminFinanceiroRoute,
+} as any)
 const AppLivesIndexRoute = AppLivesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -405,7 +411,7 @@ export interface FileRoutesByFullPath {
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
-  '/admin/financeiro': typeof AdminFinanceiroRoute
+  '/admin/financeiro': typeof AdminFinanceiroRouteWithChildren
   '/admin/lives': typeof AdminLivesRouteWithChildren
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
@@ -421,6 +427,7 @@ export interface FileRoutesByFullPath {
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia/': typeof AppAcademiaIndexRoute
   '/lives/': typeof AppLivesIndexRoute
+  '/admin/financeiro/': typeof AdminFinanceiroIndexRoute
   '/admin/lives/': typeof AdminLivesIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
   '/ferramentas/studio/criativos': typeof AppFerramentasStudioCriativosRoute
@@ -462,7 +469,6 @@ export interface FileRoutesByTo {
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
-  '/admin/financeiro': typeof AdminFinanceiroRoute
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
@@ -475,6 +481,7 @@ export interface FileRoutesByTo {
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia': typeof AppAcademiaIndexRoute
   '/lives': typeof AppLivesIndexRoute
+  '/admin/financeiro': typeof AdminFinanceiroIndexRoute
   '/admin/lives': typeof AdminLivesIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
   '/ferramentas/studio/criativos': typeof AppFerramentasStudioCriativosRoute
@@ -521,7 +528,7 @@ export interface FileRoutesById {
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
-  '/admin/financeiro': typeof AdminFinanceiroRoute
+  '/admin/financeiro': typeof AdminFinanceiroRouteWithChildren
   '/admin/lives': typeof AdminLivesRouteWithChildren
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
@@ -537,6 +544,7 @@ export interface FileRoutesById {
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/_app/academia/': typeof AppAcademiaIndexRoute
   '/_app/lives/': typeof AppLivesIndexRoute
+  '/admin/financeiro/': typeof AdminFinanceiroIndexRoute
   '/admin/lives/': typeof AdminLivesIndexRoute
   '/_app/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
   '/_app/ferramentas/studio/criativos': typeof AppFerramentasStudioCriativosRoute
@@ -599,6 +607,7 @@ export interface FileRouteTypes {
     | '/api/realtime/session'
     | '/academia/'
     | '/lives/'
+    | '/admin/financeiro/'
     | '/admin/lives/'
     | '/academia/$courseId/$lessonId'
     | '/ferramentas/studio/criativos'
@@ -640,7 +649,6 @@ export interface FileRouteTypes {
     | '/admin/cursos'
     | '/admin/eventos'
     | '/admin/ferramentas'
-    | '/admin/financeiro'
     | '/admin/saude'
     | '/admin/transcricoes'
     | '/api/chat'
@@ -653,6 +661,7 @@ export interface FileRouteTypes {
     | '/api/realtime/session'
     | '/academia'
     | '/lives'
+    | '/admin/financeiro'
     | '/admin/lives'
     | '/academia/$courseId/$lessonId'
     | '/ferramentas/studio/criativos'
@@ -714,6 +723,7 @@ export interface FileRouteTypes {
     | '/api/realtime/session'
     | '/_app/academia/'
     | '/_app/lives/'
+    | '/admin/financeiro/'
     | '/admin/lives/'
     | '/_app/academia/$courseId/$lessonId'
     | '/_app/ferramentas/studio/criativos'
@@ -992,6 +1002,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/lives/'
       preLoaderRoute: typeof AdminLivesIndexRouteImport
       parentRoute: typeof AdminLivesRoute
+    }
+    '/admin/financeiro/': {
+      id: '/admin/financeiro/'
+      path: '/'
+      fullPath: '/admin/financeiro/'
+      preLoaderRoute: typeof AdminFinanceiroIndexRouteImport
+      parentRoute: typeof AdminFinanceiroRoute
     }
     '/_app/lives/': {
       id: '/_app/lives/'
@@ -1284,6 +1301,18 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface AdminFinanceiroRouteChildren {
+  AdminFinanceiroIndexRoute: typeof AdminFinanceiroIndexRoute
+}
+
+const AdminFinanceiroRouteChildren: AdminFinanceiroRouteChildren = {
+  AdminFinanceiroIndexRoute: AdminFinanceiroIndexRoute,
+}
+
+const AdminFinanceiroRouteWithChildren = AdminFinanceiroRoute._addFileChildren(
+  AdminFinanceiroRouteChildren,
+)
+
 interface AdminLivesRouteChildren {
   AdminLivesIndexRoute: typeof AdminLivesIndexRoute
   AdminLivesLiveIdStudioRoute: typeof AdminLivesLiveIdStudioRoute
@@ -1303,7 +1332,7 @@ interface AdminRouteChildren {
   AdminCursosRoute: typeof AdminCursosRoute
   AdminEventosRoute: typeof AdminEventosRoute
   AdminFerramentasRoute: typeof AdminFerramentasRoute
-  AdminFinanceiroRoute: typeof AdminFinanceiroRoute
+  AdminFinanceiroRoute: typeof AdminFinanceiroRouteWithChildren
   AdminLivesRoute: typeof AdminLivesRouteWithChildren
   AdminSaudeRoute: typeof AdminSaudeRoute
   AdminTranscricoesRoute: typeof AdminTranscricoesRoute
@@ -1315,7 +1344,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCursosRoute: AdminCursosRoute,
   AdminEventosRoute: AdminEventosRoute,
   AdminFerramentasRoute: AdminFerramentasRoute,
-  AdminFinanceiroRoute: AdminFinanceiroRoute,
+  AdminFinanceiroRoute: AdminFinanceiroRouteWithChildren,
   AdminLivesRoute: AdminLivesRouteWithChildren,
   AdminSaudeRoute: AdminSaudeRoute,
   AdminTranscricoesRoute: AdminTranscricoesRoute,
