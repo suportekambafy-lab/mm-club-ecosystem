@@ -129,6 +129,18 @@ export const getLive = createServerFn({ method: "GET" })
     let playbackToken: string | null = null;
     if (isReplay) {
       playbackToken = replaySegments[0]?.token ?? null;
+      // Fallback: recording_video_uid points to a direct-uploaded video
+      // (e.g. from the browser MediaRecorder fail-safe) that is NOT listed
+      // under live_inputs/{uid}/videos. Sign it directly so the player has
+      // a valid token instead of going black.
+      if (!playbackToken && videoUid) {
+        try {
+          const { signPlaybackToken } = await import("@/lib/cloudflare-stream.server");
+          playbackToken = await signPlaybackToken(videoUid, { ttlSeconds: 7200 });
+        } catch (e) {
+          console.error("[lives] signPlaybackToken fallback failed", e);
+        }
+      }
     } else if (videoUid) {
       try {
         const { signPlaybackToken } = await import("@/lib/cloudflare-stream.server");
