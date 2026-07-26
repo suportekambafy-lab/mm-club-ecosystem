@@ -301,9 +301,23 @@ export async function collectFinanceOverview(): Promise<FinanceOverview> {
     ),
     revenueByCountry: sortDesc(byCountry),
     revenueByCoupon: sortDesc(byCoupon),
-    dunningRecoveredCents: paid
-      .filter((p) => in30(p.paid_at))
-      .reduce((sum, p) => sum + (p.subscription_id ? 0 : 0), 0),
+    // Money that only arrived because a failed charge was retried: a paid
+    // payment on a subscription that also failed at least once in the window.
+    dunningRecoveredCents: (() => {
+      const failedSubs = new Set(
+        payments
+          .filter((p) => p.status === "failed" && p.subscription_id && in30(p.created_at))
+          .map((p) => p.subscription_id as string),
+      );
+      return paid
+        .filter(
+          (p) =>
+            in30(p.paid_at) &&
+            p.subscription_id &&
+            failedSubs.has(p.subscription_id),
+        )
+        .reduce((sum, p) => sum + net(p), 0);
+    })(),
   };
 }
 
