@@ -84,7 +84,7 @@ function VipPage() {
 
   return (
     <>
-      <PaymentTestModeBanner />
+      
       <div className="relative min-h-[calc(100dvh-3rem)] overflow-hidden">
         <div
           aria-hidden
