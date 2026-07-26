@@ -179,7 +179,7 @@ function FeaturedHero({
   const thumb = syncThumb ?? oembedThumb;
   const heroBackground = thumb
     ? `url(${thumb}) center/cover no-repeat, #000`
-    : course.cover;
+    : courseCoverBackground(course);
 
   return (
     <Link
