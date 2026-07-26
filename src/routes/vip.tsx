@@ -49,6 +49,10 @@ function VipPage() {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) {
         setUser({ id: data.user.id, email: data.user.email ?? undefined });
+        setGuestEmail((prev) => prev || data.user.email || "");
+        const dn = (data.user.user_metadata as { display_name?: string } | null)
+          ?.display_name;
+        if (dn) setGuestName((prev) => prev || dn);
       }
     });
     if (typeof window !== "undefined") {
@@ -56,6 +60,7 @@ function VipPage() {
       if (params.get("vip") === "success") setSuccess(true);
     }
   }, []);
+
 
   const handleStart = async () => {
     // Pay first, account after: guests only need to leave an email.
