@@ -73,6 +73,7 @@ function StageBase({ state, actions, className }: StageProps) {
                 participant={screenSharer}
                 actions={actions}
                 preferScreen={false}
+                suppressAudio
                 showName={false}
                 className="h-full w-full"
               />
