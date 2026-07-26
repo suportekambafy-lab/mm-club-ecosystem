@@ -174,8 +174,8 @@ function VipPage() {
               </span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Depois, 29,90 €/mês. Cancelas a qualquer momento antes do fim do
-              trial.
+              Cobramos apenas 0,01 € para validar o cartão. Depois dos 3 meses,
+              29,90 €/mês — cancelas a qualquer momento antes do fim do trial.
             </p>
 
             <ul className="mt-8 space-y-3">
