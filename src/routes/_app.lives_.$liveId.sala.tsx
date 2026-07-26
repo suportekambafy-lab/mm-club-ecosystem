@@ -422,6 +422,60 @@ function SalaShell({
             </div>
           </div>
         )}
+        {peopleOpen && (
+          <div className="absolute inset-y-0 right-0 z-50 flex w-full max-w-sm flex-col border-l border-white/10 bg-neutral-950/95 backdrop-blur-md md:w-[340px]">
+            <div className="flex items-center justify-between border-b border-white/5 px-3 py-2.5">
+              <div className="text-sm font-semibold">
+                Participantes <span className="text-white/40">· {people.length}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPeopleOpen(false)}
+                className="grid h-8 w-8 place-items-center rounded-lg bg-white/5 hover:bg-white/10"
+                aria-label="Fechar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2">
+              {people.length === 0 ? (
+                <div className="grid h-full place-items-center px-4 text-center text-xs text-white/50">
+                  Ainda ninguém aqui.
+                </div>
+              ) : (
+                <ul className="space-y-1">
+                  {people
+                    .slice()
+                    .sort((a, b) => Number(b.on_stage) - Number(a.on_stage) || a.display_name.localeCompare(b.display_name))
+                    .map((p) => (
+                      <li
+                        key={p.user_id}
+                        className="flex items-center gap-2 rounded-xl bg-white/[0.03] px-2.5 py-2 ring-1 ring-white/5"
+                      >
+                        <div className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-white/10 text-xs font-semibold text-white/80">
+                          {p.avatar_url ? (
+                            <img src={p.avatar_url} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            (p.display_name || "?").slice(0, 2).toUpperCase()
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm text-white">{p.display_name}</div>
+                          <div className="flex items-center gap-1.5 text-[10.5px] text-white/50">
+                            {p.role === "host" && <span className="text-[hsl(45_86%_60%)]">Host</span>}
+                            {p.role === "cohost" && <span className="text-[hsl(45_86%_60%)]">Co-host</span>}
+                            {p.on_stage && p.role !== "host" && p.role !== "cohost" && <span>No palco</span>}
+                            {!p.on_stage && p.role !== "host" && p.role !== "cohost" && <span>Espectador</span>}
+                            {p.hand_raised_at && <span className="text-amber-300">· mão levantada</span>}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
