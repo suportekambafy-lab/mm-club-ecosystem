@@ -25,6 +25,14 @@ import { courses } from "@/data/courses";
 import { computeCourseDuration } from "@/lib/course-duration";
 import { courseCoverImage } from "@/lib/course-cover";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
+import {
+  BannerSkeleton,
+  CinematicHeroSkeleton,
+  PanelSkeleton,
+  RailSkeleton,
+  TextLines,
+} from "@/components/mm/skeletons";
+
 
 import { supabase } from "@/integrations/supabase/client";
 
