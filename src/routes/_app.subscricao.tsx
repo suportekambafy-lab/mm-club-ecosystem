@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
-  CreditCard,
+  
   Loader2,
   Plus,
   ShieldCheck,
