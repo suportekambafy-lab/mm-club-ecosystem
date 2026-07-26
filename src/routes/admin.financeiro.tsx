@@ -35,13 +35,13 @@ export const Route = createFileRoute("/admin/financeiro")({
   component: FinanceLayout,
 });
 
-const TABS = [
+const TABS: { to: string; label: string; exact?: boolean }[] = [
   { to: "/admin/financeiro", label: "Visão geral", exact: true },
   { to: "/admin/financeiro/subscricoes", label: "Subscrições" },
   { to: "/admin/financeiro/receita", label: "Receita" },
   { to: "/admin/financeiro/cupoes", label: "Cupões" },
   { to: "/admin/financeiro/catalogo", label: "Catálogo" },
-] as const;
+];
 
 function GlobalSearch() {
   const [term, setTerm] = useState("");
@@ -155,7 +155,7 @@ function FinanceLayout() {
             return (
               <Link
                 key={t.to}
-                to={t.to}
+                to={t.to as never}
                 className={cn(
                   "-mb-px border-b-2 px-3 py-2 text-sm transition-colors",
                   active

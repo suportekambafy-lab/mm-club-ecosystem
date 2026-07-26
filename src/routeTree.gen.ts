@@ -26,6 +26,7 @@ import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AdminTranscricoesRouteImport } from './routes/admin.transcricoes'
 import { Route as AdminSaudeRouteImport } from './routes/admin.saude'
 import { Route as AdminLivesRouteImport } from './routes/admin.lives'
+import { Route as AdminFinanceiroRouteImport } from './routes/admin.financeiro'
 import { Route as AdminFerramentasRouteImport } from './routes/admin.ferramentas'
 import { Route as AdminEventosRouteImport } from './routes/admin.eventos'
 import { Route as AdminCursosRouteImport } from './routes/admin.cursos'
@@ -150,6 +151,11 @@ const AdminSaudeRoute = AdminSaudeRouteImport.update({
 const AdminLivesRoute = AdminLivesRouteImport.update({
   id: '/lives',
   path: '/lives',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFinanceiroRoute = AdminFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminFerramentasRoute = AdminFerramentasRouteImport.update({
@@ -399,6 +405,7 @@ export interface FileRoutesByFullPath {
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
+  '/admin/financeiro': typeof AdminFinanceiroRoute
   '/admin/lives': typeof AdminLivesRouteWithChildren
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
@@ -455,6 +462,7 @@ export interface FileRoutesByTo {
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
+  '/admin/financeiro': typeof AdminFinanceiroRoute
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
@@ -513,6 +521,7 @@ export interface FileRoutesById {
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
+  '/admin/financeiro': typeof AdminFinanceiroRoute
   '/admin/lives': typeof AdminLivesRouteWithChildren
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
@@ -574,6 +583,7 @@ export interface FileRouteTypes {
     | '/admin/cursos'
     | '/admin/eventos'
     | '/admin/ferramentas'
+    | '/admin/financeiro'
     | '/admin/lives'
     | '/admin/saude'
     | '/admin/transcricoes'
@@ -630,6 +640,7 @@ export interface FileRouteTypes {
     | '/admin/cursos'
     | '/admin/eventos'
     | '/admin/ferramentas'
+    | '/admin/financeiro'
     | '/admin/saude'
     | '/admin/transcricoes'
     | '/api/chat'
@@ -687,6 +698,7 @@ export interface FileRouteTypes {
     | '/admin/cursos'
     | '/admin/eventos'
     | '/admin/ferramentas'
+    | '/admin/financeiro'
     | '/admin/lives'
     | '/admin/saude'
     | '/admin/transcricoes'
@@ -867,6 +879,13 @@ declare module '@tanstack/react-router' {
       path: '/lives'
       fullPath: '/admin/lives'
       preLoaderRoute: typeof AdminLivesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/financeiro': {
+      id: '/admin/financeiro'
+      path: '/financeiro'
+      fullPath: '/admin/financeiro'
+      preLoaderRoute: typeof AdminFinanceiroRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/ferramentas': {
@@ -1284,6 +1303,7 @@ interface AdminRouteChildren {
   AdminCursosRoute: typeof AdminCursosRoute
   AdminEventosRoute: typeof AdminEventosRoute
   AdminFerramentasRoute: typeof AdminFerramentasRoute
+  AdminFinanceiroRoute: typeof AdminFinanceiroRoute
   AdminLivesRoute: typeof AdminLivesRouteWithChildren
   AdminSaudeRoute: typeof AdminSaudeRoute
   AdminTranscricoesRoute: typeof AdminTranscricoesRoute
@@ -1295,6 +1315,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCursosRoute: AdminCursosRoute,
   AdminEventosRoute: AdminEventosRoute,
   AdminFerramentasRoute: AdminFerramentasRoute,
+  AdminFinanceiroRoute: AdminFinanceiroRoute,
   AdminLivesRoute: AdminLivesRouteWithChildren,
   AdminSaudeRoute: AdminSaudeRoute,
   AdminTranscricoesRoute: AdminTranscricoesRoute,
