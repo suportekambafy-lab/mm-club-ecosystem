@@ -235,20 +235,12 @@ async function runGate(
 
 /** Gate for authenticated functions (auth -> authz -> limits -> WAF). */
 export function securityGate(policy: SecurityPolicy) {
-  return createMiddleware({ type: "function" })
-    .middleware([requireSupabaseAuth])
-    .server(async ({ next, context }) => {
+  return createMiddleware({ type: "function" }).server(
+    async ({ next, context }) => {
       const security = await runGate(policy, context);
-      // Re-expose the authenticated context so handlers keep full typing.
-      return next({
-        context: {
-          security,
-          supabase: context.supabase,
-          userId: context.userId,
-          claims: context.claims,
-        },
-      });
-    });
+      return next({ context: { security } });
+    },
+  );
 }
 
 /** Gate for genuinely public endpoints (no session, IP-scoped limits). */
@@ -266,6 +258,6 @@ export function publicGate(policy: SecurityPolicy) {
 export function secured(policy: SecurityPolicy) {
   return policy.auth === false
     ? ([publicGate(policy)] as const)
-    : ([securityGate(policy)] as const);
+    : ([requireSupabaseAuth, securityGate(policy)] as const);
 }
 
