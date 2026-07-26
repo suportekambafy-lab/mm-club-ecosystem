@@ -125,7 +125,10 @@ export interface RoomActions {
   toggleCam(): Promise<void>;
   startScreenShare(): Promise<void>;
   stopScreenShare(): Promise<void>;
+  /** Resume remote audio playback after browser autoplay block. */
+  startAudio(): Promise<void>;
   leave(): Promise<void>;
+
 
   raiseHand(raised: boolean): Promise<void>;
 
