@@ -418,3 +418,19 @@ function CommunityBlock() {
   );
 }
 
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-16">
+      <CinematicHeroSkeleton />
+      <BannerSkeleton />
+      <RailSkeleton cards={3} />
+      <RailSkeleton cards={3} />
+      <PanelSkeleton lines={2} />
+      <section className="grid gap-4 md:grid-cols-2">
+        <PanelSkeleton lines={2} />
+        <PanelSkeleton lines={3} />
+      </section>
+    </div>
+  );
+}
