@@ -150,6 +150,7 @@ export const MediaTile = memo(MediaTileBase, (a, b) => {
     pa.connectionQuality === pb.connectionQuality &&
     a.preferScreen === b.preferScreen &&
     a.showName === b.showName &&
+    a.suppressAudio === b.suppressAudio &&
     a.className === b.className
   );
 });
