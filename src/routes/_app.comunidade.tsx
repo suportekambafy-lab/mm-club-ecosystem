@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { assertUploadAllowed } from "@/lib/security/uploads";
 import {
   Heart,
   MessageCircle,
@@ -800,6 +801,7 @@ function Composer({
     }
     setUploading(true);
     try {
+      assertUploadAllowed(file, "media");
       const ext = file.name.split(".").pop() || "bin";
       const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const { error: upErr } = await supabase.storage
