@@ -14,6 +14,7 @@ import { joinRoom } from "@/lib/live-room.functions";
 import { InteractiveRoom } from "@/components/live/interactive-room";
 import { LiveChat } from "@/components/mm/live-chat";
 import { useServerFn } from "@tanstack/react-start";
+import { cn } from "@/lib/utils";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
