@@ -296,6 +296,3 @@ function HostLeaveMenu({
   );
 }
 
-// Silence unused import warnings when only host uses the menu.
-void state;
-
