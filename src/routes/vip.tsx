@@ -49,6 +49,10 @@ function VipPage() {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) {
         setUser({ id: data.user.id, email: data.user.email ?? undefined });
+        setGuestEmail((prev) => prev || data.user.email || "");
+        const dn = (data.user.user_metadata as { display_name?: string } | null)
+          ?.display_name;
+        if (dn) setGuestName((prev) => prev || dn);
       }
     });
     if (typeof window !== "undefined") {
@@ -57,12 +61,14 @@ function VipPage() {
     }
   }, []);
 
+
   const handleStart = async () => {
-    // Pay first, account after: guests only need to leave an email.
-    if (!user && !askEmail) {
+    // Confirmação de nome/email antes de abrir o pagamento (igual ao checkout).
+    if (!askEmail) {
       setAskEmail(true);
       return;
     }
+
     setPending(true);
     setError(null);
     try {
@@ -220,7 +226,7 @@ function VipPage() {
           </p>
         </div>
 
-        {askEmail && !user ? (
+        {askEmail ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
             <motion.form
               initial={{ opacity: 0, y: 16, scale: 0.98 }}
@@ -232,11 +238,12 @@ function VipPage() {
               className="w-full max-w-md rounded-3xl bg-card p-7 ring-1 ring-border"
             >
               <h2 className="text-2xl font-semibold tracking-tight">
-                Só falta o teu email
+                {user ? "Confirma os teus dados" : "Só falta o teu email"}
               </h2>
               <p className="mt-2 text-sm text-muted-foreground">
-                Criamos a tua conta MM Club automaticamente após a validação do
-                cartão e enviamos-te o acesso para este email.
+                {user
+                  ? "Vamos validar o cartão (0,01 €) e ativar os 3 meses grátis nesta conta."
+                  : "Criamos a tua conta MM Club automaticamente após a validação do cartão e enviamos-te o acesso para este email."}
               </p>
 
               <label className="mt-6 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
@@ -245,12 +252,14 @@ function VipPage() {
               <input
                 type="email"
                 required
-                autoFocus
+                autoFocus={!user}
+                readOnly={!!user}
                 value={guestEmail}
                 onChange={(e) => setGuestEmail(e.target.value)}
                 placeholder="tu@exemplo.com"
-                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary read-only:opacity-70"
               />
+
 
               <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Nome (opcional)
