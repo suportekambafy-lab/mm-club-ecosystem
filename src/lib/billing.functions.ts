@@ -81,7 +81,7 @@ export const getBillingOverview = createServerFn({ method: "GET" })
       supabase
         .from("billing_subscriptions")
         .select(
-          "id, status, trial_end, current_period_start, current_period_end, cancel_at_period_end, cancelled_at, created_at, product:catalog_products(name, slug), price:catalog_prices(slug, amount_cents, currency, interval)",
+          "id, status, trial_end, current_period_start, current_period_end, cancel_at_period_end, cancelled_at, created_at, product:catalog_products(name, slug), price:catalog_prices!billing_subscriptions_price_id_fkey(slug, amount_cents, currency, interval)",
         )
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
