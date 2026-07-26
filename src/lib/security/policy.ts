@@ -42,6 +42,12 @@ export interface SecurityPolicy {
   waf?: WafRule | WafRule[];
   /** Blocked while Emergency Mode is active. */
   emergency?: "block" | "allow";
+  /**
+   * Marks the function as a write operation. Write operations are refused
+   * while Read Only Mode is active (maintenance / incident investigation),
+   * while reads keep working normally.
+   */
+  write?: boolean;
 }
 
 /** Generic message used everywhere so nothing can be enumerated. */
