@@ -56,7 +56,7 @@ export function Backstage({ state, actions, onGoLive, goingLive }: BackstageProp
           </div>
         ) : (
           speakers.map((p) => (
-            <MediaTile key={p.userId} participant={p} actions={actions} className="min-h-[220px]" />
+            <MediaTile key={p.userId} participant={p} actions={actions} className="h-full min-h-[220px] w-full" />
           ))
         )}
       </div>
