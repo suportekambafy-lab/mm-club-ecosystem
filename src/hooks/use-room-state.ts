@@ -154,8 +154,18 @@ export function useRoomState({
       if (ids.length) {
         const { data: profs } = await supabase.from("profiles").select("id, display_name, avatar_url").in("id", ids);
         if (!mounted) return;
+        // Resolve storage-path avatars into signed URLs so tiles can render them.
+        const resolved = await Promise.all(
+          (profs ?? []).map(async (p) => {
+            const raw = p.avatar_url as string | null;
+            if (!raw || /^https?:\/\//i.test(raw) || raw.startsWith("data:")) return p;
+            const { data: signed } = await supabase.storage.from("avatars").createSignedUrl(raw, 60 * 60);
+            return { ...p, avatar_url: signed?.signedUrl ?? null };
+          }),
+        );
+        if (!mounted) return;
         const map: Record<string, { display_name: string; avatar_url: string | null }> = {};
-        for (const p of profs ?? []) map[p.id] = { display_name: p.display_name, avatar_url: p.avatar_url };
+        for (const p of resolved) map[p.id] = { display_name: p.display_name, avatar_url: p.avatar_url };
         setProfiles(map);
       }
     }
