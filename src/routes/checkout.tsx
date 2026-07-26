@@ -4,7 +4,11 @@ import { motion } from "framer-motion";
 import { Check, Crown, ShieldCheck, Sparkles, Star } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getCatalog, startCheckout } from "@/lib/billing.functions";
+import {
+  getCatalog,
+  startCheckout,
+  startGuestCheckout,
+} from "@/lib/billing.functions";
 import { formatMoney } from "@/lib/billing/types";
 import { cn } from "@/lib/utils";
 
@@ -54,6 +58,9 @@ function PlansPage() {
   const { plan: recommended } = useSearch({ from: "/checkout" });
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [guestPlan, setGuestPlan] = useState<string | null>(null);
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestName, setGuestName] = useState("");
 
   const { data: catalog, isLoading } = useQuery({
     queryKey: ["catalog", "subscription"],
