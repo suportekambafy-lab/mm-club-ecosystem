@@ -10,7 +10,6 @@ import { getPriceBySlug } from "./catalog.server";
 import { getGateway } from "./gateway/index.server";
 import { buildCheckoutDescription } from "./description";
 
-const APP_NAME = "MM Club";
 
 /** Looks up an auth user by email (small user base — paged scan). */
 export async function findUserIdByEmail(email: string): Promise<string | null> {
