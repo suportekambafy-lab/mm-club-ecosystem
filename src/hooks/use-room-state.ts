@@ -270,8 +270,7 @@ export function useRoomState({
 
     return () => {
       handlers.forEach(([evt, fn]) => {
-        // @ts-expect-error - typed passthrough
-        room.off(evt, fn);
+        (room as unknown as AnyOn).off(evt, fn);
       });
       room.disconnect().catch(() => {});
       roomRef.current = null;
