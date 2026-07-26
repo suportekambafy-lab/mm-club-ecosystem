@@ -69,13 +69,32 @@ export async function startGuestCheckout(
   const recurring =
     price.interval !== "one_time" && price.interval !== "lifetime";
 
+  // Recurring (first) payments require a gateway customer so the mandate can
+  // be stored. Create it up front and keep it on the intent so the account we
+  // provision later reuses the same customer (and therefore the mandate).
+  let gatewayCustomerId: string | null = null;
+  if (recurring) {
+    const gwCustomer = await gw.createCustomer({
+      email,
+      name: input.name ?? null,
+      metadata: { intentId: intent.id, guest: true },
+    });
+    gatewayCustomerId = gwCustomer.id;
+    await supabaseAdmin
+      .from("billing_checkout_intents")
+      .update({
+        metadata: { gatewayCustomerId } as never,
+      })
+      .eq("id", intent.id);
+  }
+
   const payment = await gw.createCharge({
     amountCents: price.amountCents,
     currency: price.currency,
     description: `${APP_NAME} — ${price.product.name}`,
     redirectUrl: `${origin}/checkout/return?intent=${intent.id}`,
     webhookUrl: `${origin}/api/public/payments/gateway-webhook`,
-    customerId: null,
+    customerId: gatewayCustomerId,
     customerEmail: email,
     setupRecurring: recurring,
     metadata: {
@@ -90,6 +109,7 @@ export async function startGuestCheckout(
       origin,
     },
   });
+
 
   await supabaseAdmin
     .from("billing_checkout_intents")
