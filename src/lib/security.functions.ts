@@ -295,3 +295,332 @@ export const reportAuthFailure = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
+/* ------------------------------------------------------------------ */
+/* Read Only Mode                                                      */
+/* ------------------------------------------------------------------ */
+
+export const setReadOnlyMode = createServerFn({ method: "POST" })
+  .middleware([
+    ...secured({
+      name: "security.setReadOnlyMode",
+      admin: true,
+      limit: { bucket: "readonly-toggle", max: 30, windowSeconds: 3600 },
+    }),
+  ])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        enabled: z.boolean(),
+        reason: z.string().max(300).nullable().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { getReadOnlyState, setReadOnlyState, recordSecurityEvent } =
+      await import("@/lib/security/runtime.server");
+    const { auditAdmin } = await import("@/lib/security/audit.server");
+
+    const before = await getReadOnlyState();
+    const after = await auditAdmin(
+      context as never,
+      {
+        action: data.enabled ? "read_only.enable" : "read_only.disable",
+        entityType: "security_settings",
+        entityId: "read_only_mode",
+        before,
+      },
+      () =>
+        setReadOnlyState({
+          enabled: data.enabled,
+          reason: data.reason ?? null,
+          actorId: context.userId,
+        }),
+    );
+    await recordSecurityEvent({
+      kind: data.enabled ? "read_only_enabled" : "read_only_disabled",
+      severity: "critical",
+      userId: context.userId,
+      ip: context.security.ip,
+      userAgent: context.security.userAgent,
+      outcome: "allowed",
+      reason: data.reason ?? null,
+    });
+    return after;
+  });
+
+/** Public read: lets the UI show a maintenance banner and disable writes. */
+export const getPlatformModes = createServerFn({ method: "POST" })
+  .middleware([
+    ...secured({
+      name: "security.modes",
+      auth: false,
+      limit: { bucket: "modes", max: 600, windowSeconds: 3600, scope: "ip" },
+    }),
+  ])
+  .handler(async () => {
+    const { getEmergencyState, getReadOnlyState } = await import(
+      "@/lib/security/runtime.server"
+    );
+    const [emergency, readOnly] = await Promise.all([
+      getEmergencyState(),
+      getReadOnlyState(),
+    ]);
+    return { emergency, readOnly };
+  });
+
+/* ------------------------------------------------------------------ */
+/* Session security & device trust                                     */
+/* ------------------------------------------------------------------ */
+
+export const registerDeviceSession = createServerFn({ method: "POST" })
+  .middleware([
+    ...secured({
+      name: "security.registerSession",
+      limit: { bucket: "session-register", max: 120, windowSeconds: 3600 },
+    }),
+  ])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        fingerprint: z.string().min(6).max(120),
+        sessionToken: z.string().min(10).max(120),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { registerSession } = await import("@/lib/security/devices.server");
+    return registerSession({
+      userId: context.userId,
+      fingerprint: data.fingerprint,
+      sessionToken: data.sessionToken,
+      ip: context.security.ip,
+      userAgent: context.security.userAgent,
+      country: context.security.country,
+      city: context.security.city,
+    });
+  });
+
+/** Heartbeat: tells the client to sign out when its session was revoked. */
+export const checkSession = createServerFn({ method: "POST" })
+  .middleware([
+    ...secured({
+      name: "security.checkSession",
+      limit: { bucket: "session-check", max: 600, windowSeconds: 3600 },
+    }),
+  ])
+  .inputValidator((input: unknown) =>
+    z.object({ sessionToken: z.string().min(10).max(120) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { touchSession } = await import("@/lib/security/devices.server");
+    return touchSession(data.sessionToken);
+  });
+
+export const endSession = createServerFn({ method: "POST" })
+  .middleware([
+    ...secured({
+      name: "security.endSession",
+      limit: { bucket: "session-end", max: 120, windowSeconds: 3600 },
+    }),
+  ])
+  .inputValidator((input: unknown) =>
+    z.object({ sessionToken: z.string().min(10).max(120) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { revokeSession } = await import("@/lib/security/devices.server");
+    await revokeSession({ sessionToken: data.sessionToken, reason: "logout" });
+    return { ok: true };
+  });
+
+/** Self-service or admin: terminate every session of an account. */
+export const terminateAllSessions = createServerFn({ method: "POST" })
+  .middleware([
+    ...secured({
+      name: "security.terminateAllSessions",
+      limit: { bucket: "session-terminate", max: 30, windowSeconds: 3600 },
+      write: true,
+    }),
+  ])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        userId: z.string().uuid().nullable().optional(),
+        exceptToken: z.string().max(120).nullable().optional(),
+      })
+      .default({})
+      .parse(input ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    const target = data.userId ?? context.userId;
+    if (target !== context.userId) {
+      const { data: isAdmin } = await context.supabase.rpc("has_role", {
+        _user_id: context.userId,
+        _role: "admin",
+      });
+      if (!isAdmin) throw new Error("Forbidden");
+    }
+    const { revokeAllSessions } = await import(
+      "@/lib/security/devices.server"
+    );
+    const { auditAdmin } = await import("@/lib/security/audit.server");
+    const count = await auditAdmin(
+      context as never,
+      {
+        action: "sessions.terminate_all",
+        entityType: "user",
+        entityId: target,
+      },
+      () =>
+        revokeAllSessions({
+          userId: target,
+          reason: target === context.userId ? "self" : "admin",
+          exceptToken: data.exceptToken ?? null,
+        }),
+    );
+    return { ok: true, count };
+  });
+
+export const listDevices = createServerFn({ method: "POST" })
+  .middleware([
+    ...secured({
+      name: "security.listDevices",
+      limit: { bucket: "devices-list", max: 200, windowSeconds: 3600 },
+    }),
+  ])
+  .inputValidator((input: unknown) =>
+    z
+      .object({ userId: z.string().uuid().nullable().optional() })
+      .default({})
+      .parse(input ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    const target = data.userId ?? context.userId;
+    if (target !== context.userId) {
+      const { data: isAdmin } = await context.supabase.rpc("has_role", {
+        _user_id: context.userId,
+        _role: "admin",
+      });
+      if (!isAdmin) throw new Error("Forbidden");
+    }
+    const { listUserDevices } = await import("@/lib/security/devices.server");
+    return listUserDevices(target);
+  });
+
+/* ------------------------------------------------------------------ */
+/* Score, continuous scan and abuse/fraud sweep                        */
+/* ------------------------------------------------------------------ */
+
+export const getSecurityScore = createServerFn({ method: "POST" })
+  .middleware([
+    ...secured({
+      name: "security.score",
+      admin: true,
+      limit: { bucket: "security-score", max: 200, windowSeconds: 3600 },
+    }),
+  ])
+  .handler(async () => {
+    const { latestScan, runSecurityScan } = await import(
+      "@/lib/security/score.server"
+    );
+    const last = await latestScan();
+    if (last && Date.now() - new Date(last.createdAt).getTime() < 3_600_000) {
+      return last;
+    }
+    return runSecurityScan("auto");
+  });
+
+export const runSecurityScanNow = createServerFn({ method: "POST" })
+  .middleware([
+    ...secured({
+      name: "security.scan",
+      admin: true,
+      limit: { bucket: "security-scan", max: 30, windowSeconds: 3600 },
+    }),
+  ])
+  .handler(async ({ context }) => {
+    const { runSecurityScan } = await import("@/lib/security/score.server");
+    const { runAbuseSweep } = await import("@/lib/security/fraud.server");
+    const { auditAdmin } = await import("@/lib/security/audit.server");
+    return auditAdmin(
+      context as never,
+      { action: "security.scan", entityType: "security_scans" },
+      async () => {
+        await runAbuseSweep();
+        return runSecurityScan("manual");
+      },
+    );
+  });
+
+export type SecurityAlertRow = {
+  id: string;
+  category: string;
+  level: string;
+  title: string;
+  detail: string | null;
+  subject: string | null;
+  status: string;
+  createdAt: string;
+};
+
+export const listSecurityAlerts = createServerFn({ method: "POST" })
+  .middleware([
+    ...secured({
+      name: "security.alerts",
+      admin: true,
+      limit: { bucket: "security-alerts", max: 300, windowSeconds: 3600 },
+    }),
+  ])
+  .handler(async (): Promise<SecurityAlertRow[]> => {
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+    const { data } = await supabaseAdmin
+      .from("security_alerts")
+      .select("id, category, level, title, detail, subject, status, created_at")
+      .order("created_at", { ascending: false })
+      .limit(150);
+    return (data ?? []).map((r) => ({
+      id: r.id,
+      category: r.category,
+      level: r.level,
+      title: r.title,
+      detail: r.detail,
+      subject: r.subject,
+      status: r.status,
+      createdAt: r.created_at,
+    }));
+  });
+
+export const resolveSecurityAlert = createServerFn({ method: "POST" })
+  .middleware([
+    ...secured({
+      name: "security.resolveAlert",
+      admin: true,
+      limit: { bucket: "security-alert-resolve", max: 200, windowSeconds: 3600 },
+    }),
+  ])
+  .inputValidator((input: unknown) =>
+    z.object({ id: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+    const { auditAdmin } = await import("@/lib/security/audit.server");
+    return auditAdmin(
+      context as never,
+      { action: "security.alert_resolve", entityType: "security_alerts", entityId: data.id },
+      async () => {
+        await supabaseAdmin
+          .from("security_alerts")
+          .update({
+            status: "resolved",
+            resolved_at: new Date().toISOString(),
+            resolved_by: context.userId,
+          })
+          .eq("id", data.id);
+        return { ok: true };
+      },
+    );
+  });
