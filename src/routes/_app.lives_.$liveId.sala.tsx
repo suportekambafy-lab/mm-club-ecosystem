@@ -288,16 +288,34 @@ function SalaShell({
     };
   }, [liveId]);
 
-  // Real-time viewer/participant count (all rows without left_at).
+  // Real-time viewer/participant list + count (all rows without left_at).
   useEffect(() => {
     let cancelled = false;
     async function refresh() {
-      const { count } = await supabase
+      const { data, count } = await supabase
         .from("live_participants")
-        .select("id", { count: "exact", head: true })
+        .select("user_id, role, on_stage, hand_raised_at", { count: "exact" })
         .eq("live_id", liveId)
         .is("left_at", null);
-      if (!cancelled) setViewerCount(count ?? 0);
+      if (cancelled) return;
+      setViewerCount(count ?? 0);
+      const rows = (data ?? []) as Array<{ user_id: string; role: string; on_stage: boolean; hand_raised_at: string | null }>;
+      const ids = Array.from(new Set(rows.map((r) => r.user_id)));
+      let profs: Record<string, { display_name: string; avatar_url: string | null }> = {};
+      if (ids.length) {
+        const { data: p } = await supabase.from("profiles").select("id, display_name, avatar_url").in("id", ids);
+        for (const row of (p ?? []) as Array<{ id: string; display_name: string; avatar_url: string | null }>) {
+          profs[row.id] = { display_name: row.display_name, avatar_url: row.avatar_url };
+        }
+      }
+      if (cancelled) return;
+      setPeople(
+        rows.map((r) => ({
+          ...r,
+          display_name: profs[r.user_id]?.display_name ?? "Membro",
+          avatar_url: profs[r.user_id]?.avatar_url ?? null,
+        })),
+      );
     }
     refresh();
     const suffix = Math.random().toString(36).slice(2, 8);
