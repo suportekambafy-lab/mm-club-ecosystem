@@ -82,19 +82,20 @@ export interface EmergencyState {
   since: string | null;
 }
 
-let emergencyCache: { value: EmergencyState; at: number } | null = null;
-const EMERGENCY_TTL_MS = 3000; // kill switch propagates in under 5 seconds
+type ModeKey = "emergency_mode" | "read_only_mode";
 
-export async function getEmergencyState(): Promise<EmergencyState> {
+const modeCache = new Map<ModeKey, { value: EmergencyState; at: number }>();
+const MODE_TTL_MS = 3000; // kill switch propagates in under 5 seconds
+
+async function getModeState(key: ModeKey): Promise<EmergencyState> {
   const now = Date.now();
-  if (emergencyCache && now - emergencyCache.at < EMERGENCY_TTL_MS) {
-    return emergencyCache.value;
-  }
+  const cached = modeCache.get(key);
+  if (cached && now - cached.at < MODE_TTL_MS) return cached.value;
   try {
     const { data } = await supabaseAdmin
       .from("security_settings")
       .select("value")
-      .eq("key", "emergency_mode")
+      .eq("key", key)
       .maybeSingle();
     const value = (data?.value ?? {}) as Partial<EmergencyState>;
     const state: EmergencyState = {
@@ -102,38 +103,84 @@ export async function getEmergencyState(): Promise<EmergencyState> {
       reason: value.reason ?? null,
       since: value.since ?? null,
     };
-    emergencyCache = { value: state, at: now };
+    modeCache.set(key, { value: state, at: now });
     return state;
   } catch (err) {
-    console.error("[security] emergency read failed", err);
-    return emergencyCache?.value ?? { enabled: false, reason: null, since: null };
+    console.error(`[security] ${key} read failed`, err);
+    return cached?.value ?? { enabled: false, reason: null, since: null };
   }
 }
 
-export async function setEmergencyState(input: {
-  enabled: boolean;
-  reason: string | null;
-  actorId: string;
-}): Promise<EmergencyState> {
+async function setModeState(
+  key: ModeKey,
+  input: { enabled: boolean; reason: string | null; actorId: string },
+): Promise<EmergencyState> {
   const state: EmergencyState = {
     enabled: input.enabled,
     reason: input.reason,
     since: input.enabled ? new Date().toISOString() : null,
   };
-  await supabaseAdmin
-    .from("security_settings")
-    .upsert(
-      {
-        key: "emergency_mode",
-        value: state as never,
-        updated_at: new Date().toISOString(),
-        updated_by: input.actorId,
-      },
-      { onConflict: "key" },
-    );
-  emergencyCache = { value: state, at: Date.now() };
+  await supabaseAdmin.from("security_settings").upsert(
+    {
+      key,
+      value: state as never,
+      updated_at: new Date().toISOString(),
+      updated_by: input.actorId,
+    },
+    { onConflict: "key" },
+  );
+  modeCache.set(key, { value: state, at: Date.now() });
   return state;
 }
+
+export const getEmergencyState = () => getModeState("emergency_mode");
+export const setEmergencyState = (input: {
+  enabled: boolean;
+  reason: string | null;
+  actorId: string;
+}) => setModeState("emergency_mode", input);
+
+export const getReadOnlyState = () => getModeState("read_only_mode");
+export const setReadOnlyState = (input: {
+  enabled: boolean;
+  reason: string | null;
+  actorId: string;
+}) => setModeState("read_only_mode", input);
+
+/**
+ * Administrative alert (security / billing fraud). Deduplicated so the same
+ * signal inside the same window does not spam the dashboard.
+ */
+export async function raiseAlert(input: {
+  category: string;
+  level?: "info" | "warn" | "critical";
+  title: string;
+  detail?: string | null;
+  subject?: string | null;
+  userId?: string | null;
+  metadata?: Record<string, unknown>;
+  dedupeKey?: string | null;
+}): Promise<void> {
+  try {
+    await supabaseAdmin.from("security_alerts").upsert(
+      {
+        category: input.category,
+        level: input.level ?? "warn",
+        title: input.title,
+        detail: input.detail ?? null,
+        subject: input.subject ?? null,
+        user_id: input.userId ?? null,
+        metadata: (input.metadata ?? {}) as never,
+        dedupe_key: input.dedupeKey ?? `${input.category}:${input.title}`,
+        status: "open",
+      },
+      { onConflict: "dedupe_key", ignoreDuplicates: true },
+    );
+  } catch (err) {
+    console.error("[security] alert write failed", err);
+  }
+}
+
 
 export interface AdminActionInput {
   actorId: string | null;
