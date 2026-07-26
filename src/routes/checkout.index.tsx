@@ -242,11 +242,8 @@ function PlansPage() {
                         Equivale a {formatMoney(Math.round(monthly), price.currency)} por mês
                       </p>
                     ) : null}
-                    {price.trialDays > 0 ? (
-                      <p className="mt-1.5 text-xs text-primary">
-                        {price.trialDays} dias de teste incluídos
-                      </p>
-                    ) : null}
+
+
 
                     <div className="my-6 h-px w-full bg-border" />
 
