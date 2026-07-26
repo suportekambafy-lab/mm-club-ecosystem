@@ -261,6 +261,14 @@ export async function handleGatewayPayment(
       paidCents: payment.amountCents,
       paymentRowId,
     });
+    // Revenue Intelligence: every successful payment teaches the profile.
+    try {
+      const { refreshCustomerProfile } = await import("./recovery/profile.server");
+      await refreshCustomerProfile(userId, "payment_succeeded");
+    } catch (err) {
+      console.error("[billing] refreshCustomerProfile", err);
+    }
+
   } else if (payment.status === "failed" || payment.status === "expired") {
     await emitEvent({
       type: "PaymentFailed",
