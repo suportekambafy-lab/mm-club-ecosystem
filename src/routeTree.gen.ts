@@ -58,6 +58,7 @@ import { Route as ApiPublicHooksLiveTestEmailRouteImport } from './routes/api/pu
 import { Route as ApiPublicHooksAutoTranscribeRouteImport } from './routes/api/public/hooks/auto-transcribe'
 import { Route as ApiPublicCloudflareStreamWebhookRouteImport } from './routes/api/public/cloudflare-stream/webhook'
 import { Route as AdminLivesLiveIdStudioRouteImport } from './routes/admin.lives.$liveId.studio'
+import { Route as AppLivesLiveIdSalaRouteImport } from './routes/_app.lives.$liveId.sala'
 import { Route as AppFerramentasStudioVideosRouteImport } from './routes/_app.ferramentas.studio.videos'
 import { Route as AppFerramentasStudioProdutosRouteImport } from './routes/_app.ferramentas.studio.produtos'
 import { Route as AppFerramentasStudioMarcaRouteImport } from './routes/_app.ferramentas.studio.marca'
@@ -320,6 +321,11 @@ const AdminLivesLiveIdStudioRoute = AdminLivesLiveIdStudioRouteImport.update({
   path: '/$liveId/studio',
   getParentRoute: () => AdminLivesRoute,
 } as any)
+const AppLivesLiveIdSalaRoute = AppLivesLiveIdSalaRouteImport.update({
+  id: '/sala',
+  path: '/sala',
+  getParentRoute: () => AppLivesLiveIdRoute,
+} as any)
 const AppFerramentasStudioVideosRoute =
   AppFerramentasStudioVideosRouteImport.update({
     id: '/videos',
@@ -396,7 +402,7 @@ export interface FileRoutesByFullPath {
   '/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
-  '/lives/$liveId': typeof AppLivesLiveIdRoute
+  '/lives/$liveId': typeof AppLivesLiveIdRouteWithChildren
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia/': typeof AppAcademiaIndexRoute
@@ -408,6 +414,7 @@ export interface FileRoutesByFullPath {
   '/ferramentas/studio/marca': typeof AppFerramentasStudioMarcaRoute
   '/ferramentas/studio/produtos': typeof AppFerramentasStudioProdutosRoute
   '/ferramentas/studio/videos': typeof AppFerramentasStudioVideosRoute
+  '/lives/$liveId/sala': typeof AppLivesLiveIdSalaRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
@@ -447,7 +454,7 @@ export interface FileRoutesByTo {
   '/checkout/return': typeof CheckoutReturnRoute
   '/admin': typeof AdminIndexRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
-  '/lives/$liveId': typeof AppLivesLiveIdRoute
+  '/lives/$liveId': typeof AppLivesLiveIdRouteWithChildren
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia': typeof AppAcademiaIndexRoute
@@ -459,6 +466,7 @@ export interface FileRoutesByTo {
   '/ferramentas/studio/marca': typeof AppFerramentasStudioMarcaRoute
   '/ferramentas/studio/produtos': typeof AppFerramentasStudioProdutosRoute
   '/ferramentas/studio/videos': typeof AppFerramentasStudioVideosRoute
+  '/lives/$liveId/sala': typeof AppLivesLiveIdSalaRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
@@ -506,7 +514,7 @@ export interface FileRoutesById {
   '/_app/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
   '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/_app/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
-  '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
+  '/_app/lives/$liveId': typeof AppLivesLiveIdRouteWithChildren
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/_app/academia/': typeof AppAcademiaIndexRoute
@@ -518,6 +526,7 @@ export interface FileRoutesById {
   '/_app/ferramentas/studio/marca': typeof AppFerramentasStudioMarcaRoute
   '/_app/ferramentas/studio/produtos': typeof AppFerramentasStudioProdutosRoute
   '/_app/ferramentas/studio/videos': typeof AppFerramentasStudioVideosRoute
+  '/_app/lives/$liveId/sala': typeof AppLivesLiveIdSalaRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
@@ -577,6 +586,7 @@ export interface FileRouteTypes {
     | '/ferramentas/studio/marca'
     | '/ferramentas/studio/produtos'
     | '/ferramentas/studio/videos'
+    | '/lives/$liveId/sala'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
@@ -628,6 +638,7 @@ export interface FileRouteTypes {
     | '/ferramentas/studio/marca'
     | '/ferramentas/studio/produtos'
     | '/ferramentas/studio/videos'
+    | '/lives/$liveId/sala'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
@@ -686,6 +697,7 @@ export interface FileRouteTypes {
     | '/_app/ferramentas/studio/marca'
     | '/_app/ferramentas/studio/produtos'
     | '/_app/ferramentas/studio/videos'
+    | '/_app/lives/$liveId/sala'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
@@ -1069,6 +1081,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLivesLiveIdStudioRouteImport
       parentRoute: typeof AdminLivesRoute
     }
+    '/_app/lives/$liveId/sala': {
+      id: '/_app/lives/$liveId/sala'
+      path: '/sala'
+      fullPath: '/lives/$liveId/sala'
+      preLoaderRoute: typeof AppLivesLiveIdSalaRouteImport
+      parentRoute: typeof AppLivesLiveIdRoute
+    }
     '/_app/ferramentas/studio/videos': {
       id: '/_app/ferramentas/studio/videos'
       path: '/videos'
@@ -1181,13 +1200,25 @@ const AppFerramentasRouteWithChildren = AppFerramentasRoute._addFileChildren(
   AppFerramentasRouteChildren,
 )
 
+interface AppLivesLiveIdRouteChildren {
+  AppLivesLiveIdSalaRoute: typeof AppLivesLiveIdSalaRoute
+}
+
+const AppLivesLiveIdRouteChildren: AppLivesLiveIdRouteChildren = {
+  AppLivesLiveIdSalaRoute: AppLivesLiveIdSalaRoute,
+}
+
+const AppLivesLiveIdRouteWithChildren = AppLivesLiveIdRoute._addFileChildren(
+  AppLivesLiveIdRouteChildren,
+)
+
 interface AppLivesRouteChildren {
-  AppLivesLiveIdRoute: typeof AppLivesLiveIdRoute
+  AppLivesLiveIdRoute: typeof AppLivesLiveIdRouteWithChildren
   AppLivesIndexRoute: typeof AppLivesIndexRoute
 }
 
 const AppLivesRouteChildren: AppLivesRouteChildren = {
-  AppLivesLiveIdRoute: AppLivesLiveIdRoute,
+  AppLivesLiveIdRoute: AppLivesLiveIdRouteWithChildren,
   AppLivesIndexRoute: AppLivesIndexRoute,
 }
 
