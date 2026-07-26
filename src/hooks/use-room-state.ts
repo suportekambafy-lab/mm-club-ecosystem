@@ -388,12 +388,14 @@ export function useRoomState({
       state: connState,
       quality: quality[localUserId] ?? "good",
     },
+    audioBlocked,
     enabledModules: Array.isArray(live?.enabled_modules)
       ? (live!.enabled_modules as string[])
       : live?.enabled_modules
       ? Object.keys(live.enabled_modules)
       : ["chat"],
   };
+
 
   // ---------- media actions ----------
   const toggleMic = useCallback(async () => {
