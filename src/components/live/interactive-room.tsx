@@ -16,6 +16,8 @@ import { Stage } from "./stage";
 import { Backstage } from "./backstage";
 import { RoomControls } from "./room-controls";
 import { Hand, Radio, X, UserPlus, Users } from "lucide-react";
+import { MemberAvatar } from "@/components/mm/member-avatar";
+import { useAdminIds } from "@/hooks/use-admin-ids";
 
 import {
   goLive,
@@ -157,6 +159,7 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
 
 function HostRequestsPanel({ state, actions }: { state: RoomState; actions: RoomActions }) {
   const [open, setOpen] = useState(false);
+  const adminIds = useAdminIds();
   const raised = useMemo(
     () =>
       state.participants
@@ -204,13 +207,12 @@ function HostRequestsPanel({ state, actions }: { state: RoomState; actions: Room
                     key={p.userId}
                     className="flex items-center gap-2 rounded-xl bg-white/[0.03] px-2.5 py-2 ring-1 ring-white/5"
                   >
-                    <div className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-white/10 text-xs font-semibold text-white/80">
-                      {p.avatarUrl ? (
-                        <img src={p.avatarUrl} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        (p.displayName || "?").slice(0, 2).toUpperCase()
-                      )}
-                    </div>
+                    <MemberAvatar
+                      name={p.displayName}
+                      avatarUrl={p.avatarUrl}
+                      verified={adminIds.has(p.userId) || p.role === "host"}
+                      size={36}
+                    />
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm text-white">{p.displayName}</div>
                       <div className="text-[10.5px] text-amber-300/80">Levantou a mão</div>
