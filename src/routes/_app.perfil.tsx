@@ -9,8 +9,14 @@ import { cn } from "@/lib/utils";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { useAdminIds } from "@/hooks/use-admin-ids";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getPaddleEnvironment } from "@/lib/paddle";
-import { createCustomerPortalSession } from "@/lib/paddle.functions";
+import {
+  getBillingOverview,
+  cancelSubscription,
+  resumeSubscription,
+  type BillingOverview,
+} from "@/lib/billing.functions";
+import { formatMoney } from "@/lib/billing/types";
+
 
 
 export const Route = createFileRoute("/_app/perfil")({
