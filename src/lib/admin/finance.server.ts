@@ -16,6 +16,7 @@ import type {
   FinanceOverview,
   MoneyPoint,
   SearchHit,
+  SubscriptionStateRow,
 } from "./finance-types";
 
 const DAY = 86_400_000;
@@ -865,4 +866,142 @@ export async function listCatalogAdmin(): Promise<CatalogProductRow[]> {
         activeSubs: activeByPrice.get(pr.id) ?? 0,
       })),
   }));
+}
+
+// ---------------------------------------------------------------------------
+// Subscription state & entitlements (operational view)
+// ---------------------------------------------------------------------------
+
+export async function listSubscriptionStates(): Promise<SubscriptionStateRow[]> {
+  const { data, error } = await supabaseAdmin
+    .from("billing_subscriptions")
+    .select(
+      "id, user_id, status, gateway, gateway_subscription_id, trial_end, current_period_end, cancel_at_period_end, created_at, product:catalog_products(name), price:catalog_prices!billing_subscriptions_price_id_fkey(slug, amount_cents, currency, interval)",
+    )
+    .order("created_at", { ascending: false })
+    .limit(300);
+  if (error) throw new Error(`listSubscriptionStates failed: ${error.message}`);
+
+  const subs = (data ?? []) as unknown as (SubRaw & {
+    gateway: string | null;
+    gateway_subscription_id: string | null;
+    product: { name: string } | null;
+    price: {
+      slug: string;
+      amount_cents: number;
+      currency: string;
+      interval: string;
+    } | null;
+  })[];
+
+  const userIds = [...new Set(subs.map((s) => s.user_id))];
+  const subIds = subs.map((s) => s.id);
+  if (subIds.length === 0) return [];
+
+  const [identities, paymentsRes, grantsRes] = await Promise.all([
+    loadIdentities(userIds),
+    supabaseAdmin
+      .from("billing_payments")
+      .select(
+        "id, subscription_id, gateway_payment_id, status, amount_cents, currency, paid_at, created_at, failure_reason",
+      )
+      .in("subscription_id", subIds)
+      .order("created_at", { ascending: false })
+      .limit(2000),
+    supabaseAdmin
+      .from("entitlement_grants")
+      .select("user_id, feature_key, source, quota, expires_at, revoked_at")
+      .in("user_id", userIds)
+      .is("revoked_at", null)
+      .limit(5000),
+  ]);
+
+  const payments = paymentsRes.data ?? [];
+  const paymentIds = [
+    ...new Set(payments.map((p) => p.gateway_payment_id).filter(Boolean)),
+  ] as string[];
+
+  const hooksRes = paymentIds.length
+    ? await supabaseAdmin
+        .from("ops_webhook_log")
+        .select("gateway, gateway_payment_id, outcome, error, received_at")
+        .in("gateway_payment_id", paymentIds)
+        .order("received_at", { ascending: false })
+        .limit(2000)
+    : { data: [] as never[] };
+
+  const hookByPayment = new Map<
+    string,
+    { gateway: string; gateway_payment_id: string | null; outcome: string; error: string | null; received_at: string }
+  >();
+  for (const h of hooksRes.data ?? []) {
+    const key = h.gateway_payment_id ?? "";
+    if (key && !hookByPayment.has(key)) hookByPayment.set(key, h);
+  }
+
+  const now = Date.now();
+
+  return subs.map((s) => {
+    const id = identities.get(s.user_id);
+    const mine = payments.filter((p) => p.subscription_id === s.id);
+    const last = mine[0] ?? null;
+    const hook = last?.gateway_payment_id
+      ? (hookByPayment.get(last.gateway_payment_id) ?? null)
+      : null;
+
+    return {
+      id: s.id,
+      userId: s.user_id,
+      email: id?.email ?? null,
+      name: id?.name ?? null,
+      status: s.status,
+      productName: s.product?.name ?? "MM Club",
+      priceSlug: s.price?.slug ?? "",
+      amountCents: s.price?.amount_cents ?? 0,
+      currency: s.price?.currency ?? "EUR",
+      interval: s.price?.interval ?? "month",
+      gateway: s.gateway ?? null,
+      gatewaySubscriptionId: s.gateway_subscription_id ?? null,
+      trialEnd: s.trial_end,
+      currentPeriodEnd: s.current_period_end,
+      cancelAtPeriodEnd: Boolean(s.cancel_at_period_end),
+      createdAt: s.created_at,
+      lastPayment: last
+        ? {
+            id: last.id,
+            gatewayPaymentId: last.gateway_payment_id,
+            status: last.status,
+            amountCents: last.amount_cents,
+            currency: last.currency,
+            paidAt: last.paid_at,
+            createdAt: last.created_at,
+            failureReason: last.failure_reason,
+          }
+        : null,
+      paidCount: mine.filter((p) => p.status === "paid").length,
+      failedCount: mine.filter((p) => p.status === "failed").length,
+      lastWebhook: hook
+        ? {
+            gateway: hook.gateway,
+            gatewayPaymentId: hook.gateway_payment_id,
+            outcome: hook.outcome,
+            error: hook.error,
+            receivedAt: hook.received_at,
+          }
+        : null,
+      entitlements: (grantsRes.data ?? [])
+        .filter(
+          (g) =>
+            g.user_id === s.user_id &&
+            (!g.expires_at || new Date(g.expires_at).getTime() > now),
+        )
+        .map((g) => ({
+          featureKey: g.feature_key,
+          source: String(g.source),
+          quota: g.quota,
+          expiresAt: g.expires_at,
+        }))
+        .sort((a, b) => a.featureKey.localeCompare(b.featureKey)),
+    } satisfies SubscriptionStateRow;
+  });
 }
