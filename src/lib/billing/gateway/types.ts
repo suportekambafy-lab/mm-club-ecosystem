@@ -69,6 +69,18 @@ export type CreateSubscriptionInput = {
   metadata?: Record<string, unknown>;
 };
 
+/** Off-session charge on a stored mandate (retry with an alternate card). */
+export type ChargeMandateInput = {
+  customerId: string;
+  mandateId: string;
+  amountCents: number;
+  currency: string;
+  description: string;
+  webhookUrl: string;
+  metadata?: Record<string, unknown>;
+};
+
+
 export type NormalizedWebhook = {
   kind: "payment";
   gatewayPaymentId: string;
