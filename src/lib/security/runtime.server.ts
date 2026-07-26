@@ -193,6 +193,9 @@ export interface AdminActionInput {
   ip?: string | null;
   userAgent?: string | null;
   geo?: string | null;
+  /** "success" | "failed" | "denied" */
+  result?: string;
+  requestId?: string | null;
 }
 
 /** Full before/after trail for every administrative change. */
@@ -211,6 +214,8 @@ export async function recordAdminAction(
       ip: input.ip ?? null,
       user_agent: input.userAgent?.slice(0, 300) ?? null,
       geo: input.geo ?? null,
+      result: input.result ?? "success",
+      request_id: input.requestId ?? null,
     });
   } catch (err) {
     console.error("[security] admin action write failed", err);
