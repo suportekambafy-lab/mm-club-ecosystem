@@ -300,7 +300,7 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
                 <span>Fixada</span>
                 <span className="opacity-60">·</span>
                 <span className="normal-case tracking-normal text-foreground/85">{pname}</span>
-                {adminIds.has(pinned.user_id) && <VerifiedBadge size={10} />}
+                {isVerified(pinned.user_id) && <VerifiedBadge size={10} />}
               </div>
               <p className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-foreground/90 break-words">
                 {renderBody(pinned.body)}
