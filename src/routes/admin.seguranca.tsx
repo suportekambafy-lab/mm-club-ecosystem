@@ -7,15 +7,25 @@ import {
   Ban,
   Eye,
   Fingerprint,
+  Gauge,
+  Lock,
   RefreshCw,
+  ScanSearch,
   ShieldAlert,
   ShieldCheck,
   Siren,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { getSecurityOverview, setEmergencyMode } from "@/lib/security.functions";
+import {
+  getSecurityOverview,
+  getSecurityScore,
+  runSecurityScanNow,
+  setEmergencyMode,
+  setReadOnlyMode,
+} from "@/lib/security.functions";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/admin/seguranca")({
   ssr: false,
