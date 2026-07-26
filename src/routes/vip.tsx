@@ -263,15 +263,17 @@ function VipPage() {
 
 
               <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                Nome (opcional)
+                Nome
               </label>
               <input
                 type="text"
+                required
                 value={guestName}
                 onChange={(e) => setGuestName(e.target.value)}
                 placeholder="O teu nome"
                 className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
               />
+
 
               {error ? (
                 <p className="mt-4 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
