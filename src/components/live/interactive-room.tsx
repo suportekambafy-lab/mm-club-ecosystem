@@ -15,7 +15,7 @@ import type { RoomActions, RoomState, StageLayout } from "@/lib/room-state";
 import { Stage } from "./stage";
 import { Backstage } from "./backstage";
 import { RoomControls } from "./room-controls";
-import { Hand, Radio, X, UserPlus, Users } from "lucide-react";
+import { Hand, Radio, X, UserPlus, Users, UserMinus } from "lucide-react";
 import { MemberAvatar } from "@/components/mm/member-avatar";
 import { useAdminIds } from "@/hooks/use-admin-ids";
 
@@ -23,6 +23,7 @@ import {
   goLive,
   endLive,
   raiseHand,
+  leaveStage,
   inviteToStage,
   promoteToStage,
   demoteFromStage,
@@ -46,6 +47,7 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
   const goLiveFn = useServerFn(goLive);
   const endLiveFn = useServerFn(endLive);
   const raiseHandFn = useServerFn(raiseHand);
+  const leaveStageFn = useServerFn(leaveStage);
   const inviteFn = useServerFn(inviteToStage);
   const promoteFn = useServerFn(promoteToStage);
   const demoteFn = useServerFn(demoteFromStage);
@@ -58,6 +60,9 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
     () => ({
       raiseHand: async (raised: boolean) => {
         await raiseHandFn({ data: { liveId, raised } });
+      },
+      leaveStage: async () => {
+        await leaveStageFn({ data: { liveId } });
       },
       inviteToStage: async (userId: string) => {
         await inviteFn({ data: { liveId, targetUserId: userId } });
@@ -90,7 +95,7 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
         await banFn({ data: { liveId, targetUserId: userId } });
       },
     }),
-    [liveId, goLiveFn, endLiveFn, raiseHandFn, inviteFn, promoteFn, demoteFn, spotlightFn, layoutFn, kickFn, banFn],
+    [liveId, goLiveFn, endLiveFn, raiseHandFn, leaveStageFn, inviteFn, promoteFn, demoteFn, spotlightFn, layoutFn, kickFn, banFn],
   );
 
   const { state, actions } = useRoomState({
@@ -159,7 +164,15 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
 
 function HostRequestsPanel({ state, actions }: { state: RoomState; actions: RoomActions }) {
   const [open, setOpen] = useState(false);
+  const [removing, setRemoving] = useState<string | null>(null);
   const adminIds = useAdminIds();
+  const onStage = useMemo(
+    () =>
+      state.participants.filter(
+        (p) => p.onStage && !p.banned && p.role !== "host" && p.userId !== state.localUserId,
+      ),
+    [state.participants, state.localUserId],
+  );
   const raised = useMemo(
     () =>
       state.participants
@@ -185,7 +198,7 @@ function HostRequestsPanel({ state, actions }: { state: RoomState; actions: Room
       {open && (
         <div className="absolute inset-y-0 right-0 z-40 flex w-[320px] max-w-full flex-col border-l border-white/10 bg-neutral-950/95 backdrop-blur-md">
           <div className="flex items-center justify-between border-b border-white/5 px-3 py-2.5">
-            <div className="text-sm font-semibold">Pedidos para participar</div>
+            <div className="text-sm font-semibold">Gestão do palco</div>
             <button
               type="button"
               onClick={() => setOpen(false)}
@@ -196,8 +209,55 @@ function HostRequestsPanel({ state, actions }: { state: RoomState; actions: Room
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-2">
+            {onStage.length > 0 && (
+              <div className="mb-3">
+                <div className="px-1 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">
+                  No palco · {onStage.length}
+                </div>
+                <ul className="space-y-1.5">
+                  {onStage.map((p) => (
+                    <li
+                      key={p.userId}
+                      className="flex items-center gap-2 rounded-xl bg-white/[0.03] px-2.5 py-2 ring-1 ring-white/5"
+                    >
+                      <MemberAvatar
+                        name={p.displayName}
+                        avatarUrl={p.avatarUrl}
+                        verified={adminIds.has(p.userId) || p.role === "host"}
+                        size={36}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm text-white">{p.displayName}</div>
+                        <div className="text-[10.5px] text-white/50">
+                          {p.role === "cohost" ? "Co-host" : "Orador"}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={removing === p.userId}
+                        onClick={async () => {
+                          setRemoving(p.userId);
+                          try {
+                            await actions.demoteFromStage(p.userId);
+                          } finally {
+                            setRemoving(null);
+                          }
+                        }}
+                        className="inline-flex items-center gap-1 rounded-lg bg-white/5 px-2.5 py-1.5 text-[11px] font-medium text-white/80 ring-1 ring-white/10 transition hover:bg-red-500/15 hover:text-red-300 disabled:opacity-50"
+                      >
+                        <UserMinus className="h-3.5 w-3.5" />
+                        {removing === p.userId ? "A remover…" : "Remover do palco"}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div className="px-1 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">
+              Pedidos para participar
+            </div>
             {raised.length === 0 ? (
-              <div className="grid h-full place-items-center px-4 text-center text-xs text-white/50">
+              <div className="px-3 py-6 text-center text-xs text-white/50">
                 Nenhum participante levantou a mão. Quando o fizerem, aparecem aqui para convidares para o palco.
               </div>
             ) : (

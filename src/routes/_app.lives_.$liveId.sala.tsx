@@ -193,13 +193,19 @@ function SalaRoute() {
           // change while on stage — LiveKit tokens embed canPublishSources,
           // so screen-share access requires a fresh token when granted later.
           const promoted = prev === false && row.on_stage && (perms.mic || perms.cam || perms.screen);
+          // Demoted (on→off, by the host or by the user itself): the current
+          // token still carries publish rights, so we mint a viewer token —
+          // that also drops mic/cam/screen tracks from the stage instantly.
+          const demoted = prev === true && !row.on_stage;
           const permsChangedOnStage =
             row.on_stage &&
             prevPerms != null &&
             (prevPerms.mic !== perms.mic || prevPerms.cam !== perms.cam || prevPerms.screen !== perms.screen);
-          if (promoted || permsChangedOnStage) {
+          if (promoted || demoted || permsChangedOnStage) {
             setSession(null);
           }
+          if (demoted) setTarget("main");
+
         },
       )
       .subscribe();

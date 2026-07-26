@@ -396,6 +396,45 @@ export const demoteFromStage = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * Self-service stage exit: any speaker (or co-host) can step down without host
+ * intervention. The user stays connected to the room as audience — only the
+ * publish permissions and the on_stage flag are dropped.
+ */
+export const leaveStage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => liveIdOnly.parse(i))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const me = await getAuthedParticipant(supabase, data.liveId, userId);
+    if (!me) throw new Error("Não estás nesta sala.");
+    if (me.role === "host") throw new Error("O anfitrião não pode sair do palco.");
+
+    const { error } = await supabase
+      .from("live_participants")
+      .update({
+        role: "participant",
+        on_stage: false,
+        mic_allowed: false,
+        cam_allowed: false,
+        screen_allowed: false,
+        hand_raised_at: null,
+        invited_to_stage_at: null,
+        room: "main",
+      })
+      .eq("live_id", data.liveId)
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+
+    await logEvent(supabase, {
+      liveId: data.liveId,
+      actorId: userId,
+      targetUserId: userId,
+      kind: "leave_stage",
+    });
+    return { ok: true };
+  });
+
 // -------------------------------------------------------------------------
 // Layout & spotlight
 // -------------------------------------------------------------------------
