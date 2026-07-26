@@ -63,11 +63,12 @@ function VipPage() {
 
 
   const handleStart = async () => {
-    // Pay first, account after: guests only need to leave an email.
-    if (!user && !askEmail) {
+    // Confirmação de nome/email antes de abrir o pagamento (igual ao checkout).
+    if (!askEmail) {
       setAskEmail(true);
       return;
     }
+
     setPending(true);
     setError(null);
     try {
