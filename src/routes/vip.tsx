@@ -121,7 +121,7 @@ function VipPage() {
             className="mt-4 max-w-lg text-center text-base text-muted-foreground md:text-lg"
           >
             Acesso completo ao ecossistema MM Club durante 90 dias. Depois do
-            trial, continua por 49 €/mês — cancelas quando quiseres.
+            trial, continua por 29,90 €/mês — cancelas quando quiseres.
           </motion.p>
 
           {success ? (
@@ -153,7 +153,7 @@ function VipPage() {
               </span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Depois, 49 €/mês. Cancelas a qualquer momento antes do fim do
+              Depois, 29,90 €/mês. Cancelas a qualquer momento antes do fim do
               trial.
             </p>
 
