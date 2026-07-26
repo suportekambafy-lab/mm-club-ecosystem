@@ -107,27 +107,57 @@ export async function registerSession(
   const activeSessions = active?.length ?? 1;
 
   if (newDevice) {
+    // IMPORTANT: a fingerprint change NEVER invalidates a session. Browsers,
+    // OS updates, VPNs, private mode and network changes all shift the
+    // fingerprint legitimately. It is a *risk signal* only — we combine
+    // several signals to decide how loud the alert is, and always allow.
+    const { data: history } = await supabaseAdmin
+      .from("security_devices")
+      .select("country, last_ip")
+      .eq("user_id", input.userId)
+      .limit(50);
+    const knownCountries = new Set(
+      (history ?? []).map((d) => d.country).filter(Boolean),
+    );
+    const knownIps = new Set(
+      (history ?? []).map((d) => d.last_ip).filter(Boolean),
+    );
+    const newCountry =
+      !!input.country && knownCountries.size > 0 && !knownCountries.has(input.country);
+    const newIp = !!input.ip && knownIps.size > 0 && !knownIps.has(input.ip);
+    const signals = [true, newCountry, newIp].filter(Boolean).length;
+    const level = signals >= 3 ? "critical" : "warn";
+
     await recordSecurityEvent({
       kind: "new_device",
-      severity: "warn",
+      severity: level,
       userId: input.userId,
       ip: input.ip,
       userAgent: input.userAgent,
       outcome: "allowed",
       reason: `${browser} · ${os}`,
-      metadata: { country: input.country, city: input.city, deviceType },
+      metadata: {
+        country: input.country,
+        city: input.city,
+        deviceType,
+        signals: { newDevice: true, newCountry, newIp },
+      },
     });
     await raiseAlert({
       category: "session",
-      level: "warn",
-      title: "Novo dispositivo com sessão iniciada",
+      level,
+      title:
+        signals >= 3
+          ? "Novo dispositivo, novo país e novo IP na mesma conta"
+          : "Novo dispositivo com sessão iniciada",
       detail: `${browser} · ${os} · ${input.city ?? "cidade desconhecida"}, ${input.country ?? "?"}`,
       userId: input.userId,
       subject: input.userId,
       dedupeKey: `new_device:${input.userId}:${input.fingerprint}`,
-      metadata: { ip: input.ip, browser, os },
+      metadata: { ip: input.ip, browser, os, newCountry, newIp },
     });
   }
+
 
   // Duplicate/concurrent sessions across distinct devices.
   const distinctDevices = new Set(
