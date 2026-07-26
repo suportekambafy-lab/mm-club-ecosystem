@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
-  CreditCard,
+  
   Loader2,
   Plus,
   ShieldCheck,
@@ -11,6 +11,11 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  PaymentBrandMark,
+  paymentBrandLabel,
+} from "@/components/mm/payment-brand";
+
 import { cn } from "@/lib/utils";
 import {
   addPaymentMethod,
@@ -493,14 +498,13 @@ function SubscriptionPage() {
                     key={m.id}
                     className="flex flex-wrap items-center gap-4 border-b border-border px-6 py-4 last:border-0"
                   >
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-2 ring-1 ring-border">
-                      <CreditCard className="h-4 w-4 text-muted-foreground" />
-                    </span>
+                    <PaymentBrandMark brand={m.brand} method={m.method} />
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm text-foreground">
-                        {(m.brand ?? m.method ?? "Cartão").toString().toUpperCase()}
+                        {paymentBrandLabel(m.brand, m.method)}
                         {m.last4 ? ` •••• ${m.last4}` : ""}
                       </span>
+
                       <span className="block text-xs text-muted-foreground">
                         {m.expMonth && m.expYear
                           ? `Válido até ${String(m.expMonth).padStart(2, "0")}/${m.expYear}`
