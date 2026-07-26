@@ -14,6 +14,12 @@ import type {
   TimelineItem,
 } from "@/lib/billing/types";
 
+/** Catalog shape sent to the browser (metadata stays server-side). */
+export type CatalogView = Omit<CatalogEntry, "metadata" | "prices"> & {
+  badge: string | null;
+  prices: CatalogEntry["prices"];
+};
+
 /** Public product catalog (no auth): plans and packs available for purchase. */
 export const getCatalog = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) =>
@@ -22,9 +28,13 @@ export const getCatalog = createServerFn({ method: "GET" })
       .default({})
       .parse(input ?? {}),
   )
-  .handler(async ({ data }): Promise<CatalogEntry[]> => {
+  .handler(async ({ data }): Promise<CatalogView[]> => {
     const { listCatalog } = await import("@/lib/billing/catalog.server");
-    return listCatalog(data.kinds as never);
+    const entries = await listCatalog(data.kinds as never);
+    return entries.map(({ metadata, ...rest }) => ({
+      ...rest,
+      badge: typeof metadata?.badge === "string" ? metadata.badge : null,
+    }));
   });
 
 export const startCheckout = createServerFn({ method: "POST" })
