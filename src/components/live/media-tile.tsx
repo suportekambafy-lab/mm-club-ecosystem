@@ -14,9 +14,12 @@ interface Props {
   /** When true, treat screen share as primary. */
   preferScreen?: boolean;
   showName?: boolean;
+  /** Skip binding the audio track (useful for a PiP overlay where the primary
+   *  tile already plays the participant's audio). */
+  suppressAudio?: boolean;
 }
 
-function MediaTileBase({ participant, actions, className, preferScreen, showName = true }: Props) {
+function MediaTileBase({ participant, actions, className, preferScreen, showName = true, suppressAudio }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [avatarBroken, setAvatarBroken] = useState(false);
@@ -25,9 +28,9 @@ function MediaTileBase({ participant, actions, className, preferScreen, showName
     (preferScreen && participant.tracks.find((t) => t.kind === "video" && t.source === "screen")) ||
     participant.tracks.find((t) => t.kind === "video" && t.source === "camera") ||
     participant.tracks.find((t) => t.kind === "video");
-  const audioTrack: MediaTrack | undefined = participant.tracks.find(
-    (t) => t.kind === "audio" && !participant.isLocal,
-  );
+  const audioTrack: MediaTrack | undefined = suppressAudio
+    ? undefined
+    : participant.tracks.find((t) => t.kind === "audio" && !participant.isLocal);
 
   useEffect(() => {
     const el = videoRef.current;
