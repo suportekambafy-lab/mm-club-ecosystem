@@ -799,6 +799,7 @@ export type Database = {
           description: string | null
           duration_minutes: number
           enabled_modules: Json
+          ended_at: string | null
           expert_id: string | null
           id: string
           livekit_room_prefix: string | null
@@ -809,6 +810,7 @@ export type Database = {
           recording_started_at: string | null
           recording_stopped_at: string | null
           recording_video_uid: string | null
+          replay_notified_at: string | null
           spotlight_user_id: string | null
           stage_layout: Database["public"]["Enums"]["live_stage_layout"]
           started_at: string | null
@@ -833,6 +835,7 @@ export type Database = {
           description?: string | null
           duration_minutes?: number
           enabled_modules?: Json
+          ended_at?: string | null
           expert_id?: string | null
           id?: string
           livekit_room_prefix?: string | null
@@ -843,6 +846,7 @@ export type Database = {
           recording_started_at?: string | null
           recording_stopped_at?: string | null
           recording_video_uid?: string | null
+          replay_notified_at?: string | null
           spotlight_user_id?: string | null
           stage_layout?: Database["public"]["Enums"]["live_stage_layout"]
           started_at?: string | null
@@ -867,6 +871,7 @@ export type Database = {
           description?: string | null
           duration_minutes?: number
           enabled_modules?: Json
+          ended_at?: string | null
           expert_id?: string | null
           id?: string
           livekit_room_prefix?: string | null
@@ -877,6 +882,7 @@ export type Database = {
           recording_started_at?: string | null
           recording_stopped_at?: string | null
           recording_video_uid?: string | null
+          replay_notified_at?: string | null
           spotlight_user_id?: string | null
           stage_layout?: Database["public"]["Enums"]["live_stage_layout"]
           started_at?: string | null

@@ -11,6 +11,7 @@ import {
   FileText,
   Sparkles,
   Lock,
+  Loader2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getLive } from "@/lib/lives.functions";
@@ -146,6 +147,18 @@ function LiveDetail() {
     };
   }, [data.live.id]);
 
+  // While the recording is still encoding, poll until it becomes playable so
+  // the replay appears without the user refreshing.
+  useEffect(() => {
+    if (data.replayStatus !== "processing") return;
+    const t = setInterval(() => {
+      getLive({ data: { id: data.live.id } })
+        .then(setData)
+        .catch(() => {});
+    }, 20000);
+    return () => clearInterval(t);
+  }, [data.replayStatus, data.live.id]);
+
   // Immersive layout: hide the app's mobile tabbar so it can never overlap
   // the chat composer or push the video off-screen when the keyboard opens.
   // Also lock the container height to `visualViewport.height` so opening the
@@ -180,7 +193,7 @@ function LiveDetail() {
 
 
 
-  const { live, playbackToken, videoUid, actualDurationSeconds, replaySegments } = data;
+  const { live, playbackToken, videoUid, actualDurationSeconds, replaySegments, replayStatus } = data;
   const isLive = live.status === "live";
   const isReplay = live.status === "ended" || live.status === "published";
   const expert = live.expert_id ? expertsById[live.expert_id] : undefined;
@@ -245,7 +258,11 @@ function LiveDetail() {
       />
 
     ) : isReplay ? (
-      <NoReplayPoster live={live} />
+      replayStatus === "unavailable" ? (
+        <NoReplayPoster live={live} />
+      ) : (
+        <ProcessingReplayPoster live={live} />
+      )
     ) : (
       <PrelivePoster live={live} countdown={countdown} />
     );
@@ -494,6 +511,37 @@ function PrelivePoster({
         ) : (
           <h2 className="font-display text-xl text-white md:text-3xl">Começamos em breve</h2>
         )}
+      </div>
+    </div>
+  );
+}
+
+function ProcessingReplayPoster({ live }: { live: LoaderData["live"] }) {
+  const cover = resolveLiveCoverUrl(live.cover_url);
+  return (
+    <div
+      className="relative aspect-video w-full overflow-hidden bg-black shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)] lg:rounded-3xl lg:border lg:border-border"
+      style={
+        cover
+          ? {
+              backgroundImage: `url(${cover})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }
+          : undefined
+      }
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-black/85 via-black/75 to-black/90" />
+      <div className="relative flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+        <span className="inline-flex items-center gap-2 rounded-full bg-primary/15 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary ring-1 ring-primary/30">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          A processar
+        </span>
+        <h2 className="font-display text-xl text-white md:text-3xl">Gravação a ser preparada</h2>
+        <p className="max-w-md text-sm text-white/70">
+          A sessão terminou e a gravação está a ser processada. Fica disponível aqui dentro de
+          alguns minutos — avisamos-te por email quando estiver pronta.
+        </p>
       </div>
     </div>
   );

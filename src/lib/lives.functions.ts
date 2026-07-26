@@ -51,7 +51,7 @@ export const getLive = createServerFn({ method: "GET" })
     const { data: live, error } = await context.supabase
       .from("lives")
       .select(
-        "id,title,description,expert_id,starts_at,started_at,stream_generation,duration_minutes,visibility,cover_url,status,cf_playback_id,cf_live_input_id,recording_video_uid,mode",
+        "id,title,description,expert_id,starts_at,started_at,ended_at,updated_at,stream_generation,duration_minutes,visibility,cover_url,status,cf_playback_id,cf_live_input_id,recording_video_uid,mode",
       )
       .eq("id", data.id)
       .maybeSingle();
@@ -91,11 +91,16 @@ export const getLive = createServerFn({ method: "GET" })
     type ReplaySegment = { uid: string; token: string | null; duration: number | null };
     let replaySegments: ReplaySegment[] = [];
     let actualDurationSeconds: number | null = null;
+    // Cloudflare needs a few minutes to finalize a recording after the session
+    // ends. Track whether any recording is still encoding so the UI can show
+    // "a processar" instead of wrongly claiming the live wasn't recorded.
+    let pendingRecording = false;
 
     if (isReplay && live.cf_live_input_id) {
       try {
         const { listVideosForLiveInput, signPlaybackToken } = await import("@/lib/cloudflare-stream.server");
         const videos = await listVideosForLiveInput(live.cf_live_input_id);
+        pendingRecording = videos.some((v) => !v.readyToStream);
         const ready = videos
           .filter((v) => v.readyToStream)
           .sort((a, b) => {
@@ -170,8 +175,41 @@ export const getLive = createServerFn({ method: "GET" })
       }
     }
 
-    return { live: { ...live, mode: effectiveMode }, playbackToken, videoUid, actualDurationSeconds, replaySegments };
+    // Replay availability state, used by the UI:
+    //  - "ready"       → playable recording
+    //  - "processing"  → Cloudflare is still encoding, or the session ended
+    //                    recently (grace window) so a recording may still land
+    //  - "unavailable" → genuinely no recording for this session
+    let replayStatus: "ready" | "processing" | "unavailable" = "ready";
+    if (isReplay) {
+      if (videoUid && playbackToken) {
+        replayStatus = "ready";
+        // Announce the replay once, the first time it is actually playable.
+        try {
+          const { notifyReplayReady } = await import("@/lib/live-replay-notify.server");
+          await notifyReplayReady(live.id);
+        } catch (e) {
+          console.error("[lives] replay notify failed", e);
+        }
+      } else {
+        const endedRef = live.ended_at ?? live.updated_at ?? null;
+        const withinGrace = endedRef
+          ? Date.now() - new Date(endedRef).getTime() < 45 * 60 * 1000
+          : false;
+        replayStatus = pendingRecording || withinGrace ? "processing" : "unavailable";
+      }
+    }
+
+    return {
+      live: { ...live, mode: effectiveMode },
+      playbackToken,
+      videoUid,
+      actualDurationSeconds,
+      replaySegments,
+      replayStatus,
+    };
   });
+
 
 
 
@@ -444,7 +482,7 @@ export const adminSetLiveBroadcastState = createServerFn({ method: "POST" })
 
     const { error } = await supabaseAdmin
       .from("lives")
-      .update({ status: "ended", started_at: null })
+      .update({ status: "ended", started_at: null, ended_at: new Date().toISOString() })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
 

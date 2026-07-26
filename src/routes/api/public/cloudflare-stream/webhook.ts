@@ -61,15 +61,24 @@ export const Route = createFileRoute("/api/public/cloudflare-stream/webhook")({
 
           if (liveInputId && (state === "live-ended" || state === "ready")) {
             if (uid && readyToStream) {
-              await supabaseAdmin
+              const { data: rows } = await supabaseAdmin
                 .from("lives")
                 .update({ recording_video_uid: uid, status: "published" })
-                .eq("cf_live_input_id", liveInputId);
+                .eq("cf_live_input_id", liveInputId)
+                .select("id");
+              // Recording finished encoding → tell members it's watchable.
+              try {
+                const { notifyReplayReady } = await import("@/lib/live-replay-notify.server");
+                for (const r of rows ?? []) await notifyReplayReady(r.id);
+              } catch (e) {
+                console.error("[cf-stream webhook] replay notify failed", e);
+              }
             } else {
               await supabaseAdmin
                 .from("lives")
-                .update({ status: "ended" })
-                .eq("cf_live_input_id", liveInputId);
+                .update({ status: "ended", ended_at: new Date().toISOString() })
+                .eq("cf_live_input_id", liveInputId)
+                .is("ended_at", null);
             }
           }
         } catch (e) {
