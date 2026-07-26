@@ -133,6 +133,7 @@ const CRUMBS: Record<string, string> = {
   "/admin/eventos": "Eventos",
   "/admin/lives": "Lives",
   "/admin/ferramentas": "Ferramentas",
+  "/admin/seguranca": "Segurança",
 };
 
 function AdminLayout() {
