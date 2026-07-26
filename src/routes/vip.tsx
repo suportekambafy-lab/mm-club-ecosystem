@@ -213,9 +213,9 @@ function VipPage() {
             ) : null}
 
             <p className="mt-4 text-center text-[11px] text-muted-foreground">
-              Pagamento seguro via Mollie. Aceitamos cartão, MB WAY, Multibanco
-              e mais.
+              Pagamento seguro via Mollie.
             </p>
+
           </motion.div>
 
           <p className="mt-8 text-center text-xs text-muted-foreground">
