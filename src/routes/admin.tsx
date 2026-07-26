@@ -99,6 +99,8 @@ const nav: Array<{ label: string; items: NavItem[] }> = [
       { to: "/admin/financeiro/cupoes", label: "Cupões", icon: Ticket },
       { to: "/admin/financeiro/catalogo", label: "Catálogo", icon: Package },
       { to: "/admin/saude", label: "Saúde do billing", icon: HeartPulse },
+      { to: "/admin/comunicacao", label: "Comunicação", icon: Mail },
+
     ],
   },
   {
