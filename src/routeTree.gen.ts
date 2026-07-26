@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VipRouteImport } from './routes/vip'
 import { Route as TermosRouteImport } from './routes/termos'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReembolsosRouteImport } from './routes/reembolsos'
 import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
@@ -86,6 +87,11 @@ const VipRoute = VipRouteImport.update({
 const TermosRoute = TermosRouteImport.update({
   id: '/termos',
   path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReembolsosRoute = ReembolsosRouteImport.update({
@@ -445,6 +451,7 @@ export interface FileRoutesByFullPath {
   '/privacidade': typeof PrivacidadeRoute
   '/quiz': typeof QuizRoute
   '/reembolsos': typeof ReembolsosRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/termos': typeof TermosRoute
   '/vip': typeof VipRoute
   '/academia': typeof AppAcademiaRouteWithChildren
@@ -513,6 +520,7 @@ export interface FileRoutesByTo {
   '/privacidade': typeof PrivacidadeRoute
   '/quiz': typeof QuizRoute
   '/reembolsos': typeof ReembolsosRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/termos': typeof TermosRoute
   '/vip': typeof VipRoute
   '/codigo': typeof AppCodigoRoute
@@ -578,6 +586,7 @@ export interface FileRoutesById {
   '/privacidade': typeof PrivacidadeRoute
   '/quiz': typeof QuizRoute
   '/reembolsos': typeof ReembolsosRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/termos': typeof TermosRoute
   '/vip': typeof VipRoute
   '/_app/academia': typeof AppAcademiaRouteWithChildren
@@ -649,6 +658,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/quiz'
     | '/reembolsos'
+    | '/reset-password'
     | '/termos'
     | '/vip'
     | '/academia'
@@ -717,6 +727,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/quiz'
     | '/reembolsos'
+    | '/reset-password'
     | '/termos'
     | '/vip'
     | '/codigo'
@@ -781,6 +792,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/quiz'
     | '/reembolsos'
+    | '/reset-password'
     | '/termos'
     | '/vip'
     | '/_app/academia'
@@ -852,6 +864,7 @@ export interface RootRouteChildren {
   PrivacidadeRoute: typeof PrivacidadeRoute
   QuizRoute: typeof QuizRoute
   ReembolsosRoute: typeof ReembolsosRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   TermosRoute: typeof TermosRoute
   VipRoute: typeof VipRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -885,6 +898,13 @@ declare module '@tanstack/react-router' {
       path: '/termos'
       fullPath: '/termos'
       preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reembolsos': {
@@ -1532,6 +1552,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacidadeRoute: PrivacidadeRoute,
   QuizRoute: QuizRoute,
   ReembolsosRoute: ReembolsosRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   TermosRoute: TermosRoute,
   VipRoute: VipRoute,
   ApiChatRoute: ApiChatRoute,

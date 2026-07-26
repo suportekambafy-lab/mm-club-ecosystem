@@ -51,7 +51,30 @@ function AuthPage() {
 
 
 
+  async function sendReset() {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) {
+      setFormError("Escreve o teu email primeiro.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Enviámos-te um email para definires uma nova palavra-passe.");
+    } catch (err) {
+      const message = getAuthErrorMessage(err);
+      setFormError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function onSubmit(e: React.FormEvent) {
+
     e.preventDefault();
     setFormError(null);
     setLoading(true);
