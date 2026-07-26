@@ -54,22 +54,34 @@ export const Route = createFileRoute("/admin")({
 
 type AdminTo =
   | "/admin"
+  | "/admin/financeiro"
+  | "/admin/financeiro/subscricoes"
+  | "/admin/financeiro/receita"
+  | "/admin/financeiro/cupoes"
+  | "/admin/financeiro/catalogo"
+  | "/admin/saude"
   | "/admin/cursos"
   | "/admin/aulas"
   | "/admin/transcricoes"
   | "/admin/eventos"
   | "/admin/lives"
-  | "/admin/ferramentas"
-  | "/admin/saude"
-  | "/admin/financeiro";
+  | "/admin/ferramentas";
 
 const nav: Array<{
   label: string;
   items: Array<{ to: AdminTo; label: string; icon: typeof LayoutDashboard; exact?: boolean }>;
 }> = [
   {
-    label: "Painel",
-    items: [{ to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true }],
+    label: "Negócio",
+    items: [
+      { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+      { to: "/admin/financeiro", label: "Financeiro", icon: Wallet, exact: true },
+      { to: "/admin/financeiro/subscricoes", label: "Subscrições", icon: Repeat },
+      { to: "/admin/financeiro/receita", label: "Receita", icon: TrendingUp },
+      { to: "/admin/financeiro/cupoes", label: "Cupões", icon: Ticket },
+      { to: "/admin/financeiro/catalogo", label: "Catálogo", icon: Package },
+      { to: "/admin/saude", label: "Saúde do billing", icon: HeartPulse },
+    ],
   },
   {
     label: "Conteúdo",
@@ -88,18 +100,10 @@ const nav: Array<{
   },
   {
     label: "Recursos",
-    items: [
-      { to: "/admin/ferramentas", label: "Ferramentas", icon: Wrench },
-      { to: "/admin/saude", label: "Saúde do Billing", icon: HeartPulse },
-    ],
-  },
-  {
-    label: "Negócio",
-    items: [
-      { to: "/admin/financeiro", label: "Financeiro", icon: Wallet },
-    ],
+    items: [{ to: "/admin/ferramentas", label: "Ferramentas", icon: Wrench }],
   },
 ];
+
 
 function AdminLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
