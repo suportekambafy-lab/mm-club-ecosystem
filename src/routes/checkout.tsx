@@ -67,14 +67,15 @@ function PlansPage() {
   );
 
   const handleSelect = async (priceSlug: string) => {
-    setPending(priceSlug);
     setError(null);
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      // Pay first, account after: we only need an email at this point.
+      setGuestPlan(priceSlug);
+      return;
+    }
+    setPending(priceSlug);
     try {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        window.location.href = `/auth?redirect=${encodeURIComponent("/checkout")}`;
-        return;
-      }
       const res = await startCheckout({
         data: { priceSlug, origin: window.location.origin },
       });
@@ -89,6 +90,40 @@ function PlansPage() {
       setPending(null);
     }
   };
+
+  const submitGuest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!guestPlan) return;
+    setPending(guestPlan);
+    setError(null);
+    try {
+      const res = await startGuestCheckout({
+        data: {
+          email: guestEmail.trim(),
+          name: guestName.trim() || null,
+          priceSlug: guestPlan,
+          origin: window.location.origin,
+        },
+      });
+      if (res.status === "account_exists") {
+        setPending(null);
+        setError(
+          "Já existe uma conta com este email. Inicia sessão para continuares o pagamento.",
+        );
+        return;
+      }
+      window.location.href = res.checkoutUrl;
+    } catch (err) {
+      console.error(err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível abrir o checkout. Tenta novamente.",
+      );
+      setPending(null);
+    }
+  };
+
 
   return (
     <div className="relative overflow-hidden">
