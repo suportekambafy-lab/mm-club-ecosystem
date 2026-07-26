@@ -34,6 +34,8 @@ import { NotificationsBell } from "@/components/mm/notifications";
 import { cn } from "@/lib/utils";
 // Boot-time: apply admin overrides to in-memory data
 import "@/data/admin-store";
+import { endLocalSession, useSessionGuard } from "@/lib/security/session-guard";
+
 
 export const Route = createFileRoute("/_app")({
   ssr: false,
