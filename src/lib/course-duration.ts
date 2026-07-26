@@ -68,30 +68,38 @@ export function lessonThumb(
 
 
 
-// Parse strings like "12m", "1h", "1h 20m", "90 min", "1:20" -> minutes
-export function parseDurationToMinutes(input?: string): number {
+// Parse strings like "12m", "1h", "1h 20m", "90 min", "4:12" (mm:ss),
+// "1:20:00" (h:mm:ss) -> seconds.
+// IMPORTANT: two-part "M:SS" values come from real video durations
+// (Bunny/YouTube) and are minutes:seconds — never hours:minutes.
+export function parseDurationToSeconds(input?: string): number {
   if (!input) return 0;
   const s = input.trim().toLowerCase();
   if (!s) return 0;
 
-  // "1:20" or "01:20:00" style
-  if (/^\d+:\d+(:\d+)?$/.test(s)) {
+  if (/^\d+:\d{1,2}(:\d{1,2})?$/.test(s)) {
     const parts = s.split(":").map((n) => parseInt(n, 10));
     if (parts.length === 2) return parts[0] * 60 + parts[1];
-    if (parts.length === 3) return parts[0] * 60 + parts[1] + Math.round(parts[2] / 60);
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
   }
 
-  let minutes = 0;
+  let seconds = 0;
   const h = s.match(/(\d+)\s*h/);
   const m = s.match(/(\d+)\s*m/);
-  if (h) minutes += parseInt(h[1], 10) * 60;
-  if (m) minutes += parseInt(m[1], 10);
-  if (!h && !m) {
-    // bare number = minutes
+  const sec = s.match(/(\d+)\s*s(?!\w)/);
+  if (h) seconds += parseInt(h[1], 10) * 3600;
+  if (m) seconds += parseInt(m[1], 10) * 60;
+  if (sec) seconds += parseInt(sec[1], 10);
+  if (!h && !m && !sec) {
     const n = parseInt(s, 10);
-    if (!Number.isNaN(n)) minutes += n;
+    if (!Number.isNaN(n)) seconds += n * 60; // bare number = minutes
   }
-  return minutes;
+  return seconds;
+}
+
+export function parseDurationToMinutes(input?: string): number {
+  const sec = parseDurationToSeconds(input);
+  return sec > 0 ? Math.max(1, Math.round(sec / 60)) : 0;
 }
 
 export function formatMinutes(total: number): string {
@@ -103,14 +111,21 @@ export function formatMinutes(total: number): string {
   return `${m}m`;
 }
 
-export function computeCourseDuration(course: Course): string {
-  const total =
+/** Real course duration: sum of every lesson's actual video length. */
+export function computeCourseDurationSeconds(course: Course): number {
+  return (
     course.modules?.reduce(
       (sum, mod) =>
-        sum + mod.lessons.reduce((s, l: Lesson) => s + parseDurationToMinutes(l.duration), 0),
+        sum + mod.lessons.reduce((s, l: Lesson) => s + parseDurationToSeconds(l.duration), 0),
       0,
-    ) ?? 0;
-  return total > 0 ? formatMinutes(total) : course.duration;
+    ) ?? 0
+  );
+}
+
+export function computeCourseDuration(course: Course): string {
+  const seconds = computeCourseDurationSeconds(course);
+  if (seconds <= 0) return course.duration;
+  return formatMinutes(Math.max(1, Math.round(seconds / 60)));
 }
 
 export function computeLessonsCount(course: Course): number {
