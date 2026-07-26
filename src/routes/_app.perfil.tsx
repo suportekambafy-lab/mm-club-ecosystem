@@ -57,7 +57,6 @@ function ProfilePage() {
 
   const [overview, setOverview] = useState<BillingOverview | null>(null);
   const [subLoading, setSubLoading] = useState(true);
-  const [subActionLoading, setSubActionLoading] = useState(false);
   const sub = overview?.subscription ?? null;
 
   const loadBilling = async () => {
