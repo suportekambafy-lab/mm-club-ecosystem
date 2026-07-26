@@ -204,7 +204,7 @@ function AppLayout() {
       }
       const { data: sub } = await supabase
         .from("billing_subscriptions")
-        .select("status, product:catalog_products(name), price:catalog_prices!billing_subscriptions_price_id_fkey(interval)")
+        .select("status, product:catalog_products(name), price:catalog_prices!billing_subscriptions_price_id_fkey(interval, display_label)")
         .eq("user_id", authUser.id)
         .in("status", ["active", "trialing", "past_due", "grace_period"])
         .order("created_at", { ascending: false })
@@ -213,9 +213,13 @@ function AppLayout() {
       if (cancelled) return;
       const row = sub as unknown as {
         product?: { name?: string } | null;
-        price?: { interval?: string } | null;
+        price?: { interval?: string; display_label?: string | null } | null;
       } | null;
-      setPlanLabel(tierName(row?.product?.name, row?.price?.interval));
+      setPlanLabel(
+        row?.price?.display_label ||
+          tierName(row?.product?.name, row?.price?.interval),
+      );
+
 
     })();
     return () => {
