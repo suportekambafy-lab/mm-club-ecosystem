@@ -228,7 +228,20 @@ function gateHandler(policy: SecurityPolicy) {
           },
         },
       });
-    },
+  };
+}
+
+/** Gate for authenticated functions (auth -> authz -> limits -> WAF). */
+export function securityGate(policy: SecurityPolicy) {
+  return createMiddleware({ type: "function" })
+    .middleware([requireSupabaseAuth])
+    .server(gateHandler(policy) as never);
+}
+
+/** Gate for genuinely public endpoints (no session, IP-scoped limits). */
+export function publicGate(policy: SecurityPolicy) {
+  return createMiddleware({ type: "function" }).server(
+    gateHandler({ ...policy, auth: false }) as never,
   );
 }
 
@@ -238,6 +251,7 @@ function gateHandler(policy: SecurityPolicy) {
  */
 export function secured(policy: SecurityPolicy) {
   return policy.auth === false
-    ? ([securityGate(policy)] as const)
-    : ([requireSupabaseAuth, securityGate(policy)] as const);
+    ? ([publicGate(policy)] as const)
+    : ([securityGate(policy)] as const);
 }
+
