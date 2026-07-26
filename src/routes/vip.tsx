@@ -63,8 +63,8 @@ function VipPage() {
 
 
   const handleStart = async () => {
-    // Confirmação de nome/email antes de abrir o pagamento (igual ao checkout).
-    if (!askEmail) {
+    // Só pedimos nome/email a quem não tem sessão iniciada.
+    if (!user && !askEmail) {
       setAskEmail(true);
       return;
     }
@@ -76,7 +76,8 @@ function VipPage() {
         const res = await startGuestCheckout({
           data: {
             email: guestEmail.trim(),
-            name: guestName.trim() || null,
+            name: guestName.trim(),
+
             priceSlug: "mm_club_vip_trial",
             origin: window.location.origin,
           },
@@ -262,15 +263,17 @@ function VipPage() {
 
 
               <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                Nome (opcional)
+                Nome
               </label>
               <input
                 type="text"
+                required
                 value={guestName}
                 onChange={(e) => setGuestName(e.target.value)}
                 placeholder="O teu nome"
                 className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
               />
+
 
               {error ? (
                 <p className="mt-4 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
@@ -286,7 +289,7 @@ function VipPage() {
 
               <button
                 type="submit"
-                disabled={pending || !guestEmail.includes("@")}
+                disabled={pending || !guestEmail.includes("@") || guestName.trim().length < 2}
                 className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground transition hover:opacity-95 disabled:opacity-60"
               >
                 {pending ? "A abrir pagamento..." : "Continuar para pagamento"}
