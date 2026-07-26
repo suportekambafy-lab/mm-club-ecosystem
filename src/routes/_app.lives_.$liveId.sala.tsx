@@ -16,7 +16,7 @@ import { useServerFn } from "@tanstack/react-start";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export const Route = createFileRoute("/_app/lives/$liveId/sala")({
+export const Route = createFileRoute("/_app/lives_/$liveId/sala")({
   loader: ({ params }) => {
     if (!UUID_RE.test(params.liveId)) throw notFound();
     return { liveId: params.liveId };

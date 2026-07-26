@@ -58,7 +58,7 @@ import { Route as ApiPublicHooksLiveTestEmailRouteImport } from './routes/api/pu
 import { Route as ApiPublicHooksAutoTranscribeRouteImport } from './routes/api/public/hooks/auto-transcribe'
 import { Route as ApiPublicCloudflareStreamWebhookRouteImport } from './routes/api/public/cloudflare-stream/webhook'
 import { Route as AdminLivesLiveIdStudioRouteImport } from './routes/admin.lives.$liveId.studio'
-import { Route as AppLivesLiveIdSalaRouteImport } from './routes/_app.lives.$liveId.sala'
+import { Route as AppLivesLiveIdSalaRouteImport } from './routes/_app.lives_.$liveId.sala'
 import { Route as AppFerramentasStudioVideosRouteImport } from './routes/_app.ferramentas.studio.videos'
 import { Route as AppFerramentasStudioProdutosRouteImport } from './routes/_app.ferramentas.studio.produtos'
 import { Route as AppFerramentasStudioMarcaRouteImport } from './routes/_app.ferramentas.studio.marca'
@@ -322,9 +322,9 @@ const AdminLivesLiveIdStudioRoute = AdminLivesLiveIdStudioRouteImport.update({
   getParentRoute: () => AdminLivesRoute,
 } as any)
 const AppLivesLiveIdSalaRoute = AppLivesLiveIdSalaRouteImport.update({
-  id: '/sala',
-  path: '/sala',
-  getParentRoute: () => AppLivesLiveIdRoute,
+  id: '/lives_/$liveId/sala',
+  path: '/lives/$liveId/sala',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppFerramentasStudioVideosRoute =
   AppFerramentasStudioVideosRouteImport.update({
@@ -402,7 +402,7 @@ export interface FileRoutesByFullPath {
   '/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
-  '/lives/$liveId': typeof AppLivesLiveIdRouteWithChildren
+  '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia/': typeof AppAcademiaIndexRoute
@@ -454,7 +454,7 @@ export interface FileRoutesByTo {
   '/checkout/return': typeof CheckoutReturnRoute
   '/admin': typeof AdminIndexRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
-  '/lives/$liveId': typeof AppLivesLiveIdRouteWithChildren
+  '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia': typeof AppAcademiaIndexRoute
@@ -514,7 +514,7 @@ export interface FileRoutesById {
   '/_app/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
   '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/_app/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
-  '/_app/lives/$liveId': typeof AppLivesLiveIdRouteWithChildren
+  '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/_app/academia/': typeof AppAcademiaIndexRoute
@@ -526,7 +526,7 @@ export interface FileRoutesById {
   '/_app/ferramentas/studio/marca': typeof AppFerramentasStudioMarcaRoute
   '/_app/ferramentas/studio/produtos': typeof AppFerramentasStudioProdutosRoute
   '/_app/ferramentas/studio/videos': typeof AppFerramentasStudioVideosRoute
-  '/_app/lives/$liveId/sala': typeof AppLivesLiveIdSalaRoute
+  '/_app/lives_/$liveId/sala': typeof AppLivesLiveIdSalaRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
@@ -697,7 +697,7 @@ export interface FileRouteTypes {
     | '/_app/ferramentas/studio/marca'
     | '/_app/ferramentas/studio/produtos'
     | '/_app/ferramentas/studio/videos'
-    | '/_app/lives/$liveId/sala'
+    | '/_app/lives_/$liveId/sala'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
@@ -1081,12 +1081,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLivesLiveIdStudioRouteImport
       parentRoute: typeof AdminLivesRoute
     }
-    '/_app/lives/$liveId/sala': {
-      id: '/_app/lives/$liveId/sala'
-      path: '/sala'
+    '/_app/lives_/$liveId/sala': {
+      id: '/_app/lives_/$liveId/sala'
+      path: '/lives/$liveId/sala'
       fullPath: '/lives/$liveId/sala'
       preLoaderRoute: typeof AppLivesLiveIdSalaRouteImport
-      parentRoute: typeof AppLivesLiveIdRoute
+      parentRoute: typeof AppRoute
     }
     '/_app/ferramentas/studio/videos': {
       id: '/_app/ferramentas/studio/videos'
@@ -1200,25 +1200,13 @@ const AppFerramentasRouteWithChildren = AppFerramentasRoute._addFileChildren(
   AppFerramentasRouteChildren,
 )
 
-interface AppLivesLiveIdRouteChildren {
-  AppLivesLiveIdSalaRoute: typeof AppLivesLiveIdSalaRoute
-}
-
-const AppLivesLiveIdRouteChildren: AppLivesLiveIdRouteChildren = {
-  AppLivesLiveIdSalaRoute: AppLivesLiveIdSalaRoute,
-}
-
-const AppLivesLiveIdRouteWithChildren = AppLivesLiveIdRoute._addFileChildren(
-  AppLivesLiveIdRouteChildren,
-)
-
 interface AppLivesRouteChildren {
-  AppLivesLiveIdRoute: typeof AppLivesLiveIdRouteWithChildren
+  AppLivesLiveIdRoute: typeof AppLivesLiveIdRoute
   AppLivesIndexRoute: typeof AppLivesIndexRoute
 }
 
 const AppLivesRouteChildren: AppLivesRouteChildren = {
-  AppLivesLiveIdRoute: AppLivesLiveIdRouteWithChildren,
+  AppLivesLiveIdRoute: AppLivesLiveIdRoute,
   AppLivesIndexRoute: AppLivesIndexRoute,
 }
 
@@ -1238,6 +1226,7 @@ interface AppRouteChildren {
   AppPerfilRoute: typeof AppPerfilRoute
   AppShortsRoute: typeof AppShortsRoute
   AppEspecialistasExpertIdRoute: typeof AppEspecialistasExpertIdRoute
+  AppLivesLiveIdSalaRoute: typeof AppLivesLiveIdSalaRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -1252,6 +1241,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPerfilRoute: AppPerfilRoute,
   AppShortsRoute: AppShortsRoute,
   AppEspecialistasExpertIdRoute: AppEspecialistasExpertIdRoute,
+  AppLivesLiveIdSalaRoute: AppLivesLiveIdSalaRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
