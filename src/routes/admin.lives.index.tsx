@@ -418,6 +418,14 @@ function AdminLives() {
                   >
                     <Video className="h-3 w-3" /> Transmitir do navegador
                   </Link>
+                  <Link
+                    to="/lives/$liveId/sala"
+                    params={{ liveId: r.id }}
+                    className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-400/20"
+                    title="Modo interativo (Beta) — LiveKit"
+                  >
+                    <Video className="h-3 w-3" /> Sala interativa · Beta
+                  </Link>
                   <button
                     type="button"
                     onClick={() => handleShowIngest(r.id)}
