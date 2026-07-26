@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 type CheckoutSearch = { plan?: string };
 
-export const Route = createFileRoute("/checkout")({
+export const Route = createFileRoute("/checkout/")({
   validateSearch: (s: Record<string, unknown>): CheckoutSearch => ({
     plan: typeof s.plan === "string" ? s.plan : undefined,
   }),
