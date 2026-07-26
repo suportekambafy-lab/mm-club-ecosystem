@@ -25,6 +25,7 @@ import {
   setReadOnlyMode,
 } from "@/lib/security.functions";
 import { cn } from "@/lib/utils";
+import { READ_ONLY_MATRIX } from "@/lib/security/policy";
 
 
 export const Route = createFileRoute("/admin/seguranca")({
