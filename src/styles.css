@@ -364,3 +364,41 @@ html[data-live-immersive="1"] [data-mobile-tabbar] { display: none !important; }
   letter-spacing: -0.005em;
 }
 .admin-shell h1, .admin-shell h2, .admin-shell h3 { font-family: var(--font-admin); }
+
+/* Every page rendered inside the admin shell inherits the neutral Stripe-like
+   palette by remapping the app tokens locally. */
+.admin-shell {
+  color-scheme: dark;
+  --background: var(--admin-bg);
+  --foreground: var(--admin-fg);
+  --surface-1: var(--admin-panel);
+  --surface-2: var(--admin-panel-2);
+  --surface-3: var(--admin-hover);
+  --card: var(--admin-panel);
+  --card-foreground: var(--admin-fg);
+  --popover: var(--admin-panel-2);
+  --popover-foreground: var(--admin-fg);
+  --primary: var(--admin-accent);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: var(--admin-panel-2);
+  --secondary-foreground: var(--admin-fg);
+  --muted: var(--admin-panel-2);
+  --muted-foreground: var(--admin-muted);
+  --accent: var(--admin-panel-2);
+  --accent-foreground: var(--admin-fg);
+  --border: var(--admin-border);
+  --hairline: var(--admin-grid);
+  --input: oklch(1 0 0 / 12%);
+  --ring: var(--admin-accent);
+  --sidebar: var(--admin-sidebar);
+  --sidebar-foreground: var(--admin-fg);
+  --sidebar-accent: var(--admin-hover);
+  --sidebar-accent-foreground: var(--admin-fg);
+  --sidebar-border: var(--admin-border);
+  --sidebar-primary: var(--admin-accent);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --gold: var(--admin-accent);
+  --gold-soft: var(--admin-accent);
+  --gold-deep: var(--admin-accent);
+}
+.admin-shell .font-display { font-family: var(--font-admin); letter-spacing: -0.02em; }
