@@ -17,6 +17,7 @@ type LiveLike = {
   visibility: string;
   cover_url?: string | null;
   status: string;
+  mode?: "broadcast" | "interactive" | null;
 };
 
 /**
@@ -61,10 +62,11 @@ export function LiveHeroBanner({ live, className }: { live: LiveLike; className?
 
   const cta = isLive ? "Entrar na sessão" : isReplay ? "Ver replay" : "Ver detalhes";
   const CtaIcon = isLive ? Radio : isReplay ? Play : ArrowRight;
+  const liveRoute = live.mode === "interactive" ? "/lives/$liveId/sala" : "/lives/$liveId";
 
   return (
     <Link
-      to="/lives/$liveId"
+      to={liveRoute}
       params={{ liveId: live.id }}
       className={cn(
         "group relative block overflow-hidden rounded-3xl border border-border bg-surface-1",

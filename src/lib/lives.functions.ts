@@ -22,7 +22,7 @@ export const listLives = createServerFn({ method: "GET" }).handler(async () => {
   const { data, error } = await supa
     .from("lives")
     .select(
-      "id,title,description,expert_id,starts_at,duration_minutes,visibility,cover_url,status,cf_playback_id,recording_video_uid",
+      "id,title,description,expert_id,starts_at,duration_minutes,visibility,cover_url,status,cf_playback_id,recording_video_uid,mode",
     )
     .order("starts_at", { ascending: false });
   if (error) throw new Error(error.message);
@@ -36,7 +36,7 @@ export const listLivesAuthed = createServerFn({ method: "GET" })
     const { data, error } = await context.supabase
       .from("lives")
       .select(
-        "id,title,description,expert_id,starts_at,duration_minutes,visibility,cover_url,status,cf_playback_id,recording_video_uid",
+        "id,title,description,expert_id,starts_at,duration_minutes,visibility,cover_url,status,cf_playback_id,recording_video_uid,mode",
       )
       .order("starts_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -57,6 +57,26 @@ export const getLive = createServerFn({ method: "GET" })
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!live) throw new Error("Live não encontrada ou sem acesso.");
+
+    let effectiveMode = live.mode;
+    if (effectiveMode !== "interactive" && (live.status === "scheduled" || live.status === "live")) {
+      try {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: participantMarker } = await supabaseAdmin
+          .from("live_participants")
+          .select("id")
+          .eq("live_id", live.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (participantMarker) {
+          effectiveMode = "interactive";
+          await supabaseAdmin.from("lives").update({ mode: "interactive" }).eq("id", live.id);
+        }
+      } catch (e) {
+        console.error("[lives] interactive mode detection failed", e);
+      }
+    }
 
 
     // Backfill recording UID for ended/published lives when the webhook didn't fire.
@@ -150,7 +170,7 @@ export const getLive = createServerFn({ method: "GET" })
       }
     }
 
-    return { live, playbackToken, videoUid, actualDurationSeconds, replaySegments };
+    return { live: { ...live, mode: effectiveMode }, playbackToken, videoUid, actualDurationSeconds, replaySegments };
   });
 
 

@@ -149,10 +149,11 @@ function LiveCard({ live }: { live: Live }) {
   const isUpcoming = live.status === "scheduled" && date.getTime() > Date.now();
   const expert = live.expert_id ? expertsById[live.expert_id] : undefined;
   const coverUrl = resolveLiveCoverUrl(live.cover_url);
+  const liveRoute = live.mode === "interactive" ? "/lives/$liveId/sala" : "/lives/$liveId";
 
   return (
     <Link
-      to="/lives/$liveId"
+      to={liveRoute}
       params={{ liveId: live.id }}
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-surface-1 transition",
