@@ -46,7 +46,7 @@ export const Route = createFileRoute("/_app/dashboard")({
 function DashboardPage() {
   const { user: sessionUser, loading: userLoading } = useCurrentUser();
   const user = sessionUser ?? fallbackUser;
-  const { progress } = useUserProgress();
+  const { progress, loaded: progressLoaded } = useUserProgress();
   const cont = continueFromProgress(progress);
   const featured = cont[0];
   const recommended = recommendedFromProgress(progress);
@@ -54,6 +54,7 @@ function DashboardPage() {
   // Real live from backend — takes priority over static nextLive placeholder.
   type RealLive = Awaited<ReturnType<typeof listLives>>[number];
   const [realFeaturedLive, setRealFeaturedLive] = useState<RealLive | null>(null);
+  const [livesLoaded, setLivesLoaded] = useState(false);
   useEffect(() => {
     let cancelled = false;
     const load = () => {
@@ -66,8 +67,11 @@ function DashboardPage() {
             .filter((l) => l.status === "scheduled" && new Date(l.starts_at).getTime() > Date.now() - 3600_000)
             .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0];
           setRealFeaturedLive(active ?? upcoming ?? null);
+          setLivesLoaded(true);
         })
-        .catch(() => {});
+        .catch(() => {
+          if (!cancelled) setLivesLoaded(true);
+        });
     };
     load();
     const channel = supabase
@@ -80,6 +84,11 @@ function DashboardPage() {
     };
   }, []);
 
+  // Only paint the dashboard when every essential source is resolved — avoids
+  // empty covers and the "wrong content → right content" flash.
+  const ready = !userLoading && progressLoaded && livesLoaded;
+  if (!ready) return <DashboardSkeleton />;
+
   return (
     <div className="space-y-16">
       {/* Cinematic hero — full bleed, autoplay muted loop, editorial overlay */}
@@ -89,6 +98,7 @@ function DashboardPage() {
       {realFeaturedLive && (realFeaturedLive.status === "live" || realFeaturedLive.status === "scheduled") && (
         <LiveHeroBanner live={realFeaturedLive} />
       )}
+
 
       {/* Continuar a construir */}
       {featured && <ContinueHero course={featured} />}
