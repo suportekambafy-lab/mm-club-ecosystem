@@ -98,6 +98,31 @@ export function RoomControls({ state, actions, onLeave }: Props) {
         />
       )}
 
+      {/* Self-service stage exit — anyone on stage except the host. */}
+      {isPublisher && state.localRole !== "host" && (
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() =>
+            run("leaveStage", async () => {
+              try {
+                if (local?.isScreenSharing) await actions.stopScreenShare();
+              } catch {
+                /* ignore */
+              }
+              await actions.leaveStage();
+              toast.success("Saíste do palco", { description: "Continuas na sala como audiência." });
+            })
+          }
+          disabled={busy === "leaveStage"}
+          className="h-9 rounded-xl border border-white/10 bg-white/5 px-3 text-xs text-white/85 hover:bg-white/10"
+        >
+          <LogOut className="mr-1 h-4 w-4" />
+          <span className="hidden sm:inline">Sair do palco</span>
+        </Button>
+      )}
+
+
       {(state.localRole === "host" || state.localRole === "cohost") && (
         <LayoutMenu state={state} actions={actions} />
       )}
