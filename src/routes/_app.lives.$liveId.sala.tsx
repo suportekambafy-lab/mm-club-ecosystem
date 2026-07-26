@@ -54,25 +54,32 @@ function SalaRoute() {
   const [target, setTarget] = useState<"backstage" | "main">("main");
   const [error, setError] = useState<string | null>(null);
   const [liveStatus, setLiveStatus] = useState<string>(live.status);
+  const [createdBy, setCreatedBy] = useState<string | null>(null);
   const joinLockRef = useRef(false);
 
-  // Resolve current user.
+  // Resolve current user + live.created_by (not exposed by getLive loader).
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUserId(data.user?.id ?? null);
       setAuthReady(true);
     });
-  }, []);
+    supabase
+      .from("lives")
+      .select("created_by")
+      .eq("id", live.id)
+      .maybeSingle()
+      .then(({ data }) => setCreatedBy((data as { created_by?: string } | null)?.created_by ?? null));
+  }, [live.id]);
 
   // Compute initial target: publishers land in backstage until the room is live.
   useEffect(() => {
-    if (!userId) return;
-    const isCreator = live.created_by === userId;
+    if (!userId || createdBy === null) return;
+    const isCreator = createdBy === userId;
     const initial: "backstage" | "main" =
       isCreator && liveStatus !== "live" && liveStatus !== "ended" ? "backstage" : "main";
     setTarget(initial);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
+  }, [userId, createdBy]);
 
   // Realtime: watch lives.status so backstage flips to main once host goes live.
   useEffect(() => {
