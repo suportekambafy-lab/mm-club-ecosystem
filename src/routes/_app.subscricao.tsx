@@ -11,6 +11,11 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  PaymentBrandMark,
+  paymentBrandLabel,
+} from "@/components/mm/payment-brand";
+
 import { cn } from "@/lib/utils";
 import {
   addPaymentMethod,
