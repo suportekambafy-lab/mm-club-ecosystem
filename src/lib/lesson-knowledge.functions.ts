@@ -662,12 +662,13 @@ export async function runAutoTranscribeTick(): Promise<{
     }
   }
 
-  // Prioriza aulas em "error" (mais antigas primeiro) para reinício, depois novas.
+  // Prioriza aulas em "error" ou com lock preso (retomar primeiro), depois novas.
   const errorSet = new Set(
     (existing ?? [])
-      .filter((r: any) => r.status === "error")
+      .filter((r: any) => r.status === "error" || r.status === "transcribing" || r.status === "embedding")
       .map((r: any) => `${r.course_id}::${r.lesson_id}`),
   );
+
   const eligible = candidates.filter((c) => !skip.has(`${c.courseId}::${c.lessonId}`));
   eligible.sort((a, b) => {
     const ae = errorSet.has(`${a.courseId}::${a.lessonId}`) ? 0 : 1;
