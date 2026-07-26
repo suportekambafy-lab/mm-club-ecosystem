@@ -69,13 +69,32 @@ export async function startGuestCheckout(
   const recurring =
     price.interval !== "one_time" && price.interval !== "lifetime";
 
+  // Recurring (first) payments require a gateway customer so the mandate can
+  // be stored. Create it up front and keep it on the intent so the account we
+  // provision later reuses the same customer (and therefore the mandate).
+  let gatewayCustomerId: string | null = null;
+  if (recurring) {
+    const gwCustomer = await gw.createCustomer({
+      email,
+      name: input.name ?? null,
+      metadata: { intentId: intent.id, guest: true },
+    });
+    gatewayCustomerId = gwCustomer.id;
+    await supabaseAdmin
+      .from("billing_checkout_intents")
+      .update({
+        metadata: { gatewayCustomerId } as never,
+      })
+      .eq("id", intent.id);
+  }
+
   const payment = await gw.createCharge({
     amountCents: price.amountCents,
     currency: price.currency,
     description: `${APP_NAME} — ${price.product.name}`,
     redirectUrl: `${origin}/checkout/return?intent=${intent.id}`,
     webhookUrl: `${origin}/api/public/payments/gateway-webhook`,
-    customerId: null,
+    customerId: gatewayCustomerId,
     customerEmail: email,
     setupRecurring: recurring,
     metadata: {
@@ -90,6 +109,7 @@ export async function startGuestCheckout(
       origin,
     },
   });
+
 
   await supabaseAdmin
     .from("billing_checkout_intents")
@@ -120,11 +140,12 @@ export async function provisionAccountForIntent(
 ): Promise<string | null> {
   const { data: intent } = await supabaseAdmin
     .from("billing_checkout_intents")
-    .select("id, email, name, user_id, account_created")
+    .select("id, email, name, user_id, account_created, metadata")
     .eq("id", intentId)
     .maybeSingle();
   if (!intent) return null;
   if (intent.user_id) return intent.user_id;
+
 
   const email = intent.email.trim().toLowerCase();
   let userId = await findUserIdByEmail(email);
@@ -150,6 +171,33 @@ export async function provisionAccountForIntent(
     created = true;
   }
 
+  // Reuse the gateway customer created at checkout so the mandate stays
+  // attached to this member (needed for renewals).
+  const gatewayCustomerId =
+    (intent.metadata as { gatewayCustomerId?: string } | null)
+      ?.gatewayCustomerId ?? null;
+  if (gatewayCustomerId) {
+    const { data: existingCustomer } = await supabaseAdmin
+      .from("billing_customers")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (existingCustomer) {
+      await supabaseAdmin
+        .from("billing_customers")
+        .update({ gateway: gatewayName, gateway_customer_id: gatewayCustomerId })
+        .eq("id", existingCustomer.id);
+    } else {
+      await supabaseAdmin.from("billing_customers").insert({
+        user_id: userId,
+        email,
+        name: intent.name ?? null,
+        gateway: gatewayName,
+        gateway_customer_id: gatewayCustomerId,
+      });
+    }
+  }
+
   await supabaseAdmin
     .from("billing_checkout_intents")
     .update({
@@ -160,6 +208,7 @@ export async function provisionAccountForIntent(
       gateway_payment_id: gatewayPaymentId,
     })
     .eq("id", intent.id);
+
 
   if (created) {
     await sendAccountReadyEmail(userId, email).catch((e) =>
