@@ -183,12 +183,22 @@ function SubscriptionPage() {
     }
   };
 
-  /** Monthly-equivalent value, so yearly and monthly prices compare fairly. */
-  const monthly = (amountCents: number, interval: string, count = 1) => {
-    const months =
-      (interval === "year" ? 12 : interval === "week" ? 0.25 : 1) * (count || 1);
-    return amountCents / months;
+  /** Length of the commitment in months (mensal 1, semestral 6, anual 12). */
+  const cycleMonths = (interval: string, count = 1) => {
+    const base =
+      interval === "year"
+        ? 12
+        : interval === "week"
+          ? 0.25
+          : interval === "day"
+            ? 1 / 30
+            : 1;
+    return base * (count || 1);
   };
+
+  /** Monthly-equivalent value, so yearly and monthly prices compare fairly. */
+  const monthly = (amountCents: number, interval: string, count = 1) =>
+    amountCents / cycleMonths(interval, count);
 
   const planOptions = plans
     .flatMap((p) =>
@@ -199,33 +209,58 @@ function SubscriptionPage() {
         price,
       })),
     )
-    .sort(
-      (a, b) =>
-        monthly(a.price.amountCents, a.price.interval, a.price.intervalCount) -
-        monthly(b.price.amountCents, b.price.interval, b.price.intervalCount),
-    );
+    // Mensal → Semestral → Anual (compromisso mais curto primeiro).
+    .sort((a, b) => {
+      const diff =
+        cycleMonths(a.price.interval, a.price.intervalCount) -
+        cycleMonths(b.price.interval, b.price.intervalCount);
+      return diff !== 0 ? diff : a.price.amountCents - b.price.amountCents;
+    });
 
-  const currentMonthly = sub
-    ? monthly(sub.amountCents, sub.interval)
+  // O plano atual pode ser semestral (mês × 6): usa o catálogo para saber
+  // o ciclo real, já que a subscrição só guarda o intervalo base.
+  const currentPrice =
+    planOptions.find((o) => o.price.slug === sub?.priceSlug)?.price ?? null;
+  const currentMonths = sub
+    ? cycleMonths(
+        currentPrice?.interval ?? sub.interval,
+        currentPrice?.intervalCount ?? 1,
+      )
     : null;
+  const currentMonthly = sub
+    ? monthly(
+        sub.amountCents,
+        currentPrice?.interval ?? sub.interval,
+        currentPrice?.intervalCount ?? 1,
+      )
+    : null;
+
 
   const planSection = (
     <div className="grid gap-3 sm:grid-cols-2">
       {planOptions.map(({ productName, tagline, badge, price }) => {
         const isCurrent = sub?.priceSlug === price.slug;
+        const months = cycleMonths(price.interval, price.intervalCount);
         const value = monthly(
           price.amountCents,
           price.interval,
           price.intervalCount,
         );
+        // Um compromisso mais longo é sempre upgrade; só é downgrade quando o
+        // ciclo é mais curto. Com o mesmo ciclo, decide o preço.
         const change =
-          currentMonthly === null || isCurrent
+          currentMonths === null || currentMonthly === null || isCurrent
             ? null
-            : value > currentMonthly
+            : months > currentMonths
               ? "Upgrade"
-              : value < currentMonthly
+              : months < currentMonths
                 ? "Downgrade"
-                : "Alterar ciclo";
+                : value > currentMonthly
+                  ? "Upgrade"
+                  : value < currentMonthly
+                    ? "Downgrade"
+                    : "Alterar ciclo";
+
         return (
           <div
             key={price.slug}
