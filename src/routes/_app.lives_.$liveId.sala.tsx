@@ -141,6 +141,38 @@ function SalaRoute() {
     }
   }, [liveStatus, target]);
 
+  // Auto-refresh the LiveKit token when the local participant is promoted to
+  // the stage. LiveKit tokens embed publish permissions, so the initial
+  // viewer token has to be replaced before we can actually publish mic/cam.
+  useEffect(() => {
+    if (!authReady || !userId) return;
+    const ch = supabase
+      .channel(`sala-me:${liveId}:${userId}:${Math.random().toString(36).slice(2, 6)}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "live_participants",
+          filter: `live_id=eq.${liveId}`,
+        },
+        (payload) => {
+          const row = payload.new as { user_id: string; on_stage: boolean; mic_allowed: boolean; cam_allowed: boolean };
+          if (row.user_id !== userId) return;
+          if (row.on_stage && (row.mic_allowed || row.cam_allowed)) {
+            // Force reissue of publisher token.
+            setSession(null);
+          }
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [authReady, userId, liveId]);
+
+
+
   const handleLeave = () => {
     navigate({ to: "/lives/$liveId", params: { liveId } });
   };
