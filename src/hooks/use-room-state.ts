@@ -111,7 +111,7 @@ export interface UseRoomStateArgs {
   token: string;
   url: string;
   /** Called after the room actions dispatch to hit server RPCs. */
-  serverActions: Omit<RoomActions, "toggleMic" | "toggleCam" | "startScreenShare" | "stopScreenShare" | "leave" | "attachTrack" | "detachTrack">;
+  serverActions: Omit<RoomActions, "toggleMic" | "toggleCam" | "startScreenShare" | "stopScreenShare" | "startAudio" | "leave" | "attachTrack" | "detachTrack">;
 }
 
 export function useRoomState({
