@@ -133,6 +133,22 @@ const CRUMBS: Record<string, string> = {
 function AdminLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+
+  useEffect(() => {
+    const stored = localStorage.getItem("mm-admin-theme");
+    if (stored === "light" || stored === "dark") setTheme(stored);
+  }, []);
+
+  const toggleTheme = () => {
+    setTheme((prev) => {
+      const next = prev === "dark" ? "light" : "dark";
+      localStorage.setItem("mm-admin-theme", next);
+      return next;
+    });
+  };
+
+
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
