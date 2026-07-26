@@ -31,8 +31,11 @@ export const Route = createFileRoute("/_app/lives/$liveId")({
     }
     // Interactive lives always render the Sala Interativa experience —
     // for host, co-host, speakers AND regular viewers. Only permissions
-    // and controls differ based on role.
-    if ((result.live as { mode?: string }).mode === "interactive") {
+    // and controls differ based on role. Once the live is ended we keep
+    // viewers on this route so they see the replay instead of bouncing
+    // back into the (now closed) room.
+    const liveRow = result.live as { mode?: string; status?: string };
+    if (liveRow.mode === "interactive" && liveRow.status !== "ended") {
       throw redirect({ to: "/lives/$liveId/sala", params: { liveId: params.liveId } });
     }
     return result;
