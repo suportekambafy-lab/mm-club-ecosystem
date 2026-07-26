@@ -186,12 +186,7 @@ function SalaRoute() {
   }
 
   return (
-    <SalaShell
-      liveId={live.id}
-      userId={userId}
-      wentLiveAt={live.went_live_at ?? null}
-      onLeave={handleLeave}
-    >
+    <SalaShell liveId={live.id} userId={userId} onLeave={handleLeave}>
       <InteractiveRoom
         liveId={live.id}
         localUserId={userId}
