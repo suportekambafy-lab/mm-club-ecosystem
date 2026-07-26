@@ -482,7 +482,7 @@ export const adminSetLiveBroadcastState = createServerFn({ method: "POST" })
 
     const { error } = await supabaseAdmin
       .from("lives")
-      .update({ status: "ended", started_at: null })
+      .update({ status: "ended", started_at: null, ended_at: new Date().toISOString() })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
 

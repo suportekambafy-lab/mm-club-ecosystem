@@ -244,7 +244,7 @@ export const endLive = createServerFn({ method: "POST" })
 
     const { error } = await supabase
       .from("lives")
-      .update({ status: "ended" })
+      .update({ status: "ended", ended_at: new Date().toISOString() })
       .eq("id", data.liveId);
     if (error) throw new Error(error.message);
 
