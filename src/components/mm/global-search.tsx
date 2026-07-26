@@ -49,27 +49,21 @@ export function GlobalSearch({ variant = "bar" }: { variant?: "bar" | "icon" }) 
 
   return (
     <>
-      <button
-        type="button"
-        aria-label="Pesquisar"
-        onClick={() => setOpen(true)}
-        className={cn(
-          "group flex h-10 items-center text-sm text-muted-foreground transition hover:bg-surface-2/60 hover:text-foreground",
-          variant === "icon"
-            ? "w-10 justify-center rounded-full bg-surface-2"
-            : "w-full max-w-md gap-2.5 rounded-full border border-border bg-surface-1/60 px-4 hover:border-[color:var(--hairline)]",
-        )}
-      >
-        <Search className="h-4 w-4" />
-        {variant === "bar" && (
-          <>
-            <span className="flex-1 text-left">Pesquisar no MM Club…</span>
-            <kbd className="hidden rounded border border-border bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground md:inline-flex">
-              ⌘K
-            </kbd>
-          </>
-        )}
-      </button>
+      {variant === "bar" && (
+        <button
+          type="button"
+          aria-label="Pesquisar"
+          onClick={() => setOpen(true)}
+          className="group flex h-10 w-full max-w-md items-center gap-2.5 rounded-full border border-border bg-surface-1/60 px-4 text-sm text-muted-foreground transition hover:border-[color:var(--hairline)] hover:bg-surface-2/60 hover:text-foreground"
+        >
+          <Search className="h-4 w-4" />
+          <span className="flex-1 text-left">Pesquisar no MM Club…</span>
+          <kbd className="hidden rounded border border-border bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground md:inline-flex">
+            ⌘K
+          </kbd>
+        </button>
+      )}
+
 
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput placeholder="Pesquisa cursos, especialistas, ferramentas, lives, eventos…" />
