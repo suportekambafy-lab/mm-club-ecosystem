@@ -230,6 +230,9 @@ export async function handleGatewayPayment(
   const paymentRowId = saved?.id ?? existing?.id ?? null;
   const alreadyPaid = existing?.status === "paid";
 
+  const { resolveRecoveryForPayment, startRecovery, cancelRecoveryForSubscription } =
+    await import("./recovery/engine.server");
+
   if (payment.status === "paid" && !alreadyPaid) {
     // Whatever card the member just used becomes a saved method, so it can be
     // reused for future charges (credit packs, renewals, retries…).
@@ -242,6 +245,12 @@ export async function handleGatewayPayment(
       }
     }
     await onPaymentPaid({ payment, userId, priceId, paymentRowId, customerId: customer?.id ?? null, subscriptionId });
+    await resolveRecoveryForPayment({
+      gatewayPaymentId: payment.id,
+      outcome: "paid",
+      paidCents: payment.amountCents,
+      paymentRowId,
+    });
   } else if (payment.status === "failed" || payment.status === "expired") {
     await emitEvent({
       type: "PaymentFailed",
@@ -257,18 +266,41 @@ export async function handleGatewayPayment(
       },
     });
     if (subscriptionId) {
-      const retried = await retryWithAlternateCard({
-        payment,
-        userId,
-        subscriptionId,
-      });
-      if (!retried) await markPastDue(subscriptionId, userId);
+      // Is this failure part of an existing recovery plan, or a brand new one?
+      const cycle = (payment.metadata?.recoveryCycle as string | undefined) ?? null;
+      if (cycle) {
+        await resolveRecoveryForPayment({
+          gatewayPaymentId: payment.id,
+          outcome: "failed",
+          failureReason: payment.failureReason,
+          paymentRowId,
+        });
+      } else {
+        await markPastDue(subscriptionId, userId);
+        await startRecovery({
+          subscriptionId,
+          userId,
+          amountCents: payment.amountCents,
+          currency: payment.currency,
+          failureReason: payment.failureReason,
+          gatewayPaymentId: payment.id,
+          method: payment.method,
+        });
+      }
     }
   } else if (payment.refundedCents > 0) {
-
     await onRefund({ payment, userId, paymentRowId, customerId: customer?.id ?? null, subscriptionId });
+    await resolveRecoveryForPayment({
+      gatewayPaymentId: payment.id,
+      outcome: "refunded",
+      paymentRowId,
+    });
+    if (subscriptionId) {
+      await cancelRecoveryForSubscription(subscriptionId, "refunded");
+    }
   }
 }
+
 
 async function onPaymentPaid(args: {
   payment: GatewayPayment;
