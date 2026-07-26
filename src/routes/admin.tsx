@@ -250,6 +250,18 @@ function AdminLayout() {
             </span>
           </div>
           <div className="flex-1" />
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Modo claro" : "Modo escuro"}
+            className="flex h-7 w-7 items-center justify-center rounded-md text-admin-muted transition hover:bg-admin-panel hover:text-admin-fg"
+          >
+            {theme === "dark" ? (
+              <Sun strokeWidth={1.6} className="h-4 w-4" />
+            ) : (
+              <Moon strokeWidth={1.6} className="h-4 w-4" />
+            )}
+          </button>
           <Link
             to="/admin/financeiro/catalogo"
             className="inline-flex items-center gap-1.5 rounded-lg bg-admin-panel-2 px-3 py-1.5 text-[13px] text-admin-fg transition hover:bg-admin-hover"
@@ -259,7 +271,7 @@ function AdminLayout() {
           </Link>
           <Link
             to="/admin/financeiro/subscricoes"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-[13px] font-medium text-black transition hover:opacity-90"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-admin-fg px-3 py-1.5 text-[13px] font-medium text-admin-bg transition hover:opacity-90"
           >
             <ArrowUpRight strokeWidth={1.8} className="h-3.5 w-3.5" />
             Clientes
