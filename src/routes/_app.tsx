@@ -242,9 +242,11 @@ function AppLayout() {
 
 
   const handleSignOut = async () => {
+    await endLocalSession();
     await supabase.auth.signOut();
     setAuthUser(null);
   };
+
 
   const displayName =
     (authUser?.user_metadata?.display_name as string | undefined) ??
