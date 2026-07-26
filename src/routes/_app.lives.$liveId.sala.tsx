@@ -17,37 +17,30 @@ import { useServerFn } from "@tanstack/react-start";
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const Route = createFileRoute("/_app/lives/$liveId/sala")({
-  loader: async ({ params }) => {
+  loader: ({ params }) => {
     if (!UUID_RE.test(params.liveId)) throw notFound();
-    try {
-      return await getLive({ data: { id: params.liveId } });
-    } catch {
-      throw notFound();
-    }
+    return { liveId: params.liveId };
   },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: `${loaderData.live.title} — Sala Interativa` },
-          {
-            name: "description",
-            content:
-              loaderData.live.description ??
-              "Sala interativa MM Club: entra em direto, pede palavra e participa em tempo real.",
-          },
-          { name: "robots", content: "noindex" },
-        ]
-      : [{ title: "Sala Interativa — MM Club" }, { name: "robots", content: "noindex" }],
+  head: () => ({
+    meta: [
+      { title: "Sala Interativa — MM Club" },
+      { name: "robots", content: "noindex" },
+    ],
   }),
   component: SalaRoute,
 });
 
-type LoaderData = Awaited<ReturnType<typeof getLive>>;
-
 type JoinResult = Awaited<ReturnType<typeof joinRoom>>;
+type LiveData = Awaited<ReturnType<typeof getLive>>["live"];
 
 function SalaRoute() {
-  const { live } = Route.useLoaderData() as LoaderData;
+  const { liveId } = Route.useLoaderData();
+  const navigate = useNavigate();
+  const joinRoomFn = useServerFn(joinRoom);
+  const getLiveFn = useServerFn(getLive);
+
+  const [live, setLive] = useState<LiveData | null>(null);
+
   const navigate = useNavigate();
   const joinRoomFn = useServerFn(joinRoom);
 
