@@ -16,13 +16,17 @@ import {
   addPaymentMethod,
   cancelSubscription,
   getBillingOverview,
+  getCatalog,
   removePaymentMethod,
   resumeSubscription,
   setDefaultPaymentMethod,
+  startCheckout,
   syncPaymentMethods,
   type BillingOverview,
+  type CatalogView,
 } from "@/lib/billing.functions";
 import { formatMoney } from "@/lib/billing/types";
+
 
 export const Route = createFileRoute("/_app/subscricao")({
   head: () => ({
