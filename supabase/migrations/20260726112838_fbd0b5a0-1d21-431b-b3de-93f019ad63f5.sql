@@ -1,0 +1,1 @@
+UPDATE public.lesson_transcripts SET status = 'error', error = 'Lock preso: worker interrompido a meio da transcrição — reagendado', updated_at = now() - interval '1 hour' WHERE lesson_id = 'l-mrt126tt' AND status = 'transcribing';
