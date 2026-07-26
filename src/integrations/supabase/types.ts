@@ -2876,6 +2876,7 @@ export type Database = {
         Args: { _live_id: string; _user_id: string }
         Returns: boolean
       }
+      is_read_only_mode: { Args: never; Returns: boolean }
       match_lesson_chunks: {
         Args: {
           match_count?: number

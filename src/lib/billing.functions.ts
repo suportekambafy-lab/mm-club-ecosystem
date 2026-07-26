@@ -41,6 +41,7 @@ export const getCatalog = createServerFn({ method: "GET" })
 export const startCheckout = createServerFn({ method: "POST" })
   .middleware([...secured({
     name: "billing.startCheckout",
+    write: true,
     emergency: "block",
     limit: [
       { bucket: "checkout", max: 8, windowSeconds: 3600, scope: "user" },
@@ -187,6 +188,7 @@ export const getBillingOverview = createServerFn({ method: "GET" })
 export const cancelSubscription = createServerFn({ method: "POST" })
   .middleware([...secured({
     name: "billing.cancelSubscription",
+    write: true,
     waf: { bucket: "plan-change", max: 6, windowSeconds: 1800 },
   })])
   .inputValidator((input: unknown) =>
@@ -216,6 +218,7 @@ export const cancelSubscription = createServerFn({ method: "POST" })
 export const resumeSubscription = createServerFn({ method: "POST" })
   .middleware([...secured({
     name: "billing.resumeSubscription",
+    write: true,
     waf: { bucket: "plan-change", max: 6, windowSeconds: 1800 },
   })])
   .inputValidator((input: unknown) =>
@@ -270,6 +273,7 @@ export const syncCheckout = createServerFn({ method: "POST" })
 export const addPaymentMethod = createServerFn({ method: "POST" })
   .middleware([...secured({
     name: "billing.addPaymentMethod",
+    write: true,
     emergency: "block",
     limit: [
       { bucket: "payment-method", max: 6, windowSeconds: 3600, scope: "user" },
@@ -322,6 +326,7 @@ export const setDefaultPaymentMethod = createServerFn({ method: "POST" })
 export const removePaymentMethod = createServerFn({ method: "POST" })
   .middleware([...secured({
     name: "billing.removePaymentMethod",
+    write: true,
     limit: { bucket: "payment-method-remove", max: 10, windowSeconds: 3600 },
   })])
   .inputValidator((input: unknown) =>
@@ -346,6 +351,7 @@ export const startGuestCheckout = createServerFn({ method: "POST" })
   .middleware([
     ...secured({
       name: "billing.startGuestCheckout",
+    write: true,
       auth: false,
       emergency: "block",
       limit: [

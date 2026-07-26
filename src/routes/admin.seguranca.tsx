@@ -25,6 +25,7 @@ import {
   setReadOnlyMode,
 } from "@/lib/security.functions";
 import { cn } from "@/lib/utils";
+import { READ_ONLY_MATRIX } from "@/lib/security/policy";
 
 
 export const Route = createFileRoute("/admin/seguranca")({
@@ -252,6 +253,29 @@ function SecurityPage() {
               Os membros continuam a ver todo o conteúdo, mas nenhuma escrita é
               permitida. Ideal para manutenção e migrações.
             </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-500">
+                  Permitido
+                </p>
+                <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                  {READ_ONLY_MATRIX.allowed.map((i) => (
+                    <li key={i}>· {i}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-destructive">
+                  Bloqueado
+                </p>
+                <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                  {READ_ONLY_MATRIX.blocked.map((i) => (
+                    <li key={i}>· {i}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
             {ro && data?.readOnly.reason ? (
               <p className="mt-1 text-sm text-admin-accent">
                 Motivo: {data.readOnly.reason}
