@@ -127,6 +127,18 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
         </div>
       )}
 
+      {/* Audio autoplay overlay — browsers block remote audio until a gesture */}
+      {state.audioBlocked && (
+        <button
+          type="button"
+          onClick={() => actions.startAudio()}
+          className="absolute inset-x-0 top-3 z-40 mx-auto flex w-fit items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-black shadow-lg hover:brightness-105"
+        >
+          <Volume2 className="h-4 w-4" />
+          Ativar som
+        </button>
+      )}
+
       <div className="relative flex-1 overflow-hidden">
         {inBackstage && isPublisher ? (
           <Backstage state={state} actions={actions} onGoLive={handleGoLive} goingLive={goingLive} />
@@ -137,6 +149,11 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
         )}
       </div>
 
+      {/* Host-only: raised hands & participants panel */}
+      {(state.localRole === "host" || state.localRole === "cohost") && (
+        <HostRequestsPanel state={state} actions={actions} />
+      )}
+
       {/* Floating controls */}
       <div className="pointer-events-none absolute inset-x-0 bottom-3 z-20 flex justify-center px-3">
         <RoomControls state={state} actions={actions} onLeave={onLeave} />
@@ -144,6 +161,86 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
     </div>
   );
 }
+
+function HostRequestsPanel({ state, actions }: { state: RoomState; actions: RoomActions }) {
+  const [open, setOpen] = useState(false);
+  const raised = useMemo(
+    () =>
+      state.participants
+        .filter((p) => p.handRaisedAt && !p.onStage && !p.banned)
+        .sort((a, b) => (a.handRaisedAt ?? "").localeCompare(b.handRaisedAt ?? "")),
+    [state.participants],
+  );
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="pointer-events-auto absolute right-3 top-3 z-30 inline-flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white/85 ring-1 ring-white/10 backdrop-blur-md hover:bg-black/80"
+        aria-label="Participantes"
+      >
+        <Hand className={raised.length > 0 ? "h-4 w-4 text-amber-400" : "h-4 w-4"} />
+        {raised.length > 0 && (
+          <span className="rounded-full bg-amber-400 px-1.5 text-[10px] font-bold text-black">{raised.length}</span>
+        )}
+        <span className="hidden sm:inline">Pedidos</span>
+      </button>
+      {open && (
+        <div className="absolute inset-y-0 right-0 z-40 flex w-[320px] max-w-full flex-col border-l border-white/10 bg-neutral-950/95 backdrop-blur-md">
+          <div className="flex items-center justify-between border-b border-white/5 px-3 py-2.5">
+            <div className="text-sm font-semibold">Pedidos para participar</div>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="grid h-8 w-8 place-items-center rounded-lg bg-white/5 hover:bg-white/10"
+              aria-label="Fechar"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-2">
+            {raised.length === 0 ? (
+              <div className="grid h-full place-items-center px-4 text-center text-xs text-white/50">
+                Nenhum participante levantou a mão. Quando o fizerem, aparecem aqui para convidares para o palco.
+              </div>
+            ) : (
+              <ul className="space-y-1.5">
+                {raised.map((p) => (
+                  <li
+                    key={p.userId}
+                    className="flex items-center gap-2 rounded-xl bg-white/[0.03] px-2.5 py-2 ring-1 ring-white/5"
+                  >
+                    <div className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-white/10 text-xs font-semibold text-white/80">
+                      {p.avatarUrl ? (
+                        <img src={p.avatarUrl} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        (p.displayName || "?").slice(0, 2).toUpperCase()
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm text-white">{p.displayName}</div>
+                      <div className="text-[10.5px] text-amber-300/80">Levantou a mão</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => actions.promoteToStage(p.userId, { role: "speaker" })}
+                      className="inline-flex items-center gap-1 rounded-lg bg-amber-400 px-2.5 py-1.5 text-[11px] font-semibold text-black hover:brightness-105"
+                    >
+                      <UserPlus className="h-3.5 w-3.5" />
+                      Convidar
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 
 function AudienceWaiting() {
   return (
