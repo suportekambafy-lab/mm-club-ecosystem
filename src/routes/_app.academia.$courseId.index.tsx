@@ -27,8 +27,9 @@ function CourseDetail() {
   useAdminOverridesVersion(); // re-render when admin overrides change
   const course = coursesById[courseId];
   const expert = expertsById[course.expertId];
-  const { progress } = useUserProgress();
+  const { progress, loaded } = useUserProgress();
   const p = progress[course.id];
+
   const percent = Math.round((p?.progress ?? 0) * 100);
   const resumeLesson =
     (p?.lastLessonId ? findLesson(course, p.lastLessonId) : null) ??
