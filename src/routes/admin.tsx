@@ -190,9 +190,13 @@ function AdminLayout() {
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[236px] flex-col bg-admin-sidebar lg:flex">
         <div className="flex h-14 items-center px-4">
-          <Link to="/admin" className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-admin-panel-2">
-            <img src={mmIcon.url} alt="MM Club" className="h-5 w-5 object-contain" />
+          <Link to="/admin" className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-admin-panel-2">
+              <img src={mmIcon.url} alt="MM Club" className="h-5 w-5 object-contain" />
+            </span>
+            <span className="text-[14px] font-semibold tracking-[-0.01em] text-admin-fg">MMClub</span>
           </Link>
+
         </div>
 
         <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">

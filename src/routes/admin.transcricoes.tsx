@@ -50,7 +50,7 @@ function statusMeta(status: Row["status"]) {
     case "embedding":
       return { label: "A indexar", icon: Loader2, tone: "text-sky-400", bg: "bg-sky-500/10 ring-sky-500/30", spin: true };
     case "transcribing":
-      return { label: "A processar", icon: Loader2, tone: "text-amber-400", bg: "bg-amber-500/10 ring-amber-500/30", spin: true };
+      return { label: "A processar", icon: Loader2, tone: "text-admin-accent", bg: "bg-admin-accent/10 ring-admin-accent/30", spin: true };
     case "error":
       return { label: "Falhou", icon: AlertCircle, tone: "text-red-400", bg: "bg-red-500/10 ring-red-500/30" };
     case "pending":

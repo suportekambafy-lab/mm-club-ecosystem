@@ -71,8 +71,8 @@ export function StatCard({
 const STATUS_STYLE: Record<SubscriptionStatus | string, string> = {
   active: "bg-emerald-500/15 text-emerald-300 ring-emerald-500/30",
   trialing: "bg-sky-500/15 text-sky-300 ring-sky-500/30",
-  past_due: "bg-amber-500/15 text-amber-300 ring-amber-500/30",
-  grace_period: "bg-amber-500/10 text-amber-200 ring-amber-500/20",
+  past_due: "bg-admin-accent/15 text-admin-accent ring-admin-accent/30",
+  grace_period: "bg-admin-accent/10 text-admin-accent ring-admin-accent/20",
   suspended: "bg-orange-500/15 text-orange-300 ring-orange-500/30",
   cancelled: "bg-muted text-muted-foreground ring-border",
   expired: "bg-muted text-muted-foreground ring-border",
