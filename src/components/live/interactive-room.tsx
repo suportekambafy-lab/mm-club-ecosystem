@@ -159,6 +159,7 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
 
 function HostRequestsPanel({ state, actions }: { state: RoomState; actions: RoomActions }) {
   const [open, setOpen] = useState(false);
+  const adminIds = useAdminIds();
   const raised = useMemo(
     () =>
       state.participants
