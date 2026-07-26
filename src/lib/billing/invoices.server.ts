@@ -279,12 +279,12 @@ export async function buildInvoicePdf(inv: InvoicePdfData) {
     height - 60,
     { size: 12, font: bold, color: gold },
   );
-  const num = inv.number ?? inv.id.slice(0, 8).toUpperCase();
+  const num = inv.number ?? "—";
   text(num, width - M - regular.widthOfTextAtSize(num, 10), height - 78, {
     size: 10,
     color: rgb(0.9, 0.9, 0.92),
   });
-  const dateStr = `Emitida em ${fmtDate(inv.issued_at)}`;
+  const dateStr = `Emitida em ${fmtDate(inv.issuedAt)}`;
   text(
     dateStr,
     width - M - regular.widthOfTextAtSize(dateStr, 9),
@@ -296,19 +296,14 @@ export async function buildInvoicePdf(inv: InvoicePdfData) {
   let y = height - 170;
   text("FATURAR A", M, y, { size: 8, font: bold, color: muted });
   y -= 16;
-  const clientName =
-    customer?.company_name ||
-    customer?.name ||
-    profile?.display_name ||
-    "Cliente MM Club";
-  text(clientName, M, y, { size: 12, font: bold });
+  text(inv.clientName, M, y, { size: 12, font: bold });
   y -= 15;
-  if (customer?.email) {
-    text(customer.email, M, y, { size: 10, color: muted });
+  if (inv.clientEmail) {
+    text(inv.clientEmail, M, y, { size: 10, color: muted });
     y -= 14;
   }
-  if (customer?.tax_id) {
-    text(`NIF ${customer.tax_id}`, M, y, { size: 10, color: muted });
+  if (inv.clientVat) {
+    text(`NIF ${inv.clientVat}`, M, y, { size: 10, color: muted });
     y -= 14;
   }
 
@@ -351,7 +346,7 @@ export async function buildInvoicePdf(inv: InvoicePdfData) {
   });
 
   ty -= 12;
-  const lines = (inv.lines as unknown as InvoiceLine[]) ?? [];
+  const lines = inv.lines ?? [];
   for (const l of lines) {
     ty -= 26;
     text(l.description.slice(0, 60), M + 12, ty, { size: 10 });
@@ -375,20 +370,20 @@ export async function buildInvoicePdf(inv: InvoicePdfData) {
   // Totals
   ty -= 34;
   const totals: Array<[string, string, boolean]> = [
-    ["Subtotal", money(inv.subtotal_cents, inv.currency), false],
+    ["Subtotal", money(inv.subtotalCents, inv.currency), false],
   ];
-  if (inv.discount_cents > 0)
+  if (inv.discountCents > 0)
     totals.push([
       "Desconto",
-      `-${money(inv.discount_cents, inv.currency)}`,
+      `-${money(inv.discountCents, inv.currency)}`,
       false,
     ]);
   totals.push([
-    `IVA (${Number(inv.tax_rate) * 100 || 0}%)`,
-    money(inv.tax_cents, inv.currency),
+    `IVA (${Number(inv.taxRate) * 100 || 0}%)`,
+    money(inv.taxCents, inv.currency),
     false,
   ]);
-  totals.push(["Total", money(inv.total_cents, inv.currency), true]);
+  totals.push(["Total", money(inv.totalCents, inv.currency), true]);
 
   for (const [label, value, strong] of totals) {
     const f = strong ? bold : regular;
@@ -414,7 +409,7 @@ export async function buildInvoicePdf(inv: InvoicePdfData) {
   }
 
   if (paid) {
-    text(`Pago em ${fmtDate(inv.paid_at)}`, M, ty + 24, {
+    text(`Pago em ${fmtDate(inv.paidAt)}`, M, ty + 24, {
       size: 10,
       color: muted,
     });
