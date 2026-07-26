@@ -14,11 +14,11 @@ import { Route as TermosRouteImport } from './routes/termos'
 import { Route as ReembolsosRouteImport } from './routes/reembolsos'
 import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
-import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CheckoutIndexRouteImport } from './routes/checkout.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiTranscribeRouteImport } from './routes/api.transcribe'
@@ -100,11 +100,6 @@ const PrivacidadeRoute = PrivacidadeRouteImport.update({
   path: '/privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CheckoutRoute = CheckoutRouteImport.update({
-  id: '/checkout',
-  path: '/checkout',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -124,15 +119,20 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckoutIndexRoute = CheckoutIndexRouteImport.update({
+  id: '/checkout/',
+  path: '/checkout/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
-  id: '/return',
-  path: '/return',
-  getParentRoute: () => CheckoutRoute,
+  id: '/checkout/return',
+  path: '/checkout/return',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTranscribeRoute = ApiTranscribeRouteImport.update({
   id: '/api/transcribe',
@@ -423,7 +423,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
-  '/checkout': typeof CheckoutRouteWithChildren
   '/privacidade': typeof PrivacidadeRoute
   '/quiz': typeof QuizRoute
   '/reembolsos': typeof ReembolsosRoute
@@ -451,6 +450,7 @@ export interface FileRoutesByFullPath {
   '/api/transcribe': typeof ApiTranscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/admin/': typeof AdminIndexRoute
+  '/checkout/': typeof CheckoutIndexRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
@@ -488,7 +488,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/checkout': typeof CheckoutRouteWithChildren
   '/privacidade': typeof PrivacidadeRoute
   '/quiz': typeof QuizRoute
   '/reembolsos': typeof ReembolsosRoute
@@ -512,6 +511,7 @@ export interface FileRoutesByTo {
   '/api/transcribe': typeof ApiTranscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/admin': typeof AdminIndexRoute
+  '/checkout': typeof CheckoutIndexRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
@@ -550,7 +550,6 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
-  '/checkout': typeof CheckoutRouteWithChildren
   '/privacidade': typeof PrivacidadeRoute
   '/quiz': typeof QuizRoute
   '/reembolsos': typeof ReembolsosRoute
@@ -578,6 +577,7 @@ export interface FileRoutesById {
   '/api/transcribe': typeof ApiTranscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/admin/': typeof AdminIndexRoute
+  '/checkout/': typeof CheckoutIndexRoute
   '/_app/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
   '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/_app/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
@@ -618,7 +618,6 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
-    | '/checkout'
     | '/privacidade'
     | '/quiz'
     | '/reembolsos'
@@ -646,6 +645,7 @@ export interface FileRouteTypes {
     | '/api/transcribe'
     | '/checkout/return'
     | '/admin/'
+    | '/checkout/'
     | '/academia/$courseId'
     | '/especialistas/$expertId'
     | '/ferramentas/studio'
@@ -683,7 +683,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/checkout'
     | '/privacidade'
     | '/quiz'
     | '/reembolsos'
@@ -707,6 +706,7 @@ export interface FileRouteTypes {
     | '/api/transcribe'
     | '/checkout/return'
     | '/admin'
+    | '/checkout'
     | '/especialistas/$expertId'
     | '/lives/$liveId'
     | '/admin/financeiro/catalogo'
@@ -744,7 +744,6 @@ export interface FileRouteTypes {
     | '/_app'
     | '/admin'
     | '/auth'
-    | '/checkout'
     | '/privacidade'
     | '/quiz'
     | '/reembolsos'
@@ -772,6 +771,7 @@ export interface FileRouteTypes {
     | '/api/transcribe'
     | '/checkout/return'
     | '/admin/'
+    | '/checkout/'
     | '/_app/academia/$courseId'
     | '/_app/especialistas/$expertId'
     | '/_app/ferramentas/studio'
@@ -812,7 +812,6 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
-  CheckoutRoute: typeof CheckoutRouteWithChildren
   PrivacidadeRoute: typeof PrivacidadeRoute
   QuizRoute: typeof QuizRoute
   ReembolsosRoute: typeof ReembolsosRoute
@@ -820,6 +819,8 @@ export interface RootRouteChildren {
   VipRoute: typeof VipRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiTranscribeRoute: typeof ApiTranscribeRoute
+  CheckoutReturnRoute: typeof CheckoutReturnRoute
+  CheckoutIndexRoute: typeof CheckoutIndexRoute
   ApiKnowledgeSearchRoute: typeof ApiKnowledgeSearchRoute
   ApiRealtimeSessionRoute: typeof ApiRealtimeSessionRoute
   ApiPublicCloudflareStreamWebhookRoute: typeof ApiPublicCloudflareStreamWebhookRoute
@@ -869,13 +870,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/checkout': {
-      id: '/checkout'
-      path: '/checkout'
-      fullPath: '/checkout'
-      preLoaderRoute: typeof CheckoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -904,6 +898,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout/': {
+      id: '/checkout/'
+      path: '/checkout'
+      fullPath: '/checkout/'
+      preLoaderRoute: typeof CheckoutIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
@@ -913,10 +914,10 @@ declare module '@tanstack/react-router' {
     }
     '/checkout/return': {
       id: '/checkout/return'
-      path: '/return'
+      path: '/checkout/return'
       fullPath: '/checkout/return'
       preLoaderRoute: typeof CheckoutReturnRouteImport
-      parentRoute: typeof CheckoutRoute
+      parentRoute: typeof rootRouteImport
     }
     '/api/transcribe': {
       id: '/api/transcribe'
@@ -1460,24 +1461,11 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
-interface CheckoutRouteChildren {
-  CheckoutReturnRoute: typeof CheckoutReturnRoute
-}
-
-const CheckoutRouteChildren: CheckoutRouteChildren = {
-  CheckoutReturnRoute: CheckoutReturnRoute,
-}
-
-const CheckoutRouteWithChildren = CheckoutRoute._addFileChildren(
-  CheckoutRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
-  CheckoutRoute: CheckoutRouteWithChildren,
   PrivacidadeRoute: PrivacidadeRoute,
   QuizRoute: QuizRoute,
   ReembolsosRoute: ReembolsosRoute,
@@ -1485,6 +1473,8 @@ const rootRouteChildren: RootRouteChildren = {
   VipRoute: VipRoute,
   ApiChatRoute: ApiChatRoute,
   ApiTranscribeRoute: ApiTranscribeRoute,
+  CheckoutReturnRoute: CheckoutReturnRoute,
+  CheckoutIndexRoute: CheckoutIndexRoute,
   ApiKnowledgeSearchRoute: ApiKnowledgeSearchRoute,
   ApiRealtimeSessionRoute: ApiRealtimeSessionRoute,
   ApiPublicCloudflareStreamWebhookRoute: ApiPublicCloudflareStreamWebhookRoute,

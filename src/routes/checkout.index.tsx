@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 type CheckoutSearch = { plan?: string };
 
-export const Route = createFileRoute("/checkout")({
+export const Route = createFileRoute("/checkout/")({
   validateSearch: (s: Record<string, unknown>): CheckoutSearch => ({
     plan: typeof s.plan === "string" ? s.plan : undefined,
   }),
@@ -55,7 +55,7 @@ function cadenceLabel(interval: string, count: number): string {
 }
 
 function PlansPage() {
-  const { plan: recommended } = useSearch({ from: "/checkout" });
+  const { plan: recommended } = useSearch({ from: "/checkout/" });
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [guestPlan, setGuestPlan] = useState<string | null>(null);
