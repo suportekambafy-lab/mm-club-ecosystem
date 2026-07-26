@@ -31,6 +31,7 @@ const BENEFITS = [
   "Todos os cursos, aulas e novos lançamentos",
   "Comunidade privada, lives e ferramentas",
   "Suporte MM Intelligence 24/7",
+  "Apenas 0,01 € de validação do cartão — sem mensalidade nos 3 meses",
   "Cancelas quando quiseres antes do fim do trial",
   "Depois do 3.º mês, apenas 29,90 €/mês",
 ];
@@ -68,7 +69,7 @@ function VipPage() {
         const res = await startGuestCheckout({
           data: {
             email: guestEmail.trim(),
-            priceSlug: "mm_club_monthly",
+            priceSlug: "mm_club_vip_trial",
             origin: window.location.origin,
           },
         });
@@ -84,8 +85,7 @@ function VipPage() {
       }
       const { checkoutUrl } = await startCheckout({
         data: {
-          priceSlug: "mm_club_monthly",
-          couponCode: "MMVIP3",
+          priceSlug: "mm_club_vip_trial",
           origin: window.location.origin,
           successPath: "/vip?vip=success",
         },
@@ -174,8 +174,8 @@ function VipPage() {
               </span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Depois, 29,90 €/mês. Cancelas a qualquer momento antes do fim do
-              trial.
+              Cobramos apenas 0,01 € para validar o cartão. Depois dos 3 meses,
+              29,90 €/mês — cancelas a qualquer momento antes do fim do trial.
             </p>
 
             <ul className="mt-8 space-y-3">

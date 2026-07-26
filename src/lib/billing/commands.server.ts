@@ -109,7 +109,8 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
       : "/dashboard?checkout=success");
 
   const payment = await gw.createCharge({
-    amountCents: price.amountCents,
+    // Trial prices only validate the card: charge the smallest amount possible.
+    amountCents: price.trialDays > 0 ? 1 : price.amountCents,
     currency: price.currency,
     description: `MM Club — ${price.product.name}`,
     redirectUrl: `${origin}${successPath}`,
@@ -135,7 +136,7 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
     gateway: gw.name,
     gateway_payment_id: payment.id,
     status: payment.status,
-    amount_cents: price.amountCents,
+    amount_cents: price.trialDays > 0 ? 1 : price.amountCents,
     currency: price.currency,
     metadata: { priceSlug: price.slug, recurring } as never,
   });
@@ -387,6 +388,7 @@ async function onPaymentPaid(args: {
         intervalCount: price.intervalCount,
         gatewayIntervalStr: gatewayInterval(price),
         amountCents: price.amountCents,
+        trialDays: price.trialDays,
         currency: price.currency,
         description: `MM Club — ${price.product.name}`,
       });
@@ -433,12 +435,18 @@ async function activateSubscription(args: {
   intervalCount: number;
   gatewayIntervalStr: string;
   amountCents: number;
+  trialDays?: number;
   currency: string;
   description: string;
 }): Promise<string> {
   const gw = getGateway();
   const start = new Date();
-  const end = periodEnd(start, args.interval, args.intervalCount);
+  const trialDays = args.trialDays ?? 0;
+  // With a trial, the first real charge only happens when the trial ends.
+  const end =
+    trialDays > 0
+      ? new Date(start.getTime() + trialDays * 86400000)
+      : periodEnd(start, args.interval, args.intervalCount);
 
   // Store the mandate as a reusable payment method.
   let paymentMethodId: string | null = null;
@@ -493,10 +501,11 @@ async function activateSubscription(args: {
       user_id: args.userId,
       product_id: args.productId,
       price_id: args.priceId,
-      status: "active",
+      status: trialDays > 0 ? "trialing" : "active",
       gateway: gw.name,
       gateway_subscription_id: gatewaySubscriptionId,
       payment_method_id: paymentMethodId,
+      trial_end: trialDays > 0 ? end.toISOString() : null,
       current_period_start: start.toISOString(),
       current_period_end: end.toISOString(),
     })
