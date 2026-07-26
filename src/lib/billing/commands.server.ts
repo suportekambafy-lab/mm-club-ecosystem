@@ -504,6 +504,102 @@ async function renewPeriod(
   }
 }
 
+/**
+ * A renewal failed. Before flagging the subscription as past due, try the
+ * member's other saved cards (off-session). Each card is tried at most once
+ * per renewal — the chain of attempts is carried in payment metadata.
+ */
+async function retryWithAlternateCard(args: {
+  payment: GatewayPayment;
+  userId: string;
+  subscriptionId: string;
+}): Promise<boolean> {
+  const { payment, userId, subscriptionId } = args;
+  const gw = getGateway();
+
+  const { data: customer } = await supabaseAdmin
+    .from("billing_customers")
+    .select("id, gateway_customer_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const gatewayCustomerId =
+    payment.customerId ?? customer?.gateway_customer_id ?? null;
+  if (!gatewayCustomerId) return false;
+
+  const tried = new Set<string>([
+    ...(Array.isArray(payment.metadata?.triedMandates)
+      ? (payment.metadata.triedMandates as string[])
+      : []),
+    ...(payment.mandateId ? [payment.mandateId] : []),
+  ]);
+
+  let mandates: { id: string }[] = [];
+  try {
+    mandates = await gw.listMandates(gatewayCustomerId);
+  } catch (err) {
+    console.error("[billing] listMandates during retry", err);
+    return false;
+  }
+
+  const next = mandates.find((m) => !tried.has(m.id));
+  if (!next) return false;
+
+  const origin =
+    (payment.metadata?.origin as string | undefined) ??
+    process.env.PUBLIC_APP_URL ??
+    "";
+
+  try {
+    const retryPayment = await gw.chargeWithMandate({
+      customerId: gatewayCustomerId,
+      mandateId: next.id,
+      amountCents: payment.amountCents,
+      currency: payment.currency,
+      description: "MM Club — nova tentativa de cobrança",
+      webhookUrl: `${origin}/api/public/payments/gateway-webhook`,
+      metadata: {
+        ...payment.metadata,
+        userId,
+        subscriptionId,
+        origin,
+        retryOf: payment.id,
+        triedMandates: [...tried, next.id],
+      },
+    });
+
+    await supabaseAdmin.from("billing_payments").insert({
+      customer_id: customer?.id ?? null,
+      user_id: userId,
+      subscription_id: subscriptionId,
+      gateway: gw.name,
+      gateway_payment_id: retryPayment.id,
+      status: retryPayment.status,
+      amount_cents: retryPayment.amountCents,
+      currency: retryPayment.currency,
+      method: retryPayment.method,
+      metadata: { retryOf: payment.id, mandateId: next.id } as never,
+    });
+
+    await emitEvent({
+      type: "DunningEscalated",
+      aggregateType: "subscription",
+      aggregateId: subscriptionId,
+      payload: {
+        userId,
+        subscriptionId,
+        stage: "card_retry",
+        mandateId: next.id,
+        retryOf: payment.id,
+      },
+    });
+    return true;
+  } catch (err) {
+    console.error("[billing] alternate card retry failed", err);
+    return false;
+  }
+}
+
+
 async function markPastDue(subscriptionId: string, userId: string) {
   const { data: sub } = await supabaseAdmin
     .from("billing_subscriptions")
