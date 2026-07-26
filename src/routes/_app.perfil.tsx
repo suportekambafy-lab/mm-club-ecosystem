@@ -88,25 +88,8 @@ function ProfilePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const toggleSubscription = async () => {
-    if (!sub) return;
-    setSubActionLoading(true);
-    setError(null);
-    try {
-      if (sub.cancelAtPeriodEnd) {
-        await resumeSubscription({ data: { subscriptionId: sub.id } });
-        setNotice("Assinatura reativada.");
-      } else {
-        await cancelSubscription({ data: { subscriptionId: sub.id } });
-        setNotice("Cancelamento agendado para o fim do período.");
-      }
-      await loadBilling();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Não foi possível atualizar o plano.");
-    } finally {
-      setSubActionLoading(false);
-    }
-  };
+
+
 
 
 
