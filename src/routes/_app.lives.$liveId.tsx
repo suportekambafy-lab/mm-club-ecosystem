@@ -23,11 +23,19 @@ import { resolveLiveCoverUrl } from "@/lib/live-cover-url";
 
 export const Route = createFileRoute("/_app/lives/$liveId")({
   loader: async ({ params }) => {
+    let result;
     try {
-      return await getLive({ data: { id: params.liveId } });
+      result = await getLive({ data: { id: params.liveId } });
     } catch {
       throw notFound();
     }
+    // Interactive lives always render the Sala Interativa experience —
+    // for host, co-host, speakers AND regular viewers. Only permissions
+    // and controls differ based on role.
+    if ((result.live as { mode?: string }).mode === "interactive") {
+      throw redirect({ to: "/lives/$liveId/sala", params: { liveId: params.liveId } });
+    }
+    return result;
   },
   head: ({ loaderData }) => ({
     meta: loaderData
