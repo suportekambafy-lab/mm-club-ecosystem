@@ -127,7 +127,44 @@ function SecurityPage() {
     onError: () => toast.error("Não foi possível alterar o modo de emergência."),
   });
 
+  const fetchScore = useServerFn(getSecurityScore);
+  const runScan = useServerFn(runSecurityScanNow);
+  const toggleReadOnly = useServerFn(setReadOnlyMode);
+
+  const scoreQuery = useQuery({
+    queryKey: ["security-score"],
+    queryFn: () => fetchScore(),
+    refetchInterval: 300_000,
+  });
+
+  const scan = useMutation({
+    mutationFn: () => runScan(),
+    onSuccess: () => {
+      toast.success("Verificação de segurança concluída.");
+      void qc.invalidateQueries({ queryKey: ["security-score"] });
+      void qc.invalidateQueries({ queryKey: ["security-overview"] });
+    },
+    onError: () => toast.error("Não foi possível correr a verificação."),
+  });
+
+  const readOnly = useMutation({
+    mutationFn: (enabled: boolean) =>
+      toggleReadOnly({ data: { enabled, reason: reason.trim() || null } }),
+    onSuccess: (res) => {
+      toast.success(
+        res.enabled
+          ? "Modo apenas-leitura ativado — escritas bloqueadas."
+          : "Modo apenas-leitura desativado.",
+      );
+      void qc.invalidateQueries({ queryKey: ["security-overview"] });
+    },
+    onError: () => toast.error("Não foi possível alterar o modo apenas-leitura."),
+  });
+
   const on = data?.emergency.enabled ?? false;
+  const ro = data?.readOnly.enabled ?? false;
+  const report = scoreQuery.data;
+
 
   return (
     <div className="space-y-6">
