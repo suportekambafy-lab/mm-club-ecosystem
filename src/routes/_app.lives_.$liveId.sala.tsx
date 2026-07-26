@@ -258,6 +258,7 @@ function SalaShell({
   const [chatOpen, setChatOpen] = useState(true);
   const [peopleOpen, setPeopleOpen] = useState(false);
   const [viewerCount, setViewerCount] = useState<number>(0);
+  const adminIds = useAdminIds();
   const [people, setPeople] = useState<
     Array<{ user_id: string; role: string; on_stage: boolean; hand_raised_at: string | null; display_name: string; avatar_url: string | null }>
   >([]);
