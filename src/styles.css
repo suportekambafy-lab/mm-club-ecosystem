@@ -402,3 +402,7 @@ html[data-live-immersive="1"] [data-mobile-tabbar] { display: none !important; }
   --gold-deep: var(--admin-accent);
 }
 .admin-shell .font-display { font-family: var(--font-admin); letter-spacing: -0.02em; }
+.admin-shell, .admin-shell h1, .admin-shell h2, .admin-shell h3,
+.admin-shell h4, .admin-shell h5, .admin-shell h6, .admin-shell .font-display {
+  font-family: var(--font-admin) !important;
+}
