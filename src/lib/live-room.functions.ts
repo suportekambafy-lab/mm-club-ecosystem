@@ -270,7 +270,7 @@ export const endLive = createServerFn({ method: "POST" })
     // Stop server-side recording if one is running.
     const { data: liveRow } = await supabase
       .from("lives")
-      .select("recording_egress_id")
+      .select("recording_egress_id,cf_live_input_id")
       .eq("id", data.liveId)
       .maybeSingle();
 
@@ -280,18 +280,42 @@ export const endLive = createServerFn({ method: "POST" })
       .eq("id", data.liveId);
     if (error) throw new Error(error.message);
 
-    if (liveRow?.recording_egress_id) {
+    try {
+      const { livekitRoomName } = await import("./livekit.server");
+      const { stopLiveRecording, stopAllRoomEgress } = await import("./live-egress.server");
+      if (liveRow?.recording_egress_id) await stopLiveRecording(liveRow.recording_egress_id);
+      // Belt and braces: stop any other active egress bound to this room.
+      await stopAllRoomEgress(livekitRoomName(data.liveId, "main"));
+      await supabase
+        .from("lives")
+        .update({ recording_stopped_at: new Date().toISOString() })
+        .eq("id", data.liveId);
+    } catch (err) {
+      console.warn("[endLive] recording stop failed", err);
+    }
+
+    // Best effort: if Cloudflare already finalized a recording, attach it now.
+    // Otherwise the CF webhook / the lives-recording-check cron will attach it
+    // as soon as the file is ready — the live only becomes "published"
+    // (Replay disponível) when a ready-to-stream recording actually exists.
+    if (liveRow?.cf_live_input_id) {
       try {
-        const { stopLiveRecording } = await import("./live-egress.server");
-        await stopLiveRecording(liveRow.recording_egress_id);
-        await supabase
-          .from("lives")
-          .update({ recording_stopped_at: new Date().toISOString() })
-          .eq("id", data.liveId);
+        const { listVideosForLiveInput } = await import("@/lib/cloudflare-stream.server");
+        const videos = await listVideosForLiveInput(liveRow.cf_live_input_id);
+        const ready = videos
+          .filter((v) => v.readyToStream)
+          .sort((a, b) => (b.duration ?? 0) - (a.duration ?? 0))[0];
+        if (ready?.uid) {
+          await supabase
+            .from("lives")
+            .update({ recording_video_uid: ready.uid, status: "published" })
+            .eq("id", data.liveId);
+        }
       } catch (err) {
-        console.warn("[endLive] recording stop failed", err);
+        console.warn("[endLive] recording lookup failed", err);
       }
     }
+
 
     await logEvent(supabase, { liveId: data.liveId, actorId: userId, kind: "end_live" });
     return { ok: true };
