@@ -363,9 +363,11 @@ export async function listSubscriptions(filter?: {
     .order("created_at", { ascending: false })
     .limit(500);
 
-  const { data } = filter?.status
+  const { data, error } = filter?.status
     ? await query.eq("status", filter.status)
     : await query;
+  if (error) throw new Error(`listSubscriptions failed: ${error.message}`);
+
 
   const rows = (data ?? []) as unknown as (SubRaw & {
     product: { name: string } | null;
