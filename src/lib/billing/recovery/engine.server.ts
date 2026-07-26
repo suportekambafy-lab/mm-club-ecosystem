@@ -65,7 +65,7 @@ export async function hasPendingPayment(subscriptionId: string): Promise<boolean
     .from("billing_payments")
     .select("id")
     .eq("subscription_id", subscriptionId)
-    .in("status", PENDING_STATUSES as unknown as string[])
+    .in("status", PENDING_STATUSES)
     .gte("created_at", new Date(Date.now() - 3 * 24 * HOUR).toISOString())
     .limit(1);
   return (data ?? []).length > 0;
@@ -864,7 +864,7 @@ async function isUserBlockedByPending(userId: string): Promise<boolean> {
     .from("billing_payments")
     .select("id")
     .eq("user_id", userId)
-    .in("status", PENDING_STATUSES as unknown as string[])
+    .in("status", PENDING_STATUSES)
     .gte("created_at", new Date(Date.now() - 2 * HOUR).toISOString())
     .limit(1);
   return (data ?? []).length > 0;
