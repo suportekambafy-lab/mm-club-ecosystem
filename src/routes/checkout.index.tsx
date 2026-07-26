@@ -69,9 +69,11 @@ function PlansPage() {
   });
 
   const product = catalog?.[0] ?? null;
-  const prices = [...(product?.prices ?? [])].sort(
-    (a, b) => a.amountCents - b.amountCents,
-  );
+  // Planos com trial (ex.: oferta VIP de 3 meses) só existem em /vip.
+  const prices = [...(product?.prices ?? [])]
+    .filter((p) => !p.trialDays || p.trialDays <= 0)
+    .sort((a, b) => a.amountCents - b.amountCents);
+
 
   const handleSelect = async (priceSlug: string) => {
     setError(null);
