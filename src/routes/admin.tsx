@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   Sparkles,
   HeartPulse,
+  Mail,
   ChevronLeft,
   ChevronRight,
   Repeat,
@@ -79,6 +80,7 @@ type AdminTo =
   | "/admin/eventos"
   | "/admin/lives"
   | "/admin/ferramentas"
+  | "/admin/comunicacao"
   | "/admin/seguranca";
 
 type NavItem = { to: AdminTo; label: string; icon: typeof Home; exact?: boolean };
@@ -98,6 +100,8 @@ const nav: Array<{ label: string; items: NavItem[] }> = [
       { to: "/admin/financeiro/cupoes", label: "Cupões", icon: Ticket },
       { to: "/admin/financeiro/catalogo", label: "Catálogo", icon: Package },
       { to: "/admin/saude", label: "Saúde do billing", icon: HeartPulse },
+      { to: "/admin/comunicacao", label: "Comunicação", icon: Mail },
+
     ],
   },
   {
@@ -127,6 +131,7 @@ const CRUMBS: Record<string, string> = {
   "/admin/financeiro/cupoes": "Cupões",
   "/admin/financeiro/catalogo": "Catálogo",
   "/admin/saude": "Saúde do billing",
+  "/admin/comunicacao": "Comunicação",
   "/admin/cursos": "Cursos",
   "/admin/aulas": "Aulas",
   "/admin/transcricoes": "Transcrições",

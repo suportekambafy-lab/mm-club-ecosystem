@@ -32,6 +32,7 @@ import { Route as AdminFinanceiroRouteImport } from './routes/admin.financeiro'
 import { Route as AdminFerramentasRouteImport } from './routes/admin.ferramentas'
 import { Route as AdminEventosRouteImport } from './routes/admin.eventos'
 import { Route as AdminCursosRouteImport } from './routes/admin.cursos'
+import { Route as AdminComunicacaoRouteImport } from './routes/admin.comunicacao'
 import { Route as AdminAulasRouteImport } from './routes/admin.aulas'
 import { Route as AppSubscricaoRouteImport } from './routes/_app.subscricao'
 import { Route as AppShortsRouteImport } from './routes/_app.shorts'
@@ -42,6 +43,7 @@ import { Route as AppFerramentasRouteImport } from './routes/_app.ferramentas'
 import { Route as AppEventosRouteImport } from './routes/_app.eventos'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppComunidadeRouteImport } from './routes/_app.comunidade'
+import { Route as AppComunicacoesRouteImport } from './routes/_app.comunicacoes'
 import { Route as AppCodigoRouteImport } from './routes/_app.codigo'
 import { Route as AppAcademiaRouteImport } from './routes/_app.academia'
 import { Route as AdminLivesIndexRouteImport } from './routes/admin.lives.index'
@@ -199,6 +201,11 @@ const AdminCursosRoute = AdminCursosRouteImport.update({
   path: '/cursos',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminComunicacaoRoute = AdminComunicacaoRouteImport.update({
+  id: '/comunicacao',
+  path: '/comunicacao',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAulasRoute = AdminAulasRouteImport.update({
   id: '/aulas',
   path: '/aulas',
@@ -247,6 +254,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
 const AppComunidadeRoute = AppComunidadeRouteImport.update({
   id: '/comunidade',
   path: '/comunidade',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppComunicacoesRoute = AppComunicacoesRouteImport.update({
+  id: '/comunicacoes',
+  path: '/comunicacoes',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCodigoRoute = AppCodigoRouteImport.update({
@@ -494,6 +506,7 @@ export interface FileRoutesByFullPath {
   '/vip': typeof VipRoute
   '/academia': typeof AppAcademiaRouteWithChildren
   '/codigo': typeof AppCodigoRoute
+  '/comunicacoes': typeof AppComunicacoesRoute
   '/comunidade': typeof AppComunidadeRoute
   '/dashboard': typeof AppDashboardRoute
   '/eventos': typeof AppEventosRoute
@@ -504,6 +517,7 @@ export interface FileRoutesByFullPath {
   '/shorts': typeof AppShortsRoute
   '/subscricao': typeof AppSubscricaoRoute
   '/admin/aulas': typeof AdminAulasRoute
+  '/admin/comunicacao': typeof AdminComunicacaoRoute
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
@@ -568,6 +582,7 @@ export interface FileRoutesByTo {
   '/termos': typeof TermosRoute
   '/vip': typeof VipRoute
   '/codigo': typeof AppCodigoRoute
+  '/comunicacoes': typeof AppComunicacoesRoute
   '/comunidade': typeof AppComunidadeRoute
   '/dashboard': typeof AppDashboardRoute
   '/eventos': typeof AppEventosRoute
@@ -577,6 +592,7 @@ export interface FileRoutesByTo {
   '/shorts': typeof AppShortsRoute
   '/subscricao': typeof AppSubscricaoRoute
   '/admin/aulas': typeof AdminAulasRoute
+  '/admin/comunicacao': typeof AdminComunicacaoRoute
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
@@ -641,6 +657,7 @@ export interface FileRoutesById {
   '/vip': typeof VipRoute
   '/_app/academia': typeof AppAcademiaRouteWithChildren
   '/_app/codigo': typeof AppCodigoRoute
+  '/_app/comunicacoes': typeof AppComunicacoesRoute
   '/_app/comunidade': typeof AppComunidadeRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/eventos': typeof AppEventosRoute
@@ -651,6 +668,7 @@ export interface FileRoutesById {
   '/_app/shorts': typeof AppShortsRoute
   '/_app/subscricao': typeof AppSubscricaoRoute
   '/admin/aulas': typeof AdminAulasRoute
+  '/admin/comunicacao': typeof AdminComunicacaoRoute
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
@@ -719,6 +737,7 @@ export interface FileRouteTypes {
     | '/vip'
     | '/academia'
     | '/codigo'
+    | '/comunicacoes'
     | '/comunidade'
     | '/dashboard'
     | '/eventos'
@@ -729,6 +748,7 @@ export interface FileRouteTypes {
     | '/shorts'
     | '/subscricao'
     | '/admin/aulas'
+    | '/admin/comunicacao'
     | '/admin/cursos'
     | '/admin/eventos'
     | '/admin/ferramentas'
@@ -793,6 +813,7 @@ export interface FileRouteTypes {
     | '/termos'
     | '/vip'
     | '/codigo'
+    | '/comunicacoes'
     | '/comunidade'
     | '/dashboard'
     | '/eventos'
@@ -802,6 +823,7 @@ export interface FileRouteTypes {
     | '/shorts'
     | '/subscricao'
     | '/admin/aulas'
+    | '/admin/comunicacao'
     | '/admin/cursos'
     | '/admin/eventos'
     | '/admin/ferramentas'
@@ -865,6 +887,7 @@ export interface FileRouteTypes {
     | '/vip'
     | '/_app/academia'
     | '/_app/codigo'
+    | '/_app/comunicacoes'
     | '/_app/comunidade'
     | '/_app/dashboard'
     | '/_app/eventos'
@@ -875,6 +898,7 @@ export interface FileRouteTypes {
     | '/_app/shorts'
     | '/_app/subscricao'
     | '/admin/aulas'
+    | '/admin/comunicacao'
     | '/admin/cursos'
     | '/admin/eventos'
     | '/admin/ferramentas'
@@ -1124,6 +1148,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCursosRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/comunicacao': {
+      id: '/admin/comunicacao'
+      path: '/comunicacao'
+      fullPath: '/admin/comunicacao'
+      preLoaderRoute: typeof AdminComunicacaoRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/aulas': {
       id: '/admin/aulas'
       path: '/aulas'
@@ -1192,6 +1223,13 @@ declare module '@tanstack/react-router' {
       path: '/comunidade'
       fullPath: '/comunidade'
       preLoaderRoute: typeof AppComunidadeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/comunicacoes': {
+      id: '/_app/comunicacoes'
+      path: '/comunicacoes'
+      fullPath: '/comunicacoes'
+      preLoaderRoute: typeof AppComunicacoesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/codigo': {
@@ -1568,6 +1606,7 @@ const AppLivesRouteWithChildren = AppLivesRoute._addFileChildren(
 interface AppRouteChildren {
   AppAcademiaRoute: typeof AppAcademiaRouteWithChildren
   AppCodigoRoute: typeof AppCodigoRoute
+  AppComunicacoesRoute: typeof AppComunicacoesRoute
   AppComunidadeRoute: typeof AppComunidadeRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppEventosRoute: typeof AppEventosRoute
@@ -1584,6 +1623,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAcademiaRoute: AppAcademiaRouteWithChildren,
   AppCodigoRoute: AppCodigoRoute,
+  AppComunicacoesRoute: AppComunicacoesRoute,
   AppComunidadeRoute: AppComunidadeRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppEventosRoute: AppEventosRoute,
@@ -1643,6 +1683,7 @@ const AdminLivesRouteWithChildren = AdminLivesRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminAulasRoute: typeof AdminAulasRoute
+  AdminComunicacaoRoute: typeof AdminComunicacaoRoute
   AdminCursosRoute: typeof AdminCursosRoute
   AdminEventosRoute: typeof AdminEventosRoute
   AdminFerramentasRoute: typeof AdminFerramentasRoute
@@ -1656,6 +1697,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAulasRoute: AdminAulasRoute,
+  AdminComunicacaoRoute: AdminComunicacaoRoute,
   AdminCursosRoute: AdminCursosRoute,
   AdminEventosRoute: AdminEventosRoute,
   AdminFerramentasRoute: AdminFerramentasRoute,
