@@ -536,20 +536,31 @@ function SubscriptionPage() {
                     )}
                     <button
                       type="button"
-                      onClick={() =>
-                        run(
+                      onClick={() => {
+                        if (methods.length <= 1) {
+                          toast.error(
+                            "Tens de manter pelo menos um método de pagamento. Adiciona outro antes de remover este.",
+                          );
+                          return;
+                        }
+                        void run(
                           `del-${m.id}`,
                           () => removePaymentMethod({ data: { paymentMethodId: m.id } }),
                           "Método removido.",
-                        )
-                      }
-                      disabled={busy === `del-${m.id}` || methods.length <= 1}
+                        );
+                      }}
+                      disabled={busy === `del-${m.id}`}
                       title={
                         methods.length <= 1
                           ? "Tens de manter pelo menos um método de pagamento."
                           : "Remover método"
                       }
-                      className="rounded-full p-2 text-muted-foreground transition hover:text-destructive disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-muted-foreground"
+                      className={cn(
+                        "rounded-full p-2 transition disabled:opacity-60",
+                        methods.length <= 1
+                          ? "cursor-not-allowed text-muted-foreground/40"
+                          : "text-muted-foreground hover:text-destructive",
+                      )}
                       aria-label="Remover método"
                     >
                       {busy === `del-${m.id}` ? (
@@ -558,6 +569,7 @@ function SubscriptionPage() {
                         <Trash2 className="h-4 w-4" />
                       )}
                     </button>
+
 
                   </li>
                 ))}
