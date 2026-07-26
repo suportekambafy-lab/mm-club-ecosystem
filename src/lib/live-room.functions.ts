@@ -137,6 +137,18 @@ export const joinRoom = createServerFn({ method: "POST" })
       me = updated ?? me;
     }
 
+    // Self-healing recording: every main-room join makes sure an egress is
+    // running while the live is on air (covers the "room did not exist yet"
+    // race at go-live time and any egress that died mid-session).
+    if (target === "main" && live.status === "live") {
+      try {
+        const { ensureLiveRecording } = await import("./live-recording.server");
+        await ensureLiveRecording(liveId);
+      } catch (err) {
+        console.warn("[issueRoomSession] ensureLiveRecording failed", err);
+      }
+    }
+
     // Profile for display name.
     const { data: profile } = await supabase
       .from("profiles")
@@ -192,69 +204,25 @@ export const goLive = createServerFn({ method: "POST" })
     // Start server-side recording. The composed room is pushed over RTMPS into
     // the live's Cloudflare Stream input, which records automatically — so the
     // replay pipeline is identical to broadcast lives. Non-blocking failure:
-    // the live still goes on air even if egress fails to spin up.
+    // the live still goes on air even if egress fails to spin up (and every
+    // subsequent join retries via ensureLiveRecording).
     try {
       const { livekitRoomName } = await import("./livekit.server");
-      const { startLiveRecording, stopAllRoomEgress } = await import("./live-egress.server");
-      const roomName = livekitRoomName(data.liveId, "main");
-
-      // Make sure a Cloudflare live input exists (older rows may lack one).
-      const { data: cfRow } = await supabase
-        .from("lives")
-        .select("cf_live_input_id,cf_rtmps_url,cf_stream_key,title")
-        .eq("id", data.liveId)
-        .maybeSingle();
-
-      let rtmpsUrl = cfRow?.cf_rtmps_url ?? null;
-      let streamKey = cfRow?.cf_stream_key ?? null;
-
-      if (!rtmpsUrl || !streamKey) {
-        try {
-          const { createLiveInput } = await import("@/lib/cloudflare-stream.server");
-          const input = await createLiveInput({ title: cfRow?.title ?? "MM Club Live" });
-          rtmpsUrl = input.rtmps.url;
-          streamKey = input.rtmps.streamKey;
-          await supabase
-            .from("lives")
-            .update({
-              cf_live_input_id: input.uid,
-              cf_rtmps_url: input.rtmps.url,
-              cf_stream_key: input.rtmps.streamKey,
-              cf_webrtc_url: input.webRTC?.url ?? null,
-              cf_playback_id: input.uid,
-            })
-            .eq("id", data.liveId);
-        } catch (err) {
-          console.warn("[goLive] could not provision Cloudflare live input", err);
-        }
-      }
-
+      const { stopAllRoomEgress } = await import("./live-egress.server");
+      const { ensureLiveRecording } = await import("./live-recording.server");
       // Clear any stale egress left over from a previous session of this room.
-      await stopAllRoomEgress(roomName);
+      await stopAllRoomEgress(livekitRoomName(data.liveId, "main"));
 
-      const result = await startLiveRecording({
-        liveId: data.liveId,
-        roomName,
-        rtmpsUrl,
-        streamKey,
-      });
-      if (result.egressId) {
-        await supabase
-          .from("lives")
-          .update({
-            recording_egress_id: result.egressId,
-            recording_started_at: nowIso,
-            recording_stopped_at: null,
-            recording_filepath: result.filepath,
-          })
-          .eq("id", data.liveId);
-      } else {
-        console.error("[goLive] recording NOT started:", result.error);
+      let result = await ensureLiveRecording(data.liveId);
+      // The LiveKit room may not exist yet in the instant the host goes on air.
+      for (let attempt = 0; attempt < 2 && !result.ok; attempt++) {
+        await new Promise((r) => setTimeout(r, 1500));
+        result = await ensureLiveRecording(data.liveId);
       }
+      if (!result.ok) console.error("[goLive] recording NOT started:", result.reason);
     } catch (err) {
       console.warn("[goLive] recording start failed", err);
     }
-
 
     await logEvent(supabase, { liveId: data.liveId, actorId: userId, kind: "go_live" });
     return { ok: true };
