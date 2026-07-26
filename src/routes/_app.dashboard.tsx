@@ -22,9 +22,8 @@ import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { expertsById } from "@/data/experts";
 import { courses } from "@/data/courses";
 import { computeCourseDuration } from "@/lib/course-duration";
+import { courseCoverImage } from "@/lib/course-cover";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
-import marcaMilionariaCoverAsset from "@/assets/marca-milionaria-cover.png.asset.json";
-const marcaMilionariaCover = marcaMilionariaCoverAsset.url;
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -234,12 +233,7 @@ function ContinueHero({ course }: { course: import("@/data/types").Course }) {
         to: "/academia/$courseId" as const,
         params: { courseId: course.id },
       };
-  const coverImage =
-    course.id === "marca-milionaria"
-      ? marcaMilionariaCover
-      : typeof course.cover === "string" && /^(https?:|\/|data:)/.test(course.cover)
-        ? course.cover
-        : null;
+  const coverImage = courseCoverImage(course);
   return (
     <Link
       {...linkProps}

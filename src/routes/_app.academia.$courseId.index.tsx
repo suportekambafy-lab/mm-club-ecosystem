@@ -7,6 +7,7 @@ import { expertsById } from "@/data/experts";
 import { ExpertAvatar } from "@/components/mm/expert-avatar";
 import type { Course, Lesson, Module } from "@/data/types";
 import { useUserProgress } from "@/hooks/use-user-progress";
+import { courseCoverBackground } from "@/lib/course-cover";
 import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb } from "@/lib/course-duration";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 
@@ -39,7 +40,7 @@ function CourseDetail() {
   const heroThumb = heroSyncThumb ?? heroOembedThumb;
   const heroBg = heroThumb
     ? `url(${heroThumb}) center/cover no-repeat, #000`
-    : course.cover;
+    : courseCoverBackground(course);
 
 
 
@@ -72,7 +73,7 @@ function CourseDetail() {
         ) : (
           <div
             className="relative aspect-video overflow-hidden rounded-2xl ring-1 ring-border"
-            style={{ background: course.cover }}
+            style={{ background: courseCoverBackground(course) }}
           >
             <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-black/10 to-transparent" />
           </div>
@@ -208,7 +209,7 @@ function CourseLessonRow({
           {thumb ? (
             <img src={thumb} alt="" loading="lazy" className="h-full w-full object-cover" />
           ) : (
-            <div className="absolute inset-0" style={{ background: course.cover }} />
+            <div className="absolute inset-0" style={{ background: courseCoverBackground(course) }} />
           )}
           <span className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition group-hover:opacity-100">
             <Play className="h-4 w-4 fill-white text-white" />
