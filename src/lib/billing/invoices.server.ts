@@ -154,6 +154,23 @@ function fmtDate(iso: string | null): string {
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
 }
 
+export type InvoicePdfData = {
+  number: string | null;
+  status: string;
+  currency: string;
+  subtotalCents: number;
+  discountCents: number;
+  taxCents: number;
+  totalCents: number;
+  taxRate: number;
+  lines: InvoiceLine[];
+  issuedAt: string | null;
+  paidAt: string | null;
+  clientName: string;
+  clientEmail: string | null;
+  clientVat: string | null;
+};
+
 /** Renders the invoice as a branded A4 PDF. Returns raw bytes. */
 export async function renderInvoicePdf(invoiceId: string, userId: string) {
   const { data: inv } = await supabaseAdmin
@@ -176,6 +193,30 @@ export async function renderInvoicePdf(invoiceId: string, userId: string) {
     .eq("id", inv.user_id)
     .maybeSingle();
 
+  return buildInvoicePdf({
+    number: inv.number,
+    status: inv.status as string,
+    currency: inv.currency,
+    subtotalCents: inv.subtotal_cents,
+    discountCents: inv.discount_cents,
+    taxCents: inv.tax_cents,
+    totalCents: inv.total_cents,
+    taxRate: Number(inv.tax_rate),
+    lines: (inv.lines as unknown as InvoiceLine[]) ?? [],
+    issuedAt: inv.issued_at,
+    paidAt: inv.paid_at,
+    clientName:
+      customer?.company_name ||
+      customer?.name ||
+      profile?.display_name ||
+      "Cliente MM Club",
+    clientEmail: customer?.email ?? null,
+    clientVat: customer?.tax_id ?? null,
+  });
+}
+
+/** Pure PDF drawing — no database access. */
+export async function buildInvoicePdf(inv: InvoicePdfData) {
   const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
 
   const pdf = await PDFDocument.create();
