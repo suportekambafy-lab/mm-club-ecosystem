@@ -265,6 +265,10 @@ export function useRoomState({
     on(RoomEvent.ActiveSpeakersChanged, (speakers: Participant[]) => {
       setActiveSpeakerId(speakers[0]?.identity ?? null);
     });
+    on(RoomEvent.AudioPlaybackStatusChanged, () => {
+      setAudioBlocked(!room.canPlaybackAudio);
+    });
+
 
     (async () => {
       try {
