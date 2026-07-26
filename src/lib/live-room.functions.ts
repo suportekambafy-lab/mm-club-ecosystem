@@ -80,7 +80,7 @@ export const joinRoom = createServerFn({ method: "POST" })
     // Live must exist & be reachable via RLS.
     const { data: live, error: liveErr } = await supabase
       .from("lives")
-      .select("id, created_by, mode, enabled_modules, spotlight_user_id, stage_layout")
+      .select("id, created_by, mode, status, enabled_modules, spotlight_user_id, stage_layout")
       .eq("id", liveId)
       .maybeSingle();
     if (liveErr) throw new Error(liveErr.message);
