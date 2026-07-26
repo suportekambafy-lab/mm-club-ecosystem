@@ -126,6 +126,23 @@ export async function ensureInvoiceForPayment(
   return invoice.id;
 }
 
+/** Creates any missing invoices for a member's paid payments. */
+export async function backfillInvoicesForUser(userId: string) {
+  const { data: rows } = await supabaseAdmin
+    .from("billing_payments")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("status", "paid")
+    .is("invoice_id", null)
+    .order("created_at", { ascending: true })
+    .limit(50);
+  for (const r of rows ?? []) {
+    await ensureInvoiceForPayment(r.id).catch((e) =>
+      console.error("[billing] backfill invoice", e),
+    );
+  }
+}
+
 export function money(cents: number, currency: string): string {
   const value = (cents / 100).toFixed(2).replace(".", ",");
   return `${value} ${currency === "EUR" ? "€" : currency}`;

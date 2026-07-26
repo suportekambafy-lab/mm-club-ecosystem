@@ -308,6 +308,16 @@ async function onPaymentPaid(args: {
     memo: "Pagamento recebido",
   });
 
+  // Every paid payment gets its own invoice document.
+  if (paymentRowId) {
+    try {
+      const { ensureInvoiceForPayment } = await import("./invoices.server");
+      await ensureInvoiceForPayment(paymentRowId);
+    } catch (err) {
+      console.error("[billing] invoice generation", err);
+    }
+  }
+
   const price = priceId ? await getPriceById(priceId) : null;
   if (!price) return;
 
