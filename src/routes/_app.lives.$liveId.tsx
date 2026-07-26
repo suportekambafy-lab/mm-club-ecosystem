@@ -66,7 +66,8 @@ function LiveDetail() {
   // the broadcast route, hop over to the Sala Interativa immediately so every
   // participant sees the same experience.
   useEffect(() => {
-    if ((data.live as { mode?: string }).mode === "interactive") {
+    const row = data.live as { mode?: string; status?: string };
+    if (row.mode === "interactive" && row.status !== "ended") {
       navigate({ to: "/lives/$liveId/sala", params: { liveId: data.live.id }, replace: true });
     }
   }, [data.live, navigate]);
