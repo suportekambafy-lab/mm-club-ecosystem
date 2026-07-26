@@ -6,6 +6,15 @@ import type { RoomActions, RoomState } from "@/lib/room-state";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Video, VideoOff, ScreenShare, Hand, PhoneOff, Layout } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+
+// getDisplayMedia is not implemented on mobile browsers (iOS Safari,
+// Chrome Android, etc.). Detect once so we can show a helpful hint
+// instead of firing a hard error when the user taps the button.
+const canScreenShare =
+  typeof navigator !== "undefined" &&
+  typeof navigator.mediaDevices !== "undefined" &&
+  typeof navigator.mediaDevices.getDisplayMedia === "function";
 
 interface Props {
   state: RoomState;
