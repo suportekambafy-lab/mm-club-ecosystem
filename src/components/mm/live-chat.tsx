@@ -85,7 +85,34 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
   const send = useServerFn(sendChatMessage);
   const setPinned = useServerFn(setChatMessagePinned);
   const adminIds = useAdminIds();
+  const [hostIds, setHostIds] = useState<Set<string>>(() => new Set());
+  const isVerified = (uid: string) => adminIds.has(uid) || hostIds.has(uid);
   const isAdmin = currentUserId ? adminIds.has(currentUserId) : false;
+
+  // Fetch host + cohosts for this live so they render with the verified badge
+  // even if they aren't platform admins.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [{ data: live }, { data: parts }] = await Promise.all([
+        supabase.from("lives").select("created_by").eq("id", liveId).maybeSingle(),
+        supabase
+          .from("live_participants")
+          .select("user_id, role")
+          .eq("live_id", liveId)
+          .in("role", ["host", "cohost"]),
+      ]);
+      if (cancelled) return;
+      const set = new Set<string>();
+      if (live?.created_by) set.add(live.created_by as string);
+      for (const p of parts ?? []) set.add((p as { user_id: string }).user_id);
+      setHostIds(set);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [liveId]);
+
 
   useEffect(() => {
     let cancelled = false;
