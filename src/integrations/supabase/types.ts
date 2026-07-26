@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_action_log: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          after: Json | null
+          before: Json | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          geo: string | null
+          id: string
+          ip: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          geo?: string | null
+          id?: string
+          ip?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          geo?: string | null
+          id?: string
+          ip?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       admin_overrides: {
         Row: {
           data: Json
@@ -2458,6 +2503,99 @@ export type Database = {
         }
         Relationships: []
       }
+      security_counters: {
+        Row: {
+          bucket: string
+          count: number
+          id: string
+          subject: string
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          bucket: string
+          count?: number
+          id?: string
+          subject: string
+          updated_at?: string
+          window_start: string
+        }
+        Update: {
+          bucket?: string
+          count?: number
+          id?: string
+          subject?: string
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
+      security_events: {
+        Row: {
+          actor_email: string | null
+          created_at: string
+          id: string
+          ip: string | null
+          kind: string
+          metadata: Json
+          outcome: string
+          reason: string | null
+          route: string | null
+          severity: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          actor_email?: string | null
+          created_at?: string
+          id?: string
+          ip?: string | null
+          kind: string
+          metadata?: Json
+          outcome?: string
+          reason?: string | null
+          route?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          actor_email?: string | null
+          created_at?: string
+          id?: string
+          ip?: string | null
+          kind?: string
+          metadata?: Json
+          outcome?: string
+          reason?: string | null
+          route?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      security_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       user_entitlements: {
         Row: {
           entitlement: Database["public"]["Enums"]["content_visibility"]
@@ -2606,6 +2744,10 @@ export type Database = {
           quota: number
           sources: string[]
         }[]
+      }
+      security_bump_counter: {
+        Args: { _bucket: string; _subject: string; _window_seconds: number }
+        Returns: number
       }
     }
     Enums: {
