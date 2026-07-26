@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, redirect, useRouter, useRouterState } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Home,
@@ -22,6 +22,8 @@ import {
   LifeBuoy,
   ArrowUpRight,
   Plus,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import mmIcon from "@/assets/mm-icon.png.asset.json";
@@ -133,6 +135,22 @@ const CRUMBS: Record<string, string> = {
 function AdminLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+
+  useEffect(() => {
+    const stored = localStorage.getItem("mm-admin-theme");
+    if (stored === "light" || stored === "dark") setTheme(stored);
+  }, []);
+
+  const toggleTheme = () => {
+    setTheme((prev) => {
+      const next = prev === "dark" ? "light" : "dark";
+      localStorage.setItem("mm-admin-theme", next);
+      return next;
+    });
+  };
+
+
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
@@ -167,7 +185,8 @@ function AdminLayout() {
   };
 
   return (
-    <div className="admin-shell min-h-screen bg-admin-bg text-admin-fg">
+    <div className={cn("admin-shell min-h-screen bg-admin-bg text-admin-fg", theme === "light" && "admin-light")}>
+
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[236px] flex-col bg-admin-sidebar lg:flex">
         <div className="flex h-14 items-center px-4">
@@ -233,6 +252,18 @@ function AdminLayout() {
             </span>
           </div>
           <div className="flex-1" />
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Modo claro" : "Modo escuro"}
+            className="flex h-7 w-7 items-center justify-center rounded-md text-admin-muted transition hover:bg-admin-panel hover:text-admin-fg"
+          >
+            {theme === "dark" ? (
+              <Sun strokeWidth={1.6} className="h-4 w-4" />
+            ) : (
+              <Moon strokeWidth={1.6} className="h-4 w-4" />
+            )}
+          </button>
           <Link
             to="/admin/financeiro/catalogo"
             className="inline-flex items-center gap-1.5 rounded-lg bg-admin-panel-2 px-3 py-1.5 text-[13px] text-admin-fg transition hover:bg-admin-hover"
@@ -242,7 +273,7 @@ function AdminLayout() {
           </Link>
           <Link
             to="/admin/financeiro/subscricoes"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-[13px] font-medium text-black transition hover:opacity-90"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-admin-fg px-3 py-1.5 text-[13px] font-medium text-admin-bg transition hover:opacity-90"
           >
             <ArrowUpRight strokeWidth={1.8} className="h-3.5 w-3.5" />
             Clientes
