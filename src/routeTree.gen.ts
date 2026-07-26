@@ -65,6 +65,7 @@ import { Route as ApiPublicHooksBillingTickRouteImport } from './routes/api/publ
 import { Route as ApiPublicHooksAutoTranscribeRouteImport } from './routes/api/public/hooks/auto-transcribe'
 import { Route as ApiPublicCloudflareStreamWebhookRouteImport } from './routes/api/public/cloudflare-stream/webhook'
 import { Route as AdminLivesLiveIdStudioRouteImport } from './routes/admin.lives.$liveId.studio'
+import { Route as AdminFinanceiroClienteUserIdRouteImport } from './routes/admin.financeiro.cliente.$userId'
 import { Route as AppLivesLiveIdSalaRouteImport } from './routes/_app.lives_.$liveId.sala'
 import { Route as AppFerramentasStudioVideosRouteImport } from './routes/_app.ferramentas.studio.videos'
 import { Route as AppFerramentasStudioProdutosRouteImport } from './routes/_app.ferramentas.studio.produtos'
@@ -364,6 +365,12 @@ const AdminLivesLiveIdStudioRoute = AdminLivesLiveIdStudioRouteImport.update({
   path: '/$liveId/studio',
   getParentRoute: () => AdminLivesRoute,
 } as any)
+const AdminFinanceiroClienteUserIdRoute =
+  AdminFinanceiroClienteUserIdRouteImport.update({
+    id: '/cliente/$userId',
+    path: '/cliente/$userId',
+    getParentRoute: () => AdminFinanceiroRoute,
+  } as any)
 const AppLivesLiveIdSalaRoute = AppLivesLiveIdSalaRouteImport.update({
   id: '/lives_/$liveId/sala',
   path: '/lives/$liveId/sala',
@@ -465,6 +472,7 @@ export interface FileRoutesByFullPath {
   '/ferramentas/studio/produtos': typeof AppFerramentasStudioProdutosRoute
   '/ferramentas/studio/videos': typeof AppFerramentasStudioVideosRoute
   '/lives/$liveId/sala': typeof AppLivesLiveIdSalaRoute
+  '/admin/financeiro/cliente/$userId': typeof AdminFinanceiroClienteUserIdRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
@@ -523,6 +531,7 @@ export interface FileRoutesByTo {
   '/ferramentas/studio/produtos': typeof AppFerramentasStudioProdutosRoute
   '/ferramentas/studio/videos': typeof AppFerramentasStudioVideosRoute
   '/lives/$liveId/sala': typeof AppLivesLiveIdSalaRoute
+  '/admin/financeiro/cliente/$userId': typeof AdminFinanceiroClienteUserIdRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
@@ -590,6 +599,7 @@ export interface FileRoutesById {
   '/_app/ferramentas/studio/produtos': typeof AppFerramentasStudioProdutosRoute
   '/_app/ferramentas/studio/videos': typeof AppFerramentasStudioVideosRoute
   '/_app/lives_/$liveId/sala': typeof AppLivesLiveIdSalaRoute
+  '/admin/financeiro/cliente/$userId': typeof AdminFinanceiroClienteUserIdRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
@@ -657,6 +667,7 @@ export interface FileRouteTypes {
     | '/ferramentas/studio/produtos'
     | '/ferramentas/studio/videos'
     | '/lives/$liveId/sala'
+    | '/admin/financeiro/cliente/$userId'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
@@ -715,6 +726,7 @@ export interface FileRouteTypes {
     | '/ferramentas/studio/produtos'
     | '/ferramentas/studio/videos'
     | '/lives/$liveId/sala'
+    | '/admin/financeiro/cliente/$userId'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
@@ -781,6 +793,7 @@ export interface FileRouteTypes {
     | '/_app/ferramentas/studio/produtos'
     | '/_app/ferramentas/studio/videos'
     | '/_app/lives_/$liveId/sala'
+    | '/admin/financeiro/cliente/$userId'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
@@ -1213,6 +1226,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLivesLiveIdStudioRouteImport
       parentRoute: typeof AdminLivesRoute
     }
+    '/admin/financeiro/cliente/$userId': {
+      id: '/admin/financeiro/cliente/$userId'
+      path: '/cliente/$userId'
+      fullPath: '/admin/financeiro/cliente/$userId'
+      preLoaderRoute: typeof AdminFinanceiroClienteUserIdRouteImport
+      parentRoute: typeof AdminFinanceiroRoute
+    }
     '/_app/lives_/$liveId/sala': {
       id: '/_app/lives_/$liveId/sala'
       path: '/lives/$liveId/sala'
@@ -1384,6 +1404,7 @@ interface AdminFinanceiroRouteChildren {
   AdminFinanceiroReceitaRoute: typeof AdminFinanceiroReceitaRoute
   AdminFinanceiroSubscricoesRoute: typeof AdminFinanceiroSubscricoesRoute
   AdminFinanceiroIndexRoute: typeof AdminFinanceiroIndexRoute
+  AdminFinanceiroClienteUserIdRoute: typeof AdminFinanceiroClienteUserIdRoute
 }
 
 const AdminFinanceiroRouteChildren: AdminFinanceiroRouteChildren = {
@@ -1392,6 +1413,7 @@ const AdminFinanceiroRouteChildren: AdminFinanceiroRouteChildren = {
   AdminFinanceiroReceitaRoute: AdminFinanceiroReceitaRoute,
   AdminFinanceiroSubscricoesRoute: AdminFinanceiroSubscricoesRoute,
   AdminFinanceiroIndexRoute: AdminFinanceiroIndexRoute,
+  AdminFinanceiroClienteUserIdRoute: AdminFinanceiroClienteUserIdRoute,
 }
 
 const AdminFinanceiroRouteWithChildren = AdminFinanceiroRoute._addFileChildren(
