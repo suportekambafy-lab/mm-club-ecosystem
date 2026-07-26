@@ -255,9 +255,14 @@ export function publicGate(policy: SecurityPolicy) {
  * The only middleware array a server function should use.
  * Authenticated by default; pass `auth: false` for genuinely public reads.
  */
-export function secured(policy: SecurityPolicy) {
-  return policy.auth === false
-    ? ([publicGate(policy)] as const)
-    : ([requireSupabaseAuth, securityGate(policy)] as const);
+export function secured<P extends SecurityPolicy>(
+  policy: P,
+): P["auth"] extends false
+  ? readonly [ReturnType<typeof publicGate>]
+  : readonly [typeof requireSupabaseAuth, ReturnType<typeof securityGate>] {
+  return (
+    policy.auth === false
+      ? ([publicGate(policy)] as const)
+      : ([requireSupabaseAuth, securityGate(policy)] as const)
+  ) as never;
 }
-
