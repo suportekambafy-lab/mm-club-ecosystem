@@ -136,7 +136,7 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
     gateway: gw.name,
     gateway_payment_id: payment.id,
     status: payment.status,
-    amount_cents: price.amountCents,
+    amount_cents: price.trialDays > 0 ? 1 : price.amountCents,
     currency: price.currency,
     metadata: { priceSlug: price.slug, recurring } as never,
   });
