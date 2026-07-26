@@ -187,6 +187,9 @@ export const getSecurityOverview = createServerFn({ method: "POST" })
 
     return {
       emergency,
+      readOnly,
+      newDevices24h: counts["new_device"] ?? 0,
+
       counts24h: counts,
       failedLogins24h: failedLogins,
       blocked24h: blocked,
