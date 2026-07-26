@@ -158,6 +158,17 @@ export async function handleGatewayPayment(
   let userId =
     (meta.userId as string | undefined) ?? existing?.user_id ?? null;
 
+  // Card-verification charge used to store a new payment method: no order,
+  // no entitlements — just refresh the stored mandates.
+  if (meta.purpose === "add_payment_method") {
+    if (userId && payment.status === "paid") {
+      const { syncPaymentMethods } = await import("./payment-methods.server");
+      await syncPaymentMethods(userId);
+    }
+    return;
+  }
+
+
   // Guest checkout: the account only exists once the payment is confirmed.
   if (!userId && meta.intentId) {
     if (payment.status !== "paid") return;

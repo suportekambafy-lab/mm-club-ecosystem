@@ -11,8 +11,6 @@ import { useAdminIds } from "@/hooks/use-admin-ids";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   getBillingOverview,
-  cancelSubscription,
-  resumeSubscription,
   type BillingOverview,
 } from "@/lib/billing.functions";
 import { formatMoney } from "@/lib/billing/types";
@@ -57,7 +55,6 @@ function ProfilePage() {
 
   const [overview, setOverview] = useState<BillingOverview | null>(null);
   const [subLoading, setSubLoading] = useState(true);
-  const [subActionLoading, setSubActionLoading] = useState(false);
   const sub = overview?.subscription ?? null;
 
   const loadBilling = async () => {
@@ -88,25 +85,8 @@ function ProfilePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const toggleSubscription = async () => {
-    if (!sub) return;
-    setSubActionLoading(true);
-    setError(null);
-    try {
-      if (sub.cancelAtPeriodEnd) {
-        await resumeSubscription({ data: { subscriptionId: sub.id } });
-        setNotice("Assinatura reativada.");
-      } else {
-        await cancelSubscription({ data: { subscriptionId: sub.id } });
-        setNotice("Cancelamento agendado para o fim do período.");
-      }
-      await loadBilling();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Não foi possível atualizar o plano.");
-    } finally {
-      setSubActionLoading(false);
-    }
-  };
+
+
 
 
 
@@ -556,19 +536,14 @@ function ProfilePage() {
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={toggleSubscription}
-                disabled={subActionLoading}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft disabled:opacity-60"
+              <Link
+                to="/subscricao"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
               >
-                {subActionLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <CreditCard className="h-4 w-4" />
-                )}
-                {sub.cancelAtPeriodEnd ? "Reativar plano" : "Cancelar plano"}
-              </button>
+                <CreditCard className="h-4 w-4" />
+                Gerir subscrição
+              </Link>
+
 
             </div>
           ) : isAdmin ? (
