@@ -189,13 +189,34 @@ function VipPage() {
               ))}
             </ul>
 
+            {askEmail && !user ? (
+              <div className="mt-8">
+                <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  O teu email
+                </label>
+                <input
+                  type="email"
+                  required
+                  autoFocus
+                  value={guestEmail}
+                  onChange={(e) => setGuestEmail(e.target.value)}
+                  placeholder="tu@exemplo.com"
+                  className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3.5 text-sm outline-none focus:border-primary"
+                />
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Criamos a tua conta automaticamente após o pagamento.
+                </p>
+              </div>
+            ) : null}
+
             <button
               onClick={handleStart}
-              disabled={pending}
+              disabled={pending || (askEmail && !user && !guestEmail.includes("@"))}
               className="mt-8 inline-flex w-full items-center justify-center rounded-2xl bg-primary px-6 py-4 text-base font-semibold text-primary-foreground shadow-lg transition hover:opacity-95 disabled:opacity-60"
             >
               {pending ? "A abrir checkout..." : "Ativar 3 meses grátis"}
             </button>
+
 
             {error ? (
               <p className="mt-4 text-center text-sm text-destructive">
