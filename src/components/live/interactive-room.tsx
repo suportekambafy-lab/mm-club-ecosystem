@@ -11,11 +11,12 @@
 import { useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useRoomState } from "@/hooks/use-room-state";
-import type { StageLayout } from "@/lib/room-state";
+import type { RoomActions, RoomState, StageLayout } from "@/lib/room-state";
 import { Stage } from "./stage";
 import { Backstage } from "./backstage";
 import { RoomControls } from "./room-controls";
-import { Radio } from "lucide-react";
+import { Hand, Radio, Volume2, X, UserPlus } from "lucide-react";
+
 import {
   goLive,
   endLive,
