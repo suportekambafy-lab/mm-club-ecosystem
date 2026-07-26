@@ -283,6 +283,114 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_customer_profiles: {
+        Row: {
+          avg_days_failure_to_payment: number | null
+          avg_hours_suspension_to_recovery: number | null
+          avg_hours_to_recover: number | null
+          best_method: string | null
+          best_method_rate: number | null
+          best_pay_hour: number | null
+          cancellations: number
+          card_changes: number
+          chargebacks: number
+          consecutive_successes: number
+          created_at: string
+          customer_since: string | null
+          expired_cards: number
+          invoices_total: number
+          last_failure_at: string | null
+          last_login_at: string | null
+          last_method_change_at: string | null
+          last_payment_at: string | null
+          last_score: number | null
+          last_score_at: string | null
+          months_as_customer: number
+          payments_failed: number
+          payments_succeeded: number
+          preferred_method: string | null
+          recoveries_failed: number
+          recoveries_succeeded: number
+          recovery_rate: number
+          refreshed_at: string
+          refunds: number
+          suspensions: number
+          typical_pay_day: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avg_days_failure_to_payment?: number | null
+          avg_hours_suspension_to_recovery?: number | null
+          avg_hours_to_recover?: number | null
+          best_method?: string | null
+          best_method_rate?: number | null
+          best_pay_hour?: number | null
+          cancellations?: number
+          card_changes?: number
+          chargebacks?: number
+          consecutive_successes?: number
+          created_at?: string
+          customer_since?: string | null
+          expired_cards?: number
+          invoices_total?: number
+          last_failure_at?: string | null
+          last_login_at?: string | null
+          last_method_change_at?: string | null
+          last_payment_at?: string | null
+          last_score?: number | null
+          last_score_at?: string | null
+          months_as_customer?: number
+          payments_failed?: number
+          payments_succeeded?: number
+          preferred_method?: string | null
+          recoveries_failed?: number
+          recoveries_succeeded?: number
+          recovery_rate?: number
+          refreshed_at?: string
+          refunds?: number
+          suspensions?: number
+          typical_pay_day?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avg_days_failure_to_payment?: number | null
+          avg_hours_suspension_to_recovery?: number | null
+          avg_hours_to_recover?: number | null
+          best_method?: string | null
+          best_method_rate?: number | null
+          best_pay_hour?: number | null
+          cancellations?: number
+          card_changes?: number
+          chargebacks?: number
+          consecutive_successes?: number
+          created_at?: string
+          customer_since?: string | null
+          expired_cards?: number
+          invoices_total?: number
+          last_failure_at?: string | null
+          last_login_at?: string | null
+          last_method_change_at?: string | null
+          last_payment_at?: string | null
+          last_score?: number | null
+          last_score_at?: string | null
+          months_as_customer?: number
+          payments_failed?: number
+          payments_succeeded?: number
+          preferred_method?: string | null
+          recoveries_failed?: number
+          recoveries_succeeded?: number
+          recovery_rate?: number
+          refreshed_at?: string
+          refunds?: number
+          suspensions?: number
+          typical_pay_day?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       billing_customers: {
         Row: {
           address: Json
@@ -358,7 +466,9 @@ export type Database = {
           recovered_at: string | null
           recovery_score: number | null
           scheduled_for: string
+          score_factors: Json
           status: string
+          strategy: string | null
           subscription_id: string
           user_id: string
         }
@@ -385,7 +495,9 @@ export type Database = {
           recovered_at?: string | null
           recovery_score?: number | null
           scheduled_for: string
+          score_factors?: Json
           status?: string
+          strategy?: string | null
           subscription_id: string
           user_id: string
         }
@@ -412,7 +524,9 @@ export type Database = {
           recovered_at?: string | null
           recovery_score?: number | null
           scheduled_for?: string
+          score_factors?: Json
           status?: string
+          strategy?: string | null
           subscription_id?: string
           user_id?: string
         }
