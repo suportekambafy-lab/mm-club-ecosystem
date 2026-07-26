@@ -1,33 +1,25 @@
-/** Consumer: email. Transactional mail reacting to billing events. */
-import {
-  emailTemplates,
-  getUserEmailAndName,
-  sendEmail,
-} from "@/lib/email.server";
+/**
+ * Consumer: email.
+ * Nothing here decides copy or timing — it hands the event to the
+ * Notification Engine, which owns templates, rules and auditing.
+ */
 import type { JobPayload } from "../types";
 
 export async function emailConsumer(job: JobPayload): Promise<void> {
-  const userId = job.userId as string | undefined;
-  if (!userId) return;
-  const who = await getUserEmailAndName(userId);
-  if (!who) return;
+  const { dispatchEventNotification } = await import(
+    "@/lib/notifications/dispatch.server"
+  );
+  const { emailTemplates, getUserEmailAndName, sendEmail } = await import(
+    "@/lib/email.server"
+  );
 
-  if (job.eventType === "SubscriptionActivated") {
-    const tpl = emailTemplates.welcome(who.name, "MM Club Elite");
-    await sendEmail({
-      to: who.email,
-      userId,
-      kind: "welcome",
-      ref: String(job.subscriptionId ?? job.aggregateId ?? "sub"),
-      subject: tpl.subject,
-      html: tpl.html,
-    });
-    return;
-  }
-
+  // Credit packs keep their own (non-billing) template for now.
   if (job.eventType === "ProductPurchased") {
+    const userId = job.userId as string | undefined;
     const credits = Number(job.grantsCredits ?? 0);
-    if (credits <= 0) return;
+    if (!userId || credits <= 0) return;
+    const who = await getUserEmailAndName(userId);
+    if (!who) return;
     const tpl = emailTemplates.creditsTopup(
       who.name,
       credits,
@@ -41,5 +33,8 @@ export async function emailConsumer(job: JobPayload): Promise<void> {
       subject: tpl.subject,
       html: tpl.html,
     });
+    return;
   }
+
+  await dispatchEventNotification(job as Record<string, unknown>);
 }
