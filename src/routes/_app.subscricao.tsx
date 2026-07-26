@@ -409,8 +409,9 @@ function SubscriptionPage() {
                   Plano atual
                 </p>
                 <p className="mt-2 font-display text-2xl text-foreground">
-                  {sub.productName}
+                  {currentPrice?.displayLabel ?? sub.productName}
                 </p>
+
                 <p className="mt-1 text-sm text-muted-foreground">
                   {formatMoney(sub.amountCents, sub.currency)}
                   {sub.interval === "year"
