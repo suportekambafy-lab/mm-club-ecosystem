@@ -13,6 +13,11 @@ import {
   ShieldCheck,
   Sparkles,
   HeartPulse,
+  Repeat,
+  TrendingUp,
+  Ticket,
+  Package,
+
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 // Ensure admin overrides are applied
@@ -54,22 +59,34 @@ export const Route = createFileRoute("/admin")({
 
 type AdminTo =
   | "/admin"
+  | "/admin/financeiro"
+  | "/admin/financeiro/subscricoes"
+  | "/admin/financeiro/receita"
+  | "/admin/financeiro/cupoes"
+  | "/admin/financeiro/catalogo"
+  | "/admin/saude"
   | "/admin/cursos"
   | "/admin/aulas"
   | "/admin/transcricoes"
   | "/admin/eventos"
   | "/admin/lives"
-  | "/admin/ferramentas"
-  | "/admin/saude"
-  | "/admin/financeiro";
+  | "/admin/ferramentas";
 
 const nav: Array<{
   label: string;
   items: Array<{ to: AdminTo; label: string; icon: typeof LayoutDashboard; exact?: boolean }>;
 }> = [
   {
-    label: "Painel",
-    items: [{ to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true }],
+    label: "Negócio",
+    items: [
+      { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+      { to: "/admin/financeiro", label: "Financeiro", icon: Wallet, exact: true },
+      { to: "/admin/financeiro/subscricoes", label: "Subscrições", icon: Repeat },
+      { to: "/admin/financeiro/receita", label: "Receita", icon: TrendingUp },
+      { to: "/admin/financeiro/cupoes", label: "Cupões", icon: Ticket },
+      { to: "/admin/financeiro/catalogo", label: "Catálogo", icon: Package },
+      { to: "/admin/saude", label: "Saúde do billing", icon: HeartPulse },
+    ],
   },
   {
     label: "Conteúdo",
@@ -88,18 +105,10 @@ const nav: Array<{
   },
   {
     label: "Recursos",
-    items: [
-      { to: "/admin/ferramentas", label: "Ferramentas", icon: Wrench },
-      { to: "/admin/saude", label: "Saúde do Billing", icon: HeartPulse },
-    ],
-  },
-  {
-    label: "Negócio",
-    items: [
-      { to: "/admin/financeiro", label: "Financeiro", icon: Wallet },
-    ],
+    items: [{ to: "/admin/ferramentas", label: "Ferramentas", icon: Wrench }],
   },
 ];
+
 
 function AdminLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -133,13 +142,13 @@ function AdminLayout() {
           </div>
         </div>
 
-        <nav className="flex-1 space-y-6 overflow-y-auto px-4 py-6">
+        <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-5">
           {nav.map((section) => (
             <div key={section.label}>
-              <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
+              <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/60">
                 {section.label}
               </p>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {section.items.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.to, item.exact);
@@ -148,21 +157,24 @@ function AdminLayout() {
                       key={item.to}
                       to={item.to}
                       className={cn(
-                        "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all",
+                        "group relative flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-[13px] transition-colors",
                         active
-                          ? "bg-surface-2 text-foreground shadow-inner ring-1 ring-[color:var(--hairline)]"
-                          : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
+                          ? "bg-sidebar-accent font-medium text-foreground"
+                          : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
                       )}
                     >
+                      {active ? (
+                        <span className="absolute inset-y-1 left-0 w-0.5 rounded-full bg-primary" />
+                      ) : null}
                       <Icon
                         className={cn(
-                          "h-[18px] w-[18px] shrink-0 transition",
+                          "h-4 w-4 shrink-0 transition",
                           active
                             ? "text-primary"
                             : "text-muted-foreground group-hover:text-foreground",
                         )}
                       />
-                      <span className="flex-1">{item.label}</span>
+                      <span className="flex-1 truncate">{item.label}</span>
                     </Link>
                   );
                 })}
