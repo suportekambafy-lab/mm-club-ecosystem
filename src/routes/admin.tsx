@@ -181,9 +181,6 @@ function AdminLayout() {
               </div>
             </div>
           ))}
-
-            </div>
-          ))}
         </nav>
 
         <div className="border-t border-border p-4">
