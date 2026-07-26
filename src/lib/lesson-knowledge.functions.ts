@@ -647,21 +647,28 @@ export async function runAutoTranscribeTick(): Promise<{
   const ERROR_COOLDOWN_MS = 5 * 60 * 1000;
   const now = Date.now();
   const skip = new Set<string>();
+  const STALE_LOCK_MS = 20 * 60 * 1000;
   for (const r of (existing ?? []) as any[]) {
     const key = `${r.course_id}::${r.lesson_id}`;
-    if (r.status === "ready" || r.status === "embedding" || r.status === "transcribing") {
+    const ts = r.updated_at ? new Date(r.updated_at).getTime() : 0;
+    if (r.status === "ready") {
       skip.add(key);
+    } else if (r.status === "embedding" || r.status === "transcribing") {
+      // Reclama locks presos: se um worker morreu a meio (timeout), a linha
+      // ficava "transcribing" para sempre e a aula nunca era transcrita.
+      if (now - ts < STALE_LOCK_MS) skip.add(key);
     } else if (r.status === "error") {
-      const ts = r.updated_at ? new Date(r.updated_at).getTime() : 0;
       if (now - ts < ERROR_COOLDOWN_MS) skip.add(key);
     }
   }
-  // Prioriza aulas em "error" (mais antigas primeiro) para reinício, depois novas.
+
+  // Prioriza aulas em "error" ou com lock preso (retomar primeiro), depois novas.
   const errorSet = new Set(
     (existing ?? [])
-      .filter((r: any) => r.status === "error")
+      .filter((r: any) => r.status === "error" || r.status === "transcribing" || r.status === "embedding")
       .map((r: any) => `${r.course_id}::${r.lesson_id}`),
   );
+
   const eligible = candidates.filter((c) => !skip.has(`${c.courseId}::${c.lessonId}`));
   eligible.sort((a, b) => {
     const ae = errorSet.has(`${a.courseId}::${a.lessonId}`) ? 0 : 1;
