@@ -337,7 +337,7 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
                 const profile = profiles[m.user_id];
                 const name = profile?.display_name || (mine ? "Tu" : m.user_id.slice(0, 6));
                 const time = formatTime(m.created_at);
-                const authorIsAdmin = adminIds.has(m.user_id);
+                const authorIsAdmin = isVerified(m.user_id);
                 return (
                   <div
                     key={m.id}
