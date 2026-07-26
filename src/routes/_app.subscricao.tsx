@@ -134,11 +134,17 @@ function SubscriptionPage() {
     setNotice(null);
     try {
       await fn();
-      if (ok) setNotice(ok);
+      if (ok) {
+        setNotice(ok);
+        toast.success(ok);
+      }
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Ocorreu um erro.");
+      const msg = e instanceof Error ? e.message : "Ocorreu um erro.";
+      setError(msg);
+      toast.error(msg);
     } finally {
+
       setBusy(null);
     }
   };
