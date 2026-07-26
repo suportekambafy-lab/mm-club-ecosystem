@@ -61,6 +61,7 @@ import { Route as AppAcademiaCourseIdIndexRouteImport } from './routes/_app.acad
 import { Route as ApiPublicPaymentsGatewayWebhookRouteImport } from './routes/api/public/payments/gateway-webhook'
 import { Route as ApiPublicHooksWeeklySummaryRouteImport } from './routes/api/public/hooks/weekly-summary'
 import { Route as ApiPublicHooksLivesRecordingCheckRouteImport } from './routes/api/public/hooks/lives-recording-check'
+import { Route as ApiPublicHooksLivesAnnounceCatchupRouteImport } from './routes/api/public/hooks/lives-announce-catchup'
 import { Route as ApiPublicHooksLiveTestEmailRouteImport } from './routes/api/public/hooks/live-test-email'
 import { Route as ApiPublicHooksBillingTickRouteImport } from './routes/api/public/hooks/billing-tick'
 import { Route as ApiPublicHooksAutoTranscribeRouteImport } from './routes/api/public/hooks/auto-transcribe'
@@ -342,6 +343,12 @@ const ApiPublicHooksLivesRecordingCheckRoute =
     path: '/api/public/hooks/lives-recording-check',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksLivesAnnounceCatchupRoute =
+  ApiPublicHooksLivesAnnounceCatchupRouteImport.update({
+    id: '/api/public/hooks/lives-announce-catchup',
+    path: '/api/public/hooks/lives-announce-catchup',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksLiveTestEmailRoute =
   ApiPublicHooksLiveTestEmailRouteImport.update({
     id: '/api/public/hooks/live-test-email',
@@ -485,6 +492,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
+  '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
@@ -545,6 +553,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
+  '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
@@ -614,6 +623,7 @@ export interface FileRoutesById {
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
+  '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
@@ -683,6 +693,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/auto-transcribe'
     | '/api/public/hooks/billing-tick'
     | '/api/public/hooks/live-test-email'
+    | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/weekly-summary'
     | '/api/public/payments/gateway-webhook'
@@ -743,6 +754,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/auto-transcribe'
     | '/api/public/hooks/billing-tick'
     | '/api/public/hooks/live-test-email'
+    | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/weekly-summary'
     | '/api/public/payments/gateway-webhook'
@@ -811,6 +823,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/auto-transcribe'
     | '/api/public/hooks/billing-tick'
     | '/api/public/hooks/live-test-email'
+    | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/weekly-summary'
     | '/api/public/payments/gateway-webhook'
@@ -839,6 +852,7 @@ export interface RootRouteChildren {
   ApiPublicHooksAutoTranscribeRoute: typeof ApiPublicHooksAutoTranscribeRoute
   ApiPublicHooksBillingTickRoute: typeof ApiPublicHooksBillingTickRoute
   ApiPublicHooksLiveTestEmailRoute: typeof ApiPublicHooksLiveTestEmailRoute
+  ApiPublicHooksLivesAnnounceCatchupRoute: typeof ApiPublicHooksLivesAnnounceCatchupRoute
   ApiPublicHooksLivesRecordingCheckRoute: typeof ApiPublicHooksLivesRecordingCheckRoute
   ApiPublicHooksWeeklySummaryRoute: typeof ApiPublicHooksWeeklySummaryRoute
   ApiPublicPaymentsGatewayWebhookRoute: typeof ApiPublicPaymentsGatewayWebhookRoute
@@ -1211,6 +1225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksLivesRecordingCheckRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/lives-announce-catchup': {
+      id: '/api/public/hooks/lives-announce-catchup'
+      path: '/api/public/hooks/lives-announce-catchup'
+      fullPath: '/api/public/hooks/lives-announce-catchup'
+      preLoaderRoute: typeof ApiPublicHooksLivesAnnounceCatchupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/live-test-email': {
       id: '/api/public/hooks/live-test-email'
       path: '/api/public/hooks/live-test-email'
@@ -1502,6 +1523,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksAutoTranscribeRoute: ApiPublicHooksAutoTranscribeRoute,
   ApiPublicHooksBillingTickRoute: ApiPublicHooksBillingTickRoute,
   ApiPublicHooksLiveTestEmailRoute: ApiPublicHooksLiveTestEmailRoute,
+  ApiPublicHooksLivesAnnounceCatchupRoute:
+    ApiPublicHooksLivesAnnounceCatchupRoute,
   ApiPublicHooksLivesRecordingCheckRoute:
     ApiPublicHooksLivesRecordingCheckRoute,
   ApiPublicHooksWeeklySummaryRoute: ApiPublicHooksWeeklySummaryRoute,
