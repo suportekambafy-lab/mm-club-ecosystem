@@ -168,3 +168,50 @@ export type CatalogProductRow = {
   features: { key: string; quota: number | null }[];
   prices: CatalogPriceRow[];
 };
+
+export type SubscriptionStateRow = {
+  id: string;
+  userId: string;
+  email: string | null;
+  name: string | null;
+  status: SubscriptionStatus;
+  productName: string;
+  priceSlug: string;
+  amountCents: number;
+  currency: string;
+  interval: string;
+  gateway: string | null;
+  gatewaySubscriptionId: string | null;
+  trialEnd: string | null;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+  createdAt: string;
+  /** Most recent payment for this subscription. */
+  lastPayment: {
+    id: string;
+    gatewayPaymentId: string;
+    status: string;
+    amountCents: number;
+    currency: string;
+    paidAt: string | null;
+    createdAt: string;
+    failureReason: string | null;
+  } | null;
+  paidCount: number;
+  failedCount: number;
+  /** Most recent webhook seen for this subscription's payments. */
+  lastWebhook: {
+    gateway: string;
+    gatewayPaymentId: string | null;
+    outcome: string;
+    error: string | null;
+    receivedAt: string;
+  } | null;
+  /** Active (non-revoked, non-expired) entitlement features for the account. */
+  entitlements: {
+    featureKey: string;
+    source: string;
+    quota: number | null;
+    expiresAt: string | null;
+  }[];
+};
