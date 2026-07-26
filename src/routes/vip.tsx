@@ -70,6 +70,7 @@ function VipPage() {
         const res = await startGuestCheckout({
           data: {
             email: guestEmail.trim(),
+            name: guestName.trim() || null,
             priceSlug: "mm_club_vip_trial",
             origin: window.location.origin,
           },
