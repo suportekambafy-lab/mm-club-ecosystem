@@ -57,7 +57,7 @@ async function requestMeta() {
 export function securityGate(policy: SecurityPolicy) {
   return createMiddleware({ type: "function" }).server(
     async ({ next, context }) => {
-      const ctx = context as {
+      const ctx = context as unknown as {
         userId?: string;
         supabase?: {
           rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown }>;
@@ -74,7 +74,7 @@ export function securityGate(policy: SecurityPolicy) {
         reason: string,
         severity: "info" | "warn" | "critical" = "warn",
         metadata: Record<string, unknown> = {},
-      ) => {
+      ): Promise<never> => {
         await runtime.recordSecurityEvent({
           kind: code,
           severity,
@@ -169,7 +169,6 @@ export function securityGate(policy: SecurityPolicy) {
               "limiter unavailable",
               "critical",
             );
-            return;
           }
           if (count > rule.max) {
             await deny(
@@ -200,7 +199,6 @@ export function securityGate(policy: SecurityPolicy) {
             "waf unavailable",
             "critical",
           );
-          return;
         }
         if (count > rule.max) {
           await deny(
