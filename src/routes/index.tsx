@@ -13,7 +13,6 @@ import {
   Heart,
   Send,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { MMLogo } from "@/components/mm/logo";
 import { BigTypeHero } from "@/components/mm/big-type-hero";
 import cover from "@/assets/marca-milionaria-cover.png.asset.json";
@@ -60,9 +59,9 @@ function LandingPage() {
       window.location.replace("/dashboard");
       return;
     }
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) window.location.replace("/dashboard");
-    });
+    // Sessão existente NÃO força saída da landing page (permite ver o site
+    // e trocar de conta em /auth). O acesso à app continua em /dashboard.
+
   }, []);
 
   useEffect(() => {
