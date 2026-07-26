@@ -501,10 +501,11 @@ async function activateSubscription(args: {
       user_id: args.userId,
       product_id: args.productId,
       price_id: args.priceId,
-      status: "active",
+      status: trialDays > 0 ? "trialing" : "active",
       gateway: gw.name,
       gateway_subscription_id: gatewaySubscriptionId,
       payment_method_id: paymentMethodId,
+      trial_end: trialDays > 0 ? end.toISOString() : null,
       current_period_start: start.toISOString(),
       current_period_end: end.toISOString(),
     })
