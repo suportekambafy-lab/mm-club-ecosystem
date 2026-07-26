@@ -53,6 +53,7 @@ import { Route as ApiKnowledgeSearchRouteImport } from './routes/api.knowledge.s
 import { Route as AdminFinanceiroSubscricoesRouteImport } from './routes/admin.financeiro.subscricoes'
 import { Route as AdminFinanceiroRecoveryRouteImport } from './routes/admin.financeiro.recovery'
 import { Route as AdminFinanceiroReceitaRouteImport } from './routes/admin.financeiro.receita'
+import { Route as AdminFinanceiroInteligenciaRouteImport } from './routes/admin.financeiro.inteligencia'
 import { Route as AdminFinanceiroEstadoRouteImport } from './routes/admin.financeiro.estado'
 import { Route as AdminFinanceiroCupoesRouteImport } from './routes/admin.financeiro.cupoes'
 import { Route as AdminFinanceiroCatalogoRouteImport } from './routes/admin.financeiro.catalogo'
@@ -304,6 +305,12 @@ const AdminFinanceiroReceitaRoute = AdminFinanceiroReceitaRouteImport.update({
   path: '/receita',
   getParentRoute: () => AdminFinanceiroRoute,
 } as any)
+const AdminFinanceiroInteligenciaRoute =
+  AdminFinanceiroInteligenciaRouteImport.update({
+    id: '/inteligencia',
+    path: '/inteligencia',
+    getParentRoute: () => AdminFinanceiroRoute,
+  } as any)
 const AdminFinanceiroEstadoRoute = AdminFinanceiroEstadoRouteImport.update({
   id: '/estado',
   path: '/estado',
@@ -517,6 +524,7 @@ export interface FileRoutesByFullPath {
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
   '/admin/financeiro/estado': typeof AdminFinanceiroEstadoRoute
+  '/admin/financeiro/inteligencia': typeof AdminFinanceiroInteligenciaRoute
   '/admin/financeiro/receita': typeof AdminFinanceiroReceitaRoute
   '/admin/financeiro/recovery': typeof AdminFinanceiroRecoveryRoute
   '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
@@ -585,6 +593,7 @@ export interface FileRoutesByTo {
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
   '/admin/financeiro/estado': typeof AdminFinanceiroEstadoRoute
+  '/admin/financeiro/inteligencia': typeof AdminFinanceiroInteligenciaRoute
   '/admin/financeiro/receita': typeof AdminFinanceiroReceitaRoute
   '/admin/financeiro/recovery': typeof AdminFinanceiroRecoveryRoute
   '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
@@ -662,6 +671,7 @@ export interface FileRoutesById {
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
   '/admin/financeiro/estado': typeof AdminFinanceiroEstadoRoute
+  '/admin/financeiro/inteligencia': typeof AdminFinanceiroInteligenciaRoute
   '/admin/financeiro/receita': typeof AdminFinanceiroReceitaRoute
   '/admin/financeiro/recovery': typeof AdminFinanceiroRecoveryRoute
   '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
@@ -739,6 +749,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cupoes'
     | '/admin/financeiro/estado'
+    | '/admin/financeiro/inteligencia'
     | '/admin/financeiro/receita'
     | '/admin/financeiro/recovery'
     | '/admin/financeiro/subscricoes'
@@ -807,6 +818,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cupoes'
     | '/admin/financeiro/estado'
+    | '/admin/financeiro/inteligencia'
     | '/admin/financeiro/receita'
     | '/admin/financeiro/recovery'
     | '/admin/financeiro/subscricoes'
@@ -883,6 +895,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cupoes'
     | '/admin/financeiro/estado'
+    | '/admin/financeiro/inteligencia'
     | '/admin/financeiro/receita'
     | '/admin/financeiro/recovery'
     | '/admin/financeiro/subscricoes'
@@ -1258,6 +1271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFinanceiroReceitaRouteImport
       parentRoute: typeof AdminFinanceiroRoute
     }
+    '/admin/financeiro/inteligencia': {
+      id: '/admin/financeiro/inteligencia'
+      path: '/inteligencia'
+      fullPath: '/admin/financeiro/inteligencia'
+      preLoaderRoute: typeof AdminFinanceiroInteligenciaRouteImport
+      parentRoute: typeof AdminFinanceiroRoute
+    }
     '/admin/financeiro/estado': {
       id: '/admin/financeiro/estado'
       path: '/estado'
@@ -1583,6 +1603,7 @@ interface AdminFinanceiroRouteChildren {
   AdminFinanceiroCatalogoRoute: typeof AdminFinanceiroCatalogoRoute
   AdminFinanceiroCupoesRoute: typeof AdminFinanceiroCupoesRoute
   AdminFinanceiroEstadoRoute: typeof AdminFinanceiroEstadoRoute
+  AdminFinanceiroInteligenciaRoute: typeof AdminFinanceiroInteligenciaRoute
   AdminFinanceiroReceitaRoute: typeof AdminFinanceiroReceitaRoute
   AdminFinanceiroRecoveryRoute: typeof AdminFinanceiroRecoveryRoute
   AdminFinanceiroSubscricoesRoute: typeof AdminFinanceiroSubscricoesRoute
@@ -1594,6 +1615,7 @@ const AdminFinanceiroRouteChildren: AdminFinanceiroRouteChildren = {
   AdminFinanceiroCatalogoRoute: AdminFinanceiroCatalogoRoute,
   AdminFinanceiroCupoesRoute: AdminFinanceiroCupoesRoute,
   AdminFinanceiroEstadoRoute: AdminFinanceiroEstadoRoute,
+  AdminFinanceiroInteligenciaRoute: AdminFinanceiroInteligenciaRoute,
   AdminFinanceiroReceitaRoute: AdminFinanceiroReceitaRoute,
   AdminFinanceiroRecoveryRoute: AdminFinanceiroRecoveryRoute,
   AdminFinanceiroSubscricoesRoute: AdminFinanceiroSubscricoesRoute,
