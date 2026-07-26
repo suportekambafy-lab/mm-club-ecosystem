@@ -50,23 +50,23 @@ export const Route = createFileRoute("/_app")({
 
     const userId = data.session.user.id;
 
-    // Admins bypass the subscription gate
+    // Admins bypass the access gate
     const { data: isAdmin } = await supabase.rpc("has_role", {
       _user_id: userId,
       _role: "admin",
     });
 
     if (!isAdmin) {
-      const { getPaddleEnvironment } = await import("@/lib/paddle");
-      const env = getPaddleEnvironment();
-      const { data: hasSub } = await supabase.rpc("has_active_subscription", {
-        user_uuid: userId,
-        check_env: env,
+      // Access is decided by Entitlements, never by a payment status.
+      const { data: hasAccess } = await supabase.rpc("has_feature", {
+        _user_id: userId,
+        _feature: "academy.access",
       });
-      if (!hasSub) {
+      if (!hasAccess) {
         throw redirect({ to: "/checkout", replace: true });
       }
     }
+
 
     // Club Code gate — force acceptance on first login
     const { data: prof } = await supabase
