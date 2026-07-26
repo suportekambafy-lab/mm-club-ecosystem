@@ -31,8 +31,8 @@ export function useCurrentUser(): CurrentUserState {
     let cancelled = false;
 
     async function load() {
-      const { data: u } = await supabase.auth.getUser();
-      const authUser = u.user;
+      const { data: s } = await supabase.auth.getSession();
+      const authUser = s.session?.user ?? null;
       if (!authUser) {
         currentUserIdRef.current = null;
         if (!cancelled) setState({ user: null, isAdmin: false, loading: false });

@@ -37,8 +37,9 @@ export function useUserProgress() {
     let cancelled = false;
 
     async function load() {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) {
+      const { data: s } = await supabase.auth.getSession();
+      const sessionUser = s.session?.user ?? null;
+      if (!sessionUser) {
         currentUserIdRef.current = null;
         if (!cancelled) {
           setProgress({});
@@ -49,7 +50,7 @@ export function useUserProgress() {
       const { data } = await supabase
         .from("lesson_progress")
         .select("course_id, lesson_id, completed, progress_seconds, last_watched_at")
-        .eq("user_id", u.user.id);
+        .eq("user_id", sessionUser.id);
 
       const byCourse: ProgressByCourse = {};
       for (const row of data ?? []) {
@@ -96,7 +97,7 @@ export function useUserProgress() {
         bucket.progress = total > 0 ? Math.min(completedUnits / total, 1) : 0;
       }
       if (!cancelled) {
-        currentUserIdRef.current = u.user.id;
+        currentUserIdRef.current = sessionUser.id;
         setProgress(byCourse);
         setLoaded(true);
       }
