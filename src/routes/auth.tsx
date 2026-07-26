@@ -33,12 +33,22 @@ function AuthPage() {
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [activeEmail, setActiveEmail] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: redirect ?? "/dashboard" });
+      setActiveEmail(data.session?.user?.email ?? null);
     });
-  }, [navigate, redirect]);
+  }, []);
+
+  async function switchAccount() {
+    await supabase.auth.signOut();
+    setActiveEmail(null);
+    setEmail("");
+    setPassword("");
+    toast.success("Sessão terminada. Entra com outra conta.");
+  }
+
 
 
   async function onSubmit(e: React.FormEvent) {
