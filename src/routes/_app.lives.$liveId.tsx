@@ -245,7 +245,11 @@ function LiveDetail() {
       />
 
     ) : isReplay ? (
-      <NoReplayPoster live={live} />
+      replayStatus === "unavailable" ? (
+        <NoReplayPoster live={live} />
+      ) : (
+        <ProcessingReplayPoster live={live} />
+      )
     ) : (
       <PrelivePoster live={live} countdown={countdown} />
     );
