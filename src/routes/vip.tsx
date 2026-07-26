@@ -3,8 +3,8 @@ import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { createMollieVipSubscription } from "@/lib/mollie.functions";
-import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { startCheckout } from "@/lib/billing.functions";
+
 
 export const Route = createFileRoute("/vip")({
   head: () => ({
