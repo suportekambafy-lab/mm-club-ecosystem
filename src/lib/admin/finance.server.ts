@@ -543,7 +543,7 @@ export async function collectCustomerDetail(
     type: e.type,
     aggregateType: e.aggregate_type,
     occurredAt: e.occurred_at,
-    payload: (e.payload ?? {}) as Record<string, unknown>,
+    payloadJson: JSON.stringify(e.payload ?? {}),
   }));
 
   const ledgerRows = ledgerRes.data ?? [];

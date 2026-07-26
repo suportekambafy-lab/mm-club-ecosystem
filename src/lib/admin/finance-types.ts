@@ -91,7 +91,7 @@ export type AdminEventRow = {
   type: string;
   aggregateType: string;
   occurredAt: string;
-  payload: Record<string, unknown>;
+  payloadJson: string;
 };
 
 export type CustomerDetail = {
