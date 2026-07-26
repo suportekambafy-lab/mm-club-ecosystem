@@ -13,6 +13,9 @@ import {
   ShieldCheck,
   Sparkles,
   HeartPulse,
+  ChevronLeft,
+  ChevronRight,
+
   Repeat,
   TrendingUp,
   Ticket,
