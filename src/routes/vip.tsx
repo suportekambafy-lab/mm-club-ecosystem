@@ -43,6 +43,7 @@ function VipPage() {
   const [success, setSuccess] = useState(false);
   const [askEmail, setAskEmail] = useState(false);
   const [guestEmail, setGuestEmail] = useState("");
+  const [guestName, setGuestName] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
