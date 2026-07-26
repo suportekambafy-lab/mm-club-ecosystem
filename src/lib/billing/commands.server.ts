@@ -84,6 +84,16 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
       : null;
   if (!price) throw new Error("Unknown price");
 
+  // Recovery before new revenue: settle any open debt first.
+  try {
+    const { triggerRecoveryNow } = await import("./recovery/engine.server");
+    await triggerRecoveryNow(input.userId, "before_checkout");
+  } catch (err) {
+    console.error("[recovery] trigger before checkout", err);
+  }
+
+
+
   const origin = input.origin.replace(/\/$/, "");
   const customer = await ensureCustomer({
     userId: input.userId,
