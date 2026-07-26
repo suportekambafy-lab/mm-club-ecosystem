@@ -108,12 +108,16 @@ export interface RoomState {
     quality: ConnectionQuality;
   };
 
+  /** Browser blocked remote audio autoplay — needs a user gesture. */
+  audioBlocked: boolean;
+
   // Modules toggled on
   enabledModules: string[];
 
   // AI extension slot (populated later; never required)
   ai?: RoomAIState;
 }
+
 
 /** Actions the UI dispatches. Adapter implements them. */
 export interface RoomActions {
