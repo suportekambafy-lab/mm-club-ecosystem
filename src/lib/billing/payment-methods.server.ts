@@ -86,7 +86,20 @@ export async function syncPaymentMethods(userId: string): Promise<void> {
         .eq("id", r.id);
     }
   }
+
+  // A fresh, usable card is the strongest recovery signal there is: pull any
+  // pending recovery attempt forward instead of waiting for the calendar.
+  const gainedMethod = mandates.some((m) => !known.has(m.id));
+  if (gainedMethod) {
+    try {
+      const { triggerRecoveryNow } = await import("./recovery/engine.server");
+      await triggerRecoveryNow(userId, "payment_method_added");
+    } catch (err) {
+      console.error("[recovery] trigger after method sync", err);
+    }
+  }
 }
+
 
 /**
  * Starts a hosted flow that stores a new card/method for the member.

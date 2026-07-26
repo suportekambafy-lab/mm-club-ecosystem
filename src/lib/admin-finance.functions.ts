@@ -16,6 +16,7 @@ import type {
   SearchHit,
   SubscriptionStateRow,
 } from "@/lib/admin/finance-types";
+import type { RecoveryOverview } from "@/lib/admin/recovery-types";
 import type { SubscriptionStatus } from "@/lib/billing/types";
 
 async function assertAdmin(context: {
@@ -341,4 +342,32 @@ export const listSubscriptionStates = createServerFn({ method: "POST" })
       "@/lib/admin/finance.server"
     );
     return run();
+  });
+
+/** Revenue Recovery Engine — dunning metrics and the open-debt worklist. */
+export const getRecoveryOverview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<RecoveryOverview> => {
+    await assertAdmin(context as never);
+    const { collectRecoveryOverview } = await import(
+      "@/lib/admin/recovery.server"
+    );
+    return collectRecoveryOverview();
+  });
+
+/** Pulls the next scheduled attempt for a member forward to "now". */
+export const forceRecoveryAttempt = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ userId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const { triggerRecoveryNow } = await import(
+      "@/lib/billing/recovery/engine.server"
+    );
+    await triggerRecoveryNow(data.userId, "admin_manual");
+    const { drainQueue } = await import("@/lib/queue/worker.server");
+    await drainQueue(10);
+    return { ok: true };
   });

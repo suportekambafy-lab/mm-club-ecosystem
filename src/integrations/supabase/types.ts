@@ -336,35 +336,83 @@ export type Database = {
       }
       billing_dunning_attempts: {
         Row: {
+          amount_cents: number
           attempt_number: number
           attempted_at: string | null
           created_at: string
+          currency: string
+          cycle_key: string | null
           error: string | null
+          error_category: string | null
+          gateway_error_code: string | null
+          gateway_error_message: string | null
+          gateway_payment_id: string | null
           id: string
+          idempotency_key: string | null
+          invoice_id: string | null
+          mandate_id: string | null
+          method: string | null
           outcome: string | null
+          payment_id: string | null
+          phase: string
+          recovered_at: string | null
+          recovery_score: number | null
           scheduled_for: string
+          status: string
           subscription_id: string
           user_id: string
         }
         Insert: {
+          amount_cents?: number
           attempt_number: number
           attempted_at?: string | null
           created_at?: string
+          currency?: string
+          cycle_key?: string | null
           error?: string | null
+          error_category?: string | null
+          gateway_error_code?: string | null
+          gateway_error_message?: string | null
+          gateway_payment_id?: string | null
           id?: string
+          idempotency_key?: string | null
+          invoice_id?: string | null
+          mandate_id?: string | null
+          method?: string | null
           outcome?: string | null
+          payment_id?: string | null
+          phase?: string
+          recovered_at?: string | null
+          recovery_score?: number | null
           scheduled_for: string
+          status?: string
           subscription_id: string
           user_id: string
         }
         Update: {
+          amount_cents?: number
           attempt_number?: number
           attempted_at?: string | null
           created_at?: string
+          currency?: string
+          cycle_key?: string | null
           error?: string | null
+          error_category?: string | null
+          gateway_error_code?: string | null
+          gateway_error_message?: string | null
+          gateway_payment_id?: string | null
           id?: string
+          idempotency_key?: string | null
+          invoice_id?: string | null
+          mandate_id?: string | null
+          method?: string | null
           outcome?: string | null
+          payment_id?: string | null
+          phase?: string
+          recovered_at?: string | null
+          recovery_score?: number | null
           scheduled_for?: string
+          status?: string
           subscription_id?: string
           user_id?: string
         }
@@ -2849,7 +2897,34 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      billing_recovery_by_method: {
+        Row: {
+          attempts: number | null
+          method: string | null
+          recovered: number | null
+          recovered_cents: number | null
+        }
+        Relationships: []
+      }
+      billing_recovery_by_phase: {
+        Row: {
+          attempts: number | null
+          avg_seconds_to_recover: number | null
+          phase: string | null
+          recovered: number | null
+          recovered_cents: number | null
+        }
+        Relationships: []
+      }
+      billing_recovery_by_reason: {
+        Row: {
+          attempts: number | null
+          error_category: string | null
+          gateway_error_code: string | null
+          recovered: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       can_access_live: {

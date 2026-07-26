@@ -1,70 +1,93 @@
-## Estado verificado (auditoria já feita)
+# MM Club Revenue Recovery Engine (Billing Intelligence v2)
 
-Base sólida: 79/83 funções de servidor exigem sessão válida; todas as ações admin verificam o papel no backend; RLS ativo em todas as tabelas; segredos (Mollie, LiveKit, Cloudflare, OpenAI, Service Role) só existem em ficheiros de servidor.
+## Ponto de partida (verificado no código)
 
-Falhas reais encontradas:
+- A máquina de estados já define exatamente os 7 estados pedidos e as transições válidas (`src/lib/billing/state-machine.ts`).
+- Quando uma renovação falha, o motor tenta **uma vez** outro cartão guardado e marca `past_due`. Não existe calendário de tentativas, nem `grace_period`, nem `suspended` aplicados em runtime.
+- A tabela `billing_dunning_attempts` existe mas **não é usada por nenhum código** — é o lugar natural para o novo motor.
+- A fila (`job_queue`) já suporta agendamento (`run_after`), tentativas e bloqueio, e o `billing-tick` (pg_cron, 5/5 min) já a drena. É a base de execução.
+- O gateway já devolve `failureReason` da Mollie, mas hoje esse valor não é guardado nem classificado.
 
-| Risco | Gravidade | Localização | Impacto |
-|---|---|---|---|
-| Configuração interna do admin legível sem login | Alta | leitura de `admin_overrides` | Exposição de configuração e estrutura interna |
-| Media de cursos/vídeos descarregável por qualquer conta autenticada | Alta | regras de `course-media`, `lesson-videos` | Conta grátis acede a conteúdo pago |
-| Upload livre para os buckets de cursos | Média | mesmas regras | Abuso de armazenamento |
-| Sem limites de utilização em lado nenhum | Média | toda a API | Força bruta, abuso financeiro |
-| Proteção contra passwords vazadas desligada | Média | definições de autenticação | Contas fracas |
-| Webhook de pagamentos sem assinatura/anti-replay explícitos | Média | endpoint de webhook | Reprocessamento de eventos |
-| Uploads sem validação de tipo/tamanho no servidor | Média | shorts, avatares, comunidade | Ficheiros maliciosos |
+## Princípios do Recovery Engine
 
-## Plano (7 fases)
+O Recovery Engine deve obedecer sempre aos seguintes princípios:
 
-**Fase 1 — Security Gate único (a camada comum que pediu)**
+- Nunca efetuar cobranças duplicadas.
+- Nunca cobrar uma invoice enquanto existir um pagamento pendente.
+- Nunca ultrapassar o limite máximo de tentativas.
+- Nunca remover acesso Premium antes do fim do Grace Period.
+- Nunca perder histórico de cobrança.
+- Todas as decisões devem ser auditáveis através de Timeline, Ledger e Dunning.
+- Todas as operações devem ser idempotentes e seguras contra concorrência.
+- O sistema deve privilegiar a recuperação da receita antes do cancelamento definitivo da subscrição.
 
-Uma única cadeia de segurança que todas as funções de servidor e endpoints atravessam, pela ordem: autenticação → autorização (papel/entitlement) → limite de utilização → WAF lógico → validação de entrada → regras de negócio → função.
+## 1. Registo e classificação da falha
 
-- Cada função passa a declarar apenas a sua política (`{ auth: true, role: 'admin', limit: '10/min', schema }`); nunca reescreve segurança.
-- Uma função sem política declarada é rejeitada por omissão (fail-closed) — impossível "esquecer" uma validação.
-- Os mesmos controlos aplicam-se aos endpoints públicos (webhooks, cron), com verificação de assinatura em vez de sessão.
+Ao falhar um pagamento: guardar código/mensagem/tipo do gateway, criar Timeline + Ledger + registo de dunning, passar a `past_due` e arrancar o Recovery Engine.
 
-**Fase 2 — Fechar os buracos críticos**
-- `admin_overrides` legível só por administradores.
-- Media de cursos e vídeos: leitura só com o direito correspondente, escrita só admin; downloads sempre por link assinado de curta duração.
-- Validação de tipo real, extensão e tamanho no servidor antes de qualquer upload.
-- Proteção contra passwords vazadas ativada.
+Classificador (`src/lib/billing/recovery/classify.ts`):
 
-**Fase 3 — Billing, Mollie e anti-abuso financeiro**
-- Preços, planos, descontos, cupões, faturas, créditos e permissões calculados sempre no servidor a partir do catálogo; nada aceite do pedido.
-- Verificação de propriedade em cada operação (a fatura/subscrição é mesmo do requerente).
-- Limites financeiros por utilizador **e** por IP: número máximo de checkouts por hora/dia, de tentativas de pagamento, de métodos adicionados, de emails e de jobs gerados. Checkout repetido reutiliza a intenção existente em vez de criar nova.
-- Webhooks: assinatura verificada, janela de tempo, proteção contra reenvio e idempotência por evento.
+- **Recoverable** — saldo insuficiente, timeout, banco indisponível, recusa temporária → calendário completo.
+- **Permanent** — cartão expirado/cancelado, método removido, conta encerrada → poucas tentativas, foco em pedir atualização do método (email + aviso in-app).
+- **Fraud** — fraude, chargeback, bloqueio → parar recovery e criar alerta administrativo.
 
-**Fase 4 — WAF lógico e Kill Switch**
-- Deteção de padrões suspeitos por utilizador, não só volume: upgrades repetidos, ciclos cancelar/reativar, alternância de métodos de pagamento, tentativas repetidas de acesso negado. Escalada automática: abrandar → exigir confirmação → bloquear e registar.
-- **Modo de Emergência** com um botão no painel admin: bloqueia em segundos novos checkouts, novas cobranças, criação de contas, uploads e endpoints públicos não essenciais, mantendo o acesso de leitura a membros autenticados. Estado guardado nas definições e lido pelo Security Gate a cada pedido, com registo de quem ativou e porquê.
+## 2. Calendário de tentativas
 
-**Fase 5 — Proteção contra enumeração**
-- Respostas uniformes em recuperação de password, registo, verificação de email e login: sempre "Se existir uma conta com esse email, enviaremos instruções."
-- Sem distinção entre "não existe" e "sem permissão" em faturas, subscrições, perfis e IDs: a mesma resposta genérica e o mesmo tempo de resposta.
+Jobs `recovery.attempt` na fila, sempre com jitter de ±15%:
 
-**Fase 6 — Auditoria de Service Role e registo de ações admin**
-- Inventário completo de cada utilização da chave privilegiada: onde, porquê e se pode ser substituída pela sessão do utilizador. Substituir sempre que possível; o que ficar tem justificação escrita no relatório.
-- Todas as ações administrativas registadas com autor, data/hora, IP, browser, localização aproximada, valor anterior e valor novo (ex.: alteração de preço fica com o antes e o depois).
+| Fase | Tentativas | Estado |
+| --- | --- | --- |
+| 0–24h | imediato, +4h, +8h, +16h, +24h | past_due |
+| Dias 2–15 | 2, 4, 7, 10, 15 | grace_period (Premium mantido) |
+| Dia 16 | — | suspended (Premium removido; conta, perfil, histórico, faturas e login mantidos) |
+| Dias 21–90 | 21, 28, 35, 45, 60, 75, 90 | suspended, cobrança continua |
+| Após 90 dias | fim | cancelled — nada é apagado |
 
-**Fase 7 — Security Dashboard, monitorização e resposta a incidentes**
-- Tabela de eventos de segurança alimentada automaticamente pelo Security Gate: falhas de login, acessos admin, pedidos bloqueados por autorização, bloqueios por limite ou WAF, falhas de webhook e eventos de cobrança anómalos.
-- Página `/admin/seguranca` (só admin): estado do Modo de Emergência, alertas ativos, gráfico de falhas, top IPs, últimos bloqueios, histórico pesquisável e exportável.
-- Regras de alerta com email ao administrador (picos de falhas de login, série de acessos negados, criação anormal de checkouts, alterações admin invulgares).
-- Procedimento escrito de resposta a incidentes: como detetar, conter (Modo de Emergência), investigar pelo histórico, recuperar e comunicar.
-- Nunca são registados passwords, tokens, chaves ou dados de cartão.
+O espaçamento dentro de cada fase é ajustado pelo Recovery Score.
 
-## Pen test e relatório final
+## 3. Cobranças imediatas por evento
 
-Simulação de ataque via browser controlado e chamadas diretas tipo Postman: escalar privilégios, ler dados de outros utilizadores, manipular preço/fatura/subscrição/pagamento, marcar fatura como paga, criar créditos, descarregar media privada, chamar APIs internas, reutilizar webhooks e sessões expiradas, enumerar emails e IDs.
+Verificação de dívida + tentativa quando: novo método de pagamento, cartão atualizado, login no MM Club, abertura da página de subscrição, mudança de plano (recupera primeiro) e antes de qualquer novo checkout.
 
-Relatório em `docs/security-audit.md` com, para cada vulnerabilidade: risco, gravidade, localização, impacto, solução e prova do teste — mais uma **classificação OWASP Top 10** em formato PASS/FAIL (Broken Access Control, Falhas Criptográficas, Injeção, Design Inseguro, Configuração, Componentes Vulneráveis, Autenticação, Integridade de Dados, Falhas de Registo/Monitorização, SSRF).
+## 4. Recovery Score (0–100)
 
-## Notas técnicas
+Por fatura, em `src/lib/billing/recovery/score.ts`: motivo da falha, histórico de pagamentos, tempo como membro, pagamentos bem-sucedidos, falhas consecutivas, tempo desde a última tentativa, atualização recente do método, valor da fatura e idade da dívida.
 
-- Alterações de acesso a dados e storage feitas por migrações; nada validado apenas no frontend.
-- Limites de utilização implementados à medida (contadores em base de dados com janela deslizante) — a plataforma não oferece um mecanismo padrão.
-- XSS: revisão de todos os pontos onde é mostrado conteúdo de utilizador (comentários, chat, perfis, lives, shorts), com sanitização de markdown se aplicável.
-- CSRF: as chamadas são same-origin e autenticadas por cabeçalho, não por cookie — será confirmado que nenhuma operação crítica depende de cookies.
-- SQL sempre parametrizado, sem concatenação.
+- 80–100: agressivo nos primeiros dias · 40–79: espaçamento maior · 0–39: menos tentativas, foco em atualizar o método.
+
+## 5. Garantias anti-duplicação
+
+- **Pagamento em curso bloqueia tudo**: se existir um pagamento da mesma fatura em `pending`, `authorized` ou qualquer estado intermédio do gateway, o motor **não cria** nova tentativa — reagenda e espera pela resolução.
+- **Teto absoluto de 15 tentativas automáticas** por fatura, independentemente do calendário ou de gatilhos por evento. Ao atingir o teto, o motor pára e passa a comunicação manual/admin.
+- Uma tentativa em curso por fatura (bloqueio na base de dados), nunca duas cobranças da mesma fatura, nunca novo retry com outro pendente, chave de idempotência por (fatura, número da tentativa).
+
+## 6. Resolução de pagamento — todos os desfechos
+
+- **Paid** — cancelar jobs, subscrição → ativa, entitlements repostos, Timeline + Ledger + email.
+- **Partially paid** — manter a fatura em aberto pelo remanescente, recalcular score e continuar o calendário só sobre o valor em dívida.
+- **Refunded** — reverter Ledger, reavaliar entitlements, encerrar recovery dessa fatura.
+- **Chargeback** — parar recovery imediatamente, marcar fraude e alertar administração.
+- **Failed** — nova classificação e próxima tentativa do calendário.
+
+## 7. Painel "Revenue Recovery"
+
+Nova página em Admin → Financeiro:
+
+- Receita em risco, recuperada e perdida; recovery rate global.
+- **Taxa de recuperação por fase**: primeiras 24h, grace period e pós-suspensão.
+- **Tempo médio até recuperação** e **receita recuperada por intervalo** (24h, 15 dias, 90 dias).
+- **Principais motivos de falha** e **eficácia por método de pagamento**.
+- Contagens por estado (grace period, suspensos, cancelados) e, por cliente: próxima tentativa, motivo da última falha, idade da dívida e Recovery Score.
+
+## Detalhes técnicos
+
+- Migração: acrescentar a `billing_dunning_attempts` colunas de erro do gateway (código, mensagem, categoria), fase, score na altura da tentativa, número sequencial e chave de idempotência única; índices para o painel; vistas SQL agregadas para as métricas por fase, motivo e método.
+- Novo consumidor `recovery` na fila (`src/lib/queue/handlers/recovery.server.ts`) e job types `recovery.attempt` / `recovery.escalate`; registo em `CONSUMERS` e `CONSUMERS_BY_EVENT`.
+- Motor em `src/lib/billing/recovery/engine.server.ts`: agenda, executa, reagenda e cancela planos; reutiliza `chargeWithMandate` e a rotação de cartões existente.
+- Transições `grace_period` e `suspended` executadas via `assertTransition`; entitlements revogados/repostos pelo consumidor de entitlements já existente.
+- Funções de servidor novas com `secured()` + `write: true`, respeitando o modo apenas-leitura.
+- Testes (vitest): classificador, calendário com jitter, score, teto de 15 tentativas, bloqueio com pagamento pendente, idempotência sob ticks concorrentes, e cada desfecho de resolução (parcial, reembolso, chargeback).
+
+## Fora do âmbito (v3)
+
+Recovery Learning Engine — aprendizagem contínua do melhor dia/hora, método com maior sucesso e intervalo ótimo por perfil de cliente. Fica como evolução natural do score depois de existirem dados suficientes.

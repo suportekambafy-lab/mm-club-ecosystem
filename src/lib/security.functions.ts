@@ -401,7 +401,7 @@ export const registerDeviceSession = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { registerSession } = await import("@/lib/security/devices.server");
-    return registerSession({
+    const result = await registerSession({
       userId: context.userId,
       fingerprint: data.fingerprint,
       sessionToken: data.sessionToken,
@@ -410,7 +410,20 @@ export const registerDeviceSession = createServerFn({ method: "POST" })
       country: context.security.country,
       city: context.security.city,
     });
+
+    // Signing in is a recovery trigger: the member is reachable right now.
+    try {
+      const { triggerRecoveryNow } = await import(
+        "@/lib/billing/recovery/engine.server"
+      );
+      await triggerRecoveryNow(context.userId, "login");
+    } catch (err) {
+      console.error("[recovery] trigger on login", err);
+    }
+
+    return result;
   });
+
 
 /** Heartbeat: tells the client to sign out when its session was revoked. */
 export const checkSession = createServerFn({ method: "POST" })

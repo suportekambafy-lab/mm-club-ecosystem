@@ -84,6 +84,16 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
       : null;
   if (!price) throw new Error("Unknown price");
 
+  // Recovery before new revenue: settle any open debt first.
+  try {
+    const { triggerRecoveryNow } = await import("./recovery/engine.server");
+    await triggerRecoveryNow(input.userId, "before_checkout");
+  } catch (err) {
+    console.error("[recovery] trigger before checkout", err);
+  }
+
+
+
   const origin = input.origin.replace(/\/$/, "");
   const customer = await ensureCustomer({
     userId: input.userId,
@@ -230,6 +240,9 @@ export async function handleGatewayPayment(
   const paymentRowId = saved?.id ?? existing?.id ?? null;
   const alreadyPaid = existing?.status === "paid";
 
+  const { resolveRecoveryForPayment, startRecovery, cancelRecoveryForSubscription } =
+    await import("./recovery/engine.server");
+
   if (payment.status === "paid" && !alreadyPaid) {
     // Whatever card the member just used becomes a saved method, so it can be
     // reused for future charges (credit packs, renewals, retries…).
@@ -242,6 +255,12 @@ export async function handleGatewayPayment(
       }
     }
     await onPaymentPaid({ payment, userId, priceId, paymentRowId, customerId: customer?.id ?? null, subscriptionId });
+    await resolveRecoveryForPayment({
+      gatewayPaymentId: payment.id,
+      outcome: "paid",
+      paidCents: payment.amountCents,
+      paymentRowId,
+    });
   } else if (payment.status === "failed" || payment.status === "expired") {
     await emitEvent({
       type: "PaymentFailed",
@@ -257,18 +276,41 @@ export async function handleGatewayPayment(
       },
     });
     if (subscriptionId) {
-      const retried = await retryWithAlternateCard({
-        payment,
-        userId,
-        subscriptionId,
-      });
-      if (!retried) await markPastDue(subscriptionId, userId);
+      // Is this failure part of an existing recovery plan, or a brand new one?
+      const cycle = (payment.metadata?.recoveryCycle as string | undefined) ?? null;
+      if (cycle) {
+        await resolveRecoveryForPayment({
+          gatewayPaymentId: payment.id,
+          outcome: "failed",
+          failureReason: payment.failureReason,
+          paymentRowId,
+        });
+      } else {
+        await markPastDue(subscriptionId, userId);
+        await startRecovery({
+          subscriptionId,
+          userId,
+          amountCents: payment.amountCents,
+          currency: payment.currency,
+          failureReason: payment.failureReason,
+          gatewayPaymentId: payment.id,
+          method: payment.method,
+        });
+      }
     }
   } else if (payment.refundedCents > 0) {
-
     await onRefund({ payment, userId, paymentRowId, customerId: customer?.id ?? null, subscriptionId });
+    await resolveRecoveryForPayment({
+      gatewayPaymentId: payment.id,
+      outcome: "refunded",
+      paymentRowId,
+    });
+    if (subscriptionId) {
+      await cancelRecoveryForSubscription(subscriptionId, "refunded");
+    }
   }
 }
+
 
 async function onPaymentPaid(args: {
   payment: GatewayPayment;
@@ -513,102 +555,6 @@ async function renewPeriod(
     });
   }
 }
-
-/**
- * A renewal failed. Before flagging the subscription as past due, try the
- * member's other saved cards (off-session). Each card is tried at most once
- * per renewal — the chain of attempts is carried in payment metadata.
- */
-async function retryWithAlternateCard(args: {
-  payment: GatewayPayment;
-  userId: string;
-  subscriptionId: string;
-}): Promise<boolean> {
-  const { payment, userId, subscriptionId } = args;
-  const gw = getGateway();
-
-  const { data: customer } = await supabaseAdmin
-    .from("billing_customers")
-    .select("id, gateway_customer_id")
-    .eq("user_id", userId)
-    .maybeSingle();
-  const gatewayCustomerId =
-    payment.customerId ?? customer?.gateway_customer_id ?? null;
-  if (!gatewayCustomerId) return false;
-
-  const tried = new Set<string>([
-    ...(Array.isArray(payment.metadata?.triedMandates)
-      ? (payment.metadata.triedMandates as string[])
-      : []),
-    ...(payment.mandateId ? [payment.mandateId] : []),
-  ]);
-
-  let mandates: { id: string }[] = [];
-  try {
-    mandates = await gw.listMandates(gatewayCustomerId);
-  } catch (err) {
-    console.error("[billing] listMandates during retry", err);
-    return false;
-  }
-
-  const next = mandates.find((m) => !tried.has(m.id));
-  if (!next) return false;
-
-  const origin =
-    (payment.metadata?.origin as string | undefined) ??
-    process.env.PUBLIC_APP_URL ??
-    "";
-
-  try {
-    const retryPayment = await gw.chargeWithMandate({
-      customerId: gatewayCustomerId,
-      mandateId: next.id,
-      amountCents: payment.amountCents,
-      currency: payment.currency,
-      description: "MM Club — nova tentativa de cobrança",
-      webhookUrl: `${origin}/api/public/payments/gateway-webhook`,
-      metadata: {
-        ...payment.metadata,
-        userId,
-        subscriptionId,
-        origin,
-        retryOf: payment.id,
-        triedMandates: [...tried, next.id],
-      },
-    });
-
-    await supabaseAdmin.from("billing_payments").insert({
-      customer_id: customer?.id ?? null,
-      user_id: userId,
-      subscription_id: subscriptionId,
-      gateway: gw.name,
-      gateway_payment_id: retryPayment.id,
-      status: retryPayment.status,
-      amount_cents: retryPayment.amountCents,
-      currency: retryPayment.currency,
-      method: retryPayment.method,
-      metadata: { retryOf: payment.id, mandateId: next.id } as never,
-    });
-
-    await emitEvent({
-      type: "DunningEscalated",
-      aggregateType: "subscription",
-      aggregateId: subscriptionId,
-      payload: {
-        userId,
-        subscriptionId,
-        stage: "card_retry",
-        mandateId: next.id,
-        retryOf: payment.id,
-      },
-    });
-    return true;
-  } catch (err) {
-    console.error("[billing] alternate card retry failed", err);
-    return false;
-  }
-}
-
 
 async function markPastDue(subscriptionId: string, userId: string) {
   const { data: sub } = await supabaseAdmin
