@@ -54,13 +54,19 @@ async function requestMeta() {
  * Builds the gate middleware for a policy. Compose it with
  * `securedMiddleware(policy)` rather than using it directly.
  */
-type GateOptions = {
-  next: (opts?: { context?: unknown }) => unknown;
-  context: unknown;
-};
+export interface SecurityContext {
+  ip: string | null;
+  userAgent: string | null;
+  route: string | null;
+  policy: string;
+}
 
-function gateHandler(policy: SecurityPolicy) {
-  return async ({ next, context }: GateOptions) => {
+/** Runs the whole chain. Throws SecurityError on any denial. */
+async function runGate(
+  policy: SecurityPolicy,
+  context: unknown,
+): Promise<SecurityContext> {
+  {
 
       const ctx = context as unknown as {
         userId?: string;
@@ -218,31 +224,31 @@ function gateHandler(policy: SecurityPolicy) {
 
       // 6. Input validation and business rules run inside the handler,
       //    after this gate has approved the caller.
-      return next({
-        context: {
-          security: {
-            ip: meta.ip,
-            userAgent: meta.userAgent,
-            route: meta.route,
-            policy: policy.name,
-          },
-        },
-      });
-  };
+      return {
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+        route: meta.route,
+        policy: policy.name,
+      };
+  }
 }
 
 /** Gate for authenticated functions (auth -> authz -> limits -> WAF). */
 export function securityGate(policy: SecurityPolicy) {
   return createMiddleware({ type: "function" })
     .middleware([requireSupabaseAuth])
-    .server(gateHandler(policy) as never);
+    .server(async ({ next, context }) => {
+      const security = await runGate(policy, context);
+      return next({ context: { security } });
+    });
 }
 
 /** Gate for genuinely public endpoints (no session, IP-scoped limits). */
 export function publicGate(policy: SecurityPolicy) {
-  return createMiddleware({ type: "function" }).server(
-    gateHandler({ ...policy, auth: false }) as never,
-  );
+  return createMiddleware({ type: "function" }).server(async ({ next }) => {
+    const security = await runGate({ ...policy, auth: false }, {});
+    return next({ context: { security } });
+  });
 }
 
 /**
