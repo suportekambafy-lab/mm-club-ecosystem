@@ -275,9 +275,11 @@ export function useRoomState({
         setConnState("connecting");
         await room.connect(url, token, { autoSubscribe: true });
         setConnState("connected");
+        setAudioBlocked(!room.canPlaybackAudio);
         // Snapshot existing remotes
         room.remoteParticipants.forEach((p) => rebuildParticipantTracks(p));
         rebuildParticipantTracks(room.localParticipant);
+
 
         // Auto-publish mic + camera if the local participant is a publisher.
         // LiveKit does not carry local tracks across Room instances, so when
