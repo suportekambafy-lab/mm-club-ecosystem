@@ -159,14 +159,18 @@ function DashboardPage() {
         </section>
       )}
 
-      <Rail
-        title="Recomendado para ti"
-        subtitle="Curadoria com base no teu percurso."
-      >
-        {recommended.map((c) => (
-          <CourseCard key={c.id} course={c} className="w-[340px] shrink-0" />
-        ))}
-      </Rail>
+      {/* Curadoria só faz sentido com catálogo suficiente para escolher. */}
+      {recommended.length >= 3 && (
+        <Rail
+          title="Recomendado para ti"
+          subtitle="Curadoria com base no teu percurso."
+        >
+          {recommended.map((c) => (
+            <CourseCard key={c.id} course={c} className="w-[340px] shrink-0" />
+          ))}
+        </Rail>
+      )}
+
 
       <JadeCTA />
       <CommunityBlock />
