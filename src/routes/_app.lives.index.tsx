@@ -9,6 +9,13 @@ import { cn } from "@/lib/utils";
 import { LiveCountdown } from "@/components/mm/live-countdown";
 import { resolveLiveCoverUrl } from "@/lib/live-cover-url";
 import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  BannerSkeleton,
+  CardGridSkeleton,
+  SectionHeadingSkeleton,
+} from "@/components/mm/skeletons";
+
 
 type Live = Awaited<ReturnType<typeof listLives>>[number];
 
