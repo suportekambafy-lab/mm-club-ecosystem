@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Check, Lock } from "lucide-react";
 
-const ACCESS_PASSWORD = "Vivi19";
+const ACCESS_PASSWORD = "VIPMCLUB";
 
 export function ComingSoon() {
   const [email, setEmail] = useState("");
