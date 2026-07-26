@@ -378,7 +378,8 @@ export function useRoomState({
     if (!room) return;
     const findTrack = () => {
       for (const p of [room.localParticipant, ...room.remoteParticipants.values()]) {
-        const pub = Array.from(p.trackPublications.values()).find((pp) => pp.trackSid === trackId);
+        const pubs = Array.from(p.trackPublications.values() as Iterable<{ trackSid: string; track?: { attach: (el: HTMLMediaElement) => void; detach: (el: HTMLMediaElement) => void } }>);
+        const pub = pubs.find((pp) => pp.trackSid === trackId);
         if (pub?.track) return pub.track;
       }
       return null;
@@ -390,7 +391,8 @@ export function useRoomState({
     const room = roomRef.current;
     if (!room) return;
     for (const p of [room.localParticipant, ...room.remoteParticipants.values()]) {
-      const pub = Array.from(p.trackPublications.values()).find((pp) => pp.trackSid === trackId);
+      const pubs = Array.from(p.trackPublications.values() as Iterable<{ trackSid: string; track?: { attach: (el: HTMLMediaElement) => void; detach: (el: HTMLMediaElement) => void } }>);
+      const pub = pubs.find((pp) => pp.trackSid === trackId);
       pub?.track?.detach(el);
     }
   }, []);
