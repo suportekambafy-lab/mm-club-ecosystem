@@ -5,6 +5,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { secured } from "@/lib/security/gate";
 import type {
   CatalogEntry,
   LedgerEntryView,
@@ -38,7 +39,16 @@ export const getCatalog = createServerFn({ method: "GET" })
   });
 
 export const startCheckout = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([...secured({
+    name: "billing.startCheckout",
+    emergency: "block",
+    limit: [
+      { bucket: "checkout", max: 8, windowSeconds: 3600, scope: "user" },
+      { bucket: "checkout-ip", max: 20, windowSeconds: 3600, scope: "ip" },
+      { bucket: "checkout-day", max: 25, windowSeconds: 86400, scope: "user" },
+    ],
+    waf: { bucket: "plan-change", max: 6, windowSeconds: 1800 },
+  })])
   .inputValidator((input: unknown) =>
     z
       .object({
@@ -175,7 +185,10 @@ export const getBillingOverview = createServerFn({ method: "GET" })
   });
 
 export const cancelSubscription = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([...secured({
+    name: "billing.cancelSubscription",
+    waf: { bucket: "plan-change", max: 6, windowSeconds: 1800 },
+  })])
   .inputValidator((input: unknown) =>
     z
       .object({
@@ -201,7 +214,10 @@ export const cancelSubscription = createServerFn({ method: "POST" })
   });
 
 export const resumeSubscription = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([...secured({
+    name: "billing.resumeSubscription",
+    waf: { bucket: "plan-change", max: 6, windowSeconds: 1800 },
+  })])
   .inputValidator((input: unknown) =>
     z.object({ subscriptionId: z.string().uuid() }).parse(input),
   )
@@ -220,7 +236,10 @@ export const resumeSubscription = createServerFn({ method: "POST" })
 
 /** Reconciles a payment right after the gateway redirect (no webhook wait). */
 export const syncCheckout = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([...secured({
+    name: "billing.syncCheckout",
+    limit: { bucket: "checkout-sync", max: 60, windowSeconds: 3600 },
+  })])
   .handler(async ({ context }) => {
     const { supabaseAdmin } = await import(
       "@/integrations/supabase/client.server"
@@ -249,7 +268,14 @@ export const syncCheckout = createServerFn({ method: "POST" })
 // ------------------------------------------------------- payment methods
 
 export const addPaymentMethod = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([...secured({
+    name: "billing.addPaymentMethod",
+    emergency: "block",
+    limit: [
+      { bucket: "payment-method", max: 6, windowSeconds: 3600, scope: "user" },
+      { bucket: "payment-method-ip", max: 15, windowSeconds: 3600, scope: "ip" },
+    ],
+  })])
   .inputValidator((input: unknown) =>
     z
       .object({
@@ -294,7 +320,10 @@ export const setDefaultPaymentMethod = createServerFn({ method: "POST" })
   });
 
 export const removePaymentMethod = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([...secured({
+    name: "billing.removePaymentMethod",
+    limit: { bucket: "payment-method-remove", max: 10, windowSeconds: 3600 },
+  })])
   .inputValidator((input: unknown) =>
     z.object({ paymentMethodId: z.string().uuid() }).parse(input),
   )
@@ -314,6 +343,17 @@ export const removePaymentMethod = createServerFn({ method: "POST" })
  * The auth user is only created once the gateway confirms the payment.
  */
 export const startGuestCheckout = createServerFn({ method: "POST" })
+  .middleware([
+    ...secured({
+      name: "billing.startGuestCheckout",
+      auth: false,
+      emergency: "block",
+      limit: [
+        { bucket: "guest-checkout", max: 6, windowSeconds: 3600, scope: "ip" },
+        { bucket: "guest-checkout-day", max: 20, windowSeconds: 86400, scope: "ip" },
+      ],
+    }),
+  ])
   .inputValidator((input: unknown) =>
     z
       .object({
@@ -426,7 +466,10 @@ export const listInvoices = createServerFn({ method: "GET" })
 
 /** Returns the invoice PDF as base64 so the browser can download it. */
 export const getInvoicePdf = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([...secured({
+    name: "billing.getInvoicePdf",
+    limit: { bucket: "invoice-pdf", max: 60, windowSeconds: 3600 },
+  })])
   .inputValidator((input: unknown) =>
     z.object({ invoiceId: z.string().uuid() }).parse(input),
   )
