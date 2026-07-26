@@ -124,9 +124,12 @@ function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  useSessionGuard(authUser?.id ?? null);
+
   useEffect(() => {
     setCollapsed(window.localStorage.getItem("mm.sidebar.collapsed") === "1");
   }, []);
+
 
   // Close mobile drawer on route change
   useEffect(() => {
