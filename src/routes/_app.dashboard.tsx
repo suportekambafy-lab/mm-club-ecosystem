@@ -24,8 +24,6 @@ import { courses } from "@/data/courses";
 import { computeCourseDuration } from "@/lib/course-duration";
 import { courseCoverImage } from "@/lib/course-cover";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
-import marcaMilionariaCoverAsset from "@/assets/marca-milionaria-cover.png.asset.json";
-const marcaMilionariaCover = marcaMilionariaCoverAsset.url;
 
 import { supabase } from "@/integrations/supabase/client";
 
