@@ -35,6 +35,904 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          after: Json | null
+          before: Json | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
+      billing_coupon_redemptions: {
+        Row: {
+          coupon_id: string
+          id: string
+          redeemed_at: string
+          subscription_id: string | null
+          user_id: string
+        }
+        Insert: {
+          coupon_id: string
+          id?: string
+          redeemed_at?: string
+          subscription_id?: string | null
+          user_id: string
+        }
+        Update: {
+          coupon_id?: string
+          id?: string
+          redeemed_at?: string
+          subscription_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_coupon_redemptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "billing_coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_coupon_redemptions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "billing_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_coupons: {
+        Row: {
+          active: boolean
+          amount_off_cents: number | null
+          code: string
+          created_at: string
+          currency: string
+          duration: string
+          duration_in_months: number | null
+          id: string
+          max_redemptions: number | null
+          metadata: Json
+          name: string | null
+          percent_off: number | null
+          redemptions: number
+          restricted_price_ids: string[]
+          trial_days_override: number | null
+          updated_at: string
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          active?: boolean
+          amount_off_cents?: number | null
+          code: string
+          created_at?: string
+          currency?: string
+          duration?: string
+          duration_in_months?: number | null
+          id?: string
+          max_redemptions?: number | null
+          metadata?: Json
+          name?: string | null
+          percent_off?: number | null
+          redemptions?: number
+          restricted_price_ids?: string[]
+          trial_days_override?: number | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          active?: boolean
+          amount_off_cents?: number | null
+          code?: string
+          created_at?: string
+          currency?: string
+          duration?: string
+          duration_in_months?: number | null
+          id?: string
+          max_redemptions?: number | null
+          metadata?: Json
+          name?: string | null
+          percent_off?: number | null
+          redemptions?: number
+          restricted_price_ids?: string[]
+          trial_days_override?: number | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
+      billing_customers: {
+        Row: {
+          address: Json
+          company_name: string | null
+          created_at: string
+          currency: string
+          email: string | null
+          gateway: string | null
+          gateway_customer_id: string | null
+          id: string
+          metadata: Json
+          name: string | null
+          tax_country: string | null
+          tax_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: Json
+          company_name?: string | null
+          created_at?: string
+          currency?: string
+          email?: string | null
+          gateway?: string | null
+          gateway_customer_id?: string | null
+          id?: string
+          metadata?: Json
+          name?: string | null
+          tax_country?: string | null
+          tax_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: Json
+          company_name?: string | null
+          created_at?: string
+          currency?: string
+          email?: string | null
+          gateway?: string | null
+          gateway_customer_id?: string | null
+          id?: string
+          metadata?: Json
+          name?: string | null
+          tax_country?: string | null
+          tax_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      billing_dunning_attempts: {
+        Row: {
+          attempt_number: number
+          attempted_at: string | null
+          created_at: string
+          error: string | null
+          id: string
+          outcome: string | null
+          scheduled_for: string
+          subscription_id: string
+          user_id: string
+        }
+        Insert: {
+          attempt_number: number
+          attempted_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          outcome?: string | null
+          scheduled_for: string
+          subscription_id: string
+          user_id: string
+        }
+        Update: {
+          attempt_number?: number
+          attempted_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          outcome?: string | null
+          scheduled_for?: string
+          subscription_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_dunning_attempts_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "billing_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_invoices: {
+        Row: {
+          created_at: string
+          currency: string
+          customer_id: string
+          discount_cents: number
+          id: string
+          issued_at: string | null
+          lines: Json
+          metadata: Json
+          number: string | null
+          paid_at: string | null
+          pdf_url: string | null
+          status: Database["public"]["Enums"]["billing_invoice_status"]
+          subscription_id: string | null
+          subtotal_cents: number
+          tax_cents: number
+          tax_country: string | null
+          tax_rate: number
+          total_cents: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          customer_id: string
+          discount_cents?: number
+          id?: string
+          issued_at?: string | null
+          lines?: Json
+          metadata?: Json
+          number?: string | null
+          paid_at?: string | null
+          pdf_url?: string | null
+          status?: Database["public"]["Enums"]["billing_invoice_status"]
+          subscription_id?: string | null
+          subtotal_cents?: number
+          tax_cents?: number
+          tax_country?: string | null
+          tax_rate?: number
+          total_cents?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          customer_id?: string
+          discount_cents?: number
+          id?: string
+          issued_at?: string | null
+          lines?: Json
+          metadata?: Json
+          number?: string | null
+          paid_at?: string | null
+          pdf_url?: string | null
+          status?: Database["public"]["Enums"]["billing_invoice_status"]
+          subscription_id?: string | null
+          subtotal_cents?: number
+          tax_cents?: number
+          tax_country?: string | null
+          tax_rate?: number
+          total_cents?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "billing_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "billing_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_ledger_entries: {
+        Row: {
+          actor_id: string | null
+          amount_cents: number
+          balance_after: number | null
+          created_at: string
+          credits_delta: number
+          currency: string
+          customer_id: string | null
+          direction: Database["public"]["Enums"]["billing_ledger_direction"]
+          entry_type: Database["public"]["Enums"]["billing_ledger_entry_type"]
+          event_id: string | null
+          id: string
+          idempotency_key: string
+          memo: string | null
+          metadata: Json
+          reverses_entry_id: string | null
+          source_id: string | null
+          source_type: string
+          user_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          amount_cents: number
+          balance_after?: number | null
+          created_at?: string
+          credits_delta?: number
+          currency?: string
+          customer_id?: string | null
+          direction: Database["public"]["Enums"]["billing_ledger_direction"]
+          entry_type: Database["public"]["Enums"]["billing_ledger_entry_type"]
+          event_id?: string | null
+          id?: string
+          idempotency_key: string
+          memo?: string | null
+          metadata?: Json
+          reverses_entry_id?: string | null
+          source_id?: string | null
+          source_type: string
+          user_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          amount_cents?: number
+          balance_after?: number | null
+          created_at?: string
+          credits_delta?: number
+          currency?: string
+          customer_id?: string | null
+          direction?: Database["public"]["Enums"]["billing_ledger_direction"]
+          entry_type?: Database["public"]["Enums"]["billing_ledger_entry_type"]
+          event_id?: string | null
+          id?: string
+          idempotency_key?: string
+          memo?: string | null
+          metadata?: Json
+          reverses_entry_id?: string | null
+          source_id?: string | null
+          source_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_ledger_entries_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "billing_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_ledger_entries_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "domain_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_ledger_entries_reverses_entry_id_fkey"
+            columns: ["reverses_entry_id"]
+            isOneToOne: false
+            referencedRelation: "billing_ledger_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_payment_methods: {
+        Row: {
+          brand: string | null
+          created_at: string
+          customer_id: string
+          exp_month: number | null
+          exp_year: number | null
+          gateway: string
+          gateway_mandate_id: string | null
+          id: string
+          is_default: boolean
+          last4: string | null
+          metadata: Json
+          method: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand?: string | null
+          created_at?: string
+          customer_id: string
+          exp_month?: number | null
+          exp_year?: number | null
+          gateway: string
+          gateway_mandate_id?: string | null
+          id?: string
+          is_default?: boolean
+          last4?: string | null
+          metadata?: Json
+          method?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand?: string | null
+          created_at?: string
+          customer_id?: string
+          exp_month?: number | null
+          exp_year?: number | null
+          gateway?: string
+          gateway_mandate_id?: string | null
+          id?: string
+          is_default?: boolean
+          last4?: string | null
+          metadata?: Json
+          method?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_payment_methods_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "billing_customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          customer_id: string | null
+          failure_reason: string | null
+          gateway: string
+          gateway_payment_id: string
+          id: string
+          invoice_id: string | null
+          metadata: Json
+          method: string | null
+          paid_at: string | null
+          price_id: string | null
+          refunded_cents: number
+          status: Database["public"]["Enums"]["billing_payment_status"]
+          subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          currency?: string
+          customer_id?: string | null
+          failure_reason?: string | null
+          gateway: string
+          gateway_payment_id: string
+          id?: string
+          invoice_id?: string | null
+          metadata?: Json
+          method?: string | null
+          paid_at?: string | null
+          price_id?: string | null
+          refunded_cents?: number
+          status?: Database["public"]["Enums"]["billing_payment_status"]
+          subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          customer_id?: string | null
+          failure_reason?: string | null
+          gateway?: string
+          gateway_payment_id?: string
+          id?: string
+          invoice_id?: string | null
+          metadata?: Json
+          method?: string | null
+          paid_at?: string | null
+          price_id?: string | null
+          refunded_cents?: number
+          status?: Database["public"]["Enums"]["billing_payment_status"]
+          subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_payments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "billing_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "billing_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_payments_price_id_fkey"
+            columns: ["price_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_prices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "billing_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_settings: {
+        Row: {
+          description: string | null
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          description?: string | null
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
+      billing_subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean
+          cancelled_at: string | null
+          coupon_id: string | null
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          customer_id: string
+          ended_at: string | null
+          gateway: string | null
+          gateway_subscription_id: string | null
+          id: string
+          metadata: Json
+          payment_method_id: string | null
+          price_id: string
+          product_id: string
+          scheduled_change_at: string | null
+          scheduled_price_id: string | null
+          status: Database["public"]["Enums"]["billing_subscription_status"]
+          trial_end: string | null
+          trial_start: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean
+          cancelled_at?: string | null
+          coupon_id?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          customer_id: string
+          ended_at?: string | null
+          gateway?: string | null
+          gateway_subscription_id?: string | null
+          id?: string
+          metadata?: Json
+          payment_method_id?: string | null
+          price_id: string
+          product_id: string
+          scheduled_change_at?: string | null
+          scheduled_price_id?: string | null
+          status?: Database["public"]["Enums"]["billing_subscription_status"]
+          trial_end?: string | null
+          trial_start?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean
+          cancelled_at?: string | null
+          coupon_id?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          customer_id?: string
+          ended_at?: string | null
+          gateway?: string | null
+          gateway_subscription_id?: string | null
+          id?: string
+          metadata?: Json
+          payment_method_id?: string | null
+          price_id?: string
+          product_id?: string
+          scheduled_change_at?: string | null
+          scheduled_price_id?: string | null
+          status?: Database["public"]["Enums"]["billing_subscription_status"]
+          trial_end?: string | null
+          trial_start?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_subscriptions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "billing_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_subscriptions_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "billing_payment_methods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_subscriptions_price_id_fkey"
+            columns: ["price_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_prices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_subscriptions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_subscriptions_scheduled_price_id_fkey"
+            columns: ["scheduled_price_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_prices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_timeline: {
+        Row: {
+          amount_cents: number | null
+          currency: string | null
+          description: string | null
+          event_id: string | null
+          id: string
+          kind: string
+          occurred_at: string
+          subscription_id: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents?: number | null
+          currency?: string | null
+          description?: string | null
+          event_id?: string | null
+          id?: string
+          kind: string
+          occurred_at?: string
+          subscription_id?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number | null
+          currency?: string | null
+          description?: string | null
+          event_id?: string | null
+          id?: string
+          kind?: string
+          occurred_at?: string
+          subscription_id?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_timeline_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "domain_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_timeline_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "billing_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      catalog_prices: {
+        Row: {
+          active: boolean
+          amount_cents: number
+          created_at: string
+          currency: string
+          display_label: string | null
+          grants_credits: number
+          id: string
+          interval: Database["public"]["Enums"]["catalog_price_interval"]
+          interval_count: number
+          metadata: Json
+          product_id: string
+          replaces_price_id: string | null
+          slug: string
+          trial_days: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          active?: boolean
+          amount_cents: number
+          created_at?: string
+          currency?: string
+          display_label?: string | null
+          grants_credits?: number
+          id?: string
+          interval: Database["public"]["Enums"]["catalog_price_interval"]
+          interval_count?: number
+          metadata?: Json
+          product_id: string
+          replaces_price_id?: string | null
+          slug: string
+          trial_days?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          active?: boolean
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          display_label?: string | null
+          grants_credits?: number
+          id?: string
+          interval?: Database["public"]["Enums"]["catalog_price_interval"]
+          interval_count?: number
+          metadata?: Json
+          product_id?: string
+          replaces_price_id?: string | null
+          slug?: string
+          trial_days?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalog_prices_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "catalog_prices_replaces_price_id_fkey"
+            columns: ["replaces_price_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_prices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      catalog_product_features: {
+        Row: {
+          created_at: string
+          feature_key: string
+          product_id: string
+          quota: number | null
+        }
+        Insert: {
+          created_at?: string
+          feature_key: string
+          product_id: string
+          quota?: number | null
+        }
+        Update: {
+          created_at?: string
+          feature_key?: string
+          product_id?: string
+          quota?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalog_product_features_feature_key_fkey"
+            columns: ["feature_key"]
+            isOneToOne: false
+            referencedRelation: "entitlement_features"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "catalog_product_features_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      catalog_products: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          kind: Database["public"]["Enums"]["catalog_product_kind"]
+          metadata: Json
+          name: string
+          slug: string
+          sort_order: number
+          tagline: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          kind: Database["public"]["Enums"]["catalog_product_kind"]
+          metadata?: Json
+          name: string
+          slug: string
+          sort_order?: number
+          tagline?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          kind?: Database["public"]["Enums"]["catalog_product_kind"]
+          metadata?: Json
+          name?: string
+          slug?: string
+          sort_order?: number
+          tagline?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       community_categories: {
         Row: {
           color: string | null
@@ -262,6 +1160,39 @@ export type Database = {
           },
         ]
       }
+      domain_events: {
+        Row: {
+          actor_id: string | null
+          aggregate_id: string | null
+          aggregate_type: string
+          id: string
+          idempotency_key: string | null
+          occurred_at: string
+          payload: Json
+          type: string
+        }
+        Insert: {
+          actor_id?: string | null
+          aggregate_id?: string | null
+          aggregate_type: string
+          id?: string
+          idempotency_key?: string | null
+          occurred_at?: string
+          payload?: Json
+          type: string
+        }
+        Update: {
+          actor_id?: string | null
+          aggregate_id?: string | null
+          aggregate_type?: string
+          id?: string
+          idempotency_key?: string | null
+          occurred_at?: string
+          payload?: Json
+          type?: string
+        }
+        Relationships: []
+      }
       email_log: {
         Row: {
           error: string | null
@@ -297,6 +1228,142 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      entitlement_features: {
+        Row: {
+          created_at: string
+          description: string | null
+          is_quota: boolean
+          key: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          is_quota?: boolean
+          key: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          is_quota?: boolean
+          key?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      entitlement_grants: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          feature_key: string
+          granted_at: string
+          id: string
+          metadata: Json
+          quota: number | null
+          revoked_at: string | null
+          source: Database["public"]["Enums"]["entitlement_source"]
+          source_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          feature_key: string
+          granted_at?: string
+          id?: string
+          metadata?: Json
+          quota?: number | null
+          revoked_at?: string | null
+          source: Database["public"]["Enums"]["entitlement_source"]
+          source_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          feature_key?: string
+          granted_at?: string
+          id?: string
+          metadata?: Json
+          quota?: number | null
+          revoked_at?: string | null
+          source?: Database["public"]["Enums"]["entitlement_source"]
+          source_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entitlement_grants_feature_key_fkey"
+            columns: ["feature_key"]
+            isOneToOne: false
+            referencedRelation: "entitlement_features"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      job_queue: {
+        Row: {
+          attempts: number
+          completed_at: string | null
+          consumer: string
+          created_at: string
+          event_id: string | null
+          id: string
+          job_type: string
+          last_error: string | null
+          locked_at: string | null
+          max_attempts: number
+          payload: Json
+          run_after: string
+          status: Database["public"]["Enums"]["job_status"]
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          completed_at?: string | null
+          consumer: string
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          job_type: string
+          last_error?: string | null
+          locked_at?: string | null
+          max_attempts?: number
+          payload?: Json
+          run_after?: string
+          status?: Database["public"]["Enums"]["job_status"]
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          completed_at?: string | null
+          consumer?: string
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          job_type?: string
+          last_error?: string | null
+          locked_at?: string | null
+          max_attempts?: number
+          payload?: Json
+          run_after?: string
+          status?: Database["public"]["Enums"]["job_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_queue_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "domain_events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lesson_progress: {
         Row: {
@@ -896,105 +1963,6 @@ export type Database = {
         }
         Relationships: []
       }
-      mm_credit_orders: {
-        Row: {
-          amount_eur: number
-          created_at: string
-          credits: number
-          fulfilled_at: string | null
-          id: string
-          pack_id: string
-          provider: string
-          provider_payment_id: string
-          raw: Json | null
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          amount_eur: number
-          created_at?: string
-          credits: number
-          fulfilled_at?: string | null
-          id?: string
-          pack_id: string
-          provider?: string
-          provider_payment_id: string
-          raw?: Json | null
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          amount_eur?: number
-          created_at?: string
-          credits?: number
-          fulfilled_at?: string | null
-          id?: string
-          pack_id?: string
-          provider?: string
-          provider_payment_id?: string
-          raw?: Json | null
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      mm_mollie_subscriptions: {
-        Row: {
-          amount_eur: number
-          created_at: string
-          first_payment_id: string
-          id: string
-          interval: string
-          mollie_customer_id: string
-          mollie_mandate_id: string | null
-          mollie_subscription_id: string | null
-          plan_id: string
-          raw: Json | null
-          starts_at: string | null
-          status: string
-          trial_ends_at: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          amount_eur: number
-          created_at?: string
-          first_payment_id: string
-          id?: string
-          interval?: string
-          mollie_customer_id: string
-          mollie_mandate_id?: string | null
-          mollie_subscription_id?: string | null
-          plan_id: string
-          raw?: Json | null
-          starts_at?: string | null
-          status?: string
-          trial_ends_at?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          amount_eur?: number
-          created_at?: string
-          first_payment_id?: string
-          id?: string
-          interval?: string
-          mollie_customer_id?: string
-          mollie_mandate_id?: string | null
-          mollie_subscription_id?: string | null
-          plan_id?: string
-          raw?: Json | null
-          starts_at?: string | null
-          status?: string
-          trial_ends_at?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       mm_short_comments: {
         Row: {
           body: string
@@ -1341,33 +2309,6 @@ export type Database = {
           },
         ]
       }
-      paddle_customers: {
-        Row: {
-          created_at: string
-          email: string
-          environment: string
-          paddle_customer_id: string
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          environment?: string
-          paddle_customer_id: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          environment?: string
-          paddle_customer_id?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1398,60 +2339,6 @@ export type Database = {
           display_name?: string
           id?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      subscriptions: {
-        Row: {
-          cancel_at_period_end: boolean | null
-          created_at: string | null
-          current_period_end: string | null
-          current_period_start: string | null
-          environment: string
-          id: string
-          paddle_customer_id: string
-          paddle_subscription_id: string
-          price_id: string
-          product_id: string
-          scheduled_change_action: string | null
-          scheduled_change_at: string | null
-          status: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          cancel_at_period_end?: boolean | null
-          created_at?: string | null
-          current_period_end?: string | null
-          current_period_start?: string | null
-          environment?: string
-          id?: string
-          paddle_customer_id: string
-          paddle_subscription_id: string
-          price_id: string
-          product_id: string
-          scheduled_change_action?: string | null
-          scheduled_change_at?: string | null
-          status?: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          cancel_at_period_end?: boolean | null
-          created_at?: string | null
-          current_period_end?: string | null
-          current_period_start?: string | null
-          environment?: string
-          id?: string
-          paddle_customer_id?: string
-          paddle_subscription_id?: string
-          price_id?: string
-          product_id?: string
-          scheduled_change_action?: string | null
-          scheduled_change_at?: string | null
-          status?: string
-          updated_at?: string | null
-          user_id?: string
         }
         Relationships: []
       }
@@ -1534,8 +2421,8 @@ export type Database = {
         Returns: boolean
       }
       extract_mention_user_ids: { Args: { _text: string }; Returns: string[] }
-      has_active_subscription: {
-        Args: { check_env?: string; user_uuid: string }
+      has_feature: {
+        Args: { _feature: string; _user_id: string }
         Returns: boolean
       }
       has_role: {
@@ -1595,10 +2482,77 @@ export type Database = {
         }
         Returns: number
       }
+      resolve_entitlements: {
+        Args: { _user_id: string }
+        Returns: {
+          feature_key: string
+          quota: number
+          sources: string[]
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      billing_invoice_status:
+        | "draft"
+        | "issued"
+        | "paid"
+        | "void"
+        | "uncollectible"
+        | "refunded"
+      billing_ledger_direction: "debit" | "credit"
+      billing_ledger_entry_type:
+        | "payment"
+        | "refund"
+        | "chargeback"
+        | "credit_granted"
+        | "credit_consumed"
+        | "adjustment"
+        | "discount"
+        | "tax"
+        | "payout"
+      billing_payment_status:
+        | "pending"
+        | "authorized"
+        | "paid"
+        | "failed"
+        | "expired"
+        | "canceled"
+        | "refunded"
+        | "partially_refunded"
+        | "chargeback"
+      billing_subscription_status:
+        | "trialing"
+        | "active"
+        | "past_due"
+        | "grace_period"
+        | "suspended"
+        | "cancelled"
+        | "expired"
+      catalog_price_interval:
+        | "day"
+        | "week"
+        | "month"
+        | "year"
+        | "one_time"
+        | "lifetime"
+      catalog_product_kind:
+        | "subscription"
+        | "course"
+        | "event"
+        | "credit_pack"
+        | "certificate"
+        | "addon"
+        | "physical"
       content_visibility: "public" | "purchased" | "club" | "premium"
+      entitlement_source:
+        | "subscription"
+        | "purchase"
+        | "manual"
+        | "gift"
+        | "promo"
+        | "signup"
+      job_status: "pending" | "running" | "done" | "failed" | "dead"
       live_mode: "broadcast" | "interactive"
       live_role: "host" | "cohost" | "speaker" | "participant" | "viewer"
       live_room_target: "backstage" | "main"
@@ -1732,7 +2686,73 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      billing_invoice_status: [
+        "draft",
+        "issued",
+        "paid",
+        "void",
+        "uncollectible",
+        "refunded",
+      ],
+      billing_ledger_direction: ["debit", "credit"],
+      billing_ledger_entry_type: [
+        "payment",
+        "refund",
+        "chargeback",
+        "credit_granted",
+        "credit_consumed",
+        "adjustment",
+        "discount",
+        "tax",
+        "payout",
+      ],
+      billing_payment_status: [
+        "pending",
+        "authorized",
+        "paid",
+        "failed",
+        "expired",
+        "canceled",
+        "refunded",
+        "partially_refunded",
+        "chargeback",
+      ],
+      billing_subscription_status: [
+        "trialing",
+        "active",
+        "past_due",
+        "grace_period",
+        "suspended",
+        "cancelled",
+        "expired",
+      ],
+      catalog_price_interval: [
+        "day",
+        "week",
+        "month",
+        "year",
+        "one_time",
+        "lifetime",
+      ],
+      catalog_product_kind: [
+        "subscription",
+        "course",
+        "event",
+        "credit_pack",
+        "certificate",
+        "addon",
+        "physical",
+      ],
       content_visibility: ["public", "purchased", "club", "premium"],
+      entitlement_source: [
+        "subscription",
+        "purchase",
+        "manual",
+        "gift",
+        "promo",
+        "signup",
+      ],
+      job_status: ["pending", "running", "done", "failed", "dead"],
       live_mode: ["broadcast", "interactive"],
       live_role: ["host", "cohost", "speaker", "participant", "viewer"],
       live_room_target: ["backstage", "main"],

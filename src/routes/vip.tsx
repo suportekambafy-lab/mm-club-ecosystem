@@ -3,8 +3,8 @@ import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { createMollieVipSubscription } from "@/lib/mollie.functions";
-import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { startCheckout } from "@/lib/billing.functions";
+
 
 export const Route = createFileRoute("/vip")({
   head: () => ({
@@ -32,7 +32,7 @@ const BENEFITS = [
   "Comunidade privada, lives e ferramentas",
   "Suporte MM Intelligence 24/7",
   "Cancelas quando quiseres antes do fim do trial",
-  "Depois do 3.º mês, apenas 29,90 €/mês",
+  "Depois do 3.º mês, apenas 49 €/mês",
 ];
 
 function VipPage() {
@@ -61,9 +61,15 @@ function VipPage() {
     setPending(true);
     setError(null);
     try {
-      const { checkoutUrl } = await createMollieVipSubscription({
-        data: { origin: window.location.origin },
+      const { checkoutUrl } = await startCheckout({
+        data: {
+          priceSlug: "mm_club_monthly",
+          couponCode: "MMVIP3",
+          origin: window.location.origin,
+          successPath: "/vip?vip=success",
+        },
       });
+
       window.location.href = checkoutUrl;
     } catch (e) {
       console.error(e);
@@ -78,7 +84,7 @@ function VipPage() {
 
   return (
     <>
-      <PaymentTestModeBanner />
+      
       <div className="relative min-h-[calc(100dvh-3rem)] overflow-hidden">
         <div
           aria-hidden
@@ -115,7 +121,7 @@ function VipPage() {
             className="mt-4 max-w-lg text-center text-base text-muted-foreground md:text-lg"
           >
             Acesso completo ao ecossistema MM Club durante 90 dias. Depois do
-            trial, continua por 29,90 €/mês — cancelas quando quiseres.
+            trial, continua por 49 €/mês — cancelas quando quiseres.
           </motion.p>
 
           {success ? (
@@ -147,7 +153,7 @@ function VipPage() {
               </span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Depois, 29,90 €/mês. Cancelas a qualquer momento antes do fim do
+              Depois, 49 €/mês. Cancelas a qualquer momento antes do fim do
               trial.
             </p>
 

@@ -50,23 +50,23 @@ export const Route = createFileRoute("/_app")({
 
     const userId = data.session.user.id;
 
-    // Admins bypass the subscription gate
+    // Admins bypass the access gate
     const { data: isAdmin } = await supabase.rpc("has_role", {
       _user_id: userId,
       _role: "admin",
     });
 
     if (!isAdmin) {
-      const { getPaddleEnvironment } = await import("@/lib/paddle");
-      const env = getPaddleEnvironment();
-      const { data: hasSub } = await supabase.rpc("has_active_subscription", {
-        user_uuid: userId,
-        check_env: env,
+      // Access is decided by Entitlements, never by a payment status.
+      const { data: hasAccess } = await supabase.rpc("has_feature", {
+        _user_id: userId,
+        _feature: "academy.access",
       });
-      if (!hasSub) {
+      if (!hasAccess) {
         throw redirect({ to: "/checkout", replace: true });
       }
     }
+
 
     // Club Code gate — force acceptance on first login
     const { data: prof } = await supabase
@@ -203,16 +203,20 @@ function AppLayout() {
         return;
       }
       const { data: sub } = await supabase
-        .from("subscriptions")
-        .select("price_id, status")
+        .from("billing_subscriptions")
+        .select("status, product:catalog_products(name), price:catalog_prices(interval)")
         .eq("user_id", authUser.id)
-        .in("status", ["active", "trialing", "past_due"])
+        .in("status", ["active", "trialing", "past_due", "grace_period"])
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (cancelled) return;
-      const pid = (sub as { price_id?: string | null } | null)?.price_id ?? null;
-      setPlanLabel(tierNameFromPriceId(pid));
+      const row = sub as unknown as {
+        product?: { name?: string } | null;
+        price?: { interval?: string } | null;
+      } | null;
+      setPlanLabel(tierName(row?.product?.name, row?.price?.interval));
+
     })();
     return () => {
       cancelled = true;
@@ -703,11 +707,12 @@ function MobileTabBar({
   );
 }
 
-function tierNameFromPriceId(priceId: string | null): string {
-  if (!priceId) return "Membro MM Club";
-  const p = priceId.toLowerCase();
-  if (p.includes("elite") || p.includes("anual") || p.includes("annual") || p.includes("yearly")) return "MM Club Elite";
-  if (p.includes("plus") || p.includes("semestral")) return "MM Club Plus";
-  if (p.includes("start") || p.includes("monthly") || p.includes("mensal")) return "MM Club Start";
-  return "Membro MM Club";
+/** Sidebar plan chip — the catalog is the source of truth for the name. */
+function tierName(
+  productName?: string | null,
+  interval?: string | null,
+): string {
+  if (!productName) return "Membro MM Club";
+  return interval === "year" ? `${productName} Anual` : productName;
 }
+

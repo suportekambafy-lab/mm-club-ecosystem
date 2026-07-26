@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Camera, CreditCard, ExternalLink, Loader2, LogOut, Mail, Pencil, Save, Sparkles, Trophy, X } from "lucide-react";
+import { Camera, CreditCard, Loader2, LogOut, Mail, Pencil, Save, Sparkles, Trophy, X } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { SectionHeading } from "@/components/mm/section-heading";
@@ -9,8 +9,14 @@ import { cn } from "@/lib/utils";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { useAdminIds } from "@/hooks/use-admin-ids";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getPaddleEnvironment } from "@/lib/paddle";
-import { createCustomerPortalSession } from "@/lib/paddle.functions";
+import {
+  getBillingOverview,
+  cancelSubscription,
+  resumeSubscription,
+  type BillingOverview,
+} from "@/lib/billing.functions";
+import { formatMoney } from "@/lib/billing/types";
+
 
 
 export const Route = createFileRoute("/_app/perfil")({
@@ -49,17 +55,21 @@ function ProfilePage() {
   const coverFileRef = useRef<HTMLInputElement>(null);
   const adminIds = useAdminIds();
 
-  type Sub = {
-    price_id: string | null;
-    product_id: string | null;
-    status: string | null;
-    current_period_end: string | null;
-    cancel_at_period_end: boolean | null;
-    environment: string | null;
-  };
-  const [sub, setSub] = useState<Sub | null>(null);
+  const [overview, setOverview] = useState<BillingOverview | null>(null);
   const [subLoading, setSubLoading] = useState(true);
-  const [portalLoading, setPortalLoading] = useState(false);
+  const [subActionLoading, setSubActionLoading] = useState(false);
+  const sub = overview?.subscription ?? null;
+
+  const loadBilling = async () => {
+    try {
+      const data = await getBillingOverview({ data: undefined });
+      setOverview(data);
+    } catch {
+      setOverview(null);
+    } finally {
+      setSubLoading(false);
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -69,39 +79,35 @@ function ProfilePage() {
         if (mounted) setSubLoading(false);
         return;
       }
-      const { data } = await supabase
-        .from("subscriptions")
-        .select("price_id, product_id, status, current_period_end, cancel_at_period_end, environment")
-        .eq("user_id", u.user.id)
-        .eq("environment", getPaddleEnvironment())
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
       if (!mounted) return;
-      setSub(data as Sub | null);
-      setSubLoading(false);
+      await loadBilling();
     })();
     return () => {
       mounted = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const openPortal = async () => {
-    setPortalLoading(true);
+  const toggleSubscription = async () => {
+    if (!sub) return;
+    setSubActionLoading(true);
     setError(null);
     try {
-      const res = await createCustomerPortalSession();
-      if ("error" in res) {
-        setError("Sem plano ativo associado à conta.");
-        return;
+      if (sub.cancelAtPeriodEnd) {
+        await resumeSubscription({ data: { subscriptionId: sub.id } });
+        setNotice("Assinatura reativada.");
+      } else {
+        await cancelSubscription({ data: { subscriptionId: sub.id } });
+        setNotice("Cancelamento agendado para o fim do período.");
       }
-      window.open(res.url, "_blank", "noopener,noreferrer");
+      await loadBilling();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Não foi possível abrir o portal.");
+      setError(e instanceof Error ? e.message : "Não foi possível atualizar o plano.");
     } finally {
-      setPortalLoading(false);
+      setSubActionLoading(false);
     }
   };
+
 
 
 
@@ -536,30 +542,34 @@ function ProfilePage() {
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <p className="font-display text-lg text-foreground">
-                  {formatPlanLabel(sub.price_id)}
+                  {sub.productName} · {formatMoney(sub.amountCents, sub.currency)}
+                  <span className="text-sm text-muted-foreground">
+                    {sub.interval === "year" ? "/ano" : sub.interval === "month" ? "/mês" : ""}
+                  </span>
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {sub.cancel_at_period_end
+                  {sub.cancelAtPeriodEnd
                     ? "Cancela no final do período atual"
-                    : sub.current_period_end
-                      ? `Próxima renovação em ${new Date(sub.current_period_end).toLocaleDateString("pt-PT", { day: "2-digit", month: "long", year: "numeric" })}`
+                    : sub.currentPeriodEnd
+                      ? `Próxima renovação em ${new Date(sub.currentPeriodEnd).toLocaleDateString("pt-PT", { day: "2-digit", month: "long", year: "numeric" })}`
                       : "Assinatura ativa"}
                 </p>
               </div>
 
               <button
                 type="button"
-                onClick={openPortal}
-                disabled={portalLoading}
+                onClick={toggleSubscription}
+                disabled={subActionLoading}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft disabled:opacity-60"
               >
-                {portalLoading ? (
+                {subActionLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <ExternalLink className="h-4 w-4" />
+                  <CreditCard className="h-4 w-4" />
                 )}
-                Gerenciar plano
+                {sub.cancelAtPeriodEnd ? "Reativar plano" : "Cancelar plano"}
               </button>
+
             </div>
           ) : isAdmin ? (
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
@@ -677,26 +687,3 @@ function Stat({
     </div>
   );
 }
-
-function formatPlanLabel(priceId: string | null): string {
-  if (!priceId) return "Plano MM Club";
-  const map: Record<string, string> = {
-    mm_club_start_monthly: "MM Club · Mensal",
-    mm_club_plus_semestral: "MM Club Plus · Semestral",
-    mm_club_elite_anual: "MM Club Elite · Anual",
-    monthly_plan: "MM Club · Mensal",
-    semestral_plan: "MM Club Plus · Semestral",
-    annual_plan: "MM Club Elite · Anual",
-    monthly: "MM Club · Mensal",
-    semestral: "MM Club Plus · Semestral",
-    annual: "MM Club Elite · Anual",
-    annual_yearly: "MM Club Elite · Anual",
-  };
-
-  if (map[priceId]) return map[priceId];
-  return priceId
-    .replace(/^mm_club_/, "MM Club ")
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
