@@ -36,29 +36,36 @@ type Ctx = Record<string, string | number | null | undefined>;
 
 async function subscriptionVars(subscriptionId?: string | null): Promise<Ctx> {
   if (!subscriptionId) return {};
-  const { data } = await supabaseAdmin
+  const { data: sub } = await supabaseAdmin
     .from("billing_subscriptions")
-    .select(
-      "id, current_period_end, catalog_prices:price_id (amount_cents, currency, display_label, catalog_products:product_id (name))",
-    )
+    .select("id, price_id, current_period_end")
     .eq("id", subscriptionId)
     .maybeSingle();
-  if (!data) return {};
-  const price = (data as Record<string, never>).catalog_prices as
-    | {
-        amount_cents: number;
-        currency: string;
-        display_label: string | null;
-        catalog_products: { name: string } | null;
-      }
-    | null;
+  if (!sub) return {};
+
+  const { data: price } = await supabaseAdmin
+    .from("catalog_prices")
+    .select("amount_cents, currency, display_label, product_id")
+    .eq("id", sub.price_id)
+    .maybeSingle();
+
+  let productName: string | null = null;
+  if (price?.product_id) {
+    const { data: product } = await supabaseAdmin
+      .from("catalog_products")
+      .select("name")
+      .eq("id", price.product_id)
+      .maybeSingle();
+    productName = product?.name ?? null;
+  }
+
   return {
-    plan:
-      price?.display_label ?? price?.catalog_products?.name ?? "MM Club",
+    plan: price?.display_label ?? productName ?? "MM Club",
     amount: price ? money(price.amount_cents, price.currency) : undefined,
-    dueDate: day(data.current_period_end),
+    dueDate: day(sub.current_period_end),
   };
 }
+
 
 async function invoiceVars(invoiceId?: string | null): Promise<Ctx> {
   if (!invoiceId) return {};
