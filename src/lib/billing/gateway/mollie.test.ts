@@ -92,18 +92,18 @@ describe("mollie gateway adapter", () => {
   });
 
   it("normalizes the webhook body to a payment reference only", async () => {
-    const res = await mollieGateway.normalizeWebhook("id=tr_123");
+    const res = await mollieGateway.normalizeWebhook("id=tr_123", new Headers());
     expect(res).toEqual({ kind: "payment", gatewayPaymentId: "tr_123" });
   });
 
   it("ignores a webhook body without an id (never trusts the payload)", async () => {
-    expect(await mollieGateway.normalizeWebhook("")).toBeNull();
-    expect(await mollieGateway.normalizeWebhook("foo=bar")).toBeNull();
+    expect(await mollieGateway.normalizeWebhook("", new Headers())).toBeNull();
+    expect(await mollieGateway.normalizeWebhook("foo=bar", new Headers())).toBeNull();
   });
 
   it("never reads the payment state from the webhook body", async () => {
     // A malicious body claiming "paid" carries no status into the domain.
-    const res = await mollieGateway.normalizeWebhook("id=tr_9&status=paid");
+    const res = await mollieGateway.normalizeWebhook("id=tr_9&status=paid", new Headers());
     expect(res).toEqual({ kind: "payment", gatewayPaymentId: "tr_9" });
     expect(JSON.stringify(res)).not.toContain("paid");
   });
