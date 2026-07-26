@@ -146,6 +146,14 @@ function SalaRoute() {
     }
   }, [liveStatus, target]);
 
+  // When the host ends the live, evict everyone still in the room and send
+  // them to the live page — which will show the replay as soon as it's ready.
+  useEffect(() => {
+    if (liveStatus === "ended") {
+      navigate({ to: "/lives/$liveId", params: { liveId }, replace: true });
+    }
+  }, [liveStatus, liveId, navigate]);
+
   // Auto-refresh the LiveKit token when the local participant is *promoted*
   // to the stage (off_stage → on_stage transition). LiveKit tokens embed
   // publish permissions, so the initial viewer token has to be replaced
