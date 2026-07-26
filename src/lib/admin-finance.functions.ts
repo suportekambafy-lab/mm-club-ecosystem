@@ -17,6 +17,7 @@ import type {
   SubscriptionStateRow,
 } from "@/lib/admin/finance-types";
 import type { RecoveryOverview } from "@/lib/admin/recovery-types";
+import type { IntelligenceOverview } from "@/lib/admin/intelligence-types";
 import type { SubscriptionStatus } from "@/lib/billing/types";
 
 async function assertAdmin(context: {
@@ -370,4 +371,29 @@ export const forceRecoveryAttempt = createServerFn({ method: "POST" })
     const { drainQueue } = await import("@/lib/queue/worker.server");
     await drainQueue(10);
     return { ok: true };
+  });
+
+/** Revenue Intelligence Engine — profiles, score evolution and explainability. */
+export const getIntelligenceOverview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<IntelligenceOverview> => {
+    await assertAdmin(context as never);
+    const { collectIntelligenceOverview } = await import(
+      "@/lib/admin/intelligence.server"
+    );
+    return collectIntelligenceOverview();
+  });
+
+/** Rebuilds a member's payment profile and re-scores their open debt. */
+export const rescoreMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ userId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const { rescoreOpenCycles } = await import(
+      "@/lib/billing/recovery/engine.server"
+    );
+    return rescoreOpenCycles(data.userId, "manual");
   });
