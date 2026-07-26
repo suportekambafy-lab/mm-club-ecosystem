@@ -52,6 +52,23 @@ export const Route = createFileRoute("/api/public/payments/gateway-webhook")({
           return new Response("ok", { status: 200 });
         } catch (err) {
           console.error("[billing webhook]", err);
+          try {
+            const { recordSecurityEvent } = await import(
+              "@/lib/security/runtime.server"
+            );
+            await recordSecurityEvent({
+              kind: "webhook_rejected",
+              severity: "critical",
+              ip: request.headers.get("cf-connecting-ip"),
+              userAgent: request.headers.get("user-agent"),
+              route: "/api/public/payments/gateway-webhook",
+              outcome: "blocked",
+              reason: err instanceof Error ? err.message.slice(0, 200) : "erro",
+              meta: { gateway: gatewayName },
+            });
+          } catch {
+            /* logging must never break the webhook response */
+          }
           await logWebhook({
             gateway: gatewayName,
             gatewayPaymentId: paymentId,
