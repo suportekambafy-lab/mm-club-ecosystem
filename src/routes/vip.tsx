@@ -63,8 +63,8 @@ function VipPage() {
 
 
   const handleStart = async () => {
-    // Confirmação de nome/email antes de abrir o pagamento (igual ao checkout).
-    if (!askEmail) {
+    // Só pedimos nome/email a quem não tem sessão iniciada.
+    if (!user && !askEmail) {
       setAskEmail(true);
       return;
     }
@@ -76,7 +76,8 @@ function VipPage() {
         const res = await startGuestCheckout({
           data: {
             email: guestEmail.trim(),
-            name: guestName.trim() || null,
+            name: guestName.trim(),
+
             priceSlug: "mm_club_vip_trial",
             origin: window.location.origin,
           },
