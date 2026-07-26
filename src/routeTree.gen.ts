@@ -50,6 +50,7 @@ import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.espe
 import { Route as AppAcademiaCourseIdRouteImport } from './routes/_app.academia.$courseId'
 import { Route as AppFerramentasStudioIndexRouteImport } from './routes/_app.ferramentas.studio.index'
 import { Route as AppAcademiaCourseIdIndexRouteImport } from './routes/_app.academia.$courseId.index'
+import { Route as ApiPublicPaymentsGatewayWebhookRouteImport } from './routes/api/public/payments/gateway-webhook'
 import { Route as ApiPublicHooksWeeklySummaryRouteImport } from './routes/api/public/hooks/weekly-summary'
 import { Route as ApiPublicHooksLivesRecordingCheckRouteImport } from './routes/api/public/hooks/lives-recording-check'
 import { Route as ApiPublicHooksLiveTestEmailRouteImport } from './routes/api/public/hooks/live-test-email'
@@ -272,6 +273,12 @@ const AppAcademiaCourseIdIndexRoute =
     path: '/',
     getParentRoute: () => AppAcademiaCourseIdRoute,
   } as any)
+const ApiPublicPaymentsGatewayWebhookRoute =
+  ApiPublicPaymentsGatewayWebhookRouteImport.update({
+    id: '/api/public/payments/gateway-webhook',
+    path: '/api/public/payments/gateway-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksWeeklySummaryRoute =
   ApiPublicHooksWeeklySummaryRouteImport.update({
     id: '/api/public/hooks/weekly-summary',
@@ -407,6 +414,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
+  '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
   '/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
   '/ferramentas/studio/': typeof AppFerramentasStudioIndexRoute
   '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
@@ -457,6 +465,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
+  '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdIndexRoute
   '/ferramentas/studio': typeof AppFerramentasStudioIndexRoute
   '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
@@ -515,6 +524,7 @@ export interface FileRoutesById {
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
+  '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
   '/_app/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
   '/_app/ferramentas/studio/': typeof AppFerramentasStudioIndexRoute
   '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
@@ -573,6 +583,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/weekly-summary'
+    | '/api/public/payments/gateway-webhook'
     | '/academia/$courseId/'
     | '/ferramentas/studio/'
     | '/api/public/lives/$liveId/cover/svg'
@@ -623,6 +634,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/weekly-summary'
+    | '/api/public/payments/gateway-webhook'
     | '/academia/$courseId'
     | '/ferramentas/studio'
     | '/api/public/lives/$liveId/cover/svg'
@@ -680,6 +692,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/weekly-summary'
+    | '/api/public/payments/gateway-webhook'
     | '/_app/academia/$courseId/'
     | '/_app/ferramentas/studio/'
     | '/api/public/lives/$liveId/cover/svg'
@@ -705,6 +718,7 @@ export interface RootRouteChildren {
   ApiPublicHooksLiveTestEmailRoute: typeof ApiPublicHooksLiveTestEmailRoute
   ApiPublicHooksLivesRecordingCheckRoute: typeof ApiPublicHooksLivesRecordingCheckRoute
   ApiPublicHooksWeeklySummaryRoute: typeof ApiPublicHooksWeeklySummaryRoute
+  ApiPublicPaymentsGatewayWebhookRoute: typeof ApiPublicPaymentsGatewayWebhookRoute
   ApiPublicLivesLiveIdCoverSvgRoute: typeof ApiPublicLivesLiveIdCoverSvgRoute
 }
 
@@ -997,6 +1011,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAcademiaCourseIdIndexRouteImport
       parentRoute: typeof AppAcademiaCourseIdRoute
     }
+    '/api/public/payments/gateway-webhook': {
+      id: '/api/public/payments/gateway-webhook'
+      path: '/api/public/payments/gateway-webhook'
+      fullPath: '/api/public/payments/gateway-webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsGatewayWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/weekly-summary': {
       id: '/api/public/hooks/weekly-summary'
       path: '/api/public/hooks/weekly-summary'
@@ -1273,6 +1294,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksLivesRecordingCheckRoute:
     ApiPublicHooksLivesRecordingCheckRoute,
   ApiPublicHooksWeeklySummaryRoute: ApiPublicHooksWeeklySummaryRoute,
+  ApiPublicPaymentsGatewayWebhookRoute: ApiPublicPaymentsGatewayWebhookRoute,
   ApiPublicLivesLiveIdCoverSvgRoute: ApiPublicLivesLiveIdCoverSvgRoute,
 }
 export const routeTree = rootRouteImport
