@@ -175,9 +175,15 @@ export async function collectFinanceOverview(): Promise<FinanceOverview> {
       todayCents += value;
       todayCount += 1;
     }
-    if (at >= startOfMonth) monthCents += value;
-    else if (at >= startOfPrevMonth) prevMonthCents += value;
+    if (at >= startOfMonth) {
+      monthCents += value;
+      dayCurrent.set(at.getUTCDate(), (dayCurrent.get(at.getUTCDate()) ?? 0) + value);
+    } else if (at >= startOfPrevMonth) {
+      prevMonthCents += value;
+      dayPrev.set(at.getUTCDate(), (dayPrev.get(at.getUTCDate()) ?? 0) + value);
+    }
     if (at >= since30) last30Cents += value;
+
 
     const price = p.price_id ? priceById.get(p.price_id) : null;
     const planName = price
