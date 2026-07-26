@@ -131,6 +131,7 @@ const CRUMBS: Record<string, string> = {
   "/admin/financeiro/cupoes": "Cupões",
   "/admin/financeiro/catalogo": "Catálogo",
   "/admin/saude": "Saúde do billing",
+  "/admin/comunicacao": "Comunicação",
   "/admin/cursos": "Cursos",
   "/admin/aulas": "Aulas",
   "/admin/transcricoes": "Transcrições",
