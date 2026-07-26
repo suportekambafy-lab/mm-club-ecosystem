@@ -72,6 +72,11 @@ function SalaRoute() {
     getLiveFn({ data: { id: liveId } })
       .then((res) => {
         if (cancelled) return;
+        // Never open the LiveKit room for an ended/published live — go straight to the replay.
+        if (res.live.status === "ended" || res.live.status === "published") {
+          navigate({ to: "/lives/$liveId", params: { liveId }, replace: true });
+          return;
+        }
         setLive(res.live);
         setLiveStatus(res.live.status);
       })
