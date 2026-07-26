@@ -16,10 +16,11 @@
 import {
   EgressClient,
   EgressStatus,
+  EncodedFileOutput,
   EncodedFileType,
+  S3Upload,
+  StreamOutput,
   StreamProtocol,
-  type EncodedFileOutput,
-  type StreamOutput,
 } from "livekit-server-sdk";
 
 interface EgressEnv {
@@ -93,10 +94,10 @@ export async function startLiveRecording(args: {
 
     // 1) Preferred: push the composed room into Cloudflare Stream over RTMPS.
     if (args.rtmpsUrl && args.streamKey) {
-      const stream: StreamOutput = {
+      const stream = new StreamOutput({
         protocol: StreamProtocol.RTMP,
         urls: [buildRtmpTarget(args.rtmpsUrl, args.streamKey)],
-      } as StreamOutput;
+      });
 
       const info = await egress.startRoomCompositeEgress(
         args.roomName,
@@ -114,18 +115,21 @@ export async function startLiveRecording(args: {
     // 2) Fallback: MP4 into the configured S3/R2 bucket.
     if (env.s3) {
       const filepath = `mmclub/lives/${args.liveId}/${Date.now()}.mp4`;
-      const output: EncodedFileOutput = {
+      const output = new EncodedFileOutput({
         fileType: EncodedFileType.MP4,
         filepath,
-        s3: {
-          accessKey: env.s3.accessKey,
-          secret: env.s3.secret,
-          region: env.s3.region,
-          bucket: env.s3.bucket,
-          endpoint: env.s3.endpoint,
-          forcePathStyle: true,
+        output: {
+          case: "s3",
+          value: new S3Upload({
+            accessKey: env.s3.accessKey,
+            secret: env.s3.secret,
+            region: env.s3.region,
+            bucket: env.s3.bucket,
+            endpoint: env.s3.endpoint,
+            forcePathStyle: true,
+          }),
         },
-      } as EncodedFileOutput;
+      });
 
       const info = await egress.startRoomCompositeEgress(
         args.roomName,
