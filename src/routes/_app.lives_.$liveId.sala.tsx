@@ -372,10 +372,15 @@ function SalaShell({
               <span className="tabular-nums text-red-200/90">· {elapsed}</span>
             </span>
           )}
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-2.5 py-1 text-white/80 ring-1 ring-white/10">
+          <button
+            type="button"
+            onClick={() => setPeopleOpen(true)}
+            aria-label="Ver participantes"
+            className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-2.5 py-1 text-white/80 ring-1 ring-white/10 transition hover:bg-white/10 hover:text-white"
+          >
             <Users className="h-3.5 w-3.5" />
             <span className="tabular-nums">{viewerCount}</span>
-          </span>
+          </button>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <div className="hidden text-[10px] uppercase tracking-[0.2em] text-white/40 sm:block">Sala · Beta</div>
