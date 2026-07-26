@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_app/ferramentas/studio")({
 function StudioLayout() {
   const fetchCtx = useServerFn(getStudioContext);
   const qc = useQueryClient();
-  const { data } = useQuery({
+  const { data, isPending } = useQuery({
     queryKey: ["studio", "context"],
     queryFn: () => fetchCtx({ data: undefined as never }),
     staleTime: 30_000,
@@ -36,10 +36,23 @@ function StudioLayout() {
 
   return (
     <StudioShell balance={balance}>
-      <StudioContext.Provider value={ctx}>
-        <Outlet />
-      </StudioContext.Provider>
+      {isPending ? (
+        <div className="space-y-12">
+          <section className="grid gap-3 md:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-44 w-full rounded-3xl" />
+            ))}
+          </section>
+          <CardGridSkeleton cards={4} className="grid gap-4 md:grid-cols-2" />
+          <CardGridSkeleton cards={6} className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6" />
+        </div>
+      ) : (
+        <StudioContext.Provider value={ctx}>
+          <Outlet />
+        </StudioContext.Provider>
+      )}
     </StudioShell>
   );
 }
+
 
