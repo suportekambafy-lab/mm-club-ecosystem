@@ -542,30 +542,34 @@ function ProfilePage() {
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <p className="font-display text-lg text-foreground">
-                  {formatPlanLabel(sub.price_id)}
+                  {sub.productName} · {formatMoney(sub.amountCents, sub.currency)}
+                  <span className="text-sm text-muted-foreground">
+                    {sub.interval === "year" ? "/ano" : sub.interval === "month" ? "/mês" : ""}
+                  </span>
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {sub.cancel_at_period_end
+                  {sub.cancelAtPeriodEnd
                     ? "Cancela no final do período atual"
-                    : sub.current_period_end
-                      ? `Próxima renovação em ${new Date(sub.current_period_end).toLocaleDateString("pt-PT", { day: "2-digit", month: "long", year: "numeric" })}`
+                    : sub.currentPeriodEnd
+                      ? `Próxima renovação em ${new Date(sub.currentPeriodEnd).toLocaleDateString("pt-PT", { day: "2-digit", month: "long", year: "numeric" })}`
                       : "Assinatura ativa"}
                 </p>
               </div>
 
               <button
                 type="button"
-                onClick={openPortal}
-                disabled={portalLoading}
+                onClick={toggleSubscription}
+                disabled={subActionLoading}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft disabled:opacity-60"
               >
-                {portalLoading ? (
+                {subActionLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <ExternalLink className="h-4 w-4" />
+                  <CreditCard className="h-4 w-4" />
                 )}
-                Gerenciar plano
+                {sub.cancelAtPeriodEnd ? "Reativar plano" : "Cancelar plano"}
               </button>
+
             </div>
           ) : isAdmin ? (
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
