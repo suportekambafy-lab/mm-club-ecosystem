@@ -543,8 +543,13 @@ function SubscriptionPage() {
                           "Método removido.",
                         )
                       }
-                      disabled={busy === `del-${m.id}`}
-                      className="rounded-full p-2 text-muted-foreground transition hover:text-destructive disabled:opacity-60"
+                      disabled={busy === `del-${m.id}` || methods.length <= 1}
+                      title={
+                        methods.length <= 1
+                          ? "Tens de manter pelo menos um método de pagamento."
+                          : "Remover método"
+                      }
+                      className="rounded-full p-2 text-muted-foreground transition hover:text-destructive disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-muted-foreground"
                       aria-label="Remover método"
                     >
                       {busy === `del-${m.id}` ? (
@@ -553,6 +558,7 @@ function SubscriptionPage() {
                         <Trash2 className="h-4 w-4" />
                       )}
                     </button>
+
                   </li>
                 ))}
               </ul>
