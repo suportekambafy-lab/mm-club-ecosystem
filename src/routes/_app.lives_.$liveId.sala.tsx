@@ -240,9 +240,6 @@ function SalaShell({
       supabase.removeChannel(ch);
     };
   }, [liveId]);
-  const [chatOpen, setChatOpen] = useState(true);
-  const [viewerCount, setViewerCount] = useState<number>(0);
-  const [elapsed, setElapsed] = useState<string>("");
 
   // Real-time viewer/participant count (all rows without left_at).
   useEffect(() => {
