@@ -67,13 +67,18 @@ export const getSecurityOverview = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import(
       "@/integrations/supabase/client.server"
     );
-    const { getEmergencyState } = await import("@/lib/security/runtime.server");
+    const { getEmergencyState, getReadOnlyState } = await import(
+      "@/lib/security/runtime.server"
+    );
 
     const since = new Date(Date.now() - 86_400_000).toISOString();
+
+    const readOnly = await getReadOnlyState();
 
     const [emergency, recentRes, actionsRes, dayRes, webhookRes] =
       await Promise.all([
         getEmergencyState(),
+
         supabaseAdmin
           .from("security_events")
           .select(
