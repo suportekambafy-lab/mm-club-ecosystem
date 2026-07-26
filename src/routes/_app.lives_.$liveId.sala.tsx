@@ -202,16 +202,44 @@ function SalaRoute() {
 function SalaShell({
   liveId,
   userId,
-  wentLiveAt,
   onLeave,
   children,
 }: {
   liveId: string;
   userId: string;
-  wentLiveAt: string | null;
   onLeave: () => void;
   children: React.ReactNode;
 }) {
+  const [chatOpen, setChatOpen] = useState(true);
+  const [viewerCount, setViewerCount] = useState<number>(0);
+  const [elapsed, setElapsed] = useState<string>("");
+  const [wentLiveAt, setWentLiveAt] = useState<string | null>(null);
+
+  // Track live status timestamp (went_live_at) directly, incl. realtime updates.
+  useEffect(() => {
+    let cancelled = false;
+    async function refresh() {
+      const { data } = await supabase.from("lives").select("went_live_at").eq("id", liveId).maybeSingle();
+      if (!cancelled) setWentLiveAt((data?.went_live_at as string | null) ?? null);
+    }
+    refresh();
+    const suffix = Math.random().toString(36).slice(2, 8);
+    const ch = supabase
+      .channel(`sala-live:${liveId}:${suffix}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "lives", filter: `id=eq.${liveId}` },
+        (payload) => {
+          const next = (payload.new as { went_live_at?: string | null })?.went_live_at ?? null;
+          setWentLiveAt(next);
+        },
+      )
+      .subscribe();
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(ch);
+    };
+  }, [liveId]);
   const [chatOpen, setChatOpen] = useState(true);
   const [viewerCount, setViewerCount] = useState<number>(0);
   const [elapsed, setElapsed] = useState<string>("");
