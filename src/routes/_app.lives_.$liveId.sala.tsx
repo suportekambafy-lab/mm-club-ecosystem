@@ -199,7 +199,9 @@ function SalaRoute() {
 
 
   const handleLeave = () => {
-    navigate({ to: "/lives/$liveId", params: { liveId } });
+    // Route to the lives index — /lives/$liveId auto-redirects interactive
+    // lives back into /sala, which would trap the user in a loop.
+    navigate({ to: "/lives" });
   };
 
   if (!authReady) {

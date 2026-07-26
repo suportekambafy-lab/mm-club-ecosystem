@@ -102,15 +102,19 @@ export function RoomControls({ state, actions, onLeave }: Props) {
         <LayoutMenu state={state} actions={actions} />
       )}
 
-      <Button
-        variant="destructive"
-        size="sm"
-        onClick={onLeave ?? (() => actions.leave())}
-        className="ml-1 h-9 rounded-xl bg-red-500 px-3 text-white hover:bg-red-500/90"
-      >
-        <PhoneOff className="mr-1 h-4 w-4" />
-        Sair
-      </Button>
+      {state.localRole === "host" ? (
+        <HostLeaveMenu state={state} actions={actions} onLeave={onLeave} />
+      ) : (
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={onLeave ?? (() => actions.leave())}
+          className="ml-1 h-9 rounded-xl bg-red-500 px-3 text-white hover:bg-red-500/90"
+        >
+          <PhoneOff className="mr-1 h-4 w-4" />
+          Sair
+        </Button>
+      )}
     </div>
   );
 }
@@ -190,3 +194,105 @@ function LayoutMenu({ state, actions }: { state: RoomState; actions: RoomActions
     </div>
   );
 }
+
+/**
+ * Host-only leave menu. Distinguishes "leave the room" (host disconnects but
+ * the live keeps running — auto-transfer / co-host takes over) from "end the
+ * live for everyone" (calls endLive → egress stops, replay is prepared, all
+ * viewers are redirected).
+ */
+function HostLeaveMenu({
+  state,
+  actions,
+  onLeave,
+}: {
+  state: RoomState;
+  actions: RoomActions;
+  onLeave?: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [ending, setEnding] = useState(false);
+
+  const doLeave = () => {
+    setOpen(false);
+    if (onLeave) onLeave();
+    else void actions.leave();
+  };
+
+  const doEnd = async () => {
+    setEnding(true);
+    try {
+      await actions.endLive();
+      // endLive flips lives.status to "ended"; the live route reacts and
+      // redirects everyone to the replay view. Still, close the room locally.
+      if (onLeave) onLeave();
+      else await actions.leave();
+    } finally {
+      setEnding(false);
+      setConfirming(false);
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <Button
+        variant="destructive"
+        size="sm"
+        onClick={() => setOpen((v) => !v)}
+        className="ml-1 h-9 rounded-xl bg-red-500 px-3 text-white hover:bg-red-500/90"
+      >
+        <PhoneOff className="mr-1 h-4 w-4" />
+        Sair
+      </Button>
+      {open && !confirming && (
+        <div className="absolute bottom-full right-0 mb-2 min-w-[220px] rounded-xl border border-white/10 bg-neutral-900/95 p-1 shadow-2xl backdrop-blur-md">
+          <button
+            type="button"
+            onClick={doLeave}
+            className="flex w-full flex-col items-start rounded-lg px-3 py-2 text-left hover:bg-white/10"
+          >
+            <span className="text-sm text-white">Sair da sala</span>
+            <span className="text-[11px] text-white/50">A live continua ativa para os restantes.</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirming(true)}
+            className="mt-0.5 flex w-full flex-col items-start rounded-lg px-3 py-2 text-left hover:bg-red-500/10"
+          >
+            <span className="text-sm text-red-400">Terminar live</span>
+            <span className="text-[11px] text-white/50">Encerra a sala para todos e finaliza a gravação.</span>
+          </button>
+        </div>
+      )}
+      {open && confirming && (
+        <div className="absolute bottom-full right-0 mb-2 w-[280px] rounded-xl border border-white/10 bg-neutral-900/95 p-3 shadow-2xl backdrop-blur-md">
+          <div className="text-sm font-medium text-white">Terminar a live para todos?</div>
+          <p className="mt-1 text-[12px] text-white/60">
+            Todos os participantes serão desligados. A gravação é finalizada e o replay ficará disponível assim que estiver pronto.
+          </p>
+          <div className="mt-3 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setConfirming(false)}
+              disabled={ending}
+              className="rounded-lg bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10 disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={doEnd}
+              disabled={ending}
+              className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500/90 disabled:opacity-50"
+            >
+              {ending ? "A terminar…" : "Terminar live"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
