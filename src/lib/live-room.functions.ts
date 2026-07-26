@@ -90,6 +90,18 @@ export const joinRoom = createServerFn({ method: "POST" })
     let me = await getAuthedParticipant(supabase, liveId, userId);
     if (me?.banned) throw new Error("Foste removido desta sala.");
 
+    let liveMode = live.mode;
+    const canActivateInteractive = live.created_by === userId || me?.role === "host" || me?.role === "cohost";
+    if (liveMode !== "interactive" && canActivateInteractive) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { error: modeErr } = await supabaseAdmin
+        .from("lives")
+        .update({ mode: "interactive" })
+        .eq("id", liveId);
+      if (modeErr) throw new Error(modeErr.message);
+      liveMode = "interactive";
+    }
+
     if (!me) {
       // First join: host if creator, otherwise default participant / viewer.
       const isCreator = live.created_by === userId;
@@ -152,7 +164,7 @@ export const joinRoom = createServerFn({ method: "POST" })
       participantId: me!.id,
       live: {
         id: live.id,
-        mode: live.mode,
+        mode: liveMode,
         enabledModules: live.enabled_modules,
         spotlightUserId: live.spotlight_user_id,
         stageLayout: live.stage_layout,
