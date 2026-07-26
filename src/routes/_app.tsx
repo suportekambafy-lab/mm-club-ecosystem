@@ -203,16 +203,20 @@ function AppLayout() {
         return;
       }
       const { data: sub } = await supabase
-        .from("subscriptions")
-        .select("price_id, status")
+        .from("billing_subscriptions")
+        .select("status, product:catalog_products(name), price:catalog_prices(interval)")
         .eq("user_id", authUser.id)
-        .in("status", ["active", "trialing", "past_due"])
+        .in("status", ["active", "trialing", "past_due", "grace_period"])
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (cancelled) return;
-      const pid = (sub as { price_id?: string | null } | null)?.price_id ?? null;
-      setPlanLabel(tierNameFromPriceId(pid));
+      const row = sub as unknown as {
+        product?: { name?: string } | null;
+        price?: { interval?: string } | null;
+      } | null;
+      setPlanLabel(tierName(row?.product?.name, row?.price?.interval));
+
     })();
     return () => {
       cancelled = true;
