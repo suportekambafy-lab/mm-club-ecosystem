@@ -204,7 +204,7 @@ function AppLayout() {
       }
       const { data: sub } = await supabase
         .from("billing_subscriptions")
-        .select("status, product:catalog_products(name), price:catalog_prices(interval)")
+        .select("status, product:catalog_products(name), price:catalog_prices!billing_subscriptions_price_id_fkey(interval)")
         .eq("user_id", authUser.id)
         .in("status", ["active", "trialing", "past_due", "grace_period"])
         .order("created_at", { ascending: false })

@@ -358,7 +358,7 @@ export async function listSubscriptions(filter?: {
   const query = supabaseAdmin
     .from("billing_subscriptions")
     .select(
-      "id, user_id, status, trial_end, current_period_end, cancel_at_period_end, created_at, product:catalog_products(name), price:catalog_prices(slug, amount_cents, currency, interval)",
+      "id, user_id, status, trial_end, current_period_end, cancel_at_period_end, created_at, product:catalog_products(name), price:catalog_prices!billing_subscriptions_price_id_fkey(slug, amount_cents, currency, interval)",
     )
     .order("created_at", { ascending: false })
     .limit(500);
@@ -470,7 +470,7 @@ export async function collectCustomerDetail(
     supabaseAdmin
       .from("billing_subscriptions")
       .select(
-        "id, user_id, status, trial_end, current_period_end, cancel_at_period_end, created_at, product:catalog_products(name), price:catalog_prices(slug, amount_cents, currency, interval)",
+        "id, user_id, status, trial_end, current_period_end, cancel_at_period_end, created_at, product:catalog_products(name), price:catalog_prices!billing_subscriptions_price_id_fkey(slug, amount_cents, currency, interval)",
       )
       .eq("user_id", userId)
       .order("created_at", { ascending: false }),
