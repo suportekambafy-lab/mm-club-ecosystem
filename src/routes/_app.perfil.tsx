@@ -55,17 +55,21 @@ function ProfilePage() {
   const coverFileRef = useRef<HTMLInputElement>(null);
   const adminIds = useAdminIds();
 
-  type Sub = {
-    price_id: string | null;
-    product_id: string | null;
-    status: string | null;
-    current_period_end: string | null;
-    cancel_at_period_end: boolean | null;
-    environment: string | null;
-  };
-  const [sub, setSub] = useState<Sub | null>(null);
+  const [overview, setOverview] = useState<BillingOverview | null>(null);
   const [subLoading, setSubLoading] = useState(true);
-  const [portalLoading, setPortalLoading] = useState(false);
+  const [subActionLoading, setSubActionLoading] = useState(false);
+  const sub = overview?.subscription ?? null;
+
+  const loadBilling = async () => {
+    try {
+      const data = await getBillingOverview({ data: undefined });
+      setOverview(data);
+    } catch {
+      setOverview(null);
+    } finally {
+      setSubLoading(false);
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -75,39 +79,35 @@ function ProfilePage() {
         if (mounted) setSubLoading(false);
         return;
       }
-      const { data } = await supabase
-        .from("subscriptions")
-        .select("price_id, product_id, status, current_period_end, cancel_at_period_end, environment")
-        .eq("user_id", u.user.id)
-        .eq("environment", getPaddleEnvironment())
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
       if (!mounted) return;
-      setSub(data as Sub | null);
-      setSubLoading(false);
+      await loadBilling();
     })();
     return () => {
       mounted = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const openPortal = async () => {
-    setPortalLoading(true);
+  const toggleSubscription = async () => {
+    if (!sub) return;
+    setSubActionLoading(true);
     setError(null);
     try {
-      const res = await createCustomerPortalSession();
-      if ("error" in res) {
-        setError("Sem plano ativo associado à conta.");
-        return;
+      if (sub.cancelAtPeriodEnd) {
+        await resumeSubscription({ data: { subscriptionId: sub.id } });
+        setNotice("Assinatura reativada.");
+      } else {
+        await cancelSubscription({ data: { subscriptionId: sub.id } });
+        setNotice("Cancelamento agendado para o fim do período.");
       }
-      window.open(res.url, "_blank", "noopener,noreferrer");
+      await loadBilling();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Não foi possível abrir o portal.");
+      setError(e instanceof Error ? e.message : "Não foi possível atualizar o plano.");
     } finally {
-      setPortalLoading(false);
+      setSubActionLoading(false);
     }
   };
+
 
 
 
