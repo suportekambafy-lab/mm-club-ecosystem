@@ -47,6 +47,7 @@ import { Route as AppLivesIndexRouteImport } from './routes/_app.lives.index'
 import { Route as AppAcademiaIndexRouteImport } from './routes/_app.academia.index'
 import { Route as ApiRealtimeSessionRouteImport } from './routes/api.realtime.session'
 import { Route as ApiKnowledgeSearchRouteImport } from './routes/api.knowledge.search'
+import { Route as AdminFinanceiroSubscricoesRouteImport } from './routes/admin.financeiro.subscricoes'
 import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
 import { Route as AppFerramentasStudioRouteImport } from './routes/_app.ferramentas.studio'
 import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
@@ -259,6 +260,12 @@ const ApiKnowledgeSearchRoute = ApiKnowledgeSearchRouteImport.update({
   path: '/api/knowledge/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminFinanceiroSubscricoesRoute =
+  AdminFinanceiroSubscricoesRouteImport.update({
+    id: '/subscricoes',
+    path: '/subscricoes',
+    getParentRoute: () => AdminFinanceiroRoute,
+  } as any)
 const AppLivesLiveIdRoute = AppLivesLiveIdRouteImport.update({
   id: '/$liveId',
   path: '/$liveId',
@@ -423,6 +430,7 @@ export interface FileRoutesByFullPath {
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
   '/lives/$liveId': typeof AppLivesLiveIdRoute
+  '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia/': typeof AppAcademiaIndexRoute
@@ -477,6 +485,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
+  '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia': typeof AppAcademiaIndexRoute
@@ -540,6 +549,7 @@ export interface FileRoutesById {
   '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/_app/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
+  '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/_app/academia/': typeof AppAcademiaIndexRoute
@@ -603,6 +613,7 @@ export interface FileRouteTypes {
     | '/especialistas/$expertId'
     | '/ferramentas/studio'
     | '/lives/$liveId'
+    | '/admin/financeiro/subscricoes'
     | '/api/knowledge/search'
     | '/api/realtime/session'
     | '/academia/'
@@ -657,6 +668,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/especialistas/$expertId'
     | '/lives/$liveId'
+    | '/admin/financeiro/subscricoes'
     | '/api/knowledge/search'
     | '/api/realtime/session'
     | '/academia'
@@ -719,6 +731,7 @@ export interface FileRouteTypes {
     | '/_app/especialistas/$expertId'
     | '/_app/ferramentas/studio'
     | '/_app/lives/$liveId'
+    | '/admin/financeiro/subscricoes'
     | '/api/knowledge/search'
     | '/api/realtime/session'
     | '/_app/academia/'
@@ -1038,6 +1051,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiKnowledgeSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/financeiro/subscricoes': {
+      id: '/admin/financeiro/subscricoes'
+      path: '/subscricoes'
+      fullPath: '/admin/financeiro/subscricoes'
+      preLoaderRoute: typeof AdminFinanceiroSubscricoesRouteImport
+      parentRoute: typeof AdminFinanceiroRoute
+    }
     '/_app/lives/$liveId': {
       id: '/_app/lives/$liveId'
       path: '/$liveId'
@@ -1302,10 +1322,12 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AdminFinanceiroRouteChildren {
+  AdminFinanceiroSubscricoesRoute: typeof AdminFinanceiroSubscricoesRoute
   AdminFinanceiroIndexRoute: typeof AdminFinanceiroIndexRoute
 }
 
 const AdminFinanceiroRouteChildren: AdminFinanceiroRouteChildren = {
+  AdminFinanceiroSubscricoesRoute: AdminFinanceiroSubscricoesRoute,
   AdminFinanceiroIndexRoute: AdminFinanceiroIndexRoute,
 }
 
