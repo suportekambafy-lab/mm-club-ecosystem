@@ -388,6 +388,7 @@ async function onPaymentPaid(args: {
         intervalCount: price.intervalCount,
         gatewayIntervalStr: gatewayInterval(price),
         amountCents: price.amountCents,
+        trialDays: price.trialDays,
         currency: price.currency,
         description: `MM Club — ${price.product.name}`,
       });
