@@ -51,7 +51,30 @@ function AuthPage() {
 
 
 
+  async function sendReset() {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) {
+      setFormError("Escreve o teu email primeiro.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Enviámos-te um email para definires uma nova palavra-passe.");
+    } catch (err) {
+      const message = getAuthErrorMessage(err);
+      setFormError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function onSubmit(e: React.FormEvent) {
+
     e.preventDefault();
     setFormError(null);
     setLoading(true);
@@ -283,6 +306,19 @@ function AuthPage() {
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </button>
             </form>
+
+            {mode === "signin" && (
+              <button
+                type="button"
+                onClick={sendReset}
+                disabled={loading}
+                className="mt-4 text-xs text-muted-foreground underline-offset-4 transition hover:text-foreground hover:underline disabled:opacity-50"
+              >
+                Esqueci-me da palavra-passe
+              </button>
+            )}
+
+
 
             <div className="mt-6 flex items-center justify-between text-xs">
               <button

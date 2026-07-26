@@ -138,7 +138,29 @@ export const mollieGateway: PaymentGateway = {
     });
   },
 
+  /**
+   * Off-session charge on a stored mandate. Used to retry a failed renewal
+   * with another card the member already has saved.
+   */
+  async chargeWithMandate(input): Promise<GatewayPayment> {
+    const raw = await call<MolliePaymentRaw>("/payments", {
+      method: "POST",
+      body: JSON.stringify({
+        amount: money(input.amountCents, input.currency),
+        description: input.description,
+        webhookUrl: input.webhookUrl,
+        metadata: input.metadata,
+        customerId: input.customerId,
+        mandateId: input.mandateId,
+        sequenceType: "recurring",
+        locale: "pt_PT",
+      }),
+    });
+    return normalizePayment(raw);
+  },
+
   async listMandates(customerId: string): Promise<GatewayMandate[]> {
+
     const raw = await call<{
       _embedded?: {
         mandates?: {
