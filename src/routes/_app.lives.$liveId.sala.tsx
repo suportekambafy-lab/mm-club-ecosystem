@@ -40,50 +40,67 @@ function SalaRoute() {
   const getLiveFn = useServerFn(getLive);
 
   const [live, setLive] = useState<LiveData | null>(null);
-
-  const navigate = useNavigate();
-  const joinRoomFn = useServerFn(joinRoom);
-
   const [userId, setUserId] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [session, setSession] = useState<JoinResult | null>(null);
   const [target, setTarget] = useState<"backstage" | "main">("main");
   const [error, setError] = useState<string | null>(null);
-  const [liveStatus, setLiveStatus] = useState<string>(live.status);
+  const [liveStatus, setLiveStatus] = useState<string | null>(null);
   const [createdBy, setCreatedBy] = useState<string | null>(null);
   const joinLockRef = useRef(false);
 
-  // Resolve current user + live.created_by (not exposed by getLive loader).
+  // Resolve current user + live (client-side so auth token is present).
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUserId(data.user?.id ?? null);
       setAuthReady(true);
     });
+  }, []);
+
+  useEffect(() => {
+    if (!authReady || !userId) return;
+    let cancelled = false;
+    getLiveFn({ data: { id: liveId } })
+      .then((res) => {
+        if (cancelled) return;
+        setLive(res.live);
+        setLiveStatus(res.live.status);
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return;
+        setError(e instanceof Error ? e.message : "Não foi possível carregar a live.");
+      });
     supabase
       .from("lives")
       .select("created_by")
-      .eq("id", live.id)
+      .eq("id", liveId)
       .maybeSingle()
-      .then(({ data }) => setCreatedBy((data as { created_by?: string } | null)?.created_by ?? null));
-  }, [live.id]);
+      .then(({ data }) => {
+        if (cancelled) return;
+        setCreatedBy((data as { created_by?: string } | null)?.created_by ?? null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady, userId, liveId, getLiveFn]);
 
   // Compute initial target: publishers land in backstage until the room is live.
   useEffect(() => {
-    if (!userId || createdBy === null) return;
+    if (!userId || createdBy === null || liveStatus === null) return;
     const isCreator = createdBy === userId;
     const initial: "backstage" | "main" =
       isCreator && liveStatus !== "live" && liveStatus !== "ended" ? "backstage" : "main";
     setTarget(initial);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, createdBy]);
+  }, [userId, createdBy, liveStatus === null]);
 
   // Realtime: watch lives.status so backstage flips to main once host goes live.
   useEffect(() => {
     const channel = supabase
-      .channel(`sala-live-${live.id}`)
+      .channel(`sala-live-${liveId}`)
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "lives", filter: `id=eq.${live.id}` },
+        { event: "UPDATE", schema: "public", table: "lives", filter: `id=eq.${liveId}` },
         (payload) => {
           const next = (payload.new as { status?: string })?.status;
           if (next) setLiveStatus(next);
@@ -93,21 +110,21 @@ function SalaRoute() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [live.id]);
+  }, [liveId]);
 
   // (Re)join the room whenever target changes.
   useEffect(() => {
-    if (!authReady || !userId) return;
+    if (!authReady || !userId || !live) return;
     if (joinLockRef.current) return;
     joinLockRef.current = true;
     setError(null);
-    joinRoomFn({ data: { liveId: live.id, target } })
+    joinRoomFn({ data: { liveId, target } })
       .then((res) => setSession(res))
       .catch((e: unknown) => setError(e instanceof Error ? e.message : "Falha a entrar na sala."))
       .finally(() => {
         joinLockRef.current = false;
       });
-  }, [authReady, userId, target, live.id, joinRoomFn]);
+  }, [authReady, userId, target, liveId, joinRoomFn, live]);
 
   // If the room went live while we're still in backstage as publisher, move to main.
   useEffect(() => {
@@ -118,7 +135,7 @@ function SalaRoute() {
   }, [liveStatus, target]);
 
   const handleLeave = () => {
-    navigate({ to: "/lives/$liveId", params: { liveId: live.id } });
+    navigate({ to: "/lives/$liveId", params: { liveId } });
   };
 
   if (!authReady) {
@@ -147,7 +164,7 @@ function SalaRoute() {
         action={
           <Link
             to="/lives/$liveId"
-            params={{ liveId: live.id }}
+            params={{ liveId }}
             className="rounded-full border border-white/20 px-4 py-2 text-sm text-white/80 hover:bg-white/5"
           >
             Voltar à live
@@ -157,12 +174,12 @@ function SalaRoute() {
     );
   }
 
-  if (!session) {
+  if (!live || !session) {
     return <FullscreenLoader label="A ligar à sala…" />;
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-black text-white">
+    <div className="fixed inset-0 z-50 flex flex-col bg-black text-white">
       <header className="flex items-center justify-between border-b border-white/5 px-4 py-3">
         <button
           type="button"
@@ -191,7 +208,7 @@ function SalaRoute() {
 
 function FullscreenLoader({ label }: { label: string }) {
   return (
-    <div className="fixed inset-0 z-40 grid place-items-center bg-black text-white/80">
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black text-white/80">
       <div className="flex items-center gap-3 text-sm">
         <Loader2 className="h-4 w-4 animate-spin" />
         {label}
@@ -210,7 +227,7 @@ function FullscreenMessage({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="fixed inset-0 z-40 grid place-items-center bg-black px-6 text-center text-white">
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black px-6 text-center text-white">
       <div className="max-w-sm">
         <div className="text-lg font-semibold">{title}</div>
         <p className="mt-2 text-sm text-white/60">{body}</p>
