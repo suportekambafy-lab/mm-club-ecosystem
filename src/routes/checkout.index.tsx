@@ -55,7 +55,7 @@ function cadenceLabel(interval: string, count: number): string {
 }
 
 function PlansPage() {
-  const { plan: recommended } = useSearch({ from: "/checkout" });
+  const { plan: recommended } = useSearch({ from: "/checkout/" });
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [guestPlan, setGuestPlan] = useState<string | null>(null);
