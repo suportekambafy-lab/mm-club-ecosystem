@@ -455,13 +455,12 @@ function SalaShell({
                         key={p.user_id}
                         className="flex items-center gap-2 rounded-xl bg-white/[0.03] px-2.5 py-2 ring-1 ring-white/5"
                       >
-                        <div className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-white/10 text-xs font-semibold text-white/80">
-                          {p.avatar_url ? (
-                            <img src={p.avatar_url} alt="" className="h-full w-full object-cover" />
-                          ) : (
-                            (p.display_name || "?").slice(0, 2).toUpperCase()
-                          )}
-                        </div>
+                        <MemberAvatar
+                          name={p.display_name}
+                          avatarUrl={p.avatar_url}
+                          verified={adminIds.has(p.user_id) || p.role === "host"}
+                          size={36}
+                        />
                         <div className="min-w-0 flex-1">
                           <div className="truncate text-sm text-white">{p.display_name}</div>
                           <div className="flex items-center gap-1.5 text-[10.5px] text-white/50">
