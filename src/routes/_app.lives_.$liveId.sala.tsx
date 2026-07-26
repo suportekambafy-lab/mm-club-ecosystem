@@ -204,6 +204,7 @@ function SalaRoute() {
           if (promoted || demoted || permsChangedOnStage) {
             setSession(null);
           }
+          if (demoted) setTarget("main");
 
         },
       )
