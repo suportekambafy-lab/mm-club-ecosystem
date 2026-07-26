@@ -250,6 +250,7 @@ function AuthPage() {
               </div>
             )}
 
+            {!activeEmail && (
             <form onSubmit={onSubmit} className="mt-8 space-y-4">
 
               {mode === "signup" && (
@@ -314,8 +315,9 @@ function AuthPage() {
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </button>
             </form>
+            )}
 
-            {mode === "signin" && (
+            {!activeEmail && mode === "signin" && (
               <button
                 type="button"
                 onClick={sendReset}
@@ -328,6 +330,7 @@ function AuthPage() {
 
 
 
+            {!activeEmail && (
             <div className="mt-6 flex items-center justify-between text-xs">
               <button
                 onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
@@ -344,6 +347,7 @@ function AuthPage() {
                 Fazer diagnóstico
               </Link>
             </div>
+            )}
 
             <footer className="mt-12 text-center text-[11px] text-muted-foreground">
               <nav className="flex flex-wrap justify-center gap-x-4 gap-y-1.5">
