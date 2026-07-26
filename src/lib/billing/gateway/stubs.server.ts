@@ -16,6 +16,8 @@ function stub(name: string): PaymentGateway {
     getPayment: async () => fail("getPayment"),
     refundPayment: async () => fail("refundPayment"),
     listMandates: async () => fail("listMandates"),
+    chargeWithMandate: async () => fail("chargeWithMandate"),
+
     createSubscription: async () => fail("createSubscription"),
     cancelSubscription: async () => fail("cancelSubscription"),
     normalizeWebhook: async () => fail("normalizeWebhook"),
