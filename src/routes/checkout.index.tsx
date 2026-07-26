@@ -69,9 +69,11 @@ function PlansPage() {
   });
 
   const product = catalog?.[0] ?? null;
-  const prices = [...(product?.prices ?? [])].sort(
-    (a, b) => a.amountCents - b.amountCents,
-  );
+  // Planos com trial (ex.: oferta VIP de 3 meses) só existem em /vip.
+  const prices = [...(product?.prices ?? [])]
+    .filter((p) => !p.trialDays || p.trialDays <= 0)
+    .sort((a, b) => a.amountCents - b.amountCents);
+
 
   const handleSelect = async (priceSlug: string) => {
     setError(null);
@@ -240,11 +242,8 @@ function PlansPage() {
                         Equivale a {formatMoney(Math.round(monthly), price.currency)} por mês
                       </p>
                     ) : null}
-                    {price.trialDays > 0 ? (
-                      <p className="mt-1.5 text-xs text-primary">
-                        {price.trialDays} dias de teste incluídos
-                      </p>
-                    ) : null}
+
+
 
                     <div className="my-6 h-px w-full bg-border" />
 
