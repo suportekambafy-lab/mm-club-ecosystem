@@ -65,6 +65,32 @@ export const EMERGENCY_DENY =
 export const READ_ONLY_DENY =
   "A plataforma está em modo de leitura durante uma manutenção. Pode consultar tudo, mas as alterações estão temporariamente suspensas.";
 
+/**
+ * Contrato explícito do Modo Apenas-Leitura. Serve de documentação viva e é
+ * mostrado no dashboard de segurança para não haver dúvidas sobre o efeito.
+ */
+export const READ_ONLY_MATRIX = {
+  allowed: [
+    "Login e sessão",
+    "Navegar em toda a app",
+    "Ver cursos já adquiridos",
+    "Ver e assistir lives",
+    "Consultar o perfil",
+    "Ler conteúdos e comunidade",
+    "Consultar faturas e histórico",
+  ],
+  blocked: [
+    "Compras e checkouts",
+    "Alterações de plano e billing",
+    "Métodos de pagamento",
+    "Comentários e publicações",
+    "Uploads (shorts, media)",
+    "Alterações de perfil",
+    "Ações de administração",
+  ],
+} as const;
+
+
 
 export class SecurityError extends Error {
   readonly code: string;
