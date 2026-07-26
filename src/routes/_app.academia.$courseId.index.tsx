@@ -47,6 +47,8 @@ function CourseDetail() {
 
 
 
+  if (!loaded) return <CourseDetailSkeleton />;
+
   return (
     <div className="max-w-full space-y-10 overflow-x-clip">
       <Link
@@ -231,5 +233,41 @@ function CourseLessonRow({
         <span className="shrink-0 text-xs text-muted-foreground">{lesson.duration}</span>
       </Link>
     </li>
+  );
+}
+function CourseDetailSkeleton() {
+  return (
+    <div className="max-w-full space-y-10 overflow-x-clip">
+      <Skeleton className="h-4 w-24" />
+      <section className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,1fr)]">
+        <Skeleton className="aspect-video w-full rounded-2xl" />
+        <div className="space-y-4">
+          <Skeleton className="h-2.5 w-24" />
+          <Skeleton className="h-9 w-4/5" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+          <div className="flex items-center gap-3 pt-2">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-2.5 w-20" />
+            </div>
+          </div>
+          <Skeleton className="h-1 w-full rounded-full" />
+          <Skeleton className="h-11 w-40 rounded-full" />
+        </div>
+      </section>
+      <div className="space-y-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-4 rounded-2xl bg-surface-1 p-4 ring-1 ring-border">
+            <Skeleton className="h-16 w-28 shrink-0 rounded-lg" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
