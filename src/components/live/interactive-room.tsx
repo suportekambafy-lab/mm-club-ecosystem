@@ -16,6 +16,8 @@ import { Stage } from "./stage";
 import { Backstage } from "./backstage";
 import { RoomControls } from "./room-controls";
 import { Hand, Radio, X, UserPlus, Users } from "lucide-react";
+import { MemberAvatar } from "@/components/mm/member-avatar";
+import { useAdminIds } from "@/hooks/use-admin-ids";
 
 import {
   goLive,
