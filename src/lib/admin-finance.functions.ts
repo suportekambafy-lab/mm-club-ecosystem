@@ -12,6 +12,7 @@ import type {
   CustomerDetail,
   FinanceOverview,
   SearchHit,
+  SubscriptionStateRow,
 } from "@/lib/admin/finance-types";
 import type { SubscriptionStatus } from "@/lib/billing/types";
 
@@ -250,4 +251,15 @@ export const adminResumeSubscription = createServerFn({ method: "POST" })
     const { drainQueue } = await import("@/lib/queue/worker.server");
     await drainQueue(10);
     return { ok: true };
+  });
+
+/** Operational state of every subscription + the entitlements of each account. */
+export const listSubscriptionStates = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<SubscriptionStateRow[]> => {
+    await assertAdmin(context as never);
+    const { listSubscriptionStates: run } = await import(
+      "@/lib/admin/finance.server"
+    );
+    return run();
   });
