@@ -11,6 +11,7 @@ import {
   FileText,
   Sparkles,
   Lock,
+  Loader2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getLive } from "@/lib/lives.functions";
@@ -145,6 +146,18 @@ function LiveDetail() {
       window.removeEventListener("online", onOnline);
     };
   }, [data.live.id]);
+
+  // While the recording is still encoding, poll until it becomes playable so
+  // the replay appears without the user refreshing.
+  useEffect(() => {
+    if (data.replayStatus !== "processing") return;
+    const t = setInterval(() => {
+      getLive({ data: { id: data.live.id } })
+        .then(setData)
+        .catch(() => {});
+    }, 20000);
+    return () => clearInterval(t);
+  }, [data.replayStatus, data.live.id]);
 
   // Immersive layout: hide the app's mobile tabbar so it can never overlap
   // the chat composer or push the video off-screen when the keyboard opens.
