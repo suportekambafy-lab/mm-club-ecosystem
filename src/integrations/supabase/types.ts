@@ -2309,6 +2309,63 @@ export type Database = {
           },
         ]
       }
+      ops_heartbeats: {
+        Row: {
+          detail: Json
+          duration_ms: number
+          key: string
+          last_run_at: string
+          ok: boolean
+          runs: number
+        }
+        Insert: {
+          detail?: Json
+          duration_ms?: number
+          key: string
+          last_run_at?: string
+          ok?: boolean
+          runs?: number
+        }
+        Update: {
+          detail?: Json
+          duration_ms?: number
+          key?: string
+          last_run_at?: string
+          ok?: boolean
+          runs?: number
+        }
+        Relationships: []
+      }
+      ops_webhook_log: {
+        Row: {
+          duration_ms: number | null
+          error: string | null
+          gateway: string
+          gateway_payment_id: string | null
+          id: string
+          outcome: string
+          received_at: string
+        }
+        Insert: {
+          duration_ms?: number | null
+          error?: string | null
+          gateway: string
+          gateway_payment_id?: string | null
+          id?: string
+          outcome: string
+          received_at?: string
+        }
+        Update: {
+          duration_ms?: number | null
+          error?: string | null
+          gateway?: string
+          gateway_payment_id?: string | null
+          id?: string
+          outcome?: string
+          received_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

@@ -24,6 +24,7 @@ import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiTranscribeRouteImport } from './routes/api.transcribe'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AdminTranscricoesRouteImport } from './routes/admin.transcricoes'
+import { Route as AdminSaudeRouteImport } from './routes/admin.saude'
 import { Route as AdminLivesRouteImport } from './routes/admin.lives'
 import { Route as AdminFerramentasRouteImport } from './routes/admin.ferramentas'
 import { Route as AdminEventosRouteImport } from './routes/admin.eventos'
@@ -54,6 +55,7 @@ import { Route as ApiPublicPaymentsGatewayWebhookRouteImport } from './routes/ap
 import { Route as ApiPublicHooksWeeklySummaryRouteImport } from './routes/api/public/hooks/weekly-summary'
 import { Route as ApiPublicHooksLivesRecordingCheckRouteImport } from './routes/api/public/hooks/lives-recording-check'
 import { Route as ApiPublicHooksLiveTestEmailRouteImport } from './routes/api/public/hooks/live-test-email'
+import { Route as ApiPublicHooksBillingTickRouteImport } from './routes/api/public/hooks/billing-tick'
 import { Route as ApiPublicHooksAutoTranscribeRouteImport } from './routes/api/public/hooks/auto-transcribe'
 import { Route as ApiPublicCloudflareStreamWebhookRouteImport } from './routes/api/public/cloudflare-stream/webhook'
 import { Route as AdminLivesLiveIdStudioRouteImport } from './routes/admin.lives.$liveId.studio'
@@ -138,6 +140,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
 const AdminTranscricoesRoute = AdminTranscricoesRouteImport.update({
   id: '/transcricoes',
   path: '/transcricoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSaudeRoute = AdminSaudeRouteImport.update({
+  id: '/saude',
+  path: '/saude',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminLivesRoute = AdminLivesRouteImport.update({
@@ -297,6 +304,12 @@ const ApiPublicHooksLiveTestEmailRoute =
     path: '/api/public/hooks/live-test-email',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksBillingTickRoute =
+  ApiPublicHooksBillingTickRouteImport.update({
+    id: '/api/public/hooks/billing-tick',
+    path: '/api/public/hooks/billing-tick',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksAutoTranscribeRoute =
   ApiPublicHooksAutoTranscribeRouteImport.update({
     id: '/api/public/hooks/auto-transcribe',
@@ -387,6 +400,7 @@ export interface FileRoutesByFullPath {
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/lives': typeof AdminLivesRouteWithChildren
+  '/admin/saude': typeof AdminSaudeRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
   '/api/transcribe': typeof ApiTranscribeRoute
@@ -411,6 +425,7 @@ export interface FileRoutesByFullPath {
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
+  '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
@@ -440,6 +455,7 @@ export interface FileRoutesByTo {
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
+  '/admin/saude': typeof AdminSaudeRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
   '/api/transcribe': typeof ApiTranscribeRoute
@@ -462,6 +478,7 @@ export interface FileRoutesByTo {
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
+  '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
@@ -497,6 +514,7 @@ export interface FileRoutesById {
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/lives': typeof AdminLivesRouteWithChildren
+  '/admin/saude': typeof AdminSaudeRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
   '/api/transcribe': typeof ApiTranscribeRoute
@@ -521,6 +539,7 @@ export interface FileRoutesById {
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
+  '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
@@ -556,6 +575,7 @@ export interface FileRouteTypes {
     | '/admin/eventos'
     | '/admin/ferramentas'
     | '/admin/lives'
+    | '/admin/saude'
     | '/admin/transcricoes'
     | '/api/chat'
     | '/api/transcribe'
@@ -580,6 +600,7 @@ export interface FileRouteTypes {
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
+    | '/api/public/hooks/billing-tick'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/weekly-summary'
@@ -609,6 +630,7 @@ export interface FileRouteTypes {
     | '/admin/cursos'
     | '/admin/eventos'
     | '/admin/ferramentas'
+    | '/admin/saude'
     | '/admin/transcricoes'
     | '/api/chat'
     | '/api/transcribe'
@@ -631,6 +653,7 @@ export interface FileRouteTypes {
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
+    | '/api/public/hooks/billing-tick'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/weekly-summary'
@@ -665,6 +688,7 @@ export interface FileRouteTypes {
     | '/admin/eventos'
     | '/admin/ferramentas'
     | '/admin/lives'
+    | '/admin/saude'
     | '/admin/transcricoes'
     | '/api/chat'
     | '/api/transcribe'
@@ -689,6 +713,7 @@ export interface FileRouteTypes {
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
+    | '/api/public/hooks/billing-tick'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/weekly-summary'
@@ -715,6 +740,7 @@ export interface RootRouteChildren {
   ApiRealtimeSessionRoute: typeof ApiRealtimeSessionRoute
   ApiPublicCloudflareStreamWebhookRoute: typeof ApiPublicCloudflareStreamWebhookRoute
   ApiPublicHooksAutoTranscribeRoute: typeof ApiPublicHooksAutoTranscribeRoute
+  ApiPublicHooksBillingTickRoute: typeof ApiPublicHooksBillingTickRoute
   ApiPublicHooksLiveTestEmailRoute: typeof ApiPublicHooksLiveTestEmailRoute
   ApiPublicHooksLivesRecordingCheckRoute: typeof ApiPublicHooksLivesRecordingCheckRoute
   ApiPublicHooksWeeklySummaryRoute: typeof ApiPublicHooksWeeklySummaryRoute
@@ -827,6 +853,13 @@ declare module '@tanstack/react-router' {
       path: '/transcricoes'
       fullPath: '/admin/transcricoes'
       preLoaderRoute: typeof AdminTranscricoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/saude': {
+      id: '/admin/saude'
+      path: '/saude'
+      fullPath: '/admin/saude'
+      preLoaderRoute: typeof AdminSaudeRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/lives': {
@@ -1039,6 +1072,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksLiveTestEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/billing-tick': {
+      id: '/api/public/hooks/billing-tick'
+      path: '/api/public/hooks/billing-tick'
+      fullPath: '/api/public/hooks/billing-tick'
+      preLoaderRoute: typeof ApiPublicHooksBillingTickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/auto-transcribe': {
       id: '/api/public/hooks/auto-transcribe'
       path: '/api/public/hooks/auto-transcribe'
@@ -1245,6 +1285,7 @@ interface AdminRouteChildren {
   AdminEventosRoute: typeof AdminEventosRoute
   AdminFerramentasRoute: typeof AdminFerramentasRoute
   AdminLivesRoute: typeof AdminLivesRouteWithChildren
+  AdminSaudeRoute: typeof AdminSaudeRoute
   AdminTranscricoesRoute: typeof AdminTranscricoesRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -1255,6 +1296,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEventosRoute: AdminEventosRoute,
   AdminFerramentasRoute: AdminFerramentasRoute,
   AdminLivesRoute: AdminLivesRouteWithChildren,
+  AdminSaudeRoute: AdminSaudeRoute,
   AdminTranscricoesRoute: AdminTranscricoesRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
@@ -1290,6 +1332,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRealtimeSessionRoute: ApiRealtimeSessionRoute,
   ApiPublicCloudflareStreamWebhookRoute: ApiPublicCloudflareStreamWebhookRoute,
   ApiPublicHooksAutoTranscribeRoute: ApiPublicHooksAutoTranscribeRoute,
+  ApiPublicHooksBillingTickRoute: ApiPublicHooksBillingTickRoute,
   ApiPublicHooksLiveTestEmailRoute: ApiPublicHooksLiveTestEmailRoute,
   ApiPublicHooksLivesRecordingCheckRoute:
     ApiPublicHooksLivesRecordingCheckRoute,
