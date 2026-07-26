@@ -76,6 +76,8 @@ function SubscriptionPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [plans, setPlans] = useState<CatalogView[]>([]);
+  const [showPlans, setShowPlans] = useState(false);
 
   const sub = overview?.subscription ?? null;
   const methods = (overview?.paymentMethods ?? []).filter(
@@ -107,12 +109,17 @@ function SubscriptionPage() {
         setNotice("Método de pagamento adicionado.");
       }
       await load();
+      const catalog = await getCatalog({
+        data: { kinds: ["subscription"] },
+      }).catch(() => [] as CatalogView[]);
+      if (mounted) setPlans(catalog);
     })();
     return () => {
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   const run = async (key: string, fn: () => Promise<unknown>, ok?: string) => {
     setBusy(key);
