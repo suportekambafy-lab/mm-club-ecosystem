@@ -10,6 +10,8 @@ import { useUserProgress } from "@/hooks/use-user-progress";
 import { courseCoverBackground } from "@/lib/course-cover";
 import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb } from "@/lib/course-duration";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 export const Route = createFileRoute("/_app/academia/$courseId/")({
   loader: ({ params }) => {
