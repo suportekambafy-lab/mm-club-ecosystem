@@ -140,11 +140,12 @@ export async function provisionAccountForIntent(
 ): Promise<string | null> {
   const { data: intent } = await supabaseAdmin
     .from("billing_checkout_intents")
-    .select("id, email, name, user_id, account_created")
+    .select("id, email, name, user_id, account_created, metadata")
     .eq("id", intentId)
     .maybeSingle();
   if (!intent) return null;
   if (intent.user_id) return intent.user_id;
+
 
   const email = intent.email.trim().toLowerCase();
   let userId = await findUserIdByEmail(email);
