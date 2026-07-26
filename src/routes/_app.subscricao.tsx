@@ -110,6 +110,32 @@ function SubscriptionPage() {
     }
   };
 
+  const downloadInvoice = async (inv: InvoiceListItem) => {
+    setDownloading(inv.id);
+    try {
+      const { base64 } = await getInvoicePdf({ data: { invoiceId: inv.id } });
+      const bin = atob(base64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i += 1) bytes[i] = bin.charCodeAt(i);
+      const url = URL.createObjectURL(
+        new Blob([bytes], { type: "application/pdf" }),
+      );
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${inv.number ?? "fatura"}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toast.error(
+        e instanceof Error ? e.message : "Não foi possível gerar a fatura.",
+      );
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+
+
   useEffect(() => {
     let mounted = true;
     (async () => {
