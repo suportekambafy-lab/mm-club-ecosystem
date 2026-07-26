@@ -112,70 +112,116 @@ async function cancelPendingJobs(cycleKey: string) {
     .contains("payload", { cycleKey } as never);
 }
 
-async function scoreInputsFor(args: {
-  userId: string;
+/** Cycle-specific inputs of the score (everything else comes from the profile). */
+async function scoreContextFor(args: {
   cycleKey: string;
   category: FailureCategory;
   amountCents: number;
   failedAt: Date;
-}) {
-  const [{ count: successes }, { data: firstPayment }, { data: methods }, { data: prior }] =
-    await Promise.all([
-      supabaseAdmin
-        .from("billing_payments")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", args.userId)
-        .eq("status", "paid"),
-      supabaseAdmin
-        .from("billing_payments")
-        .select("created_at")
-        .eq("user_id", args.userId)
-        .eq("status", "paid")
-        .order("created_at")
-        .limit(1)
-        .maybeSingle(),
-      supabaseAdmin
-        .from("billing_payment_methods")
-        .select("created_at")
-        .eq("user_id", args.userId)
-        .order("created_at", { ascending: false })
-        .limit(1),
-      supabaseAdmin
-        .from("billing_dunning_attempts")
-        .select("attempted_at, status")
-        .eq("cycle_key", args.cycleKey)
-        .in("status", ["attempted", "failed"])
-        .order("attempted_at", { ascending: false }),
-    ]);
+}): Promise<ScoreContext> {
+  const { data: prior } = await supabaseAdmin
+    .from("billing_dunning_attempts")
+    .select("attempted_at, status")
+    .eq("cycle_key", args.cycleKey)
+    .in("status", ["attempted", "failed"])
+    .order("attempted_at", { ascending: false });
 
-  const memberSince = firstPayment?.created_at
-    ? new Date(firstPayment.created_at)
-    : args.failedAt;
-  const lastMethodAt = methods?.[0]?.created_at
-    ? new Date(methods[0].created_at)
-    : null;
   const lastAttemptAt = prior?.[0]?.attempted_at
     ? new Date(prior[0].attempted_at as string)
     : null;
 
   return {
     category: args.category,
-    monthsAsMember: Math.max(
-      0,
-      (Date.now() - memberSince.getTime()) / (30 * 24 * HOUR),
-    ),
-    successfulPayments: successes ?? 0,
     consecutiveFailures: (prior ?? []).filter((p) => p.status === "failed").length,
     hoursSinceLastAttempt: lastAttemptAt
       ? (Date.now() - lastAttemptAt.getTime()) / HOUR
       : 0,
-    methodUpdatedRecently: lastMethodAt
-      ? Date.now() - lastMethodAt.getTime() < 7 * 24 * HOUR
-      : false,
     amountCents: args.amountCents,
     debtAgeDays: Math.max(0, (Date.now() - args.failedAt.getTime()) / (24 * HOUR)),
   };
 }
+
+/**
+ * Continuous learning: recompute the profile and the score of every open
+ * cycle, then adapt the remaining calendar. Called after every billing event.
+ * Business limits are re-applied on each pass — nothing here can widen them.
+ */
+export async function rescoreOpenCycles(
+  userId: string,
+  trigger: ProfileTrigger,
+): Promise<{ cycles: number }> {
+  const profile = await refreshCustomerProfile(userId, trigger);
+
+  const { data: rows } = await supabaseAdmin
+    .from("billing_dunning_attempts")
+    .select(
+      "id, cycle_key, attempt_number, scheduled_for, created_at, status, error_category, amount_cents, currency",
+    )
+    .eq("user_id", userId)
+    .eq("status", "scheduled")
+    .order("attempt_number");
+
+  const cycles = new Map<string, typeof rows>();
+  for (const r of rows ?? []) {
+    const key = r.cycle_key as string;
+    if (!key) continue;
+    const list = cycles.get(key) ?? [];
+    list!.push(r);
+    cycles.set(key, list);
+  }
+
+  let touched = 0;
+  for (const [cycleKey, list] of cycles) {
+    if (!list || list.length === 0) continue;
+    const category = (list[0].error_category as FailureCategory) ?? "recoverable";
+    const amountCents = list[0].amount_cents ?? 0;
+    const failedAt = new Date(list[0].created_at as string);
+
+    const ctx = await scoreContextFor({ cycleKey, category, amountCents, failedAt });
+    const { score, factors } = scoreRecovery(profile, ctx);
+    const strategy = decideStrategy({ score, category, profile, amountCents });
+
+    // Re-plan only the attempts that have not run yet, never adding attempts
+    // beyond the strategy cap or the 90-day window.
+    const plan = adaptSchedule(
+      buildSchedule({ category, score }),
+      strategy,
+      failedAt,
+      CANCEL_AT_HOURS,
+    );
+
+    for (const row of list) {
+      const step = plan.find((s) => s.attemptNumber === row.attempt_number);
+      if (!step) {
+        // Strategy shrank: drop the surplus attempt (never delete history).
+        await supabaseAdmin
+          .from("billing_dunning_attempts")
+          .update({ status: "skipped", error: "strategy_reduced_attempts" })
+          .eq("id", row.id)
+          .eq("status", "scheduled");
+        continue;
+      }
+      const when = scheduledAt(failedAt, step.offsetHours);
+      await supabaseAdmin
+        .from("billing_dunning_attempts")
+        .update({
+          recovery_score: score,
+          score_factors: factors as never,
+          strategy: strategy.aggressiveness,
+          phase: step.phase,
+          scheduled_for: when.toISOString(),
+        })
+        .eq("id", row.id)
+        .eq("status", "scheduled");
+    }
+
+    await storeLastScore(userId, score);
+    touched += 1;
+  }
+
+  return { cycles: touched };
+}
+
 
 // ------------------------------------------------------------------ startup
 
