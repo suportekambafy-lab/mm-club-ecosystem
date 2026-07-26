@@ -60,17 +60,32 @@ export function RoomControls({ state, actions, onLeave }: Props) {
         />
       )}
       {isPublisher && local?.screenAllowed && (
-        <IconButton
-          active={local?.isScreenSharing}
-          onClick={() =>
-            run("screen", () =>
-              local?.isScreenSharing ? actions.stopScreenShare() : actions.startScreenShare(),
-            )
-          }
-          busy={busy === "screen"}
-          label={local?.isScreenSharing ? "Parar partilha" : "Partilhar ecrã"}
-          icon={<ScreenShare className={cn("h-4 w-4", local?.isScreenSharing && "text-emerald-400")} />}
-        />
+        canScreenShare ? (
+          <IconButton
+            active={local?.isScreenSharing}
+            onClick={() =>
+              run("screen", () =>
+                local?.isScreenSharing ? actions.stopScreenShare() : actions.startScreenShare(),
+              )
+            }
+            busy={busy === "screen"}
+            label={local?.isScreenSharing ? "Parar partilha" : "Partilhar ecrã"}
+            icon={<ScreenShare className={cn("h-4 w-4", local?.isScreenSharing && "text-emerald-400")} />}
+          />
+        ) : (
+          <IconButton
+            active={false}
+            onClick={() =>
+              toast.info("Partilha de ecrã indisponível no telemóvel", {
+                description:
+                  "Esta funcionalidade só está disponível em computador. Abre a sala num browser desktop para partilhar o teu ecrã.",
+                duration: 5000,
+              })
+            }
+            label="Partilha de ecrã disponível apenas em computador"
+            icon={<ScreenShare className="h-4 w-4 text-white/40" />}
+          />
+        )
       )}
 
       {!isPublisher && (
