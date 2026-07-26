@@ -6,6 +6,7 @@ import {
   Users,
   Bell,
 } from "lucide-react";
+import dashboardHero from "@/assets/dashboard-hero.jpg";
 import { CourseCard } from "@/components/mm/course-card";
 import { Rail } from "@/components/mm/rail";
 import { ExpertAvatar } from "@/components/mm/expert-avatar";
