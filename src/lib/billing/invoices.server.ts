@@ -40,7 +40,9 @@ export type InvoiceView = {
 /** Creates (once) the invoice for a paid payment and links it back. */
 export async function ensureInvoiceForPayment(
   paymentRowId: string,
+  options: { notify?: boolean } = {},
 ): Promise<string | null> {
+
   const { data: payment } = await supabaseAdmin
     .from("billing_payments")
     .select(
