@@ -156,6 +156,18 @@ export async function removePaymentMethod(input: {
     .maybeSingle();
   if (!pm) throw new Error("Método de pagamento não encontrado");
 
+  const { count } = await supabaseAdmin
+    .from("billing_payment_methods")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", input.userId)
+    .neq("status", "revoked");
+  if ((count ?? 0) <= 1) {
+    throw new Error(
+      "Tens de manter pelo menos um método de pagamento. Adiciona outro antes de remover este.",
+    );
+  }
+
+
   const customer = await getCustomer(input.userId);
   if (pm.gateway_mandate_id && customer?.gateway_customer_id) {
     const { mollieFetch } = await import("@/lib/mollie.server");
