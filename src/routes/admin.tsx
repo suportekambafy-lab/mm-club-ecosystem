@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   Sparkles,
   HeartPulse,
+  Mail,
   ChevronLeft,
   ChevronRight,
   Repeat,
