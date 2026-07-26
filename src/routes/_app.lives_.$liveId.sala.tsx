@@ -144,11 +144,16 @@ function SalaRoute() {
     }
   }, [liveStatus, target]);
 
-  // Auto-refresh the LiveKit token when the local participant is promoted to
-  // the stage. LiveKit tokens embed publish permissions, so the initial
-  // viewer token has to be replaced before we can actually publish mic/cam.
+  // Auto-refresh the LiveKit token when the local participant is *promoted*
+  // to the stage (off_stage → on_stage transition). LiveKit tokens embed
+  // publish permissions, so the initial viewer token has to be replaced
+  // before we can publish mic/cam. We track the previous on_stage state to
+  // avoid rejoining on every unrelated UPDATE (heartbeats, presence, etc.),
+  // which would otherwise cause an infinite reconnect loop.
+  const prevOnStageRef = useRef<boolean | null>(null);
   useEffect(() => {
     if (!authReady || !userId) return;
+    prevOnStageRef.current = null;
     const ch = supabase
       .channel(`sala-me:${liveId}:${userId}:${Math.random().toString(36).slice(2, 6)}`)
       .on(
@@ -162,8 +167,10 @@ function SalaRoute() {
         (payload) => {
           const row = payload.new as { user_id: string; on_stage: boolean; mic_allowed: boolean; cam_allowed: boolean };
           if (row.user_id !== userId) return;
-          if (row.on_stage && (row.mic_allowed || row.cam_allowed)) {
-            // Force reissue of publisher token.
+          const prev = prevOnStageRef.current;
+          prevOnStageRef.current = row.on_stage;
+          // Only reissue token on the actual off→on transition with publish rights.
+          if (prev === false && row.on_stage && (row.mic_allowed || row.cam_allowed)) {
             setSession(null);
           }
         },
@@ -173,6 +180,7 @@ function SalaRoute() {
       supabase.removeChannel(ch);
     };
   }, [authReady, userId, liveId]);
+
 
 
 
