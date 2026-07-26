@@ -164,6 +164,9 @@ export async function collectFinanceOverview(): Promise<FinanceOverview> {
   const byCountry = new Map<string, MoneyPoint>();
   const byCoupon = new Map<string, MoneyPoint>();
   const byMethod = new Map<string, { count: number; cents: number }>();
+  const dayCurrent = new Map<number, number>();
+  const dayPrev = new Map<number, number>();
+
 
   for (const p of paid) {
     const at = new Date(p.paid_at as string);
