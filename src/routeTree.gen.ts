@@ -60,6 +60,8 @@ import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.espe
 import { Route as AppAcademiaCourseIdRouteImport } from './routes/_app.academia.$courseId'
 import { Route as AppFerramentasStudioIndexRouteImport } from './routes/_app.ferramentas.studio.index'
 import { Route as AppAcademiaCourseIdIndexRouteImport } from './routes/_app.academia.$courseId.index'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicPaymentsGatewayWebhookRouteImport } from './routes/api/public/payments/gateway-webhook'
 import { Route as ApiPublicHooksWeeklySummaryRouteImport } from './routes/api/public/hooks/weekly-summary'
 import { Route as ApiPublicHooksLivesRecordingCheckRouteImport } from './routes/api/public/hooks/lives-recording-check'
@@ -337,6 +339,16 @@ const AppAcademiaCourseIdIndexRoute =
     path: '/',
     getParentRoute: () => AppAcademiaCourseIdRoute,
   } as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPaymentsGatewayWebhookRoute =
   ApiPublicPaymentsGatewayWebhookRouteImport.update({
     id: '/api/public/payments/gateway-webhook',
@@ -510,6 +522,8 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
   '/ferramentas/studio/': typeof AppFerramentasStudioIndexRoute
   '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
@@ -573,6 +587,8 @@ export interface FileRoutesByTo {
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdIndexRoute
   '/ferramentas/studio': typeof AppFerramentasStudioIndexRoute
   '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
@@ -645,6 +661,8 @@ export interface FileRoutesById {
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/_app/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
   '/_app/ferramentas/studio/': typeof AppFerramentasStudioIndexRoute
   '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
@@ -717,6 +735,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/weekly-summary'
     | '/api/public/payments/gateway-webhook'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/academia/$courseId/'
     | '/ferramentas/studio/'
     | '/api/public/lives/$liveId/cover/svg'
@@ -780,6 +800,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/weekly-summary'
     | '/api/public/payments/gateway-webhook'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/academia/$courseId'
     | '/ferramentas/studio'
     | '/api/public/lives/$liveId/cover/svg'
@@ -851,6 +873,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/weekly-summary'
     | '/api/public/payments/gateway-webhook'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/_app/academia/$courseId/'
     | '/_app/ferramentas/studio/'
     | '/api/public/lives/$liveId/cover/svg'
@@ -881,6 +905,8 @@ export interface RootRouteChildren {
   ApiPublicHooksLivesRecordingCheckRoute: typeof ApiPublicHooksLivesRecordingCheckRoute
   ApiPublicHooksWeeklySummaryRoute: typeof ApiPublicHooksWeeklySummaryRoute
   ApiPublicPaymentsGatewayWebhookRoute: typeof ApiPublicPaymentsGatewayWebhookRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   ApiPublicLivesLiveIdCoverSvgRoute: typeof ApiPublicLivesLiveIdCoverSvgRoute
 }
 
@@ -1243,6 +1269,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAcademiaCourseIdIndexRouteImport
       parentRoute: typeof AppAcademiaCourseIdRoute
     }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/gateway-webhook': {
       id: '/api/public/payments/gateway-webhook'
       path: '/api/public/payments/gateway-webhook'
@@ -1571,6 +1611,8 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPublicHooksLivesRecordingCheckRoute,
   ApiPublicHooksWeeklySummaryRoute: ApiPublicHooksWeeklySummaryRoute,
   ApiPublicPaymentsGatewayWebhookRoute: ApiPublicPaymentsGatewayWebhookRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   ApiPublicLivesLiveIdCoverSvgRoute: ApiPublicLivesLiveIdCoverSvgRoute,
 }
 export const routeTree = rootRouteImport
