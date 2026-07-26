@@ -71,6 +71,65 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_checkout_intents: {
+        Row: {
+          account_created: boolean
+          coupon_code: string | null
+          created_at: string
+          email: string
+          error: string | null
+          gateway: string | null
+          gateway_payment_id: string | null
+          id: string
+          metadata: Json
+          name: string | null
+          price_id: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          account_created?: boolean
+          coupon_code?: string | null
+          created_at?: string
+          email: string
+          error?: string | null
+          gateway?: string | null
+          gateway_payment_id?: string | null
+          id?: string
+          metadata?: Json
+          name?: string | null
+          price_id: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          account_created?: boolean
+          coupon_code?: string | null
+          created_at?: string
+          email?: string
+          error?: string | null
+          gateway?: string | null
+          gateway_payment_id?: string | null
+          id?: string
+          metadata?: Json
+          name?: string | null
+          price_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_checkout_intents_price_id_fkey"
+            columns: ["price_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_prices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       billing_coupon_redemptions: {
         Row: {
           coupon_id: string

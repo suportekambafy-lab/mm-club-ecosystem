@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { startCheckout } from "@/lib/billing.functions";
+import { startCheckout, startGuestCheckout } from "@/lib/billing.functions";
 
 
 export const Route = createFileRoute("/vip")({
@@ -40,6 +40,8 @@ function VipPage() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [askEmail, setAskEmail] = useState(false);
+  const [guestEmail, setGuestEmail] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -54,13 +56,32 @@ function VipPage() {
   }, []);
 
   const handleStart = async () => {
-    if (!user) {
-      window.location.href = `/auth?redirect=${encodeURIComponent("/vip")}`;
+    // Pay first, account after: guests only need to leave an email.
+    if (!user && !askEmail) {
+      setAskEmail(true);
       return;
     }
     setPending(true);
     setError(null);
     try {
+      if (!user) {
+        const res = await startGuestCheckout({
+          data: {
+            email: guestEmail.trim(),
+            priceSlug: "mm_club_monthly",
+            origin: window.location.origin,
+          },
+        });
+        if (res.status === "account_exists") {
+          setPending(false);
+          setError(
+            "Já existe uma conta com este email. Inicia sessão para continuares.",
+          );
+          return;
+        }
+        window.location.href = res.checkoutUrl;
+        return;
+      }
       const { checkoutUrl } = await startCheckout({
         data: {
           priceSlug: "mm_club_monthly",
@@ -168,13 +189,34 @@ function VipPage() {
               ))}
             </ul>
 
+            {askEmail && !user ? (
+              <div className="mt-8">
+                <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  O teu email
+                </label>
+                <input
+                  type="email"
+                  required
+                  autoFocus
+                  value={guestEmail}
+                  onChange={(e) => setGuestEmail(e.target.value)}
+                  placeholder="tu@exemplo.com"
+                  className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3.5 text-sm outline-none focus:border-primary"
+                />
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Criamos a tua conta automaticamente após o pagamento.
+                </p>
+              </div>
+            ) : null}
+
             <button
               onClick={handleStart}
-              disabled={pending}
+              disabled={pending || (askEmail && !user && !guestEmail.includes("@"))}
               className="mt-8 inline-flex w-full items-center justify-center rounded-2xl bg-primary px-6 py-4 text-base font-semibold text-primary-foreground shadow-lg transition hover:opacity-95 disabled:opacity-60"
             >
               {pending ? "A abrir checkout..." : "Ativar 3 meses grátis"}
             </button>
+
 
             {error ? (
               <p className="mt-4 text-center text-sm text-destructive">

@@ -4,7 +4,11 @@ import { motion } from "framer-motion";
 import { Check, Crown, ShieldCheck, Sparkles, Star } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getCatalog, startCheckout } from "@/lib/billing.functions";
+import {
+  getCatalog,
+  startCheckout,
+  startGuestCheckout,
+} from "@/lib/billing.functions";
 import { formatMoney } from "@/lib/billing/types";
 import { cn } from "@/lib/utils";
 
@@ -54,6 +58,9 @@ function PlansPage() {
   const { plan: recommended } = useSearch({ from: "/checkout" });
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [guestPlan, setGuestPlan] = useState<string | null>(null);
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestName, setGuestName] = useState("");
 
   const { data: catalog, isLoading } = useQuery({
     queryKey: ["catalog", "subscription"],
@@ -67,14 +74,15 @@ function PlansPage() {
   );
 
   const handleSelect = async (priceSlug: string) => {
-    setPending(priceSlug);
     setError(null);
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      // Pay first, account after: we only need an email at this point.
+      setGuestPlan(priceSlug);
+      return;
+    }
+    setPending(priceSlug);
     try {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        window.location.href = `/auth?redirect=${encodeURIComponent("/checkout")}`;
-        return;
-      }
       const res = await startCheckout({
         data: { priceSlug, origin: window.location.origin },
       });
@@ -89,6 +97,40 @@ function PlansPage() {
       setPending(null);
     }
   };
+
+  const submitGuest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!guestPlan) return;
+    setPending(guestPlan);
+    setError(null);
+    try {
+      const res = await startGuestCheckout({
+        data: {
+          email: guestEmail.trim(),
+          name: guestName.trim() || null,
+          priceSlug: guestPlan,
+          origin: window.location.origin,
+        },
+      });
+      if (res.status === "account_exists") {
+        setPending(null);
+        setError(
+          "Já existe uma conta com este email. Inicia sessão para continuares o pagamento.",
+        );
+        return;
+      }
+      window.location.href = res.checkoutUrl;
+    } catch (err) {
+      console.error(err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível abrir o checkout. Tenta novamente.",
+      );
+      setPending(null);
+    }
+  };
+
 
   return (
     <div className="relative overflow-hidden">
@@ -279,6 +321,88 @@ function PlansPage() {
           </p>
         </footer>
       </div>
+
+      {guestPlan ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <motion.form
+            initial={{ opacity: 0, y: 16, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            onSubmit={submitGuest}
+            className="w-full max-w-md rounded-3xl bg-surface-1 p-7 ring-1 ring-border"
+          >
+            <h2 className="font-display text-2xl tracking-tight">
+              Só falta o teu email
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Paga primeiro — criamos a tua conta MM Club automaticamente após a
+              confirmação do pagamento e enviamos-te o acesso para este email.
+            </p>
+
+            <label className="mt-6 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              Email
+            </label>
+            <input
+              type="email"
+              required
+              autoFocus
+              value={guestEmail}
+              onChange={(e) => setGuestEmail(e.target.value)}
+              placeholder="tu@exemplo.com"
+              className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+            />
+
+            <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              Nome (opcional)
+            </label>
+            <input
+              type="text"
+              value={guestName}
+              onChange={(e) => setGuestName(e.target.value)}
+              placeholder="O teu nome"
+              className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+            />
+
+            {error ? (
+              <p className="mt-4 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                {error}{" "}
+                <a
+                  href={`/auth?redirect=${encodeURIComponent("/checkout")}`}
+                  className="underline"
+                >
+                  Iniciar sessão
+                </a>
+              </p>
+            ) : null}
+
+            <button
+              type="submit"
+              disabled={pending === guestPlan}
+              className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft disabled:opacity-60"
+            >
+              {pending === guestPlan ? "A abrir pagamento..." : "Continuar para pagamento"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setGuestPlan(null);
+                setError(null);
+              }}
+              className="mt-3 w-full text-center text-xs text-muted-foreground underline"
+            >
+              Cancelar
+            </button>
+            <p className="mt-4 text-center text-[11px] text-muted-foreground">
+              Já és membro?{" "}
+              <a
+                href={`/auth?redirect=${encodeURIComponent("/checkout")}`}
+                className="underline"
+              >
+                Inicia sessão
+              </a>
+            </p>
+          </motion.form>
+        </div>
+      ) : null}
     </div>
   );
 }
