@@ -25,7 +25,19 @@ import {
   scheduledAt,
   type RecoveryPhase,
 } from "./schedule";
-import { computeRecoveryScore } from "./score";
+import {
+  adaptSchedule,
+  decideStrategy,
+  scoreRecovery,
+  type RecoveryStrategy,
+  type ScoreFactor,
+} from "./intelligence";
+import {
+  getCustomerProfile,
+  refreshCustomerProfile,
+  storeLastScore,
+  type ProfileTrigger,
+} from "./profile.server";
 
 const HOUR = 3_600_000;
 /** Gateway states that mean "money may still land" — never charge on top. */
@@ -198,15 +210,22 @@ export async function startRecovery(input: StartRecoveryInput): Promise<void> {
   });
 
   const failedAt = new Date();
-  const score = computeRecoveryScore(
-    await scoreInputsFor({
-      userId: input.userId,
-      cycleKey,
-      category: classification.category,
-      amountCents: input.amountCents,
-      failedAt,
-    }),
-  );
+  // V3 — Revenue Intelligence: the profile learns, the score follows it.
+  const profile = await refreshCustomerProfile(input.userId, "payment_failed");
+  const ctx = await scoreContextFor({
+    cycleKey,
+    category: classification.category,
+    amountCents: input.amountCents,
+    failedAt,
+  });
+  const { score, factors } = scoreRecovery(profile, ctx);
+  await storeLastScore(input.userId, score);
+  const strategy = decideStrategy({
+    score,
+    category: classification.category,
+    profile,
+    amountCents: input.amountCents,
+  });
 
   // Fraud never gets retried — it gets escalated to a human.
   if (classification.category === "fraud") {
@@ -230,6 +249,8 @@ export async function startRecovery(input: StartRecoveryInput): Promise<void> {
       status: "cancelled",
       classification,
       score,
+      factors,
+      strategy,
       amountCents: input.amountCents,
       currency: input.currency,
       method: input.method ?? null,
@@ -250,7 +271,12 @@ export async function startRecovery(input: StartRecoveryInput): Promise<void> {
     return;
   }
 
-  const steps = buildSchedule({ category: classification.category, score });
+  const steps = adaptSchedule(
+    buildSchedule({ category: classification.category, score }),
+    strategy,
+    failedAt,
+    CANCEL_AT_HOURS,
+  );
 
   for (const step of steps) {
     const when = scheduledAt(failedAt, step.offsetHours);
@@ -264,6 +290,8 @@ export async function startRecovery(input: StartRecoveryInput): Promise<void> {
       status: "scheduled",
       classification,
       score,
+      factors,
+      strategy,
       amountCents: input.amountCents,
       currency: input.currency,
       method: input.method ?? null,
@@ -322,6 +350,8 @@ async function recordAttemptRow(args: {
   status: string;
   classification: ReturnType<typeof classifyFailure>;
   score: number;
+  factors?: ScoreFactor[];
+  strategy?: RecoveryStrategy | null;
   amountCents: number;
   currency: string;
   method: string | null;
@@ -340,6 +370,8 @@ async function recordAttemptRow(args: {
       gateway_error_code: args.classification.code,
       gateway_error_message: args.classification.message,
       recovery_score: args.score,
+      score_factors: (args.factors ?? []) as never,
+      strategy: args.strategy?.aggressiveness ?? null,
       amount_cents: args.amountCents,
       currency: args.currency,
       method: args.method,
