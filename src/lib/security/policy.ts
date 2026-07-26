@@ -62,6 +62,10 @@ export const GENERIC_LIMIT_DENY =
 export const EMERGENCY_DENY =
   "Estamos temporariamente em modo de manutenção de segurança. Tente novamente dentro de instantes.";
 
+export const READ_ONLY_DENY =
+  "A plataforma está em modo de leitura durante uma manutenção. Pode consultar tudo, mas as alterações estão temporariamente suspensas.";
+
+
 export class SecurityError extends Error {
   readonly code: string;
   constructor(code: string, message: string) {
