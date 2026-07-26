@@ -43,7 +43,7 @@ async function requestMeta() {
   let route: string | null = null;
   let country: string | null = null;
   let city: string | null = null;
-  let requestId = crypto.randomUUID();
+  let requestId: string = crypto.randomUUID();
   try {
     const req = getRequest();
     userAgent = req?.headers.get("user-agent") ?? null;
