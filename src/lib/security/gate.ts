@@ -172,6 +172,20 @@ async function runGate(
         }
       }
 
+      // 3b. Read Only Mode — reads keep working, writes are suspended.
+      if (policy.write) {
+        const ro = await runtime.getReadOnlyState();
+        if (ro.enabled) {
+          await deny(
+            "read_only_block",
+            READ_ONLY_DENY,
+            ro.reason ?? "read only mode active",
+            "warn",
+          );
+        }
+      }
+
+
       // 4. Rate limits, per user and per IP.
       for (const rule of asArray<RateLimitRule>(policy.limit)) {
         const scope = rule.scope ?? "both";
