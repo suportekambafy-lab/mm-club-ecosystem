@@ -11,7 +11,8 @@ export type EmailKind =
   | "credits_topup"
   | "new_lesson"
   | "weekly_summary"
-  | "live_announcement";
+  | "live_announcement"
+  | "replay_ready";
 
 type SendOpts = {
   to: string;
