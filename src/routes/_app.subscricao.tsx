@@ -334,18 +334,16 @@ function SubscriptionPage() {
           <Skeleton className="h-52 w-full rounded-2xl" />
         </div>
       ) : !sub ? (
-        <section className="rounded-2xl bg-surface-1 p-8 text-center ring-1 ring-border">
-          <p className="font-display text-lg text-foreground">Sem plano ativo</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Ativa o acesso completo ao MM Club para desbloquear cursos, lives e ferramentas.
-          </p>
-          <Link
-            to="/checkout"
-            className="mt-5 inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
-          >
-            Ver planos
-          </Link>
+        <section className="space-y-5 rounded-2xl bg-surface-1 p-6 ring-1 ring-border">
+          <div>
+            <p className="font-display text-lg text-foreground">Sem plano ativo</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Escolhe um plano para desbloquear cursos, lives e ferramentas.
+            </p>
+          </div>
+          {planSection}
         </section>
+
       ) : (
         <>
           {/* Plano */}
