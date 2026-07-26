@@ -50,6 +50,7 @@ import { Route as ApiKnowledgeSearchRouteImport } from './routes/api.knowledge.s
 import { Route as AdminFinanceiroSubscricoesRouteImport } from './routes/admin.financeiro.subscricoes'
 import { Route as AdminFinanceiroReceitaRouteImport } from './routes/admin.financeiro.receita'
 import { Route as AdminFinanceiroCupoesRouteImport } from './routes/admin.financeiro.cupoes'
+import { Route as AdminFinanceiroCatalogoRouteImport } from './routes/admin.financeiro.catalogo'
 import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
 import { Route as AppFerramentasStudioRouteImport } from './routes/_app.ferramentas.studio'
 import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
@@ -278,6 +279,11 @@ const AdminFinanceiroCupoesRoute = AdminFinanceiroCupoesRouteImport.update({
   path: '/cupoes',
   getParentRoute: () => AdminFinanceiroRoute,
 } as any)
+const AdminFinanceiroCatalogoRoute = AdminFinanceiroCatalogoRouteImport.update({
+  id: '/catalogo',
+  path: '/catalogo',
+  getParentRoute: () => AdminFinanceiroRoute,
+} as any)
 const AppLivesLiveIdRoute = AppLivesLiveIdRouteImport.update({
   id: '/$liveId',
   path: '/$liveId',
@@ -442,6 +448,7 @@ export interface FileRoutesByFullPath {
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
   '/lives/$liveId': typeof AppLivesLiveIdRoute
+  '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
   '/admin/financeiro/receita': typeof AdminFinanceiroReceitaRoute
   '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
@@ -499,6 +506,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
+  '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
   '/admin/financeiro/receita': typeof AdminFinanceiroReceitaRoute
   '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
@@ -565,6 +573,7 @@ export interface FileRoutesById {
   '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/_app/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
+  '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
   '/admin/financeiro/receita': typeof AdminFinanceiroReceitaRoute
   '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
@@ -631,6 +640,7 @@ export interface FileRouteTypes {
     | '/especialistas/$expertId'
     | '/ferramentas/studio'
     | '/lives/$liveId'
+    | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cupoes'
     | '/admin/financeiro/receita'
     | '/admin/financeiro/subscricoes'
@@ -688,6 +698,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/especialistas/$expertId'
     | '/lives/$liveId'
+    | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cupoes'
     | '/admin/financeiro/receita'
     | '/admin/financeiro/subscricoes'
@@ -753,6 +764,7 @@ export interface FileRouteTypes {
     | '/_app/especialistas/$expertId'
     | '/_app/ferramentas/studio'
     | '/_app/lives/$liveId'
+    | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cupoes'
     | '/admin/financeiro/receita'
     | '/admin/financeiro/subscricoes'
@@ -1096,6 +1108,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFinanceiroCupoesRouteImport
       parentRoute: typeof AdminFinanceiroRoute
     }
+    '/admin/financeiro/catalogo': {
+      id: '/admin/financeiro/catalogo'
+      path: '/catalogo'
+      fullPath: '/admin/financeiro/catalogo'
+      preLoaderRoute: typeof AdminFinanceiroCatalogoRouteImport
+      parentRoute: typeof AdminFinanceiroRoute
+    }
     '/_app/lives/$liveId': {
       id: '/_app/lives/$liveId'
       path: '/$liveId'
@@ -1360,6 +1379,7 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AdminFinanceiroRouteChildren {
+  AdminFinanceiroCatalogoRoute: typeof AdminFinanceiroCatalogoRoute
   AdminFinanceiroCupoesRoute: typeof AdminFinanceiroCupoesRoute
   AdminFinanceiroReceitaRoute: typeof AdminFinanceiroReceitaRoute
   AdminFinanceiroSubscricoesRoute: typeof AdminFinanceiroSubscricoesRoute
@@ -1367,6 +1387,7 @@ interface AdminFinanceiroRouteChildren {
 }
 
 const AdminFinanceiroRouteChildren: AdminFinanceiroRouteChildren = {
+  AdminFinanceiroCatalogoRoute: AdminFinanceiroCatalogoRoute,
   AdminFinanceiroCupoesRoute: AdminFinanceiroCupoesRoute,
   AdminFinanceiroReceitaRoute: AdminFinanceiroReceitaRoute,
   AdminFinanceiroSubscricoesRoute: AdminFinanceiroSubscricoesRoute,
