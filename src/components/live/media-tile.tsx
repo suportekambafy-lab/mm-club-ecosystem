@@ -23,7 +23,7 @@ interface Props {
 function MediaTileBase({ participant, actions, className, preferScreen, showName = true, suppressAudio }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [avatarBroken, setAvatarBroken] = useState(false);
+  
 
   const videoTrack: MediaTrack | undefined =
     (preferScreen && participant.tracks.find((t) => t.kind === "video" && t.source === "screen")) ||
