@@ -226,7 +226,7 @@ function VipPage() {
           </p>
         </div>
 
-        {askEmail && !user ? (
+        {askEmail ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
             <motion.form
               initial={{ opacity: 0, y: 16, scale: 0.98 }}
