@@ -2598,6 +2598,7 @@ export type Database = {
         }
         Returns: number
       }
+      next_invoice_number: { Args: never; Returns: string }
       resolve_entitlements: {
         Args: { _user_id: string }
         Returns: {

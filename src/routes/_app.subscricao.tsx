@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
-  
+  Download,
+  FileText,
   Loader2,
   Plus,
   ShieldCheck,
@@ -24,6 +25,8 @@ import {
   cancelSubscription,
   getBillingOverview,
   getCatalog,
+  getInvoicePdf,
+  listInvoices,
   removePaymentMethod,
   resumeSubscription,
   setDefaultPaymentMethod,
@@ -31,6 +34,7 @@ import {
   syncPaymentMethods,
   type BillingOverview,
   type CatalogView,
+  type InvoiceListItem,
 } from "@/lib/billing.functions";
 import { formatMoney } from "@/lib/billing/types";
 
@@ -85,6 +89,8 @@ function SubscriptionPage() {
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [plans, setPlans] = useState<CatalogView[]>([]);
   const [showPlans, setShowPlans] = useState(false);
+  const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
+  const [downloading, setDownloading] = useState<string | null>(null);
 
   const sub = overview?.subscription ?? null;
   const methods = (overview?.paymentMethods ?? []).filter(
@@ -94,12 +100,41 @@ function SubscriptionPage() {
   const load = async () => {
     try {
       setOverview(await getBillingOverview({ data: undefined }));
+      listInvoices({ data: undefined })
+        .then(setInvoices)
+        .catch(() => setInvoices([]));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha ao carregar faturação.");
     } finally {
       setLoading(false);
     }
   };
+
+  const downloadInvoice = async (inv: InvoiceListItem) => {
+    setDownloading(inv.id);
+    try {
+      const { base64 } = await getInvoicePdf({ data: { invoiceId: inv.id } });
+      const bin = atob(base64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i += 1) bytes[i] = bin.charCodeAt(i);
+      const url = URL.createObjectURL(
+        new Blob([bytes], { type: "application/pdf" }),
+      );
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${inv.number ?? "fatura"}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toast.error(
+        e instanceof Error ? e.message : "Não foi possível gerar a fatura.",
+      );
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+
 
   useEffect(() => {
     let mounted = true;
@@ -632,6 +667,56 @@ function SubscriptionPage() {
               Os dados do cartão nunca passam pelo MM Club — são guardados pelo
               processador de pagamentos.
             </p>
+          </section>
+
+          {/* Faturas */}
+          <section className="overflow-hidden rounded-2xl bg-surface-1 ring-1 ring-border">
+            <div className="p-6">
+              <h2 className="font-display text-lg text-foreground">Faturas</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Cada pagamento gera uma fatura/recibo em PDF.
+              </p>
+            </div>
+            {invoices.length === 0 ? (
+              <p className="border-t border-border px-6 py-8 text-center text-sm text-muted-foreground">
+                Ainda não existem faturas.
+              </p>
+            ) : (
+              <ul className="border-t border-border">
+                {invoices.map((inv) => (
+                  <li
+                    key={inv.id}
+                    className="flex items-center gap-4 border-b border-border px-6 py-4 last:border-0"
+                  >
+                    <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm text-foreground">
+                        {inv.number ?? "Fatura"}
+                      </span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {dt(inv.issuedAt)} · {inv.description}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-sm tabular-nums text-foreground">
+                      {formatMoney(inv.totalCents, inv.currency)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => downloadInvoice(inv)}
+                      disabled={downloading === inv.id}
+                      className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs text-foreground transition hover:bg-surface-2 disabled:opacity-50"
+                    >
+                      {downloading === inv.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Download className="h-3.5 w-3.5" />
+                      )}
+                      PDF
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
 
           {/* Faturação */}

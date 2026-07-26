@@ -380,3 +380,60 @@ export const getGuestCheckoutStatus = createServerFn({ method: "GET" })
       accountCreated: Boolean(fresh?.account_created ?? intent.account_created),
     };
   });
+
+// ------------------------------------------------------------- invoices
+
+export type InvoiceListItem = {
+  id: string;
+  number: string | null;
+  status: string;
+  totalCents: number;
+  currency: string;
+  issuedAt: string | null;
+  paidAt: string | null;
+  description: string;
+};
+
+/** Member invoices (creates any missing ones for past paid payments). */
+export const listInvoices = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<InvoiceListItem[]> => {
+    const { backfillInvoicesForUser } = await import(
+      "@/lib/billing/invoices.server"
+    );
+    await backfillInvoicesForUser(context.userId);
+
+    const { data } = await context.supabase
+      .from("billing_invoices")
+      .select("id, number, status, total_cents, currency, issued_at, paid_at, lines")
+      .eq("user_id", context.userId)
+      .order("issued_at", { ascending: false })
+      .limit(50);
+
+    return (data ?? []).map((i) => ({
+      id: i.id,
+      number: i.number,
+      status: i.status as string,
+      totalCents: i.total_cents,
+      currency: i.currency,
+      issuedAt: i.issued_at,
+      paidAt: i.paid_at,
+      description:
+        ((i.lines as unknown as Array<{ description?: string }>) ?? [])[0]
+          ?.description ?? "MM Club",
+    }));
+  });
+
+/** Returns the invoice PDF as base64 so the browser can download it. */
+export const getInvoicePdf = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ invoiceId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { renderInvoicePdf } = await import("@/lib/billing/invoices.server");
+    const bytes = await renderInvoicePdf(data.invoiceId, context.userId);
+    let binary = "";
+    for (const b of bytes) binary += String.fromCharCode(b);
+    return { base64: btoa(binary) };
+  });
