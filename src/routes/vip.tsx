@@ -68,7 +68,7 @@ function VipPage() {
         const res = await startGuestCheckout({
           data: {
             email: guestEmail.trim(),
-            priceSlug: "mm_club_monthly",
+            priceSlug: "mm_club_vip_trial",
             origin: window.location.origin,
           },
         });
@@ -84,8 +84,7 @@ function VipPage() {
       }
       const { checkoutUrl } = await startCheckout({
         data: {
-          priceSlug: "mm_club_monthly",
-          couponCode: "MMVIP3",
+          priceSlug: "mm_club_vip_trial",
           origin: window.location.origin,
           successPath: "/vip?vip=success",
         },
