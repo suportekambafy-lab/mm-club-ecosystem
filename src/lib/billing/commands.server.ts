@@ -435,12 +435,18 @@ async function activateSubscription(args: {
   intervalCount: number;
   gatewayIntervalStr: string;
   amountCents: number;
+  trialDays?: number;
   currency: string;
   description: string;
 }): Promise<string> {
   const gw = getGateway();
   const start = new Date();
-  const end = periodEnd(start, args.interval, args.intervalCount);
+  const trialDays = args.trialDays ?? 0;
+  // With a trial, the first real charge only happens when the trial ends.
+  const end =
+    trialDays > 0
+      ? new Date(start.getTime() + trialDays * 86400000)
+      : periodEnd(start, args.interval, args.intervalCount);
 
   // Store the mandate as a reusable payment method.
   let paymentMethodId: string | null = null;
