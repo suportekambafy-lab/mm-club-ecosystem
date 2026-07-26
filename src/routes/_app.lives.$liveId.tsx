@@ -52,11 +52,22 @@ type LoaderData = Awaited<ReturnType<typeof getLive>>;
 
 function LiveDetail() {
   const initial = Route.useLoaderData();
+  const navigate = Route.useNavigate();
   const [data, setData] = useState<LoaderData>(initial);
   const [userId, setUserId] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<string | null>(() => diff(initial.live.starts_at));
   const [elapsed, setElapsed] = useState<number>(0);
   const [materialsOpen, setMaterialsOpen] = useState(false);
+
+  // If the host flips the live to interactive mode after the viewer landed on
+  // the broadcast route, hop over to the Sala Interativa immediately so every
+  // participant sees the same experience.
+  useEffect(() => {
+    if ((data.live as { mode?: string }).mode === "interactive") {
+      navigate({ to: "/lives/$liveId/sala", params: { liveId: data.live.id }, replace: true });
+    }
+  }, [data.live, navigate]);
+
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
