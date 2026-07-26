@@ -61,9 +61,15 @@ function VipPage() {
     setPending(true);
     setError(null);
     try {
-      const { checkoutUrl } = await createMollieVipSubscription({
-        data: { origin: window.location.origin },
+      const { checkoutUrl } = await startCheckout({
+        data: {
+          priceSlug: "mm_club_monthly",
+          couponCode: "MMVIP3",
+          origin: window.location.origin,
+          successPath: "/vip?vip=success",
+        },
       });
+
       window.location.href = checkoutUrl;
     } catch (e) {
       console.error(e);
