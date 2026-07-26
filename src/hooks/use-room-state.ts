@@ -223,10 +223,10 @@ export function useRoomState({
       setScreenOn((prev) => ({ ...prev, [p.identity]: p.isScreenShareEnabled }));
     };
 
-    const handlers: Array<[keyof typeof RoomEvent | string, (...args: unknown[]) => void]> = [];
+    const handlers: Array<[RoomEvent, (...args: unknown[]) => void]> = [];
+    type AnyOn = { on: (e: RoomEvent, f: (...a: unknown[]) => void) => void; off: (e: RoomEvent, f: (...a: unknown[]) => void) => void };
     const on = <T extends unknown[]>(evt: RoomEvent, fn: (...args: T) => void) => {
-      // @ts-expect-error - typed passthrough
-      room.on(evt, fn);
+      (room as unknown as AnyOn).on(evt, fn as (...a: unknown[]) => void);
       handlers.push([evt, fn as (...a: unknown[]) => void]);
     };
 
