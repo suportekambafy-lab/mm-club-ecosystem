@@ -8,8 +8,8 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getPriceBySlug } from "./catalog.server";
 import { getGateway } from "./gateway/index.server";
+import { buildCheckoutDescription } from "./description";
 
-const APP_NAME = "MM Club";
 
 /** Looks up an auth user by email (small user base — paged scan). */
 export async function findUserIdByEmail(email: string): Promise<string | null> {
@@ -92,7 +92,7 @@ export async function startGuestCheckout(
     // Trial prices only validate the card (0,01 €); the plan starts free.
     amountCents: price.trialDays > 0 ? 1 : price.amountCents,
     currency: price.currency,
-    description: `${APP_NAME} — ${price.product.name}`,
+    description: buildCheckoutDescription(price),
     redirectUrl: `${origin}/checkout/return?intent=${intent.id}`,
     webhookUrl: `${origin}/api/public/payments/gateway-webhook`,
     customerId: gatewayCustomerId,
