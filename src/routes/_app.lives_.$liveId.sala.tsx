@@ -154,7 +154,7 @@ function SalaRoute() {
   // When the host ends the live, evict everyone still in the room and send
   // them to the live page — which will show the replay as soon as it's ready.
   useEffect(() => {
-    if (liveStatus === "ended") {
+    if (liveStatus === "ended" || liveStatus === "published") {
       navigate({ to: "/lives/$liveId", params: { liveId }, replace: true });
     }
   }, [liveStatus, liveId, navigate]);
