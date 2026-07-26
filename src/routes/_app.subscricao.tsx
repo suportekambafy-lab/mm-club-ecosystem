@@ -16,13 +16,17 @@ import {
   addPaymentMethod,
   cancelSubscription,
   getBillingOverview,
+  getCatalog,
   removePaymentMethod,
   resumeSubscription,
   setDefaultPaymentMethod,
+  startCheckout,
   syncPaymentMethods,
   type BillingOverview,
+  type CatalogView,
 } from "@/lib/billing.functions";
 import { formatMoney } from "@/lib/billing/types";
+
 
 export const Route = createFileRoute("/_app/subscricao")({
   head: () => ({
@@ -72,6 +76,8 @@ function SubscriptionPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [plans, setPlans] = useState<CatalogView[]>([]);
+  const [showPlans, setShowPlans] = useState(false);
 
   const sub = overview?.subscription ?? null;
   const methods = (overview?.paymentMethods ?? []).filter(
@@ -103,12 +109,17 @@ function SubscriptionPage() {
         setNotice("Método de pagamento adicionado.");
       }
       await load();
+      const catalog = await getCatalog({
+        data: { kinds: ["subscription"] },
+      }).catch(() => [] as CatalogView[]);
+      if (mounted) setPlans(catalog);
     })();
     return () => {
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   const run = async (key: string, fn: () => Promise<unknown>, ok?: string) => {
     setBusy(key);
@@ -138,6 +149,144 @@ function SubscriptionPage() {
       setBusy(null);
     }
   };
+
+  const onSelectPlan = async (priceSlug: string) => {
+    setBusy(`plan-${priceSlug}`);
+    setError(null);
+    try {
+      const { checkoutUrl } = await startCheckout({
+        data: {
+          priceSlug,
+          origin: window.location.origin,
+          successPath: "/subscricao",
+        },
+      });
+      window.location.href = checkoutUrl;
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Não foi possível mudar de plano.",
+      );
+      setBusy(null);
+    }
+  };
+
+  /** Monthly-equivalent value, so yearly and monthly prices compare fairly. */
+  const monthly = (amountCents: number, interval: string, count = 1) => {
+    const months =
+      (interval === "year" ? 12 : interval === "week" ? 0.25 : 1) * (count || 1);
+    return amountCents / months;
+  };
+
+  const planOptions = plans
+    .flatMap((p) =>
+      p.prices.map((price) => ({
+        productName: p.name,
+        tagline: p.tagline,
+        badge: p.badge,
+        price,
+      })),
+    )
+    .sort(
+      (a, b) =>
+        monthly(a.price.amountCents, a.price.interval, a.price.intervalCount) -
+        monthly(b.price.amountCents, b.price.interval, b.price.intervalCount),
+    );
+
+  const currentMonthly = sub
+    ? monthly(sub.amountCents, sub.interval)
+    : null;
+
+  const planSection = (
+    <div className="grid gap-3 sm:grid-cols-2">
+      {planOptions.map(({ productName, tagline, badge, price }) => {
+        const isCurrent = sub?.priceSlug === price.slug;
+        const value = monthly(
+          price.amountCents,
+          price.interval,
+          price.intervalCount,
+        );
+        const change =
+          currentMonthly === null || isCurrent
+            ? null
+            : value > currentMonthly
+              ? "Upgrade"
+              : value < currentMonthly
+                ? "Downgrade"
+                : "Alterar ciclo";
+        return (
+          <div
+            key={price.slug}
+            className={cn(
+              "flex flex-col rounded-2xl p-5 ring-1 transition",
+              isCurrent
+                ? "bg-primary/5 ring-primary/40"
+                : "bg-surface-2 ring-border hover:ring-primary/30",
+            )}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <p className="font-display text-lg text-foreground">
+                {productName}
+              </p>
+              {isCurrent ? (
+                <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-primary">
+                  Plano atual
+                </span>
+              ) : change ? (
+                <span
+                  className={cn(
+                    "rounded-full px-2.5 py-1 text-[10px] uppercase tracking-[0.14em]",
+                    change === "Upgrade"
+                      ? "bg-emerald-500/10 text-emerald-400"
+                      : "bg-surface-3 text-muted-foreground",
+                  )}
+                >
+                  {change}
+                </span>
+              ) : badge ? (
+                <span className="rounded-full bg-surface-3 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                  {badge}
+                </span>
+              ) : null}
+            </div>
+
+            <p className="mt-2 text-sm text-muted-foreground">
+              {price.displayLabel ?? tagline ?? "Acesso MM Club"}
+            </p>
+
+            <p className="mt-4 text-xl text-foreground">
+              {formatMoney(price.amountCents, price.currency)}
+              <span className="text-sm text-muted-foreground">
+                {price.interval === "year"
+                  ? " / ano"
+                  : price.interval === "month"
+                    ? " / mês"
+                    : ""}
+              </span>
+            </p>
+
+            <button
+              type="button"
+              disabled={isCurrent || busy === `plan-${price.slug}`}
+              onClick={() => onSelectPlan(price.slug)}
+              className={cn(
+                "mt-5 inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition",
+                isCurrent
+                  ? "cursor-default bg-surface-3 text-muted-foreground"
+                  : "bg-primary text-primary-foreground hover:bg-gold-soft disabled:opacity-60",
+              )}
+            >
+              {busy === `plan-${price.slug}` ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : null}
+              {isCurrent ? "Estás neste plano" : (change ?? "Escolher plano")}
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-8 pb-16">
@@ -185,18 +334,16 @@ function SubscriptionPage() {
           <Skeleton className="h-52 w-full rounded-2xl" />
         </div>
       ) : !sub ? (
-        <section className="rounded-2xl bg-surface-1 p-8 text-center ring-1 ring-border">
-          <p className="font-display text-lg text-foreground">Sem plano ativo</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Ativa o acesso completo ao MM Club para desbloquear cursos, lives e ferramentas.
-          </p>
-          <Link
-            to="/checkout"
-            className="mt-5 inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
-          >
-            Ver planos
-          </Link>
+        <section className="space-y-5 rounded-2xl bg-surface-1 p-6 ring-1 ring-border">
+          <div>
+            <p className="font-display text-lg text-foreground">Sem plano ativo</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Escolhe um plano para desbloquear cursos, lives e ferramentas.
+            </p>
+          </div>
+          {planSection}
         </section>
+
       ) : (
         <>
           {/* Plano */}
@@ -218,13 +365,24 @@ function SubscriptionPage() {
                       : ""}
                 </p>
               </div>
-              <Link
-                to="/checkout"
+              <button
+                type="button"
+                onClick={() => setShowPlans((v) => !v)}
                 className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
               >
-                Mudar de plano
-              </Link>
+                {showPlans ? "Fechar planos" : "Mudar de plano"}
+              </button>
             </div>
+
+            {showPlans ? (
+              <div className="space-y-4 border-t border-border p-6">
+                <p className="text-xs text-muted-foreground">
+                  Ao mudar de plano, a nova subscrição substitui a atual assim
+                  que o pagamento for confirmado.
+                </p>
+                {planSection}
+              </div>
+            ) : null}
 
             <dl className="grid grid-cols-1 gap-px border-t border-border bg-border sm:grid-cols-3">
               <Cell
@@ -237,6 +395,7 @@ function SubscriptionPage() {
                 value={dt(sub.createdAt)}
               />
             </dl>
+
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-5">
               <p className="text-xs text-muted-foreground">
