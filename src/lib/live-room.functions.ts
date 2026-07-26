@@ -177,6 +177,27 @@ export const goLive = createServerFn({ method: "POST" })
       .eq("id", data.liveId);
     if (error) throw new Error(error.message);
 
+    // Start server-side recording (Principle #5). Non-blocking failure: the
+    // live still goes on air even if egress fails to spin up.
+    try {
+      const { livekitRoomName } = await import("./livekit.server");
+      const { startLiveRecording } = await import("./live-egress.server");
+      const roomName = livekitRoomName(data.liveId, "main");
+      const egressId = await startLiveRecording({ liveId: data.liveId, roomName });
+      if (egressId) {
+        await supabase
+          .from("lives")
+          .update({
+            recording_egress_id: egressId,
+            recording_started_at: nowIso,
+            recording_stopped_at: null,
+          })
+          .eq("id", data.liveId);
+      }
+    } catch (err) {
+      console.warn("[goLive] recording start failed", err);
+    }
+
     await logEvent(supabase, { liveId: data.liveId, actorId: userId, kind: "go_live" });
     return { ok: true };
   });
@@ -188,15 +209,36 @@ export const endLive = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     await requireHostOrCohost(supabase, data.liveId, userId);
 
+    // Stop server-side recording if one is running.
+    const { data: liveRow } = await supabase
+      .from("lives")
+      .select("recording_egress_id")
+      .eq("id", data.liveId)
+      .maybeSingle();
+
     const { error } = await supabase
       .from("lives")
       .update({ status: "ended" })
       .eq("id", data.liveId);
     if (error) throw new Error(error.message);
 
+    if (liveRow?.recording_egress_id) {
+      try {
+        const { stopLiveRecording } = await import("./live-egress.server");
+        await stopLiveRecording(liveRow.recording_egress_id);
+        await supabase
+          .from("lives")
+          .update({ recording_stopped_at: new Date().toISOString() })
+          .eq("id", data.liveId);
+      } catch (err) {
+        console.warn("[endLive] recording stop failed", err);
+      }
+    }
+
     await logEvent(supabase, { liveId: data.liveId, actorId: userId, kind: "end_live" });
     return { ok: true };
   });
+
 
 // -------------------------------------------------------------------------
 // Hand raise / invitation / promotion
