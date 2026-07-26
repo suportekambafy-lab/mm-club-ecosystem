@@ -167,7 +167,8 @@ function AdminLayout() {
   };
 
   return (
-    <div className="admin-shell min-h-screen bg-admin-bg text-admin-fg">
+    <div className={cn("admin-shell min-h-screen bg-admin-bg text-admin-fg", theme === "light" && "admin-light")}>
+
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[236px] flex-col bg-admin-sidebar lg:flex">
         <div className="flex h-14 items-center px-4">
