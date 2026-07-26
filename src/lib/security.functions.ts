@@ -24,8 +24,8 @@ export type AdminActionRow = {
   action: string;
   entityType: string;
   entityId: string | null;
-  before: unknown;
-  after: unknown;
+  before: string | null;
+  after: string | null;
   ip: string | null;
   userAgent: string | null;
   geo: string | null;
@@ -204,8 +204,8 @@ export const getSecurityOverview = createServerFn({ method: "POST" })
         action: r.action,
         entityType: r.entity_type,
         entityId: r.entity_id,
-        before: r.before,
-        after: r.after,
+        before: r.before ? JSON.stringify(r.before) : null,
+        after: r.after ? JSON.stringify(r.after) : null,
         ip: r.ip,
         userAgent: r.user_agent,
         geo: r.geo,
