@@ -128,9 +128,9 @@ function PlansPage() {
           </p>
         </motion.header>
 
-        <section className="mx-auto mt-14 grid max-w-3xl gap-6 md:mt-20 md:grid-cols-2">
+        <section className="mx-auto mt-14 grid max-w-5xl gap-6 md:mt-20 md:grid-cols-3">
           {isLoading
-            ? [0, 1].map((i) => (
+            ? [0, 1, 2].map((i) => (
                 <div
                   key={i}
                   className="h-[520px] animate-pulse rounded-3xl bg-surface-1 ring-1 ring-border"
