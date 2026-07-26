@@ -69,9 +69,9 @@ function BigMoney({ cents }: { cents: number }) {
     .toLocaleString("pt-PT", { minimumFractionDigits: 2 })
     .split(",");
   return (
-    <p className="font-display text-4xl font-semibold tracking-tight md:text-5xl">
+    <p className="text-[44px] font-semibold leading-none tracking-[-0.03em] md:text-[52px]">
       €{int}
-      <span className="text-2xl text-muted-foreground md:text-3xl">,{dec}</span>
+      <span className="text-[26px] text-admin-faint md:text-[30px]">,{dec}</span>
     </p>
   );
 }
@@ -127,11 +127,11 @@ function AdminDashboard() {
       : null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 pt-1">
       {/* Balance band */}
-      <section className="rounded-2xl border border-border bg-surface-1 px-6 py-6">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <CircleDollarSign className="h-4 w-4 text-primary" />
+      <section className="rounded-xl bg-admin-panel px-6 py-6">
+        <div className="flex items-center gap-2 text-[13px] text-admin-muted">
+          <CircleDollarSign className="h-4 w-4 text-admin-accent" />
           Receita total (30 dias)
         </div>
         <div className="mt-3">
@@ -141,15 +141,15 @@ function AdminDashboard() {
             <BigMoney cents={data.revenue.last30Cents} />
           )}
         </div>
-        <p className="mt-3 text-sm text-muted-foreground">
+        <p className="mt-3 text-[13px] text-admin-muted">
           MRR atual{" "}
-          <span className="text-foreground">
+          <span className="text-admin-fg">
             {data ? money(data.revenue.mrrCents) : "—"}
           </span>{" "}
           ·{" "}
           <Link
             to="/admin/financeiro/receita"
-            className="inline-flex items-center gap-1 text-foreground hover:text-primary"
+            className="inline-flex items-center gap-1 text-admin-fg hover:text-admin-fg"
           >
             ver receita <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
@@ -157,10 +157,10 @@ function AdminDashboard() {
       </section>
 
       {/* Chart band */}
-      <section className="rounded-2xl border border-border bg-surface-1 px-6 py-6">
+      <section className="rounded-xl bg-admin-panel px-6 py-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-[13px] text-admin-muted">
               <BarChart3 className="h-4 w-4" />
               Vendas
             </div>
@@ -169,7 +169,7 @@ function AdminDashboard() {
                 <Skeleton className="h-8 w-40" />
               ) : (
                 <>
-                  <p className="font-display text-3xl font-semibold tracking-tight">
+                  <p className="text-[30px] font-semibold leading-none tracking-[-0.02em]">
                     {money(data.revenue.monthCents)}
                   </p>
                   {delta != null && (
@@ -186,7 +186,7 @@ function AdminDashboard() {
               )}
             </div>
           </div>
-          <div className="flex rounded-lg border border-border bg-surface-2 p-0.5">
+          <div className="flex rounded-lg bg-admin-panel-2 p-0.5">
             {(["mes", "ano"] as const).map((r) => (
               <button
                 key={r}
@@ -195,8 +195,8 @@ function AdminDashboard() {
                 className={cn(
                   "rounded-md px-3 py-1 text-xs transition",
                   range === r
-                    ? "bg-surface-1 text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
+                    ? "bg-admin-hover text-admin-fg"
+                    : "text-admin-muted hover:text-admin-fg",
                 )}
               >
                 {r === "mes" ? "Mês" : "Ano"}
@@ -215,7 +215,7 @@ function AdminDashboard() {
                 margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
               >
                 <CartesianGrid
-                  stroke="var(--hairline)"
+                  stroke="var(--admin-grid)"
                   vertical={false}
                   strokeDasharray="0"
                 />
@@ -224,30 +224,30 @@ function AdminDashboard() {
                   tickLine={false}
                   axisLine={false}
                   interval="preserveStartEnd"
-                  tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                  tick={{ fill: "var(--admin-faint)", fontSize: 11 }}
                 />
                 <YAxis
                   tickLine={false}
                   axisLine={false}
                   width={44}
-                  tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                  tick={{ fill: "var(--admin-faint)", fontSize: 11 }}
                 />
                 <Tooltip
-                  cursor={{ stroke: "var(--hairline)" }}
+                  cursor={{ stroke: "var(--admin-grid)" }}
                   contentStyle={{
-                    background: "var(--surface-2)",
-                    border: "1px solid var(--border)",
+                    background: "var(--admin-panel-2)",
+                    border: "1px solid var(--admin-border)",
                     borderRadius: 12,
                     fontSize: 12,
                   }}
-                  labelStyle={{ color: "var(--muted-foreground)" }}
+                  labelStyle={{ color: "var(--admin-muted)" }}
                   formatter={(v: number) => `€${v.toFixed(2)}`}
                 />
                 <Line
                   type="linear"
                   dataKey="atual"
                   name={monthLabel}
-                  stroke="var(--primary)"
+                  stroke="var(--admin-accent)"
                   strokeWidth={2}
                   dot={false}
                 />
@@ -256,7 +256,7 @@ function AdminDashboard() {
                     type="linear"
                     dataKey="anterior"
                     name={prevLabel}
-                    stroke="var(--muted-foreground)"
+                    stroke="var(--admin-faint)"
                     strokeWidth={1.5}
                     dot={false}
                   />
@@ -266,14 +266,14 @@ function AdminDashboard() {
           )}
         </div>
 
-        <div className="mt-4 flex items-center gap-5 text-xs text-muted-foreground">
+        <div className="mt-4 flex items-center gap-5 text-xs text-admin-faint">
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            <span className="h-1.5 w-1.5 rounded-full bg-admin-accent" />
             {monthLabel}
           </span>
           {range === "mes" && (
             <span className="inline-flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+              <span className="h-1.5 w-1.5 rounded-full bg-admin-faint" />
               {prevLabel}
             </span>
           )}
@@ -281,13 +281,13 @@ function AdminDashboard() {
       </section>
 
       {error ? (
-        <p className="rounded-2xl border border-border bg-surface-1 p-5 text-sm text-muted-foreground">
+        <p className="rounded-xl bg-admin-panel p-5 text-[13px] text-admin-muted">
           Não foi possível carregar as métricas.
         </p>
       ) : null}
 
       {/* Metric rows */}
-      <section className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-4">
+      <section className="grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-admin-border md:grid-cols-4">
         {[
           { label: "MRR", value: data ? money(data.revenue.mrrCents) : "—" },
           { label: "ARR", value: data ? money(data.revenue.arrCents) : "—" },
@@ -316,18 +316,18 @@ function AdminDashboard() {
                 : "—",
           },
         ].map((m) => (
-          <div key={m.label} className="bg-surface-1 px-4 py-4">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+          <div key={m.label} className="bg-admin-panel px-4 py-4">
+            <p className="text-[11px] text-admin-faint">
               {m.label}
             </p>
-            <p className="mt-1.5 font-display text-lg tabular-nums">{m.value}</p>
+            <p className="mt-1.5 text-[17px] font-medium tabular-nums">{m.value}</p>
           </div>
         ))}
       </section>
 
       {/* Content shortcuts */}
       <section className="space-y-3 pt-2">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        <p className="text-[12px] text-admin-faint">
           Gestão de conteúdo
         </p>
         <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-6">
@@ -337,9 +337,9 @@ function AdminDashboard() {
               <Link
                 key={s.to}
                 to={s.to}
-                className="group flex items-center gap-2.5 rounded-xl border border-border bg-surface-1 px-3.5 py-3 text-[13px] transition hover:border-primary/40 hover:bg-surface-2"
+                className="group flex items-center gap-2.5 rounded-xl bg-admin-panel px-3.5 py-3 text-[13px] transition hover:bg-admin-panel-2"
               >
-                <Icon className="h-4 w-4 text-muted-foreground transition group-hover:text-primary" />
+                <Icon className="h-4 w-4 text-admin-faint transition group-hover:text-admin-fg" />
                 <span className="truncate">{s.label}</span>
               </Link>
             );

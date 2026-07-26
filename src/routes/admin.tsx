@@ -2,7 +2,8 @@ import { createFileRoute, Link, Outlet, redirect, useRouter, useRouterState } fr
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  LayoutDashboard,
+  Home,
+  Bell,
   BookOpen,
   PlayCircle,
   CalendarDays,
@@ -10,19 +11,20 @@ import {
   Wallet,
   Wrench,
   ArrowLeft,
-  ShieldCheck,
   Sparkles,
   HeartPulse,
   ChevronLeft,
   ChevronRight,
-
   Repeat,
   TrendingUp,
   Ticket,
   Package,
-
+  LifeBuoy,
+  ArrowUpRight,
+  Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import mmIcon from "@/assets/mm-icon.png.asset.json";
 // Ensure admin overrides are applied
 import "@/data/admin-store";
 
@@ -75,17 +77,20 @@ type AdminTo =
   | "/admin/lives"
   | "/admin/ferramentas";
 
-const nav: Array<{
-  label: string;
-  items: Array<{ to: AdminTo; label: string; icon: typeof LayoutDashboard; exact?: boolean }>;
-}> = [
+type NavItem = { to: AdminTo; label: string; icon: typeof Home; exact?: boolean };
+
+const topNav: NavItem[] = [
+  { to: "/admin", label: "Início", icon: Home, exact: true },
+  { to: "/admin/saude", label: "Notificações", icon: Bell },
+];
+
+const nav: Array<{ label: string; items: NavItem[] }> = [
   {
     label: "Negócio",
     items: [
-      { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
       { to: "/admin/financeiro", label: "Financeiro", icon: Wallet, exact: true },
+      { to: "/admin/financeiro/receita", label: "Vendas", icon: TrendingUp },
       { to: "/admin/financeiro/subscricoes", label: "Subscrições", icon: Repeat },
-      { to: "/admin/financeiro/receita", label: "Receita", icon: TrendingUp },
       { to: "/admin/financeiro/cupoes", label: "Cupões", icon: Ticket },
       { to: "/admin/financeiro/catalogo", label: "Catálogo", icon: Package },
       { to: "/admin/saude", label: "Saúde do billing", icon: HeartPulse },
@@ -104,14 +109,26 @@ const nav: Array<{
     items: [
       { to: "/admin/eventos", label: "Eventos", icon: CalendarDays },
       { to: "/admin/lives", label: "Lives", icon: Radio },
+      { to: "/admin/ferramentas", label: "Ferramentas", icon: Wrench },
     ],
-  },
-  {
-    label: "Recursos",
-    items: [{ to: "/admin/ferramentas", label: "Ferramentas", icon: Wrench }],
   },
 ];
 
+const CRUMBS: Record<string, string> = {
+  "/admin": "Início",
+  "/admin/financeiro": "Financeiro",
+  "/admin/financeiro/receita": "Vendas",
+  "/admin/financeiro/subscricoes": "Subscrições",
+  "/admin/financeiro/cupoes": "Cupões",
+  "/admin/financeiro/catalogo": "Catálogo",
+  "/admin/saude": "Saúde do billing",
+  "/admin/cursos": "Cursos",
+  "/admin/aulas": "Aulas",
+  "/admin/transcricoes": "Transcrições",
+  "/admin/eventos": "Eventos",
+  "/admin/lives": "Lives",
+  "/admin/ferramentas": "Ferramentas",
+};
 
 function AdminLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -129,145 +146,133 @@ function AdminLayout() {
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 
+  const renderItem = (item: NavItem) => {
+    const Icon = item.icon;
+    const active = isActive(item.to, item.exact);
+    return (
+      <Link
+        key={item.to + item.label}
+        to={item.to}
+        className={cn(
+          "group flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] transition-colors",
+          active
+            ? "bg-admin-hover text-admin-fg"
+            : "text-admin-muted hover:bg-admin-panel hover:text-admin-fg",
+        )}
+      >
+        <Icon strokeWidth={1.6} className="h-[15px] w-[15px] shrink-0 opacity-90" />
+        <span className="flex-1 truncate">{item.label}</span>
+      </Link>
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="admin-shell min-h-screen bg-admin-bg text-admin-fg">
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border bg-sidebar lg:flex">
-        <div className="flex h-20 items-center gap-2 border-b border-border px-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/30">
-            <ShieldCheck className="h-4 w-4" />
-          </div>
-          <div>
-            <p className="font-display text-sm font-semibold leading-tight">MM Admin</p>
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              Backoffice
-            </p>
-          </div>
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[236px] flex-col bg-admin-sidebar lg:flex">
+        <div className="flex h-14 items-center px-4">
+          <Link to="/admin" className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-admin-panel-2">
+            <img src={mmIcon.url} alt="MM Club" className="h-5 w-5 object-contain" />
+          </Link>
         </div>
 
-        <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-5">
+        <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+          <div className="space-y-0.5">{topNav.map(renderItem)}</div>
           {nav.map((section) => (
             <div key={section.label}>
-              <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/60">
-                {section.label}
-              </p>
-              <div className="space-y-0.5">
-                {section.items.map((item) => {
-                  const Icon = item.icon;
-                  const active = isActive(item.to, item.exact);
-                  return (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      className={cn(
-                        "group relative flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-[13px] transition-colors",
-                        active
-                          ? "bg-sidebar-accent font-medium text-foreground"
-                          : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
-                      )}
-                    >
-                      {active ? (
-                        <span className="absolute inset-y-1 left-0 w-0.5 rounded-full bg-primary" />
-                      ) : null}
-                      <Icon
-                        className={cn(
-                          "h-4 w-4 shrink-0 transition",
-                          active
-                            ? "text-primary"
-                            : "text-muted-foreground group-hover:text-foreground",
-                        )}
-                      />
-                      <span className="flex-1 truncate">{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
+              <p className="mb-1 px-2.5 text-[12px] text-admin-faint">{section.label}</p>
+              <div className="space-y-0.5">{section.items.map(renderItem)}</div>
             </div>
           ))}
         </nav>
 
-        <div className="border-t border-border p-4">
+        <div className="space-y-0.5 px-3 pb-4">
+          <a
+            href="mailto:suporte@mmclub.online"
+            className="flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] text-admin-muted transition hover:bg-admin-panel hover:text-admin-fg"
+          >
+            <LifeBuoy strokeWidth={1.6} className="h-[15px] w-[15px]" />
+            Ajuda
+          </a>
           <Link
             to="/"
-            className="flex items-center gap-3 rounded-lg px-2 py-2 text-sm text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground"
+            className="flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] text-admin-muted transition hover:bg-admin-panel hover:text-admin-fg"
           >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Voltar ao site</span>
+            <ArrowLeft strokeWidth={1.6} className="h-[15px] w-[15px]" />
+            Voltar ao site
           </Link>
         </div>
       </aside>
 
       {/* Main */}
-      <div className="lg:pl-64">
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/80 px-4 py-2.5 backdrop-blur-xl md:px-6">
+      <div className="lg:pl-[236px]">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 bg-admin-bg px-4 md:px-5">
           <div className="flex items-center gap-2 lg:hidden">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/30">
-              <ShieldCheck className="h-3.5 w-3.5" />
-            </div>
-            <span className="font-display text-sm font-semibold">MM Admin</span>
+            <img src={mmIcon.url} alt="MM Club" className="h-6 w-6 object-contain" />
           </div>
           <div className="hidden items-center gap-1 lg:flex">
             <button
               type="button"
               onClick={() => window.history.back()}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-admin-muted transition hover:bg-admin-panel hover:text-admin-fg"
               aria-label="Voltar"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft strokeWidth={1.6} className="h-4 w-4" />
             </button>
             <button
               type="button"
               onClick={() => window.history.forward()}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-admin-muted transition hover:bg-admin-panel hover:text-admin-fg"
               aria-label="Avançar"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight strokeWidth={1.6} className="h-4 w-4" />
             </button>
-            <span className="ml-2 text-xs text-muted-foreground">
-              {pathname === "/admin" ? "Início" : pathname.replace("/admin/", "")}
+            <span className="mx-2 h-4 w-px bg-admin-border" />
+            <span className="text-[13px] text-admin-faint">
+              {CRUMBS[pathname] ?? pathname.replace("/admin/", "")}
             </span>
           </div>
           <div className="flex-1" />
           <Link
-            to="/admin/saude"
-            className="hidden rounded-lg border border-border bg-surface-1 px-3 py-1.5 text-xs text-muted-foreground transition hover:text-foreground md:inline-flex"
+            to="/admin/financeiro/catalogo"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-admin-panel-2 px-3 py-1.5 text-[13px] text-admin-fg transition hover:bg-admin-hover"
           >
-            Saúde
+            <Plus strokeWidth={1.8} className="h-3.5 w-3.5" />
+            Catálogo
           </Link>
           <Link
-            to="/"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background transition hover:opacity-90"
+            to="/admin/financeiro/subscricoes"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-[13px] font-medium text-black transition hover:opacity-90"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Site
+            <ArrowUpRight strokeWidth={1.8} className="h-3.5 w-3.5" />
+            Clientes
           </Link>
         </header>
 
-
         {/* Mobile nav */}
-        <nav className="sticky top-16 z-20 flex gap-1 overflow-x-auto border-b border-border bg-background/80 px-4 py-2 backdrop-blur-xl lg:hidden">
-          {nav.flatMap((s) => s.items).map((item) => {
+        <nav className="sticky top-14 z-20 flex gap-1 overflow-x-auto bg-admin-bg px-4 py-2 lg:hidden">
+          {[...topNav, ...nav.flatMap((s) => s.items)].map((item) => {
             const Icon = item.icon;
             const active = isActive(item.to, item.exact);
             return (
               <Link
-                key={item.to}
+                key={item.to + item.label}
                 to={item.to}
                 className={cn(
                   "flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-xs transition",
                   active
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground",
+                    ? "bg-admin-hover text-admin-fg"
+                    : "text-admin-muted hover:text-admin-fg",
                 )}
               >
-                <Icon className="h-3.5 w-3.5" />
+                <Icon strokeWidth={1.6} className="h-3.5 w-3.5" />
                 {item.label}
               </Link>
             );
           })}
         </nav>
 
-        <main className="mx-auto max-w-7xl px-4 pb-12 pt-6 md:px-8 md:pt-8">
+        <main className="px-3 pb-12 md:px-5">
           <Outlet />
         </main>
       </div>

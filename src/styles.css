@@ -326,3 +326,41 @@ html[data-live-immersive="1"] [data-mobile-tabbar] { display: none !important; }
 }
 .live-chat-msg { animation: live-chat-msg-in 220ms cubic-bezier(0.22, 1, 0.36, 1); }
 
+
+/* ---------------------------------------------------------------
+ * MM Admin — Stripe-like neutral dark surface (scoped to /admin)
+ * --------------------------------------------------------------- */
+:root {
+  --admin-bg: oklch(0.145 0 0);
+  --admin-sidebar: oklch(0.115 0 0);
+  --admin-panel: oklch(0.165 0 0);
+  --admin-panel-2: oklch(0.2 0 0);
+  --admin-hover: oklch(0.225 0 0);
+  --admin-border: oklch(1 0 0 / 8%);
+  --admin-fg: oklch(0.975 0 0);
+  --admin-muted: oklch(0.72 0 0);
+  --admin-faint: oklch(0.58 0 0);
+  --admin-accent: oklch(0.55 0.23 264);
+  --admin-grid: oklch(1 0 0 / 7%);
+}
+
+@theme inline {
+  --font-admin: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-admin-bg: var(--admin-bg);
+  --color-admin-sidebar: var(--admin-sidebar);
+  --color-admin-panel: var(--admin-panel);
+  --color-admin-panel-2: var(--admin-panel-2);
+  --color-admin-hover: var(--admin-hover);
+  --color-admin-border: var(--admin-border);
+  --color-admin-fg: var(--admin-fg);
+  --color-admin-muted: var(--admin-muted);
+  --color-admin-faint: var(--admin-faint);
+  --color-admin-accent: var(--admin-accent);
+}
+
+.admin-shell {
+  font-family: var(--font-admin);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  letter-spacing: -0.005em;
+}
+.admin-shell h1, .admin-shell h2, .admin-shell h3 { font-family: var(--font-admin); }
