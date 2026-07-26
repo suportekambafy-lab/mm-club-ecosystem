@@ -30,6 +30,7 @@ import {
   decideStrategy,
   scoreRecovery,
   type RecoveryStrategy,
+  type ScoreContext,
   type ScoreFactor,
 } from "./intelligence";
 import {
