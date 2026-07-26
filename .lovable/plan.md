@@ -1,101 +1,155 @@
-# MM Studio — Plano de Implementação
+# MM Club Salas — Plataforma de Eventos Interativos (v2)
 
-Nova secção premium dentro de Ferramentas para gerar **imagens publicitárias** e **vídeos** com IA, sem prompts escritos pelo utilizador. Estética Apple/Linear com identidade MM (preto, dourado, glassmorphism).
+Aprovado **LiveKit Cloud**, com 3 alterações do utilizador:
+1. **Adiar** Breakout Rooms + Speed Networking (fase posterior).
+2. **Arquitetura modular** — cada feature (reactions, polls, questions, backstage, IA, futuros breakouts/networking) é um módulo independente, ativável/desativável por evento sem tocar no core.
+3. **Modo Backstage** — sala privada pré-live para host + co-hosts + oradores testarem equipamento antes de entrar em direto.
 
-## Arquitetura de rotas
+## Arquitetura
 
-Adicionar como sub-rotas de `/ferramentas` (já existe placeholder):
-
+```text
+┌─ Publishers (host/co-host/oradores) ─┐
+│ cam / mic / screen / audio sistema   │──┐
+└──────────────────────────────────────┘  │
+                                          ▼
+                                  ┌──────────────────┐
+                                  │ LiveKit Cloud    │
+                                  │ SFU + Egress     │
+                                  │ (2 rooms/live:   │
+                                  │  backstage +     │
+                                  │  main stage)     │
+                                  └────────┬─────────┘
+                                           │
+        ┌──────────────────────────────────┼──────────────────────────┐
+        ▼                                  ▼                          ▼
+  Espectadores (subscrevem)     Supabase (estado da sala)     CF Stream
+                                módulos: reactions/polls/           replays
+                                questions/backstage/…
 ```
-/ferramentas/studio                    → Landing MM Studio (hub)
-/ferramentas/studio/imagens            → Fluxo IA de Imagens (4 passos)
-/ferramentas/studio/videos             → Fluxo IA de Vídeos
-/ferramentas/studio/criativos          → Histórico "Os Meus Criativos"
-/ferramentas/studio/produtos           → Biblioteca de Produtos
-/ferramentas/studio/marca              → Brand DNA (config única)
+
+LiveKit gere media + presença técnica; Supabase é source of truth do estado de produto e da configuração de módulos por sala.
+
+## Core vs Módulos (modular por design)
+
+**Core (imutável, mínimo)**
+- Sala + participantes + papéis + tokens
+- Palco (join/leave, mic/cam/screen)
+- Spotlight + layout
+- Moderação (mute, kick, ban)
+- Gravação + replay
+- Backstage (sala pré-live)
+
+**Módulos (opt-in por sala)** — registados num `roomModules` registry:
+- `reactions`
+- `questions`
+- `polls`
+- `chat` (já existe)
+- `ai-assistant` (futuro)
+- `breakouts` (futuro — adiado)
+- `speed-networking` (futuro — adiado)
+
+Contrato uniforme:
+```ts
+interface RoomModule {
+  id: string;
+  enabledByDefaultFor: LiveMode[]; // broadcast | interactive
+  ServerRPC?: Record<string, ServerFn>;
+  Panel?: ComponentType<RoomModuleProps>;   // painel lateral
+  Overlay?: ComponentType<RoomModuleProps>;  // camada sobre o stage
+  requires?: ("host" | "publisher")[];
+}
 ```
 
-O placeholder atual em `src/routes/_app.ferramentas.tsx` passa a página índice das ferramentas com card destacado para "MM Studio".
+Config guardada em `lives.enabled_modules` (jsonb). UI de criação lista os módulos com toggles. Adicionar breakouts/networking mais tarde = registar módulo novo, sem tocar em core.
 
-## Backend (Lovable Cloud / Supabase)
+## Modos + Backstage
 
-Migração única com GRANTs + RLS por `auth.uid()`:
+- **Broadcast** (mantém stack CF Stream atual).
+- **Interactive** (LiveKit).
 
-- `mm_studio_brand` (1 por utilizador): user_id PK, brand_name, logo_url, colors jsonb, typography text, segment, audience, tone, website, socials jsonb, description, updated_at.
-- `mm_studio_products`: id, user_id, name, category, logo_url, brand_colors jsonb, photos text[] (signed URL paths), created_at.
-- `mm_studio_credits` (1 por utilizador): user_id PK, balance int default 200, updated_at. Trigger em `handle_new_user` para criar linha com saldo inicial cortesia.
-- `mm_studio_credit_ledger`: id, user_id, delta int, reason text, ref_id uuid, created_at (histórico e auditoria).
-- `mm_studio_assets`: id, user_id, kind ('image'|'video'), url text, thumb_url text, format text, style text, product_id uuid null, credits_used int, metadata jsonb (aspect, duration, prompt gerado, modelo), created_at.
-- Bucket `studio-media` (privado) — uploads de produtos e outputs gerados; URLs assinadas de longa duração via helper existente `uploadMedia`.
+Backstage aplica-se aos dois modos:
+- Cada `live` interativa tem duas rooms LiveKit lógicas: `mmclub_live_<id>_backstage` e `mmclub_live_<id>_main`.
+- Host + co-hosts + oradores entram primeiro no backstage: mic/cam/screen preview, chat privado, checklist de equipamento (mic level meter, câmara ok, screen share test), latência/bandwidth check.
+- Participantes veem contador "A sessão está a ser preparada".
+- Host clica **"Entrar em direto"** → server fn move os publishers para a room `main`, define `lives.status = 'live'` e `started_at`, dispara gravação Egress. Backstage fica disponível em paralelo (bastidores durante a live: sussurros entre oradores fora do ar). Módulos configurados aparecem no painel.
+- Gravação apenas cobre a room `main`.
 
-Custos: imagem = 40 créditos, vídeo = 250 créditos. Verificado server-side antes de invocar o modelo; débito idempotente ligado a `ref_id`.
+## Papéis
 
-## Server functions
+| Papel | Backstage | Palco Main | Modera |
+|---|---|---|---|
+| Host | ✅ | ✅ | ✅ total |
+| Co-host | ✅ | ✅ | ✅ (não encerra) |
+| Orador | ✅ | ✅ (promovido) | ❌ |
+| Participante | ❌ | ⚠️ via mão/convite | ❌ |
+| Espectador | ❌ | ❌ | ❌ |
 
-`src/lib/studio.functions.ts` (com `requireSupabaseAuth`):
+Se host cai >30s → co-host mais antigo promovido a host automaticamente.
 
-- `getStudioContext()` → { credits, brand, products[] }
-- `saveBrandDna(input)` upsert
-- `createProduct` / `updateProduct` / `deleteProduct`
-- `generateImages({ productId?, uploads[], style, format, notes })`:
-  - Compõe prompt otimizado a partir de Brand DNA + estilo + formato + notas + análise das imagens.
-  - Chama `openai/gpt-image-2` via AI Gateway em `n=4`, `stream:false` (server), tamanho consoante formato (1024×1024, 1024×1792, 1792×1024).
-  - Faz upload dos 4 PNGs para `studio-media`, cria 4 rows `mm_studio_assets`, debita 40×4=160 créditos.
-- `regenerateImage(assetId, tweak?)` → 1 imagem, 40 créditos.
-- `generateVideo({ productId?, assetIds[]|uploads[], style, format, duration, objective })`:
-  - Escolha automática de modelo (Veo primeiro; fallback Gemini se falhar). Usa a primeira imagem como `starting_frame` e as restantes no prompt/storyboard.
-  - Aspect ratio derivado do formato (Reels/TikTok/Shorts=9:16, Feed=1:1, YouTube 16:9, Stories 9:16).
-  - Duração 10/15/20/30s (mapeada ao suportado pelo provider — 5s ou 10s por corte concatenado se necessário; MVP: aceitar 10s nativo e "15/20/30s" gerando cortes múltiplos e concatenando via ffmpeg no server, ou avisar quando não suportado).
-  - Debita 250 créditos ao concluir.
-- `listAssets({ kind?, cursor })`, `deleteAsset(id)`, `duplicateAsset(id)`.
+## Schema (migration)
 
-Regra: utilizador **nunca vê o prompt**. Prompt guardado em `metadata` apenas para debugging admin.
+- `lives.mode` (`broadcast|interactive`), `lives.enabled_modules` (jsonb), `lives.spotlight_user_id`, `lives.stage_layout` (`solo|host_guest|spotlight|grid`), `lives.backstage_started_at`, `lives.went_live_at`.
+- `live_participants` — role, room (`backstage|main`), on_stage, mic/cam/screen_allowed, hand_raised_at, invited_at, connection_quality, joined_at, kicked_at, banned.
+- `live_stage_events` — auditoria (raise/invite/approve/promote/mute/kick/…).
+- Tabelas por módulo (isoladas, só criadas se módulo ativo no projeto):
+  - `live_reactions`
+  - `live_questions`
+  - `live_polls` + `live_poll_options` + `live_poll_votes`
+- RLS: host/co-host escrevem tudo; participantes escrevem só o seu; banned bloqueados; backstage só visível a role ≥ orador.
 
-## Cliente / UX
+## Server
 
-Componentes em `src/components/mm/studio/`:
+`src/lib/livekit.server.ts` — SDK LiveKit isolado; emite tokens com `VideoGrant` por papel + sala (backstage/main); re-emite em cada promoção.
 
-- `StudioShell` — header com logo MM Studio, badge de créditos, glass nav (Imagens · Vídeos · Criativos · Produtos · Marca).
-- `CreditsPill` — saldo em tempo real, click abre painel com histórico e CTA "Comprar créditos" (placeholder que abre modal de contacto até integrarmos Paddle top-ups).
-- `StepFlow` (Imagens) — 4 passos em cards grandes:
-  1. Upload/produto (drag & drop, até 10, preview em grid).
-  2. Estilo — grid de chips com miniaturas (Luxo, Minimalista, Apple, Premium, Tecnologia, Moda, Beleza, Comida, Fitness, Elegante, Escuro, Claro, Lifestyle, Estúdio).
-  3. Formato — cards com aspect visual (IG Feed 1:1, Story 9:16, Reels Cover 9:16, Facebook, TikTok, Loja, Banner, Thumbnail).
-  4. Descrição opcional (textarea).
-- `GenerationOverlay` — full-screen com progress cinematográfico durante fetch.
-- `ResultGallery` — 4 imagens em grid, hover revela ações (Ver, Download, Gerar novamente, Editar, Guardar).
-- `VideoFlow` — similar mas com passos: Fonte (produtos ou criativos) → Estilo → Formato → Duração → Objetivo.
-- `VideoResult` — player + Download / Gerar novamente / Criar versão diferente.
-- `CreativesLibrary` — tabs (Todos · Imagens · Vídeos), grid com miniatura, data, créditos usados, ações.
-- `ProductLibrary` — cards de produtos, botão "Novo produto" abre drawer com nome, fotos, logo, categoria, cores.
-- `BrandDnaForm` — formulário single-page com secções colapsáveis, guardado automaticamente (debounced) tal como o admin overrides.
+`src/lib/live-room.functions.ts` — **core apenas**:
+- `joinRoom({liveId, target: 'backstage'|'main'})`
+- `goLive({liveId})` — host-only; move publishers para main, marca started_at, arranca Egress.
+- `endLive({liveId})` — para Egress, publica replay.
+- `raiseHand`, `inviteToStage`, `approveHand`, `denyHand`, `promoteToStage`, `demoteFromStage`, `setRole`
+- `setMic`, `setCam`, `setScreen`, `muteAll`
+- `setSpotlight`, `setStageLayout`
+- `kick`, `ban`
 
-Design tokens: reutilizar `surface-1/2/3`, `gold`, `hairline`. Efeitos: `backdrop-blur-xl`, sombras douradas suaves, transições `duration-500 ease-out`. Sem cores hardcoded.
+Módulos vivem em `src/lib/room-modules/<id>/` — cada um exporta `functions.ts` (RPCs), `Panel.tsx`, `Overlay.tsx`, `schema.sql`.
 
-## Segurança / Cloud
+## Frontend (`src/components/mm/room/`)
 
-- RLS: cada tabela restrita a `auth.uid() = user_id`. Assets só visíveis ao dono.
-- Storage bucket privado com policies para dono. Signed URLs (10 anos) via helper existente.
-- Server functions verificam saldo e debitam **antes** da chamada AI; refund automático se provider devolver erro (ledger com delta positivo `reason='refund'`).
-- Content policy: capturar erros de moderação da OpenAI e mostrar mensagem clara em PT.
+- `interactive-room.tsx` — LiveKit `<Room>` provider + orquestração de módulos ativos.
+- `backstage.tsx` — preview grid, mic level meter, device selectors, network stats, checklist, botão "Entrar em direto" (host).
+- `stage.tsx` — grelha adaptativa + layouts (solo, host_guest, spotlight, grid); troca sem reconectar.
+- `participant-tile.tsx` — vídeo/avatar + verified + indicadores + menu contextual do host.
+- `local-controls.tsx` — mic/cam/screen (com áudio sistema onde possível), mão, sair, seletor de dispositivos inline (sem sair da sala).
+- `host-panel.tsx` — participantes, qualidade (`ConnectionQuality`), voz ativa, pedidos de palco, ações completas, toggle de módulos ao vivo.
+- `invitation-toast.tsx` — "O anfitrião convidou-te para o palco".
+- `module-slot.tsx` — renderiza `Panel`/`Overlay` dos módulos ativos.
 
-## Detalhes técnicos
+Módulos incluídos na v1:
+- `reactions` — overlay flutuante (👏 ❤️ 🔥 😂 👍) + throttle server 1/s.
+- `questions` — separador com upvote, marcar respondida, destacar (banner sobre stage).
+- `polls` — criar/lançar/fechar + barras em tempo real + projetar resultado no stage.
+- `chat` — atualiza componente existente para consumir novo estado.
 
-- Modelos AI Gateway: `openai/gpt-image-2` (imagens), `google/veo-3` via videogen tool não aplica no runtime do user — usaremos `google/gemini-3.1-flash-image` como fallback multi-frame e chamada a Veo por REST (documentar em `metadata.provider`). Para MVP, se Veo indisponível, gerar "vídeo animado" via sequência de imagens geradas + ffmpeg no server (`fluent-ffmpeg` não suportado no Worker → usar `@remotion/renderer`-like impossível; **decisão**: MVP entrega imagem em movimento via Nano Banana `google/gemini-3.1-flash-image` output e um pipeline stub que devolve preview em imagem animada. Rota preparada para trocar para Veo quando disponível no Gateway).
-- Prompt builder determinístico em `src/lib/studio-prompt.ts` combina Brand DNA + estilo + formato + notas + análise breve das imagens (via chat model `google/gemini-3.5-flash` para descrever produto).
-- Streaming de imagens: preferir non-streaming server → armazenamento → devolver URLs (evita 5MB SSE).
+## Resiliência
 
-## Entregáveis (ordem)
+- LiveKit reconecta sozinho (Wi-Fi ↔ 5G, sleep, refresh).
+- Gravação **server-side via LiveKit Egress** — imune a refresh/queda do host.
+- Watchdog server: retry Egress + alerta.
+- Replay: Egress → MP4 → upload CF Stream (usa `cloudflare-stream.server.ts`) → `recording_video_uid` → replay unificado.
 
-1. Migração SQL (tabelas, RLS, GRANTs, trigger de créditos iniciais) + bucket `studio-media`.
-2. `src/lib/studio.functions.ts` + `src/lib/studio-prompt.ts` + tipos.
-3. Layout `/ferramentas/studio` + shell + créditos pill.
-4. Fluxo Imagens completo (upload, estilo, formato, notas, geração, galeria).
-5. Biblioteca de Produtos + Brand DNA.
-6. Fluxo Vídeos (com fallback quando Veo indisponível).
-7. Criativos (histórico) + ações.
-8. Polish: animações, empty states, feedback de créditos.
+## Fases
 
-Confirmas para eu avançar? Duas decisões que gostaria de fechar antes:
-- **Saldo inicial de cortesia** (proponho 400 créditos = 10 imagens ou 1 vídeo + 6 imagens).
-- **Comprar créditos**: MVP com botão "Falar com suporte" ou já integrar pack Paddle (ex.: 1000 créditos = X €)?
+1. **Fase 1** — Infra LiveKit + core (rooms backstage+main, papéis, tokens) + wizard de modo/módulos + coexistência com Broadcast.
+2. **Fase 2** — Backstage completo (preview, device checks, "Entrar em direto") + palco (mão/convite/spotlight/layouts).
+3. **Fase 3** — Moderação completa + qualidade + transferência automática de host.
+4. **Fase 4** — Módulos: reactions, questions, polls.
+5. **Fase 5** — Gravação Egress + replay unificado.
+6. **Fase 6 (adiado)** — Módulos breakouts + speed-networking, quando core estiver estável em produção.
+
+## Preciso de ti para arrancar a Fase 1
+
+1. Cria projeto em **LiveKit Cloud** → https://cloud.livekit.io (grátis, sem cartão).
+2. Em Settings → Keys, cria uma API Key. Precisamos de 3 valores:
+   - `LIVEKIT_URL` (ex: `wss://mmclub-xxxxx.livekit.cloud`)
+   - `LIVEKIT_API_KEY`
+   - `LIVEKIT_API_SECRET`
+3. Diz-me "avança" e eu abro o formulário seguro para colares os 3 valores. Depois começo pela migration + `livekit.server.ts` + wizard de modo/módulos.
