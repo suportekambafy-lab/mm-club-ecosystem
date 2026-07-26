@@ -365,13 +365,24 @@ function SubscriptionPage() {
                       : ""}
                 </p>
               </div>
-              <Link
-                to="/checkout"
+              <button
+                type="button"
+                onClick={() => setShowPlans((v) => !v)}
                 className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
               >
-                Mudar de plano
-              </Link>
+                {showPlans ? "Fechar planos" : "Mudar de plano"}
+              </button>
             </div>
+
+            {showPlans ? (
+              <div className="space-y-4 border-t border-border p-6">
+                <p className="text-xs text-muted-foreground">
+                  Ao mudar de plano, a nova subscrição substitui a atual assim
+                  que o pagamento for confirmado.
+                </p>
+                {planSection}
+              </div>
+            ) : null}
 
             <dl className="grid grid-cols-1 gap-px border-t border-border bg-border sm:grid-cols-3">
               <Cell
@@ -384,6 +395,7 @@ function SubscriptionPage() {
                 value={dt(sub.createdAt)}
               />
             </dl>
+
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-5">
               <p className="text-xs text-muted-foreground">
