@@ -289,7 +289,7 @@ function VipPage() {
 
               <button
                 type="submit"
-                disabled={pending || !guestEmail.includes("@")}
+                disabled={pending || !guestEmail.includes("@") || guestName.trim().length < 2}
                 className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground transition hover:opacity-95 disabled:opacity-60"
               >
                 {pending ? "A abrir pagamento..." : "Continuar para pagamento"}
