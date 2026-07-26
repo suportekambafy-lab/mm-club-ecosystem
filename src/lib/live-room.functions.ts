@@ -80,7 +80,7 @@ export const joinRoom = createServerFn({ method: "POST" })
     // Live must exist & be reachable via RLS.
     const { data: live, error: liveErr } = await supabase
       .from("lives")
-      .select("id, created_by, mode, enabled_modules, spotlight_user_id, stage_layout")
+      .select("id, created_by, mode, status, enabled_modules, spotlight_user_id, stage_layout")
       .eq("id", liveId)
       .maybeSingle();
     if (liveErr) throw new Error(liveErr.message);
@@ -137,6 +137,18 @@ export const joinRoom = createServerFn({ method: "POST" })
       me = updated ?? me;
     }
 
+    // Self-healing recording: every main-room join makes sure an egress is
+    // running while the live is on air (covers the "room did not exist yet"
+    // race at go-live time and any egress that died mid-session).
+    if (target === "main" && live.status === "live") {
+      try {
+        const { ensureLiveRecording } = await import("./live-recording.server");
+        await ensureLiveRecording(liveId);
+      } catch (err) {
+        console.warn("[issueRoomSession] ensureLiveRecording failed", err);
+      }
+    }
+
     // Profile for display name.
     const { data: profile } = await supabase
       .from("profiles")
@@ -189,23 +201,25 @@ export const goLive = createServerFn({ method: "POST" })
       .eq("id", data.liveId);
     if (error) throw new Error(error.message);
 
-    // Start server-side recording (Principle #5). Non-blocking failure: the
-    // live still goes on air even if egress fails to spin up.
+    // Start server-side recording. The composed room is pushed over RTMPS into
+    // the live's Cloudflare Stream input, which records automatically — so the
+    // replay pipeline is identical to broadcast lives. Non-blocking failure:
+    // the live still goes on air even if egress fails to spin up (and every
+    // subsequent join retries via ensureLiveRecording).
     try {
       const { livekitRoomName } = await import("./livekit.server");
-      const { startLiveRecording } = await import("./live-egress.server");
-      const roomName = livekitRoomName(data.liveId, "main");
-      const egressId = await startLiveRecording({ liveId: data.liveId, roomName });
-      if (egressId) {
-        await supabase
-          .from("lives")
-          .update({
-            recording_egress_id: egressId,
-            recording_started_at: nowIso,
-            recording_stopped_at: null,
-          })
-          .eq("id", data.liveId);
+      const { stopAllRoomEgress } = await import("./live-egress.server");
+      const { ensureLiveRecording } = await import("./live-recording.server");
+      // Clear any stale egress left over from a previous session of this room.
+      await stopAllRoomEgress(livekitRoomName(data.liveId, "main"));
+
+      let result = await ensureLiveRecording(data.liveId);
+      // The LiveKit room may not exist yet in the instant the host goes on air.
+      for (let attempt = 0; attempt < 2 && !result.ok; attempt++) {
+        await new Promise((r) => setTimeout(r, 1500));
+        result = await ensureLiveRecording(data.liveId);
       }
+      if (!result.ok) console.error("[goLive] recording NOT started:", result.reason);
     } catch (err) {
       console.warn("[goLive] recording start failed", err);
     }
@@ -224,7 +238,7 @@ export const endLive = createServerFn({ method: "POST" })
     // Stop server-side recording if one is running.
     const { data: liveRow } = await supabase
       .from("lives")
-      .select("recording_egress_id")
+      .select("recording_egress_id,cf_live_input_id")
       .eq("id", data.liveId)
       .maybeSingle();
 
@@ -234,18 +248,42 @@ export const endLive = createServerFn({ method: "POST" })
       .eq("id", data.liveId);
     if (error) throw new Error(error.message);
 
-    if (liveRow?.recording_egress_id) {
+    try {
+      const { livekitRoomName } = await import("./livekit.server");
+      const { stopLiveRecording, stopAllRoomEgress } = await import("./live-egress.server");
+      if (liveRow?.recording_egress_id) await stopLiveRecording(liveRow.recording_egress_id);
+      // Belt and braces: stop any other active egress bound to this room.
+      await stopAllRoomEgress(livekitRoomName(data.liveId, "main"));
+      await supabase
+        .from("lives")
+        .update({ recording_stopped_at: new Date().toISOString() })
+        .eq("id", data.liveId);
+    } catch (err) {
+      console.warn("[endLive] recording stop failed", err);
+    }
+
+    // Best effort: if Cloudflare already finalized a recording, attach it now.
+    // Otherwise the CF webhook / the lives-recording-check cron will attach it
+    // as soon as the file is ready — the live only becomes "published"
+    // (Replay disponível) when a ready-to-stream recording actually exists.
+    if (liveRow?.cf_live_input_id) {
       try {
-        const { stopLiveRecording } = await import("./live-egress.server");
-        await stopLiveRecording(liveRow.recording_egress_id);
-        await supabase
-          .from("lives")
-          .update({ recording_stopped_at: new Date().toISOString() })
-          .eq("id", data.liveId);
+        const { listVideosForLiveInput } = await import("@/lib/cloudflare-stream.server");
+        const videos = await listVideosForLiveInput(liveRow.cf_live_input_id);
+        const ready = videos
+          .filter((v) => v.readyToStream)
+          .sort((a, b) => (b.duration ?? 0) - (a.duration ?? 0))[0];
+        if (ready?.uid) {
+          await supabase
+            .from("lives")
+            .update({ recording_video_uid: ready.uid, status: "published" })
+            .eq("id", data.liveId);
+        }
       } catch (err) {
-        console.warn("[endLive] recording stop failed", err);
+        console.warn("[endLive] recording lookup failed", err);
       }
     }
+
 
     await logEvent(supabase, { liveId: data.liveId, actorId: userId, kind: "end_live" });
     return { ok: true };
