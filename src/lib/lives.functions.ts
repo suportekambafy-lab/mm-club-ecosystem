@@ -91,11 +91,16 @@ export const getLive = createServerFn({ method: "GET" })
     type ReplaySegment = { uid: string; token: string | null; duration: number | null };
     let replaySegments: ReplaySegment[] = [];
     let actualDurationSeconds: number | null = null;
+    // Cloudflare needs a few minutes to finalize a recording after the session
+    // ends. Track whether any recording is still encoding so the UI can show
+    // "a processar" instead of wrongly claiming the live wasn't recorded.
+    let pendingRecording = false;
 
     if (isReplay && live.cf_live_input_id) {
       try {
         const { listVideosForLiveInput, signPlaybackToken } = await import("@/lib/cloudflare-stream.server");
         const videos = await listVideosForLiveInput(live.cf_live_input_id);
+        pendingRecording = videos.some((v) => !v.readyToStream);
         const ready = videos
           .filter((v) => v.readyToStream)
           .sort((a, b) => {
