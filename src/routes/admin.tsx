@@ -11,6 +11,7 @@ import {
   ArrowLeft,
   ShieldCheck,
   Sparkles,
+  HeartPulse,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 // Ensure admin overrides are applied
@@ -57,7 +58,8 @@ type AdminTo =
   | "/admin/transcricoes"
   | "/admin/eventos"
   | "/admin/lives"
-  | "/admin/ferramentas";
+  | "/admin/ferramentas"
+  | "/admin/saude";
 
 const nav: Array<{
   label: string;
@@ -84,7 +86,10 @@ const nav: Array<{
   },
   {
     label: "Recursos",
-    items: [{ to: "/admin/ferramentas", label: "Ferramentas", icon: Wrench }],
+    items: [
+      { to: "/admin/ferramentas", label: "Ferramentas", icon: Wrench },
+      { to: "/admin/saude", label: "Saúde do Billing", icon: HeartPulse },
+    ],
   },
 ];
 
