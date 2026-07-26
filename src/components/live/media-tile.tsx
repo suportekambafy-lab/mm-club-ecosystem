@@ -36,7 +36,18 @@ function MediaTileBase({ participant, actions, className, preferScreen, showName
   useEffect(() => {
     const el = videoRef.current;
     if (!el || !videoTrack) return;
+    // Reset srcObject so a previously attached (stopped) MediaStream
+    // doesn't leave the element in a "needs user gesture" state that
+    // browsers surface as a native play overlay.
+    try { (el as HTMLVideoElement).srcObject = null; } catch { /* noop */ }
+    el.muted = true;
+    el.autoplay = true;
+    el.playsInline = true;
     actions.attachTrack(videoTrack.id, el);
+    // Force playback after attach — LiveKit sets srcObject synchronously,
+    // but some browsers require an explicit .play() after re-attach.
+    const p = el.play();
+    if (p && typeof p.catch === "function") p.catch(() => { /* autoplay suppressed */ });
     return () => {
       actions.detachTrack(videoTrack.id, el);
     };

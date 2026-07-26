@@ -153,9 +153,11 @@ function SalaRoute() {
   // avoid rejoining on every unrelated UPDATE (heartbeats, presence, etc.),
   // which would otherwise cause an infinite reconnect loop.
   const prevOnStageRef = useRef<boolean | null>(null);
+  const prevPermsRef = useRef<{ mic: boolean; cam: boolean; screen: boolean } | null>(null);
   useEffect(() => {
     if (!authReady || !userId) return;
     prevOnStageRef.current = null;
+    prevPermsRef.current = null;
     const ch = supabase
       .channel(`sala-me:${liveId}:${userId}:${Math.random().toString(36).slice(2, 6)}`)
       .on(
@@ -167,12 +169,22 @@ function SalaRoute() {
           filter: `live_id=eq.${liveId}`,
         },
         (payload) => {
-          const row = payload.new as { user_id: string; on_stage: boolean; mic_allowed: boolean; cam_allowed: boolean };
+          const row = payload.new as { user_id: string; on_stage: boolean; mic_allowed: boolean; cam_allowed: boolean; screen_allowed: boolean };
           if (row.user_id !== userId) return;
           const prev = prevOnStageRef.current;
+          const prevPerms = prevPermsRef.current;
           prevOnStageRef.current = row.on_stage;
-          // Only reissue token on the actual off→on transition with publish rights.
-          if (prev === false && row.on_stage && (row.mic_allowed || row.cam_allowed)) {
+          const perms = { mic: row.mic_allowed, cam: row.cam_allowed, screen: row.screen_allowed };
+          prevPermsRef.current = perms;
+          // Reissue token when promoted (off→on) OR when publish permissions
+          // change while on stage — LiveKit tokens embed canPublishSources,
+          // so screen-share access requires a fresh token when granted later.
+          const promoted = prev === false && row.on_stage && (perms.mic || perms.cam || perms.screen);
+          const permsChangedOnStage =
+            row.on_stage &&
+            prevPerms != null &&
+            (prevPerms.mic !== perms.mic || prevPerms.cam !== perms.cam || prevPerms.screen !== perms.screen);
+          if (promoted || permsChangedOnStage) {
             setSession(null);
           }
         },
