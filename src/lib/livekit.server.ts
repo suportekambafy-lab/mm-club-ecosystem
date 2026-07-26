@@ -2,7 +2,7 @@
  * LiveKit server SDK — token minting + room admin.
  * Server-only (imported by *.functions.ts handlers via dynamic import).
  */
-import { AccessToken, RoomServiceClient, type VideoGrant } from "livekit-server-sdk";
+import { AccessToken, RoomServiceClient, TrackSource, type VideoGrant } from "livekit-server-sdk";
 
 export type LiveRoomTarget = "backstage" | "main";
 export type LiveRole = "host" | "cohost" | "speaker" | "participant" | "viewer";
@@ -45,21 +45,29 @@ function grantFor(role: LiveRole, publishOverride?: MintTokenArgs["publishOverri
     ? Boolean(publishOverride.mic || publishOverride.cam || publishOverride.screen)
     : isPublisherByDefault;
 
+  const sources: TrackSource[] = publishOverride
+    ? [
+        ...(publishOverride.mic ? [TrackSource.MICROPHONE] : []),
+        ...(publishOverride.cam ? [TrackSource.CAMERA] : []),
+        ...(publishOverride.screen
+          ? [TrackSource.SCREEN_SHARE, TrackSource.SCREEN_SHARE_AUDIO]
+          : []),
+      ]
+    : isPublisherByDefault
+    ? [
+        TrackSource.MICROPHONE,
+        TrackSource.CAMERA,
+        TrackSource.SCREEN_SHARE,
+        TrackSource.SCREEN_SHARE_AUDIO,
+      ]
+    : [];
+
   return {
     roomJoin: true,
     canSubscribe: true,
     canPublish,
     canPublishData: true,
-    // Restrict source types to what the participant is allowed to send.
-    canPublishSources: publishOverride
-      ? [
-          ...(publishOverride.mic ? (["microphone"] as const) : []),
-          ...(publishOverride.cam ? (["camera"] as const) : []),
-          ...(publishOverride.screen ? (["screen_share", "screen_share_audio"] as const) : []),
-        ]
-      : isPublisherByDefault
-      ? ["microphone", "camera", "screen_share", "screen_share_audio"]
-      : [],
+    canPublishSources: sources,
     // Only host/cohost can update room metadata (spotlight, layout).
     roomAdmin: role === "host" || role === "cohost",
     // Only host/cohost can act on other participants (mute, kick).
