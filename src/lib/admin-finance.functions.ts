@@ -5,6 +5,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { secured } from "@/lib/security/gate";
+
 import type {
   AdminSubscriptionRow,
   CatalogProductRow,
@@ -90,7 +92,14 @@ export const listAdminCoupons = createServerFn({ method: "POST" })
   });
 
 export const createCoupon = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([
+    ...secured({
+      name: "finance.createCoupon",
+      admin: true,
+      write: true,
+      limit: { bucket: "coupon-create", max: 60, windowSeconds: 3600 },
+    }),
+  ])
   .inputValidator((input: unknown) =>
     z
       .object({
@@ -112,49 +121,97 @@ export const createCoupon = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context as never);
     const { supabaseAdmin } = await import(
       "@/integrations/supabase/client.server"
     );
-    const { error } = await supabaseAdmin.from("billing_coupons").insert({
-      code: data.code.toUpperCase(),
-      name: data.name ?? null,
-      percent_off: data.percentOff ?? null,
-      amount_off_cents: data.amountOffCents ?? null,
-      trial_days_override: data.trialDaysOverride ?? null,
-      duration: data.duration,
-      duration_in_months: data.durationInMonths ?? null,
-      max_redemptions: data.maxRedemptions ?? null,
-      valid_until: data.validUntil ?? null,
-      active: true,
-    });
-    if (error) {
-      throw new Error(
-        error.code === "23505"
-          ? "Já existe um cupão com esse código."
-          : error.message,
-      );
-    }
-    return { ok: true };
+    const { auditAdmin } = await import("@/lib/security/audit.server");
+    return auditAdmin(
+      context as never,
+      {
+        action: "coupon.create",
+        entityType: "billing_coupons",
+        entityId: data.code.toUpperCase(),
+        after: data,
+      },
+      async () => {
+        const { error } = await supabaseAdmin.from("billing_coupons").insert({
+          code: data.code.toUpperCase(),
+          name: data.name ?? null,
+          percent_off: data.percentOff ?? null,
+          amount_off_cents: data.amountOffCents ?? null,
+          trial_days_override: data.trialDaysOverride ?? null,
+          duration: data.duration,
+          duration_in_months: data.durationInMonths ?? null,
+          max_redemptions: data.maxRedemptions ?? null,
+          valid_until: data.validUntil ?? null,
+          active: true,
+        });
+        if (error) {
+          throw new Error(
+            error.code === "23505"
+              ? "Já existe um cupão com esse código."
+              : error.message,
+          );
+        }
+        return { ok: true };
+      },
+    );
   });
 
-export const setCouponActive = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({ id: z.string().uuid(), active: z.boolean() }).parse(input),
-  )
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context as never);
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
-    const { error } = await supabaseAdmin
-      .from("billing_coupons")
-      .update({ active: data.active })
-      .eq("id", data.id);
-    if (error) throw new Error(error.message);
-    return { ok: true };
-  });
+/** Shared implementation for the "flip the active flag" admin toggles. */
+function activeToggle(options: {
+  name: string;
+  table: "billing_coupons" | "catalog_products" | "catalog_prices";
+  action: string;
+  bucket: string;
+}) {
+  return createServerFn({ method: "POST" })
+    .middleware([
+      ...secured({
+        name: options.name,
+        admin: true,
+        write: true,
+        limit: { bucket: options.bucket, max: 120, windowSeconds: 3600 },
+      }),
+    ])
+    .inputValidator((input: unknown) =>
+      z.object({ id: z.string().uuid(), active: z.boolean() }).parse(input),
+    )
+    .handler(async ({ data, context }) => {
+      const { supabaseAdmin } = await import(
+        "@/integrations/supabase/client.server"
+      );
+      const { auditAdmin, snapshot } = await import(
+        "@/lib/security/audit.server"
+      );
+      const before = await snapshot(options.table, data.id);
+      return auditAdmin(
+        context as never,
+        {
+          action: options.action,
+          entityType: options.table,
+          entityId: data.id,
+          before,
+          after: { active: data.active },
+        },
+        async () => {
+          const { error } = await supabaseAdmin
+            .from(options.table)
+            .update({ active: data.active })
+            .eq("id", data.id);
+          if (error) throw new Error(error.message);
+          return { ok: true };
+        },
+      );
+    });
+}
+
+export const setCouponActive = activeToggle({
+  name: "finance.setCouponActive",
+  table: "billing_coupons",
+  action: "coupon.set_active",
+  bucket: "coupon-toggle",
+});
 
 export const listAdminCatalog = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -164,45 +221,30 @@ export const listAdminCatalog = createServerFn({ method: "POST" })
     return listCatalogAdmin();
   });
 
-export const setProductActive = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({ id: z.string().uuid(), active: z.boolean() }).parse(input),
-  )
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context as never);
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
-    const { error } = await supabaseAdmin
-      .from("catalog_products")
-      .update({ active: data.active })
-      .eq("id", data.id);
-    if (error) throw new Error(error.message);
-    return { ok: true };
-  });
+export const setProductActive = activeToggle({
+  name: "finance.setProductActive",
+  table: "catalog_products",
+  action: "catalog.product.set_active",
+  bucket: "product-toggle",
+});
 
-export const setPriceActive = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({ id: z.string().uuid(), active: z.boolean() }).parse(input),
-  )
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context as never);
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
-    const { error } = await supabaseAdmin
-      .from("catalog_prices")
-      .update({ active: data.active })
-      .eq("id", data.id);
-    if (error) throw new Error(error.message);
-    return { ok: true };
-  });
+export const setPriceActive = activeToggle({
+  name: "finance.setPriceActive",
+  table: "catalog_prices",
+  action: "catalog.price.set_active",
+  bucket: "price-toggle",
+});
 
 /** Cancels or resumes any member's subscription from the backoffice. */
 export const adminCancelSubscription = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([
+    ...secured({
+      name: "finance.cancelSubscription",
+      admin: true,
+      write: true,
+      limit: { bucket: "admin-cancel", max: 60, windowSeconds: 3600 },
+    }),
+  ])
   .inputValidator((input: unknown) =>
     z
       .object({
@@ -214,23 +256,45 @@ export const adminCancelSubscription = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context as never);
-    const { cancelSubscription } = await import(
-      "@/lib/billing/commands.server"
+    const { auditAdmin, snapshot } = await import(
+      "@/lib/security/audit.server"
     );
-    await cancelSubscription({
-      subscriptionId: data.subscriptionId,
-      userId: data.userId,
-      immediate: data.immediate,
-      reason: data.reason ?? "admin",
-    });
-    const { drainQueue } = await import("@/lib/queue/worker.server");
-    await drainQueue(10);
-    return { ok: true };
+    const before = await snapshot("billing_subscriptions", data.subscriptionId);
+    return auditAdmin(
+      context as never,
+      {
+        action: "subscription.cancel",
+        entityType: "billing_subscriptions",
+        entityId: data.subscriptionId,
+        before,
+        after: { immediate: data.immediate, reason: data.reason ?? "admin" },
+      },
+      async () => {
+        const { cancelSubscription } = await import(
+          "@/lib/billing/commands.server"
+        );
+        await cancelSubscription({
+          subscriptionId: data.subscriptionId,
+          userId: data.userId,
+          immediate: data.immediate,
+          reason: data.reason ?? "admin",
+        });
+        const { drainQueue } = await import("@/lib/queue/worker.server");
+        await drainQueue(10);
+        return { ok: true };
+      },
+    );
   });
 
 export const adminResumeSubscription = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([
+    ...secured({
+      name: "finance.resumeSubscription",
+      admin: true,
+      write: true,
+      limit: { bucket: "admin-resume", max: 60, windowSeconds: 3600 },
+    }),
+  ])
   .inputValidator((input: unknown) =>
     z
       .object({
@@ -240,18 +304,33 @@ export const adminResumeSubscription = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context as never);
-    const { resumeSubscription } = await import(
-      "@/lib/billing/commands.server"
+    const { auditAdmin, snapshot } = await import(
+      "@/lib/security/audit.server"
     );
-    await resumeSubscription({
-      subscriptionId: data.subscriptionId,
-      userId: data.userId,
-    });
-    const { drainQueue } = await import("@/lib/queue/worker.server");
-    await drainQueue(10);
-    return { ok: true };
+    const before = await snapshot("billing_subscriptions", data.subscriptionId);
+    return auditAdmin(
+      context as never,
+      {
+        action: "subscription.resume",
+        entityType: "billing_subscriptions",
+        entityId: data.subscriptionId,
+        before,
+      },
+      async () => {
+        const { resumeSubscription } = await import(
+          "@/lib/billing/commands.server"
+        );
+        await resumeSubscription({
+          subscriptionId: data.subscriptionId,
+          userId: data.userId,
+        });
+        const { drainQueue } = await import("@/lib/queue/worker.server");
+        await drainQueue(10);
+        return { ok: true };
+      },
+    );
   });
+
 
 /** Operational state of every subscription + the entitlements of each account. */
 export const listSubscriptionStates = createServerFn({ method: "POST" })

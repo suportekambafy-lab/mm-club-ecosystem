@@ -34,6 +34,8 @@ import { NotificationsBell } from "@/components/mm/notifications";
 import { cn } from "@/lib/utils";
 // Boot-time: apply admin overrides to in-memory data
 import "@/data/admin-store";
+import { endLocalSession, useSessionGuard } from "@/lib/security/session-guard";
+
 
 export const Route = createFileRoute("/_app")({
   ssr: false,
@@ -122,9 +124,12 @@ function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  useSessionGuard(authUser?.id ?? null);
+
   useEffect(() => {
     setCollapsed(window.localStorage.getItem("mm.sidebar.collapsed") === "1");
   }, []);
+
 
   // Close mobile drawer on route change
   useEffect(() => {
@@ -242,9 +247,11 @@ function AppLayout() {
 
 
   const handleSignOut = async () => {
+    await endLocalSession();
     await supabase.auth.signOut();
     setAuthUser(null);
   };
+
 
   const displayName =
     (authUser?.user_metadata?.display_name as string | undefined) ??

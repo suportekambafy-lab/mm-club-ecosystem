@@ -7,15 +7,25 @@ import {
   Ban,
   Eye,
   Fingerprint,
+  Gauge,
+  Lock,
   RefreshCw,
+  ScanSearch,
   ShieldAlert,
   ShieldCheck,
   Siren,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { getSecurityOverview, setEmergencyMode } from "@/lib/security.functions";
+import {
+  getSecurityOverview,
+  getSecurityScore,
+  runSecurityScanNow,
+  setEmergencyMode,
+  setReadOnlyMode,
+} from "@/lib/security.functions";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/admin/seguranca")({
   ssr: false,
@@ -117,7 +127,44 @@ function SecurityPage() {
     onError: () => toast.error("Não foi possível alterar o modo de emergência."),
   });
 
+  const fetchScore = useServerFn(getSecurityScore);
+  const runScan = useServerFn(runSecurityScanNow);
+  const toggleReadOnly = useServerFn(setReadOnlyMode);
+
+  const scoreQuery = useQuery({
+    queryKey: ["security-score"],
+    queryFn: () => fetchScore(),
+    refetchInterval: 300_000,
+  });
+
+  const scan = useMutation({
+    mutationFn: () => runScan(),
+    onSuccess: () => {
+      toast.success("Verificação de segurança concluída.");
+      void qc.invalidateQueries({ queryKey: ["security-score"] });
+      void qc.invalidateQueries({ queryKey: ["security-overview"] });
+    },
+    onError: () => toast.error("Não foi possível correr a verificação."),
+  });
+
+  const readOnly = useMutation({
+    mutationFn: (enabled: boolean) =>
+      toggleReadOnly({ data: { enabled, reason: reason.trim() || null } }),
+    onSuccess: (res) => {
+      toast.success(
+        res.enabled
+          ? "Modo apenas-leitura ativado — escritas bloqueadas."
+          : "Modo apenas-leitura desativado.",
+      );
+      void qc.invalidateQueries({ queryKey: ["security-overview"] });
+    },
+    onError: () => toast.error("Não foi possível alterar o modo apenas-leitura."),
+  });
+
   const on = data?.emergency.enabled ?? false;
+  const ro = data?.readOnly.enabled ?? false;
+  const report = scoreQuery.data;
+
 
   return (
     <div className="space-y-6">
@@ -187,6 +234,124 @@ function SecurityPage() {
           </div>
         </div>
       </section>
+
+      {/* Read only mode */}
+      <section
+        className={cn(
+          "flex flex-wrap items-center justify-between gap-4 rounded-2xl border p-5",
+          ro ? "border-admin-accent/60 bg-admin-accent/10" : "border-border bg-surface-1",
+        )}
+      >
+        <div className="flex items-start gap-3">
+          <Lock className={cn("h-5 w-5", ro ? "text-admin-accent" : "text-muted-foreground")} />
+          <div>
+            <p className="font-medium">
+              Modo apenas-leitura {ro ? "ATIVO" : "desligado"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Os membros continuam a ver todo o conteúdo, mas nenhuma escrita é
+              permitida. Ideal para manutenção e migrações.
+            </p>
+            {ro && data?.readOnly.reason ? (
+              <p className="mt-1 text-sm text-admin-accent">
+                Motivo: {data.readOnly.reason}
+              </p>
+            ) : null}
+          </div>
+        </div>
+        <Button
+          variant={ro ? "outline" : "secondary"}
+          disabled={readOnly.isPending}
+          onClick={() => readOnly.mutate(!ro)}
+        >
+          {ro ? "Desativar" : "Ativar apenas-leitura"}
+        </Button>
+      </section>
+
+      {/* Security score */}
+      <section className="rounded-2xl border border-border bg-surface-1 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Gauge className="h-5 w-5 text-admin-accent" />
+            <div>
+              <p className="font-medium">Security Score</p>
+              <p className="text-sm text-muted-foreground">
+                Verificação contínua de RLS, buckets, políticas, abuso e fraude.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <span
+              className={cn(
+                "text-3xl font-semibold",
+                (report?.score ?? 0) >= 85
+                  ? "text-emerald-500"
+                  : (report?.score ?? 0) >= 65
+                    ? "text-admin-accent"
+                    : "text-red-500",
+              )}
+            >
+              {report ? report.score : "—"}
+              <span className="text-base text-muted-foreground">/100</span>
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={scan.isPending}
+              onClick={() => scan.mutate()}
+            >
+              <ScanSearch className={cn("mr-2 h-4 w-4", scan.isPending && "animate-pulse")} />
+              Correr verificação
+            </Button>
+          </div>
+        </div>
+
+        {report?.sections.length ? (
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {report.sections.map((s) => (
+              <div key={s.key} className="rounded-xl border border-border/70 p-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span>{s.label}</span>
+                  <span
+                    className={cn(
+                      "font-semibold",
+                      s.score >= 85
+                        ? "text-emerald-500"
+                        : s.score >= 65
+                          ? "text-admin-accent"
+                          : "text-red-500",
+                    )}
+                  >
+                    {s.score}
+                  </span>
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border">
+                  <div
+                    className={cn(
+                      "h-full rounded-full",
+                      s.score >= 85
+                        ? "bg-emerald-500"
+                        : s.score >= 65
+                          ? "bg-admin-accent"
+                          : "bg-red-500",
+                    )}
+                    style={{ width: `${s.score}%` }}
+                  />
+                </div>
+                {s.findings.length ? (
+                  <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                    {s.findings.slice(0, 3).map((f) => (
+                      <li key={f}>• {f}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </section>
+
+
 
       {/* Alerts */}
       {data?.alerts.length ? (

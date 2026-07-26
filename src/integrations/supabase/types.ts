@@ -27,6 +27,8 @@ export type Database = {
           geo: string | null
           id: string
           ip: string | null
+          request_id: string | null
+          result: string
           user_agent: string | null
         }
         Insert: {
@@ -41,6 +43,8 @@ export type Database = {
           geo?: string | null
           id?: string
           ip?: string | null
+          request_id?: string | null
+          result?: string
           user_agent?: string | null
         }
         Update: {
@@ -55,6 +59,8 @@ export type Database = {
           geo?: string | null
           id?: string
           ip?: string | null
+          request_id?: string | null
+          result?: string
           user_agent?: string | null
         }
         Relationships: []
@@ -2503,6 +2509,54 @@ export type Database = {
         }
         Relationships: []
       }
+      security_alerts: {
+        Row: {
+          category: string
+          created_at: string
+          dedupe_key: string | null
+          detail: string | null
+          id: string
+          level: string
+          metadata: Json
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          subject: string | null
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          dedupe_key?: string | null
+          detail?: string | null
+          id?: string
+          level?: string
+          metadata?: Json
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          subject?: string | null
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          dedupe_key?: string | null
+          detail?: string | null
+          id?: string
+          level?: string
+          metadata?: Json
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          subject?: string | null
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       security_counters: {
         Row: {
           bucket: string
@@ -2527,6 +2581,60 @@ export type Database = {
           subject?: string
           updated_at?: string
           window_start?: string
+        }
+        Relationships: []
+      }
+      security_devices: {
+        Row: {
+          browser: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          device_type: string | null
+          fingerprint: string
+          first_seen_at: string
+          id: string
+          last_ip: string | null
+          last_seen_at: string
+          os: string | null
+          revoked_at: string | null
+          trusted: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          fingerprint: string
+          first_seen_at?: string
+          id?: string
+          last_ip?: string | null
+          last_seen_at?: string
+          os?: string | null
+          revoked_at?: string | null
+          trusted?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          fingerprint?: string
+          first_seen_at?: string
+          id?: string
+          last_ip?: string | null
+          last_seen_at?: string
+          os?: string | null
+          revoked_at?: string | null
+          trusted?: boolean
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -2574,6 +2682,80 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      security_scans: {
+        Row: {
+          created_at: string
+          findings: Json
+          id: string
+          score: number
+          sections: Json
+          trigger: string
+        }
+        Insert: {
+          created_at?: string
+          findings?: Json
+          id?: string
+          score?: number
+          sections?: Json
+          trigger?: string
+        }
+        Update: {
+          created_at?: string
+          findings?: Json
+          id?: string
+          score?: number
+          sections?: Json
+          trigger?: string
+        }
+        Relationships: []
+      }
+      security_sessions: {
+        Row: {
+          created_at: string
+          device_id: string | null
+          id: string
+          ip: string | null
+          last_seen_at: string
+          revoked_at: string | null
+          revoked_reason: string | null
+          session_token: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          ip?: string | null
+          last_seen_at?: string
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          session_token: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          ip?: string | null
+          last_seen_at?: string
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          session_token?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "security_sessions_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "security_devices"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       security_settings: {
         Row: {
@@ -2749,6 +2931,7 @@ export type Database = {
         Args: { _bucket: string; _subject: string; _window_seconds: number }
         Returns: number
       }
+      security_posture_report: { Args: never; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
