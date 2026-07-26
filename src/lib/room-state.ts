@@ -131,6 +131,8 @@ export interface RoomActions {
 
 
   raiseHand(raised: boolean): Promise<void>;
+  /** Self-service: step down from the stage back to the audience. */
+  leaveStage(): Promise<void>;
 
   // Host / cohost only (adapter no-ops for others).
   inviteToStage(userId: string): Promise<void>;

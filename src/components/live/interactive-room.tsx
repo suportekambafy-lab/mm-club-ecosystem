@@ -23,6 +23,7 @@ import {
   goLive,
   endLive,
   raiseHand,
+  leaveStage,
   inviteToStage,
   promoteToStage,
   demoteFromStage,
@@ -46,6 +47,7 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
   const goLiveFn = useServerFn(goLive);
   const endLiveFn = useServerFn(endLive);
   const raiseHandFn = useServerFn(raiseHand);
+  const leaveStageFn = useServerFn(leaveStage);
   const inviteFn = useServerFn(inviteToStage);
   const promoteFn = useServerFn(promoteToStage);
   const demoteFn = useServerFn(demoteFromStage);
@@ -58,6 +60,9 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
     () => ({
       raiseHand: async (raised: boolean) => {
         await raiseHandFn({ data: { liveId, raised } });
+      },
+      leaveStage: async () => {
+        await leaveStageFn({ data: { liveId } });
       },
       inviteToStage: async (userId: string) => {
         await inviteFn({ data: { liveId, targetUserId: userId } });
@@ -90,7 +95,7 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
         await banFn({ data: { liveId, targetUserId: userId } });
       },
     }),
-    [liveId, goLiveFn, endLiveFn, raiseHandFn, inviteFn, promoteFn, demoteFn, spotlightFn, layoutFn, kickFn, banFn],
+    [liveId, goLiveFn, endLiveFn, raiseHandFn, leaveStageFn, inviteFn, promoteFn, demoteFn, spotlightFn, layoutFn, kickFn, banFn],
   );
 
   const { state, actions } = useRoomState({
