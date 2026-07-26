@@ -22,7 +22,7 @@ export const listLives = createServerFn({ method: "GET" }).handler(async () => {
   const { data, error } = await supa
     .from("lives")
     .select(
-      "id,title,description,expert_id,starts_at,duration_minutes,visibility,cover_url,status,cf_playback_id,recording_video_uid",
+      "id,title,description,expert_id,starts_at,duration_minutes,visibility,cover_url,status,cf_playback_id,recording_video_uid,mode",
     )
     .order("starts_at", { ascending: false });
   if (error) throw new Error(error.message);
@@ -36,7 +36,7 @@ export const listLivesAuthed = createServerFn({ method: "GET" })
     const { data, error } = await context.supabase
       .from("lives")
       .select(
-        "id,title,description,expert_id,starts_at,duration_minutes,visibility,cover_url,status,cf_playback_id,recording_video_uid",
+        "id,title,description,expert_id,starts_at,duration_minutes,visibility,cover_url,status,cf_playback_id,recording_video_uid,mode",
       )
       .order("starts_at", { ascending: false });
     if (error) throw new Error(error.message);
