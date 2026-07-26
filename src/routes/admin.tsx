@@ -24,6 +24,7 @@ import {
   Plus,
   Sun,
   Moon,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import mmIcon from "@/assets/mm-icon.png.asset.json";
@@ -77,7 +78,8 @@ type AdminTo =
   | "/admin/transcricoes"
   | "/admin/eventos"
   | "/admin/lives"
-  | "/admin/ferramentas";
+  | "/admin/ferramentas"
+  | "/admin/seguranca";
 
 type NavItem = { to: AdminTo; label: string; icon: typeof Home; exact?: boolean };
 
@@ -112,6 +114,7 @@ const nav: Array<{ label: string; items: NavItem[] }> = [
       { to: "/admin/eventos", label: "Eventos", icon: CalendarDays },
       { to: "/admin/lives", label: "Lives", icon: Radio },
       { to: "/admin/ferramentas", label: "Ferramentas", icon: Wrench },
+      { to: "/admin/seguranca", label: "Segurança", icon: ShieldCheck },
     ],
   },
 ];

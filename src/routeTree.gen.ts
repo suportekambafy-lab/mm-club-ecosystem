@@ -25,6 +25,7 @@ import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiTranscribeRouteImport } from './routes/api.transcribe'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AdminTranscricoesRouteImport } from './routes/admin.transcricoes'
+import { Route as AdminSegurancaRouteImport } from './routes/admin.seguranca'
 import { Route as AdminSaudeRouteImport } from './routes/admin.saude'
 import { Route as AdminLivesRouteImport } from './routes/admin.lives'
 import { Route as AdminFinanceiroRouteImport } from './routes/admin.financeiro'
@@ -159,6 +160,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
 const AdminTranscricoesRoute = AdminTranscricoesRouteImport.update({
   id: '/transcricoes',
   path: '/transcricoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSegurancaRoute = AdminSegurancaRouteImport.update({
+  id: '/seguranca',
+  path: '/seguranca',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSaudeRoute = AdminSaudeRouteImport.update({
@@ -491,6 +497,7 @@ export interface FileRoutesByFullPath {
   '/admin/financeiro': typeof AdminFinanceiroRouteWithChildren
   '/admin/lives': typeof AdminLivesRouteWithChildren
   '/admin/saude': typeof AdminSaudeRoute
+  '/admin/seguranca': typeof AdminSegurancaRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
   '/api/transcribe': typeof ApiTranscribeRoute
@@ -559,6 +566,7 @@ export interface FileRoutesByTo {
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/saude': typeof AdminSaudeRoute
+  '/admin/seguranca': typeof AdminSegurancaRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
   '/api/transcribe': typeof ApiTranscribeRoute
@@ -632,6 +640,7 @@ export interface FileRoutesById {
   '/admin/financeiro': typeof AdminFinanceiroRouteWithChildren
   '/admin/lives': typeof AdminLivesRouteWithChildren
   '/admin/saude': typeof AdminSaudeRoute
+  '/admin/seguranca': typeof AdminSegurancaRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
   '/api/transcribe': typeof ApiTranscribeRoute
@@ -707,6 +716,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro'
     | '/admin/lives'
     | '/admin/saude'
+    | '/admin/seguranca'
     | '/admin/transcricoes'
     | '/api/chat'
     | '/api/transcribe'
@@ -775,6 +785,7 @@ export interface FileRouteTypes {
     | '/admin/eventos'
     | '/admin/ferramentas'
     | '/admin/saude'
+    | '/admin/seguranca'
     | '/admin/transcricoes'
     | '/api/chat'
     | '/api/transcribe'
@@ -847,6 +858,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro'
     | '/admin/lives'
     | '/admin/saude'
+    | '/admin/seguranca'
     | '/admin/transcricoes'
     | '/api/chat'
     | '/api/transcribe'
@@ -1036,6 +1048,13 @@ declare module '@tanstack/react-router' {
       path: '/transcricoes'
       fullPath: '/admin/transcricoes'
       preLoaderRoute: typeof AdminTranscricoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/seguranca': {
+      id: '/admin/seguranca'
+      path: '/seguranca'
+      fullPath: '/admin/seguranca'
+      preLoaderRoute: typeof AdminSegurancaRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/saude': {
@@ -1587,6 +1606,7 @@ interface AdminRouteChildren {
   AdminFinanceiroRoute: typeof AdminFinanceiroRouteWithChildren
   AdminLivesRoute: typeof AdminLivesRouteWithChildren
   AdminSaudeRoute: typeof AdminSaudeRoute
+  AdminSegurancaRoute: typeof AdminSegurancaRoute
   AdminTranscricoesRoute: typeof AdminTranscricoesRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -1599,6 +1619,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminFinanceiroRoute: AdminFinanceiroRouteWithChildren,
   AdminLivesRoute: AdminLivesRouteWithChildren,
   AdminSaudeRoute: AdminSaudeRoute,
+  AdminSegurancaRoute: AdminSegurancaRoute,
   AdminTranscricoesRoute: AdminTranscricoesRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
