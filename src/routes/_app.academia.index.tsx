@@ -6,6 +6,7 @@ import { expertsById } from "@/data/experts";
 import type { Course } from "@/data/types";
 import { useUserProgress, type ProgressByCourse } from "@/hooks/use-user-progress";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
+import { courseCoverBackground } from "@/lib/course-cover";
 import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb, parseDurationToMinutes, formatMinutes } from "@/lib/course-duration";
 
 export const Route = createFileRoute("/_app/academia/")({
@@ -68,7 +69,7 @@ function AcademiaPage() {
           </div>
           <div className="scrollbar-none -mx-1 flex gap-5 overflow-x-auto px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {continuing.map((c) => (
-              <PosterCard key={c.id} course={c} progress={progress} />
+              <PosterCard key={c.id} course={c} progress={progress} showResumeThumb />
             ))}
           </div>
         </section>
@@ -265,10 +266,12 @@ function PosterCard({
   course,
   progress,
   inGrid,
+  showResumeThumb,
 }: {
   course: Course;
   progress: ProgressByCourse;
   inGrid?: boolean;
+  showResumeThumb?: boolean;
 }) {
   const expert = expertsById[course.expertId];
   const percent = Math.round(course.progress * 100);
@@ -282,9 +285,16 @@ function PosterCard({
       : { to: "/academia/$courseId" as const, params: { courseId: course.id } };
   const totalDuration = computeCourseDuration(course);
   const lessonsCount = computeLessonsCount(course);
-  // Catalog cards always show the course cover — lesson thumbs are reserved
-  // for the "Continua a assistir" hero.
-  const posterBackground = course.cover;
+  // Catalog cards always show the COURSE cover. Cards in "Continua onde
+  // ficaste" show the frame of the lesson the member stopped at.
+  const syncThumb = showResumeThumb && percent > 0 ? lessonThumb(resumeLesson, course) : null;
+  const { thumb: oembedThumb } = useBunnyThumb(
+    showResumeThumb && percent > 0 && !syncThumb ? resumeLesson?.videoUrl : null,
+  );
+  const resumeThumb = syncThumb ?? oembedThumb;
+  const posterBackground = resumeThumb
+    ? `url(${resumeThumb}) center/cover no-repeat, #000`
+    : courseCoverBackground(course);
 
 
   return (
@@ -356,7 +366,7 @@ function ComingSoonCard({ course }: { course: Course }) {
   const expert = expertsById[course.expertId];
   return (
     <div className="relative flex flex-col overflow-hidden rounded-2xl bg-surface-1 ring-1 ring-border">
-      <div className="aspect-[16/9]" style={{ background: course.cover }}>
+      <div className="aspect-[16/9]" style={{ background: courseCoverBackground(course) }}>
         <div className="h-full w-full bg-linear-to-t from-black/70 to-transparent" />
       </div>
       <div className="flex flex-col gap-2 p-5">

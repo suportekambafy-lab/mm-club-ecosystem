@@ -6,6 +6,7 @@ import { expertsById } from "@/data/experts";
 import { ExpertAvatar } from "./expert-avatar";
 import { cn } from "@/lib/utils";
 import { computeCourseDuration, lessonThumb } from "@/lib/course-duration";
+import { courseCoverBackground } from "@/lib/course-cover";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 
 
@@ -34,11 +35,14 @@ export function CourseCard({ course, className, variant = "default", resumeLesso
           params: { courseId: course.id, lessonId: resumeLesson.id },
         }
       : { to: "/academia/$courseId" as const, params: { courseId: course.id } };
-  // Always prefer a real lesson thumbnail (Bunny/YouTube frame) over any static cover.
-  const thumbLesson = showResumeThumb && course.progress > 0 ? resumeLesson : firstLesson;
-  const syncThumb = lessonThumb(thumbLesson, course);
-  const { thumb: oembedThumb } = useBunnyThumb(syncThumb ? null : thumbLesson?.videoUrl);
-  const thumb = syncThumb ?? oembedThumb;
+  // Catalog cards show the COURSE cover. Only "Continua a ver" cards show the
+  // frame of the lesson the member stopped at. Never invert this.
+  const resumeThumbLesson = showResumeThumb && course.progress > 0 ? resumeLesson : null;
+  const syncThumb = resumeThumbLesson ? lessonThumb(resumeThumbLesson, course) : null;
+  const { thumb: oembedThumb } = useBunnyThumb(
+    resumeThumbLesson && !syncThumb ? resumeThumbLesson.videoUrl : null,
+  );
+  const resumeThumb = syncThumb ?? oembedThumb;
 
 
 
@@ -77,9 +81,9 @@ export function CourseCard({ course, className, variant = "default", resumeLesso
             isWide ? "aspect-[16/8]" : "aspect-[16/10]",
           )}
           style={{
-            background: thumb
-              ? `url(${thumb}) center/cover no-repeat, #000`
-              : course.cover,
+            background: resumeThumb
+              ? `url(${resumeThumb}) center/cover no-repeat, #000`
+              : courseCoverBackground(course),
           }}
 
 
