@@ -10,6 +10,7 @@ import {
   startGuestCheckout,
 } from "@/lib/billing.functions";
 import { formatMoney } from "@/lib/billing/types";
+import { rememberIntendedPlan, readIntendedPlan } from "@/lib/intended-plan";
 import { cn } from "@/lib/utils";
 
 type CheckoutSearch = { plan?: string };
@@ -82,6 +83,7 @@ function PlansPage() {
 
   const handleSelect = async (priceSlug: string) => {
     setError(null);
+    rememberIntendedPlan(priceSlug, "checkout");
     const { data } = await supabase.auth.getSession();
     if (!data.session) {
       // Pay first, account after: we only need an email at this point.

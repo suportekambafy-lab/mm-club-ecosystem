@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { rememberIntendedPlan } from "@/lib/intended-plan";
 import { startCheckout, startGuestCheckout } from "@/lib/billing.functions";
 
 
@@ -71,6 +72,7 @@ function VipPage() {
 
     setPending(true);
     setError(null);
+    rememberIntendedPlan("mm_club_vip_trial", "vip");
     try {
       if (!user) {
         const res = await startGuestCheckout({
