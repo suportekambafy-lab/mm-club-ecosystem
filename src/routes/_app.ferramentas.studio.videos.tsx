@@ -15,6 +15,20 @@ type QcSummary = {
   skipped?: string;
 };
 
+const QC_LABELS: Record<string, string> = {
+  segments_complete: "Segmentos em falta",
+  narration_present: "Narração pedida não detetada",
+  captions_present: "Legendas pedidas não detetadas",
+  music_present: "Música de fundo não detetada",
+  character_consistent: "Variação de identidade/roupa detetada",
+  anatomy_ok: "Problema de anatomia detetado",
+  text_legible: "Texto ilegível no ecrã",
+  motion_smooth: "Movimento irregular",
+  framing_stable: "Enquadramento instável",
+  audio_video_synced: "Áudio dessincronizado",
+};
+
+
 
 
 export const Route = createFileRoute("/_app/ferramentas/studio/videos")({
