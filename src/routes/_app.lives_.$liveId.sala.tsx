@@ -263,6 +263,26 @@ function SalaRoute() {
     return <FullscreenLoader label="A ligar à sala…" />;
   }
 
+  // Green room: publishers (host / cohost / speaker) check camera, microphone
+  // and framing before any track is published to the room.
+  const isPublisher = session.role === "host" || session.role === "cohost" || session.role === "speaker";
+  if (isPublisher && !ready) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black">
+        <PreJoin
+          title={target === "backstage" ? "Backstage privado" : "Antes de entrar ao vivo"}
+          subtitle={
+            target === "backstage"
+              ? "Ninguém te vê ainda. Ajusta câmara, microfone e enquadramento e entra quando estiveres pronto."
+              : "Verifica câmara, microfone e enquadramento. Só entras na sala quando confirmares."
+          }
+          onEnter={() => setReady(true)}
+          onCancel={handleLeave}
+        />
+      </div>
+    );
+  }
+
   return (
     <SalaShell liveId={live.id} userId={userId} onLeave={handleLeave}>
       <InteractiveRoom
