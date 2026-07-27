@@ -134,7 +134,7 @@ export async function startLiveRecording(args: {
       const info = await egress.startRoomCompositeEgress(
         args.roomName,
         { file: output },
-        { layout: "grid", audioOnly: false, videoOnly: false },
+        compositeOptions(),
       );
       return { egressId: info.egressId ?? null, target: "s3", filepath, error: null };
     }
