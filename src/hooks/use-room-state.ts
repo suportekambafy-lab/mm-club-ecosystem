@@ -25,6 +25,8 @@ import {
   type ConnectionState,
 } from "livekit-client";
 import { HQ_ROOM_OPTIONS, HQ_SCREEN_SHARE } from "@/lib/livekit-quality";
+import { syncStudioProcessors } from "@/lib/studio-processors";
+import { subscribeStudio } from "@/lib/studio-filters";
 import { supabase } from "@/integrations/supabase/client";
 import {
   resolveLayout,
@@ -247,6 +249,10 @@ export function useRoomState({
       handlers.push([evt, fn as (...a: unknown[]) => void]);
     };
 
+    on(RoomEvent.LocalTrackPublished, () => {
+      rebuildParticipantTracks(room.localParticipant);
+      void syncStudioProcessors(room);
+    });
     on(RoomEvent.ConnectionStateChanged, (s: ConnectionState) => setConnState(mapConnectionState(s)));
     on(RoomEvent.ParticipantConnected, (p: Participant) => rebuildParticipantTracks(p));
     on(RoomEvent.ParticipantDisconnected, (p: Participant) => {
@@ -320,6 +326,7 @@ export function useRoomState({
               });
             }
             rebuildParticipantTracks(lp);
+            void syncStudioProcessors(room);
           }
 
         } catch (err) {
@@ -331,7 +338,13 @@ export function useRoomState({
       }
     })();
 
+    // Ligar/desligar filtros de estúdio em direto quando o utilizador mexe no painel.
+    const unsubStudio = subscribeStudio(() => {
+      void syncStudioProcessors(room);
+    });
+
     return () => {
+      unsubStudio();
       handlers.forEach(([evt, fn]) => {
         (room as unknown as AnyOn).off(evt, fn);
       });
