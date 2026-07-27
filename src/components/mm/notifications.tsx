@@ -191,6 +191,7 @@ export function NotificationsBell({ className }: { className?: string }) {
     dismiss: dbDismiss,
   } = useCommunityNotifications();
 
+  const device = useDeviceNotifications();
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<StoredState>({ readIds: [], dismissedIds: [], lastOpenedAt: 0 });
   const [hydrated, setHydrated] = useState(false);
@@ -277,6 +278,16 @@ export function NotificationsBell({ className }: { className?: string }) {
 
   const unreadCount = hydrated ? visible.filter((n) => !isReadOf(n)).length : 0;
 
+  // Mirror unread bell items to the device (PWA / browser) notifications
+  useEffect(() => {
+    if (!hydrated || !device.enabled) return;
+    const unread = visible.filter((n) => !isReadOf(n));
+    if (unread.length === 0) return;
+    device.deliver(
+      unread.map((n) => ({ id: n.id, title: n.title, body: n.subtitle, href: n.href })),
+    );
+  }, [hydrated, device, visible, state.readIds]);
+
   const handleOpen = () => {
     const next = !open;
     setOpen(next);
@@ -356,6 +367,32 @@ export function NotificationsBell({ className }: { className?: string }) {
             <div className="flex items-center gap-2">
               <p className="font-display text-sm text-foreground">Notificações</p>
             </div>
+            <div className="flex items-center gap-3">
+            {device.supported && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (device.enabled) device.disable();
+                  else void device.enable();
+                }}
+                title={
+                  device.permission === "denied"
+                    ? "Notificações bloqueadas no navegador"
+                    : device.enabled
+                      ? "Desativar notificações no dispositivo"
+                      : "Ativar notificações no dispositivo"
+                }
+                aria-label="Notificações no dispositivo"
+                className={cn(
+                  "flex h-6 w-6 items-center justify-center rounded-full transition",
+                  device.enabled
+                    ? "bg-primary/10 text-primary"
+                    : "bg-surface-2 text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {device.enabled ? <BellRing className="h-3.5 w-3.5" /> : <BellOff className="h-3.5 w-3.5" />}
+              </button>
+            )}
             {unreadCount > 0 && (
               <button
                 type="button"
@@ -365,6 +402,7 @@ export function NotificationsBell({ className }: { className?: string }) {
                 Marcar tudo como lido
               </button>
             )}
+            </div>
           </div>
 
           <div className="flex-1 min-h-0 overflow-y-auto">
