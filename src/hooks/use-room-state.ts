@@ -369,7 +369,7 @@ export function useRoomState({
         isLocal: r.user_id === localUserId,
       } satisfies RoomParticipant;
     });
-  }, [participants, profiles, engineTracks, micOn, camOn, screenOn, activeSpeakerId, quality, localUserId]);
+  }, [participants, profiles, engineNames, engineTracks, micOn, camOn, screenOn, activeSpeakerId, quality, localUserId]);
 
   const onStage = useMemo(() => mapped.filter((p) => p.onStage && p.room === "main"), [mapped]);
   const audience = useMemo(() => mapped.filter((p) => p.role === "viewer" || (!p.onStage && p.room === "main")), [mapped]);
