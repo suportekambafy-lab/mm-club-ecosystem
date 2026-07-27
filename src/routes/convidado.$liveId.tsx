@@ -7,7 +7,7 @@
  */
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, Radio, CalendarClock } from "lucide-react";
 import { joinLiveAsGuest, getGuestLiveInfo } from "@/lib/live-guest.functions";
@@ -47,7 +47,7 @@ function GuestEntry() {
     queryKey: ["guest-live-info", liveId, c],
     enabled: Boolean(c),
     queryFn: () => fetchInfo({ data: { liveId, code: c as string } }),
-    refetchInterval: 15_000,
+    refetchInterval: 10_000,
     staleTime: 0,
   });
 
@@ -139,6 +139,18 @@ function GuestEntry() {
   }
 
   const live = info.data;
+  // Flip the page to "entrar" the exact second the scheduled time is reached.
+  const startMs = live?.startsAt ? new Date(live.startsAt).getTime() : 0;
+  const [, tick] = useState(0);
+  useEffect(() => {
+    if (!startMs || live?.open) return;
+    const id = setInterval(() => {
+      tick((n) => n + 1);
+      if (Date.now() >= startMs) void info.refetch();
+    }, 1000);
+    return () => clearInterval(id);
+  }, [startMs, live?.open, info]);
+  const isOpen = Boolean(live?.open) || (startMs > 0 && Date.now() >= startMs);
   const coverUrl = resolveLiveCoverUrl(live?.coverUrl ?? undefined);
   const dateLabel = live?.startsAt
     ? new Intl.DateTimeFormat("pt-PT", { dateStyle: "full", timeStyle: "short" }).format(new Date(live.startsAt))
@@ -185,7 +197,7 @@ function GuestEntry() {
           <div className="bg-gradient-to-t from-black/90 via-black/60 to-black/30 p-6 pt-24 text-left">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest text-amber-300">
               <Radio className="h-3 w-3" />
-              {live?.open ? "Sala aberta" : "Sessão agendada"}
+              {isOpen ? "Sala aberta" : "Em breve"}
             </span>
             <h1 className="mt-3 text-2xl font-semibold text-white">{live?.title}</h1>
             {live?.description && <p className="mt-1.5 text-sm text-white/60">{live.description}</p>}
@@ -195,7 +207,7 @@ function GuestEntry() {
                 {dateLabel}
               </p>
             )}
-            {live?.startsAt && !live.open && (
+            {live?.startsAt && !isOpen && (
               <div className="mt-4">
                 <LiveCountdown startsAt={live.startsAt} variant="hero" />
               </div>
@@ -203,11 +215,11 @@ function GuestEntry() {
           </div>
         </div>
 
-        {!live?.open ? (
+        {!isOpen ? (
           <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5 text-center">
             <p className="text-sm text-white/70">
-              A sala abre 10 minutos antes do início. Deixa esta página aberta — assim que o anfitrião abrir,
-              poderás escrever o teu nome e entrar.
+              Em breve. Deixa esta página aberta — à hora marcada abre automaticamente para escreveres o
+              teu nome e entrares.
             </p>
           </div>
         ) : (

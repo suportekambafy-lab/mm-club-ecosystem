@@ -79,8 +79,8 @@ export const joinLiveAsGuest = createServerFn({ method: "POST" })
       const open =
         st === "live" ||
         st === "starting" ||
-        (startMs > 0 && Date.now() >= startMs - 10 * 60_000);
-      if (!open) throw new Error("A sala ainda não está aberta. Volta perto da hora de início.");
+        (startMs > 0 && Date.now() >= startMs);
+      if (!open) throw new Error("A sessão ainda não começou. Volta à hora marcada.");
     }
 
     const guestId = data.guestId ?? crypto.randomUUID();
@@ -241,7 +241,7 @@ export const getGuestLiveInfo = createServerFn({ method: "POST" })
     const open =
       status === "live" ||
       status === "starting" ||
-      (status === "scheduled" && startMs > 0 && Date.now() >= startMs - 10 * 60_000);
+      (startMs > 0 && Date.now() >= startMs);
     return {
       title: live.title as string,
       description: (live.description as string | null) ?? null,
