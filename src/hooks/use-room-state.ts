@@ -507,9 +507,12 @@ export function useRoomState({
       leave,
       attachTrack,
       detachTrack,
+      listDevices,
+      setDevice,
+      getActiveDevice,
       ...serverActions,
     }),
-    [toggleMic, toggleCam, startScreenShare, stopScreenShare, startAudio, leave, attachTrack, detachTrack, serverActions],
+    [toggleMic, toggleCam, startScreenShare, stopScreenShare, startAudio, leave, attachTrack, detachTrack, listDevices, setDevice, getActiveDevice, serverActions],
   );
 
   return { state, actions };
