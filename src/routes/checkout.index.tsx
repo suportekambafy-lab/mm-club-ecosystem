@@ -179,6 +179,13 @@ function PlansPage() {
           </p>
         </motion.header>
 
+        {resumed ? (
+          <p className="mx-auto mt-10 max-w-xl rounded-2xl bg-primary/10 px-5 py-3 text-center text-sm text-foreground ring-1 ring-primary/30">
+            Guardámos o plano que tinhas escolhido — está destacado abaixo. Podes
+            retomar o pagamento com um clique.
+          </p>
+        ) : null}
+
         <section className="mx-auto mt-14 grid max-w-5xl gap-6 md:mt-20 md:grid-cols-3">
           {isLoading
             ? [0, 1, 2].map((i) => (
