@@ -171,6 +171,12 @@ export function GuestRoom({
         if (!cancelled) {
           setRoom(r);
           setConnecting(false);
+          try {
+            await r.startAudio();
+          } catch {
+            /* precisa de gesto */
+          }
+          setAudioBlocked(!r.canPlaybackAudio);
         }
       } catch (e) {
         if (cancelled) return;
