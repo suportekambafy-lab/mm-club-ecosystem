@@ -1,5 +1,5 @@
 import { createECDH, createHash } from "node:crypto";
-import * as webPush from "web-push";
+import * as webPushNamespace from "web-push";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
@@ -41,6 +41,10 @@ type PushSubscriptionRow = {
   auth: string;
   failure_count: number;
 };
+
+const webPush =
+  (webPushNamespace as unknown as { default?: typeof webPushNamespace }).default ??
+  webPushNamespace;
 
 let cachedVapid: VapidKeys | undefined;
 
