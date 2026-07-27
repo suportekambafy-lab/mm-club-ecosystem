@@ -182,13 +182,23 @@ export const guestSync = createServerFn({ method: "POST" })
       throw new Error("Link de convidado inválido ou expirado.");
     }
 
-    if (typeof data.raiseHand === "boolean") {
+    // Heartbeat: mantém o convidado "vivo" na lista (evita fantasmas).
+    {
+      const patch: Record<string, unknown> = {
+        last_seen_at: new Date().toISOString(),
+        guest_name: data.displayName,
+        is_guest: true,
+      };
+      if (typeof data.raiseHand === "boolean") {
+        patch.hand_raised_at = data.raiseHand ? new Date().toISOString() : null;
+      }
       await supabaseAdmin
         .from("live_participants")
-        .update({ hand_raised_at: data.raiseHand ? new Date().toISOString() : null })
+        .update(patch)
         .eq("live_id", live.id)
         .eq("user_id", data.guestId);
     }
+
 
     const { data: me } = await supabaseAdmin
       .from("live_participants")
