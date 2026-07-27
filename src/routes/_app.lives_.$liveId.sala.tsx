@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getLive } from "@/lib/lives.functions";
 import { joinRoom } from "@/lib/live-room.functions";
 import { InteractiveRoom } from "@/components/live/interactive-room";
+import { PreJoin } from "@/components/live/pre-join";
 import { LiveChat } from "@/components/mm/live-chat";
 import { MemberAvatar } from "@/components/mm/member-avatar";
 import { useAdminIds } from "@/hooks/use-admin-ids";
