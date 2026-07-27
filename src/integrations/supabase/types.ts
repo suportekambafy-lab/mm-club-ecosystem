@@ -2662,6 +2662,9 @@ export type Database = {
           id: string
           kind: string
           post_id: string | null
+          push_attempts: number
+          push_error: string | null
+          push_sent_at: string | null
           read_at: string | null
           short_comment_id: string | null
           short_id: string | null
@@ -2675,6 +2678,9 @@ export type Database = {
           id?: string
           kind: string
           post_id?: string | null
+          push_attempts?: number
+          push_error?: string | null
+          push_sent_at?: string | null
           read_at?: string | null
           short_comment_id?: string | null
           short_id?: string | null
@@ -2688,6 +2694,9 @@ export type Database = {
           id?: string
           kind?: string
           post_id?: string | null
+          push_attempts?: number
+          push_error?: string | null
+          push_sent_at?: string | null
           read_at?: string | null
           short_comment_id?: string | null
           short_id?: string | null
@@ -2811,6 +2820,51 @@ export type Database = {
           display_name?: string
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          failed_at: string | null
+          failure_count: number
+          id: string
+          last_seen_at: string
+          p256dh: string
+          revoked_at: string | null
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          failed_at?: string | null
+          failure_count?: number
+          id?: string
+          last_seen_at?: string
+          p256dh: string
+          revoked_at?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          failed_at?: string | null
+          failure_count?: number
+          id?: string
+          last_seen_at?: string
+          p256dh?: string
+          revoked_at?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
         }
         Relationships: []
       }
