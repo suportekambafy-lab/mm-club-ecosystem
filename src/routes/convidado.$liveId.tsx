@@ -42,7 +42,13 @@ function GuestEntry() {
 
   const [name, setName] = useState("");
   const [step, setStep] = useState<"name" | "prejoin" | "room">("name");
-  const [session, setSession] = useState<{ token: string; url: string; title: string } | null>(null);
+  const [session, setSession] = useState<{
+    token: string;
+    url: string;
+    title: string;
+    guestId: string;
+    onStage: boolean;
+  } | null>(null);
   const [prefs, setPrefs] = useState<MediaPrefs | null>(null);
   const [entering, setEntering] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +66,7 @@ function GuestEntry() {
     setError(null);
     try {
       const res = await join({ data: { liveId, code: c, displayName: name.trim() } });
-      setSession({ token: res.token, url: res.url, title: res.title });
+      setSession({ token: res.token, url: res.url, title: res.title, guestId: res.guestId, onStage: res.onStage });
       setPrefs(mediaPrefs);
       setStep("room");
     } catch (e) {
@@ -78,6 +84,11 @@ function GuestEntry() {
           token={session.token}
           url={session.url}
           prefs={prefs}
+          liveId={liveId}
+          code={c}
+          guestId={session.guestId}
+          displayName={name.trim()}
+          onStage={session.onStage}
           onLeave={() => {
             setStep("name");
             setSession(null);
@@ -86,6 +97,7 @@ function GuestEntry() {
       </div>
     );
   }
+
 
   if (step === "prejoin") {
     return (
