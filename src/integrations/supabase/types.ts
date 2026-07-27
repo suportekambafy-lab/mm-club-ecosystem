@@ -1822,12 +1822,15 @@ export type Database = {
           cam_allowed: boolean
           connection_quality: string | null
           created_at: string
+          guest_name: string | null
           hand_raised_at: string | null
           id: string
           invited_by: string | null
           invited_to_stage_at: string | null
+          is_guest: boolean
           joined_at: string
           kicked_at: string | null
+          last_seen_at: string | null
           left_at: string | null
           live_id: string
           mic_allowed: boolean
@@ -1844,12 +1847,15 @@ export type Database = {
           cam_allowed?: boolean
           connection_quality?: string | null
           created_at?: string
+          guest_name?: string | null
           hand_raised_at?: string | null
           id?: string
           invited_by?: string | null
           invited_to_stage_at?: string | null
+          is_guest?: boolean
           joined_at?: string
           kicked_at?: string | null
+          last_seen_at?: string | null
           left_at?: string | null
           live_id: string
           mic_allowed?: boolean
@@ -1866,12 +1872,15 @@ export type Database = {
           cam_allowed?: boolean
           connection_quality?: string | null
           created_at?: string
+          guest_name?: string | null
           hand_raised_at?: string | null
           id?: string
           invited_by?: string | null
           invited_to_stage_at?: string | null
+          is_guest?: boolean
           joined_at?: string
           kicked_at?: string | null
+          last_seen_at?: string | null
           left_at?: string | null
           live_id?: string
           mic_allowed?: boolean
