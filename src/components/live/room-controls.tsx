@@ -2,9 +2,9 @@
  * Floating controls bar (Meet-style). Pure UI reading abstract state.
  */
 import { useMemo, useState } from "react";
-import type { RoomActions, RoomState } from "@/lib/room-state";
+import type { MediaDeviceOption, RoomActions, RoomState } from "@/lib/room-state";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Video, VideoOff, ScreenShare, Hand, PhoneOff, Layout, LogOut } from "lucide-react";
+import { Mic, MicOff, Video, VideoOff, ScreenShare, Hand, PhoneOff, Layout, LogOut, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
