@@ -1,4 +1,4 @@
-const VERSION = "mm-club-fresh-runtime-2026-07-27-1";
+const VERSION = "mm-club-fresh-runtime-2026-07-27-2";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(self.skipWaiting());
@@ -43,4 +43,20 @@ self.addEventListener("fetch", (event) => {
   if (!shouldAlwaysUseNetwork) return;
 
   event.respondWith(fetch(new Request(request, { cache: "reload" })));
+});
+self.addEventListener("notificationclick", (event) => {
+  const href = (event.notification.data && event.notification.data.href) || "/";
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ("focus" in client) {
+          client.focus();
+          if ("navigate" in client) client.navigate(href);
+          return;
+        }
+      }
+      return self.clients.openWindow(href);
+    }),
+  );
 });
