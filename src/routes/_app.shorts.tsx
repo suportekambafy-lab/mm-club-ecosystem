@@ -495,6 +495,8 @@ function ShortItem({
   return (
     <section
       data-short-idx={idx}
+      data-short-id={short.id}
+
       className="relative flex h-full min-h-full w-full snap-start snap-always items-center justify-center"
     >
       <div className="relative flex h-full w-full items-center justify-center bg-black">
