@@ -235,7 +235,11 @@ async function transcribeFromHls(playlistUrl: string, apiKey: string): Promise<s
   const isFmp4 = !!initBytes;
 
   const MAX = 20 * 1024 * 1024;
-  const texts: string[] = [];
+  // Transcrição de chunks em paralelo (ordem preservada pelo índice).
+  const CHUNK_CONCURRENCY = 4;
+  const SEGMENT_CONCURRENCY = 6;
+  const pending: Promise<{ index: number; text: string }>[] = [];
+  let chunkIndex = 0;
   let batch: Uint8Array[] = initBytes ? [initBytes] : [];
   let size = initBytes ? initBytes.byteLength : 0;
 
@@ -243,35 +247,56 @@ async function transcribeFromHls(playlistUrl: string, apiKey: string): Promise<s
     const hasContent = batch.length > (initBytes ? 1 : 0);
     if (!hasContent) return;
     const out = concatBytes(batch);
-    const payload = isFmp4 ? out : await transmuxTsToAudioMp4(out);
-    const t = await transcribeChunk(
-      payload,
-      isFmp4 ? "chunk.mp4" : "chunk.m4a",
-      isFmp4 ? "video/mp4" : "audio/mp4",
-      apiKey,
-    );
-    const trimmed = t.trim();
-    if (!trimmed) {
-      // Fail hard: um batch com áudio real tem de produzir texto. Caso contrário
-      // marcaríamos como "concluída" com transcrição parcial. Deixa o cron reiniciar.
-      throw new Error("Chunk HLS devolveu transcrição vazia — abortar para retry.");
-    }
-    texts.push(trimmed);
+    const index = chunkIndex++;
     batch = initBytes ? [initBytes] : [];
     size = initBytes ? initBytes.byteLength : 0;
+
+    if (pending.length >= CHUNK_CONCURRENCY) {
+      // Espera que o lote atual liberte espaço antes de somar mais trabalho.
+      await Promise.race(pending);
+    }
+
+    const task = (async () => {
+      const payload = isFmp4 ? out : await transmuxTsToAudioMp4(out);
+      const t = await transcribeChunk(
+        payload,
+        isFmp4 ? "chunk.mp4" : "chunk.m4a",
+        isFmp4 ? "video/mp4" : "audio/mp4",
+        apiKey,
+      );
+      const trimmed = t.trim();
+      if (!trimmed) {
+        // Fail hard: um batch com áudio real tem de produzir texto. Caso contrário
+        // marcaríamos como "concluída" com transcrição parcial. Deixa o cron reiniciar.
+        throw new Error("Chunk HLS devolveu transcrição vazia — abortar para retry.");
+      }
+      return { index, text: trimmed };
+    })();
+    pending.push(task);
   };
 
-  for (const segUrl of segments) {
-    const r = await fetch(segUrl);
-    if (!r.ok) throw new Error(`Segmento HLS ${r.status}`);
-    const bytes = new Uint8Array(await r.arrayBuffer());
-    if (size + bytes.byteLength > MAX && batch.length > (initBytes ? 1 : 0)) {
-      await flush();
+  // Descarrega segmentos em paralelo mantendo a ordem original.
+  for (let i = 0; i < segments.length; i += SEGMENT_CONCURRENCY) {
+    const slice = segments.slice(i, i + SEGMENT_CONCURRENCY);
+    const fetched = await Promise.all(
+      slice.map(async (segUrl) => {
+        const r = await fetch(segUrl);
+        if (!r.ok) throw new Error(`Segmento HLS ${r.status}`);
+        return new Uint8Array(await r.arrayBuffer());
+      }),
+    );
+    for (const bytes of fetched) {
+      if (size + bytes.byteLength > MAX && batch.length > (initBytes ? 1 : 0)) {
+        await flush();
+      }
+      batch.push(bytes);
+      size += bytes.byteLength;
     }
-    batch.push(bytes);
-    size += bytes.byteLength;
   }
   await flush();
+
+  const settled = await Promise.all(pending);
+  const texts = settled.sort((a, b) => a.index - b.index).map((s) => s.text);
 
   const combined = texts.join(" ").replace(/\s+/g, " ").trim();
   if (!combined) throw new Error("Nenhum segmento transcrito");
