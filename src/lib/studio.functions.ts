@@ -975,11 +975,13 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
                 user_id: userId,
                 asset_id: asset.id,
                 verdict: report.verdict,
-                checks: report.checks as never,
-                bad_segments: report.badSegments,
+                reasons: report.checks.filter((c) => !c.ok).map((c) => c.id) as never,
+                confidence: report.checks.filter((c) => !c.ok)[0]?.confidence ?? null,
+                regenerated_segments: restarted,
                 credits_absorbed: cost,
-                auto_retried: true,
+                report: report as never,
               } as never);
+
             } catch {
               // log é best-effort
             }
