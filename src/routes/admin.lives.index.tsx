@@ -13,6 +13,9 @@ import { adminGetGuestLink } from "@/lib/live-guest.functions";
 import { uploadMedia } from "@/lib/media-upload";
 import { toast } from "sonner";
 
+const GUEST_LINK_ORIGIN = "https://mmclub.pt";
+
+
 async function copyText(value: string) {
   try {
     if (navigator.clipboard && window.isSecureContext) {
