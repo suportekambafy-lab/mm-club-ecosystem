@@ -154,8 +154,21 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
         </div>
       )}
 
-      {/* Audio autoplay overlay removed — LiveKit + muted <video>/separate <audio>
-          handle playback cleanly; no user gesture is needed anymore. */}
+      {/* Áudio bloqueado pelo browser — exige um gesto do utilizador */}
+      {state.audioBlocked && (
+        <div className="absolute inset-x-0 top-10 z-30 flex justify-center px-3">
+          <button
+            type="button"
+            onClick={() => void actions.startAudio()}
+            className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-xs font-semibold text-black shadow-lg hover:brightness-105"
+          >
+            <Volume2 className="h-4 w-4" />
+            Ativar som
+          </button>
+        </div>
+      )}
+
+
 
 
 
