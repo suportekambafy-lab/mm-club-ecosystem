@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getLive } from "@/lib/lives.functions";
 import { joinRoom } from "@/lib/live-room.functions";
 import { InteractiveRoom } from "@/components/live/interactive-room";
+import { PreJoin } from "@/components/live/pre-join";
 import { LiveChat } from "@/components/mm/live-chat";
 import { MemberAvatar } from "@/components/mm/member-avatar";
 import { useAdminIds } from "@/hooks/use-admin-ids";
@@ -57,6 +58,8 @@ function SalaRoute() {
   const [liveStatus, setLiveStatus] = useState<string | null>(null);
   const [createdBy, setCreatedBy] = useState<string | null>(null);
   const joinLockRef = useRef(false);
+  /** Green room gate — publishers confirm devices before entering. */
+  const [ready, setReady] = useState(false);
 
   // Resolve current user + live (client-side so auth token is present).
   useEffect(() => {
@@ -261,6 +264,26 @@ function SalaRoute() {
 
   if (!live || !session) {
     return <FullscreenLoader label="A ligar à sala…" />;
+  }
+
+  // Green room: publishers (host / cohost / speaker) check camera, microphone
+  // and framing before any track is published to the room.
+  const isPublisher = session.role === "host" || session.role === "cohost" || session.role === "speaker";
+  if (isPublisher && !ready) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black">
+        <PreJoin
+          title={target === "backstage" ? "Backstage privado" : "Antes de entrar ao vivo"}
+          subtitle={
+            target === "backstage"
+              ? "Ninguém te vê ainda. Ajusta câmara, microfone e enquadramento e entra quando estiveres pronto."
+              : "Verifica câmara, microfone e enquadramento. Só entras na sala quando confirmares."
+          }
+          onEnter={() => setReady(true)}
+          onCancel={handleLeave}
+        />
+      </div>
+    );
   }
 
   return (

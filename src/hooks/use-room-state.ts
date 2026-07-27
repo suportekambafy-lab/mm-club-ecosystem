@@ -12,6 +12,7 @@
  * they are re-hydrated from Postgres.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { readMediaPrefs } from "@/lib/media-prefs";
 import {
   Room,
   RoomEvent,
@@ -289,6 +290,7 @@ export function useRoomState({
         // capture — otherwise viewers see a black tile and hear silence.
         try {
           const lp = room.localParticipant;
+          const prefs = readMediaPrefs();
           const canPublish = lp.permissions?.canPublish ?? false;
           const allowedSources = (lp.permissions?.canPublishSources ?? []) as unknown as number[];
           // Empty list means "all sources allowed" per LiveKit server semantics.
@@ -296,18 +298,28 @@ export function useRoomState({
           const allowsMic = allowsAll || allowedSources.some((s) => Number(s) === Number(Track.Source.Microphone));
           const allowsCam = allowsAll || allowedSources.some((s) => Number(s) === Number(Track.Source.Camera));
           if (canPublish) {
-            if (allowsMic && !lp.isMicrophoneEnabled) {
+            // Honour the device + on/off choices made in the pre-join screen.
+            if (prefs.cameraId) {
+              await room.switchActiveDevice("videoinput", prefs.cameraId).catch(() => {});
+              setActiveVideoIn(prefs.cameraId);
+            }
+            if (prefs.micId) {
+              await room.switchActiveDevice("audioinput", prefs.micId).catch(() => {});
+              setActiveAudioIn(prefs.micId);
+            }
+            if (allowsMic && prefs.micEnabled && !lp.isMicrophoneEnabled) {
               await lp.setMicrophoneEnabled(true).catch((e) => {
                 console.warn("[useRoomState] mic auto-enable failed", e);
               });
             }
-            if (allowsCam && !lp.isCameraEnabled) {
+            if (allowsCam && prefs.camEnabled && !lp.isCameraEnabled) {
               await lp.setCameraEnabled(true).catch((e) => {
                 console.warn("[useRoomState] cam auto-enable failed", e);
               });
             }
             rebuildParticipantTracks(lp);
           }
+
         } catch (err) {
           console.warn("[useRoomState] auto-publish skipped", err);
         }
