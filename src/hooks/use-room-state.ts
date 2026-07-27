@@ -338,7 +338,13 @@ export function useRoomState({
       }
     })();
 
+    // Ligar/desligar filtros de estúdio em direto quando o utilizador mexe no painel.
+    const unsubStudio = subscribeStudio(() => {
+      void syncStudioProcessors(room);
+    });
+
     return () => {
+      unsubStudio();
       handlers.forEach(([evt, fn]) => {
         (room as unknown as AnyOn).off(evt, fn);
       });
