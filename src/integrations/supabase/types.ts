@@ -2140,6 +2140,7 @@ export type Database = {
           enabled_modules: Json
           ended_at: string | null
           expert_id: string | null
+          guest_token: string | null
           id: string
           livekit_room_prefix: string | null
           mode: Database["public"]["Enums"]["live_mode"]
@@ -2176,6 +2177,7 @@ export type Database = {
           enabled_modules?: Json
           ended_at?: string | null
           expert_id?: string | null
+          guest_token?: string | null
           id?: string
           livekit_room_prefix?: string | null
           mode?: Database["public"]["Enums"]["live_mode"]
@@ -2212,6 +2214,7 @@ export type Database = {
           enabled_modules?: Json
           ended_at?: string | null
           expert_id?: string | null
+          guest_token?: string | null
           id?: string
           livekit_room_prefix?: string | null
           mode?: Database["public"]["Enums"]["live_mode"]
