@@ -102,7 +102,7 @@ export async function startLiveRecording(args: {
       const info = await egress.startRoomCompositeEgress(
         args.roomName,
         { stream },
-        { layout: "grid", audioOnly: false, videoOnly: false },
+        compositeOptions(),
       );
       return {
         egressId: info.egressId ?? null,
