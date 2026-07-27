@@ -145,6 +145,11 @@ export interface RoomActions {
   kick(userId: string): Promise<void>;
   ban(userId: string): Promise<void>;
 
+  // Devices (camera / microphone selection)
+  listDevices?(kind: "videoinput" | "audioinput"): Promise<MediaDeviceOption[]>;
+  setDevice?(kind: "videoinput" | "audioinput", deviceId: string): Promise<void>;
+  getActiveDevice?(kind: "videoinput" | "audioinput"): string | undefined;
+
   // Media element binding — adapter attaches the engine track to the DOM node.
   attachTrack(trackId: string, el: HTMLMediaElement): void;
   detachTrack(trackId: string, el: HTMLMediaElement): void;
