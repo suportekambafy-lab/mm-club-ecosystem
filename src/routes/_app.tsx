@@ -31,6 +31,7 @@ import { clearIntendedPlan, readIntendedPlan } from "@/lib/intended-plan";
 import { MMLogo } from "@/components/mm/logo";
 import { GlobalSearch } from "@/components/mm/global-search";
 import { NotificationsBell } from "@/components/mm/notifications";
+import { NotificationsPrompt } from "@/components/mm/notifications-prompt";
 
 import { cn } from "@/lib/utils";
 // Boot-time: apply admin overrides to in-memory data
