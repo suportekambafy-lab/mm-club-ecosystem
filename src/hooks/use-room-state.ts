@@ -135,6 +135,8 @@ export function useRoomState({
   const [camOn, setCamOn] = useState<Record<string, boolean>>({});
   const [screenOn, setScreenOn] = useState<Record<string, boolean>>({});
   const [quality, setQuality] = useState<Record<string, RoomParticipant["connectionQuality"]>>({});
+  const [activeVideoIn, setActiveVideoIn] = useState<string | undefined>(undefined);
+  const [activeAudioIn, setActiveAudioIn] = useState<string | undefined>(undefined);
   const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null);
   const [audioBlocked, setAudioBlocked] = useState(false);
 
