@@ -8,7 +8,7 @@
  * The engine (LiveKit) is bootstrapped by useRoomState; this component
  * only reads the abstract RoomState / RoomActions.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useRoomState } from "@/hooks/use-room-state";
 import type { RoomActions, RoomState, StageLayout } from "@/lib/room-state";
