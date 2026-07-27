@@ -147,6 +147,7 @@ export function GuestRoom({
       .on(RoomEvent.LocalTrackUnpublished, rerender)
       .on(RoomEvent.ActiveSpeakersChanged, rerender)
       .on(RoomEvent.ConnectionStateChanged, rerender)
+      .on(RoomEvent.AudioPlaybackStatusChanged, () => setAudioBlocked(!r.canPlaybackAudio))
       .on(RoomEvent.Disconnected, () => {
         if (!cancelled) onLeave();
       });
