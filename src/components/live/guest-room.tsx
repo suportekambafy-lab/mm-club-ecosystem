@@ -1,11 +1,15 @@
 /**
  * <GuestRoom> — minimal LiveKit room for external guests (no MM Club account).
  *
+ * Guests join as regular attendees (audience). They can raise their hand and,
+ * once the host promotes them, the room reconnects with publish rights.
+ *
  * Self-contained on purpose: guests have no Supabase session, so this view
  * reads everything from the LiveKit room itself (participants, tracks) rather
  * than from Postgres like the member experience does.
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import {
   Room,
   RoomEvent,
@@ -13,25 +17,74 @@ import {
   type Participant,
   type RemoteTrackPublication,
 } from "livekit-client";
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2 } from "lucide-react";
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, Hand } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { guestSync } from "@/lib/live-guest.functions";
 import type { MediaPrefs } from "@/lib/media-prefs";
 
 interface Props {
   token: string;
   url: string;
   prefs: MediaPrefs;
+  /** Identity + credentials used to poll for stage promotions. */
+  liveId: string;
+  code: string;
+  guestId: string;
+  displayName: string;
+  onStage: boolean;
   onLeave: () => void;
 }
 
-export function GuestRoom({ token, url, prefs, onLeave }: Props) {
+export function GuestRoom({
+  token,
+  url,
+  prefs,
+  liveId,
+  code,
+  guestId,
+  displayName,
+  onStage: initialOnStage,
+  onLeave,
+}: Props) {
+  const sync = useServerFn(guestSync);
   const roomRef = useRef<Room | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
+  const [activeToken, setActiveToken] = useState(token);
+  const [onStage, setOnStage] = useState(initialOnStage);
+  const [handRaised, setHandRaised] = useState(false);
   const [connecting, setConnecting] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [micOn, setMicOn] = useState(prefs.micEnabled);
-  const [camOn, setCamOn] = useState(prefs.camEnabled);
+  const [micOn, setMicOn] = useState(prefs.micEnabled && initialOnStage);
+  const [camOn, setCamOn] = useState(prefs.camEnabled && initialOnStage);
   const [, forceTick] = useState(0);
+
+  const onStageRef = useRef(onStage);
+  onStageRef.current = onStage;
+
+  // Heartbeat: pick up promotions/demotions decided by the host.
+  const poll = useCallback(
+    async (raiseHand?: boolean) => {
+      try {
+        const r = await sync({
+          data: { liveId, code, guestId, displayName, raiseHand, currentlyOnStage: onStageRef.current },
+        });
+        setHandRaised(r.handRaised);
+        if (r.token) {
+          setOnStage(r.onStage);
+          setActiveToken(r.token);
+        }
+      } catch {
+        /* transient — next tick retries */
+      }
+    },
+    [sync, liveId, code, guestId, displayName],
+  );
+
+  useEffect(() => {
+    const id = setInterval(() => void poll(), 5000);
+    return () => clearInterval(id);
+  }, [poll]);
+
 
   useEffect(() => {
     let cancelled = false;
