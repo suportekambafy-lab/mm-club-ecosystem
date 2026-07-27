@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 const DELIVERED_KEY = "mm.notifications.delivered.v1";
 const ENABLED_KEY = "mm.notifications.push.enabled";
+const ENABLED_AT_KEY = "mm.notifications.push.enabledAt";
 
 export type PushPayload = {
   id: string;
@@ -57,11 +58,21 @@ export function useDeviceNotifications() {
     "unsupported",
   );
   const [enabled, setEnabled] = useState(false);
+  const [enabledAt, setEnabledAt] = useState(0);
 
   useEffect(() => {
     if (!isPushSupported()) return;
     setPermission(Notification.permission);
-    setEnabled(window.localStorage.getItem(ENABLED_KEY) === "1");
+    const storedEnabled = window.localStorage.getItem(ENABLED_KEY) === "1";
+    setEnabled(storedEnabled);
+    const storedEnabledAt = Number(window.localStorage.getItem(ENABLED_AT_KEY) ?? "0");
+    if (storedEnabled && Number.isFinite(storedEnabledAt) && storedEnabledAt > 0) {
+      setEnabledAt(storedEnabledAt);
+    } else if (storedEnabled) {
+      const now = Date.now();
+      setEnabledAt(now);
+      window.localStorage.setItem(ENABLED_AT_KEY, String(now));
+    }
   }, []);
 
   const enable = useCallback(async () => {
@@ -72,13 +83,22 @@ export function useDeviceNotifications() {
     const ok = perm === "granted";
     setEnabled(ok);
     window.localStorage.setItem(ENABLED_KEY, ok ? "1" : "0");
-    if (ok) void readyServiceWorker();
+    if (ok) {
+      const now = Date.now();
+      setEnabledAt(now);
+      window.localStorage.setItem(ENABLED_AT_KEY, String(now));
+      void readyServiceWorker();
+    }
     return ok;
   }, []);
 
   const disable = useCallback(() => {
     setEnabled(false);
-    if (typeof window !== "undefined") window.localStorage.setItem(ENABLED_KEY, "0");
+    setEnabledAt(0);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(ENABLED_KEY, "0");
+      window.localStorage.removeItem(ENABLED_AT_KEY);
+    }
   }, []);
 
   const deliver = useCallback(
@@ -99,8 +119,6 @@ export function useDeviceNotifications() {
           icon: "/icon-192.png",
           badge: "/icon-192.png",
           tag: item.id,
-          renotify: true,
-          silent: false,
           data: { href: item.href },
         };
         let deliveredOk = false;
@@ -138,6 +156,7 @@ export function useDeviceNotifications() {
     supported: isPushSupported(),
     permission,
     enabled,
+    enabledAt,
     enable,
     disable,
     deliver,
