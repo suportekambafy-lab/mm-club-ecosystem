@@ -12,6 +12,7 @@
  * they are re-hydrated from Postgres.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { readMediaPrefs } from "@/lib/media-prefs";
 import {
   Room,
   RoomEvent,
