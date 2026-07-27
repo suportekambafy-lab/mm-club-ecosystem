@@ -46,7 +46,7 @@ export function buildCheckoutDescription(price: DescPrice, now = new Date()): st
   if (price.trialDays > 0) {
     const renews = new Date(now);
     renews.setDate(renews.getDate() + price.trialDays);
-    return `${plan} — Validação do cartão (${money(1, price.currency)}). Renova a ${dateLabel(renews)} por ${amount}.`;
+    return `${plan} — Validação do cartão (sem cobrança). Renova a ${dateLabel(renews)} por ${amount}.`;
   }
 
   const recurring = price.interval !== "one_time" && price.interval !== "lifetime";
