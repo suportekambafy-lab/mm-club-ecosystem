@@ -252,3 +252,24 @@ export const getGuestLiveInfo = createServerFn({ method: "POST" })
       ended: status === "ended" || status === "published",
     };
   });
+
+/** Public: guest left the room (tab closed / hangup) — frees the seat. */
+export const guestLeave = createServerFn({ method: "POST" })
+  .inputValidator((i) =>
+    z.object({ liveId: uuid, code: z.string().trim().min(8).max(64), guestId: uuid }).parse(i),
+  )
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: live } = await supabaseAdmin
+      .from("lives")
+      .select("id, guest_token")
+      .eq("id", data.liveId)
+      .maybeSingle();
+    if (!live || live.guest_token !== data.code) return { ok: false };
+    await supabaseAdmin
+      .from("live_participants")
+      .update({ left_at: new Date().toISOString(), on_stage: false, hand_raised_at: null })
+      .eq("live_id", live.id)
+      .eq("user_id", data.guestId);
+    return { ok: true };
+  });

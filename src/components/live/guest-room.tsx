@@ -19,7 +19,7 @@ import {
 } from "livekit-client";
 import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, Hand } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { guestSync } from "@/lib/live-guest.functions";
+import { guestSync, guestLeave } from "@/lib/live-guest.functions";
 import type { MediaPrefs } from "@/lib/media-prefs";
 
 interface Props {
@@ -47,6 +47,7 @@ export function GuestRoom({
   onLeave,
 }: Props) {
   const sync = useServerFn(guestSync);
+  const leaveFn = useServerFn(guestLeave);
   const roomRef = useRef<Room | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
   const [activeToken, setActiveToken] = useState(token);
@@ -84,6 +85,23 @@ export function GuestRoom({
     const id = setInterval(() => void poll(), 5000);
     return () => clearInterval(id);
   }, [poll]);
+
+  // Free the seat when the guest closes the tab / navigates away, so the host
+  // does not see ghost or duplicated participants.
+  const markLeft = useCallback(() => {
+    void leaveFn({ data: { liveId, code, guestId } }).catch(() => {});
+  }, [leaveFn, liveId, code, guestId]);
+
+  useEffect(() => {
+    const handler = () => markLeft();
+    window.addEventListener("pagehide", handler);
+    window.addEventListener("beforeunload", handler);
+    return () => {
+      window.removeEventListener("pagehide", handler);
+      window.removeEventListener("beforeunload", handler);
+      markLeft();
+    };
+  }, [markLeft]);
 
 
   useEffect(() => {
@@ -264,6 +282,7 @@ export function GuestRoom({
             type="button"
             onClick={() => {
               roomRef.current?.disconnect().catch(() => {});
+              markLeft();
               onLeave();
             }}
             aria-label="Sair da sala"
