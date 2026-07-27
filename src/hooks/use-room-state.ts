@@ -102,6 +102,8 @@ interface ParticipantRow {
   hand_raised_at: string | null;
   invited_to_stage_at: string | null;
   banned: boolean;
+  guest_name?: string | null;
+  is_guest?: boolean | null;
 }
 
 export interface UseRoomStateArgs {
@@ -150,7 +152,7 @@ export function useRoomState({
     async function hydrate() {
       const [liveRes, partsRes] = await Promise.all([
         supabase.from("lives").select("id,status,mode,stage_layout,spotlight_user_id,started_at,went_live_at,backstage_started_at,enabled_modules").eq("id", liveId).maybeSingle(),
-        supabase.from("live_participants").select("id,user_id,role,room,on_stage,mic_allowed,cam_allowed,screen_allowed,hand_raised_at,invited_to_stage_at,banned").eq("live_id", liveId),
+        supabase.from("live_participants").select("id,user_id,role,room,on_stage,mic_allowed,cam_allowed,screen_allowed,hand_raised_at,invited_to_stage_at,banned,guest_name,is_guest").eq("live_id", liveId),
       ]);
       if (!mounted) return;
       if (liveRes.data) setLive(liveRes.data as LiveRow);
@@ -349,7 +351,7 @@ export function useRoomState({
       return {
         userId: r.user_id,
         identity: r.user_id,
-        displayName: prof?.display_name ?? engineNames[r.user_id] ?? "Convidado",
+        displayName: prof?.display_name ?? r.guest_name ?? engineNames[r.user_id] ?? "Convidado",
         avatarUrl: prof?.avatar_url ?? null,
         role: r.role,
         room: r.room,
