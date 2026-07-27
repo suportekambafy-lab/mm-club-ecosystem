@@ -17,7 +17,7 @@ import {
   type Participant,
   type RemoteTrackPublication,
 } from "livekit-client";
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, Hand } from "lucide-react";
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, Hand, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { guestSync, guestLeave } from "@/lib/live-guest.functions";
 import type { MediaPrefs } from "@/lib/media-prefs";
@@ -58,6 +58,33 @@ export function GuestRoom({
   const [micOn, setMicOn] = useState(prefs.micEnabled && initialOnStage);
   const [camOn, setCamOn] = useState(prefs.camEnabled && initialOnStage);
   const [, forceTick] = useState(0);
+  const [audioBlocked, setAudioBlocked] = useState(false);
+
+  const unlockAudio = useCallback(async () => {
+    const r = roomRef.current;
+    if (!r) return;
+    try {
+      await r.startAudio();
+    } catch {
+      /* precisa de gesto do utilizador */
+    }
+    setAudioBlocked(!r.canPlaybackAudio);
+  }, []);
+
+  // Força o desbloqueio do áudio remoto ao primeiro gesto do utilizador.
+  useEffect(() => {
+    if (!audioBlocked) return;
+    const unlock = () => void unlockAudio();
+    const opts = { passive: true } as AddEventListenerOptions;
+    window.addEventListener("pointerdown", unlock, opts);
+    window.addEventListener("touchstart", unlock, opts);
+    window.addEventListener("keydown", unlock);
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("touchstart", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, [audioBlocked, unlockAudio]);
 
   const onStageRef = useRef(onStage);
   onStageRef.current = onStage;
@@ -120,6 +147,7 @@ export function GuestRoom({
       .on(RoomEvent.LocalTrackUnpublished, rerender)
       .on(RoomEvent.ActiveSpeakersChanged, rerender)
       .on(RoomEvent.ConnectionStateChanged, rerender)
+      .on(RoomEvent.AudioPlaybackStatusChanged, () => setAudioBlocked(!r.canPlaybackAudio))
       .on(RoomEvent.Disconnected, () => {
         if (!cancelled) onLeave();
       });
@@ -143,6 +171,12 @@ export function GuestRoom({
         if (!cancelled) {
           setRoom(r);
           setConnecting(false);
+          try {
+            await r.startAudio();
+          } catch {
+            /* precisa de gesto */
+          }
+          setAudioBlocked(!r.canPlaybackAudio);
         }
       } catch (e) {
         if (cancelled) return;
@@ -235,6 +269,21 @@ export function GuestRoom({
           </div>
         </div>
       )}
+
+      {audioBlocked && (
+        <div className="absolute inset-x-0 top-12 z-30 flex justify-center px-3">
+          <button
+            type="button"
+            onClick={() => void unlockAudio()}
+            className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-xs font-semibold text-black shadow-lg hover:brightness-105"
+          >
+            <Volume2 className="h-4 w-4" />
+            Ativar som
+          </button>
+        </div>
+      )}
+
+
 
       <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center">
         <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-black/70 px-3 py-2 ring-1 ring-white/10 backdrop-blur-md">
@@ -351,7 +400,7 @@ function GuestTile({ participant, isLocal }: { participant: Participant; isLocal
           {participant.name || "Convidado"}
         </div>
       )}
-      {!isLocal && <audio ref={audioRef} autoPlay />}
+      {!isLocal && <audio ref={audioRef} autoPlay playsInline />}
       <div className="absolute bottom-2 left-2 rounded-full bg-black/60 px-2.5 py-1 text-[11px] text-white/85">
         {participant.name || "Convidado"} {isLocal && "(tu)"}
       </div>

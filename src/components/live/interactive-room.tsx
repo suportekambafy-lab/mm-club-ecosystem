@@ -8,14 +8,14 @@
  * The engine (LiveKit) is bootstrapped by useRoomState; this component
  * only reads the abstract RoomState / RoomActions.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useRoomState } from "@/hooks/use-room-state";
 import type { RoomActions, RoomState, StageLayout } from "@/lib/room-state";
 import { Stage } from "./stage";
 import { Backstage } from "./backstage";
 import { RoomControls } from "./room-controls";
-import { Hand, Radio, X, UserPlus, Users, UserMinus } from "lucide-react";
+import { Hand, Radio, X, UserPlus, Users, UserMinus, Volume2 } from "lucide-react";
 import { MemberAvatar } from "@/components/mm/member-avatar";
 import { useAdminIds } from "@/hooks/use-admin-ids";
 
@@ -117,6 +117,26 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
     }
   };
 
+  // Força o desbloqueio do áudio remoto: tenta imediatamente e, se o browser
+  // exigir gesto do utilizador, ao primeiro toque/clique/tecla.
+  useEffect(() => {
+    void actions.startAudio();
+    if (!state.audioBlocked) return;
+    const unlock = () => {
+      void actions.startAudio();
+    };
+    const opts = { passive: true } as AddEventListenerOptions;
+    window.addEventListener("pointerdown", unlock, opts);
+    window.addEventListener("touchstart", unlock, opts);
+    window.addEventListener("keydown", unlock);
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("touchstart", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, [actions, state.audioBlocked, state.connection.state]);
+
+
   // Which stage to render?
   const inBackstage = target === "backstage";
   const isPublisher = state.localRole === "host" || state.localRole === "cohost" || state.localRole === "speaker";
@@ -134,8 +154,21 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
         </div>
       )}
 
-      {/* Audio autoplay overlay removed — LiveKit + muted <video>/separate <audio>
-          handle playback cleanly; no user gesture is needed anymore. */}
+      {/* Áudio bloqueado pelo browser — exige um gesto do utilizador */}
+      {state.audioBlocked && (
+        <div className="absolute inset-x-0 top-10 z-30 flex justify-center px-3">
+          <button
+            type="button"
+            onClick={() => void actions.startAudio()}
+            className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-xs font-semibold text-black shadow-lg hover:brightness-105"
+          >
+            <Volume2 className="h-4 w-4" />
+            Ativar som
+          </button>
+        </div>
+      )}
+
+
 
 
 
