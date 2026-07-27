@@ -71,6 +71,22 @@ export function buildRtmpTarget(rtmpsUrl: string, streamKey: string): string {
   return `${base}/${streamKey}`;
 }
 
+/**
+ * Room composite options — uses the MM Club branded egress template so the
+ * recording looks like the live room (golden frame, name plates, stage layout)
+ * instead of LiveKit's default plain grid.
+ */
+function compositeOptions() {
+  const origin = (process.env.EGRESS_TEMPLATE_ORIGIN || "https://mmclub.pt").replace(/\/+$/, "");
+  return {
+    layout: "mmclub",
+    customBaseUrl: `${origin}/egress/composite`,
+    audioOnly: false,
+    videoOnly: false,
+  } as const;
+}
+
+
 export type StartRecordingResult = {
   egressId: string | null;
   /** "cloudflare" = RTMP into CF Stream, "s3" = MP4 file output. */
@@ -102,7 +118,7 @@ export async function startLiveRecording(args: {
       const info = await egress.startRoomCompositeEgress(
         args.roomName,
         { stream },
-        { layout: "grid", audioOnly: false, videoOnly: false },
+        compositeOptions(),
       );
       return {
         egressId: info.egressId ?? null,
@@ -134,7 +150,7 @@ export async function startLiveRecording(args: {
       const info = await egress.startRoomCompositeEgress(
         args.roomName,
         { file: output },
-        { layout: "grid", audioOnly: false, videoOnly: false },
+        compositeOptions(),
       );
       return { egressId: info.egressId ?? null, target: "s3", filepath, error: null };
     }
