@@ -84,14 +84,6 @@ function VipPage() {
             origin: window.location.origin,
           },
         });
-        if (res.status === "account_exists") {
-          setPending(false);
-          setError(
-            "Este email já tem uma subscrição ativa. Inicia sessão para a gerires.",
-          );
-          return;
-
-        }
         window.location.href = res.checkoutUrl;
         return;
       }
@@ -280,13 +272,7 @@ function VipPage() {
 
               {error ? (
                 <p className="mt-4 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                  {error}{" "}
-                  <a
-                    href={`/auth?redirect=${encodeURIComponent("/vip")}`}
-                    className="underline"
-                  >
-                    Iniciar sessão
-                  </a>
+                  {error}
                 </p>
               ) : null}
 
