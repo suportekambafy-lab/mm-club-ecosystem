@@ -42,22 +42,28 @@ export function RoomControls({ state, actions, onLeave }: Props) {
   return (
     <div className="pointer-events-auto flex items-center gap-1.5 rounded-2xl border border-white/10 bg-black/60 p-1.5 backdrop-blur-md">
       {isPublisher && local?.micAllowed && (
-        <IconButton
-          active={local.micOn}
-          onClick={() => run("mic", actions.toggleMic)}
-          busy={busy === "mic"}
-          label={local.micOn ? "Silenciar microfone" : "Ativar microfone"}
-          icon={local.micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4 text-red-400" />}
-        />
+        <div className="flex items-center">
+          <IconButton
+            active={local.micOn}
+            onClick={() => run("mic", actions.toggleMic)}
+            busy={busy === "mic"}
+            label={local.micOn ? "Silenciar microfone" : "Ativar microfone"}
+            icon={local.micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4 text-red-400" />}
+          />
+          <DeviceMenu kind="audioinput" actions={actions} label="Escolher microfone" />
+        </div>
       )}
       {isPublisher && local?.camAllowed && (
-        <IconButton
-          active={local.camOn}
-          onClick={() => run("cam", actions.toggleCam)}
-          busy={busy === "cam"}
-          label={local.camOn ? "Desligar câmara" : "Ligar câmara"}
-          icon={local.camOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4 text-red-400" />}
-        />
+        <div className="flex items-center">
+          <IconButton
+            active={local.camOn}
+            onClick={() => run("cam", actions.toggleCam)}
+            busy={busy === "cam"}
+            label={local.camOn ? "Desligar câmara" : "Ligar câmara"}
+            icon={local.camOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4 text-red-400" />}
+          />
+          <DeviceMenu kind="videoinput" actions={actions} label="Escolher câmara" />
+        </div>
       )}
       {isPublisher && local?.screenAllowed && (
         canScreenShare ? (
