@@ -18,6 +18,7 @@ import {
   type RemoteTrackPublication,
 } from "livekit-client";
 import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, Hand, Volume2 } from "lucide-react";
+import { HQ_ROOM_OPTIONS } from "@/lib/livekit-quality";
 import { cn } from "@/lib/utils";
 import { guestSync, guestLeave } from "@/lib/live-guest.functions";
 import type { MediaPrefs } from "@/lib/media-prefs";
@@ -133,7 +134,7 @@ export function GuestRoom({
 
   useEffect(() => {
     let cancelled = false;
-    const r = new Room({ adaptiveStream: true, dynacast: true });
+    const r = new Room(HQ_ROOM_OPTIONS);
     roomRef.current = r;
 
     const rerender = () => forceTick((n) => n + 1);

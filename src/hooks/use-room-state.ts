@@ -24,6 +24,7 @@ import {
   type ConnectionQuality as LKConnectionQuality,
   type ConnectionState,
 } from "livekit-client";
+import { HQ_ROOM_OPTIONS, HQ_SCREEN_SHARE } from "@/lib/livekit-quality";
 import { supabase } from "@/integrations/supabase/client";
 import {
   resolveLayout,
@@ -216,11 +217,7 @@ export function useRoomState({
   // ---------- LiveKit engine ----------
   useEffect(() => {
     if (!token || !url) return;
-    const room = new Room({
-      adaptiveStream: true,
-      dynacast: true,
-      publishDefaults: { simulcast: true },
-    });
+    const room = new Room(HQ_ROOM_OPTIONS);
     roomRef.current = room;
 
     const rebuildParticipantTracks = (p: Participant) => {
@@ -431,7 +428,7 @@ export function useRoomState({
     const lp = roomRef.current?.localParticipant;
     if (!lp) return;
     try {
-      await lp.setScreenShareEnabled(true, { audio: true, selfBrowserSurface: "include" });
+      await lp.setScreenShareEnabled(true, HQ_SCREEN_SHARE);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       // NotAllowedError => user cancelled the OS picker; anything else is a real failure.
