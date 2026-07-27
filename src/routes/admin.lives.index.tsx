@@ -191,11 +191,11 @@ function AdminLives() {
       const r = await guestLink({ data: { liveId: id, rotate } });
       const url = `${window.location.origin}${r.path}`;
       setGuestUrl({ id, url });
-      try {
-        await navigator.clipboard.writeText(url);
-      } catch {
-        /* clipboard may be blocked — the link is shown anyway */
-      }
+      const copied = await copyText(url);
+      toast[copied ? "success" : "message"](
+        copied ? "Link de convidado copiado" : "Link gerado — copia manualmente abaixo",
+      );
+
     } catch (e) {
       setError((e as Error).message);
     } finally {
