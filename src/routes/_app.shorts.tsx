@@ -11,6 +11,11 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/shorts")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>) => ({
+    v: typeof search.v === "string" ? search.v : undefined,
+    c: search.c === "1" || search.c === 1 ? "1" : undefined,
+  }),
+
   head: () => ({
     meta: [
       { title: "MM Shorts — MM Club" },
