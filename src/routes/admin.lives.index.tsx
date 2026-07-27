@@ -464,11 +464,22 @@ function AdminLives() {
                   </Link>
                   <button
                     type="button"
+                    onClick={() => handleGuestLink(r.id)}
+                    disabled={guestBusy === r.id}
+                    className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40 disabled:opacity-60"
+                    title="Link para convidados externos entrarem só com o nome"
+                  >
+                    {guestBusy === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Copy className="h-3 w-3" />}
+                    Link de convidado
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => handleShowIngest(r.id)}
                     className="rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40"
                   >
                     Ver RTMPS
                   </button>
+
                   <button
                     type="button"
                     onClick={() => handleDelete(r.id)}
