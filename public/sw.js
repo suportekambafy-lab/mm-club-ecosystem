@@ -25,6 +25,26 @@ self.addEventListener("message", (event) => {
   }
 });
 
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    payload = {};
+  }
+
+  const title = payload.title || "MM Club";
+  const options = {
+    body: payload.body || "Tens uma nova notificação.",
+    icon: "/icon-192.png",
+    badge: "/icon-192.png",
+    tag: payload.id || "mm-club-notification",
+    data: { href: payload.href || "/dashboard" },
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
