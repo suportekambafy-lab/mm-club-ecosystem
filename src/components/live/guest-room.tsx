@@ -58,6 +58,33 @@ export function GuestRoom({
   const [micOn, setMicOn] = useState(prefs.micEnabled && initialOnStage);
   const [camOn, setCamOn] = useState(prefs.camEnabled && initialOnStage);
   const [, forceTick] = useState(0);
+  const [audioBlocked, setAudioBlocked] = useState(false);
+
+  const unlockAudio = useCallback(async () => {
+    const r = roomRef.current;
+    if (!r) return;
+    try {
+      await r.startAudio();
+    } catch {
+      /* precisa de gesto do utilizador */
+    }
+    setAudioBlocked(!r.canPlaybackAudio);
+  }, []);
+
+  // Força o desbloqueio do áudio remoto ao primeiro gesto do utilizador.
+  useEffect(() => {
+    if (!audioBlocked) return;
+    const unlock = () => void unlockAudio();
+    const opts = { passive: true } as AddEventListenerOptions;
+    window.addEventListener("pointerdown", unlock, opts);
+    window.addEventListener("touchstart", unlock, opts);
+    window.addEventListener("keydown", unlock);
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("touchstart", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, [audioBlocked, unlockAudio]);
 
   const onStageRef = useRef(onStage);
   onStageRef.current = onStage;
