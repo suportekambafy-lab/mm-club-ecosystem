@@ -117,6 +117,26 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
     }
   };
 
+  // Força o desbloqueio do áudio remoto: tenta imediatamente e, se o browser
+  // exigir gesto do utilizador, ao primeiro toque/clique/tecla.
+  useEffect(() => {
+    void actions.startAudio();
+    if (!state.audioBlocked) return;
+    const unlock = () => {
+      void actions.startAudio();
+    };
+    const opts = { passive: true } as AddEventListenerOptions;
+    window.addEventListener("pointerdown", unlock, opts);
+    window.addEventListener("touchstart", unlock, opts);
+    window.addEventListener("keydown", unlock);
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("touchstart", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, [actions, state.audioBlocked, state.connection.state]);
+
+
   // Which stage to render?
   const inBackstage = target === "backstage";
   const isPublisher = state.localRole === "host" || state.localRole === "cohost" || state.localRole === "speaker";
