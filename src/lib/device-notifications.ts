@@ -63,28 +63,43 @@ export function useDeviceNotifications() {
   }, []);
 
   const deliver = useCallback(
-    (items: PushPayload[]) => {
+    async (items: PushPayload[]) => {
       if (!enabled || !isPushSupported() || Notification.permission !== "granted") return;
-      if (typeof document !== "undefined" && document.visibilityState === "visible") return;
       const delivered = loadDelivered();
       const seen = new Set(delivered);
       const fresh = items.filter((i) => !seen.has(i.id)).slice(0, 3);
       if (fresh.length === 0) return;
+
+      // Service worker notifications are the only ones that work in installed
+      // PWAs (Android/iOS); `new Notification()` throws there.
+      let reg: ServiceWorkerRegistration | undefined;
+      try {
+        reg = (await navigator.serviceWorker?.ready) ?? undefined;
+      } catch {
+        reg = undefined;
+      }
+
       for (const item of fresh) {
+        const options: NotificationOptions = {
+          body: item.body,
+          icon: "/icon-192.png",
+          badge: "/icon-192.png",
+          tag: item.id,
+          data: { href: item.href },
+        };
         try {
-          const n = new Notification(item.title, {
-            body: item.body,
-            icon: "/icon-192.png",
-            badge: "/icon-192.png",
-            tag: item.id,
-          });
-          n.onclick = () => {
-            window.focus();
-            window.location.href = item.href;
-            n.close();
-          };
+          if (reg?.showNotification) {
+            await reg.showNotification(item.title, options);
+          } else {
+            const n = new Notification(item.title, options);
+            n.onclick = () => {
+              window.focus();
+              window.location.href = item.href;
+              n.close();
+            };
+          }
         } catch {
-          // ignore delivery failures (unsupported constructor on some platforms)
+          // ignore delivery failures
         }
         seen.add(item.id);
       }
@@ -93,6 +108,13 @@ export function useDeviceNotifications() {
     [enabled],
   );
 
+  /** Mark items as already delivered without showing them (baseline on enable). */
+  const seedDelivered = useCallback((ids: string[]) => {
+    const seen = new Set(loadDelivered());
+    for (const id of ids) seen.add(id);
+    saveDelivered(Array.from(seen));
+  }, []);
+
   return {
     supported: isPushSupported(),
     permission,
@@ -100,5 +122,6 @@ export function useDeviceNotifications() {
     enable,
     disable,
     deliver,
+    seedDelivered,
   };
 }

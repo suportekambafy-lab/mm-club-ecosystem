@@ -283,10 +283,21 @@ export function NotificationsBell({ className }: { className?: string }) {
     if (!hydrated || !device.enabled) return;
     const unread = visible.filter((n) => !isReadOf(n));
     if (unread.length === 0) return;
-    device.deliver(
-      unread.map((n) => ({ id: n.id, title: n.title, body: n.subtitle, href: n.href })),
-    );
+    const payloads = unread.map((n) => ({
+      id: n.id,
+      title: n.title,
+      body: n.subtitle,
+      href: n.href,
+    }));
+    // Don't buzz the device while the user is actively looking at the app,
+    // but still record them so they don't all fire later in one burst.
+    if (typeof document !== "undefined" && document.visibilityState === "visible") {
+      device.seedDelivered(payloads.map((p) => p.id));
+      return;
+    }
+    void device.deliver(payloads);
   }, [hydrated, device, visible, state.readIds]);
+
 
   const handleOpen = () => {
     const next = !open;
