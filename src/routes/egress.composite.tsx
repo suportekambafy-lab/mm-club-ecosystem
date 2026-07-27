@@ -191,12 +191,14 @@ function EgressComposite() {
       {/* Header */}
       <div className="absolute inset-x-12 top-12 z-20 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div
-            className="grid h-10 w-10 place-items-center rounded-xl text-sm font-black text-black"
-            style={{ background: "linear-gradient(135deg,#f5d67b,#c9a227)" }}
-          >
-            MM
-          </div>
+          <img
+            src={mmIcon.url}
+            alt="MM Club"
+            width={40}
+            height={40}
+            className="shrink-0 select-none"
+          />
+
           <div className="leading-tight">
             <div className="text-[17px] font-semibold tracking-tight">MM Club</div>
             <div className="text-[11px] uppercase tracking-[0.22em] text-white/40">
