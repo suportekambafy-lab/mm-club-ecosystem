@@ -235,7 +235,11 @@ async function transcribeFromHls(playlistUrl: string, apiKey: string): Promise<s
   const isFmp4 = !!initBytes;
 
   const MAX = 20 * 1024 * 1024;
-  const texts: string[] = [];
+  // Transcrição de chunks em paralelo (ordem preservada pelo índice).
+  const CHUNK_CONCURRENCY = 4;
+  const SEGMENT_CONCURRENCY = 6;
+  const pending: Promise<{ index: number; text: string }>[] = [];
+  let chunkIndex = 0;
   let batch: Uint8Array[] = initBytes ? [initBytes] : [];
   let size = initBytes ? initBytes.byteLength : 0;
 
@@ -243,35 +247,56 @@ async function transcribeFromHls(playlistUrl: string, apiKey: string): Promise<s
     const hasContent = batch.length > (initBytes ? 1 : 0);
     if (!hasContent) return;
     const out = concatBytes(batch);
-    const payload = isFmp4 ? out : await transmuxTsToAudioMp4(out);
-    const t = await transcribeChunk(
-      payload,
-      isFmp4 ? "chunk.mp4" : "chunk.m4a",
-      isFmp4 ? "video/mp4" : "audio/mp4",
-      apiKey,
-    );
-    const trimmed = t.trim();
-    if (!trimmed) {
-      // Fail hard: um batch com áudio real tem de produzir texto. Caso contrário
-      // marcaríamos como "concluída" com transcrição parcial. Deixa o cron reiniciar.
-      throw new Error("Chunk HLS devolveu transcrição vazia — abortar para retry.");
-    }
-    texts.push(trimmed);
+    const index = chunkIndex++;
     batch = initBytes ? [initBytes] : [];
     size = initBytes ? initBytes.byteLength : 0;
+
+    if (pending.length >= CHUNK_CONCURRENCY) {
+      // Espera que o lote atual liberte espaço antes de somar mais trabalho.
+      await Promise.race(pending);
+    }
+
+    const task = (async () => {
+      const payload = isFmp4 ? out : await transmuxTsToAudioMp4(out);
+      const t = await transcribeChunk(
+        payload,
+        isFmp4 ? "chunk.mp4" : "chunk.m4a",
+        isFmp4 ? "video/mp4" : "audio/mp4",
+        apiKey,
+      );
+      const trimmed = t.trim();
+      if (!trimmed) {
+        // Fail hard: um batch com áudio real tem de produzir texto. Caso contrário
+        // marcaríamos como "concluída" com transcrição parcial. Deixa o cron reiniciar.
+        throw new Error("Chunk HLS devolveu transcrição vazia — abortar para retry.");
+      }
+      return { index, text: trimmed };
+    })();
+    pending.push(task);
   };
 
-  for (const segUrl of segments) {
-    const r = await fetch(segUrl);
-    if (!r.ok) throw new Error(`Segmento HLS ${r.status}`);
-    const bytes = new Uint8Array(await r.arrayBuffer());
-    if (size + bytes.byteLength > MAX && batch.length > (initBytes ? 1 : 0)) {
-      await flush();
+  // Descarrega segmentos em paralelo mantendo a ordem original.
+  for (let i = 0; i < segments.length; i += SEGMENT_CONCURRENCY) {
+    const slice = segments.slice(i, i + SEGMENT_CONCURRENCY);
+    const fetched = await Promise.all(
+      slice.map(async (segUrl) => {
+        const r = await fetch(segUrl);
+        if (!r.ok) throw new Error(`Segmento HLS ${r.status}`);
+        return new Uint8Array(await r.arrayBuffer());
+      }),
+    );
+    for (const bytes of fetched) {
+      if (size + bytes.byteLength > MAX && batch.length > (initBytes ? 1 : 0)) {
+        await flush();
+      }
+      batch.push(bytes);
+      size += bytes.byteLength;
     }
-    batch.push(bytes);
-    size += bytes.byteLength;
   }
   await flush();
+
+  const settled = await Promise.all(pending);
+  const texts = settled.sort((a, b) => a.index - b.index).map((s) => s.text);
 
   const combined = texts.join(" ").replace(/\s+/g, " ").trim();
   if (!combined) throw new Error("Nenhum segmento transcrito");
@@ -572,26 +597,30 @@ async function ingestTranscriptRaw(params: {
  * simple lock via `status = 'transcribing'` to avoid concurrent workers.
  * Returns a small summary the cron/route can log.
  */
+const MAX_PARALLEL_LESSONS = 3;
+
 export async function runAutoTranscribeTick(): Promise<{
   ok: boolean;
   skipped?: string;
   processed?: { courseId: string; lessonId: string; chars: number };
+  results?: Array<{ courseId: string; lessonId: string; ok: boolean; chars?: number; error?: string }>;
   error?: string;
 }> {
   const apiKey = requireAiKey();
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  // Lock: if another worker is currently transcribing (within last 20min), skip.
+  // Lock por concorrência: até MAX_PARALLEL_LESSONS aulas em voo ao mesmo tempo.
   const lockCutoff = new Date(Date.now() - 20 * 60 * 1000).toISOString();
   const { data: inFlight } = await supabaseAdmin
     .from("lesson_transcripts")
     .select("course_id,lesson_id,updated_at")
     .eq("status", "transcribing")
-    .gte("updated_at", lockCutoff)
-    .limit(1);
-  if (inFlight && inFlight.length > 0) {
-    return { ok: true, skipped: "another lesson is being transcribed" };
+    .gte("updated_at", lockCutoff);
+  const freeSlots = MAX_PARALLEL_LESSONS - (inFlight?.length ?? 0);
+  if (freeSlots <= 0) {
+    return { ok: true, skipped: "transcription workers busy" };
   }
+
 
   // Load course overrides (video URLs + titles live here).
   const { data: ov } = await supabaseAdmin
@@ -675,45 +704,64 @@ export async function runAutoTranscribeTick(): Promise<{
     const be = errorSet.has(`${b.courseId}::${b.lessonId}`) ? 0 : 1;
     return ae - be;
   });
-  const next = eligible[0];
-  if (!next) return { ok: true, skipped: "all lessons transcribed or in cooldown" };
+  const batchToRun = eligible.slice(0, freeSlots);
+  if (!batchToRun.length)
+    return { ok: true, skipped: "all lessons transcribed or in cooldown" };
 
-  // Mark as transcribing (acts as lock).
+  // Marca todas como "transcribing" (lock) antes de arrancar em paralelo.
   await supabaseAdmin.from("lesson_transcripts").upsert(
-    {
-      course_id: next.courseId,
-      lesson_id: next.lessonId,
-      course_title: next.courseTitle,
-      lesson_title: next.lessonTitle,
-      video_url: next.videoUrl,
+    batchToRun.map((c) => ({
+      course_id: c.courseId,
+      lesson_id: c.lessonId,
+      course_title: c.courseTitle,
+      lesson_title: c.lessonTitle,
+      video_url: c.videoUrl,
       status: "transcribing",
       error: null,
       model: TRANSCRIBE_MODEL,
-    },
+    })),
     { onConflict: "course_id,lesson_id" },
   );
 
-  try {
-    const text = await transcribeFromUrl(next.videoUrl, apiKey);
-    await ingestTranscriptRaw({
-      courseId: next.courseId,
-      lessonId: next.lessonId,
-      courseTitle: next.courseTitle,
-      lessonTitle: next.lessonTitle,
-      videoUrl: next.videoUrl,
-      transcript: text,
-    });
-    return {
-      ok: true,
-      processed: { courseId: next.courseId, lessonId: next.lessonId, chars: text.length },
-    };
-  } catch (e: any) {
-    await supabaseAdmin
-      .from("lesson_transcripts")
-      .update({ status: "error", error: String(e?.message ?? e) })
-      .eq("course_id", next.courseId)
-      .eq("lesson_id", next.lessonId);
-    return { ok: false, error: String(e?.message ?? e) };
-  }
+  const results = await Promise.all(
+    batchToRun.map(async (item) => {
+      try {
+        const text = await transcribeFromUrl(item.videoUrl, apiKey);
+        await ingestTranscriptRaw({
+          courseId: item.courseId,
+          lessonId: item.lessonId,
+          courseTitle: item.courseTitle,
+          lessonTitle: item.lessonTitle,
+          videoUrl: item.videoUrl,
+          transcript: text,
+        });
+        return {
+          courseId: item.courseId,
+          lessonId: item.lessonId,
+          ok: true,
+          chars: text.length,
+        };
+      } catch (e: any) {
+        const error = String(e?.message ?? e);
+        await supabaseAdmin
+          .from("lesson_transcripts")
+          .update({ status: "error", error })
+          .eq("course_id", item.courseId)
+          .eq("lesson_id", item.lessonId);
+        return { courseId: item.courseId, lessonId: item.lessonId, ok: false, error };
+      }
+    }),
+  );
+
+  const first = results.find((r) => r.ok);
+  return {
+    ok: results.some((r) => r.ok),
+    results,
+    processed: first
+      ? { courseId: first.courseId, lessonId: first.lessonId, chars: first.chars ?? 0 }
+      : undefined,
+    error: results.every((r) => !r.ok) ? results[0]?.error : undefined,
+  };
 }
+
 
