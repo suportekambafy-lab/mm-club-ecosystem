@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { AlertCircle, ArrowRight, ArrowLeft, Mail, Lock, User } from "lucide-react";
+import { AlertCircle, ArrowRight, ArrowLeft, Mail, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { readIntendedPlan } from "@/lib/intended-plan";
 import { MMLogo } from "@/components/mm/logo";
@@ -29,10 +29,9 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const { redirect } = useSearch({ from: "/auth" });
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [joinIntent] = useState(() => readIntendedPlan());
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [activeEmail, setActiveEmail] = useState<string | null>(null);
@@ -86,24 +85,9 @@ function AuthPage() {
     setLoading(true);
     try {
       const cleanEmail = email.trim().toLowerCase();
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email: cleanEmail,
-          password,
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: { display_name: displayName || cleanEmail.split("@")[0] },
-          },
-        });
-        if (error) throw error;
-        toast.success("Conta criada. Escolhe o teu plano para entrar.");
-        navigate({ to: "/checkout" });
-        return;
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
-        if (error) throw error;
-        if (!data.session) throw new Error("Sessão não criada. Tenta novamente.");
-      }
+      const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
+      if (error) throw error;
+      if (!data.session) throw new Error("Sessão não criada. Tenta novamente.");
       const intended = readIntendedPlan();
       if (!redirect && intended) {
         // Retoma o plano que o cliente já tinha tentado ativar.
@@ -120,7 +104,7 @@ function AuthPage() {
       setFormError(message);
       toast.error(message);
       void reportAuthFailure({
-        data: { stage: mode === "signup" ? "signup" : "login" },
+        data: { stage: "login" },
       }).catch(() => {});
     } finally {
       setLoading(false);
@@ -217,7 +201,7 @@ function AuthPage() {
             </div>
 
             <motion.div
-              key={mode}
+              key="signin"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
@@ -225,15 +209,13 @@ function AuthPage() {
             >
               <div className="flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.28em] text-muted-foreground">
                 <span className="h-px w-8 bg-hairline" />
-                {mode === "signin" ? "Regresso ao clube" : "Adesão ao clube"}
+                Regresso ao clube
               </div>
               <h1 className="mt-5 font-display text-4xl leading-[1.05] tracking-tight text-foreground lg:text-5xl">
-                {mode === "signin" ? "Entra." : "Cria a tua conta."}
+                Entra.
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                {mode === "signin"
-                  ? "Continua onde ficaste no ecossistema MM."
-                  : "Ainda sem plano? Depois de criar conta, escolhes o teu na página seguinte."}
+                Continua onde ficaste no ecossistema MM.
               </p>
             </motion.div>
 
@@ -263,20 +245,6 @@ function AuthPage() {
 
             {!activeEmail && (
             <form onSubmit={onSubmit} className="mt-8 space-y-4">
-
-              {mode === "signup" && (
-                <Field
-                  label="Nome"
-                  icon={User}
-                  value={displayName}
-                  onChange={(value) => {
-                    setDisplayName(value);
-                    setFormError(null);
-                  }}
-                  autoComplete="name"
-                  required
-                />
-              )}
               <Field
                 label="Email"
                 icon={Mail}
@@ -298,7 +266,7 @@ function AuthPage() {
                   setPassword(value);
                   setFormError(null);
                 }}
-                autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                autoComplete="current-password"
                 required
                 minLength={6}
               />
@@ -318,17 +286,13 @@ function AuthPage() {
                 disabled={loading}
                 className="group mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_20px_60px_-20px_oklch(0.82_0.13_82_/_0.7)] transition hover:bg-gold-soft disabled:opacity-50"
               >
-                {loading
-                  ? "A processar…"
-                  : mode === "signin"
-                    ? "Entrar no clube"
-                    : "Criar conta MM Club"}
+                {loading ? "A processar…" : "Entrar no clube"}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </button>
             </form>
             )}
 
-            {!activeEmail && mode === "signin" && (
+            {!activeEmail && (
               <button
                 type="button"
                 onClick={sendReset}
@@ -343,14 +307,19 @@ function AuthPage() {
 
             {!activeEmail && (
             <div className="mt-6 flex items-center justify-between text-xs">
-              <button
-                onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-                className="text-muted-foreground transition hover:text-foreground"
-              >
-                {mode === "signin"
-                  ? "Ainda não tens conta? Criar conta →"
-                  : "← Já tens conta? Entrar"}
-              </button>
+              {joinIntent?.from === "vip" ? (
+                <Link to="/vip" className="text-muted-foreground transition hover:text-foreground">
+                  Ainda sem assinatura? Continuar pagamento →
+                </Link>
+              ) : (
+                <Link
+                  to="/checkout"
+                  search={joinIntent?.slug ? { plan: joinIntent.slug } : undefined}
+                  className="text-muted-foreground transition hover:text-foreground"
+                >
+                  Ainda sem assinatura? Continuar pagamento →
+                </Link>
+              )}
               <Link
                 to="/quiz"
                 className="text-primary hover:underline"

@@ -45,6 +45,7 @@ function CheckoutReturn() {
   const priceSlug = data && "priceSlug" in data ? data.priceSlug : null;
   const planName = data && "planName" in data ? data.planName : null;
   const isTrial = Boolean(data && "isTrial" in data && data.isTrial);
+  const accountCreated = Boolean(data && "accountCreated" in data && data.accountCreated);
 
   // Guarda o plano tentado para que qualquer caminho (login, /checkout, /vip)
   // retome exatamente a mesma escolha em vez de mostrar a parede de planos.
@@ -128,11 +129,17 @@ function CheckoutReturn() {
           )}
         </div>
         <h1 className="mt-6 font-display text-3xl">
-          {ready ? "Conta criada" : "A confirmar o pagamento"}
+          {ready
+            ? accountCreated
+              ? "Conta criada"
+              : "Acesso ativado"
+            : "A confirmar o pagamento"}
         </h1>
         <p className="mt-3 text-sm text-muted-foreground">
           {ready
-            ? `A tua adesão está ativa e criámos a conta ${email}. Enviámos-te um email para definires a palavra-passe.`
+            ? accountCreated
+              ? `A tua adesão está ativa e criámos a conta ${email}. Enviámos-te um email para definires a palavra-passe.`
+              : `A tua adesão está ativa para ${email}. Se ainda não tens palavra-passe, pede o link abaixo.`
             : isLoading
               ? "A verificar o estado do pagamento..."
               : "Assim que o pagamento for confirmado criamos a tua conta automaticamente. Isto costuma demorar alguns segundos."}

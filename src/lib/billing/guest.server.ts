@@ -36,8 +36,7 @@ export type StartGuestCheckoutInput = {
 };
 
 export type StartGuestCheckoutResult =
-  | { status: "redirect"; checkoutUrl: string; intentId: string }
-  | { status: "account_exists" };
+  { status: "redirect"; checkoutUrl: string; intentId: string };
 
 export async function startGuestCheckout(
   input: StartGuestCheckoutInput,
@@ -46,21 +45,10 @@ export async function startGuestCheckout(
   const price = await getPriceBySlug(input.priceSlug);
   if (!price) throw new Error("Unknown price");
 
-  // Um email já registado só bloqueia se a conta tiver subscrição viva — nesse
-  // caso deve gerir a partir da área de membro. Contas criadas mas nunca pagas
-  // (sem palavra-passe definida) continuam o checkout normalmente e recebem o
-  // acesso por email no fim.
-  const existingUserId = await findUserIdByEmail(email);
-  if (existingUserId) {
-    const { data: liveSub } = await supabaseAdmin
-      .from("billing_subscriptions")
-      .select("id")
-      .eq("user_id", existingUserId)
-      .in("status", ["active", "trialing", "past_due", "grace_period"])
-      .limit(1)
-      .maybeSingle();
-    if (liveSub) return { status: "account_exists" };
-  }
+  // Nunca bloqueamos o pagamento apenas porque o email já existe. Este é o
+  // caso crítico: alguém pode ter ficado com uma conta criada num fluxo antigo
+  // sem assinatura/palavra-passe. O checkout continua; após confirmação,
+  // ligamos o pagamento à conta existente ou criamos uma nova se necessário.
 
   const origin = input.origin.replace(/\/$/, "");
 
