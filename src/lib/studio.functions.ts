@@ -224,6 +224,17 @@ export const generateImages = createServerFn({ method: "POST" })
       throw new Error(spendErr.message);
     }
 
+    // Bíblia de consistência partilhada por todas as variações do lote.
+    const { generateConsistencyLock } = await import("./studio-qc.server");
+    const imageLock = await generateConsistencyLock({
+      people: data.people,
+      style: data.style,
+      scene: data.scene,
+      notes: data.notes,
+      brand,
+      product,
+    });
+
     const prompt = buildImagePrompt({
       style: data.style as ImageStyle,
       format: data.format as ImageFormat,
@@ -233,7 +244,9 @@ export const generateImages = createServerFn({ method: "POST" })
       brand,
       product,
       notes: data.notes,
+      consistency: consistencyBlock(imageLock),
     });
+
 
     // Carregar fotos do produto como referência real (mantém identidade visual).
     const productPhotos = ((product as { photos?: string[] } | null)?.photos ?? []).slice(0, 3);
