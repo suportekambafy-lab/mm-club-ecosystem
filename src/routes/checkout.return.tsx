@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, Loader2, Mail } from "lucide-react";
-import { useState } from "react";
+import { AlertCircle, CheckCircle2, Loader2, Mail, RotateCcw } from "lucide-react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getGuestCheckoutStatus } from "@/lib/billing.functions";
+import { rememberIntendedPlan } from "@/lib/intended-plan";
 
 export const Route = createFileRoute("/checkout/return")({
   validateSearch: (
@@ -31,14 +32,27 @@ function CheckoutReturn() {
     queryKey: ["guest-checkout", intent],
     queryFn: () => getGuestCheckoutStatus({ data: { intentId: intent! } }),
     enabled: Boolean(intent),
-    refetchInterval: (q) =>
-      q.state.data && "ready" in q.state.data && q.state.data.ready
-        ? false
-        : 3000,
+    refetchInterval: (q) => {
+      const d = q.state.data;
+      if (d && "ready" in d && (d.ready || d.failed)) return false;
+      return 3000;
+    },
   });
 
   const ready = Boolean(data && "ready" in data && data.ready);
+  const failed = Boolean(data && "failed" in data && data.failed);
   const email = data && "email" in data ? data.email : null;
+  const priceSlug = data && "priceSlug" in data ? data.priceSlug : null;
+  const planName = data && "planName" in data ? data.planName : null;
+  const isTrial = Boolean(data && "isTrial" in data && data.isTrial);
+
+  // Guarda o plano tentado para que qualquer caminho (login, /checkout, /vip)
+  // retome exatamente a mesma escolha em vez de mostrar a parede de planos.
+  useEffect(() => {
+    if (failed && priceSlug) {
+      rememberIntendedPlan(priceSlug, isTrial ? "vip" : "checkout");
+    }
+  }, [failed, priceSlug, isTrial]);
 
   const sendSetPassword = async () => {
     if (!email) return;
@@ -51,6 +65,59 @@ function CheckoutReturn() {
   };
 
   if (intent) {
+    if (failed) {
+      return (
+        <div className="mx-auto flex min-h-[80vh] max-w-lg flex-col items-center justify-center px-4 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/15 text-destructive">
+            <AlertCircle className="h-8 w-8" />
+          </div>
+          <h1 className="mt-6 font-display text-3xl">
+            {isTrial
+              ? "Não conseguimos validar o cartão"
+              : "O pagamento não foi concluído"}
+          </h1>
+          <p className="mt-3 text-sm text-muted-foreground">
+            {isTrial
+              ? "O teu acesso VIP continua reservado. A validação do cartão foi recusada pelo banco — podes tentar outra vez com o mesmo cartão ou com outro."
+              : "Não foi cobrado nenhum valor. Podes retomar exatamente o mesmo plano e tentar de novo com outro método de pagamento."}
+          </p>
+          {planName ? (
+            <p className="mt-4 rounded-full border border-border bg-muted/40 px-4 py-2 text-xs text-muted-foreground">
+              Plano guardado:{" "}
+              <span className="font-medium text-foreground">{planName}</span>
+            </p>
+          ) : null}
+
+          <div className="mt-8 flex flex-col items-center gap-3">
+            {isTrial ? (
+              <Link
+                to="/vip"
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Tentar novamente o acesso VIP
+              </Link>
+            ) : (
+              <Link
+                to="/checkout"
+                search={priceSlug ? { plan: priceSlug } : {}}
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Retomar {planName ?? "o meu plano"}
+              </Link>
+            )}
+            <a
+              href="mailto:geral@mmclub.pt"
+              className="text-xs text-muted-foreground underline hover:text-foreground"
+            >
+              Precisas de ajuda? Fala connosco
+            </a>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="mx-auto flex min-h-[80vh] max-w-lg flex-col items-center justify-center px-4 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/15 text-primary">
@@ -97,6 +164,7 @@ function CheckoutReturn() {
       </div>
     );
   }
+
 
   return (
     <div className="mx-auto flex min-h-[80vh] max-w-lg flex-col items-center justify-center px-4 text-center">
