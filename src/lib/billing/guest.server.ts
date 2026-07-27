@@ -164,6 +164,14 @@ export async function provisionAccountForIntent(
   const email = intent.email.trim().toLowerCase();
   let userId = await findUserIdByEmail(email);
   let created = false;
+  // Conta já existia mas nunca entrou (criada sem palavra-passe): tratamos como
+  // nova e enviamos também o email de acesso.
+  let neverSignedIn = false;
+  if (userId) {
+    const { data: existing } = await supabaseAdmin.auth.admin.getUserById(userId);
+    neverSignedIn = !existing?.user?.last_sign_in_at;
+  }
+
 
   if (!userId) {
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
