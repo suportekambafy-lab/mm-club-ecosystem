@@ -704,45 +704,64 @@ export async function runAutoTranscribeTick(): Promise<{
     const be = errorSet.has(`${b.courseId}::${b.lessonId}`) ? 0 : 1;
     return ae - be;
   });
-  const next = eligible[0];
-  if (!next) return { ok: true, skipped: "all lessons transcribed or in cooldown" };
+  const batchToRun = eligible.slice(0, freeSlots);
+  if (!batchToRun.length)
+    return { ok: true, skipped: "all lessons transcribed or in cooldown" };
 
-  // Mark as transcribing (acts as lock).
+  // Marca todas como "transcribing" (lock) antes de arrancar em paralelo.
   await supabaseAdmin.from("lesson_transcripts").upsert(
-    {
-      course_id: next.courseId,
-      lesson_id: next.lessonId,
-      course_title: next.courseTitle,
-      lesson_title: next.lessonTitle,
-      video_url: next.videoUrl,
+    batchToRun.map((c) => ({
+      course_id: c.courseId,
+      lesson_id: c.lessonId,
+      course_title: c.courseTitle,
+      lesson_title: c.lessonTitle,
+      video_url: c.videoUrl,
       status: "transcribing",
       error: null,
       model: TRANSCRIBE_MODEL,
-    },
+    })),
     { onConflict: "course_id,lesson_id" },
   );
 
-  try {
-    const text = await transcribeFromUrl(next.videoUrl, apiKey);
-    await ingestTranscriptRaw({
-      courseId: next.courseId,
-      lessonId: next.lessonId,
-      courseTitle: next.courseTitle,
-      lessonTitle: next.lessonTitle,
-      videoUrl: next.videoUrl,
-      transcript: text,
-    });
-    return {
-      ok: true,
-      processed: { courseId: next.courseId, lessonId: next.lessonId, chars: text.length },
-    };
-  } catch (e: any) {
-    await supabaseAdmin
-      .from("lesson_transcripts")
-      .update({ status: "error", error: String(e?.message ?? e) })
-      .eq("course_id", next.courseId)
-      .eq("lesson_id", next.lessonId);
-    return { ok: false, error: String(e?.message ?? e) };
-  }
+  const results = await Promise.all(
+    batchToRun.map(async (item) => {
+      try {
+        const text = await transcribeFromUrl(item.videoUrl, apiKey);
+        await ingestTranscriptRaw({
+          courseId: item.courseId,
+          lessonId: item.lessonId,
+          courseTitle: item.courseTitle,
+          lessonTitle: item.lessonTitle,
+          videoUrl: item.videoUrl,
+          transcript: text,
+        });
+        return {
+          courseId: item.courseId,
+          lessonId: item.lessonId,
+          ok: true,
+          chars: text.length,
+        };
+      } catch (e: any) {
+        const error = String(e?.message ?? e);
+        await supabaseAdmin
+          .from("lesson_transcripts")
+          .update({ status: "error", error })
+          .eq("course_id", item.courseId)
+          .eq("lesson_id", item.lessonId);
+        return { courseId: item.courseId, lessonId: item.lessonId, ok: false, error };
+      }
+    }),
+  );
+
+  const first = results.find((r) => r.ok);
+  return {
+    ok: results.some((r) => r.ok),
+    results,
+    processed: first
+      ? { courseId: first.courseId, lessonId: first.lessonId, chars: first.chars ?? 0 }
+      : undefined,
+    error: results.every((r) => !r.ok) ? results[0]?.error : undefined,
+  };
 }
+
 
