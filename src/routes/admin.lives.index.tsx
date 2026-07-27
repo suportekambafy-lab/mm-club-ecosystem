@@ -652,13 +652,18 @@ function ModeButton({
 
 function IngestField({ label, value, secret }: { label: string; value: string; secret?: boolean }) {
   const [revealed, setRevealed] = useState(!secret);
+  const [copied, setCopied] = useState(false);
   return (
     <div>
       <p className="mb-1 text-[11px] uppercase tracking-widest text-muted-foreground">{label}</p>
       <div className="flex items-center gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2">
-        <code className="flex-1 truncate font-mono text-xs">
-          {revealed ? value : "•".repeat(Math.min(value.length, 32))}
-        </code>
+        <input
+          readOnly
+          value={revealed ? value : "•".repeat(Math.min(value.length, 32))}
+          onFocus={(e) => e.currentTarget.select()}
+          onClick={(e) => e.currentTarget.select()}
+          className="flex-1 truncate bg-transparent font-mono text-xs outline-none"
+        />
         {secret && (
           <button
             type="button"
@@ -670,12 +675,18 @@ function IngestField({ label, value, secret }: { label: string; value: string; s
         )}
         <button
           type="button"
-          onClick={() => navigator.clipboard.writeText(value)}
+          onClick={async () => {
+            const ok = await copyText(value);
+            setCopied(ok);
+            toast[ok ? "success" : "error"](ok ? "Copiado" : "Não foi possível copiar — seleciona o texto");
+            if (ok) setTimeout(() => setCopied(false), 2000);
+          }}
           className="inline-flex items-center gap-1 text-[11px] text-primary"
         >
-          <Copy className="h-3 w-3" /> Copiar
+          <Copy className="h-3 w-3" /> {copied ? "Copiado" : "Copiar"}
         </button>
       </div>
     </div>
   );
+
 }
