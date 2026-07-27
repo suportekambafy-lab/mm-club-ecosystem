@@ -1,11 +1,15 @@
 /**
  * <GuestRoom> — minimal LiveKit room for external guests (no MM Club account).
  *
+ * Guests join as regular attendees (audience). They can raise their hand and,
+ * once the host promotes them, the room reconnects with publish rights.
+ *
  * Self-contained on purpose: guests have no Supabase session, so this view
  * reads everything from the LiveKit room itself (participants, tracks) rather
  * than from Postgres like the member experience does.
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import {
   Room,
   RoomEvent,
@@ -13,25 +17,74 @@ import {
   type Participant,
   type RemoteTrackPublication,
 } from "livekit-client";
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2 } from "lucide-react";
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, Hand } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { guestSync } from "@/lib/live-guest.functions";
 import type { MediaPrefs } from "@/lib/media-prefs";
 
 interface Props {
   token: string;
   url: string;
   prefs: MediaPrefs;
+  /** Identity + credentials used to poll for stage promotions. */
+  liveId: string;
+  code: string;
+  guestId: string;
+  displayName: string;
+  onStage: boolean;
   onLeave: () => void;
 }
 
-export function GuestRoom({ token, url, prefs, onLeave }: Props) {
+export function GuestRoom({
+  token,
+  url,
+  prefs,
+  liveId,
+  code,
+  guestId,
+  displayName,
+  onStage: initialOnStage,
+  onLeave,
+}: Props) {
+  const sync = useServerFn(guestSync);
   const roomRef = useRef<Room | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
+  const [activeToken, setActiveToken] = useState(token);
+  const [onStage, setOnStage] = useState(initialOnStage);
+  const [handRaised, setHandRaised] = useState(false);
   const [connecting, setConnecting] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [micOn, setMicOn] = useState(prefs.micEnabled);
-  const [camOn, setCamOn] = useState(prefs.camEnabled);
+  const [micOn, setMicOn] = useState(prefs.micEnabled && initialOnStage);
+  const [camOn, setCamOn] = useState(prefs.camEnabled && initialOnStage);
   const [, forceTick] = useState(0);
+
+  const onStageRef = useRef(onStage);
+  onStageRef.current = onStage;
+
+  // Heartbeat: pick up promotions/demotions decided by the host.
+  const poll = useCallback(
+    async (raiseHand?: boolean) => {
+      try {
+        const r = await sync({
+          data: { liveId, code, guestId, displayName, raiseHand, currentlyOnStage: onStageRef.current },
+        });
+        setHandRaised(r.handRaised);
+        if (r.token) {
+          setOnStage(r.onStage);
+          setActiveToken(r.token);
+        }
+      } catch {
+        /* transient — next tick retries */
+      }
+    },
+    [sync, liveId, code, guestId, displayName],
+  );
+
+  useEffect(() => {
+    const id = setInterval(() => void poll(), 5000);
+    return () => clearInterval(id);
+  }, [poll]);
+
 
   useEffect(() => {
     let cancelled = false;
@@ -55,10 +108,20 @@ export function GuestRoom({ token, url, prefs, onLeave }: Props) {
 
     (async () => {
       try {
-        await r.connect(url, token);
+        setConnecting(true);
+        await r.connect(url, activeToken);
         if (cancelled) return;
-        if (prefs.micEnabled) await r.localParticipant.setMicrophoneEnabled(true, prefs.micId ? { deviceId: prefs.micId } : undefined);
-        if (prefs.camEnabled) await r.localParticipant.setCameraEnabled(true, prefs.cameraId ? { deviceId: prefs.cameraId } : undefined);
+        if (onStageRef.current) {
+          if (prefs.micEnabled)
+            await r.localParticipant.setMicrophoneEnabled(true, prefs.micId ? { deviceId: prefs.micId } : undefined);
+          if (prefs.camEnabled)
+            await r.localParticipant.setCameraEnabled(true, prefs.cameraId ? { deviceId: prefs.cameraId } : undefined);
+          setMicOn(prefs.micEnabled);
+          setCamOn(prefs.camEnabled);
+        } else {
+          setMicOn(false);
+          setCamOn(false);
+        }
         if (!cancelled) {
           setRoom(r);
           setConnecting(false);
@@ -76,7 +139,8 @@ export function GuestRoom({ token, url, prefs, onLeave }: Props) {
       roomRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, url]);
+  }, [activeToken, url]);
+
 
   const participants: Participant[] = useMemo(() => {
     if (!room) return [];
@@ -139,30 +203,56 @@ export function GuestRoom({ token, url, prefs, onLeave }: Props) {
         ))}
       </div>
 
+      {!onStage && (
+        <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-center px-3">
+          <div className="rounded-full bg-black/70 px-3 py-1.5 text-[11px] text-white/70 ring-1 ring-white/10 backdrop-blur-md">
+            Estás a assistir como convidado. Levanta a mão para pedires para falar.
+          </div>
+        </div>
+      )}
+
       <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center">
         <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-black/70 px-3 py-2 ring-1 ring-white/10 backdrop-blur-md">
-          <button
-            type="button"
-            onClick={toggleMic}
-            aria-label={micOn ? "Desligar microfone" : "Ligar microfone"}
-            className={cn(
-              "grid h-11 w-11 place-items-center rounded-full text-white transition",
-              micOn ? "bg-white/10 hover:bg-white/20" : "bg-red-500/90 hover:bg-red-500",
-            )}
-          >
-            {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-          </button>
-          <button
-            type="button"
-            onClick={toggleCam}
-            aria-label={camOn ? "Desligar câmara" : "Ligar câmara"}
-            className={cn(
-              "grid h-11 w-11 place-items-center rounded-full text-white transition",
-              camOn ? "bg-white/10 hover:bg-white/20" : "bg-red-500/90 hover:bg-red-500",
-            )}
-          >
-            {camOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
-          </button>
+          {onStage ? (
+            <>
+              <button
+                type="button"
+                onClick={toggleMic}
+                aria-label={micOn ? "Desligar microfone" : "Ligar microfone"}
+                className={cn(
+                  "grid h-11 w-11 place-items-center rounded-full text-white transition",
+                  micOn ? "bg-white/10 hover:bg-white/20" : "bg-red-500/90 hover:bg-red-500",
+                )}
+              >
+                {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+              </button>
+              <button
+                type="button"
+                onClick={toggleCam}
+                aria-label={camOn ? "Desligar câmara" : "Ligar câmara"}
+                className={cn(
+                  "grid h-11 w-11 place-items-center rounded-full text-white transition",
+                  camOn ? "bg-white/10 hover:bg-white/20" : "bg-red-500/90 hover:bg-red-500",
+                )}
+              >
+                {camOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void poll(!handRaised)}
+              aria-label={handRaised ? "Baixar a mão" : "Levantar a mão"}
+              className={cn(
+                "inline-flex h-11 items-center gap-2 rounded-full px-4 text-sm font-medium transition",
+                handRaised ? "bg-amber-400 text-black hover:brightness-105" : "bg-white/10 text-white hover:bg-white/20",
+              )}
+            >
+              <Hand className="h-4 w-4" />
+              {handRaised ? "Mão levantada" : "Levantar a mão"}
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => {

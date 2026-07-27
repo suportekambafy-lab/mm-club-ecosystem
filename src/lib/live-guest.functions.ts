@@ -90,20 +90,23 @@ export const joinLiveAsGuest = createServerFn({ method: "POST" })
         .update({ room: "main", left_at: null, joined_at: new Date().toISOString() })
         .eq("id", existing.id);
     } else {
+      // Guests join as regular attendees (audience). The host can promote them
+      // to the stage afterwards — being a guest does not mean being a speaker.
       const { error: insErr } = await supabaseAdmin.from("live_participants").insert({
         live_id: live.id,
         user_id: guestId,
-        role: "speaker",
+        role: "participant",
         room: "main",
-        on_stage: true,
-        mic_allowed: true,
-        cam_allowed: true,
-        screen_allowed: true,
+        on_stage: false,
+        mic_allowed: false,
+        cam_allowed: false,
+        screen_allowed: false,
       });
       if (insErr) throw new Error(insErr.message);
     }
 
-    const role = (existing?.role ?? "speaker") as "host" | "cohost" | "speaker" | "participant" | "viewer";
+    const role = (existing?.role ?? "participant") as "host" | "cohost" | "speaker" | "participant" | "viewer";
+    const onStage = Boolean(existing?.on_stage);
     const { mintLiveKitToken } = await import("@/lib/livekit.server");
     const { token, url } = await mintLiveKitToken({
       liveId: live.id,
@@ -111,13 +114,11 @@ export const joinLiveAsGuest = createServerFn({ method: "POST" })
       userId: guestId,
       displayName: data.displayName,
       role,
-      publishOverride: existing
-        ? {
-            mic: existing.mic_allowed && existing.on_stage,
-            cam: existing.cam_allowed && existing.on_stage,
-            screen: existing.screen_allowed && existing.on_stage,
-          }
-        : undefined,
+      publishOverride: {
+        mic: Boolean(existing?.mic_allowed) && onStage,
+        cam: Boolean(existing?.cam_allowed) && onStage,
+        screen: Boolean(existing?.screen_allowed) && onStage,
+      },
       ttlSeconds: 60 * 60 * 6,
     });
 
@@ -125,7 +126,84 @@ export const joinLiveAsGuest = createServerFn({ method: "POST" })
       token,
       url,
       guestId,
+      onStage,
       title: live.title as string,
       status: live.status as string,
     };
   });
+
+/**
+ * Public: guest heartbeat — raise/lower hand and pick up stage promotions.
+ * Returns a fresh LiveKit token whenever publish rights changed, so the guest
+ * can reconnect with the right grants once the host invites them on stage.
+ */
+export const guestSync = createServerFn({ method: "POST" })
+  .inputValidator((i) =>
+    z
+      .object({
+        liveId: uuid,
+        code: z.string().trim().min(8).max(64),
+        guestId: uuid,
+        displayName: z.string().trim().min(2).max(40),
+        raiseHand: z.boolean().optional(),
+        currentlyOnStage: z.boolean(),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: live } = await supabaseAdmin
+      .from("lives")
+      .select("id, status, guest_token")
+      .eq("id", data.liveId)
+      .maybeSingle();
+    if (!live || !live.guest_token || live.guest_token !== data.code) {
+      throw new Error("Link de convidado inválido ou expirado.");
+    }
+
+    if (typeof data.raiseHand === "boolean") {
+      await supabaseAdmin
+        .from("live_participants")
+        .update({ hand_raised_at: data.raiseHand ? new Date().toISOString() : null })
+        .eq("live_id", live.id)
+        .eq("user_id", data.guestId);
+    }
+
+    const { data: me } = await supabaseAdmin
+      .from("live_participants")
+      .select("role, on_stage, banned, hand_raised_at, mic_allowed, cam_allowed, screen_allowed")
+      .eq("live_id", live.id)
+      .eq("user_id", data.guestId)
+      .maybeSingle();
+    if (!me) throw new Error("Já não estás nesta sessão.");
+    if (me.banned) throw new Error("Já não tens acesso a esta sessão.");
+
+    const onStage = Boolean(me.on_stage);
+    let token: string | null = null;
+    if (onStage !== data.currentlyOnStage) {
+      const { mintLiveKitToken } = await import("@/lib/livekit.server");
+      const minted = await mintLiveKitToken({
+        liveId: live.id,
+        target: "main",
+        userId: data.guestId,
+        displayName: data.displayName,
+        role: me.role as "host" | "cohost" | "speaker" | "participant" | "viewer",
+        publishOverride: {
+          mic: Boolean(me.mic_allowed) && onStage,
+          cam: Boolean(me.cam_allowed) && onStage,
+          screen: Boolean(me.screen_allowed) && onStage,
+        },
+        ttlSeconds: 60 * 60 * 6,
+      });
+      token = minted.token;
+    }
+
+    return {
+      onStage,
+      handRaised: Boolean(me.hand_raised_at),
+      status: live.status as string,
+      token,
+    };
+  });
+
