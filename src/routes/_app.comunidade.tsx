@@ -1276,7 +1276,7 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
           className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-muted-foreground transition hover:text-foreground"
         >
           <MessageCircle className="h-4 w-4" />
-          {commentCount > 0 && <span>{commentCount}</span>}
+          <span>{commentCount}</span>
         </button>
       </div>
 
