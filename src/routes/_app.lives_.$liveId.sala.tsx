@@ -58,6 +58,8 @@ function SalaRoute() {
   const [liveStatus, setLiveStatus] = useState<string | null>(null);
   const [createdBy, setCreatedBy] = useState<string | null>(null);
   const joinLockRef = useRef(false);
+  /** Green room gate — publishers confirm devices before entering. */
+  const [ready, setReady] = useState(false);
 
   // Resolve current user + live (client-side so auth token is present).
   useEffect(() => {
