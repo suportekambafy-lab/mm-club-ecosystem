@@ -235,6 +235,7 @@ export function useRoomState({
         });
       });
       setEngineTracks((prev) => ({ ...prev, [p.identity]: list }));
+      if (p.name) setEngineNames((prev) => (prev[p.identity] === p.name ? prev : { ...prev, [p.identity]: p.name! }));
       setMicOn((prev) => ({ ...prev, [p.identity]: !p.isMicrophoneEnabled ? false : true }));
       setCamOn((prev) => ({ ...prev, [p.identity]: p.isCameraEnabled }));
       setScreenOn((prev) => ({ ...prev, [p.identity]: p.isScreenShareEnabled }));
