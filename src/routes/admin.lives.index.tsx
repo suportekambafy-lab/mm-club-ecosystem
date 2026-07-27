@@ -189,7 +189,7 @@ function AdminLives() {
     setGuestBusy(id);
     try {
       const r = await guestLink({ data: { liveId: id, rotate } });
-      const url = `${window.location.origin}${r.path}`;
+      const url = `${GUEST_LINK_ORIGIN}${r.path}`;
       setGuestUrl({ id, url });
       const copied = await copyText(url);
       toast[copied ? "success" : "message"](
