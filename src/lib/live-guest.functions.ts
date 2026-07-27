@@ -96,7 +96,14 @@ export const joinLiveAsGuest = createServerFn({ method: "POST" })
     if (existing) {
       await supabaseAdmin
         .from("live_participants")
-        .update({ room: "main", left_at: null, joined_at: new Date().toISOString() })
+        .update({
+          room: "main",
+          left_at: null,
+          joined_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
+          guest_name: data.displayName,
+          is_guest: true,
+        })
         .eq("id", existing.id);
     } else {
       // Guests join as regular attendees (audience). The host can promote them
@@ -110,9 +117,13 @@ export const joinLiveAsGuest = createServerFn({ method: "POST" })
         mic_allowed: false,
         cam_allowed: false,
         screen_allowed: false,
+        guest_name: data.displayName,
+        is_guest: true,
+        last_seen_at: new Date().toISOString(),
       });
       if (insErr) throw new Error(insErr.message);
     }
+
 
     const role = (existing?.role ?? "participant") as "host" | "cohost" | "speaker" | "participant" | "viewer";
     const onStage = Boolean(existing?.on_stage);
