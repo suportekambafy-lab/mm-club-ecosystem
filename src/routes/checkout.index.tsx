@@ -55,7 +55,12 @@ function cadenceLabel(interval: string, count: number): string {
 }
 
 function PlansPage() {
-  const { plan: recommended } = useSearch({ from: "/checkout/" });
+  const { plan: planFromUrl } = useSearch({ from: "/checkout/" });
+  // Se o cliente já tinha escolhido um plano antes (pagamento falhado, login,
+  // troca de conta), retomamos essa escolha em vez de voltar ao muro de planos.
+  const [remembered] = useState(() => readIntendedPlan());
+  const recommended = planFromUrl ?? remembered?.slug;
+  const resumed = !planFromUrl && Boolean(remembered);
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [guestPlan, setGuestPlan] = useState<string | null>(null);
