@@ -7,9 +7,10 @@ export const getRouter = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: false,
-        refetchOnMount: false,
+        staleTime: 0,
+        refetchOnWindowFocus: true,
+        refetchOnReconnect: true,
+        refetchOnMount: "always",
       },
     },
   });
@@ -21,7 +22,7 @@ export const getRouter = () => {
     defaultPreload: "intent",
     defaultPreloadDelay: 60,
     defaultPreloadStaleTime: 0,
-    defaultStaleTime: 60_000,
+    defaultStaleTime: 0,
   });
 
   return router;

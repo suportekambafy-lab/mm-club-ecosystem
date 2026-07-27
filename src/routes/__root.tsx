@@ -143,6 +143,25 @@ try {
 } catch(e) {}
 `;
 
+const PWA_RUNTIME_SCRIPT = `
+try {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js').then(function (registration) {
+        registration.update && registration.update();
+        if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }).catch(function () {});
+    });
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (!window.__mmClubControllerChanged) {
+        window.__mmClubControllerChanged = true;
+        window.location.reload();
+      }
+    });
+  }
+} catch(e) {}
+`;
+
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
@@ -150,6 +169,7 @@ function RootShell({ children }: { children: ReactNode }) {
       <head suppressHydrationWarning>
         <HeadContent />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: PWA_RUNTIME_SCRIPT }} />
       </head>
       <body suppressHydrationWarning>
         {children}
