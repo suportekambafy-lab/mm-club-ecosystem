@@ -64,6 +64,24 @@ function GuestEntry() {
   const [entering, setEntering] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Tick every second while waiting so the page flips to the join form the
+  // exact moment the scheduled time is reached. Declared before any early
+  // return so hook order stays stable.
+  const waitingStartMs = info.data?.startsAt ? new Date(info.data.startsAt).getTime() : 0;
+  const waitingOpen = Boolean(info.data?.open);
+  const [, tick] = useState(0);
+  useEffect(() => {
+    if (!waitingStartMs || waitingOpen) return;
+    const id = setInterval(() => {
+      tick((n) => n + 1);
+      if (Date.now() >= waitingStartMs) void info.refetch();
+    }, 1000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waitingStartMs, waitingOpen]);
+
+
+
   if (!c) {
     return (
       <Shell>
