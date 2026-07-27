@@ -647,6 +647,9 @@ export async function cancelSubscription(input: {
     .maybeSingle();
   if (!sub) throw new Error("Subscription not found");
 
+  // Trials have no paid period to honour: cancelling suspends access at once.
+  const immediate = input.immediate || sub.status === "trialing";
+
   const gw = getGateway(sub.gateway ?? DEFAULT_GATEWAY);
   const gwCustomerId = (
     sub as unknown as { customer?: { gateway_customer_id?: string | null } }
