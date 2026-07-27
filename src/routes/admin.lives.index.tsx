@@ -151,6 +151,26 @@ function AdminLives() {
     }
   }
 
+  async function handleGuestLink(id: string, rotate = false) {
+    setError(null);
+    setGuestBusy(id);
+    try {
+      const r = await guestLink({ data: { liveId: id, rotate } });
+      const url = `${window.location.origin}${r.path}`;
+      setGuestUrl({ id, url });
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch {
+        /* clipboard may be blocked — the link is shown anyway */
+      }
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setGuestBusy(null);
+    }
+  }
+
+
   async function handleDelete(id: string) {
     if (!confirm("Apagar esta live? Esta ação não pode ser desfeita.")) return;
     try {
