@@ -207,3 +207,39 @@ export const guestSync = createServerFn({ method: "POST" })
     };
   });
 
+
+/**
+ * Public: lightweight info about a live for the guest landing page
+ * (cover, title, scheduled start and whether the room is open).
+ */
+export const getGuestLiveInfo = createServerFn({ method: "POST" })
+  .inputValidator((i) => z.object({ liveId: uuid, code: z.string().trim().min(8).max(64) }).parse(i))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: live, error } = await supabaseAdmin
+      .from("lives")
+      .select("id, title, description, status, starts_at, cover_url, guest_token")
+      .eq("id", data.liveId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!live || !live.guest_token || live.guest_token !== data.code) {
+      throw new Error("Link de convidado inválido ou expirado.");
+    }
+    const startsAt = live.starts_at as string | null;
+    const status = live.status as string;
+    const startMs = startsAt ? new Date(startsAt).getTime() : 0;
+    // Room opens when the host starts it, or 10 min before the scheduled time.
+    const open =
+      status === "live" ||
+      status === "starting" ||
+      (status === "scheduled" && startMs > 0 && Date.now() >= startMs - 10 * 60_000);
+    return {
+      title: live.title as string,
+      description: (live.description as string | null) ?? null,
+      status,
+      startsAt,
+      coverUrl: (live.cover_url as string | null) ?? null,
+      open,
+      ended: status === "ended" || status === "published",
+    };
+  });
