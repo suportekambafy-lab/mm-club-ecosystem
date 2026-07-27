@@ -24,12 +24,22 @@ export async function notifyReplayReady(liveId: string): Promise<{ sent: boolean
 
   try {
     const { sendEmail, emailTemplates } = await import("@/lib/email.server");
+
+    // Only members with an active or trial subscription get the replay email.
+    const { data: subs } = await supabaseAdmin
+      .from("billing_subscriptions")
+      .select("user_id, status")
+      .in("status", ["active", "trialing"]);
+    const allowed = new Set((subs ?? []).map((s) => s.user_id as string));
+    if (allowed.size === 0) return { sent: true };
+
     let page = 1;
     for (let i = 0; i < 20; i++) {
       const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 100 });
       if (error || !list?.users?.length) break;
       for (const u of list.users) {
         if (!u.email || !u.email_confirmed_at) continue;
+        if (!allowed.has(u.id)) continue;
         const name =
           (u.user_metadata as { display_name?: string } | null)?.display_name ??
           u.email.split("@")[0] ??
@@ -54,6 +64,7 @@ export async function notifyReplayReady(liveId: string): Promise<{ sent: boolean
       if (list.users.length < 100) break;
       page += 1;
     }
+
   } catch (e) {
     console.error("[replay-notify] dispatch failed", e);
   }
