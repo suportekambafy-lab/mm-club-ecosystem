@@ -31,6 +31,7 @@ import { clearIntendedPlan, readIntendedPlan } from "@/lib/intended-plan";
 import { MMLogo } from "@/components/mm/logo";
 import { GlobalSearch } from "@/components/mm/global-search";
 import { NotificationsBell } from "@/components/mm/notifications";
+import { NotificationsPrompt } from "@/components/mm/notifications-prompt";
 
 import { cn } from "@/lib/utils";
 // Boot-time: apply admin overrides to in-memory data
@@ -559,6 +560,8 @@ function AppLayout() {
                 {themeMounted ? <ThemeIcon className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </button>
               <NotificationsBell />
+              <NotificationsPrompt />
+
               <Link
                 to="/perfil"
                 aria-label="Perfil"
