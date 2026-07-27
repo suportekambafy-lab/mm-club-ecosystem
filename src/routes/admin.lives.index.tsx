@@ -9,6 +9,7 @@ import {
   adminDeleteLive,
   adminGetLiveIngest,
 } from "@/lib/lives.functions";
+import { adminGetGuestLink } from "@/lib/live-guest.functions";
 import { uploadMedia } from "@/lib/media-upload";
 
 type LiveRow = Awaited<ReturnType<typeof adminListLives>>[number];
