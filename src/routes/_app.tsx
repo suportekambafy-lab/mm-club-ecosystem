@@ -27,6 +27,7 @@ import {
 import { useTheme } from "@/lib/theme";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { clearIntendedPlan, readIntendedPlan } from "@/lib/intended-plan";
 import { MMLogo } from "@/components/mm/logo";
 import { GlobalSearch } from "@/components/mm/global-search";
 import { NotificationsBell } from "@/components/mm/notifications";
@@ -65,8 +66,18 @@ export const Route = createFileRoute("/_app")({
         _feature: "academy.access",
       });
       if (!hasAccess) {
-        throw redirect({ to: "/checkout", replace: true });
+        // Leva o membro directamente ao plano que já tinha escolhido.
+        const intended = readIntendedPlan();
+        if (intended?.from === "vip") {
+          throw redirect({ to: "/vip", replace: true });
+        }
+        throw redirect({
+          to: "/checkout",
+          search: intended ? ({ plan: intended.slug } as never) : undefined,
+          replace: true,
+        });
       }
+      clearIntendedPlan();
     }
 
 
