@@ -13,6 +13,9 @@ import { adminGetGuestLink } from "@/lib/live-guest.functions";
 import { uploadMedia } from "@/lib/media-upload";
 import { toast } from "sonner";
 
+const GUEST_LINK_ORIGIN = "https://mmclub.pt";
+
+
 async function copyText(value: string) {
   try {
     if (navigator.clipboard && window.isSecureContext) {
@@ -189,7 +192,7 @@ function AdminLives() {
     setGuestBusy(id);
     try {
       const r = await guestLink({ data: { liveId: id, rotate } });
-      const url = `${window.location.origin}${r.path}`;
+      const url = `${GUEST_LINK_ORIGIN}${r.path}`;
       setGuestUrl({ id, url });
       const copied = await copyText(url);
       toast[copied ? "success" : "message"](
