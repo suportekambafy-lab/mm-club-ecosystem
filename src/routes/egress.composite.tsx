@@ -12,6 +12,7 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import mmIcon from "@/assets/mm-icon.png.asset.json";
 
 export const Route = createFileRoute("/egress/composite")({
   component: EgressComposite,
