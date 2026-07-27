@@ -222,6 +222,33 @@ function AdminLives() {
         </div>
       )}
 
+      {guestUrl && (
+        <div className="rounded-2xl border border-amber-400/40 bg-amber-400/5 p-5">
+          <p className="font-display text-sm text-amber-300">Link de convidado</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Quem abrir este link entra na sala interativa apenas com o nome, sem conta MM Club. O link foi copiado para a
+            área de transferência.
+          </p>
+          <div className="mt-3">
+            <IngestField label="Link" value={guestUrl.url} />
+          </div>
+          <div className="mt-4 flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => handleGuestLink(guestUrl.id, true)}
+              className="text-xs text-amber-300 underline"
+            >
+              Gerar novo link (invalida o anterior)
+            </button>
+            <button type="button" onClick={() => setGuestUrl(null)} className="text-xs text-muted-foreground underline">
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
+
+
+
       <form
         onSubmit={handleCreate}
         className="space-y-5 rounded-2xl border border-border bg-surface-1 p-5"
