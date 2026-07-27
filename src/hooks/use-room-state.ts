@@ -132,6 +132,8 @@ export function useRoomState({
   const roomRef = useRef<Room | null>(null);
   const [connState, setConnState] = useState<RoomState["connection"]["state"]>("connecting");
   const [engineTracks, setEngineTracks] = useState<Record<string, MediaTrack[]>>({}); // identity -> tracks
+  // identity -> LiveKit display name (fallback for guests without a profile)
+  const [engineNames, setEngineNames] = useState<Record<string, string>>({});
   const [micOn, setMicOn] = useState<Record<string, boolean>>({});
   const [camOn, setCamOn] = useState<Record<string, boolean>>({});
   const [screenOn, setScreenOn] = useState<Record<string, boolean>>({});
