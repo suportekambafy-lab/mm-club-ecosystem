@@ -132,6 +132,8 @@ export function useRoomState({
   const roomRef = useRef<Room | null>(null);
   const [connState, setConnState] = useState<RoomState["connection"]["state"]>("connecting");
   const [engineTracks, setEngineTracks] = useState<Record<string, MediaTrack[]>>({}); // identity -> tracks
+  // identity -> LiveKit display name (fallback for guests without a profile)
+  const [engineNames, setEngineNames] = useState<Record<string, string>>({});
   const [micOn, setMicOn] = useState<Record<string, boolean>>({});
   const [camOn, setCamOn] = useState<Record<string, boolean>>({});
   const [screenOn, setScreenOn] = useState<Record<string, boolean>>({});
@@ -233,6 +235,7 @@ export function useRoomState({
         });
       });
       setEngineTracks((prev) => ({ ...prev, [p.identity]: list }));
+      if (p.name) setEngineNames((prev) => (prev[p.identity] === p.name ? prev : { ...prev, [p.identity]: p.name! }));
       setMicOn((prev) => ({ ...prev, [p.identity]: !p.isMicrophoneEnabled ? false : true }));
       setCamOn((prev) => ({ ...prev, [p.identity]: p.isCameraEnabled }));
       setScreenOn((prev) => ({ ...prev, [p.identity]: p.isScreenShareEnabled }));
@@ -346,7 +349,7 @@ export function useRoomState({
       return {
         userId: r.user_id,
         identity: r.user_id,
-        displayName: prof?.display_name ?? "Membro",
+        displayName: prof?.display_name ?? engineNames[r.user_id] ?? "Convidado",
         avatarUrl: prof?.avatar_url ?? null,
         role: r.role,
         room: r.room,
@@ -366,7 +369,7 @@ export function useRoomState({
         isLocal: r.user_id === localUserId,
       } satisfies RoomParticipant;
     });
-  }, [participants, profiles, engineTracks, micOn, camOn, screenOn, activeSpeakerId, quality, localUserId]);
+  }, [participants, profiles, engineNames, engineTracks, micOn, camOn, screenOn, activeSpeakerId, quality, localUserId]);
 
   const onStage = useMemo(() => mapped.filter((p) => p.onStage && p.room === "main"), [mapped]);
   const audience = useMemo(() => mapped.filter((p) => p.role === "viewer" || (!p.onStage && p.room === "main")), [mapped]);

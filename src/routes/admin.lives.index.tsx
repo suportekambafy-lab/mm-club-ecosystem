@@ -9,6 +9,7 @@ import {
   adminDeleteLive,
   adminGetLiveIngest,
 } from "@/lib/lives.functions";
+import { adminGetGuestLink } from "@/lib/live-guest.functions";
 import { uploadMedia } from "@/lib/media-upload";
 
 type LiveRow = Awaited<ReturnType<typeof adminListLives>>[number];
@@ -33,12 +34,15 @@ function AdminLives() {
   const create = useServerFn(adminCreateLive);
   const del = useServerFn(adminDeleteLive);
   const getIngest = useServerFn(adminGetLiveIngest);
+  const guestLink = useServerFn(adminGetGuestLink);
 
   const [rows, setRows] = useState<LiveRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ingest, setIngest] = useState<{ id: string; url: string; key: string } | null>(null);
+  const [guestUrl, setGuestUrl] = useState<{ id: string; url: string } | null>(null);
+  const [guestBusy, setGuestBusy] = useState<string | null>(null);
 
   // Form state
   const [title, setTitle] = useState("");
@@ -151,6 +155,26 @@ function AdminLives() {
     }
   }
 
+  async function handleGuestLink(id: string, rotate = false) {
+    setError(null);
+    setGuestBusy(id);
+    try {
+      const r = await guestLink({ data: { liveId: id, rotate } });
+      const url = `${window.location.origin}${r.path}`;
+      setGuestUrl({ id, url });
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch {
+        /* clipboard may be blocked — the link is shown anyway */
+      }
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setGuestBusy(null);
+    }
+  }
+
+
   async function handleDelete(id: string) {
     if (!confirm("Apagar esta live? Esta ação não pode ser desfeita.")) return;
     try {
@@ -197,6 +221,33 @@ function AdminLives() {
           </button>
         </div>
       )}
+
+      {guestUrl && (
+        <div className="rounded-2xl border border-amber-400/40 bg-amber-400/5 p-5">
+          <p className="font-display text-sm text-amber-300">Link de convidado</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Quem abrir este link entra na sala interativa apenas com o nome, sem conta MM Club. O link foi copiado para a
+            área de transferência.
+          </p>
+          <div className="mt-3">
+            <IngestField label="Link" value={guestUrl.url} />
+          </div>
+          <div className="mt-4 flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => handleGuestLink(guestUrl.id, true)}
+              className="text-xs text-amber-300 underline"
+            >
+              Gerar novo link (invalida o anterior)
+            </button>
+            <button type="button" onClick={() => setGuestUrl(null)} className="text-xs text-muted-foreground underline">
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
+
+
 
       <form
         onSubmit={handleCreate}
@@ -440,11 +491,22 @@ function AdminLives() {
                   </Link>
                   <button
                     type="button"
+                    onClick={() => handleGuestLink(r.id)}
+                    disabled={guestBusy === r.id}
+                    className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40 disabled:opacity-60"
+                    title="Link para convidados externos entrarem só com o nome"
+                  >
+                    {guestBusy === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Copy className="h-3 w-3" />}
+                    Link de convidado
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => handleShowIngest(r.id)}
                     className="rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40"
                   >
                     Ver RTMPS
                   </button>
+
                   <button
                     type="button"
                     onClick={() => handleDelete(r.id)}

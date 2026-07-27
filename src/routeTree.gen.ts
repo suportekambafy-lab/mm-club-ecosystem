@@ -21,6 +21,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutIndexRouteImport } from './routes/checkout.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as ConvidadoLiveIdRouteImport } from './routes/convidado.$liveId'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiTranscribeRouteImport } from './routes/api.transcribe'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
@@ -146,6 +147,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const ConvidadoLiveIdRoute = ConvidadoLiveIdRouteImport.update({
+  id: '/convidado/$liveId',
+  path: '/convidado/$liveId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
@@ -536,6 +542,7 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/api/transcribe': typeof ApiTranscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/convidado/$liveId': typeof ConvidadoLiveIdRoute
   '/admin/': typeof AdminIndexRoute
   '/checkout/': typeof CheckoutIndexRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
@@ -610,6 +617,7 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/api/transcribe': typeof ApiTranscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/convidado/$liveId': typeof ConvidadoLiveIdRoute
   '/admin': typeof AdminIndexRoute
   '/checkout': typeof CheckoutIndexRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
@@ -689,6 +697,7 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/api/transcribe': typeof ApiTranscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/convidado/$liveId': typeof ConvidadoLiveIdRoute
   '/admin/': typeof AdminIndexRoute
   '/checkout/': typeof CheckoutIndexRoute
   '/_app/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
@@ -770,6 +779,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/transcribe'
     | '/checkout/return'
+    | '/convidado/$liveId'
     | '/admin/'
     | '/checkout/'
     | '/academia/$courseId'
@@ -844,6 +854,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/transcribe'
     | '/checkout/return'
+    | '/convidado/$liveId'
     | '/admin'
     | '/checkout'
     | '/especialistas/$expertId'
@@ -922,6 +933,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/transcribe'
     | '/checkout/return'
+    | '/convidado/$liveId'
     | '/admin/'
     | '/checkout/'
     | '/_app/academia/$courseId'
@@ -981,6 +993,7 @@ export interface RootRouteChildren {
   ApiChatRoute: typeof ApiChatRoute
   ApiTranscribeRoute: typeof ApiTranscribeRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
+  ConvidadoLiveIdRoute: typeof ConvidadoLiveIdRoute
   CheckoutIndexRoute: typeof CheckoutIndexRoute
   ApiKnowledgeSearchRoute: typeof ApiKnowledgeSearchRoute
   ApiRealtimeSessionRoute: typeof ApiRealtimeSessionRoute
@@ -1084,6 +1097,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/convidado/$liveId': {
+      id: '/convidado/$liveId'
+      path: '/convidado/$liveId'
+      fullPath: '/convidado/$liveId'
+      preLoaderRoute: typeof ConvidadoLiveIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/checkout/return': {
       id: '/checkout/return'
@@ -1746,6 +1766,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatRoute: ApiChatRoute,
   ApiTranscribeRoute: ApiTranscribeRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
+  ConvidadoLiveIdRoute: ConvidadoLiveIdRoute,
   CheckoutIndexRoute: CheckoutIndexRoute,
   ApiKnowledgeSearchRoute: ApiKnowledgeSearchRoute,
   ApiRealtimeSessionRoute: ApiRealtimeSessionRoute,
