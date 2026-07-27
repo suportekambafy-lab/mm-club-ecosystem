@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { BellRing, X } from "lucide-react";
 import { useDeviceNotifications } from "@/lib/device-notifications";
 
@@ -37,7 +38,7 @@ export function NotificationsPrompt() {
     window.localStorage.setItem(DISMISS_KEY, "1");
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-x-3 bottom-3 z-[9998] sm:inset-x-auto sm:right-4 sm:w-[360px]">
       <div className="relative overflow-hidden rounded-2xl border border-border bg-surface-1 p-4 shadow-2xl shadow-black/40 ring-1 ring-[color:var(--hairline)]">
         <button
@@ -79,6 +80,7 @@ export function NotificationsPrompt() {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
