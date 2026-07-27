@@ -1,0 +1,54 @@
+/**
+ * Remembers which plan a visitor tried to activate, so that after a failed
+ * payment, a login or a session switch we can take them straight back to it
+ * instead of showing the generic 3-plan wall again.
+ */
+const KEY = "mm:intended_plan";
+const TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 dias
+
+export type IntendedPlan = {
+  /** Price slug from the catalog, or "vip" for the trial offer. */
+  slug: string;
+  /** Where the intent started: "/checkout" or "/vip". */
+  from: "checkout" | "vip";
+  at: number;
+};
+
+export function rememberIntendedPlan(
+  slug: string,
+  from: IntendedPlan["from"] = "checkout",
+) {
+  if (typeof window === "undefined" || !slug) return;
+  try {
+    const value: IntendedPlan = { slug, from, at: Date.now() };
+    window.localStorage.setItem(KEY, JSON.stringify(value));
+  } catch {
+    /* storage indisponível */
+  }
+}
+
+export function readIntendedPlan(): IntendedPlan | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as IntendedPlan;
+    if (!parsed?.slug || typeof parsed.at !== "number") return null;
+    if (Date.now() - parsed.at > TTL_MS) {
+      window.localStorage.removeItem(KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function clearIntendedPlan() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(KEY);
+  } catch {
+    /* noop */
+  }
+}
