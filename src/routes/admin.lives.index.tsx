@@ -33,12 +33,15 @@ function AdminLives() {
   const create = useServerFn(adminCreateLive);
   const del = useServerFn(adminDeleteLive);
   const getIngest = useServerFn(adminGetLiveIngest);
+  const guestLink = useServerFn(adminGetGuestLink);
 
   const [rows, setRows] = useState<LiveRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ingest, setIngest] = useState<{ id: string; url: string; key: string } | null>(null);
+  const [guestUrl, setGuestUrl] = useState<{ id: string; url: string } | null>(null);
+  const [guestBusy, setGuestBusy] = useState<string | null>(null);
 
   // Form state
   const [title, setTitle] = useState("");
