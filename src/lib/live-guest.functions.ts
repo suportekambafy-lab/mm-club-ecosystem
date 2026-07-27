@@ -194,6 +194,10 @@ export const guestSync = createServerFn({ method: "POST" })
         guest_name: data.displayName,
         is_guest: true,
       };
+      if (typeof data.raiseHand === "boolean") {
+        patch.hand_raised_at = data.raiseHand ? new Date().toISOString() : null;
+      }
+
 
       await supabaseAdmin
         .from("live_participants")
