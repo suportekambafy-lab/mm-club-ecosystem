@@ -443,11 +443,11 @@ export const getGuestCheckoutStatus = createServerFn({ method: "GET" })
     if (intent.price_id) {
       const { data: price } = await supabaseAdmin
         .from("catalog_prices")
-        .select("slug, nickname, trial_days")
+        .select("slug, display_label, trial_days")
         .eq("id", intent.price_id)
         .maybeSingle();
       priceSlug = price?.slug ?? null;
-      planName = price?.nickname ?? null;
+      planName = price?.display_label ?? null;
       isTrial = (price?.trial_days ?? 0) > 0;
     }
 
