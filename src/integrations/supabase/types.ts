@@ -2530,6 +2530,45 @@ export type Database = {
         }
         Relationships: []
       }
+      mm_studio_qc_log: {
+        Row: {
+          asset_id: string | null
+          confidence: number
+          created_at: string
+          credits_absorbed: number
+          id: string
+          reasons: Json
+          regenerated_segments: number
+          report: Json
+          user_id: string
+          verdict: string
+        }
+        Insert: {
+          asset_id?: string | null
+          confidence?: number
+          created_at?: string
+          credits_absorbed?: number
+          id?: string
+          reasons?: Json
+          regenerated_segments?: number
+          report?: Json
+          user_id: string
+          verdict: string
+        }
+        Update: {
+          asset_id?: string | null
+          confidence?: number
+          created_at?: string
+          credits_absorbed?: number
+          id?: string
+          reasons?: Json
+          regenerated_segments?: number
+          report?: Json
+          user_id?: string
+          verdict?: string
+        }
+        Relationships: []
+      }
       notification_log: {
         Row: {
           category: string
