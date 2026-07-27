@@ -30,6 +30,7 @@ const iconByKind: Record<NotifKind, typeof Bell> = {
   reply: MessageCircle,
   mention: AtSign,
   reaction: Smile,
+  comment_reply: MessageCircle,
 };
 
 const labelByKind: Record<NotifKind, string> = {
@@ -39,6 +40,7 @@ const labelByKind: Record<NotifKind, string> = {
   reply: "Resposta",
   mention: "Menção",
   reaction: "Reação",
+  comment_reply: "Resposta",
 };
 
 const STORAGE_KEY = "mm.notifications.state.v2";
@@ -147,29 +149,40 @@ function useDerivedNotifs(): Notif[] {
   }, [progress, liveRows]);
 }
 
-function communityCopy(kind: CommunityNotifKind, actorName: string | null): { title: string; subtitle: string } {
+function communityCopy(
+  kind: CommunityNotifKind,
+  actorName: string | null,
+  isShort: boolean,
+): { title: string; subtitle: string } {
   const who = actorName?.trim() || "Alguém";
+  const where = isShort ? "no teu MM Short" : "no teu post";
   if (kind === "like") {
     return {
-      title: `${who} gostou do teu post`,
-      subtitle: "Toca para veres a publicação",
+      title: isShort ? `${who} gostou do teu MM Short` : `${who} gostou do teu post`,
+      subtitle: isShort ? "Toca para veres o vídeo" : "Toca para veres a publicação",
     };
   }
   if (kind === "reply") {
     return {
-      title: `${who} comentou no teu post`,
-      subtitle: "Vê a resposta na comunidade",
+      title: `${who} comentou ${where}`,
+      subtitle: isShort ? "Vê o comentário no MM Shorts" : "Vê a resposta na comunidade",
+    };
+  }
+  if (kind === "comment_reply") {
+    return {
+      title: `${who} respondeu ao teu comentário`,
+      subtitle: isShort ? "Abre a conversa no MM Shorts" : "Abre a conversa na comunidade",
     };
   }
   if (kind === "reaction") {
     return {
-      title: `${who} reagiu à tua publicação`,
+      title: `${who} reagiu ${isShort ? "ao teu MM Short" : "à tua publicação"}`,
       subtitle: "Abre para ver a reação",
     };
   }
   return {
     title: `${who} mencionou-te`,
-    subtitle: "Foste referido numa publicação",
+    subtitle: isShort ? "Foste referido num MM Short" : "Foste referido numa publicação",
   };
 }
 
@@ -235,8 +248,13 @@ export function NotificationsBell({ className }: { className?: string }) {
 
   const merged: Notif[] = useMemo(() => {
     const fromDb: Notif[] = dbItems.map((n) => {
-      const copy = communityCopy(n.kind, n.actor_name);
-      const href = n.post_id ? `/comunidade?post=${n.post_id}` : "/comunidade";
+      const isShort = !!n.short_id;
+      const copy = communityCopy(n.kind, n.actor_name, isShort);
+      const href = isShort
+        ? `/shorts?v=${n.short_id}${n.kind === "reply" || n.kind === "comment_reply" ? "&c=1" : ""}`
+        : n.post_id
+          ? `/comunidade?post=${n.post_id}`
+          : "/comunidade";
       return {
         id: `notif:${n.id}`,
         kind: n.kind,
