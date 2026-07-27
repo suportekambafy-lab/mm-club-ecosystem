@@ -400,7 +400,7 @@ function GuestTile({ participant, isLocal }: { participant: Participant; isLocal
           {participant.name || "Convidado"}
         </div>
       )}
-      {!isLocal && <audio ref={audioRef} autoPlay />}
+      {!isLocal && <audio ref={audioRef} autoPlay playsInline />}
       <div className="absolute bottom-2 left-2 rounded-full bg-black/60 px-2.5 py-1 text-[11px] text-white/85">
         {participant.name || "Convidado"} {isLocal && "(tu)"}
       </div>

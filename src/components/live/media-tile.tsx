@@ -97,7 +97,7 @@ function MediaTileBase({ participant, actions, className, preferScreen, showName
         </div>
       )}
 
-      {audioTrack && <audio ref={audioRef} autoPlay />}
+      {audioTrack && <audio ref={audioRef} autoPlay playsInline />}
 
       {showName && (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/70 to-transparent p-2.5">
