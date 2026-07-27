@@ -349,7 +349,7 @@ export function useRoomState({
       return {
         userId: r.user_id,
         identity: r.user_id,
-        displayName: prof?.display_name ?? "Membro",
+        displayName: prof?.display_name ?? engineNames[r.user_id] ?? "Convidado",
         avatarUrl: prof?.avatar_url ?? null,
         role: r.role,
         room: r.room,
