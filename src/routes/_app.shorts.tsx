@@ -352,6 +352,22 @@ function ShortsFeed({
 
   const commentsOpen = !!commentsFor;
 
+  // Deep-link: /shorts?v=<id>&c=1 (vindo das notificações ou de um link partilhado)
+  const search = Route.useSearch();
+  const deepLinkedRef = useRef<string | null>(null);
+  useEffect(() => {
+    const target = search.v;
+    if (!target || shorts.length === 0 || deepLinkedRef.current === target) return;
+    const idx = shorts.findIndex((s) => s.id === target);
+    if (idx < 0) return;
+    deepLinkedRef.current = target;
+    const el = containerRef.current?.querySelector<HTMLElement>(`[data-short-id="${target}"]`);
+    el?.scrollIntoView({ block: "start" });
+    setActiveIdx(idx);
+    if (search.c === "1") setCommentsFor(shorts[idx]);
+  }, [search.v, search.c, shorts]);
+
+
   return (
     <div className="fixed inset-0 flex flex-col bg-black">
       <div
