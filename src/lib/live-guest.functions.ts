@@ -75,9 +75,10 @@ export const joinLiveAsGuest = createServerFn({ method: "POST" })
     }
     {
       const startMs = live.starts_at ? new Date(live.starts_at as string).getTime() : 0;
+      const st = live.status as string;
       const open =
-        live.status === "live" ||
-        live.status === "starting" ||
+        st === "live" ||
+        st === "starting" ||
         (startMs > 0 && Date.now() >= startMs - 10 * 60_000);
       if (!open) throw new Error("A sala ainda não está aberta. Volta perto da hora de início.");
     }
