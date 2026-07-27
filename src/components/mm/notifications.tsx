@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile } from "lucide-react";
+import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile, BellRing, BellOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { useUserProgress, continueFromProgress } from "@/hooks/use-user-progress";
 import { formatDistanceToNow } from "date-fns";
 import { pt } from "date-fns/locale";
 import { useCommunityNotifications, type CommunityNotifKind } from "@/lib/community-notifications";
+import { buildLiveReminders, type LiveLike } from "@/lib/live-reminders";
+import { useDeviceNotifications } from "@/lib/device-notifications";
 
 type NotifKind = "live" | "progress" | CommunityNotifKind;
 
@@ -77,6 +79,12 @@ type RealLive = Awaited<ReturnType<typeof listLives>>[number];
 function useDerivedNotifs(): Notif[] {
   const { progress } = useUserProgress();
   const [liveRows, setLiveRows] = useState<RealLive[]>([]);
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    const id = window.setInterval(() => setTick((t) => t + 1), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -86,8 +94,14 @@ function useDerivedNotifs(): Notif[] {
         setLiveRows(rows as RealLive[]);
       })
       .catch(() => {});
+    const id = window.setInterval(() => {
+      listLives()
+        .then((rows) => setLiveRows(rows as RealLive[]))
+        .catch(() => {});
+    }, 120_000);
     return () => {
       cancelled = true;
+      window.clearInterval(id);
     };
   }, []);
 
@@ -95,33 +109,15 @@ function useDerivedNotifs(): Notif[] {
     const out: Notif[] = [];
     const now = Date.now();
 
-    const active = liveRows.find((l) => l.status === "live");
-    const upcoming = liveRows
-      .filter((l) => l.status === "scheduled" && new Date(l.starts_at).getTime() > now - 3600_000)
-      .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0];
-    const featured = active ?? upcoming;
-    if (featured) {
-      const startsMs = new Date(featured.starts_at).getTime();
-      const diffDays = Math.round((startsMs - now) / 86400000);
-      // Use real timestamps: created_at for scheduled announces, or start time for live
-      const createdAtRaw =
-        (featured as unknown as { created_at?: string }).created_at ?? featured.starts_at;
-      const createdMs = new Date(createdAtRaw).getTime();
+    for (const r of buildLiveReminders(liveRows as unknown as LiveLike[], now)) {
       out.push({
-        id: `live:${featured.id}`,
+        id: r.id,
         kind: "live",
-        title: featured.title,
-        subtitle:
-          featured.status === "live"
-            ? "A decorrer agora"
-            : diffDays <= 0
-              ? "Começa em breve"
-              : diffDays === 1
-                ? "Amanhã ao vivo"
-                : `Daqui a ${diffDays} dias`,
-        href: "/lives",
-        createdAt: Number.isFinite(createdMs) ? createdMs : now,
-        priority: 10,
+        title: r.title,
+        subtitle: r.subtitle,
+        href: r.href,
+        createdAt: r.createdAt,
+        priority: r.priority,
         source: "local",
       });
     }
@@ -146,7 +142,7 @@ function useDerivedNotifs(): Notif[] {
     }
 
     return out;
-  }, [progress, liveRows]);
+  }, [progress, liveRows, tick]);
 }
 
 function communityCopy(
