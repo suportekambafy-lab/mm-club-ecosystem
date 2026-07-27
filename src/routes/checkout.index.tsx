@@ -10,6 +10,7 @@ import {
   startGuestCheckout,
 } from "@/lib/billing.functions";
 import { formatMoney } from "@/lib/billing/types";
+import { rememberIntendedPlan, readIntendedPlan } from "@/lib/intended-plan";
 import { cn } from "@/lib/utils";
 
 type CheckoutSearch = { plan?: string };
@@ -55,7 +56,12 @@ function cadenceLabel(interval: string, count: number): string {
 }
 
 function PlansPage() {
-  const { plan: recommended } = useSearch({ from: "/checkout/" });
+  const { plan: planFromUrl } = useSearch({ from: "/checkout/" });
+  // Se o cliente já tinha escolhido um plano antes (pagamento falhado, login,
+  // troca de conta), retomamos essa escolha em vez de voltar ao muro de planos.
+  const [remembered] = useState(() => readIntendedPlan());
+  const recommended = planFromUrl ?? remembered?.slug;
+  const resumed = !planFromUrl && Boolean(remembered);
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [guestPlan, setGuestPlan] = useState<string | null>(null);
@@ -77,6 +83,7 @@ function PlansPage() {
 
   const handleSelect = async (priceSlug: string) => {
     setError(null);
+    rememberIntendedPlan(priceSlug, "checkout");
     const { data } = await supabase.auth.getSession();
     if (!data.session) {
       // Pay first, account after: we only need an email at this point.
@@ -171,6 +178,13 @@ function PlansPage() {
             que faz sentido para ti — cancelas quando quiseres.
           </p>
         </motion.header>
+
+        {resumed ? (
+          <p className="mx-auto mt-10 max-w-xl rounded-2xl bg-primary/10 px-5 py-3 text-center text-sm text-foreground ring-1 ring-primary/30">
+            Guardámos o plano que tinhas escolhido — está destacado abaixo. Podes
+            retomar o pagamento com um clique.
+          </p>
+        ) : null}
 
         <section className="mx-auto mt-14 grid max-w-5xl gap-6 md:mt-20 md:grid-cols-3">
           {isLoading
