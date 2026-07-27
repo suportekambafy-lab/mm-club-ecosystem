@@ -87,9 +87,10 @@ function VipPage() {
         if (res.status === "account_exists") {
           setPending(false);
           setError(
-            "Já existe uma conta com este email. Inicia sessão para continuares.",
+            "Este email já tem uma subscrição ativa. Inicia sessão para a gerires.",
           );
           return;
+
         }
         window.location.href = res.checkoutUrl;
         return;

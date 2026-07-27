@@ -46,9 +46,21 @@ export async function startGuestCheckout(
   const price = await getPriceBySlug(input.priceSlug);
   if (!price) throw new Error("Unknown price");
 
-  // Already a member? They must sign in so the payment lands on their account.
+  // Um email já registado só bloqueia se a conta tiver subscrição viva — nesse
+  // caso deve gerir a partir da área de membro. Contas criadas mas nunca pagas
+  // (sem palavra-passe definida) continuam o checkout normalmente e recebem o
+  // acesso por email no fim.
   const existingUserId = await findUserIdByEmail(email);
-  if (existingUserId) return { status: "account_exists" };
+  if (existingUserId) {
+    const { data: liveSub } = await supabaseAdmin
+      .from("billing_subscriptions")
+      .select("id")
+      .eq("user_id", existingUserId)
+      .in("status", ["active", "trialing", "past_due", "grace_period"])
+      .limit(1)
+      .maybeSingle();
+    if (liveSub) return { status: "account_exists" };
+  }
 
   const origin = input.origin.replace(/\/$/, "");
 
@@ -64,6 +76,7 @@ export async function startGuestCheckout(
     .select("id")
     .single();
   if (error) throw new Error(error.message);
+
 
   const gw = getGateway();
   const recurring =
@@ -151,6 +164,14 @@ export async function provisionAccountForIntent(
   const email = intent.email.trim().toLowerCase();
   let userId = await findUserIdByEmail(email);
   let created = false;
+  // Conta já existia mas nunca entrou (criada sem palavra-passe): tratamos como
+  // nova e enviamos também o email de acesso.
+  let neverSignedIn = false;
+  if (userId) {
+    const { data: existing } = await supabaseAdmin.auth.admin.getUserById(userId);
+    neverSignedIn = !existing?.user?.last_sign_in_at;
+  }
+
 
   if (!userId) {
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
@@ -211,11 +232,12 @@ export async function provisionAccountForIntent(
     .eq("id", intent.id);
 
 
-  if (created) {
+  if (created || neverSignedIn) {
     await sendAccountReadyEmail(userId, email).catch((e) =>
       console.error("[guest checkout] welcome email", e),
     );
   }
+
 
   return userId;
 }
