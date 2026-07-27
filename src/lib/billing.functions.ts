@@ -406,7 +406,9 @@ export const getGuestCheckoutStatus = createServerFn({ method: "GET" })
 
     const { data: intent } = await supabaseAdmin
       .from("billing_checkout_intents")
-      .select("id, email, status, account_created, gateway, gateway_payment_id")
+      .select(
+        "id, email, status, account_created, gateway, gateway_payment_id, price_id",
+      )
       .eq("id", data.intentId)
       .maybeSingle();
     if (!intent) return { found: false as const };
@@ -430,14 +432,64 @@ export const getGuestCheckoutStatus = createServerFn({ method: "GET" })
       .eq("id", data.intentId)
       .maybeSingle();
 
+    const status = fresh?.status ?? intent.status;
+    const ready = status === "provisioned";
+
+    // Which plan was the visitor trying to activate? Needed so the return page
+    // can offer a one-click retry instead of dumping them on the generic wall.
+    let priceSlug: string | null = null;
+    let planName: string | null = null;
+    let isTrial = false;
+    if (intent.price_id) {
+      const { data: price } = await supabaseAdmin
+        .from("catalog_prices")
+        .select("slug, nickname, trial_days")
+        .eq("id", intent.price_id)
+        .maybeSingle();
+      priceSlug = price?.slug ?? null;
+      planName = price?.nickname ?? null;
+      isTrial = (price?.trial_days ?? 0) > 0;
+    }
+
+    // Ask the gateway directly: the intent row stays "awaiting_payment" when
+    // the payment is refused/blocked, so we would otherwise spin forever.
+    let paymentStatus: string | null = null;
+    let failureReason: string | null = null;
+    if (!ready && intent.gateway && intent.gateway_payment_id) {
+      try {
+        const { getGateway } = await import(
+          "@/lib/billing/gateway/index.server"
+        );
+        const payment = await getGateway(intent.gateway).getPayment(
+          intent.gateway_payment_id,
+        );
+        paymentStatus = payment.status;
+        failureReason = payment.failureReason;
+      } catch (e) {
+        console.error("[getGuestCheckoutStatus:getPayment]", e);
+      }
+    }
+
+    const failed =
+      !ready &&
+      (status === "failed" ||
+        ["failed", "expired", "canceled"].includes(paymentStatus ?? ""));
+
     return {
       found: true as const,
       email: fresh?.email ?? intent.email,
-      status: fresh?.status ?? intent.status,
-      ready: (fresh?.status ?? intent.status) === "provisioned",
+      status,
+      ready,
+      failed,
+      paymentStatus,
+      failureReason,
+      priceSlug,
+      planName,
+      isTrial,
       accountCreated: Boolean(fresh?.account_created ?? intent.account_created),
     };
   });
+
 
 // ------------------------------------------------------------- invoices
 
