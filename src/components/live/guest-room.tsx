@@ -108,10 +108,20 @@ export function GuestRoom({
 
     (async () => {
       try {
-        await r.connect(url, token);
+        setConnecting(true);
+        await r.connect(url, activeToken);
         if (cancelled) return;
-        if (prefs.micEnabled) await r.localParticipant.setMicrophoneEnabled(true, prefs.micId ? { deviceId: prefs.micId } : undefined);
-        if (prefs.camEnabled) await r.localParticipant.setCameraEnabled(true, prefs.cameraId ? { deviceId: prefs.cameraId } : undefined);
+        if (onStageRef.current) {
+          if (prefs.micEnabled)
+            await r.localParticipant.setMicrophoneEnabled(true, prefs.micId ? { deviceId: prefs.micId } : undefined);
+          if (prefs.camEnabled)
+            await r.localParticipant.setCameraEnabled(true, prefs.cameraId ? { deviceId: prefs.cameraId } : undefined);
+          setMicOn(prefs.micEnabled);
+          setCamOn(prefs.camEnabled);
+        } else {
+          setMicOn(false);
+          setCamOn(false);
+        }
         if (!cancelled) {
           setRoom(r);
           setConnecting(false);
@@ -129,7 +139,8 @@ export function GuestRoom({
       roomRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, url]);
+  }, [activeToken, url]);
+
 
   const participants: Participant[] = useMemo(() => {
     if (!room) return [];
