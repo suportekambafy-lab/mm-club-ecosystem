@@ -1,4 +1,4 @@
-const VERSION = "mm-club-fresh-runtime-2026-07-27-3";
+const VERSION = "mm-club-fresh-runtime-2026-07-27-checkout-1";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(self.skipWaiting());
@@ -47,7 +47,11 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-  if (request.method !== "GET") return;
+  if (request.method !== "GET") {
+    // Never let old service-worker state sit between checkout actions and the
+    // server. Payment/auth mutations must always go straight to the network.
+    return;
+  }
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
@@ -57,12 +61,28 @@ self.addEventListener("fetch", (event) => {
     url.pathname === "/manifest.webmanifest" ||
     url.pathname.endsWith(".js") ||
     url.pathname.endsWith(".css") ||
+    url.pathname.startsWith("/vip") ||
+    url.pathname.startsWith("/checkout") ||
+    url.pathname.startsWith("/auth") ||
+    url.pathname.startsWith("/_server") ||
     url.pathname.startsWith("/academia") ||
     url.pathname.startsWith("/admin");
 
   if (!shouldAlwaysUseNetwork) return;
 
-  event.respondWith(fetch(new Request(request, { cache: "reload" })));
+  event.respondWith(
+    fetch(
+      new Request(request, {
+        cache:
+          url.pathname.startsWith("/vip") ||
+          url.pathname.startsWith("/checkout") ||
+          url.pathname.startsWith("/auth") ||
+          url.pathname.startsWith("/_server")
+            ? "no-store"
+            : "reload",
+      }),
+    ).catch(() => fetch(request)),
+  );
 });
 self.addEventListener("notificationclick", (event) => {
   const href = (event.notification.data && event.notification.data.href) || "/";
