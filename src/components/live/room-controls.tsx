@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import type { MediaDeviceOption, RoomActions, RoomState } from "@/lib/room-state";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Video, VideoOff, ScreenShare, Hand, PhoneOff, Layout, LogOut, ChevronUp } from "lucide-react";
+import { StudioPanel } from "./studio-panel";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -93,6 +94,8 @@ export function RoomControls({ state, actions, onLeave }: Props) {
           />
         )
       )}
+
+      {isPublisher && <StudioPanel />}
 
       {!isPublisher && (
         <IconButton
