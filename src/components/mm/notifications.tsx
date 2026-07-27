@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile } from "lucide-react";
+import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile, BellRing, BellOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { useUserProgress, continueFromProgress } from "@/hooks/use-user-progress";
 import { formatDistanceToNow } from "date-fns";
 import { pt } from "date-fns/locale";
 import { useCommunityNotifications, type CommunityNotifKind } from "@/lib/community-notifications";
+import { buildLiveReminders, type LiveLike } from "@/lib/live-reminders";
+import { useDeviceNotifications } from "@/lib/device-notifications";
 
 type NotifKind = "live" | "progress" | CommunityNotifKind;
 
@@ -77,6 +79,12 @@ type RealLive = Awaited<ReturnType<typeof listLives>>[number];
 function useDerivedNotifs(): Notif[] {
   const { progress } = useUserProgress();
   const [liveRows, setLiveRows] = useState<RealLive[]>([]);
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    const id = window.setInterval(() => setTick((t) => t + 1), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -86,8 +94,14 @@ function useDerivedNotifs(): Notif[] {
         setLiveRows(rows as RealLive[]);
       })
       .catch(() => {});
+    const id = window.setInterval(() => {
+      listLives()
+        .then((rows) => setLiveRows(rows as RealLive[]))
+        .catch(() => {});
+    }, 120_000);
     return () => {
       cancelled = true;
+      window.clearInterval(id);
     };
   }, []);
 
@@ -95,33 +109,15 @@ function useDerivedNotifs(): Notif[] {
     const out: Notif[] = [];
     const now = Date.now();
 
-    const active = liveRows.find((l) => l.status === "live");
-    const upcoming = liveRows
-      .filter((l) => l.status === "scheduled" && new Date(l.starts_at).getTime() > now - 3600_000)
-      .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0];
-    const featured = active ?? upcoming;
-    if (featured) {
-      const startsMs = new Date(featured.starts_at).getTime();
-      const diffDays = Math.round((startsMs - now) / 86400000);
-      // Use real timestamps: created_at for scheduled announces, or start time for live
-      const createdAtRaw =
-        (featured as unknown as { created_at?: string }).created_at ?? featured.starts_at;
-      const createdMs = new Date(createdAtRaw).getTime();
+    for (const r of buildLiveReminders(liveRows as unknown as LiveLike[], now)) {
       out.push({
-        id: `live:${featured.id}`,
+        id: r.id,
         kind: "live",
-        title: featured.title,
-        subtitle:
-          featured.status === "live"
-            ? "A decorrer agora"
-            : diffDays <= 0
-              ? "Começa em breve"
-              : diffDays === 1
-                ? "Amanhã ao vivo"
-                : `Daqui a ${diffDays} dias`,
-        href: "/lives",
-        createdAt: Number.isFinite(createdMs) ? createdMs : now,
-        priority: 10,
+        title: r.title,
+        subtitle: r.subtitle,
+        href: r.href,
+        createdAt: r.createdAt,
+        priority: r.priority,
         source: "local",
       });
     }
@@ -146,7 +142,7 @@ function useDerivedNotifs(): Notif[] {
     }
 
     return out;
-  }, [progress, liveRows]);
+  }, [progress, liveRows, tick]);
 }
 
 function communityCopy(
@@ -195,6 +191,7 @@ export function NotificationsBell({ className }: { className?: string }) {
     dismiss: dbDismiss,
   } = useCommunityNotifications();
 
+  const device = useDeviceNotifications();
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<StoredState>({ readIds: [], dismissedIds: [], lastOpenedAt: 0 });
   const [hydrated, setHydrated] = useState(false);
@@ -281,6 +278,16 @@ export function NotificationsBell({ className }: { className?: string }) {
 
   const unreadCount = hydrated ? visible.filter((n) => !isReadOf(n)).length : 0;
 
+  // Mirror unread bell items to the device (PWA / browser) notifications
+  useEffect(() => {
+    if (!hydrated || !device.enabled) return;
+    const unread = visible.filter((n) => !isReadOf(n));
+    if (unread.length === 0) return;
+    device.deliver(
+      unread.map((n) => ({ id: n.id, title: n.title, body: n.subtitle, href: n.href })),
+    );
+  }, [hydrated, device, visible, state.readIds]);
+
   const handleOpen = () => {
     const next = !open;
     setOpen(next);
@@ -360,6 +367,32 @@ export function NotificationsBell({ className }: { className?: string }) {
             <div className="flex items-center gap-2">
               <p className="font-display text-sm text-foreground">Notificações</p>
             </div>
+            <div className="flex items-center gap-3">
+            {device.supported && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (device.enabled) device.disable();
+                  else void device.enable();
+                }}
+                title={
+                  device.permission === "denied"
+                    ? "Notificações bloqueadas no navegador"
+                    : device.enabled
+                      ? "Desativar notificações no dispositivo"
+                      : "Ativar notificações no dispositivo"
+                }
+                aria-label="Notificações no dispositivo"
+                className={cn(
+                  "flex h-6 w-6 items-center justify-center rounded-full transition",
+                  device.enabled
+                    ? "bg-primary/10 text-primary"
+                    : "bg-surface-2 text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {device.enabled ? <BellRing className="h-3.5 w-3.5" /> : <BellOff className="h-3.5 w-3.5" />}
+              </button>
+            )}
             {unreadCount > 0 && (
               <button
                 type="button"
@@ -369,6 +402,7 @@ export function NotificationsBell({ className }: { className?: string }) {
                 Marcar tudo como lido
               </button>
             )}
+            </div>
           </div>
 
           <div className="flex-1 min-h-0 overflow-y-auto">
