@@ -21,6 +21,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutIndexRouteImport } from './routes/checkout.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as EgressCompositeRouteImport } from './routes/egress.composite'
 import { Route as ConvidadoLiveIdRouteImport } from './routes/convidado.$liveId'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiTranscribeRouteImport } from './routes/api.transcribe'
@@ -147,6 +148,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const EgressCompositeRoute = EgressCompositeRouteImport.update({
+  id: '/egress/composite',
+  path: '/egress/composite',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ConvidadoLiveIdRoute = ConvidadoLiveIdRouteImport.update({
   id: '/convidado/$liveId',
@@ -543,6 +549,7 @@ export interface FileRoutesByFullPath {
   '/api/transcribe': typeof ApiTranscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/convidado/$liveId': typeof ConvidadoLiveIdRoute
+  '/egress/composite': typeof EgressCompositeRoute
   '/admin/': typeof AdminIndexRoute
   '/checkout/': typeof CheckoutIndexRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
@@ -618,6 +625,7 @@ export interface FileRoutesByTo {
   '/api/transcribe': typeof ApiTranscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/convidado/$liveId': typeof ConvidadoLiveIdRoute
+  '/egress/composite': typeof EgressCompositeRoute
   '/admin': typeof AdminIndexRoute
   '/checkout': typeof CheckoutIndexRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
@@ -698,6 +706,7 @@ export interface FileRoutesById {
   '/api/transcribe': typeof ApiTranscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/convidado/$liveId': typeof ConvidadoLiveIdRoute
+  '/egress/composite': typeof EgressCompositeRoute
   '/admin/': typeof AdminIndexRoute
   '/checkout/': typeof CheckoutIndexRoute
   '/_app/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
@@ -780,6 +789,7 @@ export interface FileRouteTypes {
     | '/api/transcribe'
     | '/checkout/return'
     | '/convidado/$liveId'
+    | '/egress/composite'
     | '/admin/'
     | '/checkout/'
     | '/academia/$courseId'
@@ -855,6 +865,7 @@ export interface FileRouteTypes {
     | '/api/transcribe'
     | '/checkout/return'
     | '/convidado/$liveId'
+    | '/egress/composite'
     | '/admin'
     | '/checkout'
     | '/especialistas/$expertId'
@@ -934,6 +945,7 @@ export interface FileRouteTypes {
     | '/api/transcribe'
     | '/checkout/return'
     | '/convidado/$liveId'
+    | '/egress/composite'
     | '/admin/'
     | '/checkout/'
     | '/_app/academia/$courseId'
@@ -994,6 +1006,7 @@ export interface RootRouteChildren {
   ApiTranscribeRoute: typeof ApiTranscribeRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ConvidadoLiveIdRoute: typeof ConvidadoLiveIdRoute
+  EgressCompositeRoute: typeof EgressCompositeRoute
   CheckoutIndexRoute: typeof CheckoutIndexRoute
   ApiKnowledgeSearchRoute: typeof ApiKnowledgeSearchRoute
   ApiRealtimeSessionRoute: typeof ApiRealtimeSessionRoute
@@ -1097,6 +1110,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/egress/composite': {
+      id: '/egress/composite'
+      path: '/egress/composite'
+      fullPath: '/egress/composite'
+      preLoaderRoute: typeof EgressCompositeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/convidado/$liveId': {
       id: '/convidado/$liveId'
@@ -1767,6 +1787,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTranscribeRoute: ApiTranscribeRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ConvidadoLiveIdRoute: ConvidadoLiveIdRoute,
+  EgressCompositeRoute: EgressCompositeRoute,
   CheckoutIndexRoute: CheckoutIndexRoute,
   ApiKnowledgeSearchRoute: ApiKnowledgeSearchRoute,
   ApiRealtimeSessionRoute: ApiRealtimeSessionRoute,
