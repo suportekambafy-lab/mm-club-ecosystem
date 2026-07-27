@@ -455,6 +455,39 @@ function VideosPage() {
               )}
             </div>
           )}
+          {qc?.verdict && (
+            <div className="mt-3 rounded-2xl border border-[color:var(--hairline)] bg-background/40 p-3">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em]">
+                <span
+                  className={
+                    qc.verdict === "passed"
+                      ? "text-emerald-500"
+                      : qc.verdict === "warned"
+                        ? "text-amber-500"
+                        : "text-destructive"
+                  }
+                >
+                  Controlo de qualidade: {qc.verdict === "passed" ? "aprovado" : qc.verdict === "warned" ? "aprovado com avisos" : "com falhas"}
+                </span>
+              </div>
+              <ul className="mt-2 space-y-1">
+                {(qc.checks ?? [])
+                  .filter((c) => !c.ok)
+                  .slice(0, 5)
+                  .map((c) => (
+                    <li key={c.id} className="text-[11px] text-muted-foreground">
+                      • {QC_LABELS[c.id] ?? c.id}
+                      {c.detail ? ` — ${c.detail}` : ""}
+                    </li>
+                  ))}
+                {(qc.checks ?? []).every((c) => c.ok) && (
+                  <li className="text-[11px] text-muted-foreground">• Narração, legendas, anatomia e continuidade verificadas.</li>
+                )}
+              </ul>
+              {qc.skipped && <p className="mt-1 text-[11px] text-muted-foreground">{qc.skipped}</p>}
+            </div>
+          )}
+
         </div>
       </section>
     </div>
