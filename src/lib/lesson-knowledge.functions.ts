@@ -597,26 +597,30 @@ async function ingestTranscriptRaw(params: {
  * simple lock via `status = 'transcribing'` to avoid concurrent workers.
  * Returns a small summary the cron/route can log.
  */
+const MAX_PARALLEL_LESSONS = 3;
+
 export async function runAutoTranscribeTick(): Promise<{
   ok: boolean;
   skipped?: string;
   processed?: { courseId: string; lessonId: string; chars: number };
+  results?: Array<{ courseId: string; lessonId: string; ok: boolean; chars?: number; error?: string }>;
   error?: string;
 }> {
   const apiKey = requireAiKey();
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  // Lock: if another worker is currently transcribing (within last 20min), skip.
+  // Lock por concorrência: até MAX_PARALLEL_LESSONS aulas em voo ao mesmo tempo.
   const lockCutoff = new Date(Date.now() - 20 * 60 * 1000).toISOString();
   const { data: inFlight } = await supabaseAdmin
     .from("lesson_transcripts")
     .select("course_id,lesson_id,updated_at")
     .eq("status", "transcribing")
-    .gte("updated_at", lockCutoff)
-    .limit(1);
-  if (inFlight && inFlight.length > 0) {
-    return { ok: true, skipped: "another lesson is being transcribed" };
+    .gte("updated_at", lockCutoff);
+  const freeSlots = MAX_PARALLEL_LESSONS - (inFlight?.length ?? 0);
+  if (freeSlots <= 0) {
+    return { ok: true, skipped: "transcription workers busy" };
   }
+
 
   // Load course overrides (video URLs + titles live here).
   const { data: ov } = await supabaseAdmin
