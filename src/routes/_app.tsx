@@ -560,6 +560,8 @@ function AppLayout() {
                 {themeMounted ? <ThemeIcon className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </button>
               <NotificationsBell />
+              <NotificationsPrompt />
+
               <Link
                 to="/perfil"
                 aria-label="Perfil"
