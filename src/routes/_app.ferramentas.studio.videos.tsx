@@ -378,6 +378,36 @@ function VideosPage() {
             </Field>
           </Section>
 
+          <Section
+            title="Qualidade & Consistência"
+            summary={sequential ? "Cadeia contínua + QC automático" : "Paralelo rápido + QC automático"}
+          >
+            <label className="flex items-start gap-3 rounded-xl border border-[color:var(--hairline)] bg-background/40 p-3">
+              <input
+                type="checkbox"
+                checked={maxConsistency}
+                onChange={(e) => setMaxConsistency(e.target.checked)}
+                className="mt-1 h-4 w-4 accent-[color:var(--secondary)]"
+              />
+              <span className="text-sm">
+                Máxima consistência
+                <span className="block text-[11px] text-muted-foreground">
+                  Gera os segmentos em cadeia (um após o outro) para bloquear rosto, roupa, unhas, adereços e luz. Fica mais lento, mas elimina saltos visuais.
+                </span>
+              </span>
+            </label>
+            <p className="text-[11px] text-muted-foreground">
+              {segments.length > 1
+                ? sequential
+                  ? "Modo em cadeia activo — continuidade garantida entre os segmentos."
+                  : "Cenas independentes de produto: geração em paralelo (mais rápida)."
+                : "Segmento único — consistência interna garantida pelo Consistency Lock."}
+              {" "}Cada vídeo passa por controlo de qualidade automático (narração, legendas, anatomia, continuidade) antes da entrega.
+            </p>
+          </Section>
+
+
+
 
           <button
             onClick={onGenerate}
