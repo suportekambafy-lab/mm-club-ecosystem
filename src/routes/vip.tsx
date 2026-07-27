@@ -31,7 +31,7 @@ const BENEFITS = [
   "Todos os cursos, aulas e novos lançamentos",
   "Comunidade privada, lives e ferramentas",
   "Suporte MM Intelligence 24/7",
-  "Apenas 0,01 € de validação do cartão — sem mensalidade nos 3 meses",
+  "Sem cobrança hoje — apenas validação do cartão nos 3 meses grátis",
   "Cancelas quando quiseres antes do fim do trial",
   "Depois do 3.º mês, apenas 29,90 €/mês",
 ];
@@ -183,7 +183,7 @@ function VipPage() {
               </span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Cobramos apenas 0,01 € para validar o cartão. Depois dos 3 meses,
+              Não cobramos nada hoje: só validamos o cartão. Depois dos 3 meses,
               29,90 €/mês — cancelas a qualquer momento antes do fim do trial.
             </p>
 
@@ -243,7 +243,7 @@ function VipPage() {
               </h2>
               <p className="mt-2 text-sm text-muted-foreground">
                 {user
-                  ? "Vamos validar o cartão (0,01 €) e ativar os 3 meses grátis nesta conta."
+                  ? "Vamos validar o cartão (sem cobrança) e ativar os 3 meses grátis nesta conta."
                   : "Criamos a tua conta MM Club automaticamente após a validação do cartão e enviamos-te o acesso para este email."}
               </p>
 
