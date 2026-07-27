@@ -26,7 +26,7 @@ export const CONSUMERS_BY_EVENT: Record<DomainEventType, ConsumerName[]> = {
   SubscriptionResumed: ["entitlements", "timeline"],
   TrialStarted: ["entitlements", "timeline"],
   TrialEnded: ["timeline", "email"],
-  PaymentSucceeded: ["timeline"],
+  PaymentSucceeded: ["timeline", "credits"],
   PaymentFailed: ["timeline", "email"],
   PaymentRefunded: ["entitlements", "timeline", "email"],
   PaymentRecovered: ["entitlements", "timeline", "email"],

@@ -17,15 +17,16 @@ export const getStudioContext = createServerFn({ method: "GET" })
       supabase.from("mm_studio_products").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
     ]);
 
-    // Auto-provision credits row if missing
+    // Auto-provision an EMPTY credits row: the welcome bonus is only granted
+    // after the first confirmed paid invoice (trials start at zero).
     let credits = creditsRes.data;
     if (!credits) {
       const { data } = await supabase
         .from("mm_studio_credits")
-        .insert({ user_id: userId, balance: 400, lifetime_granted: 400 })
+        .insert({ user_id: userId, balance: 0, lifetime_granted: 0 })
         .select("balance, lifetime_granted, lifetime_spent")
         .maybeSingle();
-      credits = data ?? { balance: 400, lifetime_granted: 400, lifetime_spent: 0 };
+      credits = data ?? { balance: 0, lifetime_granted: 0, lifetime_spent: 0 };
     }
 
     return {
