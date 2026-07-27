@@ -36,9 +36,26 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 }
 
 function withFreshnessHeaders(request: Request, response: Response): Response {
-  if (request.method !== "GET") return response;
-
   const url = new URL(request.url);
+  const isCheckoutFlow =
+    url.pathname.startsWith("/vip") ||
+    url.pathname.startsWith("/checkout") ||
+    url.pathname.startsWith("/auth") ||
+    url.pathname.startsWith("/_server");
+
+  if (request.method !== "GET") {
+    if (!isCheckoutFlow) return response;
+    const headers = new Headers(response.headers);
+    headers.set("Cache-Control", "no-store, max-age=0, must-revalidate");
+    headers.set("Pragma", "no-cache");
+    headers.set("Expires", "0");
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  }
+
   const accept = request.headers.get("accept") ?? "";
   const isHtmlNavigation = request.mode === "navigate" || accept.includes("text/html");
   const isFreshRuntimeAsset =
@@ -47,15 +64,19 @@ function withFreshnessHeaders(request: Request, response: Response): Response {
     url.pathname.endsWith(".js") ||
     url.pathname.endsWith(".css");
 
-  if (!isHtmlNavigation && !isFreshRuntimeAsset) return response;
+  if (!isHtmlNavigation && !isFreshRuntimeAsset && !isCheckoutFlow) return response;
 
   const headers = new Headers(response.headers);
   headers.set(
     "Cache-Control",
-    isHtmlNavigation
+    isHtmlNavigation || isCheckoutFlow
       ? "no-store, max-age=0, must-revalidate"
       : "no-cache, max-age=0, must-revalidate",
   );
+  headers.set("Pragma", "no-cache");
+  headers.set("Expires", "0");
+  if (url.pathname === "/sw.js") headers.set("Service-Worker-Allowed", "/");
+  if (isCheckoutFlow) headers.set("Clear-Site-Data", '"cache"');
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
