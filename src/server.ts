@@ -35,6 +35,34 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   });
 }
 
+function withFreshnessHeaders(request: Request, response: Response): Response {
+  if (request.method !== "GET") return response;
+
+  const url = new URL(request.url);
+  const accept = request.headers.get("accept") ?? "";
+  const isHtmlNavigation = request.mode === "navigate" || accept.includes("text/html");
+  const isFreshRuntimeAsset =
+    url.pathname === "/sw.js" ||
+    url.pathname === "/manifest.webmanifest" ||
+    url.pathname.endsWith(".js") ||
+    url.pathname.endsWith(".css");
+
+  if (!isHtmlNavigation && !isFreshRuntimeAsset) return response;
+
+  const headers = new Headers(response.headers);
+  headers.set(
+    "Cache-Control",
+    isHtmlNavigation
+      ? "no-store, max-age=0, must-revalidate"
+      : "no-cache, max-age=0, must-revalidate",
+  );
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 function isH3SwallowedErrorBody(body: string): boolean {
   try {
     const payload = JSON.parse(body) as { unhandled?: unknown; message?: unknown };
@@ -49,7 +77,8 @@ export default {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      const normalized = await normalizeCatastrophicSsrResponse(response);
+      return withFreshnessHeaders(request, normalized);
     } catch (error) {
       console.error(error);
       return new Response(renderErrorPage(), {

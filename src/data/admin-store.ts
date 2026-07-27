@@ -1,11 +1,13 @@
-// Admin overrides — persist course/expert/module/lesson edits in localStorage
-// and apply them to the in-memory data so every consumer picks them up.
+// Admin overrides — the database row is the source of truth for course/expert/
+// module/lesson edits. localStorage is only a fast fallback until the remote row
+// is fetched, never the final truth shown to members.
 
 import { courses, coursesById } from "./courses";
 import { experts, expertsById } from "./experts";
 import type { Course, Expert, Lesson, Module } from "./types";
 
 const STORAGE_KEY = "mm-club.admin.overrides.v3";
+const REMOTE_ROW_ID = "courses";
 
 export type CourseOverride = Partial<
   Pick<Course, "title" | "tagline" | "description" | "cover" | "logo" | "duration">
@@ -26,7 +28,33 @@ function emptyOverrides(): Overrides {
   return { courses: {}, experts: {}, lessons: {}, modulesByCourse: {} };
 }
 
+function normalizeOverrides(raw: unknown): Overrides {
+  const parsed = (raw && typeof raw === "object" ? raw : {}) as Partial<Overrides>;
+  return {
+    courses: parsed.courses ?? {},
+    experts: parsed.experts ?? {},
+    lessons: parsed.lessons ?? {},
+    modulesByCourse: parsed.modulesByCourse ?? {},
+  };
+}
+
+function cloneOverrides(o: Overrides): Overrides {
+  return JSON.parse(JSON.stringify(o)) as Overrides;
+}
+
+let currentOverrides: Overrides = emptyOverrides();
+let remoteLoaded = typeof window === "undefined";
+let remoteLoading = false;
+let remoteError: string | null = null;
+let remoteUpdatedAt: string | null = null;
+let remotePromise: Promise<Overrides | null> | null = null;
+
 export function loadOverrides(): Overrides {
+  if (typeof window === "undefined") return emptyOverrides();
+  return cloneOverrides(currentOverrides);
+}
+
+function loadLocalOverrides(): Overrides {
   if (typeof window === "undefined") return emptyOverrides();
   try {
     // Try v3 first, fall back to older keys for migration
@@ -36,12 +64,7 @@ export function loadOverrides(): Overrides {
       window.localStorage.getItem("mm-club.admin.overrides.v1");
     if (!raw) return emptyOverrides();
     const parsed = JSON.parse(raw);
-    return {
-      courses: parsed.courses ?? {},
-      experts: parsed.experts ?? {},
-      lessons: parsed.lessons ?? {},
-      modulesByCourse: parsed.modulesByCourse ?? {},
-    };
+    return normalizeOverrides(parsed);
   } catch {
     return emptyOverrides();
   }
@@ -49,7 +72,9 @@ export function loadOverrides(): Overrides {
 
 export function saveOverrides(o: Overrides) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(o));
+  const clean = normalizeOverrides(o);
+  currentOverrides = cloneOverrides(clean);
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
 }
 
 // Keep original snapshots so we can reset.
@@ -120,6 +145,8 @@ function countLessons(mods: Module[]) {
 
 export function applyOverrides(o: Overrides) {
   snapshot();
+  const clean = normalizeOverrides(o);
+  currentOverrides = cloneOverrides(clean);
 
   // Reset course/expert fields to originals
   for (const c of courses) {
@@ -136,7 +163,7 @@ export function applyOverrides(o: Overrides) {
   }
 
   // Apply full-modules replacement first (if any)
-  for (const [courseId, mods] of Object.entries(o.modulesByCourse)) {
+  for (const [courseId, mods] of Object.entries(clean.modulesByCourse)) {
     const c = coursesById[courseId];
     if (c) {
       c.modules = deepCloneModules(mods);
@@ -145,11 +172,11 @@ export function applyOverrides(o: Overrides) {
   }
 
   // Apply per-course field overrides
-  for (const [id, patch] of Object.entries(o.courses)) {
+  for (const [id, patch] of Object.entries(clean.courses)) {
     const c = coursesById[id];
     if (c) Object.assign(c, patch);
   }
-  for (const [id, patch] of Object.entries(o.experts)) {
+  for (const [id, patch] of Object.entries(clean.experts)) {
     const e = expertsById[id];
     if (e) Object.assign(e, patch);
   }
@@ -158,7 +185,7 @@ export function applyOverrides(o: Overrides) {
   for (const c of courses) {
     for (const m of c.modules ?? []) {
       for (const l of m.lessons) {
-        const patch = o.lessons[l.id];
+        const patch = clean.lessons[l.id];
         if (patch) Object.assign(l, patch);
       }
     }
@@ -185,48 +212,146 @@ export function getOverridesVersion() {
   return version;
 }
 
+export function getOverridesReady() {
+  return remoteLoaded;
+}
+
+export function getOverridesStatus() {
+  return {
+    remoteLoaded,
+    remoteLoading,
+    remoteError,
+    remoteUpdatedAt,
+  };
+}
+
+function notifySubscribers() {
+  version++;
+  listeners.forEach((l) => l());
+}
+
+async function clearLegacyRuntimeCaches() {
+  if (typeof window === "undefined") return;
+  try {
+    if ("caches" in window) {
+      const keys = await window.caches.keys();
+      await Promise.all(
+        keys
+          .filter((key) => /mm|club|workbox|vite|tanstack|academy|academia/i.test(key))
+          .map((key) => window.caches.delete(key)),
+      );
+    }
+  } catch {
+    // Cache cleanup is best-effort only.
+  }
+}
+
+export async function refreshAdminOverrides(options: { force?: boolean } = {}) {
+  if (typeof window === "undefined") return null;
+  if (remotePromise && !options.force) return remotePromise;
+
+  remoteLoading = true;
+  remoteError = null;
+  notifySubscribers();
+
+  remotePromise = (async () => {
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data, error } = await supabase
+        .from("admin_overrides")
+        .select("data,updated_at")
+        .eq("id", REMOTE_ROW_ID)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data?.data) {
+        const remote = normalizeOverrides(data.data);
+        remoteUpdatedAt = data.updated_at ?? new Date().toISOString();
+        saveOverrides(remote);
+        applyOverrides(remote);
+        return remote;
+      }
+
+      remoteUpdatedAt = null;
+      return null;
+    } catch (error) {
+      remoteError = (error as Error).message;
+      return null;
+    } finally {
+      remoteLoaded = true;
+      remoteLoading = false;
+      remotePromise = null;
+      notifySubscribers();
+    }
+  })();
+
+  return remotePromise;
+}
+
 // Apply on load (browser only) — first localStorage (instant), then pull the
 // shared server copy so admin edits show up in production for every visitor.
 if (typeof window !== "undefined") {
-  applyOverrides(loadOverrides());
+  currentOverrides = loadLocalOverrides();
+  applyOverrides(currentOverrides);
+  void clearLegacyRuntimeCaches();
   window.addEventListener("storage", (e) => {
-    if (e.key === STORAGE_KEY) applyOverrides(loadOverrides());
+    if (e.key === STORAGE_KEY) applyOverrides(loadLocalOverrides());
+  });
+
+  void refreshAdminOverrides({ force: true });
+
+  window.addEventListener("focus", () => {
+    void refreshAdminOverrides({ force: true });
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      void refreshAdminOverrides({ force: true });
+    }
   });
 
   void (async () => {
     try {
       const { supabase } = await import("@/integrations/supabase/client");
-      const { data } = await supabase
-        .from("admin_overrides")
-        .select("data")
-        .eq("id", "courses")
-        .maybeSingle();
-      const remote = (data?.data ?? null) as Overrides | null;
-      if (remote && (remote.modulesByCourse || remote.courses || remote.experts)) {
-        saveOverrides(remote);
-        applyOverrides(remote);
-      }
+      const channel = supabase
+        .channel("admin-overrides-content-freshness")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "admin_overrides", filter: `id=eq.${REMOTE_ROW_ID}` },
+          () => {
+            void refreshAdminOverrides({ force: true });
+          },
+        )
+        .subscribe();
+      window.addEventListener("beforeunload", () => {
+        void supabase.removeChannel(channel);
+      });
     } catch {
-      // offline / unauth — fall back to local + base data
+      // Realtime unavailable — focus/visibility refresh still keeps content fresh.
     }
   })();
 }
 
 export async function pushOverridesToServer(o: Overrides) {
   if (typeof window === "undefined") return { ok: false as const, error: "SSR" };
+  const clean = normalizeOverrides(o);
   try {
     const { supabase } = await import("@/integrations/supabase/client");
     const { error } = await supabase
       .from("admin_overrides")
       .upsert(
         {
-          id: "courses",
-          data: o as never,
+          id: REMOTE_ROW_ID,
+          data: clean as never,
           updated_at: new Date().toISOString(),
         },
         { onConflict: "id" },
       );
     if (error) return { ok: false as const, error: error.message };
+    remoteLoaded = true;
+    remoteError = null;
+    saveOverrides(clean);
+    applyOverrides(clean);
     return { ok: true as const };
   } catch (e) {
     return { ok: false as const, error: (e as Error).message };

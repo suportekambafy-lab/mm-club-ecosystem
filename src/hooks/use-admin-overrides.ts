@@ -1,5 +1,10 @@
 import { useSyncExternalStore } from "react";
-import { subscribeOverrides, getOverridesVersion } from "@/data/admin-store";
+import {
+  subscribeOverrides,
+  getOverridesVersion,
+  getOverridesReady,
+  getOverridesStatus,
+} from "@/data/admin-store";
 
 /**
  * Subscribes to admin override changes so components re-render whenever
@@ -13,4 +18,17 @@ export function useAdminOverridesVersion() {
     getOverridesVersion,
     () => 0, // server snapshot
   );
+}
+
+export function useAdminOverridesReady() {
+  return useSyncExternalStore(
+    subscribeOverrides,
+    getOverridesReady,
+    () => true,
+  );
+}
+
+export function useAdminOverridesStatus() {
+  useAdminOverridesVersion();
+  return getOverridesStatus();
 }
