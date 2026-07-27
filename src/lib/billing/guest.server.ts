@@ -232,11 +232,12 @@ export async function provisionAccountForIntent(
     .eq("id", intent.id);
 
 
-  if (created) {
+  if (created || neverSignedIn) {
     await sendAccountReadyEmail(userId, email).catch((e) =>
       console.error("[guest checkout] welcome email", e),
     );
   }
+
 
   return userId;
 }
