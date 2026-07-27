@@ -17,6 +17,7 @@ import {
   EgressClient,
   EgressStatus,
   EncodedFileOutput,
+  EncodingOptions,
   EncodedFileType,
   S3Upload,
   StreamOutput,
@@ -83,6 +84,15 @@ function compositeOptions() {
     customBaseUrl: `${origin}/egress/composite`,
     audioOnly: false,
     videoOnly: false,
+    encodingOptions: new EncodingOptions({
+      width: 1920,
+      height: 1080,
+      framerate: 30,
+      videoBitrate: 6000,
+      keyFrameInterval: 2,
+      audioBitrate: 192,
+      audioFrequency: 48000,
+    }),
   } as const;
 }
 
