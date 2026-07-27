@@ -270,6 +270,21 @@ export function GuestRoom({
         </div>
       )}
 
+      {audioBlocked && (
+        <div className="absolute inset-x-0 top-12 z-30 flex justify-center px-3">
+          <button
+            type="button"
+            onClick={() => void unlockAudio()}
+            className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-xs font-semibold text-black shadow-lg hover:brightness-105"
+          >
+            <Volume2 className="h-4 w-4" />
+            Ativar som
+          </button>
+        </div>
+      )}
+
+
+
       <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center">
         <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-black/70 px-3 py-2 ring-1 ring-white/10 backdrop-blur-md">
           {onStage ? (
