@@ -11,6 +11,11 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/shorts")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>) => ({
+    v: typeof search.v === "string" ? search.v : undefined,
+    c: search.c === "1" || search.c === 1 ? "1" : undefined,
+  }),
+
   head: () => ({
     meta: [
       { title: "MM Shorts — MM Club" },
@@ -347,6 +352,22 @@ function ShortsFeed({
 
   const commentsOpen = !!commentsFor;
 
+  // Deep-link: /shorts?v=<id>&c=1 (vindo das notificações ou de um link partilhado)
+  const search = Route.useSearch();
+  const deepLinkedRef = useRef<string | null>(null);
+  useEffect(() => {
+    const target = search.v;
+    if (!target || shorts.length === 0 || deepLinkedRef.current === target) return;
+    const idx = shorts.findIndex((s) => s.id === target);
+    if (idx < 0) return;
+    deepLinkedRef.current = target;
+    const el = containerRef.current?.querySelector<HTMLElement>(`[data-short-id="${target}"]`);
+    el?.scrollIntoView({ block: "start" });
+    setActiveIdx(idx);
+    if (search.c === "1") setCommentsFor(shorts[idx]);
+  }, [search.v, search.c, shorts]);
+
+
   return (
     <div className="fixed inset-0 flex flex-col bg-black">
       <div
@@ -490,6 +511,8 @@ function ShortItem({
   return (
     <section
       data-short-idx={idx}
+      data-short-id={short.id}
+
       className="relative flex h-full min-h-full w-full snap-start snap-always items-center justify-center"
     >
       <div className="relative flex h-full w-full items-center justify-center bg-black">

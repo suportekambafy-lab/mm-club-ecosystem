@@ -1,13 +1,14 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export type CommunityNotifKind = "like" | "reply" | "mention" | "reaction";
+export type CommunityNotifKind = "like" | "reply" | "mention" | "reaction" | "comment_reply";
 
 export type CommunityNotif = {
   id: string;
   kind: CommunityNotifKind;
   post_id: string | null;
   comment_id: string | null;
+  short_id: string | null;
   actor_id: string | null;
   actor_name: string | null;
   actor_avatar: string | null;
@@ -21,6 +22,7 @@ type Row = {
   kind: CommunityNotifKind;
   post_id: string | null;
   comment_id: string | null;
+  short_id: string | null;
   actor_id: string | null;
   read_at: string | null;
   dismissed_at: string | null;
@@ -35,7 +37,7 @@ export function useCommunityNotifications() {
   const load = useCallback(async (uid: string) => {
     const { data } = await supabase
       .from("notifications")
-      .select("id, kind, post_id, comment_id, actor_id, read_at, dismissed_at, created_at")
+      .select("id, kind, post_id, comment_id, short_id, actor_id, read_at, dismissed_at, created_at")
       .eq("user_id", uid)
       .is("dismissed_at", null)
       .order("created_at", { ascending: false })
