@@ -144,7 +144,14 @@ export function GuestRoom({
 
   const participants: Participant[] = useMemo(() => {
     if (!room) return [];
-    return [room.localParticipant as Participant, ...Array.from(room.remoteParticipants.values())];
+    const all = [room.localParticipant as Participant, ...Array.from(room.remoteParticipants.values())];
+    // Guard against duplicate identities (stale sessions reconnecting).
+    const seen = new Set<string>();
+    return all.filter((p) => {
+      if (seen.has(p.identity)) return false;
+      seen.add(p.identity);
+      return true;
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room, forceTick]);
 
