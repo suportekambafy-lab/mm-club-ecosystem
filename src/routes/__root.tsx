@@ -137,13 +137,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 const THEME_INIT_SCRIPT = `
 try {
   var s = localStorage.getItem('mm.theme');
-  var t = s === 'light' || s === 'dark'
-    ? s
-    : (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  var t = s === 'light' || s === 'dark' ? s : 'dark';
   document.documentElement.classList.add(t);
   document.documentElement.style.colorScheme = t;
 } catch(e) {}
 `;
+
 
 function RootShell({ children }: { children: ReactNode }) {
   return (

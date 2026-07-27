@@ -119,10 +119,11 @@ function Nav({ scrolled }: { scrolled: boolean }) {
         <div className="flex items-center gap-2">
           <Link
             to="/auth"
-            className="hidden sm:inline-flex text-sm text-muted-foreground hover:text-foreground px-3 py-2"
+            className="inline-flex items-center rounded-full border border-border px-3.5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface-2 sm:border-0 sm:text-muted-foreground sm:hover:text-foreground"
           >
             Entrar
           </Link>
+
           <Link
             to="/quiz"
             className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-gold-soft transition-colors"
