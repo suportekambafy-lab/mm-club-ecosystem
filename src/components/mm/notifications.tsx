@@ -281,7 +281,11 @@ export function NotificationsBell({ className }: { className?: string }) {
   // Mirror unread bell items to the device (PWA / browser) notifications
   useEffect(() => {
     if (!hydrated || !device.enabled) return;
-    const unread = visible.filter((n) => !isReadOf(n));
+    const unread = visible.filter((n) => {
+      if (isReadOf(n)) return false;
+      if (!device.enabledAt) return true;
+      return n.createdAt >= device.enabledAt - 5_000;
+    });
     if (unread.length === 0) return;
     const payloads = unread.map((n) => ({
       id: n.id,
@@ -289,12 +293,6 @@ export function NotificationsBell({ className }: { className?: string }) {
       body: n.subtitle,
       href: n.href,
     }));
-    // Don't buzz the device while the user is actively looking at the app,
-    // but still record them so they don't all fire later in one burst.
-    if (typeof document !== "undefined" && document.visibilityState === "visible") {
-      device.seedDelivered(payloads.map((p) => p.id));
-      return;
-    }
     void device.deliver(payloads);
   }, [hydrated, device, visible, state.readIds]);
 

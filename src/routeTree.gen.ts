@@ -70,6 +70,7 @@ import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/em
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicPaymentsGatewayWebhookRouteImport } from './routes/api/public/payments/gateway-webhook'
 import { Route as ApiPublicHooksWeeklySummaryRouteImport } from './routes/api/public/hooks/weekly-summary'
+import { Route as ApiPublicHooksPushNotificationsRouteImport } from './routes/api/public/hooks/push-notifications'
 import { Route as ApiPublicHooksLivesRecordingCheckRouteImport } from './routes/api/public/hooks/lives-recording-check'
 import { Route as ApiPublicHooksLivesAnnounceCatchupRouteImport } from './routes/api/public/hooks/lives-announce-catchup'
 import { Route as ApiPublicHooksLiveTestEmailRouteImport } from './routes/api/public/hooks/live-test-email'
@@ -399,6 +400,12 @@ const ApiPublicHooksWeeklySummaryRoute =
     path: '/api/public/hooks/weekly-summary',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksPushNotificationsRoute =
+  ApiPublicHooksPushNotificationsRouteImport.update({
+    id: '/api/public/hooks/push-notifications',
+    path: '/api/public/hooks/push-notifications',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksLivesRecordingCheckRoute =
   ApiPublicHooksLivesRecordingCheckRouteImport.update({
     id: '/api/public/hooks/lives-recording-check',
@@ -563,6 +570,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
+  '/api/public/hooks/push-notifications': typeof ApiPublicHooksPushNotificationsRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -634,6 +642,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
+  '/api/public/hooks/push-notifications': typeof ApiPublicHooksPushNotificationsRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -714,6 +723,7 @@ export interface FileRoutesById {
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
+  '/api/public/hooks/push-notifications': typeof ApiPublicHooksPushNotificationsRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -794,6 +804,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
+    | '/api/public/hooks/push-notifications'
     | '/api/public/hooks/weekly-summary'
     | '/api/public/payments/gateway-webhook'
     | '/lovable/email/auth/preview'
@@ -865,6 +876,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
+    | '/api/public/hooks/push-notifications'
     | '/api/public/hooks/weekly-summary'
     | '/api/public/payments/gateway-webhook'
     | '/lovable/email/auth/preview'
@@ -944,6 +956,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
+    | '/api/public/hooks/push-notifications'
     | '/api/public/hooks/weekly-summary'
     | '/api/public/payments/gateway-webhook'
     | '/lovable/email/auth/preview'
@@ -977,6 +990,7 @@ export interface RootRouteChildren {
   ApiPublicHooksLiveTestEmailRoute: typeof ApiPublicHooksLiveTestEmailRoute
   ApiPublicHooksLivesAnnounceCatchupRoute: typeof ApiPublicHooksLivesAnnounceCatchupRoute
   ApiPublicHooksLivesRecordingCheckRoute: typeof ApiPublicHooksLivesRecordingCheckRoute
+  ApiPublicHooksPushNotificationsRoute: typeof ApiPublicHooksPushNotificationsRoute
   ApiPublicHooksWeeklySummaryRoute: typeof ApiPublicHooksWeeklySummaryRoute
   ApiPublicPaymentsGatewayWebhookRoute: typeof ApiPublicPaymentsGatewayWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -1414,6 +1428,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksWeeklySummaryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/push-notifications': {
+      id: '/api/public/hooks/push-notifications'
+      path: '/api/public/hooks/push-notifications'
+      fullPath: '/api/public/hooks/push-notifications'
+      preLoaderRoute: typeof ApiPublicHooksPushNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/lives-recording-check': {
       id: '/api/public/hooks/lives-recording-check'
       path: '/api/public/hooks/lives-recording-check'
@@ -1736,6 +1757,7 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPublicHooksLivesAnnounceCatchupRoute,
   ApiPublicHooksLivesRecordingCheckRoute:
     ApiPublicHooksLivesRecordingCheckRoute,
+  ApiPublicHooksPushNotificationsRoute: ApiPublicHooksPushNotificationsRoute,
   ApiPublicHooksWeeklySummaryRoute: ApiPublicHooksWeeklySummaryRoute,
   ApiPublicPaymentsGatewayWebhookRoute: ApiPublicPaymentsGatewayWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,

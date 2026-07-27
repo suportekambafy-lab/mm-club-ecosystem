@@ -1,4 +1,4 @@
-const VERSION = "mm-club-fresh-runtime-2026-07-27-2";
+const VERSION = "mm-club-fresh-runtime-2026-07-27-3";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(self.skipWaiting());
@@ -23,6 +23,26 @@ self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
   }
+});
+
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    payload = {};
+  }
+
+  const title = payload.title || "MM Club";
+  const options = {
+    body: payload.body || "Tens uma nova notificação.",
+    icon: "/icon-192.png",
+    badge: "/icon-192.png",
+    tag: payload.id || "mm-club-notification",
+    data: { href: payload.href || "/dashboard" },
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener("fetch", (event) => {
