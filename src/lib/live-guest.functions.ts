@@ -184,14 +184,17 @@ export const guestSync = createServerFn({ method: "POST" })
 
     // Heartbeat: mantém o convidado "vivo" na lista (evita fantasmas).
     {
-      const patch: Record<string, unknown> = {
+      const patch: {
+        last_seen_at: string;
+        guest_name: string;
+        is_guest: boolean;
+        hand_raised_at?: string | null;
+      } = {
         last_seen_at: new Date().toISOString(),
         guest_name: data.displayName,
         is_guest: true,
       };
-      if (typeof data.raiseHand === "boolean") {
-        patch.hand_raised_at = data.raiseHand ? new Date().toISOString() : null;
-      }
+
       await supabaseAdmin
         .from("live_participants")
         .update(patch)
