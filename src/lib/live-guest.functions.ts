@@ -63,7 +63,7 @@ export const joinLiveAsGuest = createServerFn({ method: "POST" })
 
     const { data: live, error } = await supabaseAdmin
       .from("lives")
-      .select("id, title, status, guest_token")
+      .select("id, title, status, starts_at, guest_token")
       .eq("id", data.liveId)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -72,6 +72,15 @@ export const joinLiveAsGuest = createServerFn({ method: "POST" })
     }
     if (live.status === "ended" || live.status === "published") {
       throw new Error("Esta sessão já terminou.");
+    }
+    {
+      const startMs = live.starts_at ? new Date(live.starts_at as string).getTime() : 0;
+      const st = live.status as string;
+      const open =
+        st === "live" ||
+        st === "starting" ||
+        (startMs > 0 && Date.now() >= startMs - 10 * 60_000);
+      if (!open) throw new Error("A sala ainda não está aberta. Volta perto da hora de início.");
     }
 
     const guestId = data.guestId ?? crypto.randomUUID();
