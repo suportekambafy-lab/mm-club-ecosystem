@@ -1,4 +1,4 @@
-const VERSION = "mm-club-fresh-runtime-2026-07-27-2";
+const VERSION = "mm-club-fresh-runtime-2026-07-27-3";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(self.skipWaiting());
