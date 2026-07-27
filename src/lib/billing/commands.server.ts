@@ -647,6 +647,9 @@ export async function cancelSubscription(input: {
     .maybeSingle();
   if (!sub) throw new Error("Subscription not found");
 
+  // Trials have no paid period to honour: cancelling suspends access at once.
+  const immediate = input.immediate || sub.status === "trialing";
+
   const gw = getGateway(sub.gateway ?? DEFAULT_GATEWAY);
   const gwCustomerId = (
     sub as unknown as { customer?: { gateway_customer_id?: string | null } }
@@ -659,7 +662,7 @@ export async function cancelSubscription(input: {
   }
 
   const now = new Date().toISOString();
-  if (input.immediate) {
+  if (immediate) {
     assertTransition(sub.status as SubscriptionStatus, "cancelled");
     await supabaseAdmin
       .from("billing_subscriptions")
@@ -674,11 +677,11 @@ export async function cancelSubscription(input: {
 
   await supabaseAdmin.from("audit_log").insert({
     actor_id: input.actorId ?? input.userId,
-    action: input.immediate ? "subscription.cancel_immediate" : "subscription.cancel_at_period_end",
+    action: immediate ? "subscription.cancel_immediate" : "subscription.cancel_at_period_end",
     entity_type: "billing_subscription",
     entity_id: sub.id,
     before: { status: sub.status, cancel_at_period_end: sub.cancel_at_period_end } as never,
-    after: { status: input.immediate ? "cancelled" : sub.status, cancel_at_period_end: !input.immediate } as never,
+    after: { status: immediate ? "cancelled" : sub.status, cancel_at_period_end: !immediate } as never,
     reason: input.reason ?? null,
   });
 
@@ -690,8 +693,8 @@ export async function cancelSubscription(input: {
     payload: {
       userId: input.userId,
       subscriptionId: sub.id,
-      immediate: Boolean(input.immediate),
-      endsAt: input.immediate ? now : sub.current_period_end,
+      immediate,
+      endsAt: immediate ? now : sub.current_period_end,
     },
   });
 }

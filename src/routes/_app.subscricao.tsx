@@ -525,7 +525,9 @@ function SubscriptionPage() {
                       run(
                         "cancel",
                         () => cancelSubscription({ data: { subscriptionId: sub.id } }),
-                        "Cancelamento agendado para o fim do período.",
+                        sub.status === "trialing"
+                          ? "Período de teste cancelado. O acesso foi suspenso de imediato."
+                          : "Cancelamento agendado para o fim do período.",
                       ).then(() => setConfirmCancel(false))
                     }
                     disabled={busy === "cancel"}
