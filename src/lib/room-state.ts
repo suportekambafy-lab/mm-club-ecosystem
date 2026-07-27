@@ -16,6 +16,12 @@ export type StageLayout = "solo" | "host_guest" | "spotlight" | "grid" | "auto";
 export type RoomStatus = "scheduled" | "backstage" | "live" | "ended";
 export type ConnectionQuality = "excellent" | "good" | "poor" | "lost";
 
+/** A selectable input device (camera / microphone). */
+export interface MediaDeviceOption {
+  deviceId: string;
+  label: string;
+}
+
 /** A published media track, abstracted from the engine. */
 export interface MediaTrack {
   /** Stable id across the engine (e.g. LiveKit trackSid). */
