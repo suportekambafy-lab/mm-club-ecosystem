@@ -2,9 +2,9 @@
  * Floating controls bar (Meet-style). Pure UI reading abstract state.
  */
 import { useMemo, useState } from "react";
-import type { RoomActions, RoomState } from "@/lib/room-state";
+import type { MediaDeviceOption, RoomActions, RoomState } from "@/lib/room-state";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Video, VideoOff, ScreenShare, Hand, PhoneOff, Layout, LogOut } from "lucide-react";
+import { Mic, MicOff, Video, VideoOff, ScreenShare, Hand, PhoneOff, Layout, LogOut, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -42,22 +42,28 @@ export function RoomControls({ state, actions, onLeave }: Props) {
   return (
     <div className="pointer-events-auto flex items-center gap-1.5 rounded-2xl border border-white/10 bg-black/60 p-1.5 backdrop-blur-md">
       {isPublisher && local?.micAllowed && (
-        <IconButton
-          active={local.micOn}
-          onClick={() => run("mic", actions.toggleMic)}
-          busy={busy === "mic"}
-          label={local.micOn ? "Silenciar microfone" : "Ativar microfone"}
-          icon={local.micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4 text-red-400" />}
-        />
+        <div className="flex items-center">
+          <IconButton
+            active={local.micOn}
+            onClick={() => run("mic", actions.toggleMic)}
+            busy={busy === "mic"}
+            label={local.micOn ? "Silenciar microfone" : "Ativar microfone"}
+            icon={local.micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4 text-red-400" />}
+          />
+          <DeviceMenu kind="audioinput" actions={actions} label="Escolher microfone" />
+        </div>
       )}
       {isPublisher && local?.camAllowed && (
-        <IconButton
-          active={local.camOn}
-          onClick={() => run("cam", actions.toggleCam)}
-          busy={busy === "cam"}
-          label={local.camOn ? "Desligar câmara" : "Ligar câmara"}
-          icon={local.camOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4 text-red-400" />}
-        />
+        <div className="flex items-center">
+          <IconButton
+            active={local.camOn}
+            onClick={() => run("cam", actions.toggleCam)}
+            busy={busy === "cam"}
+            label={local.camOn ? "Desligar câmara" : "Ligar câmara"}
+            icon={local.camOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4 text-red-400" />}
+          />
+          <DeviceMenu kind="videoinput" actions={actions} label="Escolher câmara" />
+        </div>
       )}
       {isPublisher && local?.screenAllowed && (
         canScreenShare ? (
@@ -172,6 +178,84 @@ function IconButton({
     >
       {icon}
     </button>
+  );
+}
+
+function DeviceMenu({
+  kind,
+  actions,
+  label,
+}: {
+  kind: "videoinput" | "audioinput";
+  actions: RoomActions;
+  label: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [devices, setDevices] = useState<MediaDeviceOption[]>([]);
+  const [loading, setLoading] = useState(false);
+  const active = actions.getActiveDevice?.(kind);
+
+  if (!actions.listDevices || !actions.setDevice) return null;
+
+  const openMenu = async () => {
+    const next = !open;
+    setOpen(next);
+    if (!next) return;
+    setLoading(true);
+    try {
+      setDevices((await actions.listDevices!(kind)) ?? []);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={openMenu}
+        aria-label={label}
+        title={label}
+        className="grid h-9 w-5 place-items-center rounded-lg text-white/60 hover:text-white"
+      >
+        <ChevronUp className="h-3.5 w-3.5" />
+      </button>
+      {open && (
+        <div className="absolute bottom-full left-1/2 z-50 mb-2 min-w-[220px] max-w-[280px] -translate-x-1/2 rounded-xl border border-white/10 bg-neutral-900/95 p-1 shadow-2xl backdrop-blur-md">
+          <div className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-white/40">
+            {kind === "videoinput" ? "Câmara" : "Microfone"}
+          </div>
+          {loading && <div className="px-3 py-2 text-xs text-white/50">A procurar dispositivos…</div>}
+          {!loading && devices.length === 0 && (
+            <div className="px-3 py-2 text-xs text-white/50">Nenhum dispositivo encontrado.</div>
+          )}
+          {devices.map((d) => (
+            <button
+              key={d.deviceId}
+              type="button"
+              onClick={async () => {
+                setOpen(false);
+                try {
+                  await actions.setDevice!(kind, d.deviceId);
+                  toast.success(kind === "videoinput" ? "Câmara alterada" : "Microfone alterado", {
+                    description: d.label,
+                  });
+                } catch {
+                  toast.error("Não foi possível mudar de dispositivo");
+                }
+              }}
+              className={cn(
+                "flex w-full items-center justify-between gap-2 rounded-lg px-3 py-1.5 text-left text-xs text-white/80 hover:bg-white/10",
+                active === d.deviceId && "bg-white/10 text-white",
+              )}
+            >
+              <span className="truncate">{d.label}</span>
+              {active === d.deviceId && <span className="text-[hsl(45_86%_60%)]">•</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

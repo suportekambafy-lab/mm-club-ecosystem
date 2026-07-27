@@ -16,6 +16,12 @@ export type StageLayout = "solo" | "host_guest" | "spotlight" | "grid" | "auto";
 export type RoomStatus = "scheduled" | "backstage" | "live" | "ended";
 export type ConnectionQuality = "excellent" | "good" | "poor" | "lost";
 
+/** A selectable input device (camera / microphone). */
+export interface MediaDeviceOption {
+  deviceId: string;
+  label: string;
+}
+
 /** A published media track, abstracted from the engine. */
 export interface MediaTrack {
   /** Stable id across the engine (e.g. LiveKit trackSid). */
@@ -144,6 +150,11 @@ export interface RoomActions {
   endLive(): Promise<void>;
   kick(userId: string): Promise<void>;
   ban(userId: string): Promise<void>;
+
+  // Devices (camera / microphone selection)
+  listDevices?(kind: "videoinput" | "audioinput"): Promise<MediaDeviceOption[]>;
+  setDevice?(kind: "videoinput" | "audioinput", deviceId: string): Promise<void>;
+  getActiveDevice?(kind: "videoinput" | "audioinput"): string | undefined;
 
   // Media element binding — adapter attaches the engine track to the DOM node.
   attachTrack(trackId: string, el: HTMLMediaElement): void;

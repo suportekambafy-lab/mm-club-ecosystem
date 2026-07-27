@@ -135,6 +135,8 @@ export function useRoomState({
   const [camOn, setCamOn] = useState<Record<string, boolean>>({});
   const [screenOn, setScreenOn] = useState<Record<string, boolean>>({});
   const [quality, setQuality] = useState<Record<string, RoomParticipant["connectionQuality"]>>({});
+  const [activeVideoIn, setActiveVideoIn] = useState<string | undefined>(undefined);
+  const [activeAudioIn, setActiveAudioIn] = useState<string | undefined>(undefined);
   const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null);
   const [audioBlocked, setAudioBlocked] = useState(false);
 
@@ -439,6 +441,35 @@ export function useRoomState({
     }
   }, []);
 
+  const listDevices = useCallback(async (kind: "videoinput" | "audioinput") => {
+    try {
+      // Ensure labels are available (requires an active permission grant).
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      return devices
+        .filter((d) => d.kind === kind && d.deviceId)
+        .map((d, i) => ({
+          deviceId: d.deviceId,
+          label: d.label || (kind === "videoinput" ? `Câmara ${i + 1}` : `Microfone ${i + 1}`),
+        }));
+    } catch (e) {
+      console.warn("[useRoomState] listDevices failed", e);
+      return [];
+    }
+  }, []);
+
+  const setDevice = useCallback(async (kind: "videoinput" | "audioinput", deviceId: string) => {
+    const room = roomRef.current;
+    if (!room) return;
+    await room.switchActiveDevice(kind, deviceId, true);
+    if (kind === "videoinput") setActiveVideoIn(deviceId);
+    else setActiveAudioIn(deviceId);
+  }, []);
+
+  const getActiveDevice = useCallback(
+    (kind: "videoinput" | "audioinput") => (kind === "videoinput" ? activeVideoIn : activeAudioIn),
+    [activeVideoIn, activeAudioIn],
+  );
+
   const attachTrack = useCallback((trackId: string, el: HTMLMediaElement) => {
     const room = roomRef.current;
     if (!room) return;
@@ -476,9 +507,12 @@ export function useRoomState({
       leave,
       attachTrack,
       detachTrack,
+      listDevices,
+      setDevice,
+      getActiveDevice,
       ...serverActions,
     }),
-    [toggleMic, toggleCam, startScreenShare, stopScreenShare, startAudio, leave, attachTrack, detachTrack, serverActions],
+    [toggleMic, toggleCam, startScreenShare, stopScreenShare, startAudio, leave, attachTrack, detachTrack, listDevices, setDevice, getActiveDevice, serverActions],
   );
 
   return { state, actions };
