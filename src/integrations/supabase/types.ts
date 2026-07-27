@@ -2663,6 +2663,8 @@ export type Database = {
           kind: string
           post_id: string | null
           read_at: string | null
+          short_comment_id: string | null
+          short_id: string | null
           user_id: string
         }
         Insert: {
@@ -2674,6 +2676,8 @@ export type Database = {
           kind: string
           post_id?: string | null
           read_at?: string | null
+          short_comment_id?: string | null
+          short_id?: string | null
           user_id: string
         }
         Update: {
@@ -2685,6 +2689,8 @@ export type Database = {
           kind?: string
           post_id?: string | null
           read_at?: string | null
+          short_comment_id?: string | null
+          short_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -2700,6 +2706,20 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_short_comment_id_fkey"
+            columns: ["short_comment_id"]
+            isOneToOne: false
+            referencedRelation: "mm_short_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_short_id_fkey"
+            columns: ["short_id"]
+            isOneToOne: false
+            referencedRelation: "mm_shorts"
             referencedColumns: ["id"]
           },
         ]
@@ -3232,6 +3252,16 @@ export type Database = {
         Returns: number
       }
       next_invoice_number: { Args: never; Returns: string }
+      notify_mentions: {
+        Args: {
+          _actor: string
+          _comment_id: string
+          _content: string
+          _post_id: string
+          _short_id: string
+        }
+        Returns: undefined
+      }
       resolve_entitlements: {
         Args: { _user_id: string }
         Returns: {
