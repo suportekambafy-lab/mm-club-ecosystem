@@ -15,7 +15,7 @@ import type { RoomActions, RoomState, StageLayout } from "@/lib/room-state";
 import { Stage } from "./stage";
 import { Backstage } from "./backstage";
 import { RoomControls } from "./room-controls";
-import { Hand, Radio, X, UserPlus, Users, UserMinus } from "lucide-react";
+import { Hand, Radio, X, UserPlus, Users, UserMinus, Volume2 } from "lucide-react";
 import { MemberAvatar } from "@/components/mm/member-avatar";
 import { useAdminIds } from "@/hooks/use-admin-ids";
 
