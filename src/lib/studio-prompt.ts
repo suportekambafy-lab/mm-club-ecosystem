@@ -121,9 +121,12 @@ export function buildImagePrompt(input: {
   brand: BrandDna;
   product: ProductCtx;
   notes?: string;
+  /** Bloco "Consistency Lock" partilhado por todas as variações do lote. */
+  consistency?: string;
 }): string {
   const parts: string[] = [];
   parts.push("HIGH-CONVERSION advertising photograph, engineered to stop the scroll and drive click-through.");
+  if (input.consistency) parts.push(input.consistency);
   parts.push(STYLE_DIRECTIVES[input.style]);
   parts.push(FORMAT_DIRECTIVES[input.format]);
   if (input.scene) parts.push(`Scene: ${SCENE_DIRECTIVES[input.scene]}.`);
@@ -152,6 +155,7 @@ export function buildImagePrompt(input: {
   return parts.join(" ");
 }
 
+
 // ============ VIDEO ============
 
 const VIDEO_STYLE_DIRECTIVES: Partial<Record<VideoStyle, string>> = {
@@ -177,8 +181,22 @@ export function buildVideoPrompt(input: {
   hook?: ConversionHook;
   brand: BrandDna;
   product: ProductCtx;
+  /** Requisitos não-negociáveis (narração, legendas, música, idioma). */
+  hardRequirements?: string[];
+  /** Bloco "Consistency Lock". */
+  consistency?: string;
 }): string {
   const parts: string[] = [];
+  if (input.hardRequirements?.length) {
+    parts.push(
+      `=== HARD REQUIREMENTS (non-negotiable, the render is rejected if any is missing) === ${input.hardRequirements
+        .map((r, i) => `(${i + 1}) ${r}`)
+        .join(" ")}`,
+    );
+  }
+  if (input.consistency) parts.push(input.consistency);
+
+
   parts.push(
     `${input.duration}-second HIGH-CONVERSION ${input.format} ad video, engineered as a scroll-stopping performance creative (Meta / TikTok / YouTube Shorts).`,
   );
@@ -199,7 +217,11 @@ export function buildVideoPrompt(input: {
     "Storyboard (high-conversion ad structure): (1) 0–1.5s HOOK — a striking, thumb-stopping opening frame that instantly creates curiosity or shows the product benefit; (2) mid — desire beat: macro detail, texture, in-context beauty shot; (3) proof / lifestyle moment; (4) closing 1s — clean brand / product hero moment ready for a CTA overlay.",
   );
   parts.push(
-    "Editing: fast motivated cuts, dynamic camera, subtle speed-ramps, seamless transitions, no dead frames.",
+    "Editing: motivated cuts only, dynamic but smooth camera, subtle speed-ramps, seamless transitions, no dead frames, no abrupt reframing.",
+  );
+  parts.push(
+    "Technical target: 4k render, 24–30fps, stable exposure and white balance, no flicker, no warping, no compression artefacts.",
   );
   return parts.join(" ");
+
 }

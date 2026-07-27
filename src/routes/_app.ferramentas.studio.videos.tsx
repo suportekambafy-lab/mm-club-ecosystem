@@ -5,8 +5,30 @@ import { Film, Loader2, Play, Download, ChevronDown } from "lucide-react";
 import { useStudio } from "@/lib/studio-context";
 import { startVideoGeneration, pollVideoGeneration, listAssets } from "@/lib/studio.functions";
 import { VIDEO_STYLES, VIDEO_FORMATS, VIDEO_DURATIONS, VIDEO_OBJECTIVES, PEOPLE_OPTIONS, CONVERSION_HOOKS, videoCost, videoSegments, type PeoplePreset, type ConversionHook } from "@/lib/studio-config";
+import { STUDIO_LOCALES, VOICE_GENDERS, localeLabel, type StudioLocale, type VoiceGender } from "@/lib/studio-languages";
 import { VideoPlaylist } from "@/components/mm/video-playlist";
 import { MergedDownloadButton } from "@/components/mm/merged-download-button";
+
+type QcSummary = {
+  verdict?: string;
+  checks?: Array<{ id: string; ok: boolean; severity: string; detail?: string }>;
+  skipped?: string;
+};
+
+const QC_LABELS: Record<string, string> = {
+  segments_complete: "Segmentos em falta",
+  narration_present: "Narração pedida não detetada",
+  captions_present: "Legendas pedidas não detetadas",
+  music_present: "Música de fundo não detetada",
+  character_consistent: "Variação de identidade/roupa detetada",
+  anatomy_ok: "Problema de anatomia detetado",
+  text_legible: "Texto ilegível no ecrã",
+  motion_smooth: "Movimento irregular",
+  framing_stable: "Enquadramento instável",
+  audio_video_synced: "Áudio dessincronizado",
+};
+
+
 
 
 export const Route = createFileRoute("/_app/ferramentas/studio/videos")({
@@ -29,23 +51,33 @@ function VideosPage() {
   const [people, setPeople] = useState<PeoplePreset>("none");
   const [hook, setHook] = useState<ConversionHook>("none");
   const [notes, setNotes] = useState("");
-  const [captions, setCaptions] = useState<"none" | "pt" | "en" | "es">("none");
+  const [captionsOn, setCaptionsOn] = useState(false);
+  const [captionsLocale, setCaptionsLocale] = useState<StudioLocale>("pt-PT");
   const [captionText, setCaptionText] = useState("");
-  const [narration, setNarration] = useState<"none" | "male_pt" | "female_pt" | "male_en" | "female_en" | "neutral">("none");
+  const [narrationVoice, setNarrationVoice] = useState<"none" | VoiceGender>("none");
+  const [narrationLocale, setNarrationLocale] = useState<StudioLocale>("pt-PT");
   const [narrationScript, setNarrationScript] = useState("");
   const [music, setMusic] = useState<"none" | "cinematic" | "upbeat" | "elegant" | "epic" | "chill" | "corporate">("none");
+  const [maxConsistency, setMaxConsistency] = useState(false);
 
   const [busy, setBusy] = useState(false);
   const [statusText, setStatusText] = useState<string>("");
   const [videoUrls, setVideoUrls] = useState<string[] | null>(null);
+  const [qc, setQc] = useState<QcSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
 
   const segments = useMemo(() => videoSegments(duration), [duration]);
   const cost = useMemo(() => videoCost(duration), [duration]);
   const canPay = balance >= cost;
 
   const aspect = useMemo(() => VIDEO_FORMATS.find((f) => f.id === format)?.aspect ?? "9:16", [format]);
+
+  const sequential = useMemo(
+    () => segments.length > 1 && (maxConsistency || people !== "none"),
+    [segments.length, maxConsistency, people],
+  );
 
   async function loopPoll(assetId: string) {
     if (pollTimer.current) clearTimeout(pollTimer.current);
@@ -54,6 +86,7 @@ function VideosPage() {
       if (r.status === "ready") {
         const urls = (r as { urls?: string[] }).urls?.length ? (r as { urls: string[] }).urls : (r.url ? [r.url] : []);
         setVideoUrls(urls);
+        setQc(((r as { qc?: QcSummary | null }).qc ?? null));
         setBusy(false);
         setStatusText("");
         refresh();
@@ -66,10 +99,19 @@ function VideosPage() {
         refresh();
         return;
       }
-      setStatusText(segments.length > 1
-        ? `A renderizar ${segments.length} segmentos em paralelo (${duration}s totais)…`
-        : "A renderizar vídeo… pode demorar 1–3 minutos.");
+      if ((r as { autoFixing?: boolean }).autoFixing) {
+        setStatusText("Controlo de qualidade detetou um problema — a corrigir automaticamente, sem custo…");
+      } else {
+        setStatusText(
+          segments.length > 1
+            ? sequential
+              ? `A renderizar ${segments.length} segmentos em cadeia para máxima consistência (${duration}s totais)…`
+              : `A renderizar ${segments.length} segmentos em paralelo (${duration}s totais)…`
+            : "A renderizar vídeo… pode demorar 1–3 minutos.",
+        );
+      }
       pollTimer.current = setTimeout(() => loopPoll(assetId), 8000);
+
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro no polling");
       setBusy(false);
@@ -117,8 +159,9 @@ function VideosPage() {
   async function onGenerate() {
     setError(null);
     setVideoUrls(null);
+    setQc(null);
     setBusy(true);
-    setStatusText("A iniciar geração…");
+    setStatusText("A preparar consistência e guião…");
     try {
       const r = await start({
         data: {
@@ -130,13 +173,17 @@ function VideosPage() {
           people,
           hook,
           notes: notes || undefined,
-          captions,
+          captions: captionsOn ? captionsLocale : "none",
+          captionsLocale: captionsOn ? captionsLocale : undefined,
           captionText: captionText || undefined,
-          narration,
+          narration: narrationVoice,
+          narrationLocale: narrationVoice !== "none" ? narrationLocale : undefined,
           narrationScript: narrationScript || undefined,
           music,
+          maxConsistency,
         },
       });
+
       refresh();
       setStatusText("Vídeo em fila. A monitorizar…");
       loopPoll(r.assetId);
@@ -266,52 +313,55 @@ function VideosPage() {
 
           <Section
             title="Áudio & Legendas"
-            summary={`${narration === "none" ? "Sem narração" : "Narração"} · ${captions === "none" ? "Sem legendas" : captions.toUpperCase()} · ${music === "none" ? "Sem música" : music}`}
+            summary={`${narrationVoice === "none" ? "Sem narração" : `Narração ${localeLabel(narrationLocale)}`} · ${captionsOn ? `Legendas ${localeLabel(captionsLocale)}` : "Sem legendas"} · ${music === "none" ? "Sem música" : music}`}
           >
             <Field label="Narração">
               <div className="flex flex-wrap gap-2">
-                {([
-                  { id: "none", label: "Sem narração" },
-                  { id: "female_pt", label: "Voz feminina · PT" },
-                  { id: "male_pt", label: "Voz masculina · PT" },
-                  { id: "female_en", label: "Voz feminina · EN" },
-                  { id: "male_en", label: "Voz masculina · EN" },
-                  { id: "neutral", label: "Neutra premium" },
-                ] as const).map((n) => (
-                  <Chip key={n.id} active={narration === n.id} onClick={() => setNarration(n.id)}>{n.label}</Chip>
+                <Chip active={narrationVoice === "none"} onClick={() => setNarrationVoice("none")}>Sem narração</Chip>
+                {VOICE_GENDERS.map((v) => (
+                  <Chip key={v.id} active={narrationVoice === v.id} onClick={() => setNarrationVoice(v.id)}>{v.label}</Chip>
                 ))}
               </div>
-              {narration !== "none" && (
-                <textarea
-                  value={narrationScript}
-                  onChange={(e) => setNarrationScript(e.target.value)}
-                  rows={2}
-                  placeholder="Guião da narração (opcional). Ex.: 'Redefinimos o luxo. Descobre a nova coleção.'"
-                  className="mt-2 w-full rounded-xl border border-[color:var(--hairline)] bg-background/40 px-3 py-2 text-sm"
-                />
+              {narrationVoice !== "none" && (
+                <>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {STUDIO_LOCALES.map((l) => (
+                      <Chip key={l.id} active={narrationLocale === l.id} onClick={() => setNarrationLocale(l.id)}>{l.label}</Chip>
+                    ))}
+                  </div>
+                  <textarea
+                    value={narrationScript}
+                    onChange={(e) => setNarrationScript(e.target.value)}
+                    rows={2}
+                    placeholder="Guião da narração (opcional — se ficar vazio, a IA escreve-o no idioma escolhido)."
+                    className="mt-2 w-full rounded-xl border border-[color:var(--hairline)] bg-background/40 px-3 py-2 text-sm"
+                  />
+                </>
               )}
             </Field>
 
             <Field label="Legendas">
               <div className="flex flex-wrap gap-2">
-                {([
-                  { id: "none", label: "Sem legendas" },
-                  { id: "pt", label: "Português" },
-                  { id: "en", label: "English" },
-                  { id: "es", label: "Español" },
-                ] as const).map((c) => (
-                  <Chip key={c.id} active={captions === c.id} onClick={() => setCaptions(c.id)}>{c.label}</Chip>
-                ))}
+                <Chip active={!captionsOn} onClick={() => setCaptionsOn(false)}>Sem legendas</Chip>
+                <Chip active={captionsOn} onClick={() => setCaptionsOn(true)}>Com legendas</Chip>
               </div>
-              {captions !== "none" && (
-                <input
-                  value={captionText}
-                  onChange={(e) => setCaptionText(e.target.value)}
-                  placeholder="Texto exato da legenda (opcional)"
-                  className="mt-2 w-full rounded-xl border border-[color:var(--hairline)] bg-background/40 px-3 py-2 text-sm"
-                />
+              {captionsOn && (
+                <>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {STUDIO_LOCALES.map((l) => (
+                      <Chip key={l.id} active={captionsLocale === l.id} onClick={() => setCaptionsLocale(l.id)}>{l.label}</Chip>
+                    ))}
+                  </div>
+                  <input
+                    value={captionText}
+                    onChange={(e) => setCaptionText(e.target.value)}
+                    placeholder="Texto exato da legenda (opcional)"
+                    className="mt-2 w-full rounded-xl border border-[color:var(--hairline)] bg-background/40 px-3 py-2 text-sm"
+                  />
+                </>
               )}
             </Field>
+
 
             <Field label="Música">
               <div className="flex flex-wrap gap-2">
@@ -341,6 +391,36 @@ function VideosPage() {
               />
             </Field>
           </Section>
+
+          <Section
+            title="Qualidade & Consistência"
+            summary={sequential ? "Cadeia contínua + QC automático" : "Paralelo rápido + QC automático"}
+          >
+            <label className="flex items-start gap-3 rounded-xl border border-[color:var(--hairline)] bg-background/40 p-3">
+              <input
+                type="checkbox"
+                checked={maxConsistency}
+                onChange={(e) => setMaxConsistency(e.target.checked)}
+                className="mt-1 h-4 w-4 accent-[color:var(--secondary)]"
+              />
+              <span className="text-sm">
+                Máxima consistência
+                <span className="block text-[11px] text-muted-foreground">
+                  Gera os segmentos em cadeia (um após o outro) para bloquear rosto, roupa, unhas, adereços e luz. Fica mais lento, mas elimina saltos visuais.
+                </span>
+              </span>
+            </label>
+            <p className="text-[11px] text-muted-foreground">
+              {segments.length > 1
+                ? sequential
+                  ? "Modo em cadeia activo — continuidade garantida entre os segmentos."
+                  : "Cenas independentes de produto: geração em paralelo (mais rápida)."
+                : "Segmento único — consistência interna garantida pelo Consistency Lock."}
+              {" "}Cada vídeo passa por controlo de qualidade automático (narração, legendas, anatomia, continuidade) antes da entrega.
+            </p>
+          </Section>
+
+
 
 
           <button
@@ -389,6 +469,39 @@ function VideosPage() {
               )}
             </div>
           )}
+          {qc?.verdict && (
+            <div className="mt-3 rounded-2xl border border-[color:var(--hairline)] bg-background/40 p-3">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em]">
+                <span
+                  className={
+                    qc.verdict === "passed"
+                      ? "text-emerald-500"
+                      : qc.verdict === "warned"
+                        ? "text-amber-500"
+                        : "text-destructive"
+                  }
+                >
+                  Controlo de qualidade: {qc.verdict === "passed" ? "aprovado" : qc.verdict === "warned" ? "aprovado com avisos" : "com falhas"}
+                </span>
+              </div>
+              <ul className="mt-2 space-y-1">
+                {(qc.checks ?? [])
+                  .filter((c) => !c.ok)
+                  .slice(0, 5)
+                  .map((c) => (
+                    <li key={c.id} className="text-[11px] text-muted-foreground">
+                      • {QC_LABELS[c.id] ?? c.id}
+                      {c.detail ? ` — ${c.detail}` : ""}
+                    </li>
+                  ))}
+                {(qc.checks ?? []).every((c) => c.ok) && (
+                  <li className="text-[11px] text-muted-foreground">• Narração, legendas, anatomia e continuidade verificadas.</li>
+                )}
+              </ul>
+              {qc.skipped && <p className="mt-1 text-[11px] text-muted-foreground">{qc.skipped}</p>}
+            </div>
+          )}
+
         </div>
       </section>
     </div>

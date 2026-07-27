@@ -3,6 +3,9 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { STUDIO_COSTS, IMAGE_FORMATS, videoSegments, type ImageFormat, type ImageStyle, type PeoplePreset, type SceneMode, type ConversionHook, type VideoStyle, type VideoFormat } from "./studio-config";
 import { buildImagePrompt, buildVideoPrompt, type BrandDna, type ProductCtx } from "./studio-prompt";
+import { consistencyBlock, pickContinuityStrategy, type ConsistencyLock } from "./studio-consistency";
+import { localeDirective, normalizeLegacyLocale, normalizeLegacyVoice, VOICE_GENDERS } from "./studio-languages";
+
 
 const BUCKET = "studio-media";
 
@@ -221,6 +224,17 @@ export const generateImages = createServerFn({ method: "POST" })
       throw new Error(spendErr.message);
     }
 
+    // Bíblia de consistência partilhada por todas as variações do lote.
+    const { generateConsistencyLock } = await import("./studio-qc.server");
+    const imageLock = await generateConsistencyLock({
+      people: data.people,
+      style: data.style,
+      scene: data.scene,
+      notes: data.notes,
+      brand,
+      product,
+    });
+
     const prompt = buildImagePrompt({
       style: data.style as ImageStyle,
       format: data.format as ImageFormat,
@@ -230,7 +244,9 @@ export const generateImages = createServerFn({ method: "POST" })
       brand,
       product,
       notes: data.notes,
+      consistency: consistencyBlock(imageLock),
     });
+
 
     // Carregar fotos do produto como referência real (mantém identidade visual).
     const productPhotos = ((product as { photos?: string[] } | null)?.photos ?? []).slice(0, 3);
@@ -316,12 +332,18 @@ const StartVideoSchema = z.object({
   people: z.enum(["none", "man", "woman", "couple", "group", "hands"]).default("none"),
   hook: z.enum(["none", "problem_solution", "before_after", "social_proof", "scarcity", "curiosity", "aspiration"]).default("none"),
   notes: z.string().max(1200).optional(),
-  captions: z.enum(["none", "pt", "en", "es"]).default("none"),
+  // Aceita valores antigos (`pt`, `male_pt`) e novos (`pt-PT`).
+  captions: z.string().default("none"),
+  captionsLocale: z.string().optional(),
   captionText: z.string().max(300).optional(),
-  narration: z.enum(["none", "male_pt", "female_pt", "male_en", "female_en", "neutral"]).default("none"),
+  narration: z.string().default("none"),
+  narrationLocale: z.string().optional(),
   narrationScript: z.string().max(800).optional(),
   music: z.enum(["none", "cinematic", "upbeat", "elegant", "epic", "chill", "corporate"]).default("none"),
+  /** Força geração encadeada (máxima consistência) mesmo sem pessoas. */
+  maxConsistency: z.boolean().default(false),
 });
+
 
 function aspectFromFormat(fmt: string): "16:9" | "9:16" | "1:1" {
   if (fmt === "facebook") return "1:1";
@@ -365,11 +387,52 @@ type VideoSegment = {
   index: number;
   duration: number;
   interaction_id: string;
-  status: "pending" | "ready" | "failed";
+  status: "queued" | "pending" | "ready" | "failed";
   storage_path?: string;
   url?: string;
   error?: string;
+  retried?: boolean;
 };
+
+type VideoMeta = {
+  status?: string;
+  interaction_id?: string;
+  operation?: string;
+  segments?: VideoSegment[];
+  prompt?: string;
+  aspect?: string;
+  duration?: number;
+  multi_segment?: boolean;
+  strategy?: "sequential" | "parallel";
+  strategy_reason?: string;
+  requirements?: {
+    narration: boolean;
+    captions: boolean;
+    music: boolean;
+    hasPeople: boolean;
+  };
+  qc?: unknown;
+  auto_retry_count?: number;
+  partial?: boolean;
+  error?: string;
+};
+
+/** Prompt final de um segmento, com a cláusula de continuidade correcta. */
+function segmentPrompt(base: string, index: number, total: number, seconds: number, strategy: "sequential" | "parallel"): string {
+  if (total <= 1) return `${base}. Total length about ${seconds}s.`;
+  const position =
+    index === 0
+      ? "Open the scene and establish the subject and environment."
+      : index === total - 1
+        ? "Close the scene naturally, resolving the motion started in the previous part and landing on a clean hero frame."
+        : "Continue the exact motion and action from the previous part with no visual reset.";
+  const chain =
+    strategy === "sequential"
+      ? " This part is generated AFTER the previous one: the first frame of this part must look like a direct continuation of the last frame of the previous part (same framing logic, same subject position, same lighting, same wardrobe and same props)."
+      : "";
+  return `${base}. This is part ${index + 1} of ${total} of ONE single continuous cinematic scene — identical subject, wardrobe, props, environment, lighting and camera language across all parts. ${position}${chain} This part lasts about ${seconds}s.`;
+}
+
 
 async function startOmniInteraction(
   key: string,
@@ -417,17 +480,16 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
     const key = process.env.GEMINI_API_KEY;
     if (!key) throw new Error("GEMINI_API_KEY não configurada.");
 
-    // Load brand + product for a rich prompt
     const [brandRes, productRes] = await Promise.all([
       supabase.from("mm_studio_brand").select("*").eq("user_id", userId).maybeSingle(),
       data.productId
         ? supabase.from("mm_studio_products").select("*").eq("id", data.productId).eq("user_id", userId).maybeSingle()
         : Promise.resolve({ data: null }),
     ]);
-    const brand = brandRes.data as { brand_name?: string; tone?: string; description?: string } | null;
+    const brand = brandRes.data as { brand_name?: string; tone?: string; audience?: string; description?: string } | null;
     const product = productRes.data as { name?: string; category?: string; notes?: string; photos?: string[] } | null;
 
-    // Carregar fotos do produto para injectar como referência visual no Omni.
+    // Fotos do produto como referência visual (âncora de consistência).
     const refs: { bytes: Uint8Array; mime: string }[] = [];
     for (const url of (product?.photos ?? []).slice(0, 3)) {
       try {
@@ -442,31 +504,71 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
     const totalCost = segments.length * STUDIO_COSTS.video;
     const aspect = aspectFromFormat(data.format);
 
-    const refClause = refs.length > 0
-      ? "Use the attached reference image(s) as the EXACT product hero — keep the same shape, colours, label, packaging and proportions in every frame. Do not invent a different product."
+    // ---- idiomas (pt-PT ≠ pt-BR) ----
+    const captionLocale = normalizeLegacyLocale(data.captionsLocale ?? data.captions);
+    const narrationVoice = normalizeLegacyVoice(data.narration);
+    const narrationLocale = narrationVoice
+      ? normalizeLegacyLocale(data.narrationLocale ?? data.narration) ?? captionLocale ?? "pt-PT"
       : null;
 
-    const captionLangMap: Record<string, string> = {
-      pt: "Portuguese", en: "English", es: "Spanish",
-    };
-    const captionClause = data.captions !== "none"
-      ? `Burn in bold, modern social-media captions in ${captionLangMap[data.captions]}, centered lower-third, high-contrast white text with subtle drop shadow, kinetic word-by-word reveal synced to voiceover${data.captionText ? `. Caption text: "${data.captionText}"` : ""}.`
-      : "no on-screen text, no captions, no logos.";
+    // ---- guião de narração garantido ----
+    let narrationScript = data.narrationScript?.trim() || "";
+    if (narrationVoice && narrationLocale && !narrationScript) {
+      const { generateNarrationScript } = await import("./studio-qc.server");
+      narrationScript =
+        (await generateNarrationScript({
+          localeDirective: localeDirective(narrationLocale),
+          duration: data.duration,
+          objective: data.objective,
+          brand,
+          product,
+          notes: data.notes,
+        })) ?? "";
+    }
 
-    const narrationVoiceMap: Record<string, string> = {
-      male_pt: "confident male voice-over in Portuguese",
-      female_pt: "warm female voice-over in Portuguese",
-      male_en: "confident male voice-over in English",
-      female_en: "warm female voice-over in English",
-      neutral: "neutral premium voice-over",
-    };
-    const narrationClause = data.narration !== "none"
-      ? `Include a ${narrationVoiceMap[data.narration]}, cinematic advertising tone, perfectly lip-agnostic${data.narrationScript ? `. Voice-over script: "${data.narrationScript}"` : ", concise persuasive script matching the objective"}.`
-      : "no narration, ambient sound only.";
+    // ---- bíblia de consistência ----
+    const { generateConsistencyLock } = await import("./studio-qc.server");
+    const lock = await generateConsistencyLock({
+      people: data.people,
+      style: data.style,
+      objective: data.objective,
+      notes: data.notes,
+      brand,
+      product,
+    });
+    const consistency = consistencyBlock(lock);
 
-    const musicClause = data.music !== "none"
-      ? `Layered ${data.music} background music track, well-mixed under the narration, dynamic build matching the edit.`
-      : "";
+    // ---- requisitos obrigatórios ----
+    const hardRequirements: string[] = [];
+    if (narrationVoice && narrationLocale) {
+      const voice = VOICE_GENDERS.find((v) => v.id === narrationVoice)?.directive ?? "premium voice-over";
+      hardRequirements.push(
+        `MANDATORY spoken voice-over: a ${voice} speaking ${localeDirective(narrationLocale)} Audio must be clearly audible, well mixed and perfectly synced with the picture.${
+          narrationScript ? ` The voice-over MUST say exactly this script: "${narrationScript}"` : ""
+        }`,
+      );
+    } else {
+      hardRequirements.push("No narration — ambient/diegetic sound only, no spoken words.");
+    }
+    if (captionLocale) {
+      hardRequirements.push(
+        `MANDATORY burned-in captions in ${localeDirective(captionLocale)} Bold modern social caption style, lower third inside the safe zone, high-contrast white text with subtle shadow, kinetic word-by-word reveal synced to the audio, correctly spelled, never cropped.${
+          data.captionText ? ` Caption text: "${data.captionText}"` : ""
+        }`,
+      );
+    } else {
+      hardRequirements.push("No captions and no on-screen text of any kind.");
+    }
+    if (data.music !== "none") {
+      hardRequirements.push(
+        `MANDATORY ${data.music} background music bed, mixed clearly under the voice-over, dynamic build matched to the edit.`,
+      );
+    }
+    if (refs.length > 0) {
+      hardRequirements.push(
+        "The attached reference image(s) define the EXACT hero product: identical shape, colours, label, typography, packaging and proportions in every frame. Never invent a different product.",
+      );
+    }
 
     const conversionBase = buildVideoPrompt({
       style: data.style as VideoStyle,
@@ -477,6 +579,8 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
       hook: data.hook as ConversionHook,
       brand: brand as BrandDna,
       product: product as ProductCtx,
+      hardRequirements,
+      consistency,
     });
 
     const basePrompt = [
@@ -484,14 +588,19 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
       product?.notes ? `Product notes: ${product.notes}` : null,
       brand?.description ? `Brand context: ${brand.description}` : null,
       data.notes ? `Extra direction: ${data.notes}` : null,
-      refClause,
-      narrationClause,
-      captionClause,
-      musicClause || null,
-      "Smooth motivated camera motion, dramatic lighting, premium color grading, 4k.",
-    ].filter(Boolean).join(". ");
+    ]
+      .filter(Boolean)
+      .join(". ");
 
-    // Spend all credits upfront
+    const { strategy, reason } = pickContinuityStrategy({
+      people: data.people as PeoplePreset,
+      objective: data.objective,
+      hook: data.hook as ConversionHook,
+      force: data.maxConsistency,
+      segments: segments.length,
+    });
+
+    // Débito total antecipado
     const { data: newBal, error: spendErr } = await supabase.rpc("mm_studio_spend_credits", {
       _user_id: userId,
       _amount: totalCost,
@@ -504,24 +613,35 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
       throw new Error(spendErr.message);
     }
 
-    // Start all segments in parallel with continuity prompt engineering
-    let startedIds: string[] = [];
+    // Sequencial: arranca só o primeiro; os seguintes são encadeados no poll.
+    let segArr: VideoSegment[] = [];
     try {
-      startedIds = await Promise.all(
-        segments.map((secs, i) => {
-          const continuity = multi
-            ? ` This is part ${i + 1} of ${segments.length} in one continuous cinematic scene — keep the exact same subject, wardrobe, environment, lighting, color palette and camera style as the other parts. ${
-                i === 0
-                  ? "Open the scene."
-                  : i === segments.length - 1
-                    ? "Close the scene naturally, resolving the motion started before."
-                    : "Continue the motion from the previous part seamlessly."
-              }`
-            : "";
-          const prompt = `${basePrompt}. About ${secs}s.${continuity}`;
-          return startOmniInteraction(key, prompt, aspect, refs);
-        }),
-      );
+      if (strategy === "sequential") {
+        const firstId = await startOmniInteraction(
+          key,
+          segmentPrompt(basePrompt, 0, segments.length, segments[0], strategy),
+          aspect,
+          refs,
+        );
+        segArr = segments.map((secs, i) => ({
+          index: i,
+          duration: secs,
+          interaction_id: i === 0 ? firstId : "",
+          status: i === 0 ? "pending" : "queued",
+        }));
+      } else {
+        const ids = await Promise.all(
+          segments.map((secs, i) =>
+            startOmniInteraction(key, segmentPrompt(basePrompt, i, segments.length, secs, strategy), aspect, refs),
+          ),
+        );
+        segArr = segments.map((secs, i) => ({
+          index: i,
+          duration: secs,
+          interaction_id: ids[i],
+          status: "pending",
+        }));
+      }
     } catch (err) {
       await supabase.rpc("mm_studio_refund_credits", {
         _user_id: userId,
@@ -531,40 +651,60 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
       throw err;
     }
 
-    const segArr: VideoSegment[] = segments.map((secs, i) => ({
-      index: i,
-      duration: secs,
-      interaction_id: startedIds[i],
+    const meta: VideoMeta = {
       status: "pending",
-    }));
+      interaction_id: segArr[0].interaction_id,
+      segments: segArr,
+      prompt: basePrompt,
+      aspect,
+      duration: data.duration,
+      multi_segment: multi,
+      strategy,
+      strategy_reason: reason,
+      requirements: {
+        narration: Boolean(narrationVoice && narrationLocale),
+        captions: Boolean(captionLocale),
+        music: data.music !== "none",
+        hasPeople: data.people !== "none",
+      },
+      auto_retry_count: 0,
+    };
 
     const { data: asset, error: aErr } = await supabase
       .from("mm_studio_assets")
       .insert({
         user_id: userId,
         kind: "video",
-        url: `pending://${startedIds[0]}`,
+        url: `pending://${segArr[0].interaction_id}`,
         format: data.format,
         style: data.style,
         product_id: data.productId ?? null,
         credits_used: totalCost,
         metadata: {
-          status: "pending",
-          interaction_id: startedIds[0], // legacy compat
-          segments: segArr,
-          prompt: basePrompt,
+          ...meta,
           model: OMNI_MODEL,
-          aspect,
-          duration: data.duration,
-          multi_segment: multi,
-        },
+          consistency_lock: lock ?? null,
+          consistency_block: consistency,
+          narration_locale: narrationLocale,
+          narration_voice: narrationVoice,
+          narration_script: narrationScript || null,
+          captions_locale: captionLocale,
+        } as never,
+
       })
       .select("id")
       .single();
     if (aErr) throw new Error(aErr.message);
 
-    return { assetId: asset.id, operation: startedIds[0], balance: newBal as number };
+    return {
+      assetId: asset.id,
+      operation: segArr[0].interaction_id,
+      balance: newBal as number,
+      strategy,
+      strategyReason: reason,
+    };
   });
+
 
 // Downloads the video bytes for a completed Omni interaction and uploads to storage.
 type SupabaseCtx = { storage: { from: (b: string) => { upload: (p: string, buf: Uint8Array, o: { contentType: string; upsert: boolean }) => Promise<{ error: { message: string } | null }>; createSignedUrl: (p: string, s: number) => Promise<{ data: { signedUrl: string } | null; error: { message: string } | null }> } } };
@@ -652,15 +792,18 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!asset) throw new Error("Asset não encontrado.");
 
-    const meta = (asset.metadata ?? {}) as {
-      status?: string;
-      interaction_id?: string;
-      operation?: string;
-      segments?: VideoSegment[];
-      prompt?: string;
-      aspect?: string;
-      duration?: number;
-      multi_segment?: boolean;
+    const meta = (asset.metadata ?? {}) as VideoMeta & {
+      consistency_lock?: ConsistencyLock | null;
+    };
+    const strategy: "sequential" | "parallel" = meta.strategy === "sequential" ? "sequential" : "parallel";
+    const basePrompt = meta.prompt ?? "";
+    const aspect = (meta.aspect as "9:16" | "1:1" | "16:9") ?? "9:16";
+
+    const saveMeta = async (patch: Record<string, unknown>) => {
+      await supabase
+        .from("mm_studio_assets")
+        .update({ metadata: { ...meta, ...patch } as never })
+        .eq("id", asset.id);
     };
 
     if (meta.status === "ready") {
@@ -669,13 +812,14 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
         url: asset.url,
         urls: (meta.segments ?? []).map((s) => s.url).filter(Boolean) as string[],
         id: asset.id,
+        qc: meta.qc ?? null,
       };
     }
     if (meta.status === "failed") {
-      return { status: "failed" as const, id: asset.id, error: "Geração falhou." };
+      return { status: "failed" as const, id: asset.id, error: meta.error ?? "Geração falhou." };
     }
 
-    // Legacy: single interaction without segments array
+    // Legacy: interação única sem array de segmentos
     let segs: VideoSegment[] = meta.segments ?? [];
     if (segs.length === 0) {
       const legacyId = meta.interaction_id ?? meta.operation;
@@ -683,11 +827,11 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
       segs = [{ index: 0, duration: meta.duration ?? 8, interaction_id: legacyId, status: "pending" }];
     }
 
-    // Poll every still-pending segment
+    // Poll de cada segmento activo
     let anyFailed = false;
     let failureMsg = "";
     for (const seg of segs) {
-      if (seg.status === "ready" || seg.status === "failed") continue;
+      if (seg.status !== "pending") continue;
       const op = await pollOmni(key, seg.interaction_id);
       const st = op.status ?? "pending";
       if (st === "failed" || st === "cancelled" || op.error) {
@@ -711,10 +855,36 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
       }
     }
 
+    // Cadeia sequencial: arrancar o próximo segmento quando o anterior fica pronto.
+    if (strategy === "sequential" && !anyFailed) {
+      const next = segs.find((s) => s.status === "queued");
+      const prevDone = next ? segs[next.index - 1]?.status === "ready" : false;
+      if (next && prevDone) {
+        try {
+          next.interaction_id = await startOmniInteraction(
+            key,
+            segmentPrompt(basePrompt, next.index, segs.length, next.duration, "sequential"),
+            aspect,
+          );
+          next.status = "pending";
+        } catch (err) {
+          next.status = "failed";
+          next.error = err instanceof Error ? err.message : String(err);
+          anyFailed = true;
+          failureMsg = next.error;
+        }
+      }
+    }
+
     if (anyFailed) {
-      // Refund unpaid segments proportionally
       const failedCount = segs.filter((s) => s.status === "failed").length;
-      const refund = failedCount * STUDIO_COSTS.video;
+      const queued = segs.filter((s) => s.status === "queued");
+      // Cadeia partida: os segmentos por arrancar deixam de fazer sentido.
+      for (const q of queued) {
+        q.status = "failed";
+        q.error = "Cadeia interrompida.";
+      }
+      const refund = (failedCount + queued.length) * STUDIO_COSTS.video;
       if (refund > 0) {
         await supabase.rpc("mm_studio_refund_credits", {
           _user_id: userId,
@@ -723,23 +893,19 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
         });
       }
       const readySegs = segs.filter((s) => s.status === "ready");
-      const allDone = segs.every((s) => s.status !== "pending");
+      const allDone = segs.every((s) => s.status !== "pending" && s.status !== "queued");
       if (allDone && readySegs.length === 0) {
-        await supabase
-          .from("mm_studio_assets")
-          .update({ metadata: { ...meta, segments: segs, status: "failed", error: failureMsg } })
-          .eq("id", asset.id);
+        await saveMeta({ segments: segs, status: "failed", error: failureMsg });
         return { status: "failed" as const, id: asset.id, error: failureMsg };
       }
       if (allDone) {
-        // Some segments ready — publish partial
         const first = readySegs[0];
         await supabase
           .from("mm_studio_assets")
           .update({
             url: first.url ?? asset.url,
             thumb_url: first.url ?? null,
-            metadata: { ...meta, segments: segs, status: "ready", partial: true },
+            metadata: { ...meta, segments: segs, status: "ready", partial: true } as never,
           })
           .eq("id", asset.id);
         return {
@@ -748,17 +914,100 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
           urls: readySegs.map((s) => s.url!).filter(Boolean),
           id: asset.id,
           partial: true,
+          qc: null,
         };
       }
-      // still some pending
-      await supabase.from("mm_studio_assets").update({ metadata: { ...meta, segments: segs } }).eq("id", asset.id);
+      await saveMeta({ segments: segs });
       return { status: "pending" as const, id: asset.id };
     }
 
     const allReady = segs.every((s) => s.status === "ready");
     if (!allReady) {
-      await supabase.from("mm_studio_assets").update({ metadata: { ...meta, segments: segs } }).eq("id", asset.id);
+      await saveMeta({ segments: segs });
       return { status: "pending" as const, id: asset.id };
+    }
+
+    // ---------- Controlo de qualidade antes da entrega ----------
+    let qcReport = meta.qc as { verdict?: string; checks?: unknown[]; badSegments?: number[] } | null | undefined;
+    if (!qcReport) {
+      const { runVideoQc, absorbedBudget } = await import("./studio-qc.server");
+      const req = meta.requirements ?? { narration: false, captions: false, music: false, hasPeople: false };
+      const report = await runVideoQc(
+        segs.map((s) => s.url!).filter(Boolean),
+        { ...req, expectedSegments: segs.length },
+      );
+      qcReport = report;
+
+      const retries = meta.auto_retry_count ?? 0;
+      const canRetry = report.verdict === "failed" && report.badSegments.length > 0 && retries < 1;
+
+      if (canRetry) {
+        const budget = await absorbedBudget(supabase as never);
+        const cost = report.badSegments.length * STUDIO_COSTS.video;
+        if (budget.allowed) {
+          // Regenera automaticamente, sem custo para o membro.
+          let restarted = 0;
+          for (const idx of report.badSegments) {
+            const seg = segs[idx];
+            if (!seg) continue;
+            try {
+              seg.interaction_id = await startOmniInteraction(
+                key,
+                `${segmentPrompt(basePrompt, idx, segs.length, seg.duration, strategy)} CRITICAL FIX PASS: the previous render was rejected by quality control for: ${report.checks
+                  .filter((c) => !c.ok)
+                  .map((c) => c.id)
+                  .join(", ")}. Fix these issues while keeping everything else identical.`,
+                aspect,
+              );
+              seg.status = "pending";
+              seg.retried = true;
+              seg.url = undefined;
+              seg.storage_path = undefined;
+              restarted++;
+            } catch {
+              // mantém o segmento existente se a regeneração não arrancar
+            }
+          }
+          if (restarted > 0) {
+            try {
+              const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+              await supabaseAdmin.from("mm_studio_qc_log").insert({
+                user_id: userId,
+                asset_id: asset.id,
+                verdict: report.verdict,
+                reasons: report.checks.filter((c) => !c.ok).map((c) => c.id) as never,
+                confidence: report.checks.filter((c) => !c.ok)[0]?.confidence ?? null,
+                regenerated_segments: restarted,
+                credits_absorbed: cost,
+                report: report as never,
+              } as never);
+
+            } catch {
+              // log é best-effort
+            }
+            await saveMeta({ segments: segs, auto_retry_count: retries + 1, qc: null, last_qc: report as never });
+            return { status: "pending" as const, id: asset.id, autoFixing: true };
+          }
+        }
+      }
+
+      // Sem regeneração — regista o resultado do QC.
+      try {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        await supabaseAdmin.from("mm_studio_qc_log").insert({
+          user_id: userId,
+          asset_id: asset.id,
+          verdict: report.verdict,
+          reasons: report.checks.filter((c) => !c.ok).map((c) => c.id) as never,
+          confidence: report.checks.filter((c) => !c.ok)[0]?.confidence ?? null,
+          regenerated_segments: 0,
+          credits_absorbed: 0,
+          report: report as never,
+        } as never);
+
+      } catch {
+        // best-effort
+      }
     }
 
     const first = segs[0];
@@ -767,7 +1016,7 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
       .update({
         url: first.url ?? asset.url,
         thumb_url: first.url ?? null,
-        metadata: { ...meta, segments: segs, status: "ready" },
+        metadata: { ...meta, segments: segs, status: "ready", qc: qcReport as never } as never,
       })
       .eq("id", asset.id);
 
@@ -776,8 +1025,10 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
       url: first.url ?? asset.url,
       urls: segs.map((s) => s.url!).filter(Boolean),
       id: asset.id,
+      qc: qcReport ?? null,
     };
   });
+
 
 
 
