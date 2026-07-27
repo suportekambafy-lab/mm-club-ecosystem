@@ -351,15 +351,31 @@ function SalaShell({
   useEffect(() => {
     let cancelled = false;
     async function refresh() {
-      const { data, count } = await supabase
+      const { data } = await supabase
         .from("live_participants")
-        .select("user_id, role, on_stage, hand_raised_at", { count: "exact" })
+        .select("user_id, role, on_stage, hand_raised_at, guest_name, is_guest, last_seen_at, joined_at")
         .eq("live_id", liveId)
         .is("left_at", null);
       if (cancelled) return;
-      setViewerCount(count ?? 0);
-      const rows = (data ?? []) as Array<{ user_id: string; role: string; on_stage: boolean; hand_raised_at: string | null }>;
-      const ids = Array.from(new Set(rows.map((r) => r.user_id)));
+      const all = (data ?? []) as Array<{
+        user_id: string;
+        role: string;
+        on_stage: boolean;
+        hand_raised_at: string | null;
+        guest_name: string | null;
+        is_guest: boolean | null;
+        last_seen_at: string | null;
+        joined_at: string | null;
+      }>;
+      // Convidados sem sinal de vida recente são fantasmas — não os mostramos.
+      const cutoff = Date.now() - 3 * 60 * 1000;
+      const rows = all.filter((r) => {
+        if (!r.is_guest) return true;
+        const seen = new Date(r.last_seen_at ?? r.joined_at ?? 0).getTime();
+        return seen >= cutoff;
+      });
+      setViewerCount(rows.length);
+      const ids = Array.from(new Set(rows.filter((r) => !r.is_guest).map((r) => r.user_id)));
       let profs: Record<string, { display_name: string; avatar_url: string | null }> = {};
       if (ids.length) {
         const { data: p } = await supabase.from("profiles").select("id, display_name, avatar_url").in("id", ids);
@@ -371,11 +387,14 @@ function SalaShell({
       setPeople(
         rows.map((r) => ({
           ...r,
-          display_name: profs[r.user_id]?.display_name ?? "Membro",
+          display_name:
+            profs[r.user_id]?.display_name ??
+            (r.guest_name ? `${r.guest_name} (convidado)` : "Membro"),
           avatar_url: profs[r.user_id]?.avatar_url ?? null,
         })),
       );
     }
+
     refresh();
     const suffix = Math.random().toString(36).slice(2, 8);
     const ch = supabase
