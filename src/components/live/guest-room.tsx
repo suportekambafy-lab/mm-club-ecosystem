@@ -203,30 +203,56 @@ export function GuestRoom({
         ))}
       </div>
 
+      {!onStage && (
+        <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-center px-3">
+          <div className="rounded-full bg-black/70 px-3 py-1.5 text-[11px] text-white/70 ring-1 ring-white/10 backdrop-blur-md">
+            Estás a assistir como convidado. Levanta a mão para pedires para falar.
+          </div>
+        </div>
+      )}
+
       <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center">
         <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-black/70 px-3 py-2 ring-1 ring-white/10 backdrop-blur-md">
-          <button
-            type="button"
-            onClick={toggleMic}
-            aria-label={micOn ? "Desligar microfone" : "Ligar microfone"}
-            className={cn(
-              "grid h-11 w-11 place-items-center rounded-full text-white transition",
-              micOn ? "bg-white/10 hover:bg-white/20" : "bg-red-500/90 hover:bg-red-500",
-            )}
-          >
-            {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-          </button>
-          <button
-            type="button"
-            onClick={toggleCam}
-            aria-label={camOn ? "Desligar câmara" : "Ligar câmara"}
-            className={cn(
-              "grid h-11 w-11 place-items-center rounded-full text-white transition",
-              camOn ? "bg-white/10 hover:bg-white/20" : "bg-red-500/90 hover:bg-red-500",
-            )}
-          >
-            {camOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
-          </button>
+          {onStage ? (
+            <>
+              <button
+                type="button"
+                onClick={toggleMic}
+                aria-label={micOn ? "Desligar microfone" : "Ligar microfone"}
+                className={cn(
+                  "grid h-11 w-11 place-items-center rounded-full text-white transition",
+                  micOn ? "bg-white/10 hover:bg-white/20" : "bg-red-500/90 hover:bg-red-500",
+                )}
+              >
+                {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+              </button>
+              <button
+                type="button"
+                onClick={toggleCam}
+                aria-label={camOn ? "Desligar câmara" : "Ligar câmara"}
+                className={cn(
+                  "grid h-11 w-11 place-items-center rounded-full text-white transition",
+                  camOn ? "bg-white/10 hover:bg-white/20" : "bg-red-500/90 hover:bg-red-500",
+                )}
+              >
+                {camOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void poll(!handRaised)}
+              aria-label={handRaised ? "Baixar a mão" : "Levantar a mão"}
+              className={cn(
+                "inline-flex h-11 items-center gap-2 rounded-full px-4 text-sm font-medium transition",
+                handRaised ? "bg-amber-400 text-black hover:brightness-105" : "bg-white/10 text-white hover:bg-white/20",
+              )}
+            >
+              <Hand className="h-4 w-4" />
+              {handRaised ? "Mão levantada" : "Levantar a mão"}
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => {
