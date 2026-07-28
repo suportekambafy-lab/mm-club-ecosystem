@@ -7,7 +7,6 @@ import {
   ArrowRight,
   Play,
   Users,
-  Bell,
 } from "lucide-react";
 import dashboardHero from "@/assets/dashboard-hero.jpg";
 import { CourseCard } from "@/components/mm/course-card";
@@ -39,8 +38,6 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 
-import { formatDistanceToNow } from "date-fns";
-import { pt } from "date-fns/locale";
 
 
 export const Route = createFileRoute("/_app/dashboard")({
