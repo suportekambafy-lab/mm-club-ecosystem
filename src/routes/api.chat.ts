@@ -72,6 +72,10 @@ export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const { requireRequestUser } = await import("@/lib/api-auth.server");
+        const auth = await requireRequestUser(request);
+        if ("denied" in auth) return auth.denied;
+
         const { messages } = (await request.json()) as ChatRequestBody;
         if (!Array.isArray(messages)) {
           return new Response("Messages are required", { status: 400 });
