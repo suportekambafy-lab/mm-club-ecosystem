@@ -1,4 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { InlineAlert } from "@/components/mm/inline-alert";
+import { trackLoadTime } from "@/lib/ux-analytics";
+
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
