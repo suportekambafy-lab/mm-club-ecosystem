@@ -284,26 +284,8 @@ export function BigTypeHero() {
           </motion.div>
         </div>
 
-        {/* Animated play — abre modal de boas-vindas */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.6 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 1.2, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-12 flex justify-center sm:mt-16"
-        >
-          <button
-            type="button"
-            onClick={() => setWelcomeOpen(true)}
-            aria-label="Reproduzir apresentação"
-            className="group relative"
-          >
-            <span className="absolute inset-0 -m-4 rounded-full bg-primary/30 blur-xl transition-all group-hover:-m-6" />
-            <span className="absolute inset-0 -m-2 rounded-full bg-primary/40 animate-ping" />
-            <span className="relative flex h-20 w-20 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_20px_60px_-15px_oklch(0.82_0.13_82_/_0.8)] transition-transform group-hover:scale-105 sm:h-24 sm:w-24">
-              <Play className="h-7 w-7 translate-x-0.5 fill-current sm:h-9 sm:w-9" />
-            </span>
-          </button>
-        </motion.div>
+        {/* Play temporariamente oculto */}
+
 
         {/* CTA row */}
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4 sm:mt-14">
