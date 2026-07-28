@@ -264,6 +264,12 @@
     body {
       background-attachment: scroll;
     }
+
+    input,
+    textarea,
+    select {
+      font-size: 16px;
+    }
   }
 
   h1, h2, h3, .font-display {
