@@ -278,6 +278,11 @@ function AppLayout() {
     };
   }, []);
 
+  // Route changes must reset the inner scroll container, not the window.
+  useEffect(() => {
+    document.querySelector("[data-app-scroll]")?.scrollTo({ top: 0 });
+  }, [pathname]);
+
   // Never render protected content after the session is cleared.
   if (!authUser) {
     return <div className="min-h-screen bg-background" />;
