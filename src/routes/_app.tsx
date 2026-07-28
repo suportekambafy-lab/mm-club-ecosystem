@@ -542,7 +542,14 @@ function AppLayout() {
       </div>
 
       {/* Main */}
-      <div className={cn("min-w-0 max-w-full overflow-x-clip transition-[padding] duration-200 ease-out", collapsed ? "lg:pl-[76px]" : "lg:pl-64")}>
+      <div
+        data-app-scroll
+        key="app-scroll"
+        className={cn(
+          "h-full min-w-0 max-w-full overflow-y-auto overflow-x-clip overscroll-none transition-[padding] duration-200 ease-out [-webkit-overflow-scrolling:touch]",
+          collapsed ? "lg:pl-[76px]" : "lg:pl-64",
+        )}
+      >
         {/* Topbar — hidden on immersive routes */}
         {pathname !== "/shorts" && (
         <header data-app-topbar className="sticky top-0 z-30 grid max-w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 overflow-x-clip bg-background/80 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 backdrop-blur-xl sm:gap-4 sm:px-4 sm:pt-[calc(env(safe-area-inset-top)+1rem)] sm:pb-4 md:px-8 md:pt-[calc(env(safe-area-inset-top)+1.5rem)] lg:flex">
