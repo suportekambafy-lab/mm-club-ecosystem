@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Play, Search, ChevronDown, Lock, Clock } from "lucide-react";
-import { useMemo } from "react";
+import { Play, Search, ChevronDown, Lock, Clock, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { liveCourses, upcomingCourses } from "@/data/courses";
 import { expertsById } from "@/data/experts";
+import { objectives } from "@/data/objectives";
 import type { Course } from "@/data/types";
 import { useUserProgress, type ProgressByCourse } from "@/hooks/use-user-progress";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
@@ -10,6 +11,8 @@ import { courseCoverBackground } from "@/lib/course-cover";
 import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb, parseDurationToMinutes, formatMinutes } from "@/lib/course-duration";
 import { BannerSkeleton, CardGridSkeleton, RailSkeleton } from "@/components/mm/skeletons";
 import { Skeleton } from "@/components/ui/skeleton";
+import { trackUx } from "@/lib/ux-analytics";
+
 
 export const Route = createFileRoute("/_app/academia/")({
   head: () => ({
