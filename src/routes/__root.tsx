@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ComingSoon } from "../components/mm/coming-soon";
 import { Toaster } from "../components/ui/sonner";
+import { installZoomLock } from "../lib/zoom-lock";
 
 const COMING_SOON_HOSTS = new Set([
   "mmclub.pt",
