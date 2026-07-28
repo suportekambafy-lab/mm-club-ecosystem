@@ -400,56 +400,41 @@ function CommunityBlock() {
     };
   }, []);
 
+  const fresh = posts.filter(
+    (p) => Date.now() - new Date(p.created_at).getTime() < 86_400_000,
+  ).length;
+
   return (
-    <section className="grid gap-4 md:grid-cols-2">
-      <div className="rounded-2xl bg-surface-1 p-6 ring-1 ring-border">
-        <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-primary" />
-          <h3 className="font-display text-lg text-foreground">Comunidade</h3>
+    <section className="rounded-2xl bg-surface-1 p-6 ring-1 ring-border">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-primary" />
+            <h3 className="font-display text-lg text-foreground">Comunidade</h3>
+          </div>
+          {!hydrated ? (
+            <TextLines lines={1} className="mt-3 max-w-xs" />
+          ) : (
+            <p className="mt-2 text-sm text-muted-foreground">
+              {posts.length === 0
+                ? "Ainda sem publicações. Sê o primeiro a partilhar."
+                : fresh > 0
+                  ? `${fresh} ${fresh === 1 ? "nova publicação" : "novas publicações"} nas últimas 24 h.`
+                  : "Grupo privado, avisos e networking."}
+            </p>
+          )}
         </div>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Grupo privado, avisos e networking.
-        </p>
         <Link
           to="/comunidade"
-          className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+          className="inline-flex shrink-0 items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:brightness-110"
         >
-          Entrar <ArrowRight className="h-3.5 w-3.5" />
+          Ver comunidade <ArrowRight className="h-3.5 w-3.5" />
         </Link>
-      </div>
-      <div className="rounded-2xl bg-surface-1 p-6 ring-1 ring-border">
-        <div className="flex items-center gap-2">
-          <Bell className="h-4 w-4 text-primary" />
-          <h3 className="font-display text-lg text-foreground">Atividade recente</h3>
-        </div>
-        {!hydrated ? (
-          <TextLines lines={3} className="mt-4" />
-        ) : posts.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">
-            Ainda sem publicações. Sê o primeiro a partilhar na comunidade.
-          </p>
-        ) : (
-
-          <ul className="mt-3 space-y-2.5">
-            {posts.map((p) => (
-              <li key={p.id} className="text-sm">
-                <span className="font-medium text-foreground">
-                  {p.author?.display_name ?? "Membro"}
-                </span>
-                <span className="ml-2 text-muted-foreground line-clamp-1">
-                  {p.content}
-                </span>
-                <span className="ml-2 text-[11px] text-muted-foreground/70">
-                  {formatDistanceToNow(new Date(p.created_at), { locale: pt, addSuffix: true })}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
     </section>
   );
 }
+
 
 
 function DashboardSkeleton() {
