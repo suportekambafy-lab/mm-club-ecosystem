@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { PhoneOff, Mic, MicOff, Loader2, AudioLines } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { authHeaders } from "@/lib/auth-headers";
 
 type Status = "connecting" | "live" | "ended" | "error";
 
@@ -25,7 +26,10 @@ export function JadeCallOverlay({ onClose }: { onClose: () => void }) {
 
     (async () => {
       try {
-        const tokenRes = await fetch("/api/realtime/session", { method: "POST" });
+        const tokenRes = await fetch("/api/realtime/session", {
+          method: "POST",
+          headers: await authHeaders(),
+        });
         if (!tokenRes.ok) throw new Error(await tokenRes.text());
         const session = await tokenRes.json();
         const ephemeralKey: string | undefined = session?.client_secret?.value;
@@ -113,7 +117,7 @@ export function JadeCallOverlay({ onClose }: { onClose: () => void }) {
           try {
             const r = await fetch("/api/knowledge/search", {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json", ...(await authHeaders()) },
               body: JSON.stringify({ query, match_count: 6 }),
             });
             if (r.ok) {
