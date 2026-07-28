@@ -111,7 +111,10 @@ function ProdutosPage() {
           }}
         />
       )}
+
+      {confirmDialog}
     </div>
+
   );
 }
 
