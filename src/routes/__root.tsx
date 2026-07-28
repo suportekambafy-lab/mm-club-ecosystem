@@ -15,13 +15,8 @@ import { ComingSoon } from "../components/mm/coming-soon";
 import { Toaster } from "../components/ui/sonner";
 import { installZoomLock } from "../lib/zoom-lock";
 
-const COMING_SOON_HOSTS = new Set([
-  "mmclub.pt",
-  "mmclub.online",
-  "www.mmclub.online",
-  "www.mmclub.pt",
-  "mm-club-ecosystem.lovable.app",
-]);
+// Lançamento público concluído — sem hosts em modo "em breve".
+const COMING_SOON_HOSTS = new Set<string>([]);
 
 function NotFoundComponent() {
   return (
