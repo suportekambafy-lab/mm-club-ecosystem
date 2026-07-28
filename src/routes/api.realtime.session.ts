@@ -30,7 +30,11 @@ const TOOLS = [
 export const Route = createFileRoute("/api/realtime/session")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const { requireRequestUser } = await import("@/lib/api-auth.server");
+        const auth = await requireRequestUser(request);
+        if ("denied" in auth) return auth.denied;
+
         const key = process.env.OPENAI_API_KEY;
         if (!key) return new Response("Missing OPENAI_API_KEY", { status: 500 });
 
