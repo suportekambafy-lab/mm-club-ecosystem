@@ -217,9 +217,13 @@ export function ComingSoon() {
         </h1>
 
         <p className="mt-6 max-w-xl text-base text-white/70 md:text-lg">
-          O ecossistema privado da Marca Milionária está a ser finalizado. Deixa o teu email
-          e serás dos primeiros a receber acesso quando abrirmos.
+          O ecossistema privado da Marca Milionária abre ao público a {LAUNCH_LABEL}.
+          Deixa o teu email e recebes o acesso mal abrirmos.
         </p>
+
+        <LaunchCountdown />
+
+
 
         {status === "done" ? (
           <div className="mt-10 inline-flex items-center gap-3 rounded-full border border-primary/40 bg-primary/10 px-6 py-3 text-sm text-primary">
