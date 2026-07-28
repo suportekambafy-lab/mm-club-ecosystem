@@ -244,6 +244,12 @@ function SubscriptionPage() {
         price,
       })),
     )
+    // Planos de teste (VIP com meses grátis) nunca são uma opção de mudança —
+    // só aparecem se forem exactamente o plano que a pessoa tem agora.
+    .filter(
+      ({ price }) => price.trialDays === 0 || sub?.priceSlug === price.slug,
+    )
+
     // Mensal → Semestral → Anual (compromisso mais curto primeiro).
     .sort((a, b) => {
       const diff =
