@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, ImageIcon, Film, Package, Gem, Zap, Palette, Plus } from "lucide-react";
+import { ArrowRight, ImageIcon, Package, Gem, Zap, Palette, Plus } from "lucide-react";
 import { useStudio } from "@/lib/studio-context";
 import { CreditsTopupModal } from "@/components/mm/studio/credits-topup-modal";
 import showcase1 from "@/assets/studio-showcase-1.jpg";
@@ -9,7 +9,6 @@ import showcase3 from "@/assets/studio-showcase-3.jpg";
 import showcase4 from "@/assets/studio-showcase-4.jpg";
 import showcase5 from "@/assets/studio-showcase-5.jpg";
 import showcase6 from "@/assets/studio-showcase-6.jpg";
-import motionExample from "@/assets/mm-motion-example.mp4.asset.json";
 
 export const Route = createFileRoute("/_app/ferramentas/studio/")({
   component: StudioHome,
