@@ -28,6 +28,8 @@ import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { useAdminIds } from "@/hooks/use-admin-ids";
 import { useConfirm } from "@/components/mm/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CommunitySpotlight } from "@/components/mm/community-spotlight";
+
 
 export const Route = createFileRoute("/_app/comunidade")({
   head: () => ({
