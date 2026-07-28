@@ -583,7 +583,7 @@ async function renewPeriod(
 ) {
   const { data: sub } = await supabaseAdmin
     .from("billing_subscriptions")
-    .select("status, current_period_end")
+    .select("status, current_period_end, trial_end")
     .eq("id", subscriptionId)
     .maybeSingle();
   if (!sub) return;
@@ -591,16 +591,24 @@ async function renewPeriod(
   const base = sub.current_period_end ? new Date(sub.current_period_end) : new Date();
   const start = base > new Date() ? base : new Date();
   const end = periodEnd(start, interval, intervalCount);
-  const wasStruggling = sub.status !== "active";
+  // While the trial has not expired yet the subscription must stay "trialing"
+  // (a 0.00 mandate/authorisation must never promote it to "active").
+  const stillInTrial =
+    !!sub.trial_end && new Date(sub.trial_end).getTime() > Date.now();
+  const nextStatus = stillInTrial ? "trialing" : "active";
+  const wasStruggling = sub.status !== "active" && !stillInTrial;
 
   await supabaseAdmin
     .from("billing_subscriptions")
     .update({
-      status: "active",
+      status: nextStatus,
       current_period_start: start.toISOString(),
-      current_period_end: end.toISOString(),
+      current_period_end: stillInTrial
+        ? (sub.trial_end as string)
+        : end.toISOString(),
     })
     .eq("id", subscriptionId);
+
 
   if (wasStruggling) {
     await emitEvent({
