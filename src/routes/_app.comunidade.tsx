@@ -356,11 +356,14 @@ function CommunityPage() {
         </aside>
 
         {/* CENTER — feed ou chat */}
-        <section className="min-w-0 space-y-5">
+        <section className="min-w-0 space-y-3">
           {tab === "feed" ? (
             <>
-              {/* Category pills — mobile only */}
-              <div className="flex gap-2 overflow-x-auto pb-1 lg:hidden">
+              {/* Destaque contextual: live a decorrer ou próximo evento */}
+              {user != null && <CommunitySpotlight enabled={user != null} />}
+
+              {/* Filtros horizontais — fixos ao fazer scroll (mobile) */}
+              <div className="sticky top-[3.9rem] z-10 -mx-3 flex gap-2 overflow-x-auto bg-background/90 px-3 py-2 backdrop-blur-xl sm:-mx-4 sm:px-4 lg:static lg:hidden lg:bg-transparent lg:p-0">
                 <CategoryPill
                   active={activeCategory === null}
                   onClick={() => setActiveCategory(null)}
@@ -377,9 +380,19 @@ function CommunityPage() {
                 ))}
               </div>
 
+              {/* Sinal de atividade */}
+              {todayCount > 0 && (
+                <p className="flex items-center gap-1.5 px-0.5 text-[11px] text-muted-foreground">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  {todayCount === 1
+                    ? "1 nova publicação nas últimas 24 h"
+                    : `${todayCount} novas publicações nas últimas 24 h`}
+                </p>
+              )}
+
               {/* Composer or sign-in gate */}
               {user === undefined ? (
-                <div className="h-24 rounded-2xl border border-border bg-surface-1" />
+                <div className="h-14 rounded-2xl border border-border bg-surface-1" />
               ) : user === null ? (
                 <SignInGate />
               ) : (
@@ -389,6 +402,7 @@ function CommunityPage() {
                   defaultCategoryId={activeCategory}
                 />
               )}
+
 
               {/* Feed */}
               <div className="space-y-4">
