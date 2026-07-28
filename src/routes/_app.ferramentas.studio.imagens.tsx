@@ -96,7 +96,7 @@ function ImagensPage() {
                   <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Referências enviadas à IA:</span>
                   <div className="flex gap-1.5">
                     {photos.slice(0, 3).map((url, i) => (
-                      <img key={i} src={url} alt="" className="h-10 w-10 rounded-lg object-cover border border-[color:var(--hairline)]" />
+                      <img loading="lazy" decoding="async" key={i} src={url} alt="" className="h-10 w-10 rounded-lg object-cover border border-[color:var(--hairline)]" />
                     ))}
                   </div>
                 </div>
@@ -260,7 +260,7 @@ function ImagensPage() {
                 ))
               : assets.map((a) => (
                   <div key={a.id} className="group relative overflow-hidden rounded-2xl border border-[color:var(--hairline)] bg-black">
-                    <img src={a.url} alt="" className="h-full w-full object-cover" />
+                    <img loading="lazy" decoding="async" src={a.url} alt="" className="h-full w-full object-cover" />
                     <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-gradient-to-t from-black/80 to-transparent p-3 opacity-0 transition group-hover:opacity-100">
                       <a
                         href={a.url}

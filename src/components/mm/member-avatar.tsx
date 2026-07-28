@@ -68,6 +68,8 @@ export function MemberAvatar({
           src={resolved ?? ""}
           alt=""
           onError={() => setBroken(true)}
+          loading="lazy"
+          decoding="async"
           className="h-full w-full rounded-full object-cover ring-1 ring-white/10"
         />
       ) : (

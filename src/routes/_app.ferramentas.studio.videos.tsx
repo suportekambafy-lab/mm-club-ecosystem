@@ -241,7 +241,7 @@ function VideosPage() {
                   <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Referências:</span>
                   <div className="flex gap-1.5">
                     {photos.slice(0, 3).map((url, i) => (
-                      <img key={i} src={url} alt="" className="h-9 w-9 rounded-md object-cover border border-[color:var(--hairline)]" />
+                      <img loading="lazy" decoding="async" key={i} src={url} alt="" className="h-9 w-9 rounded-md object-cover border border-[color:var(--hairline)]" />
                     ))}
                   </div>
                 </div>

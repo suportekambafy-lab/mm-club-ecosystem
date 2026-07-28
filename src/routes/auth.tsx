@@ -125,8 +125,10 @@ function AuthPage() {
             src={authCover}
             alt=""
             aria-hidden
-            width={1024}
-            height={1536}
+            decoding="async"
+            fetchPriority="high"
+            width={900}
+            height={1350}
             className="absolute inset-0 h-full w-full object-cover object-center"
           />
           {/* Vignette — top for logo, strong bottom for text */}

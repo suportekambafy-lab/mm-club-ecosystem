@@ -543,7 +543,7 @@ function ShortItem({
             <div className="pointer-events-auto flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-white/20">
                 {short.author?.avatar_url ? (
-                  <img src={short.author.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
+                  <img loading="lazy" decoding="async" src={short.author.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
                 ) : (
                   initials || "M"
                 )}
@@ -1025,7 +1025,7 @@ function CommentsDrawer({
           isReply ? "h-7 w-7 text-[10px]" : "h-9 w-9",
         )}>
           {c.author?.avatar_url ? (
-            <img src={c.author.avatar_url} alt="" className="h-full w-full object-cover" />
+            <img loading="lazy" decoding="async" src={c.author.avatar_url} alt="" className="h-full w-full object-cover" />
           ) : (
             initials || "M"
           )}

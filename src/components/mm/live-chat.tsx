@@ -354,6 +354,8 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
                             <img
                               src={profile.avatar_url}
                               alt=""
+                              loading="lazy"
+                              decoding="async"
                               className="h-full w-full object-cover"
                             />
                           ) : (

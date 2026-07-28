@@ -155,7 +155,7 @@ function AdminCursos() {
                   style={{ background: merged.cover }}
                 >
                   {merged.logo && (
-                    <img src={merged.logo} alt="" className="h-full w-full object-cover" />
+                    <img loading="lazy" decoding="async" src={merged.logo} alt="" className="h-full w-full object-cover" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
