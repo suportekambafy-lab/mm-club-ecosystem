@@ -1,8 +1,55 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Check, Lock } from "lucide-react";
+import { LAUNCH_LABEL, launchCountdown } from "@/lib/launch";
 
 const ACCESS_PASSWORD = "VIPMCLUB";
+
+function CountdownUnit({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="flex min-w-[68px] flex-col items-center rounded-2xl border border-white/12 bg-white/5 px-3 py-3 backdrop-blur sm:min-w-[84px]">
+      <span
+        className="text-3xl font-semibold tabular-nums text-white sm:text-4xl"
+        style={{ fontFamily: "Syne, ui-sans-serif" }}
+      >
+        {String(value).padStart(2, "0")}
+      </span>
+      <span className="mt-1 text-[9px] uppercase tracking-[0.22em] text-white/50">{label}</span>
+    </div>
+  );
+}
+
+function LaunchCountdown() {
+  const [t, setT] = useState(() => launchCountdown());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setT(launchCountdown()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  if (t.isOpen) {
+    return (
+      <div className="mt-10 inline-flex items-center gap-3 rounded-full border border-primary/40 bg-primary/10 px-6 py-3 text-sm font-semibold text-primary">
+        As portas estão abertas — verifica o teu email.
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-10 flex flex-col items-center">
+      <span className="text-[10px] uppercase tracking-[0.28em] text-primary/90">
+        Abertura ao público · {LAUNCH_LABEL}
+      </span>
+      <div className="mt-4 flex items-center gap-2 sm:gap-3">
+        <CountdownUnit value={t.days} label="Dias" />
+        <CountdownUnit value={t.hours} label="Horas" />
+        <CountdownUnit value={t.minutes} label="Min" />
+        <CountdownUnit value={t.seconds} label="Seg" />
+      </div>
+    </div>
+  );
+}
+
 
 export function ComingSoon() {
   const [email, setEmail] = useState("");
