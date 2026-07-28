@@ -4,7 +4,7 @@
  * Called by pg_cron every 5 minutes. Requeues jobs stuck in `running`,
  * drains all due jobs and records a heartbeat used by the Health dashboard.
  *
- * Auth: caller must send the project publishable/anon key in `apikey`.
+ * Auth: caller must send the server-only CRON_SECRET in `x-cron-secret`.
  */
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -12,18 +12,9 @@ export const Route = createFileRoute("/api/public/hooks/billing-tick")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const expected =
-          process.env.SUPABASE_PUBLISHABLE_KEY ||
-          process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-        const provided =
-          request.headers.get("apikey") ??
-          request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-        if (!expected || !provided || provided !== expected) {
-          return new Response(JSON.stringify({ error: "unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
+        const { verifyCronRequest } = await import("@/lib/cron-auth.server");
+        const denied = verifyCronRequest(request);
+        if (denied) return denied;
 
         const started = Date.now();
         const { recordHeartbeat } = await import(

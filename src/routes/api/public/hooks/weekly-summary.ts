@@ -1,6 +1,6 @@
 // Weekly AI-generated lesson summary email.
-// Called by pg_cron every Monday. Requires apikey header (Supabase anon key)
-// as documented for /api/public/* cron endpoints.
+// Called by pg_cron every Monday. Requires the server-only CRON_SECRET in the
+// `x-cron-secret` header.
 import { createFileRoute } from "@tanstack/react-router";
 import { courses } from "@/data/courses";
 
@@ -83,11 +83,9 @@ export const Route = createFileRoute("/api/public/hooks/weekly-summary")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        // Lightweight auth: require Supabase anon key in apikey header
-        const anon = request.headers.get("apikey");
-        if (!anon || anon !== process.env.SUPABASE_PUBLISHABLE_KEY) {
-          return new Response("unauthorized", { status: 401 });
-        }
+        const { verifyCronRequest } = await import("@/lib/cron-auth.server");
+        const denied = verifyCronRequest(request);
+        if (denied) return denied;
 
         const { supabaseAdmin } = await import(
           "@/integrations/supabase/client.server"

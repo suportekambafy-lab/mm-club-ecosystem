@@ -4,18 +4,9 @@ export const Route = createFileRoute("/api/public/hooks/push-notifications")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const expected =
-          process.env.SUPABASE_PUBLISHABLE_KEY ||
-          process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-        const provided =
-          request.headers.get("apikey") ??
-          request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-        if (!expected || !provided || provided !== expected) {
-          return new Response(JSON.stringify({ error: "unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
+        const { verifyCronRequest } = await import("@/lib/cron-auth.server");
+        const denied = verifyCronRequest(request);
+        if (denied) return denied;
 
         const body = (await request.json().catch(() => ({}))) as {
           notification_id?: unknown;

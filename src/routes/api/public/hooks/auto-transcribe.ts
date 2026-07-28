@@ -6,25 +6,15 @@ import { runAutoTranscribeTick } from "@/lib/lesson-knowledge.functions";
  * lesson without a transcript and processes it in the background. One
  * lesson per tick to keep runtime bounded.
  *
- * Auth: caller must send the project anon key in `apikey` header (same
- * pattern as the other scheduled hooks in this project).
+ * Auth: caller must send the server-only CRON_SECRET in the `x-cron-secret` header.
  */
 export const Route = createFileRoute("/api/public/hooks/auto-transcribe")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const expected =
-          process.env.SUPABASE_PUBLISHABLE_KEY ||
-          process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-        const provided =
-          request.headers.get("apikey") ??
-          request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-        if (!expected || !provided || provided !== expected) {
-          return new Response(JSON.stringify({ error: "unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
+        const { verifyCronRequest } = await import("@/lib/cron-auth.server");
+        const denied = verifyCronRequest(request);
+        if (denied) return denied;
 
         try {
           const result = await runAutoTranscribeTick();
