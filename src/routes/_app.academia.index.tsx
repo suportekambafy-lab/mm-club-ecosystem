@@ -56,6 +56,42 @@ function AcademiaPage() {
     return { continuing, enrolled, featured: continuing[0] ?? enrolled[0] };
   }, [progress]);
 
+  // Pesquisa e filtro do catálogo (local, sem pedidos ao servidor).
+  const [query, setQuery] = useState("");
+  const [objective, setObjective] = useState<string>("all");
+
+  const catalog = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return enrolled.filter((c) => {
+      if (objective !== "all" && c.objectiveId !== objective) return false;
+      if (!q) return true;
+      const expert = expertsById[c.expertId];
+      return [c.title, c.tagline, c.description, expert?.name, expert?.role]
+        .filter(Boolean)
+        .some((field) => (field as string).toLowerCase().includes(q));
+    });
+  }, [enrolled, query, objective]);
+
+  // Métrica anónima: saber se a pesquisa é usada e se devolve resultados.
+  const searchTracked = useRef<number | null>(null);
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) return;
+    if (searchTracked.current) clearTimeout(searchTracked.current);
+    searchTracked.current = window.setTimeout(() => {
+      trackUx("search_used", {
+        surface: "academia",
+        reason: catalog.length === 0 ? "no_results" : "results",
+      });
+    }, 900);
+    return () => {
+      if (searchTracked.current) clearTimeout(searchTracked.current);
+    };
+  }, [query, catalog.length]);
+
+  const isFiltering = query.trim().length > 0 || objective !== "all";
+
+
   // Wait for real progress before painting hero/cards, so covers and
   // "continua onde ficaste" never flash the wrong state.
   if (!loaded) return <AcademiaSkeleton />;
