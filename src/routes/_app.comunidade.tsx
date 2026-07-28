@@ -1079,6 +1079,8 @@ function Avatar({
       <img
         src={src}
         alt={name}
+        loading="lazy"
+        decoding="async"
         style={{ width: size, height: size }}
         className="rounded-full object-cover shrink-0"
       />
