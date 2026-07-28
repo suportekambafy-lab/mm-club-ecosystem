@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "motion/react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Play, X } from "lucide-react";
+import { ArrowRight, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import avatar1 from "@/assets/avatar-1.jpg";
 import avatar2 from "@/assets/avatar-2.jpg";
