@@ -47,6 +47,8 @@ function FerramentasLayout() {
           alt="MM Studio — criativos publicitários com IA"
           className="absolute inset-0 h-full w-full object-cover object-right opacity-80"
           loading="eager"
+          decoding="async"
+          fetchPriority="high"
         />
         <div className="relative z-20 flex flex-col gap-6 p-8 md:p-14 lg:p-16 min-h-[520px] md:min-h-[560px] justify-end md:justify-center max-w-[720px]">
           <span className="inline-flex w-fit items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/90 backdrop-blur">

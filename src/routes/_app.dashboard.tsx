@@ -205,8 +205,10 @@ function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
         <img
           src={dashboardHero}
           alt="MM Club"
-          width={1920}
-          height={832}
+          decoding="async"
+          fetchPriority="high"
+          width={1600}
+          height={693}
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/10" />
