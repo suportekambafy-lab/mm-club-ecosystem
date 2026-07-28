@@ -130,6 +130,62 @@ function bytesToB64(bytes: Uint8Array): string {
   return btoa(bin);
 }
 
+const GEMINI_IMAGE_MODEL = "google/gemini-3.1-flash-image";
+
+function isModerationError(status: number, body: string): boolean {
+  const b = body.toLowerCase();
+  return (
+    status === 400 &&
+    (b.includes("content_policy_violation") ||
+      b.includes("moderation_blocked") ||
+      b.includes("safety system") ||
+      b.includes("rejected as a result of our safety"))
+  );
+}
+
+/**
+ * Fallback: quando a OpenAI recusa o prompt por moderação (roupa justa, biquíni,
+ * fitness, mais pele visível), geramos com o Gemini via Lovable AI, que tem
+ * política diferente para moda/beachwear.
+ */
+async function callGeminiImageModel(
+  prompt: string,
+  refs: { bytes: Uint8Array; mime: string }[] = [],
+): Promise<string> {
+  const key = process.env.LOVABLE_API_KEY;
+  if (!key) throw new Error("Fallback de imagem indisponível (LOVABLE_API_KEY não configurada).");
+
+  const content: Array<Record<string, unknown>> = [
+    {
+      type: "text",
+      text: `${prompt} Tasteful, professional advertising photography. Non-explicit, commercial catalogue standard suitable for fashion, swimwear, fitness and bodycare brands.`,
+    },
+  ];
+  for (const r of refs.slice(0, 3)) {
+    content.push({ type: "image_url", image_url: { url: `data:${r.mime};base64,${bytesToB64(r.bytes)}` } });
+  }
+
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: GEMINI_IMAGE_MODEL,
+      messages: [{ role: "user", content }],
+      modalities: ["image", "text"],
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    if (res.status === 429) throw new Error("Limite de pedidos atingido no gerador alternativo. Tenta daqui a pouco.");
+    if (res.status === 402) throw new Error("Créditos de IA esgotados no gerador alternativo.");
+    throw new Error(`Gerador alternativo falhou (${res.status}): ${text.slice(0, 200)}`);
+  }
+  const json = (await res.json()) as { data?: { b64_json?: string }[] };
+  const b64 = json.data?.[0]?.b64_json;
+  if (!b64) throw new Error("O gerador alternativo não devolveu imagem.");
+  return b64;
+}
+
 async function callImageModel(
   prompt: string,
   size: string,
@@ -176,6 +232,10 @@ async function callImageModel(
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
+    if (isModerationError(res.status, text)) {
+      // Moda/biquíni/fitness: a OpenAI bloqueia, o Gemini gera.
+      return callGeminiImageModel(prompt, refs);
+    }
     if (res.status === 401) throw new Error("Chave OpenAI inválida. Verifica OPENAI_API_KEY.");
     if (res.status === 402 || res.status === 429) {
       throw new Error("OpenAI recusou o pedido (créditos ou rate limit). Tenta novamente daqui a pouco.");
@@ -187,6 +247,7 @@ async function callImageModel(
   if (!b64) throw new Error("Resposta inesperada da OpenAI.");
   return b64;
 }
+
 
 export const generateImages = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
