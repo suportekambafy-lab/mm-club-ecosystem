@@ -117,11 +117,53 @@ const GenerateImagesSchema = z.object({
 const OPENAI_IMAGE_MODEL = "gpt-image-2";
 const OPENAI_IMAGE_QUALITY = "high";
 
+const MAX_REF_BYTES = 15 * 1024 * 1024;
+
+/**
+ * Only reference images hosted on this project's own storage domain may be
+ * fetched server-side. Anything else (internal hosts, cloud metadata IPs,
+ * arbitrary third-party URLs) is rejected to prevent SSRF.
+ */
+function assertAllowedReferenceUrl(url: string): URL {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error("URL de imagem inválida.");
+  }
+  if (parsed.protocol !== "https:") throw new Error("URL de imagem inválida.");
+
+  const allowedHosts = new Set<string>();
+  for (const base of [process.env.SUPABASE_URL, process.env.VITE_SUPABASE_URL]) {
+    if (!base) continue;
+    try {
+      allowedHosts.add(new URL(base).hostname.toLowerCase());
+    } catch {
+      /* ignore malformed env */
+    }
+  }
+  if (!allowedHosts.has(parsed.hostname.toLowerCase())) {
+    throw new Error("Imagem de referência fora do armazenamento permitido.");
+  }
+  return parsed;
+}
+
 async function fetchAsBytes(url: string): Promise<{ bytes: Uint8Array; mime: string }> {
-  const r = await fetch(url);
+  const safe = assertAllowedReferenceUrl(url);
+  const r = await fetch(safe.toString(), {
+    redirect: "error",
+    signal: AbortSignal.timeout(15_000),
+  });
   if (!r.ok) throw new Error(`Não consegui carregar imagem de referência (${r.status}).`);
-  const mime = r.headers.get("content-type") ?? "image/png";
-  return { bytes: new Uint8Array(await r.arrayBuffer()), mime };
+  const mime = (r.headers.get("content-type") ?? "image/png").split(";")[0].trim();
+  if (!mime.startsWith("image/")) {
+    throw new Error("Referência não é uma imagem.");
+  }
+  const buf = await r.arrayBuffer();
+  if (buf.byteLength > MAX_REF_BYTES) {
+    throw new Error("Imagem de referência demasiado grande.");
+  }
+  return { bytes: new Uint8Array(buf), mime };
 }
 
 function bytesToB64(bytes: Uint8Array): string {

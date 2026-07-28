@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { authHeaders } from "@/lib/auth-headers";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { ArrowUp, Square, Mic, Loader2, Phone, Plus } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
@@ -42,7 +43,11 @@ function SuporteIAPage() {
   const [callOpen, setCallOpen] = useState(false);
 
   const transport = useMemo(
-    () => new DefaultChatTransport({ api: "/api/chat" }),
+    () =>
+      new DefaultChatTransport({
+        api: "/api/chat",
+        headers: () => authHeaders(),
+      }),
     [],
   );
 
@@ -146,7 +151,11 @@ function SuporteIAPage() {
       const form = new FormData();
       const ext = (blob.type.split(";")[0].split("/")[1] || "webm").replace("mpeg", "mp3");
       form.append("file", blob, `recording.${ext}`);
-      const res = await fetch("/api/transcribe", { method: "POST", body: form });
+      const res = await fetch("/api/transcribe", {
+        method: "POST",
+        body: form,
+        headers: await authHeaders(),
+      });
       if (!res.ok) {
         const t = await res.text().catch(() => "");
         throw new Error(t || `Falha na transcrição (${res.status})`);

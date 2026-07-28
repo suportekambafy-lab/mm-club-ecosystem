@@ -7,23 +7,15 @@ import { createFileRoute } from "@tanstack/react-router";
  * kind = "open"     -> launch email with the link to join (quiz -> checkout)
  *
  * Deduped through `email_log` on (recipient, kind, ref), so re-runs are safe.
- * Auth: caller must send the project publishable/anon key in the `apikey` header.
+ * Auth: caller must send the server-only CRON_SECRET in the `x-cron-secret` header.
  */
 export const Route = createFileRoute("/api/public/hooks/waitlist-broadcast")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const expected =
-          process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-        const provided =
-          request.headers.get("apikey") ??
-          request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-        if (!expected || !provided || provided !== expected) {
-          return new Response(JSON.stringify({ error: "unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
+        const { verifyCronRequest } = await import("@/lib/cron-auth.server");
+        const denied = verifyCronRequest(request);
+        if (denied) return denied;
 
         let body: { kind?: string } = {};
         try {

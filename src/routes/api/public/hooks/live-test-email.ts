@@ -1,16 +1,15 @@
-// One-off test dispatcher for the live announcement email.
-// POST { liveId, to } with header apikey = Supabase publishable key.
+// Admin-only test dispatcher for the live announcement email.
+// POST { liveId, to } with an admin Supabase session (Authorization: Bearer ...).
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/public/hooks/live-test-email")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const expected = process.env.SUPABASE_PUBLISHABLE_KEY;
-        const provided = request.headers.get("apikey");
-        if (!expected || provided !== expected) {
-          return new Response("Unauthorized", { status: 401 });
-        }
+        const { requireRequestAdmin } = await import("@/lib/api-auth.server");
+        const auth = await requireRequestAdmin(request);
+        if ("denied" in auth) return auth.denied;
+
         const body = (await request.json()) as { liveId?: string; to?: string };
         if (!body.liveId || !body.to) {
           return new Response("Missing liveId or to", { status: 400 });
