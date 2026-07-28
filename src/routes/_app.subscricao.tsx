@@ -244,11 +244,10 @@ function SubscriptionPage() {
         price,
       })),
     )
-    // Planos de teste (VIP com meses grátis) nunca são uma opção de mudança —
-    // só aparecem se forem exactamente o plano que a pessoa tem agora.
-    .filter(
-      ({ price }) => price.trialDays === 0 || sub?.priceSlug === price.slug,
-    )
+    // O teste VIP não é um plano — é um estado temporário que desaparece no
+    // fim do período. Nunca aparece na lista de planos disponíveis.
+    .filter(({ price }) => price.trialDays === 0)
+
 
     // Mensal → Semestral → Anual (compromisso mais curto primeiro).
     .sort((a, b) => {
