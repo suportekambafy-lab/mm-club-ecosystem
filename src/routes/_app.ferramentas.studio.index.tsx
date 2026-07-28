@@ -95,7 +95,7 @@ function StudioHome() {
       </section>
 
       {/* HERO CTAs */}
-      <section className="grid gap-4">
+      <section className="grid gap-4 md:grid-cols-2">
         <Link
           to="/ferramentas/studio/imagens"
           className="group relative aspect-[4/3] overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-black md:aspect-[5/3]"
