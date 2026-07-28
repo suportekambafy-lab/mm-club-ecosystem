@@ -8,6 +8,7 @@ import { useCurrentUser } from "@/hooks/use-current-user";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/mm/confirm-dialog";
 
 export const Route = createFileRoute("/_app/shorts")({
   ssr: false,
@@ -54,6 +55,7 @@ function ShortsPage() {
   const { user } = useCurrentUser();
   const qc = useQueryClient();
   const [uploaderOpen, setUploaderOpen] = useState(false);
+  const { confirm: askConfirm, dialog: confirmDialog } = useConfirm();
   const [upload, setUpload] = useState<{ progress: number; status: "uploading" | "processing" | "done" | "error"; error?: string } | null>(null);
 
   const startUpload = useCallback(
@@ -236,11 +238,20 @@ function ShortsPage() {
           shorts={shorts}
           currentUserId={user?.id}
           onToggleLike={(s) => toggleLike.mutate({ shortId: s.id, liked: s.liked })}
-          onDelete={(id) => {
-            if (confirm("Eliminar este Short?")) removeShort.mutate(id);
+          onDelete={async (id) => {
+            const ok = await askConfirm({
+              title: "Eliminar este Short?",
+              description: "O vídeo deixa de estar visível para todos os membros. Esta ação não pode ser desfeita.",
+              confirmLabel: "Eliminar",
+              surface: "shorts",
+              action: "delete_short",
+            });
+            if (ok) removeShort.mutate(id);
           }}
         />
       )}
+
+      {confirmDialog}
 
       {/* Floating create button */}
       <button

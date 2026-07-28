@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Play, Search, ChevronDown, Lock, Clock } from "lucide-react";
-import { useMemo } from "react";
+import { Play, Search, ChevronDown, Lock, Clock, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { liveCourses, upcomingCourses } from "@/data/courses";
 import { expertsById } from "@/data/experts";
+import { objectives } from "@/data/objectives";
 import type { Course } from "@/data/types";
 import { useUserProgress, type ProgressByCourse } from "@/hooks/use-user-progress";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
@@ -10,6 +11,8 @@ import { courseCoverBackground } from "@/lib/course-cover";
 import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb, parseDurationToMinutes, formatMinutes } from "@/lib/course-duration";
 import { BannerSkeleton, CardGridSkeleton, RailSkeleton } from "@/components/mm/skeletons";
 import { Skeleton } from "@/components/ui/skeleton";
+import { trackUx } from "@/lib/ux-analytics";
+
 
 export const Route = createFileRoute("/_app/academia/")({
   head: () => ({
@@ -52,6 +55,42 @@ function AcademiaPage() {
       });
     return { continuing, enrolled, featured: continuing[0] ?? enrolled[0] };
   }, [progress]);
+
+  // Pesquisa e filtro do catálogo (local, sem pedidos ao servidor).
+  const [query, setQuery] = useState("");
+  const [objective, setObjective] = useState<string>("all");
+
+  const catalog = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return enrolled.filter((c) => {
+      if (objective !== "all" && c.objectiveId !== objective) return false;
+      if (!q) return true;
+      const expert = expertsById[c.expertId];
+      return [c.title, c.tagline, c.description, expert?.name, expert?.role]
+        .filter(Boolean)
+        .some((field) => (field as string).toLowerCase().includes(q));
+    });
+  }, [enrolled, query, objective]);
+
+  // Métrica anónima: saber se a pesquisa é usada e se devolve resultados.
+  const searchTracked = useRef<number | null>(null);
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) return;
+    if (searchTracked.current) clearTimeout(searchTracked.current);
+    searchTracked.current = window.setTimeout(() => {
+      trackUx("search_used", {
+        surface: "academia",
+        reason: catalog.length === 0 ? "no_results" : "results",
+      });
+    }, 900);
+    return () => {
+      if (searchTracked.current) clearTimeout(searchTracked.current);
+    };
+  }, [query, catalog.length]);
+
+  const isFiltering = query.trim().length > 0 || objective !== "all";
+
 
   // Wait for real progress before painting hero/cards, so covers and
   // "continua onde ficaste" never flash the wrong state.
@@ -99,31 +138,81 @@ function AcademiaPage() {
 
           <div className="flex min-w-0 items-center gap-3">
             <label className="flex h-11 w-full min-w-0 items-center gap-2 rounded-full border border-border bg-surface-1 px-4 md:w-[260px]">
-              <Search className="h-4 w-4 text-muted-foreground" />
+              <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <span className="sr-only">Procurar curso</span>
               <input
-                type="text"
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
                 placeholder="Procurar curso..."
-                className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:hidden"
               />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  aria-label="Limpar pesquisa"
+                  className="shrink-0 rounded-full p-1 text-muted-foreground transition hover:text-foreground"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
             </label>
-            <button
-              type="button"
-              className="hidden h-11 items-center gap-2 rounded-full border border-border bg-surface-1 px-4 text-sm text-foreground transition hover:border-[color:var(--hairline)] md:flex"
-            >
-              Todos
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            </button>
+            <div className="relative hidden md:block">
+              <select
+                value={objective}
+                onChange={(e) => setObjective(e.target.value)}
+                aria-label="Filtrar por objetivo"
+                className="h-11 appearance-none rounded-full border border-border bg-surface-1 pl-4 pr-10 text-sm text-foreground outline-none transition hover:border-[color:var(--hairline)]"
+              >
+                <option value="all">Todos</option>
+                {objectives.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {enrolled.map((c) => (
-            <PosterCard key={c.id} course={c} progress={progress} inGrid />
-          ))}
-        </div>
+        {catalog.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-surface-1 px-6 py-14 text-center">
+            <Search className="mx-auto h-6 w-6 text-muted-foreground" aria-hidden="true" />
+            <p className="mt-3 text-sm text-foreground">Nenhum curso corresponde à tua procura.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Tenta outras palavras ou vê o catálogo completo.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setQuery("");
+                setObjective("all");
+              }}
+              className="mt-5 inline-flex h-10 items-center rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
+            >
+              Ver todos os cursos
+            </button>
+          </div>
+        ) : (
+          <>
+            {isFiltering && (
+              <p className="px-1 text-xs text-muted-foreground" aria-live="polite">
+                {catalog.length} {catalog.length === 1 ? "curso" : "cursos"}
+              </p>
+            )}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {catalog.map((c) => (
+                <PosterCard key={c.id} course={c} progress={progress} inGrid />
+              ))}
+            </div>
+          </>
+        )}
+
       </section>
 
-      {upcomingCourses.length > 0 && (
+      {!isFiltering && upcomingCourses.length > 0 && (
         <section className="space-y-5">
           <div className="px-1">
             <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-primary">

@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { useAdminIds } from "@/hooks/use-admin-ids";
+import { useConfirm } from "@/components/mm/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_app/comunidade")({
@@ -1106,6 +1107,7 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
   const isOwner = currentUserId === post.author_id;
+  const { confirm: askConfirm, dialog: confirmDialog } = useConfirm();
   const adminIds = useAdminIds();
   const authorIsAdmin = adminIds.has(post.author_id);
 
@@ -1209,14 +1211,22 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
               <Pencil className="h-4 w-4" />
             </button>
             <button
-              onClick={() => {
-                if (confirm("Apagar este post?")) del.mutate();
+              onClick={async () => {
+                const ok = await askConfirm({
+                  title: "Eliminar esta publicação?",
+                  description: "A publicação e os respetivos comentários desaparecem da comunidade. Esta ação não pode ser desfeita.",
+                  confirmLabel: "Eliminar",
+                  surface: "comunidade",
+                  action: "delete_post",
+                });
+                if (ok) del.mutate();
               }}
               className="rounded-full p-2 text-muted-foreground transition hover:bg-surface-2 hover:text-destructive"
-              aria-label="Apagar"
+              aria-label="Eliminar publicação"
             >
               <Trash2 className="h-4 w-4" />
             </button>
+            {confirmDialog}
           </div>
         )}
       </header>

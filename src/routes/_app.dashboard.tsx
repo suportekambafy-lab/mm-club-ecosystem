@@ -1,4 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { InlineAlert } from "@/components/mm/inline-alert";
+import { trackLoadTime } from "@/lib/ux-analytics";
+
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -63,6 +66,9 @@ function DashboardPage() {
   type RealLive = Awaited<ReturnType<typeof listLives>>[number];
   const [realFeaturedLive, setRealFeaturedLive] = useState<RealLive | null>(null);
   const [livesLoaded, setLivesLoaded] = useState(false);
+  const [livesError, setLivesError] = useState(false);
+  const [livesReloadKey, setLivesReloadKey] = useState(0);
+  const startedAt = useRef(typeof performance !== "undefined" ? performance.now() : 0);
   useEffect(() => {
     let cancelled = false;
     const load = () => {
@@ -75,10 +81,13 @@ function DashboardPage() {
             .filter((l) => l.status === "scheduled" && new Date(l.starts_at).getTime() > Date.now() - 3600_000)
             .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0];
           setRealFeaturedLive(active ?? upcoming ?? null);
+          setLivesError(false);
           setLivesLoaded(true);
         })
         .catch(() => {
-          if (!cancelled) setLivesLoaded(true);
+          if (cancelled) return;
+          setLivesError(true);
+          setLivesLoaded(true);
         });
     };
     load();
@@ -90,11 +99,16 @@ function DashboardPage() {
       cancelled = true;
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [livesReloadKey]);
 
-  // Only paint the dashboard when every essential source is resolved — avoids
-  // empty covers and the "wrong content → right content" flash.
-  const ready = !userLoading && progressLoaded && livesLoaded;
+  // Revelação progressiva: assim que a sessão e o progresso estão prontos o
+  // painel aparece. As lives entram depois, com o seu próprio estado.
+  const ready = !userLoading && progressLoaded;
+
+  useEffect(() => {
+    if (ready) trackLoadTime("dashboard", startedAt.current);
+  }, [ready]);
+
   if (!ready) return <DashboardSkeleton />;
 
   return (
@@ -103,13 +117,30 @@ function DashboardPage() {
       <CinematicHero name={sessionUser?.name ?? ""} loading={userLoading && !sessionUser} />
 
       {/* Live activa ou próxima em destaque (com contador) */}
-      {realFeaturedLive && (realFeaturedLive.status === "live" || realFeaturedLive.status === "scheduled") && (
-        <LiveHeroBanner live={realFeaturedLive} />
+      {!livesLoaded ? (
+        <BannerSkeleton />
+      ) : livesError ? (
+        <InlineAlert
+          surface="dashboard"
+          onRetry={() => {
+            setLivesLoaded(false);
+            setLivesError(false);
+            setLivesReloadKey((k) => k + 1);
+          }}
+        >
+          Não foi possível carregar as sessões ao vivo.
+        </InlineAlert>
+      ) : (
+        realFeaturedLive &&
+        (realFeaturedLive.status === "live" || realFeaturedLive.status === "scheduled") && (
+          <LiveHeroBanner live={realFeaturedLive} />
+        )
       )}
 
 
       {/* Continuar a construir */}
       {featured && <ContinueHero course={featured} />}
+
 
       {/* Rails na ordem editorial */}
       {cont.length > 0 && (
