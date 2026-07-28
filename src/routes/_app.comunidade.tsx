@@ -1107,6 +1107,7 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
   const isOwner = currentUserId === post.author_id;
+  const { confirm: askConfirm, dialog: confirmDialog } = useConfirm();
   const adminIds = useAdminIds();
   const authorIsAdmin = adminIds.has(post.author_id);
 
@@ -1225,6 +1226,7 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
             >
               <Trash2 className="h-4 w-4" />
             </button>
+            {confirmDialog}
           </div>
         )}
       </header>

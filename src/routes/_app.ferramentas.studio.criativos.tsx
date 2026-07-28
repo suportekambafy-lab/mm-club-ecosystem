@@ -175,6 +175,7 @@ function VideoThumb({ src, poster }: { src: string; poster: string | null }) {
 
 function AssetModal({ asset, onClose, onDelete }: { asset: AssetRow; onClose: () => void; onDelete: () => void }) {
   const { refresh } = useStudio();
+  const { confirm: askConfirm, dialog: confirmDialog } = useConfirm();
   const start = useServerFn(startVideoGeneration);
   const poll = useServerFn(pollVideoGeneration);
   const qc = useQueryClient();
@@ -288,6 +289,7 @@ function AssetModal({ asset, onClose, onDelete }: { asset: AssetRow; onClose: ()
               <button type="button" onClick={async () => { const ok = await askConfirm({ title: "Eliminar este criativo?", description: "O ficheiro deixa de estar disponível na tua biblioteca. Esta ação não pode ser desfeita.", confirmLabel: "Eliminar", surface: "studio_criativos", action: "delete_asset" }); if (ok) onDelete(); }} className="inline-flex items-center justify-center gap-2 rounded-full border border-[color:var(--hairline)] bg-background/40 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10">
                 <Trash2 className="h-4 w-4" /> Eliminar
               </button>
+              {confirmDialog}
             </div>
 
             {asset.kind === "video" && (

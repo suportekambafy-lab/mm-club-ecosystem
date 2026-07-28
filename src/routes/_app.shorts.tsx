@@ -251,6 +251,8 @@ function ShortsPage() {
         />
       )}
 
+      {confirmDialog}
+
       {/* Floating create button */}
       <button
         onClick={() => setUploaderOpen(true)}

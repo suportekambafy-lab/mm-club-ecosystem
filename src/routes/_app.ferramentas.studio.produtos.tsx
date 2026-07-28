@@ -28,6 +28,7 @@ function ProdutosPage() {
   const { products, refresh } = useStudio();
   const [editing, setEditing] = useState<Product | null>(null);
   const [creating, setCreating] = useState(false);
+  const { confirm: askConfirm, dialog: confirmDialog } = useConfirm();
   const del = useServerFn(deleteProduct);
   const delMut = useMutation({
     mutationFn: (id: string) => del({ data: { id } }),
