@@ -96,7 +96,7 @@ function StudioHome() {
       </section>
 
       {/* HERO CTAs */}
-      <section className="grid gap-4 md:grid-cols-2">
+      <section className="grid gap-4">
         <Link
           to="/ferramentas/studio/imagens"
           className="group relative aspect-[4/3] overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-black md:aspect-[5/3]"
@@ -117,37 +117,8 @@ function StudioHome() {
             </span>
           </div>
         </Link>
-
-        <Link
-          to="/ferramentas/studio/videos"
-          className="group relative aspect-[4/3] overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-black md:aspect-[5/3]"
-        >
-          <video
-            src={motionExample.url}
-            poster={showcase4}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/0" />
-          <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-8">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary text-secondary-foreground shadow-lg">
-              <Film className="h-5 w-5" />
-            </span>
-            <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-secondary">250 créditos · cinematográfico</p>
-            <h3 className="mt-1 font-display text-3xl text-white md:text-4xl">MM Motion</h3>
-            <p className="mt-2 max-w-md text-sm text-white/80">
-              Anúncios cinematográficos verticais e horizontais. Storyboard automático, som ambiente, prontos para Reels e Ads.
-            </p>
-            <span className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-secondary">
-              Começar geração <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-            </span>
-          </div>
-        </Link>
       </section>
+
 
       {/* INSPIRATION MASONRY */}
       <section className="space-y-4">
