@@ -198,6 +198,9 @@ function RootComponent() {
     );
   }, []);
 
+  useEffect(() => installZoomLock(), []);
+
+
   return (
     <QueryClientProvider client={queryClient}>
       {showComingSoon ? <ComingSoon /> : <Outlet />}
