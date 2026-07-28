@@ -8,6 +8,7 @@ import { uploadMedia } from "@/lib/media-upload";
 import { supabase } from "@/integrations/supabase/client";
 import { useStudio } from "@/lib/studio-context";
 import { cn } from "@/lib/utils";
+import { useConfirm } from "@/components/mm/confirm-dialog";
 
 export const Route = createFileRoute("/_app/ferramentas/studio/produtos")({
   component: ProdutosPage,
@@ -74,7 +75,17 @@ function ProdutosPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => confirm(`Eliminar "${p.name}"?`) && delMut.mutate(p.id)}
+                  aria-label={`Eliminar ${p.name}`}
+                  onClick={async () => {
+                    const ok = await askConfirm({
+                      title: `Eliminar "${p.name}"?`,
+                      description: "O produto e as fotos associadas saem da tua biblioteca. Esta ação não pode ser desfeita.",
+                      confirmLabel: "Eliminar",
+                      surface: "studio_produtos",
+                      action: "delete_product",
+                    });
+                    if (ok) delMut.mutate(p.id);
+                  }}
                   className="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs text-muted-foreground hover:border-destructive/40 hover:text-destructive"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
