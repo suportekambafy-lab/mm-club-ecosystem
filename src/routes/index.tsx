@@ -238,16 +238,8 @@ function Hero() {
                 style={{ backgroundImage: `url(${cover.url})` }}
               >
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/20" />
-                <button
-                  type="button"
-                  aria-label="Reproduzir apresentação"
-                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 group"
-                >
-                  <span className="absolute inset-0 -m-4 rounded-full bg-primary/30 blur-xl transition-all group-hover:-m-6" />
-                  <span className="relative flex h-20 w-20 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-2xl transition-transform group-hover:scale-105">
-                    <Play className="h-7 w-7 translate-x-0.5 fill-current" />
-                  </span>
-                </button>
+                {/* Botão de reprodução temporariamente oculto */}
+
                 <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between">
                   <div>
                     <p className="text-[10px] uppercase tracking-[0.24em] text-white/70">
