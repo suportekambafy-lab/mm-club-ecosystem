@@ -24,5 +24,7 @@ export interface TemplateEntry {
  */
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'invoice-receipt': invoiceReceiptTemplate,
+  'waitlist-heads-up': waitlistHeadsUpTemplate,
+  'waitlist-open': waitlistOpenTemplate,
 }
 
