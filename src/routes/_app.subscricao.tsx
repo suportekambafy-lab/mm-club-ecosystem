@@ -452,11 +452,18 @@ function SubscriptionPage() {
                   {currentPrice?.displayLabel ?? sub.productName}
                 </p>
 
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {formatMoney(sub.amountCents, sub.currency)}
-                  {sub.interval === "year"
-                    ? " / ano"
-                    : sub.interval === "month"
+                {sub.status === "trialing" && sub.trialEnd ? (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Período de teste — termina a {dt(sub.trialEnd)}. No fim,
+                    escolhes um plano para continuar.
+                  </p>
+                ) : (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {formatMoney(sub.amountCents, sub.currency)}
+                    {sub.interval === "year"
+                      ? " / ano"
+                      : sub.interval === "month"
+
                       ? " / mês"
                       : ""}
                 </p>
