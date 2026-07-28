@@ -3293,6 +3293,7 @@ export type Database = {
         Args: { _live_id: string; _user_id: string }
         Returns: boolean
       }
+      cron_hook_headers: { Args: never; Returns: Json }
       extract_mention_user_ids: { Args: { _text: string }; Returns: string[] }
       has_feature: {
         Args: { _feature: string; _user_id: string }
