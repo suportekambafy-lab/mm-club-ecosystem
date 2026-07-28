@@ -463,11 +463,12 @@ function SubscriptionPage() {
                     {sub.interval === "year"
                       ? " / ano"
                       : sub.interval === "month"
-
-                      ? " / mês"
-                      : ""}
-                </p>
+                        ? " / mês"
+                        : ""}
+                  </p>
+                )}
               </div>
+
               <button
                 type="button"
                 onClick={() => setShowPlans((v) => !v)}
