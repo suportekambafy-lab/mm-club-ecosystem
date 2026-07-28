@@ -68,18 +68,22 @@ export const Route = createFileRoute("/api/public/hooks/waitlist-broadcast")({
           let skipped = 0;
           for (const email of emails) {
             try {
-              const result = await sendTemplateEmail(templateName, email, {
-                templateData: kind === "open" ? {} : { launchLabel: LAUNCH_LABEL },
-                idempotencyKey: `${logKind}:${email}`,
-              });
+              const result = await sendTemplateEmailResend(
+                templateName,
+                email,
+                kind === "open" ? {} : { launchLabel: LAUNCH_LABEL },
+              );
               if (result.sent) sent++;
               else skipped++;
               await supabaseAdmin.from("email_log").insert({
                 recipient: email,
                 kind: logKind,
                 ref: "public-launch",
-                status: result.sent ? "sent" : "suppressed",
+                status: result.sent ? "sent" : "error",
+                provider_id: result.sent ? result.providerId : null,
+                error: result.sent ? null : result.error,
               });
+
             } catch (err) {
               await supabaseAdmin.from("email_log").insert({
                 recipient: email,
