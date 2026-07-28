@@ -132,8 +132,8 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
       : "/dashboard?checkout=success");
 
   const payment = await gw.createCharge({
-    // Trial prices only create a mandate: zero-amount first payment, no charge.
-    amountCents: price.trialDays > 0 ? 0 : price.amountCents,
+    // Trial prices only create a mandate: 1,00 € card verification, no plan charge.
+    amountCents: price.trialDays > 0 ? TRIAL_VERIFICATION_CENTS : price.amountCents,
     currency: price.currency,
     description: buildCheckoutDescription(price),
     redirectUrl: `${origin}${successPath}`,
@@ -159,7 +159,7 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
     gateway: gw.name,
     gateway_payment_id: payment.id,
     status: payment.status,
-    amount_cents: price.trialDays > 0 ? 0 : price.amountCents,
+    amount_cents: price.trialDays > 0 ? TRIAL_VERIFICATION_CENTS : price.amountCents,
     currency: price.currency,
     metadata: { priceSlug: price.slug, recurring } as never,
   });

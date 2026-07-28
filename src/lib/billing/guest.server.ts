@@ -90,8 +90,8 @@ export async function startGuestCheckout(
   }
 
   const payment = await gw.createCharge({
-    // Trial prices only create a mandate (0,00 €); the plan starts free.
-    amountCents: price.trialDays > 0 ? 0 : price.amountCents,
+    // Trial prices only create a mandate (1,00 € verification); the plan starts free.
+    amountCents: price.trialDays > 0 ? TRIAL_VERIFICATION_CENTS : price.amountCents,
     currency: price.currency,
     description: buildCheckoutDescription(price),
     redirectUrl: `${origin}/checkout/return?intent=${intent.id}`,
