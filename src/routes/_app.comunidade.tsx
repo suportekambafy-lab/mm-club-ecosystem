@@ -805,10 +805,27 @@ function Composer({
     }
   }, [categories, categoryId]);
 
+  const meQ = useQuery({
+    queryKey: ["community", "me-profile", user.id],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("display_name, avatar_url")
+        .eq("id", user.id)
+        .maybeSingle();
+      return data ?? null;
+    },
+  });
+
   const displayName =
+    meQ.data?.display_name ??
     (user.user_metadata?.display_name as string | undefined) ??
     user.email?.split("@")[0] ??
     "Membro";
+  const myAvatar =
+    meQ.data?.avatar_url ?? ((user.user_metadata?.avatar_url as string | undefined) ?? null);
+
 
   const handleFile = async (file: File) => {
     if (file.size > 10 * 1024 * 1024) {
