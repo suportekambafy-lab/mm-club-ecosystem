@@ -252,6 +252,32 @@ function AppLayout() {
     }
   }, [authUser, pathname, router]);
 
+  // Native-app feel: lock the page itself, let only the content column scroll
+  // (same approach used on the Suporte IA chat screen).
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const prev = {
+      htmlOverflow: html.style.overflow,
+      htmlHeight: html.style.height,
+      bodyOverflow: body.style.overflow,
+      bodyHeight: body.style.height,
+      overscroll: body.style.overscrollBehavior,
+    };
+    html.style.overflow = "hidden";
+    html.style.height = "100%";
+    body.style.overflow = "hidden";
+    body.style.height = "100%";
+    body.style.overscrollBehavior = "none";
+    return () => {
+      html.style.overflow = prev.htmlOverflow;
+      html.style.height = prev.htmlHeight;
+      body.style.overflow = prev.bodyOverflow;
+      body.style.height = prev.bodyHeight;
+      body.style.overscrollBehavior = prev.overscroll;
+    };
+  }, []);
+
   // Never render protected content after the session is cleared.
   if (!authUser) {
     return <div className="min-h-screen bg-background" />;
