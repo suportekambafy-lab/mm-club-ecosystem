@@ -850,16 +850,81 @@ function Composer({
       setContent("");
       setImageUrl("");
       if (taRef.current) taRef.current.style.height = "auto";
+      setExpanded(false);
       qc.invalidateQueries({ queryKey: ["community", "posts"] });
       toast.success("Publicado.");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao publicar"),
   });
 
+  if (!expanded) {
+    return (
+      <div className="flex items-center gap-2.5 rounded-2xl border border-border bg-surface-1 p-2.5">
+        <Avatar name={displayName} url={null} size={34} />
+        <button
+          type="button"
+          onClick={() => {
+            setExpanded(true);
+            requestAnimationFrame(() => taRef.current?.focus());
+          }}
+          className="min-w-0 flex-1 truncate rounded-full bg-surface-2 px-4 py-2 text-left text-sm text-muted-foreground transition hover:text-foreground"
+        >
+          No que estás a pensar?
+        </button>
+        <div className="flex shrink-0 items-center gap-1 text-muted-foreground">
+          <button
+            type="button"
+            aria-label="Adicionar imagem"
+            onClick={() => {
+              setExpanded(true);
+              requestAnimationFrame(() => fileRef.current?.click());
+            }}
+            className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-surface-2 hover:text-foreground"
+          >
+            <ImagePlus className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            aria-label="Anexar ficheiro"
+            onClick={() => {
+              setExpanded(true);
+              requestAnimationFrame(() => fileRef.current?.click());
+            }}
+            className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-surface-2 hover:text-foreground"
+          >
+            <Paperclip className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            aria-label="Escrever publicação"
+            onClick={() => {
+              setExpanded(true);
+              requestAnimationFrame(() => taRef.current?.focus());
+            }}
+            className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-surface-2 hover:text-foreground"
+          >
+            <SmilePlus className="h-4 w-4" />
+          </button>
+        </div>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleFile(f);
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="rounded-2xl border border-border bg-surface-1 p-4">
+    <div className="rounded-2xl border border-primary/30 bg-surface-1 p-4">
       <div className="flex gap-3">
         <Avatar name={displayName} url={null} size={40} />
+
         <div className="flex-1">
           <textarea
             ref={taRef}
