@@ -244,11 +244,10 @@ function SubscriptionPage() {
         price,
       })),
     )
-    // Planos de teste (VIP com meses grátis) nunca são uma opção de mudança —
-    // só aparecem se forem exactamente o plano que a pessoa tem agora.
-    .filter(
-      ({ price }) => price.trialDays === 0 || sub?.priceSlug === price.slug,
-    )
+    // O teste VIP não é um plano — é um estado temporário que desaparece no
+    // fim do período. Nunca aparece na lista de planos disponíveis.
+    .filter(({ price }) => price.trialDays === 0)
+
 
     // Mensal → Semestral → Anual (compromisso mais curto primeiro).
     .sort((a, b) => {
@@ -453,15 +452,23 @@ function SubscriptionPage() {
                   {currentPrice?.displayLabel ?? sub.productName}
                 </p>
 
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {formatMoney(sub.amountCents, sub.currency)}
-                  {sub.interval === "year"
-                    ? " / ano"
-                    : sub.interval === "month"
-                      ? " / mês"
-                      : ""}
-                </p>
+                {sub.status === "trialing" && sub.trialEnd ? (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Período de teste — termina a {dt(sub.trialEnd)}. No fim,
+                    escolhes um plano para continuar.
+                  </p>
+                ) : (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {formatMoney(sub.amountCents, sub.currency)}
+                    {sub.interval === "year"
+                      ? " / ano"
+                      : sub.interval === "month"
+                        ? " / mês"
+                        : ""}
+                  </p>
+                )}
               </div>
+
               <button
                 type="button"
                 onClick={() => setShowPlans((v) => !v)}
