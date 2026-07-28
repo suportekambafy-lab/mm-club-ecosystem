@@ -85,6 +85,27 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
       : null;
   if (!price) throw new Error("Unknown price");
 
+  // One live subscription per product, always: a member who already has an
+  // active/trialing plan can never open a second checkout for the same product
+  // (this is what produced duplicated trials via the VIP flow).
+  const subscriptionLike =
+    price.interval !== "one_time" && price.interval !== "lifetime";
+  if (subscriptionLike) {
+    const { data: live } = await supabaseAdmin
+      .from("billing_subscriptions")
+      .select("id, status")
+      .eq("user_id", input.userId)
+      .eq("product_id", price.product.id)
+      .in("status", ["trialing", "active", "past_due", "grace_period", "suspended"])
+      .limit(1)
+      .maybeSingle();
+    if (live?.id) {
+      throw new Error(
+        "Já tens uma subscrição deste plano. Gere-a em /subscricao para mudares de plano.",
+      );
+    }
+  }
+
   // Recovery before new revenue: settle any open debt first.
   try {
     const { triggerRecoveryNow } = await import("./recovery/engine.server");
@@ -92,6 +113,7 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
   } catch (err) {
     console.error("[recovery] trigger before checkout", err);
   }
+
 
 
 
