@@ -6,8 +6,11 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { DEFAULT_GATEWAY, getGateway } from "./gateway/index.server";
 import { ensureCustomer } from "./commands.server";
 
-/** Amount charged (and immediately refunded) to collect a reusable mandate. */
-const VERIFICATION_CENTS = 1;
+/**
+ * Adding an extra payment method is free: a 0,00 € authorisation is enough to
+ * create a reusable mandate (only trials pay the 1,00 € verification).
+ */
+const VERIFICATION_CENTS = 0;
 
 async function getCustomer(userId: string) {
   const { data } = await supabaseAdmin

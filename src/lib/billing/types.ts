@@ -5,6 +5,12 @@
 
 export type Currency = "EUR";
 
+/**
+ * Card verification charged when starting a trial plan (VIP 3 meses grátis).
+ * The plan itself stays free during the trial.
+ */
+export const TRIAL_VERIFICATION_CENTS = 100;
+
 export type ProductKind =
   | "subscription"
   | "course"

@@ -9,6 +9,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getPriceBySlug } from "./catalog.server";
 import { getGateway } from "./gateway/index.server";
 import { buildCheckoutDescription } from "./description";
+import { TRIAL_VERIFICATION_CENTS } from "./types";
 
 
 /** Looks up an auth user by email (small user base — paged scan). */
