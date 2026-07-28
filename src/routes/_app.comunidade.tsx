@@ -879,7 +879,7 @@ function Composer({
   if (!expanded) {
     return (
       <div className="flex items-center gap-2.5 rounded-2xl border border-border bg-surface-1 p-2.5">
-        <Avatar name={displayName} url={null} size={34} />
+        <Avatar name={displayName} url={myAvatar} size={34} />
         <button
           type="button"
           onClick={() => {
@@ -942,7 +942,7 @@ function Composer({
   return (
     <div className="rounded-2xl border border-primary/30 bg-surface-1 p-4">
       <div className="flex gap-3">
-        <Avatar name={displayName} url={null} size={40} />
+        <Avatar name={displayName} url={myAvatar} size={40} />
 
         <div className="flex-1">
           <textarea
