@@ -28,6 +28,8 @@ import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { useAdminIds } from "@/hooks/use-admin-ids";
 import { useConfirm } from "@/components/mm/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CommunitySpotlight } from "@/components/mm/community-spotlight";
+
 
 export const Route = createFileRoute("/_app/comunidade")({
   head: () => ({
@@ -251,6 +253,10 @@ function CommunityPage() {
   const membersQ = useTopMembers(user != null);
 
   const totalPosts = postsQ.data?.length ?? 0;
+  const todayCount = (postsQ.data ?? []).filter(
+    (p) => Date.now() - new Date(p.created_at).getTime() < 86_400_000,
+  ).length;
+
   const activeCategoryName =
     activeCategory && catQ.data
       ? catQ.data.find((c) => c.id === activeCategory)?.name ?? null
@@ -278,25 +284,17 @@ function CommunityPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1600px] 2xl:max-w-[1760px]">
-      {/* Header — editorial */}
+      {/* Header — compacto, content-first */}
       <header
         className={cn(
-          "sticky top-16 z-20 mb-8 -mx-3 flex flex-wrap items-end justify-between gap-6 border-b border-border/60 bg-background/85 px-3 pb-6 pt-6 backdrop-blur-xl transition-all duration-300 ease-out sm:-mx-4 sm:px-4 md:-mx-8 md:px-8",
-          headerHidden && "pointer-events-none -translate-y-6 opacity-0",
+          "sticky top-16 z-20 -mx-3 mb-3 flex items-center justify-between gap-3 border-b border-border/60 bg-background/90 px-3 py-2.5 backdrop-blur-xl transition-all duration-300 ease-out sm:-mx-4 sm:px-4 md:-mx-8 md:px-8 md:py-3",
+          headerHidden && "pointer-events-none -translate-y-4 opacity-0",
         )}
       >
-        <div className="min-w-0 space-y-3">
-          <p className="text-[10px] uppercase tracking-[0.4em] text-primary font-display">
-            — Comunidade
-          </p>
-          <h1 className="font-display text-4xl leading-[1.05] text-foreground md:text-6xl">
-            {activeCategoryName ? activeCategoryName : "O que se passa no clube?"}
-          </h1>
-          <p className="max-w-xl text-sm text-muted-foreground md:text-base">
-            Partilhe vitórias, tire dúvidas e converse ao vivo com outros membros.
-          </p>
-        </div>
-        <div className="inline-flex rounded-full border border-border bg-surface-1 p-1">
+        <h1 className="min-w-0 truncate font-display text-lg text-foreground md:text-2xl">
+          {activeCategoryName ?? "Comunidade"}
+        </h1>
+        <div className="inline-flex shrink-0 rounded-full border border-border bg-surface-1 p-0.5">
           <TabButton
             active={tab === "feed"}
             onClick={() => setTab("feed")}
@@ -307,10 +305,11 @@ function CommunityPage() {
             active={tab === "chat"}
             onClick={() => setTab("chat")}
             icon={<MessagesSquare className="h-3.5 w-3.5" />}
-            label="Chat ao vivo"
+            label="Chat"
           />
         </div>
       </header>
+
 
 
       <div className="grid items-start gap-8 lg:grid-cols-[220px_minmax(0,1fr)] xl:gap-10 2xl:grid-cols-[240px_minmax(0,1fr)_300px]">
@@ -363,11 +362,14 @@ function CommunityPage() {
         </aside>
 
         {/* CENTER — feed ou chat */}
-        <section className="min-w-0 space-y-5">
+        <section className="min-w-0 space-y-3">
           {tab === "feed" ? (
             <>
-              {/* Category pills — mobile only */}
-              <div className="flex gap-2 overflow-x-auto pb-1 lg:hidden">
+              {/* Destaque contextual: live a decorrer ou próximo evento */}
+              {user != null && <CommunitySpotlight enabled={user != null} />}
+
+              {/* Filtros horizontais — fixos ao fazer scroll (mobile) */}
+              <div className="sticky top-[3.9rem] z-10 -mx-3 flex gap-2 overflow-x-auto bg-background/90 px-3 py-2 backdrop-blur-xl sm:-mx-4 sm:px-4 lg:static lg:hidden lg:bg-transparent lg:p-0">
                 <CategoryPill
                   active={activeCategory === null}
                   onClick={() => setActiveCategory(null)}
@@ -384,9 +386,19 @@ function CommunityPage() {
                 ))}
               </div>
 
+              {/* Sinal de atividade */}
+              {todayCount > 0 && (
+                <p className="flex items-center gap-1.5 px-0.5 text-[11px] text-muted-foreground">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  {todayCount === 1
+                    ? "1 nova publicação nas últimas 24 h"
+                    : `${todayCount} novas publicações nas últimas 24 h`}
+                </p>
+              )}
+
               {/* Composer or sign-in gate */}
               {user === undefined ? (
-                <div className="h-24 rounded-2xl border border-border bg-surface-1" />
+                <div className="h-14 rounded-2xl border border-border bg-surface-1" />
               ) : user === null ? (
                 <SignInGate />
               ) : (
@@ -396,6 +408,7 @@ function CommunityPage() {
                   defaultCategoryId={activeCategory}
                 />
               )}
+
 
               {/* Feed */}
               <div className="space-y-4">
@@ -779,6 +792,8 @@ function Composer({
   );
   const taRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [expanded, setExpanded] = useState(false);
+
 
   useEffect(() => {
     if (defaultCategoryId) setCategoryId(defaultCategoryId);
@@ -837,16 +852,81 @@ function Composer({
       setContent("");
       setImageUrl("");
       if (taRef.current) taRef.current.style.height = "auto";
+      setExpanded(false);
       qc.invalidateQueries({ queryKey: ["community", "posts"] });
       toast.success("Publicado.");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao publicar"),
   });
 
+  if (!expanded) {
+    return (
+      <div className="flex items-center gap-2.5 rounded-2xl border border-border bg-surface-1 p-2.5">
+        <Avatar name={displayName} url={null} size={34} />
+        <button
+          type="button"
+          onClick={() => {
+            setExpanded(true);
+            requestAnimationFrame(() => taRef.current?.focus());
+          }}
+          className="min-w-0 flex-1 truncate rounded-full bg-surface-2 px-4 py-2 text-left text-sm text-muted-foreground transition hover:text-foreground"
+        >
+          No que estás a pensar?
+        </button>
+        <div className="flex shrink-0 items-center gap-1 text-muted-foreground">
+          <button
+            type="button"
+            aria-label="Adicionar imagem"
+            onClick={() => {
+              setExpanded(true);
+              requestAnimationFrame(() => fileRef.current?.click());
+            }}
+            className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-surface-2 hover:text-foreground"
+          >
+            <ImagePlus className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            aria-label="Anexar ficheiro"
+            onClick={() => {
+              setExpanded(true);
+              requestAnimationFrame(() => fileRef.current?.click());
+            }}
+            className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-surface-2 hover:text-foreground"
+          >
+            <Paperclip className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            aria-label="Escrever publicação"
+            onClick={() => {
+              setExpanded(true);
+              requestAnimationFrame(() => taRef.current?.focus());
+            }}
+            className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-surface-2 hover:text-foreground"
+          >
+            <SmilePlus className="h-4 w-4" />
+          </button>
+        </div>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleFile(f);
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="rounded-2xl border border-border bg-surface-1 p-4">
+    <div className="rounded-2xl border border-primary/30 bg-surface-1 p-4">
       <div className="flex gap-3">
         <Avatar name={displayName} url={null} size={40} />
+
         <div className="flex-1">
           <textarea
             ref={taRef}
