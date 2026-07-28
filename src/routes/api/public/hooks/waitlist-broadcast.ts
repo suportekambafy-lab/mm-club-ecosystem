@@ -35,8 +35,11 @@ export const Route = createFileRoute("/api/public/hooks/waitlist-broadcast")({
 
         try {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-          const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+          const { sendTemplateEmailResend } = await import(
+            "@/lib/email-templates/send-resend.server"
+          );
           const { LAUNCH_LABEL } = await import("@/lib/launch");
+
 
           const logKind = kind === "open" ? "waitlist_open" : "waitlist_heads_up";
           const templateName = kind === "open" ? "waitlist-open" : "waitlist-heads-up";
