@@ -376,6 +376,21 @@ async function onPaymentPaid(args: {
   const recurring = price.interval !== "one_time" && price.interval !== "lifetime";
 
   if (recurring) {
+    if (!subscriptionId) {
+      // Never create a second live subscription for the same product: a repeated
+      // mandate/first payment must attach to the existing one.
+      const { data: existing } = await supabaseAdmin
+        .from("billing_subscriptions")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("product_id", price.product.id)
+        .in("status", ["trialing", "active", "past_due", "grace_period", "suspended"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (existing?.id) subscriptionId = existing.id;
+    }
+
     if (subscriptionId) {
       await renewPeriod(subscriptionId, userId, price.interval, price.intervalCount);
     } else {
@@ -396,6 +411,7 @@ async function onPaymentPaid(args: {
     }
     return;
   }
+
 
   // One-off purchase (credit pack, course, event, certificate…)
   await emitEvent({
