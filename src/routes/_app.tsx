@@ -252,6 +252,37 @@ function AppLayout() {
     }
   }, [authUser, pathname, router]);
 
+  // Native-app feel: lock the page itself, let only the content column scroll
+  // (same approach used on the Suporte IA chat screen).
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const prev = {
+      htmlOverflow: html.style.overflow,
+      htmlHeight: html.style.height,
+      bodyOverflow: body.style.overflow,
+      bodyHeight: body.style.height,
+      overscroll: body.style.overscrollBehavior,
+    };
+    html.style.overflow = "hidden";
+    html.style.height = "100%";
+    body.style.overflow = "hidden";
+    body.style.height = "100%";
+    body.style.overscrollBehavior = "none";
+    return () => {
+      html.style.overflow = prev.htmlOverflow;
+      html.style.height = prev.htmlHeight;
+      body.style.overflow = prev.bodyOverflow;
+      body.style.height = prev.bodyHeight;
+      body.style.overscrollBehavior = prev.overscroll;
+    };
+  }, []);
+
+  // Route changes must reset the inner scroll container, not the window.
+  useEffect(() => {
+    document.querySelector("[data-app-scroll]")?.scrollTo({ top: 0 });
+  }, [pathname]);
+
   // Never render protected content after the session is cleared.
   if (!authUser) {
     return <div className="min-h-screen bg-background" />;
@@ -476,7 +507,7 @@ function AppLayout() {
 
   return (
     <div
-      className="min-h-dvh max-w-full overflow-x-clip bg-background text-foreground"
+      className="h-dvh max-h-dvh max-w-full overflow-hidden bg-background text-foreground"
       style={{ ["--mm-sidebar-w" as string]: collapsed ? "76px" : "256px" } as React.CSSProperties}
     >
 
@@ -516,7 +547,14 @@ function AppLayout() {
       </div>
 
       {/* Main */}
-      <div className={cn("min-w-0 max-w-full overflow-x-clip transition-[padding] duration-200 ease-out", collapsed ? "lg:pl-[76px]" : "lg:pl-64")}>
+      <div
+        data-app-scroll
+        key="app-scroll"
+        className={cn(
+          "h-full min-w-0 max-w-full overflow-y-auto overflow-x-clip overscroll-none transition-[padding] duration-200 ease-out [-webkit-overflow-scrolling:touch]",
+          collapsed ? "lg:pl-[76px]" : "lg:pl-64",
+        )}
+      >
         {/* Topbar — hidden on immersive routes */}
         {pathname !== "/shorts" && (
         <header data-app-topbar className="sticky top-0 z-30 grid max-w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 overflow-x-clip bg-background/80 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 backdrop-blur-xl sm:gap-4 sm:px-4 sm:pt-[calc(env(safe-area-inset-top)+1rem)] sm:pb-4 md:px-8 md:pt-[calc(env(safe-area-inset-top)+1.5rem)] lg:flex">
