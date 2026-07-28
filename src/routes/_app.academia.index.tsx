@@ -212,7 +212,7 @@ function AcademiaPage() {
 
       </section>
 
-      {upcomingCourses.length > 0 && (
+      {!isFiltering && upcomingCourses.length > 0 && (
         <section className="space-y-5">
           <div className="px-1">
             <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-primary">
