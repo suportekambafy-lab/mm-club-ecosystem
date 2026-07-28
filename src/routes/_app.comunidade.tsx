@@ -253,6 +253,10 @@ function CommunityPage() {
   const membersQ = useTopMembers(user != null);
 
   const totalPosts = postsQ.data?.length ?? 0;
+  const todayCount = (postsQ.data ?? []).filter(
+    (p) => Date.now() - new Date(p.created_at).getTime() < 86_400_000,
+  ).length;
+
   const activeCategoryName =
     activeCategory && catQ.data
       ? catQ.data.find((c) => c.id === activeCategory)?.name ?? null
