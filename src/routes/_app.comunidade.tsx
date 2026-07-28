@@ -792,6 +792,8 @@ function Composer({
   );
   const taRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [expanded, setExpanded] = useState(false);
+
 
   useEffect(() => {
     if (defaultCategoryId) setCategoryId(defaultCategoryId);
