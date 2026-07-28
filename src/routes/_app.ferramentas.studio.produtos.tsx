@@ -60,7 +60,7 @@ function ProdutosPage() {
             <div key={p.id} className="group relative overflow-hidden rounded-2xl border border-[color:var(--hairline)] bg-surface-1 p-4">
               <div className="flex gap-3">
                 <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[color:var(--hairline)] bg-surface-2">
-                  {p.photos?.[0] ? <img src={p.photos[0]} alt="" className="h-full w-full object-cover" /> : <Package className="m-auto h-6 w-6 text-muted-foreground" />}
+                  {p.photos?.[0] ? <img loading="lazy" decoding="async" src={p.photos[0]} alt="" className="h-full w-full object-cover" /> : <Package className="m-auto h-6 w-6 text-muted-foreground" />}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium text-foreground">{p.name}</p>
@@ -179,7 +179,7 @@ function ProductDrawer({ initial, onClose, onSaved }: { initial?: Product; onClo
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
               {photos.map((p, i) => (
                 <div key={i} className="group relative aspect-square overflow-hidden rounded-xl border border-[color:var(--hairline)]">
-                  <img src={p} alt="" className="h-full w-full object-cover" />
+                  <img loading="lazy" decoding="async" src={p} alt="" className="h-full w-full object-cover" />
                   <button
                     type="button"
                     onClick={() => setPhotos(photos.filter((_, idx) => idx !== i))}

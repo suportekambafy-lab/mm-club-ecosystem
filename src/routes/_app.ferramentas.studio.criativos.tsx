@@ -260,7 +260,7 @@ function AssetModal({ asset, onClose, onDelete }: { asset: AssetRow; onClose: ()
                 return <VideoPlaylist urls={urls} poster={asset.thumb_url ?? undefined} className="h-full max-h-[70vh] w-full" />;
               })()
             ) : (
-              <img src={asset.url} alt="" className="h-full max-h-[70vh] w-full object-contain" />
+              <img loading="lazy" decoding="async" src={asset.url} alt="" className="h-full max-h-[70vh] w-full object-contain" />
             )}
           </div>
 

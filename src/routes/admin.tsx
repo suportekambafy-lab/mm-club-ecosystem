@@ -201,7 +201,7 @@ function AdminLayout() {
         <div className="flex h-14 items-center px-4">
           <Link to="/admin" className="flex items-center gap-2.5">
             <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-admin-panel-2">
-              <img src={mmIcon.url} alt="MM Club" className="h-5 w-5 object-contain" />
+              <img loading="lazy" decoding="async" src={mmIcon.url} alt="MM Club" className="h-5 w-5 object-contain" />
             </span>
             <span className="text-[14px] font-semibold tracking-[-0.01em] text-admin-fg">MMClub</span>
           </Link>
@@ -240,7 +240,7 @@ function AdminLayout() {
       <div className="lg:pl-[236px]">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-2 bg-admin-bg px-4 md:px-5">
           <div className="flex items-center gap-2 lg:hidden">
-            <img src={mmIcon.url} alt="MM Club" className="h-6 w-6 object-contain" />
+            <img loading="lazy" decoding="async" src={mmIcon.url} alt="MM Club" className="h-6 w-6 object-contain" />
           </div>
           <div className="hidden items-center gap-1 lg:flex">
             <button

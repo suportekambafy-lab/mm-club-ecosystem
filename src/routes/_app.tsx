@@ -421,7 +421,7 @@ function AppLayout() {
               className="mx-auto flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft"
             >
               {avatarSrc ? (
-                <img src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
+                <img loading="lazy" decoding="async" src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
               ) : (
                 initials
               )}
@@ -435,7 +435,7 @@ function AppLayout() {
               >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-semibold text-primary-foreground">
                   {avatarSrc ? (
-                    <img src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
+                    <img loading="lazy" decoding="async" src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
                   ) : (
                     initials
                   )}
@@ -568,7 +568,7 @@ function AppLayout() {
                 className="ml-0.5 flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-background transition hover:bg-gold-soft sm:ml-1 sm:h-10 sm:w-10"
               >
                 {avatarSrc ? (
-                  <img src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
+                  <img loading="lazy" decoding="async" src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
                 ) : (
                   initials
                 )}
@@ -720,7 +720,7 @@ function MobileTabBar({
               )}
             >
               {avatarSrc ? (
-                <img src={avatarSrc} alt="" className="h-full w-full object-cover" />
+                <img loading="lazy" decoding="async" src={avatarSrc} alt="" className="h-full w-full object-cover" />
               ) : (
                 initials || <UserRound className="h-4 w-4" />
               )}

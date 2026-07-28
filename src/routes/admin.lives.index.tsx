@@ -358,7 +358,7 @@ function AdminLives() {
             <div className="flex h-16 w-28 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-surface-1">
               {coverUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={coverUrl} alt="Capa" className="h-full w-full object-cover" />
+                <img loading="lazy" decoding="async" src={coverUrl} alt="Capa" className="h-full w-full object-cover" />
               ) : (
                 <div className="flex flex-col items-center gap-1 px-2 text-center text-[10px] text-primary">
                   <Sparkles className="h-4 w-4" />
@@ -419,7 +419,7 @@ function AdminLives() {
           <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface-2 p-3">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-surface-1">
               {speakerUrl ? (
-                <img src={speakerUrl} alt="Palestrante" className="h-full w-full object-cover" />
+                <img loading="lazy" decoding="async" src={speakerUrl} alt="Palestrante" className="h-full w-full object-cover" />
               ) : (
                 <Sparkles className="h-4 w-4 text-primary" />
               )}
