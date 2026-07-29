@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -14,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ComingSoon } from "../components/mm/coming-soon";
 import { Toaster } from "../components/ui/sonner";
 import { installZoomLock } from "../lib/zoom-lock";
+import { META_PIXEL_ID, META_PIXEL_SCRIPT, trackMetaPageView } from "../lib/meta/pixel";
 
 // Lançamento público concluído — sem hosts em modo "em breve".
 const COMING_SOON_HOSTS = new Set<string>([]);
@@ -170,8 +172,18 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: PWA_RUNTIME_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: META_PIXEL_SCRIPT }} />
       </head>
       <body suppressHydrationWarning>
+        <noscript>
+          <img
+            height="1"
+            width="1"
+            style={{ display: "none" }}
+            alt=""
+            src={`https://www.facebook.com/tr?id=${META_PIXEL_ID}&ev=PageView&noscript=1`}
+          />
+        </noscript>
         {children}
         <Scripts />
       </body>
@@ -195,6 +207,12 @@ function RootComponent() {
   }, []);
 
   useEffect(() => installZoomLock(), []);
+
+  // PageView do Meta em cada navegação (SPA não recarrega a página).
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  useEffect(() => {
+    trackMetaPageView();
+  }, [pathname]);
 
 
   return (
