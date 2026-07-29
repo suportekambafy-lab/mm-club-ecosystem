@@ -338,7 +338,7 @@ function LessonRow({
 }
 
 
-const DEFAULT_LESSON_YOUTUBE_URL = "https://www.youtube.com/watch?v=-alfqFwiI6Y";
+
 
 type SaveLessonProgress = ReturnType<typeof useLessonProgress>["saveProgress"];
 
