@@ -28,6 +28,7 @@ import { HQ_ROOM_OPTIONS, HQ_SCREEN_SHARE } from "@/lib/livekit-quality";
 import { syncStudioProcessors } from "@/lib/studio-processors";
 import { subscribeStudio } from "@/lib/studio-filters";
 import { supabase } from "@/integrations/supabase/client";
+import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 import {
   resolveLayout,
   type MediaTrack,
