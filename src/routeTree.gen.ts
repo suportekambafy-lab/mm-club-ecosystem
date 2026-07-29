@@ -77,6 +77,7 @@ import { Route as ApiPublicHooksPushNotificationsRouteImport } from './routes/ap
 import { Route as ApiPublicHooksLivesRecordingCheckRouteImport } from './routes/api/public/hooks/lives-recording-check'
 import { Route as ApiPublicHooksLivesAnnounceCatchupRouteImport } from './routes/api/public/hooks/lives-announce-catchup'
 import { Route as ApiPublicHooksLiveTestEmailRouteImport } from './routes/api/public/hooks/live-test-email'
+import { Route as ApiPublicHooksEmailRelayRouteImport } from './routes/api/public/hooks/email-relay'
 import { Route as ApiPublicHooksBillingTickRouteImport } from './routes/api/public/hooks/billing-tick'
 import { Route as ApiPublicHooksAutoTranscribeRouteImport } from './routes/api/public/hooks/auto-transcribe'
 import { Route as ApiPublicCloudflareStreamWebhookRouteImport } from './routes/api/public/cloudflare-stream/webhook'
@@ -443,6 +444,12 @@ const ApiPublicHooksLiveTestEmailRoute =
     path: '/api/public/hooks/live-test-email',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksEmailRelayRoute =
+  ApiPublicHooksEmailRelayRouteImport.update({
+    id: '/api/public/hooks/email-relay',
+    path: '/api/public/hooks/email-relay',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksBillingTickRoute =
   ApiPublicHooksBillingTickRouteImport.update({
     id: '/api/public/hooks/billing-tick',
@@ -588,6 +595,7 @@ export interface FileRoutesByFullPath {
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
+  '/api/public/hooks/email-relay': typeof ApiPublicHooksEmailRelayRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
@@ -663,6 +671,7 @@ export interface FileRoutesByTo {
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
+  '/api/public/hooks/email-relay': typeof ApiPublicHooksEmailRelayRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
@@ -747,6 +756,7 @@ export interface FileRoutesById {
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
+  '/api/public/hooks/email-relay': typeof ApiPublicHooksEmailRelayRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
@@ -831,6 +841,7 @@ export interface FileRouteTypes {
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
     | '/api/public/hooks/billing-tick'
+    | '/api/public/hooks/email-relay'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
@@ -906,6 +917,7 @@ export interface FileRouteTypes {
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
     | '/api/public/hooks/billing-tick'
+    | '/api/public/hooks/email-relay'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
@@ -989,6 +1001,7 @@ export interface FileRouteTypes {
     | '/api/public/cloudflare-stream/webhook'
     | '/api/public/hooks/auto-transcribe'
     | '/api/public/hooks/billing-tick'
+    | '/api/public/hooks/email-relay'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
@@ -1026,6 +1039,7 @@ export interface RootRouteChildren {
   ApiPublicCloudflareStreamWebhookRoute: typeof ApiPublicCloudflareStreamWebhookRoute
   ApiPublicHooksAutoTranscribeRoute: typeof ApiPublicHooksAutoTranscribeRoute
   ApiPublicHooksBillingTickRoute: typeof ApiPublicHooksBillingTickRoute
+  ApiPublicHooksEmailRelayRoute: typeof ApiPublicHooksEmailRelayRoute
   ApiPublicHooksLiveTestEmailRoute: typeof ApiPublicHooksLiveTestEmailRoute
   ApiPublicHooksLivesAnnounceCatchupRoute: typeof ApiPublicHooksLivesAnnounceCatchupRoute
   ApiPublicHooksLivesRecordingCheckRoute: typeof ApiPublicHooksLivesRecordingCheckRoute
@@ -1517,6 +1531,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksLiveTestEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/email-relay': {
+      id: '/api/public/hooks/email-relay'
+      path: '/api/public/hooks/email-relay'
+      fullPath: '/api/public/hooks/email-relay'
+      preLoaderRoute: typeof ApiPublicHooksEmailRelayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/billing-tick': {
       id: '/api/public/hooks/billing-tick'
       path: '/api/public/hooks/billing-tick'
@@ -1815,6 +1836,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCloudflareStreamWebhookRoute: ApiPublicCloudflareStreamWebhookRoute,
   ApiPublicHooksAutoTranscribeRoute: ApiPublicHooksAutoTranscribeRoute,
   ApiPublicHooksBillingTickRoute: ApiPublicHooksBillingTickRoute,
+  ApiPublicHooksEmailRelayRoute: ApiPublicHooksEmailRelayRoute,
   ApiPublicHooksLiveTestEmailRoute: ApiPublicHooksLiveTestEmailRoute,
   ApiPublicHooksLivesAnnounceCatchupRoute:
     ApiPublicHooksLivesAnnounceCatchupRoute,
