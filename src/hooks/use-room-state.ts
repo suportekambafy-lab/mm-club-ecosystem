@@ -28,6 +28,7 @@ import { HQ_ROOM_OPTIONS, HQ_SCREEN_SHARE } from "@/lib/livekit-quality";
 import { syncStudioProcessors } from "@/lib/studio-processors";
 import { subscribeStudio } from "@/lib/studio-filters";
 import { supabase } from "@/integrations/supabase/client";
+import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 import {
   resolveLayout,
   type MediaTrack,
@@ -166,13 +167,12 @@ export function useRoomState({
       if (ids.length) {
         const { data: profs } = await supabase.from("profiles").select("id, display_name, avatar_url").in("id", ids);
         if (!mounted) return;
-        // Resolve storage-path avatars into signed URLs so tiles can render them.
+        // Resolve avatares através do cache partilhado (instantâneo em revisitas).
         const resolved = await Promise.all(
           (profs ?? []).map(async (p) => {
             const raw = p.avatar_url as string | null;
-            if (!raw || /^https?:\/\//i.test(raw) || raw.startsWith("data:")) return p;
-            const { data: signed } = await supabase.storage.from("avatars").createSignedUrl(raw, 60 * 60);
-            return { ...p, avatar_url: signed?.signedUrl ?? null };
+            const url = await resolveAvatarUrl(raw);
+            return { ...p, avatar_url: url ?? cachedAvatarUrl(raw) };
           }),
         );
         if (!mounted) return;

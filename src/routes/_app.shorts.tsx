@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Heart, Volume2, VolumeX, Plus, X, Upload, Trash2, Eye, Play, MessageCircle, ArrowUp, CornerDownRight, MoreHorizontal, Share2, Link2, Flag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { assertUploadAllowed } from "@/lib/security/uploads";
+import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { cn } from "@/lib/utils";
@@ -44,11 +45,9 @@ type ShortWithAuthor = ShortRow & {
   liked: boolean;
 };
 
-async function resolveAvatar(pathOrUrl: string | null): Promise<string | null> {
-  if (!pathOrUrl) return null;
-  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
-  const { data } = await supabase.storage.from("avatars").createSignedUrl(pathOrUrl, 60 * 60 * 24);
-  return data?.signedUrl ?? null;
+function resolveAvatar(pathOrUrl: string | null): Promise<string | null> {
+  // Cache partilhado: evita novo signed URL a cada render/navegação.
+  return resolveAvatarUrl(pathOrUrl).then((u) => u ?? cachedAvatarUrl(pathOrUrl));
 }
 
 function ShortsPage() {
