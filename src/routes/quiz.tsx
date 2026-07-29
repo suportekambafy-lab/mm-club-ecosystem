@@ -171,6 +171,14 @@ const allBeats: Beat[] = [
       { id: "network", label: "Networking", weight: { start: 0, plus: 2, elite: 3 } },
     ],
   },
+  {
+    kind: "proof",
+    key: "prova-shopify",
+    kicker: "Prova real",
+    title: "Denis, aluno da Marca Milionária",
+    caption: "2.299 € em vendas e 30 encomendas — partilhado no grupo da mentoria.",
+    image: proofShopify.url,
+  },
   { kind: "gallery", key: "album" },
   {
     kind: "question",
