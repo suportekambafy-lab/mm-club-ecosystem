@@ -81,7 +81,14 @@ export function CommunitySpotlight({ enabled = true }: { enabled?: boolean }) {
   const timeLabel = when.toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" });
   const isToday = when.toDateString() === new Date().toDateString();
 
-  const to = active.mode === "interactive" && isLive ? "/lives/$liveId/sala" : "/lives/$liveId";
+  // Interactive sessions always live in the Sala route (unless already ended).
+  // Pointing straight there avoids the detail route's redirect hop, which was
+  // showing a flash of the wrong page before landing.
+  const goesToRoom =
+    active.mode === "interactive" &&
+    active.status !== "ended" &&
+    active.status !== "published";
+  const to = goesToRoom ? "/lives/$liveId/sala" : "/lives/$liveId";
 
   return (
     <div
