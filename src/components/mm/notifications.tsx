@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile, BellRing, BellOff } from "lucide-react";
+import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile, BellRing, BellOff, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { useUserProgress, continueFromProgress } from "@/hooks/use-user-progress";
@@ -11,7 +11,7 @@ import { useCommunityNotifications, type CommunityNotifKind } from "@/lib/commun
 import { buildLiveReminders, type LiveLike } from "@/lib/live-reminders";
 import { useDeviceNotifications } from "@/lib/device-notifications";
 
-type NotifKind = "live" | "progress" | CommunityNotifKind;
+type NotifKind = "live" | "progress" | "profile" | CommunityNotifKind;
 
 type Notif = {
   id: string;
@@ -28,6 +28,7 @@ type Notif = {
 const iconByKind: Record<NotifKind, typeof Bell> = {
   live: Radio,
   progress: Play,
+  profile: UserRound,
   like: Heart,
   reply: MessageCircle,
   mention: AtSign,
@@ -38,6 +39,7 @@ const iconByKind: Record<NotifKind, typeof Bell> = {
 const labelByKind: Record<NotifKind, string> = {
   live: "Live",
   progress: "Continua",
+  profile: "Perfil",
   like: "Gosto",
   reply: "Resposta",
   mention: "Menção",
@@ -80,6 +82,30 @@ function useDerivedNotifs(): Notif[] {
   const { progress } = useUserProgress();
   const [liveRows, setLiveRows] = useState<RealLive[]>([]);
   const [tick, setTick] = useState(0);
+  const [profileMissing, setProfileMissing] = useState<string[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid || cancelled) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("display_name, avatar_url, bio")
+        .eq("id", uid)
+        .maybeSingle();
+      if (cancelled) return;
+      const missing: string[] = [];
+      if (!data?.display_name) missing.push("nome");
+      if (!data?.avatar_url) missing.push("foto");
+      if (!data?.bio) missing.push("bio");
+      setProfileMissing(missing);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [tick === 0]);
 
   useEffect(() => {
     const id = window.setInterval(() => setTick((t) => t + 1), 30_000);
@@ -122,6 +148,19 @@ function useDerivedNotifs(): Notif[] {
       });
     }
 
+    if (profileMissing && profileMissing.length > 0) {
+      out.push({
+        id: "profile:incomplete",
+        kind: "profile",
+        title: "Completa o teu perfil",
+        subtitle: `Falta ${profileMissing.join(", ")} — os membros veem-te melhor assim`,
+        href: "/perfil",
+        createdAt: now,
+        priority: 9,
+        source: "local",
+      });
+    }
+
     const cont = continueFromProgress(progress)[0];
     if (cont) {
       // Real timestamp: last watched lesson time from lesson_progress
@@ -142,7 +181,7 @@ function useDerivedNotifs(): Notif[] {
     }
 
     return out;
-  }, [progress, liveRows, tick]);
+  }, [progress, liveRows, tick, profileMissing]);
 }
 
 function communityCopy(
