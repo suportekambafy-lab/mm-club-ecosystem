@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, CreditCard, Loader2, LogOut, Mail, Pencil, Save, Sparkles, Trophy, X } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { courses } from "@/data/courses";
 import { cn } from "@/lib/utils";
