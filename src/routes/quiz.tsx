@@ -827,16 +827,12 @@ function AnalysisStep({ onDone }: { onDone: () => void }) {
 
 function ResultStep({
   profile,
-  total,
-  winner,
   onGo,
 }: {
   profile: (typeof profiles)[PlanKey];
-  total: { start: number; plus: number; elite: number };
-  winner: PlanKey;
   onGo: () => void;
 }) {
-  const max = Math.max(1, total.start, total.plus, total.elite);
+  const monthly = profiles.start.plan;
   return (
     <div>
       {/* Perfil primeiro — sem preço */}
