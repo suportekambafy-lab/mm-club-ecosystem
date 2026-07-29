@@ -185,18 +185,11 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
         .select("id,display_name,avatar_url")
         .in("id", missing);
       if (cancelled || !data) return;
-      // Resolve storage paths to signed URLs when needed.
+      // Resolve storage paths to signed URLs (cache partilhado).
       const resolved = await Promise.all(
         data.map(async (p) => {
-          const raw = p.avatar_url;
-          if (!raw) return { ...p } as Profile;
-          if (/^https?:\/\//i.test(raw) || raw.startsWith("data:")) {
-            return { ...p } as Profile;
-          }
-          const { data: signed } = await supabase.storage
-            .from("avatars")
-            .createSignedUrl(raw, 60 * 60);
-          return { ...p, avatar_url: signed?.signedUrl ?? null } as Profile;
+          const url = await resolveAvatarUrl(p.avatar_url);
+          return { ...p, avatar_url: url ?? cachedAvatarUrl(p.avatar_url) } as Profile;
         }),
       );
       if (cancelled) return;
