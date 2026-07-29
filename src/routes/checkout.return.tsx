@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getGuestCheckoutStatus } from "@/lib/billing.functions";
 import { rememberIntendedPlan } from "@/lib/intended-plan";
+import { trackMeta } from "@/lib/meta/pixel";
 
 export const Route = createFileRoute("/checkout/return")({
   validateSearch: (
@@ -54,6 +55,23 @@ function CheckoutReturn() {
       rememberIntendedPlan(priceSlug, isTrial ? "vip" : "checkout");
     }
   }, [failed, priceSlug, isTrial]);
+
+  // Conversão: dispara uma única vez quando a adesão fica confirmada.
+  const [conversionSent, setConversionSent] = useState(false);
+  useEffect(() => {
+    if (!ready || conversionSent) return;
+    setConversionSent(true);
+    void trackMeta(
+      isTrial ? "StartTrial" : "Purchase",
+      {
+        currency: "EUR",
+        content_name: planName ?? priceSlug ?? "MM Club",
+        content_ids: priceSlug ? [priceSlug] : undefined,
+        content_type: "product",
+      },
+      { email },
+    );
+  }, [ready, conversionSent, isTrial, planName, priceSlug, email]);
 
   const sendSetPassword = async () => {
     if (!email) return;
