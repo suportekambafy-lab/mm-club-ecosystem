@@ -17,11 +17,16 @@ const SITE_URL = "https://mmclub.online"
 
 // The SDK handler owns verification, dispatch, and retry semantics; this file
 // owns only the email decisions: subjects, templates, and per-type props.
+// `sendUrl` points at our own relay so every auth email is delivered by
+// Resend (and therefore visible in the Resend dashboard).
+const RELAY_URL =
+  process.env.LOVABLE_SEND_URL ?? 'https://www.mmclub.online/api/public/hooks/email-relay'
+
 const handler = createAuthEmailHandler({
   apiKey: process.env.LOVABLE_API_KEY!,
   from: `${SITE_NAME} <geral@${FROM_DOMAIN}>`,
   senderDomain: SENDER_DOMAIN,
-  sendUrl: process.env.LOVABLE_SEND_URL,
+  sendUrl: RELAY_URL,
   emails: {
     signup: {
       subject: 'Confirma o teu email — MM Club',
