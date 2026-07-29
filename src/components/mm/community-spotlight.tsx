@@ -101,6 +101,7 @@ export function CommunitySpotlight({ enabled = true }: { enabled?: boolean }) {
         key={active.id}
         to={to}
         params={{ liveId: active.id }}
+        preload="render"
         aria-label={`Ver detalhes da sessão: ${active.title}`}
         className={cn(
           "group flex items-center gap-3 overflow-hidden rounded-xl border bg-surface-1 p-2.5 transition",
