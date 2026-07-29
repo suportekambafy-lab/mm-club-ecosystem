@@ -325,11 +325,6 @@ function QuizPage() {
     else setPhase("landing");
   }
 
-  function restart() {
-    setAnswers({});
-    setI(0);
-    setPhase("landing");
-  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
@@ -421,7 +416,6 @@ function QuizPage() {
                 profile={profile}
                 total={result.total}
                 winner={result.winner}
-                onRestart={restart}
                 onGo={() =>
                   navigate({ to: "/checkout", search: { plan: result.winner } })
                 }
@@ -838,13 +832,11 @@ function ResultStep({
   total,
   winner,
   onGo,
-  onRestart,
 }: {
   profile: (typeof profiles)[PlanKey];
   total: { start: number; plus: number; elite: number };
   winner: PlanKey;
   onGo: () => void;
-  onRestart: () => void;
 }) {
   const max = Math.max(1, total.start, total.plus, total.elite);
   return (
@@ -952,40 +944,24 @@ function ResultStep({
             <p className="mt-3 text-sm leading-relaxed text-foreground/90">
               “{t.quote}”
             </p>
-            <div className="mt-4 flex items-center gap-3">
-              <img
-                src={t.avatar}
-                alt=""
-                aria-hidden
-                loading="lazy"
-                className="h-8 w-8 rounded-full object-cover"
-              />
-              <div>
-                <p className="text-xs font-medium text-foreground">{t.name}</p>
-                <p className="text-[11px] text-muted-foreground">{t.role}</p>
-              </div>
+            <div className="mt-4">
+              <p className="text-xs font-medium text-foreground">{t.name}</p>
+              <p className="text-[11px] text-muted-foreground">{t.role}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="mt-10 flex flex-wrap items-center gap-3">
+      <div className="mt-10 flex flex-col items-stretch gap-3 sm:items-center">
         <button
           type="button"
           onClick={onGo}
-          className="group inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 text-sm font-semibold text-primary-foreground shadow-[0_20px_60px_-20px_oklch(0.82_0.13_82_/_0.7)] transition hover:bg-gold-soft"
+          className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-10 py-5 text-base font-semibold text-primary-foreground shadow-[0_20px_60px_-20px_oklch(0.82_0.13_82_/_0.7)] transition hover:bg-gold-soft sm:text-lg"
         >
           Entrar no MM Club
-          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
         </button>
-        <button
-          type="button"
-          onClick={onRestart}
-          className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-4 text-sm font-medium transition hover:bg-surface-1"
-        >
-          Refazer diagnóstico
-        </button>
-        <span className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+        <span className="inline-flex items-center justify-center gap-2 text-xs text-muted-foreground">
           <Users className="h-3.5 w-3.5" /> Cancelas quando quiseres.
         </span>
       </div>
