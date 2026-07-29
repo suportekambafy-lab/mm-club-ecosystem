@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowDown, Send, MessagesSquare, Lock, Pin, PinOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 import { listChatMessages, sendChatMessage, setChatMessagePinned } from "@/lib/lives.functions";
 import { useAdminIds } from "@/hooks/use-admin-ids";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
