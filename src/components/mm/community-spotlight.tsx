@@ -37,7 +37,9 @@ export function CommunitySpotlight({ enabled = true }: { enabled?: boolean }) {
   const q = useQuery({
     queryKey: ["community", "spotlight-lives"],
     enabled,
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    refetchOnWindowFocus: false,
     queryFn: async () => (await listLivesAuthed()) as Live[],
   });
 
