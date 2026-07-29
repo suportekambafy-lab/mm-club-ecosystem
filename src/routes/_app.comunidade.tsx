@@ -339,25 +339,17 @@ function CommunityPage() {
             </nav>
           </SidebarCard>
 
-          <SidebarCard title="Membros ativos" subtitle={`${membersQ.data?.length ?? 0} online`}>
+          <SidebarCard title="Membros online" subtitle={`${onlineMembers.length} online`}>
             <div className="grid grid-cols-5 gap-2">
-              {membersQ.data?.slice(0, 15).map((m) => (
-                <div
-                  key={m.id}
-                  className="group relative"
-                  title={m.display_name}
-                >
-                  <Avatar name={m.display_name} url={m.avatar_url} size={36} />
+              {onlineMembers.slice(0, 15).map((m) => (
+                <div key={m.id} className="group relative" title={m.display_name ?? "Membro"}>
+                  <Avatar name={m.display_name ?? "Membro"} url={m.avatar_url} size={36} />
                   <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border-2 border-surface-1 bg-emerald-500" />
                 </div>
               ))}
-              {membersQ.isLoading &&
-                Array.from({ length: 10 }).map((_, i) => (
-                  <Skeleton key={i} className="h-9 w-9 rounded-full" />
-                ))}
-              {membersQ.data && membersQ.data.length === 0 && (
+              {onlineMembers.length === 0 && (
                 <p className="col-span-5 text-center text-xs text-muted-foreground">
-                  Ainda ninguém publicou.
+                  Ninguém online neste momento.
                 </p>
               )}
             </div>
