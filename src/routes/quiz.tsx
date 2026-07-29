@@ -137,6 +137,14 @@ const allBeats: Beat[] = [
     ],
   },
   {
+    kind: "proof",
+    key: "prova-vendas",
+    kicker: "Prova real",
+    title: "Tatiana: 3 vendas antes do almoço",
+    caption: "Notificações de encomendas reais recebidas por uma aluna, a meio da manhã.",
+    image: proofVendas.url,
+  },
+  {
     kind: "video",
     key: "v-direcao",
     kicker: "Um segundo",
