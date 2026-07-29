@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { AlertCircle, ArrowRight, ArrowLeft, Mail, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { readIntendedPlan } from "@/lib/intended-plan";
+import { clearIntendedPlan, readIntendedPlan } from "@/lib/intended-plan";
 import { MMLogo } from "@/components/mm/logo";
 import { toast } from "sonner";
 import authCover from "@/assets/auth-cover.jpg";
@@ -89,16 +89,31 @@ function AuthPage() {
       if (error) throw error;
       if (!data.session) throw new Error("Sessão não criada. Tenta novamente.");
       const intended = readIntendedPlan();
-      if (!redirect && intended) {
-        // Retoma o plano que o cliente já tinha tentado ativar.
-        navigate(
-          intended.from === "vip"
-            ? { to: "/vip" }
-            : { to: "/checkout", search: { plan: intended.slug } },
-        );
+      if (redirect) {
+        navigate({ to: redirect });
         return;
       }
-      navigate({ to: redirect ?? "/dashboard" });
+      if (intended) {
+        // Só retomamos o plano se a conta ainda não tiver subscrição ativa.
+        const { data: subs } = await supabase
+          .from("billing_subscriptions")
+          .select("status")
+          .eq("user_id", data.session.user.id)
+          .in("status", ["active", "trialing", "past_due", "grace_period"])
+          .limit(1);
+        if (subs && subs.length > 0) {
+          clearIntendedPlan();
+        } else {
+          navigate(
+            intended.from === "vip"
+              ? { to: "/vip" }
+              : { to: "/checkout", search: { plan: intended.slug } },
+          );
+          return;
+        }
+      }
+      navigate({ to: "/dashboard" });
+
     } catch (err) {
       const message = getAuthErrorMessage(err);
       setFormError(message);

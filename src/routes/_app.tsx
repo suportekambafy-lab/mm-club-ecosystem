@@ -1,5 +1,7 @@
 import { createFileRoute, Link, Outlet, redirect, useRouter, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
+
 import {
   LayoutDashboard,
   GraduationCap,
@@ -172,38 +174,46 @@ function AppLayout() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  // Load user's avatar from private bucket
+  // Load user's avatar from private bucket (com cache — aparece instantâneo)
   useEffect(() => {
     let cancelled = false;
     if (!authUser) {
       setAvatarSrc(null);
       return;
     }
+    const pathKey = `mm:avatar_path:${authUser.id}`;
+    const knownPath =
+      typeof window !== "undefined" ? window.localStorage.getItem(pathKey) : null;
+    const cached = cachedAvatarUrl(knownPath);
+    if (cached) setAvatarSrc(cached);
+    else if (knownPath) void resolveAvatarUrl(knownPath).then((u) => {
+      if (!cancelled && u) setAvatarSrc(u);
+    });
+
     (async () => {
       const { data: prof } = await supabase
         .from("profiles")
         .select("avatar_url")
         .eq("id", authUser.id)
         .maybeSingle();
-      const path = prof?.avatar_url;
-      if (!path) {
-        if (!cancelled) setAvatarSrc(null);
-        return;
-      }
-      if (/^https?:\/\//i.test(path)) {
-        if (!cancelled) setAvatarSrc(path);
-        return;
-      }
-      const { data, error } = await supabase.storage
-        .from("avatars")
-        .createSignedUrl(path, 60 * 60);
+      const path = prof?.avatar_url ?? null;
       if (cancelled) return;
-      setAvatarSrc(error ? null : data.signedUrl);
+      if (typeof window !== "undefined") {
+        if (path) window.localStorage.setItem(pathKey, path);
+        else window.localStorage.removeItem(pathKey);
+      }
+      if (!path) {
+        setAvatarSrc(null);
+        return;
+      }
+      const url = await resolveAvatarUrl(path);
+      if (!cancelled) setAvatarSrc(url);
     })();
     return () => {
       cancelled = true;
     };
   }, [authUser]);
+
 
   // Plan tier label (name only, no billing period)
   const [planLabel, setPlanLabel] = useState<string>("Membro MM Club");
@@ -452,7 +462,7 @@ function AppLayout() {
               className="mx-auto flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft"
             >
               {avatarSrc ? (
-                <img loading="lazy" decoding="async" src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
+                <img decoding="async" fetchPriority="high" src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
               ) : (
                 initials
               )}
@@ -466,7 +476,7 @@ function AppLayout() {
               >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-semibold text-primary-foreground">
                   {avatarSrc ? (
-                    <img loading="lazy" decoding="async" src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
+                    <img decoding="async" fetchPriority="high" src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
                   ) : (
                     initials
                   )}
@@ -606,7 +616,7 @@ function AppLayout() {
                 className="ml-0.5 flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-background transition hover:bg-gold-soft sm:ml-1 sm:h-10 sm:w-10"
               >
                 {avatarSrc ? (
-                  <img loading="lazy" decoding="async" src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
+                  <img decoding="async" fetchPriority="high" src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
                 ) : (
                   initials
                 )}
@@ -758,7 +768,7 @@ function MobileTabBar({
               )}
             >
               {avatarSrc ? (
-                <img loading="lazy" decoding="async" src={avatarSrc} alt="" className="h-full w-full object-cover" />
+                <img decoding="async" fetchPriority="high" src={avatarSrc} alt="" className="h-full w-full object-cover" />
               ) : (
                 initials || <UserRound className="h-4 w-4" />
               )}

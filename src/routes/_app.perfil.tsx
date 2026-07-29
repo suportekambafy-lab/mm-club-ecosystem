@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, CreditCard, Loader2, LogOut, Mail, Pencil, Save, Sparkles, Trophy, X } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { courses } from "@/data/courses";
 import { cn } from "@/lib/utils";
@@ -131,21 +132,17 @@ function ProfilePage() {
         setAvatarUrl(null);
         return;
       }
-      // Stored path like "<userId>/avatar-xxxx.jpg"
-      const { data, error: sErr } = await supabase.storage
-        .from("avatars")
-        .createSignedUrl(profile.avatar_url, 60 * 60);
+      const cached = cachedAvatarUrl(profile.avatar_url);
+      if (cached && !cancelled) setAvatarUrl(cached);
+      const url = await resolveAvatarUrl(profile.avatar_url);
       if (cancelled) return;
-      if (sErr) {
-        setAvatarUrl("");
-      } else {
-        setAvatarUrl(data.signedUrl);
-      }
+      setAvatarUrl(url ?? "");
     })();
     return () => {
       cancelled = true;
     };
   }, [profile?.avatar_url]);
+
 
   // Resolve signed URL for cover
   useEffect(() => {

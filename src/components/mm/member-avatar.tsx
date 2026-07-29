@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { cn } from "@/lib/utils";
+
 
 type Props = {
   userId?: string | null;
@@ -32,24 +33,18 @@ export function MemberAvatar({
   badgeSize,
   className,
 }: Props) {
-  const [resolved, setResolved] = useState<string | null>(null);
+  const [resolved, setResolved] = useState<string | null>(() => cachedAvatarUrl(avatarUrl));
   const [broken, setBroken] = useState(false);
 
   useEffect(() => {
     setBroken(false);
-    if (!avatarUrl) {
-      setResolved(null);
-      return;
-    }
-    if (/^https?:\/\//i.test(avatarUrl) || avatarUrl.startsWith("data:")) {
-      setResolved(avatarUrl);
-      return;
-    }
+    const cached = cachedAvatarUrl(avatarUrl);
+    setResolved(cached);
+    if (!avatarUrl) return;
     let cancelled = false;
-    (async () => {
-      const { data } = await supabase.storage.from("avatars").createSignedUrl(avatarUrl, 60 * 60);
-      if (!cancelled) setResolved(data?.signedUrl ?? null);
-    })();
+    void resolveAvatarUrl(avatarUrl).then((url) => {
+      if (!cancelled && url) setResolved(url);
+    });
     return () => {
       cancelled = true;
     };
@@ -68,11 +63,11 @@ export function MemberAvatar({
           src={resolved ?? ""}
           alt=""
           onError={() => setBroken(true)}
-          loading="lazy"
           decoding="async"
           className="h-full w-full rounded-full object-cover ring-1 ring-white/10"
         />
       ) : (
+
         <div
           className="grid h-full w-full place-items-center rounded-full bg-white/10 font-semibold text-white/85 ring-1 ring-white/10"
           style={{ fontSize: Math.max(10, Math.round(size * 0.36)) }}
