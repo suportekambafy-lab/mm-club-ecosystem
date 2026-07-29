@@ -960,23 +960,16 @@ function ResultStep({
         ))}
       </div>
 
-      <div className="mt-10 flex flex-wrap items-center gap-3">
+      <div className="mt-10 flex flex-col items-stretch gap-3 sm:items-center">
         <button
           type="button"
           onClick={onGo}
-          className="group inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 text-sm font-semibold text-primary-foreground shadow-[0_20px_60px_-20px_oklch(0.82_0.13_82_/_0.7)] transition hover:bg-gold-soft"
+          className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-10 py-5 text-base font-semibold text-primary-foreground shadow-[0_20px_60px_-20px_oklch(0.82_0.13_82_/_0.7)] transition hover:bg-gold-soft sm:text-lg"
         >
           Entrar no MM Club
-          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
         </button>
-        <button
-          type="button"
-          onClick={onRestart}
-          className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-4 text-sm font-medium transition hover:bg-surface-1"
-        >
-          Refazer diagnóstico
-        </button>
-        <span className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+        <span className="inline-flex items-center justify-center gap-2 text-xs text-muted-foreground">
           <Users className="h-3.5 w-3.5" /> Cancelas quando quiseres.
         </span>
       </div>
