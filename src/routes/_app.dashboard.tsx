@@ -114,9 +114,7 @@ function DashboardPage() {
       <CinematicHero name={sessionUser?.name ?? ""} loading={userLoading && !sessionUser} />
 
       {/* Live activa ou próxima em destaque (com contador) */}
-      {!livesLoaded ? (
-        <BannerSkeleton />
-      ) : livesError ? (
+      {!livesLoaded ? null : livesError ? (
         <InlineAlert
           surface="dashboard"
           onRetry={() => {
@@ -438,14 +436,7 @@ function DashboardSkeleton() {
   return (
     <div className="space-y-16">
       <CinematicHeroSkeleton />
-      <BannerSkeleton />
       <RailSkeleton cards={3} />
-      <RailSkeleton cards={3} />
-      <PanelSkeleton lines={2} />
-      <section className="grid gap-4 md:grid-cols-2">
-        <PanelSkeleton lines={2} />
-        <PanelSkeleton lines={3} />
-      </section>
     </div>
   );
 }
