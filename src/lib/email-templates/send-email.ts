@@ -65,6 +65,32 @@ export async function sendTemplateEmail(
       ? template.subject(templateData)
       : template.subject
 
+  // All system email goes out through Resend so every delivery is visible in
+  // the Resend dashboard. Lovable's managed API stays as a fallback.
+  const resendKey = process.env.RESEND_API_KEY
+  if (resendKey) {
+    const res = await fetch('https://connector-gateway.lovable.dev/resend/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        'X-Connection-Api-Key': resendKey,
+      },
+      body: JSON.stringify({
+        from: `MM Club <geral@${FROM_DOMAIN}>`,
+        to: [recipient],
+        subject,
+        html,
+        text,
+        ...(options.replyTo ? { reply_to: options.replyTo } : {}),
+      }),
+    })
+    if (res.ok) return { sent: true }
+    const errorBody = await res.text()
+    console.error(`[send-email] resend failed [${res.status}]: ${errorBody}`)
+    throw new Error(`Resend request failed [${res.status}]: ${errorBody.slice(0, 400)}`)
+  }
+
   try {
     await sendLovableEmail(
       {
