@@ -1049,25 +1049,18 @@ function ReactionBar({
 
 /* ---------------- Avatar ---------------- */
 function useAvatarSrc(url: string | null) {
-  return useQuery({
+  const data = useQuery({
     queryKey: ["avatar-signed", url],
     enabled: !!url,
     staleTime: 55 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
-    queryFn: async () => {
-      if (!url) return null;
-      // Already a full URL
-      if (/^https?:\/\//i.test(url) || url.startsWith("data:") || url.startsWith("blob:")) {
-        return url;
-      }
-      const { data, error } = await supabase.storage
-        .from("avatars")
-        .createSignedUrl(url, 60 * 60);
-      if (error) return null;
-      return data.signedUrl;
-    },
-  }).data ?? null;
+    // URL já em cache → a foto aparece sem espera.
+    initialData: () => cachedAvatarUrl(url) ?? undefined,
+    queryFn: () => resolveAvatarUrl(url),
+  }).data;
+  return data ?? cachedAvatarUrl(url);
 }
+
 
 function Avatar({
   name,
