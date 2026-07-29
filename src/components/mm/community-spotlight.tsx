@@ -71,67 +71,90 @@ export function CommunitySpotlight({ enabled = true }: { enabled?: boolean }) {
       to={to}
       params={{ liveId: live.id }}
       className={cn(
-        "group flex items-center gap-3 rounded-2xl border bg-surface-1 p-3 transition",
+        "group block overflow-hidden rounded-2xl border bg-surface-1 p-4 transition",
         isLive
-          ? "border-destructive/40 hover:border-destructive/60"
+          ? "border-destructive/35 hover:border-destructive/60"
           : "border-border hover:border-primary/40",
       )}
     >
-      <div className="min-w-0 flex-1">
-        <span
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]",
-            isLive
-              ? "bg-destructive/15 text-destructive"
-              : "bg-primary/12 text-primary",
-          )}
-        >
-          {isLive ? (
-            <>
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-destructive" />
-              Em direto
-            </>
-          ) : (
-            <>
-              <Calendar className="h-3 w-3" />
-              {isToday ? `Hoje · ${timeLabel}` : `${dayLabel} · ${timeLabel}`}
-            </>
-          )}
-        </span>
-        <p className="mt-1.5 truncate font-display text-base leading-tight text-foreground sm:text-lg">
-          {live.title}
-        </p>
-        <p className="mt-0.5 flex items-center gap-1.5 truncate text-[11px] text-muted-foreground">
-          {expert?.name && <span className="truncate">{expert.name}</span>}
-          {expert?.name && <span aria-hidden>·</span>}
-          <span className="inline-flex items-center gap-1">
-            {isLive ? <Users className="h-3 w-3" /> : null}
-            {isLive ? "a decorrer agora" : countdown}
+      <div className="flex items-start gap-4">
+        <div className="min-w-0 flex-1">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em]",
+              isLive
+                ? "bg-destructive/20 text-destructive"
+                : "bg-primary/12 text-primary",
+            )}
+          >
+            {isLive ? (
+              <>
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-destructive" />
+                Em direto
+              </>
+            ) : (
+              <>
+                <Calendar className="h-3 w-3" />
+                {isToday ? `Hoje · ${timeLabel}` : `${dayLabel} · ${timeLabel}`}
+              </>
+            )}
           </span>
-        </p>
+
+          <h3 className="mt-2.5 font-display text-xl leading-[1.15] tracking-tight text-foreground sm:text-2xl">
+            {live.title}
+          </h3>
+        </div>
+
+        {cover && (
+          <img
+            src={cover}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="h-20 w-28 shrink-0 rounded-xl object-cover sm:h-24 sm:w-40"
+          />
+        )}
       </div>
 
-      {cover && (
-        <img
-          src={cover}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          className="hidden h-14 w-24 shrink-0 rounded-xl object-cover sm:block"
-        />
-      )}
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+          {expert && (
+            <>
+              <span
+                className="h-6 w-6 shrink-0 rounded-full bg-muted ring-1 ring-border"
+                style={
+                  expert.logo
+                    ? {
+                        backgroundImage: `url(${expert.logo})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }
+                    : { background: expert.photo }
+                }
+              />
+              <span className="truncate text-foreground">{expert.name}</span>
+              <span aria-hidden className="text-border">|</span>
+            </>
+          )}
+          <span className="inline-flex shrink-0 items-center gap-1.5">
+            {isLive ? <Users className="h-3.5 w-3.5" /> : null}
+            {isLive ? "a decorrer agora" : countdown}
+          </span>
+        </div>
 
-      <span
-        className={cn(
-          "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition",
-          isLive
-            ? "bg-primary text-primary-foreground group-hover:brightness-110"
-            : "border border-border text-foreground group-hover:border-primary/50",
-        )}
-      >
-        {isLive ? <Radio className="h-3.5 w-3.5" /> : <ArrowRight className="h-3.5 w-3.5" />}
-        <span className="hidden sm:inline">{isLive ? "Entrar agora" : "Reservar lugar"}</span>
-      </span>
+        <span
+          className={cn(
+            "inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition",
+            isLive
+              ? "bg-primary text-primary-foreground group-hover:brightness-110"
+              : "border border-border text-foreground group-hover:border-primary/50",
+          )}
+        >
+          {isLive ? <Radio className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+          {isLive ? "Entrar agora" : "Reservar lugar"}
+        </span>
+      </div>
     </Link>
   );
 }
+
