@@ -1,5 +1,7 @@
 import { createFileRoute, Link, Outlet, redirect, useRouter, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
+
 import {
   LayoutDashboard,
   GraduationCap,
