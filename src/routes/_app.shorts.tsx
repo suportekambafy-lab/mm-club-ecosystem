@@ -44,11 +44,9 @@ type ShortWithAuthor = ShortRow & {
   liked: boolean;
 };
 
-async function resolveAvatar(pathOrUrl: string | null): Promise<string | null> {
-  if (!pathOrUrl) return null;
-  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
-  const { data } = await supabase.storage.from("avatars").createSignedUrl(pathOrUrl, 60 * 60 * 24);
-  return data?.signedUrl ?? null;
+function resolveAvatar(pathOrUrl: string | null): Promise<string | null> {
+  // Cache partilhado: evita novo signed URL a cada render/navegação.
+  return resolveAvatarUrl(pathOrUrl).then((u) => u ?? cachedAvatarUrl(pathOrUrl));
 }
 
 function ShortsPage() {
