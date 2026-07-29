@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile, BellRing, BellOff, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { useUserProgress, continueFromProgress } from "@/hooks/use-user-progress";
 import { formatDistanceToNow } from "date-fns";
@@ -105,7 +106,7 @@ function useDerivedNotifs(): Notif[] {
     return () => {
       cancelled = true;
     };
-  }, [tick === 0]);
+  }, []);
 
   useEffect(() => {
     const id = window.setInterval(() => setTick((t) => t + 1), 30_000);
