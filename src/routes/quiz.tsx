@@ -87,7 +87,7 @@ type GalleryBeat = { kind: "gallery"; key: string };
 
 type Beat = QuestionBeat | VideoBeat | GalleryBeat;
 
-const beats: Beat[] = [
+const allBeats: Beat[] = [
   {
     kind: "video",
     key: "v-intro",
@@ -197,6 +197,8 @@ const beats: Beat[] = [
     ],
   },
 ];
+
+const beats: Beat[] = allBeats.filter((b) => b.kind === "question");
 
 const questionCount = beats.filter((b) => b.kind === "question").length;
 
