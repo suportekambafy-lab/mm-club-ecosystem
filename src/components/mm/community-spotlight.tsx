@@ -71,90 +71,67 @@ export function CommunitySpotlight({ enabled = true }: { enabled?: boolean }) {
       to={to}
       params={{ liveId: live.id }}
       className={cn(
-        "group block overflow-hidden rounded-2xl border bg-surface-1 p-4 transition",
+        "group flex items-center gap-3 overflow-hidden rounded-xl border bg-surface-1 p-2.5 transition",
         isLive
           ? "border-destructive/35 hover:border-destructive/60"
           : "border-border hover:border-primary/40",
       )}
     >
-      <div className="flex items-start gap-4">
-        <div className="min-w-0 flex-1">
-          <span
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em]",
-              isLive
-                ? "bg-destructive/20 text-destructive"
-                : "bg-primary/12 text-primary",
-            )}
-          >
-            {isLive ? (
-              <>
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-destructive" />
-                Em direto
-              </>
-            ) : (
-              <>
-                <Calendar className="h-3 w-3" />
-                {isToday ? `Hoje · ${timeLabel}` : `${dayLabel} · ${timeLabel}`}
-              </>
-            )}
-          </span>
+      {cover && (
+        <img
+          src={cover}
+          alt=""
+          width={64}
+          height={44}
+          decoding="async"
+          fetchPriority="high"
+          className="h-11 w-16 shrink-0 rounded-lg bg-muted object-cover"
+        />
+      )}
 
-          <h3 className="mt-2.5 font-display text-xl leading-[1.15] tracking-tight text-foreground sm:text-2xl">
-            {live.title}
-          </h3>
-        </div>
-
-        {cover && (
-          <img
-            src={cover}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            className="h-20 w-28 shrink-0 rounded-xl object-cover sm:h-24 sm:w-40"
-          />
-        )}
-      </div>
-
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
-          {expert && (
-            <>
-              <span
-                className="h-6 w-6 shrink-0 rounded-full bg-muted ring-1 ring-border"
-                style={
-                  expert.logo
-                    ? {
-                        backgroundImage: `url(${expert.logo})`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                      }
-                    : { background: expert.photo }
-                }
-              />
-              <span className="truncate text-foreground">{expert.name}</span>
-              <span aria-hidden className="text-border">|</span>
-            </>
-          )}
-          <span className="inline-flex shrink-0 items-center gap-1.5">
-            {isLive ? <Users className="h-3.5 w-3.5" /> : null}
-            {isLive ? "a decorrer agora" : countdown}
-          </span>
-        </div>
-
+      <div className="min-w-0 flex-1">
         <span
           className={cn(
-            "inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition",
+            "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em]",
             isLive
-              ? "bg-primary text-primary-foreground group-hover:brightness-110"
-              : "border border-border text-foreground group-hover:border-primary/50",
+              ? "bg-destructive/20 text-destructive"
+              : "bg-primary/12 text-primary",
           )}
         >
-          {isLive ? <Radio className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
-          {isLive ? "Entrar agora" : "Reservar lugar"}
+          {isLive ? (
+            <>
+              <span className="h-1 w-1 animate-pulse rounded-full bg-destructive" />
+              Em direto
+            </>
+          ) : (
+            <>
+              <Calendar className="h-2.5 w-2.5" />
+              {isToday ? `Hoje · ${timeLabel}` : `${dayLabel} · ${timeLabel}`}
+            </>
+          )}
         </span>
+        <p className="truncate text-sm font-medium leading-tight text-foreground">
+          {live.title}
+        </p>
+        <p className="truncate text-[11px] text-muted-foreground">
+          {expert?.name ? `${expert.name} · ` : ""}
+          {isLive ? "a decorrer agora" : countdown}
+        </p>
       </div>
+
+      <span
+        className={cn(
+          "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition",
+          isLive
+            ? "bg-primary text-primary-foreground group-hover:brightness-110"
+            : "border border-border text-foreground group-hover:border-primary/50",
+        )}
+      >
+        {isLive ? <Radio className="h-3.5 w-3.5" /> : <ArrowRight className="h-3.5 w-3.5" />}
+        <span className="hidden xs:inline sm:inline">{isLive ? "Entrar" : "Ver"}</span>
+      </span>
     </Link>
   );
 }
+
 
