@@ -126,7 +126,13 @@ function LessonPlayer() {
           {/* Main content: video + title/cta */}
           <div className="order-1 flex min-h-0 min-w-0 flex-col gap-3 sm:gap-4 md:gap-6 lg:order-2 lg:overflow-y-auto lg:pr-1">
             {/* Video player */}
-            {loaded ? (
+            {!source ? (
+              <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
+                <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-white/60">
+                  Vídeo desta aula ainda não está disponível.
+                </div>
+              </div>
+            ) : loaded ? (
               <TrackedVideoPlayer
                 lessonId={current.lesson.id}
                 title={current.lesson.title}
