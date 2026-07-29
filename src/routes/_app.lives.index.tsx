@@ -11,7 +11,6 @@ import { resolveLiveCoverUrl } from "@/lib/live-cover-url";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  BannerSkeleton,
   CardGridSkeleton,
   SectionHeadingSkeleton,
 } from "@/components/mm/skeletons";
@@ -37,7 +36,6 @@ function LivesSkeleton() {
   return (
     <div className="space-y-14">
       <SectionHeadingSkeleton />
-      <BannerSkeleton />
       <section className="space-y-5">
         <div className="space-y-2.5">
           <Skeleton className="h-2.5 w-20" />
