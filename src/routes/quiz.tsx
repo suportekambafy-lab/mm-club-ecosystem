@@ -422,6 +422,14 @@ function QuizPage() {
             </Section>
           )}
 
+          {phase === "flow" && beat.kind === "proof" && (
+            <Section key={beat.key}>
+              <ProofStep beat={beat} onNext={advance} onBack={goBack} />
+            </Section>
+          )}
+
+
+
           {phase === "flow" && beat.kind === "question" && (
             <Section key={beat.key}>
               <QuestionStep
