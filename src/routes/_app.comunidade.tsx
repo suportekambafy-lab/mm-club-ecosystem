@@ -29,6 +29,7 @@ import { useAdminIds } from "@/hooks/use-admin-ids";
 import { useConfirm } from "@/components/mm/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CommunitySpotlight } from "@/components/mm/community-spotlight";
+import { useCommunityPresence } from "@/lib/community-presence";
 
 
 export const Route = createFileRoute("/_app/comunidade")({
@@ -214,31 +215,19 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
   return query;
 }
 
-/* ---------------- Top members ---------------- */
-function useTopMembers(enabled: boolean) {
+/* ---------------- My profile (for presence + composer) ---------------- */
+function useMyProfile(userId: string | null) {
   return useQuery({
-    queryKey: ["community", "top-members"],
-    enabled,
-    queryFn: async (): Promise<Profile[]> => {
-      // Últimos autores ativos (baseado em posts recentes)
-      const { data, error } = await supabase
-        .from("community_posts")
-        .select(
-          "author_id, created_at, author:profiles!community_posts_author_id_fkey (id, display_name, avatar_url, bio)",
-        )
-        .order("created_at", { ascending: false })
-        .limit(50);
-      if (error) throw error;
-      const seen = new Set<string>();
-      const list: Profile[] = [];
-      for (const row of data ?? []) {
-        const a: any = Array.isArray((row as any).author) ? (row as any).author[0] : (row as any).author;
-        if (!a || seen.has(a.id)) continue;
-        seen.add(a.id);
-        list.push(a as Profile);
-        if (list.length >= 12) break;
-      }
-      return list;
+    queryKey: ["community", "me-profile", userId ?? "anon"],
+    enabled: !!userId,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("display_name, avatar_url")
+        .eq("id", userId!)
+        .maybeSingle();
+      return data ?? null;
     },
   });
 }
@@ -250,7 +239,22 @@ function CommunityPage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const catQ = useCategories(user != null);
   const postsQ = usePosts(activeCategory, user?.id ?? null, user != null && tab === "feed");
-  const membersQ = useTopMembers(user != null);
+  const myProfileQ = useMyProfile(user?.id ?? null);
+  const onlineMembers = useCommunityPresence(
+    user
+      ? {
+          id: user.id,
+          display_name:
+            myProfileQ.data?.display_name ??
+            (user.user_metadata?.display_name as string | undefined) ??
+            user.email?.split("@")[0] ??
+            "Membro",
+          avatar_url:
+            myProfileQ.data?.avatar_url ??
+            ((user.user_metadata?.avatar_url as string | undefined) ?? null),
+        }
+      : null,
+  );
 
   const totalPosts = postsQ.data?.length ?? 0;
   const todayCount = (postsQ.data ?? []).filter(
@@ -336,25 +340,17 @@ function CommunityPage() {
             </nav>
           </SidebarCard>
 
-          <SidebarCard title="Membros ativos" subtitle={`${membersQ.data?.length ?? 0} online`}>
+          <SidebarCard title="Membros online" subtitle={`${onlineMembers.length} online`}>
             <div className="grid grid-cols-5 gap-2">
-              {membersQ.data?.slice(0, 15).map((m) => (
-                <div
-                  key={m.id}
-                  className="group relative"
-                  title={m.display_name}
-                >
-                  <Avatar name={m.display_name} url={m.avatar_url} size={36} />
+              {onlineMembers.slice(0, 15).map((m) => (
+                <div key={m.id} className="group relative" title={m.display_name ?? "Membro"}>
+                  <Avatar name={m.display_name ?? "Membro"} url={m.avatar_url} size={36} />
                   <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border-2 border-surface-1 bg-emerald-500" />
                 </div>
               ))}
-              {membersQ.isLoading &&
-                Array.from({ length: 10 }).map((_, i) => (
-                  <Skeleton key={i} className="h-9 w-9 rounded-full" />
-                ))}
-              {membersQ.data && membersQ.data.length === 0 && (
+              {onlineMembers.length === 0 && (
                 <p className="col-span-5 text-center text-xs text-muted-foreground">
-                  Ainda ninguém publicou.
+                  Ninguém online neste momento.
                 </p>
               )}
             </div>
@@ -467,7 +463,6 @@ function CommunityPage() {
           {/* Cards que só aparecem na sidebar direita a partir de 2xl — em telas menores ficam por baixo do feed */}
           {tab === "feed" && (
             <div className="grid gap-4 pt-2 sm:grid-cols-2 xl:grid-cols-3 2xl:hidden">
-              <ProfileCompletionCard user={user} />
               <LatestUpdatesCard posts={postsQ.data ?? []} />
               <QuickLinksCard />
             </div>
@@ -477,7 +472,6 @@ function CommunityPage() {
         {/* RIGHT SIDEBAR — perfil + últimas atualizações + atalhos */}
         <aside className="hidden space-y-4 2xl:sticky 2xl:top-24 2xl:block 2xl:max-h-[calc(100vh-7rem)] 2xl:overflow-y-auto 2xl:pr-1 [scrollbar-width:thin]">
 
-          <ProfileCompletionCard user={user} />
           <LatestUpdatesCard posts={postsQ.data ?? []} />
           <QuickLinksCard />
         </aside>
@@ -546,93 +540,6 @@ function CategoryNavItem({
         <span className="text-[10px] text-muted-foreground">{count}</span>
       )}
     </button>
-  );
-}
-
-function ProfileCompletionCard({ user }: { user: User | null | undefined }) {
-  const q = useQuery({
-    queryKey: ["community", "my-profile", user?.id ?? "anon"],
-    enabled: !!user,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("display_name, avatar_url, bio")
-        .eq("id", user!.id)
-        .maybeSingle();
-      return data;
-    },
-  });
-
-  if (!user) return null;
-
-  const items = [
-    { label: "Nome", done: !!q.data?.display_name },
-    { label: "Avatar", done: !!q.data?.avatar_url },
-    { label: "Bio", done: !!q.data?.bio },
-  ];
-  const done = items.filter((i) => i.done).length;
-  const pct = Math.round((done / items.length) * 100);
-
-  return (
-    <SidebarCard title="Complete o perfil">
-      <div className="mb-3 flex items-center gap-3">
-        <div className="relative h-14 w-14 shrink-0">
-          <svg viewBox="0 0 36 36" className="h-14 w-14 -rotate-90">
-            <circle
-              cx="18"
-              cy="18"
-              r="15"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              className="text-surface-2"
-            />
-            <circle
-              cx="18"
-              cy="18"
-              r="15"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              strokeLinecap="round"
-              className="text-primary transition-all"
-              strokeDasharray={`${(pct / 100) * 94.25} 94.25`}
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-xs font-semibold text-foreground">{pct}%</span>
-          </div>
-        </div>
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-foreground">
-            {done}/{items.length} completo
-          </p>
-          <Link
-            to="/perfil"
-            className="text-xs text-primary hover:underline"
-          >
-            Editar perfil →
-          </Link>
-        </div>
-      </div>
-      <ul className="space-y-1.5">
-        {items.map((i) => (
-          <li key={i.label} className="flex items-center gap-2 text-xs">
-            <span
-              className={cn(
-                "flex h-4 w-4 items-center justify-center rounded-full",
-                i.done ? "bg-primary/20 text-primary" : "bg-surface-2 text-muted-foreground",
-              )}
-            >
-              {i.done ? "✓" : "○"}
-            </span>
-            <span className={i.done ? "text-foreground" : "text-muted-foreground"}>
-              {i.label}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </SidebarCard>
   );
 }
 
