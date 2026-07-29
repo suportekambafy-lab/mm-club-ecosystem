@@ -414,10 +414,8 @@ function QuizPage() {
             <Section key="result">
               <ResultStep
                 profile={profile}
-                total={result.total}
-                winner={result.winner}
                 onGo={() =>
-                  navigate({ to: "/checkout", search: { plan: result.winner } })
+                  navigate({ to: "/checkout", search: { plan: "start" } })
                 }
               />
             </Section>
