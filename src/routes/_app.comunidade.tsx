@@ -463,7 +463,6 @@ function CommunityPage() {
           {/* Cards que só aparecem na sidebar direita a partir de 2xl — em telas menores ficam por baixo do feed */}
           {tab === "feed" && (
             <div className="grid gap-4 pt-2 sm:grid-cols-2 xl:grid-cols-3 2xl:hidden">
-              <ProfileCompletionCard user={user} />
               <LatestUpdatesCard posts={postsQ.data ?? []} />
               <QuickLinksCard />
             </div>
@@ -473,7 +472,6 @@ function CommunityPage() {
         {/* RIGHT SIDEBAR — perfil + últimas atualizações + atalhos */}
         <aside className="hidden space-y-4 2xl:sticky 2xl:top-24 2xl:block 2xl:max-h-[calc(100vh-7rem)] 2xl:overflow-y-auto 2xl:pr-1 [scrollbar-width:thin]">
 
-          <ProfileCompletionCard user={user} />
           <LatestUpdatesCard posts={postsQ.data ?? []} />
           <QuickLinksCard />
         </aside>
@@ -542,93 +540,6 @@ function CategoryNavItem({
         <span className="text-[10px] text-muted-foreground">{count}</span>
       )}
     </button>
-  );
-}
-
-function ProfileCompletionCard({ user }: { user: User | null | undefined }) {
-  const q = useQuery({
-    queryKey: ["community", "my-profile", user?.id ?? "anon"],
-    enabled: !!user,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("display_name, avatar_url, bio")
-        .eq("id", user!.id)
-        .maybeSingle();
-      return data;
-    },
-  });
-
-  if (!user) return null;
-
-  const items = [
-    { label: "Nome", done: !!q.data?.display_name },
-    { label: "Avatar", done: !!q.data?.avatar_url },
-    { label: "Bio", done: !!q.data?.bio },
-  ];
-  const done = items.filter((i) => i.done).length;
-  const pct = Math.round((done / items.length) * 100);
-
-  return (
-    <SidebarCard title="Complete o perfil">
-      <div className="mb-3 flex items-center gap-3">
-        <div className="relative h-14 w-14 shrink-0">
-          <svg viewBox="0 0 36 36" className="h-14 w-14 -rotate-90">
-            <circle
-              cx="18"
-              cy="18"
-              r="15"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              className="text-surface-2"
-            />
-            <circle
-              cx="18"
-              cy="18"
-              r="15"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              strokeLinecap="round"
-              className="text-primary transition-all"
-              strokeDasharray={`${(pct / 100) * 94.25} 94.25`}
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-xs font-semibold text-foreground">{pct}%</span>
-          </div>
-        </div>
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-foreground">
-            {done}/{items.length} completo
-          </p>
-          <Link
-            to="/perfil"
-            className="text-xs text-primary hover:underline"
-          >
-            Editar perfil →
-          </Link>
-        </div>
-      </div>
-      <ul className="space-y-1.5">
-        {items.map((i) => (
-          <li key={i.label} className="flex items-center gap-2 text-xs">
-            <span
-              className={cn(
-                "flex h-4 w-4 items-center justify-center rounded-full",
-                i.done ? "bg-primary/20 text-primary" : "bg-surface-2 text-muted-foreground",
-              )}
-            >
-              {i.done ? "✓" : "○"}
-            </span>
-            <span className={i.done ? "text-foreground" : "text-muted-foreground"}>
-              {i.label}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </SidebarCard>
   );
 }
 
