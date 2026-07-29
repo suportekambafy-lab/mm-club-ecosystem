@@ -58,8 +58,8 @@ function LessonPlayer() {
   // across renders (including when `data` transitions from null → value).
   const currentLessonId = data?.current.lesson.id ?? "__no_lesson__";
   const courseIdForProgress = data?.course.id ?? "__no_course__";
-  const videoUrl = data?.current.lesson.videoUrl ?? DEFAULT_LESSON_YOUTUBE_URL;
-  const source = parseVideoUrl(videoUrl);
+  const videoUrl = data?.current.lesson.videoUrl ?? "";
+  const source = videoUrl ? parseVideoUrl(videoUrl) : null;
   const { row, completed, saving, loaded, saveProgress, setCompleted } = useLessonProgress(
     courseIdForProgress,
     currentLessonId,
