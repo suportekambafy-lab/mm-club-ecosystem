@@ -25,6 +25,8 @@ import avatar2 from "@/assets/avatar-2.jpg";
 import avatar3 from "@/assets/avatar-3.jpg";
 import avatar4 from "@/assets/avatar-4.jpg";
 import avatar5 from "@/assets/avatar-5.jpg";
+import proofVendas from "@/assets/depoimento-vendas.jpg.asset.json";
+import proofShopify from "@/assets/depoimento-shopify.jpg.asset.json";
 
 export const Route = createFileRoute("/quiz")({
   ssr: false,
