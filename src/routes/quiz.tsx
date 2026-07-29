@@ -225,7 +225,9 @@ const allBeats: Beat[] = [
   },
 ];
 
-const beats: Beat[] = allBeats.filter((b) => b.kind === "question");
+const beats: Beat[] = allBeats.filter(
+  (b) => b.kind === "question" || b.kind === "proof",
+);
 
 const questionCount = beats.filter((b) => b.kind === "question").length;
 
