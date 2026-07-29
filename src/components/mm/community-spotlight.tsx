@@ -165,7 +165,10 @@ export function CommunitySpotlight({ enabled = true }: { enabled?: boolean }) {
               type="button"
               aria-label={`Ver sessão ${i + 1}`}
               aria-current={i === index}
-              onClick={() => setIndex(i)}
+              onClick={() => {
+                setIndex(i);
+                setPaused(true);
+              }}
               className={cn(
                 "h-1.5 rounded-full transition-all",
                 i === index
