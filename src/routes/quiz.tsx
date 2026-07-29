@@ -480,8 +480,8 @@ function Atmosphere() {
 
 function SocialProofRow() {
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex -space-x-2">
+    <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
+      <div className="flex shrink-0 -space-x-2">
         {memberAvatars.map((src, idx) => (
           <img
             key={idx}
@@ -489,11 +489,11 @@ function SocialProofRow() {
             alt=""
             aria-hidden
             loading="lazy"
-            className="h-8 w-8 rounded-full border-2 border-background object-cover"
+            className="h-7 w-7 shrink-0 rounded-full border-2 border-background object-cover sm:h-8 sm:w-8"
           />
         ))}
       </div>
-      <p className="text-xs text-muted-foreground">
+      <p className="min-w-0 text-[11px] leading-snug text-muted-foreground sm:text-xs">
         Mais de 2.000 empreendedores já responderam a este diagnóstico.
       </p>
     </div>
