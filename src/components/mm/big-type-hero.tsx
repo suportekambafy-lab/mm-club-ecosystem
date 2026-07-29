@@ -367,22 +367,24 @@ export function BigTypeHero() {
             </p>
             <div className="mt-8 flex items-center justify-between rounded-2xl border border-border bg-surface-2/60 p-3">
               <div className="flex items-center gap-2.5">
-                <div
-                  className="h-9 w-9 rounded-xl"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, oklch(0.82 0.13 82), oklch(0.58 0.14 68))",
-                  }}
+                <img
+                  src={realCourse.logo ?? realCourse.cover}
+                  alt={realCourse.title}
+                  loading="lazy"
+                  className="h-9 w-9 rounded-xl object-cover"
                 />
                 <div>
-                  <p className="font-display text-sm">rui.mm</p>
-                  <p className="text-[10px] text-muted-foreground">Fundamentos · 12 aulas</p>
+                  <p className="font-display text-sm">{realCourse.title}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {realCourse.modules?.length ?? 0} módulos · {realCourseLessons} aulas
+                  </p>
                 </div>
               </div>
               <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-semibold text-primary">
-                Módulo 03
+                Disponível
               </span>
             </div>
+
             {/* Arrow to next */}
             <div className="absolute -right-4 top-1/2 z-10 hidden h-10 w-16 -translate-y-1/2 text-foreground md:block">
               <ArrowInk />
