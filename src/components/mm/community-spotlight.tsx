@@ -58,17 +58,18 @@ export function CommunitySpotlight({ enabled = true }: { enabled?: boolean }) {
 
   const items = [...onAir, ...upcoming].slice(0, MAX_ITEMS);
   const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
   const active = items[Math.min(index, Math.max(items.length - 1, 0))];
   const countdown = useCountdownLabel(active?.starts_at);
 
   useEffect(() => {
-    if (items.length < 2) return;
+    if (items.length < 2 || paused) return;
     const t = setInterval(
       () => setIndex((i) => (i + 1) % items.length),
       ROTATE_MS,
     );
     return () => clearInterval(t);
-  }, [items.length]);
+  }, [items.length, paused]);
 
   if (!active) return null;
 
@@ -83,10 +84,17 @@ export function CommunitySpotlight({ enabled = true }: { enabled?: boolean }) {
   const to = active.mode === "interactive" && isLive ? "/lives/$liveId/sala" : "/lives/$liveId";
 
   return (
-    <div className="space-y-1.5">
+    <div
+      className="space-y-1.5"
+      onPointerEnter={() => setPaused(true)}
+      onPointerDown={() => setPaused(true)}
+      onPointerLeave={() => setPaused(false)}
+    >
       <Link
+        key={active.id}
         to={to}
         params={{ liveId: active.id }}
+        aria-label={`Ver detalhes da sessão: ${active.title}`}
         className={cn(
           "group flex items-center gap-3 overflow-hidden rounded-xl border bg-surface-1 p-2.5 transition",
           isLive
@@ -157,7 +165,10 @@ export function CommunitySpotlight({ enabled = true }: { enabled?: boolean }) {
               type="button"
               aria-label={`Ver sessão ${i + 1}`}
               aria-current={i === index}
-              onClick={() => setIndex(i)}
+              onClick={() => {
+                setIndex(i);
+                setPaused(true);
+              }}
               className={cn(
                 "h-1.5 rounded-full transition-all",
                 i === index
