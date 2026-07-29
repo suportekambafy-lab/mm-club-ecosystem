@@ -214,31 +214,19 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
   return query;
 }
 
-/* ---------------- Top members ---------------- */
-function useTopMembers(enabled: boolean) {
+/* ---------------- My profile (for presence + composer) ---------------- */
+function useMyProfile(userId: string | null) {
   return useQuery({
-    queryKey: ["community", "top-members"],
-    enabled,
-    queryFn: async (): Promise<Profile[]> => {
-      // Últimos autores ativos (baseado em posts recentes)
-      const { data, error } = await supabase
-        .from("community_posts")
-        .select(
-          "author_id, created_at, author:profiles!community_posts_author_id_fkey (id, display_name, avatar_url, bio)",
-        )
-        .order("created_at", { ascending: false })
-        .limit(50);
-      if (error) throw error;
-      const seen = new Set<string>();
-      const list: Profile[] = [];
-      for (const row of data ?? []) {
-        const a: any = Array.isArray((row as any).author) ? (row as any).author[0] : (row as any).author;
-        if (!a || seen.has(a.id)) continue;
-        seen.add(a.id);
-        list.push(a as Profile);
-        if (list.length >= 12) break;
-      }
-      return list;
+    queryKey: ["community", "me-profile", userId ?? "anon"],
+    enabled: !!userId,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("display_name, avatar_url")
+        .eq("id", userId!)
+        .maybeSingle();
+      return data ?? null;
     },
   });
 }
