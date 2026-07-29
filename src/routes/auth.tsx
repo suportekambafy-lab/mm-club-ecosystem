@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { AlertCircle, ArrowRight, ArrowLeft, Mail, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { readIntendedPlan } from "@/lib/intended-plan";
+import { clearIntendedPlan, readIntendedPlan } from "@/lib/intended-plan";
 import { MMLogo } from "@/components/mm/logo";
 import { toast } from "sonner";
 import authCover from "@/assets/auth-cover.jpg";
