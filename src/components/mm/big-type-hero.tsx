@@ -6,8 +6,16 @@ import avatar1 from "@/assets/avatar-1.jpg";
 import avatar2 from "@/assets/avatar-2.jpg";
 import avatar3 from "@/assets/avatar-3.jpg";
 import avatar5 from "@/assets/avatar-5.jpg";
+import { courses } from "@/data/courses";
 
 const WELCOME_VIDEO_ID = "J-ivFkMIHCQ";
+
+const realCourse = courses[0];
+const realCourseLessons =
+  realCourse?.modules?.reduce((n, m) => n + (m.lessons?.length ?? 0), 0) ??
+  realCourse?.lessonsCount ??
+  0;
+
 
 /* ---------- Hand-drawn arrows ---------- */
 
