@@ -29,6 +29,7 @@ import { useAdminIds } from "@/hooks/use-admin-ids";
 import { useConfirm } from "@/components/mm/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CommunitySpotlight } from "@/components/mm/community-spotlight";
+import { useCommunityPresence } from "@/lib/community-presence";
 
 
 export const Route = createFileRoute("/_app/comunidade")({
