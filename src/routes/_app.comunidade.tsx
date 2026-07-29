@@ -238,7 +238,22 @@ function CommunityPage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const catQ = useCategories(user != null);
   const postsQ = usePosts(activeCategory, user?.id ?? null, user != null && tab === "feed");
-  const membersQ = useTopMembers(user != null);
+  const myProfileQ = useMyProfile(user?.id ?? null);
+  const onlineMembers = useCommunityPresence(
+    user
+      ? {
+          id: user.id,
+          display_name:
+            myProfileQ.data?.display_name ??
+            (user.user_metadata?.display_name as string | undefined) ??
+            user.email?.split("@")[0] ??
+            "Membro",
+          avatar_url:
+            myProfileQ.data?.avatar_url ??
+            ((user.user_metadata?.avatar_url as string | undefined) ?? null),
+        }
+      : null,
+  );
 
   const totalPosts = postsQ.data?.length ?? 0;
   const todayCount = (postsQ.data ?? []).filter(
