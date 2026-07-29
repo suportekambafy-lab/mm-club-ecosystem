@@ -861,71 +861,26 @@ function ResultStep({
         {profile.line}
       </p>
 
-      {/* Plano recomendado */}
+      {/* Plano recomendado — sempre o mensal */}
       <div className="mt-12 rounded-3xl border border-primary/40 bg-primary/[0.06] p-7 md:p-9">
         <p className="text-sm text-muted-foreground">
-          Com base nas tuas respostas, acreditamos que este é o plano ideal para ti.
+          Com base nas tuas respostas, o melhor arranque para ti é este — sem
+          compromissos longos.
         </p>
-        <h2 className="mt-3 font-display text-3xl md:text-4xl">
-          {profile.plan.name}
-        </h2>
-        <p className="mt-2 text-sm text-foreground/90">{profile.plan.tagline}</p>
+        <h2 className="mt-3 font-display text-3xl md:text-4xl">{monthly.name}</h2>
+        <p className="mt-2 text-sm text-foreground/90">{monthly.tagline}</p>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          {profile.plan.description}
+          {monthly.description}
         </p>
         <p className="mt-5 font-display text-xl text-foreground">
-          {profile.plan.price}
+          {monthly.price}
+        </p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Acesso completo ao MM Club. Se quiseres, podes trocar para 6 meses ou
+          anual mais tarde.
         </p>
       </div>
 
-      {/* Compatibilidade */}
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
-        {(["start", "plus", "elite"] as const).map((k) => {
-          const active = winner === k;
-          return (
-            <div
-              key={k}
-              className={cn(
-                "rounded-2xl border p-5 transition",
-                active ? "border-primary bg-primary/8" : "border-border bg-surface-1",
-              )}
-            >
-              <div className="flex items-center justify-between">
-                <p
-                  className={cn(
-                    "font-display text-base",
-                    active ? "text-foreground" : "text-muted-foreground",
-                  )}
-                >
-                  {profiles[k].plan.name}
-                </p>
-                {active && (
-                  <span className="rounded-full bg-primary px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary-foreground">
-                    Match
-                  </span>
-                )}
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {profiles[k].plan.price}
-              </p>
-              <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-surface-3">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.round((total[k] / max) * 100)}%` }}
-                  transition={{ duration: 1, ease: easing }}
-                  className="h-full rounded-full"
-                  style={{
-                    background: active
-                      ? "linear-gradient(90deg, var(--gold-soft), var(--gold-deep))"
-                      : "var(--muted-foreground)",
-                    opacity: active ? 1 : 0.35,
-                  }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
 
       {/* Prova social antes do CTA */}
       <div className="mt-12 grid gap-4 md:grid-cols-3">
