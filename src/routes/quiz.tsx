@@ -87,7 +87,7 @@ type GalleryBeat = { kind: "gallery"; key: string };
 
 type Beat = QuestionBeat | VideoBeat | GalleryBeat;
 
-const beats: Beat[] = [
+const allBeats: Beat[] = [
   {
     kind: "video",
     key: "v-intro",
@@ -197,6 +197,8 @@ const beats: Beat[] = [
     ],
   },
 ];
+
+const beats: Beat[] = allBeats.filter((b) => b.kind === "question");
 
 const questionCount = beats.filter((b) => b.kind === "question").length;
 
@@ -963,23 +965,6 @@ function ResultStep({
                 <p className="text-[11px] text-muted-foreground">{t.role}</p>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-        {galleryImages.slice(0, 4).map((src, idx) => (
-          <div
-            key={idx}
-            className="overflow-hidden rounded-2xl border border-hairline bg-surface-1"
-          >
-            <img
-              src={src}
-              alt=""
-              aria-hidden
-              loading="lazy"
-              className="aspect-square h-full w-full object-cover"
-            />
           </div>
         ))}
       </div>
