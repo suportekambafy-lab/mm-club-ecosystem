@@ -9,7 +9,7 @@ import { useUserProgress, type ProgressByCourse } from "@/hooks/use-user-progres
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 import { courseCoverBackground } from "@/lib/course-cover";
 import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb, parseDurationToMinutes, formatMinutes } from "@/lib/course-duration";
-import { BannerSkeleton, CardGridSkeleton, RailSkeleton } from "@/components/mm/skeletons";
+import { CardGridSkeleton, RailSkeleton } from "@/components/mm/skeletons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { trackUx } from "@/lib/ux-analytics";
 
@@ -487,7 +487,6 @@ function ComingSoonCard({ course }: { course: Course }) {
 function AcademiaSkeleton() {
   return (
     <div className="max-w-full space-y-16 overflow-x-clip">
-      <BannerSkeleton />
       <RailSkeleton cards={3} cardClassName="w-[300px] shrink-0" />
       <section className="space-y-5">
         <div className="space-y-2.5 px-1">
