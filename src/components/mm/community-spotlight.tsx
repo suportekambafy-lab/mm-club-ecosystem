@@ -84,10 +84,17 @@ export function CommunitySpotlight({ enabled = true }: { enabled?: boolean }) {
   const to = active.mode === "interactive" && isLive ? "/lives/$liveId/sala" : "/lives/$liveId";
 
   return (
-    <div className="space-y-1.5">
+    <div
+      className="space-y-1.5"
+      onPointerEnter={() => setPaused(true)}
+      onPointerDown={() => setPaused(true)}
+      onPointerLeave={() => setPaused(false)}
+    >
       <Link
+        key={active.id}
         to={to}
         params={{ liveId: active.id }}
+        aria-label={`Ver detalhes da sessão: ${active.title}`}
         className={cn(
           "group flex items-center gap-3 overflow-hidden rounded-xl border bg-surface-1 p-2.5 transition",
           isLive
