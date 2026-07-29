@@ -58,17 +58,18 @@ export function CommunitySpotlight({ enabled = true }: { enabled?: boolean }) {
 
   const items = [...onAir, ...upcoming].slice(0, MAX_ITEMS);
   const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
   const active = items[Math.min(index, Math.max(items.length - 1, 0))];
   const countdown = useCountdownLabel(active?.starts_at);
 
   useEffect(() => {
-    if (items.length < 2) return;
+    if (items.length < 2 || paused) return;
     const t = setInterval(
       () => setIndex((i) => (i + 1) % items.length),
       ROTATE_MS,
     );
     return () => clearInterval(t);
-  }, [items.length]);
+  }, [items.length, paused]);
 
   if (!active) return null;
 
