@@ -651,6 +651,52 @@ function VideoStep({
   );
 }
 
+function ProofStep({
+  beat,
+  onNext,
+  onBack,
+}: {
+  beat: ProofBeat;
+  onNext: () => void;
+  onBack: () => void;
+}) {
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-[0.28em] text-primary">{beat.kicker}</p>
+      <h2 className="mt-3 text-2xl font-semibold leading-tight md:text-3xl">{beat.title}</h2>
+      <p className="mt-2 max-w-xl text-sm text-muted-foreground">{beat.caption}</p>
+
+      <div className="mt-6 flex justify-center">
+        <div className="w-full max-w-[320px] overflow-hidden rounded-2xl border border-border bg-surface-2 shadow-lg">
+          <img
+            src={beat.image}
+            alt={beat.title}
+            loading="lazy"
+            className="block h-auto w-full"
+          />
+        </div>
+      </div>
+
+      <div className="mt-8 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs text-muted-foreground transition hover:text-foreground"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" /> Voltar
+        </button>
+        <button
+          type="button"
+          onClick={onNext}
+          className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+        >
+          Continuar <ArrowRight className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function GalleryStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
   return (
     <div>
