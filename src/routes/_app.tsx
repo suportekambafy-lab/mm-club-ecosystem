@@ -172,38 +172,46 @@ function AppLayout() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  // Load user's avatar from private bucket
+  // Load user's avatar from private bucket (com cache — aparece instantâneo)
   useEffect(() => {
     let cancelled = false;
     if (!authUser) {
       setAvatarSrc(null);
       return;
     }
+    const pathKey = `mm:avatar_path:${authUser.id}`;
+    const knownPath =
+      typeof window !== "undefined" ? window.localStorage.getItem(pathKey) : null;
+    const cached = cachedAvatarUrl(knownPath);
+    if (cached) setAvatarSrc(cached);
+    else if (knownPath) void resolveAvatarUrl(knownPath).then((u) => {
+      if (!cancelled && u) setAvatarSrc(u);
+    });
+
     (async () => {
       const { data: prof } = await supabase
         .from("profiles")
         .select("avatar_url")
         .eq("id", authUser.id)
         .maybeSingle();
-      const path = prof?.avatar_url;
-      if (!path) {
-        if (!cancelled) setAvatarSrc(null);
-        return;
-      }
-      if (/^https?:\/\//i.test(path)) {
-        if (!cancelled) setAvatarSrc(path);
-        return;
-      }
-      const { data, error } = await supabase.storage
-        .from("avatars")
-        .createSignedUrl(path, 60 * 60);
+      const path = prof?.avatar_url ?? null;
       if (cancelled) return;
-      setAvatarSrc(error ? null : data.signedUrl);
+      if (typeof window !== "undefined") {
+        if (path) window.localStorage.setItem(pathKey, path);
+        else window.localStorage.removeItem(pathKey);
+      }
+      if (!path) {
+        setAvatarSrc(null);
+        return;
+      }
+      const url = await resolveAvatarUrl(path);
+      if (!cancelled) setAvatarSrc(url);
     })();
     return () => {
       cancelled = true;
     };
   }, [authUser]);
+
 
   // Plan tier label (name only, no billing period)
   const [planLabel, setPlanLabel] = useState<string>("Membro MM Club");
