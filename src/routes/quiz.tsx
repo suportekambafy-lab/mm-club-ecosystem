@@ -969,23 +969,6 @@ function ResultStep({
         ))}
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-        {galleryImages.slice(0, 4).map((src, idx) => (
-          <div
-            key={idx}
-            className="overflow-hidden rounded-2xl border border-hairline bg-surface-1"
-          >
-            <img
-              src={src}
-              alt=""
-              aria-hidden
-              loading="lazy"
-              className="aspect-square h-full w-full object-cover"
-            />
-          </div>
-        ))}
-      </div>
-
       <div className="mt-10 flex flex-wrap items-center gap-3">
         <button
           type="button"
