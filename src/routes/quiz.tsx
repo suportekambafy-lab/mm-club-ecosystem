@@ -325,11 +325,6 @@ function QuizPage() {
     else setPhase("landing");
   }
 
-  function restart() {
-    setAnswers({});
-    setI(0);
-    setPhase("landing");
-  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
