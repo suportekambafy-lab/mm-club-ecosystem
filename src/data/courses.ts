@@ -8,8 +8,8 @@ import lessonL6 from "@/assets/lesson-l6.jpg";
 import lessonL7 from "@/assets/lesson-l7.jpg";
 import lessonL8 from "@/assets/lesson-l8.jpg";
 
-// Conteudo real do curso (fonte: administracao). NAO adicionar aulas de
-// demonstracao aqui — o que estiver neste ficheiro e o que os membros veem
+// Conteúdo real do curso (fonte: administração). NÃO adicionar aulas de
+// demonstração aqui — o que estiver neste ficheiro é o que os membros veem
 // antes de os overrides do admin carregarem.
 
 const COURSE_COVER = "https://yarjxrbhxaawzdizmvlh.supabase.co/storage/v1/object/sign/course-media/courses/marca-milionaria/logo/1785064506187-bze4qr.PNG?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV81YTA0ZWZiOS0yZmMzLTQxZGQtYjkzYi1jNWRiMzQzNzllOTAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJjb3Vyc2UtbWVkaWEvY291cnNlcy9tYXJjYS1taWxpb25hcmlhL2xvZ28vMTc4NTA2NDUwNjE4Ny1iemU0cXIuUE5HIiwic2NvcGUiOiJkb3dubG9hZCIsImlhdCI6MTc4NTA2NDUwNiwiZXhwIjoyMTAwNDI0NTA2fQ.psHSZ9Fo80xUEpFR4Ml-omo86qb4PgVMcH-pEvggoIg";
@@ -18,10 +18,10 @@ const COURSE_LOGO = "https://yarjxrbhxaawzdizmvlh.supabase.co/storage/v1/object/
 export const courses: Course[] = [
   {
     id: "marca-milionaria",
-    title: "Marca Milionaria",
-    tagline: "O metodo completo de posicionamento premium.",
+    title: "Marca Milionária",
+    tagline: "O método completo de posicionamento premium.",
     description:
-      "O curso-mae do ecossistema. Constroi uma marca com alto valor percebido, do posicionamento a monetizacao.",
+      "O curso-mãe do ecossistema. Constrói uma marca com alto valor percebido, do posicionamento à monetização.",
     objectiveId: "criar-negocio",
     expertId: "founder",
     duration: "6h 40m",
