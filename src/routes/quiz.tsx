@@ -952,18 +952,9 @@ function ResultStep({
             <p className="mt-3 text-sm leading-relaxed text-foreground/90">
               “{t.quote}”
             </p>
-            <div className="mt-4 flex items-center gap-3">
-              <img
-                src={t.avatar}
-                alt=""
-                aria-hidden
-                loading="lazy"
-                className="h-8 w-8 rounded-full object-cover"
-              />
-              <div>
-                <p className="text-xs font-medium text-foreground">{t.name}</p>
-                <p className="text-[11px] text-muted-foreground">{t.role}</p>
-              </div>
+            <div className="mt-4">
+              <p className="text-xs font-medium text-foreground">{t.name}</p>
+              <p className="text-[11px] text-muted-foreground">{t.role}</p>
             </div>
           </div>
         ))}
