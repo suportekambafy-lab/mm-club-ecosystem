@@ -421,7 +421,6 @@ function QuizPage() {
                 profile={profile}
                 total={result.total}
                 winner={result.winner}
-                onRestart={restart}
                 onGo={() =>
                   navigate({ to: "/checkout", search: { plan: result.winner } })
                 }
@@ -838,13 +837,11 @@ function ResultStep({
   total,
   winner,
   onGo,
-  onRestart,
 }: {
   profile: (typeof profiles)[PlanKey];
   total: { start: number; plus: number; elite: number };
   winner: PlanKey;
   onGo: () => void;
-  onRestart: () => void;
 }) {
   const max = Math.max(1, total.start, total.plus, total.elite);
   return (
