@@ -87,7 +87,16 @@ type VideoBeat = {
 
 type GalleryBeat = { kind: "gallery"; key: string };
 
-type Beat = QuestionBeat | VideoBeat | GalleryBeat;
+type ProofBeat = {
+  kind: "proof";
+  key: string;
+  kicker: string;
+  title: string;
+  caption: string;
+  image: string;
+};
+
+type Beat = QuestionBeat | VideoBeat | GalleryBeat | ProofBeat;
 
 const allBeats: Beat[] = [
   {
