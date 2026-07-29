@@ -25,6 +25,8 @@ import avatar2 from "@/assets/avatar-2.jpg";
 import avatar3 from "@/assets/avatar-3.jpg";
 import avatar4 from "@/assets/avatar-4.jpg";
 import avatar5 from "@/assets/avatar-5.jpg";
+import proofVendas from "@/assets/depoimento-vendas.jpg.asset.json";
+import proofShopify from "@/assets/depoimento-shopify.jpg.asset.json";
 
 export const Route = createFileRoute("/quiz")({
   ssr: false,
@@ -85,7 +87,16 @@ type VideoBeat = {
 
 type GalleryBeat = { kind: "gallery"; key: string };
 
-type Beat = QuestionBeat | VideoBeat | GalleryBeat;
+type ProofBeat = {
+  kind: "proof";
+  key: string;
+  kicker: string;
+  title: string;
+  caption: string;
+  image: string;
+};
+
+type Beat = QuestionBeat | VideoBeat | GalleryBeat | ProofBeat;
 
 const allBeats: Beat[] = [
   {
@@ -126,6 +137,14 @@ const allBeats: Beat[] = [
     ],
   },
   {
+    kind: "proof",
+    key: "prova-vendas",
+    kicker: "Prova real",
+    title: "Tatiana: 3 vendas antes do almoço",
+    caption: "Notificações de encomendas reais recebidas por uma aluna, a meio da manhã.",
+    image: proofVendas.url,
+  },
+  {
     kind: "video",
     key: "v-direcao",
     kicker: "Um segundo",
@@ -159,6 +178,14 @@ const allBeats: Beat[] = [
       { id: "tools", label: "Ferramentas", weight: { start: 1, plus: 3, elite: 2 } },
       { id: "network", label: "Networking", weight: { start: 0, plus: 2, elite: 3 } },
     ],
+  },
+  {
+    kind: "proof",
+    key: "prova-shopify",
+    kicker: "Prova real",
+    title: "Denis, aluno da Marca Milionária",
+    caption: "2.299 € em vendas e 30 encomendas — partilhado no grupo da mentoria.",
+    image: proofShopify.url,
   },
   { kind: "gallery", key: "album" },
   {
@@ -198,7 +225,9 @@ const allBeats: Beat[] = [
   },
 ];
 
-const beats: Beat[] = allBeats.filter((b) => b.kind === "question");
+const beats: Beat[] = allBeats.filter(
+  (b) => b.kind === "question" || b.kind === "proof",
+);
 
 const questionCount = beats.filter((b) => b.kind === "question").length;
 
@@ -392,6 +421,14 @@ function QuizPage() {
               <GalleryStep onNext={advance} onBack={goBack} />
             </Section>
           )}
+
+          {phase === "flow" && beat.kind === "proof" && (
+            <Section key={beat.key}>
+              <ProofStep beat={beat} onNext={advance} onBack={goBack} />
+            </Section>
+          )}
+
+
 
           {phase === "flow" && beat.kind === "question" && (
             <Section key={beat.key}>
@@ -608,6 +645,52 @@ function VideoStep({
         >
           {beat.cta}
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ProofStep({
+  beat,
+  onNext,
+  onBack,
+}: {
+  beat: ProofBeat;
+  onNext: () => void;
+  onBack: () => void;
+}) {
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-[0.28em] text-primary">{beat.kicker}</p>
+      <h2 className="mt-3 text-2xl font-semibold leading-tight md:text-3xl">{beat.title}</h2>
+      <p className="mt-2 max-w-xl text-sm text-muted-foreground">{beat.caption}</p>
+
+      <div className="mt-6 flex justify-center">
+        <div className="w-full max-w-[320px] overflow-hidden rounded-2xl border border-border bg-surface-2 shadow-lg">
+          <img
+            src={beat.image}
+            alt={beat.title}
+            loading="lazy"
+            className="block h-auto w-full"
+          />
+        </div>
+      </div>
+
+      <div className="mt-8 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs text-muted-foreground transition hover:text-foreground"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" /> Voltar
+        </button>
+        <button
+          type="button"
+          onClick={onNext}
+          className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+        >
+          Continuar <ArrowRight className="h-4 w-4" />
         </button>
       </div>
     </div>
