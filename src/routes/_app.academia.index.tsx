@@ -230,23 +230,6 @@ function AcademiaPage() {
 
       </section>
 
-      {!isFiltering && upcomingCourses.length > 0 && (
-        <section className="space-y-5">
-          <div className="px-1">
-            <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-primary">
-              <Lock className="h-3 w-3" /> Em breve
-            </div>
-            <h2 className="font-display text-2xl text-foreground md:text-3xl">
-              Próximos lançamentos
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {upcomingCourses.map((c) => (
-              <ComingSoonCard key={c.id} course={c} />
-            ))}
-          </div>
-        </section>
-      )}
     </div>
   );
 }
