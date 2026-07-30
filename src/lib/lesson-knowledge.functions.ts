@@ -734,7 +734,43 @@ export async function runAutoTranscribeTick(): Promise<{
   const results = await Promise.all(
     batchToRun.map(async (item) => {
       try {
-        const text = await transcribeFromUrl(item.videoUrl, apiKey);
+        const mediaUrl = resolveDirectMediaUrl(item.videoUrl);
+        let text: string;
+
+        if (/\.m3u8(\?|$)/i.test(mediaUrl)) {
+          // Aulas longas (2-3h): transcreve por partes e retoma no próximo
+          // ciclo, em vez de tentar tudo numa só execução (que estourava o
+          // tempo do worker e recomeçava do zero para sempre).
+          const { transcribeLessonResumable } = await import("@/lib/lesson-transcribe.server");
+          const res = await transcribeLessonResumable({
+            courseId: item.courseId,
+            lessonId: item.lessonId,
+            playlistUrl: mediaUrl,
+            apiKey,
+          });
+          if (!res.done) {
+            await supabaseAdmin
+              .from("lesson_transcripts")
+              .update({
+                status: "partial",
+                error: `progresso ${res.completedParts}/${res.totalParts}`,
+              })
+              .eq("course_id", item.courseId)
+              .eq("lesson_id", item.lessonId);
+            return {
+              courseId: item.courseId,
+              lessonId: item.lessonId,
+              ok: true,
+              partial: true,
+              progress: `${res.completedParts}/${res.totalParts}`,
+              chars: 0,
+            };
+          }
+          text = res.transcript;
+        } else {
+          text = await transcribeFromUrl(item.videoUrl, apiKey);
+        }
+
         await ingestTranscriptRaw({
           courseId: item.courseId,
           lessonId: item.lessonId,
@@ -760,6 +796,7 @@ export async function runAutoTranscribeTick(): Promise<{
       }
     }),
   );
+
 
   const first = results.find((r) => r.ok);
   return {
