@@ -57,12 +57,9 @@ export function CourseCard({ course, className, variant = "default", resumeLesso
     >
       <Link
         {...linkProps}
-        disabled={isSoon}
         className={cn(
           "group relative flex h-full flex-col overflow-hidden rounded-2xl bg-surface-1 ring-1 ring-border transition-all duration-500",
-          !isSoon &&
-            "hover:-translate-y-1 hover:ring-[color:var(--hairline)] hover:shadow-[0_28px_80px_-30px_oklch(0.82_0.13_82_/_0.35)]",
-          isSoon && "cursor-default opacity-95",
+          "hover:-translate-y-1 hover:ring-[color:var(--hairline)] hover:shadow-[0_28px_80px_-30px_oklch(0.82_0.13_82_/_0.35)]",
         )}
       >
         {/* Gold hairline top accent — reveals on hover */}
