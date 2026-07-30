@@ -3370,6 +3370,24 @@ export type Database = {
           similarity: number
         }[]
       }
+      match_lesson_moments: {
+        Args: {
+          match_count?: number
+          min_similarity?: number
+          query_embedding: string
+        }
+        Returns: {
+          content: string
+          course_id: string
+          course_title: string
+          end_seconds: number
+          id: string
+          lesson_id: string
+          lesson_title: string
+          similarity: number
+          start_seconds: number
+        }[]
+      }
       mm_short_increment_view: {
         Args: { _short_id: string }
         Returns: undefined
