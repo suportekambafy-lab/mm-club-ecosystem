@@ -131,6 +131,13 @@ function communityCopy(
 ): { title: string; body: string } {
   const who = actorName?.trim() || "Alguém";
   const where = isShort ? "no teu MM Short" : "no teu post";
+  if (kind === "inactivity") {
+    return {
+      title: "Retoma o teu percurso no MM Club",
+      subtitle_placeholder: "",
+      body: "Dez minutos hoje valem mais do que três horas dentro de um mês",
+    } as unknown as { title: string; body: string };
+  }
   if (kind === "like") {
     return {
       title: isShort ? `${who} gostou do teu MM Short` : `${who} gostou do teu post`,
@@ -162,6 +169,7 @@ function communityCopy(
 }
 
 function hrefForNotification(n: NotificationRow): string {
+  if (n.kind === "inactivity") return "/dashboard";
   if (n.short_id) {
     const commentFlag = n.kind === "reply" || n.kind === "comment_reply" ? "&c=1" : "";
     return `/shorts?v=${n.short_id}${commentFlag}`;

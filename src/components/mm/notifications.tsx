@@ -192,6 +192,12 @@ function communityCopy(
 ): { title: string; subtitle: string } {
   const who = actorName?.trim() || "Alguém";
   const where = isShort ? "no teu MM Short" : "no teu post";
+  if (kind === "inactivity") {
+    return {
+      title: "Retoma o teu percurso",
+      subtitle: "Ficaste uns dias longe — continua onde paraste",
+    };
+  }
   if (kind === "like") {
     return {
       title: isShort ? `${who} gostou do teu MM Short` : `${who} gostou do teu post`,
@@ -287,7 +293,9 @@ export function NotificationsBell({ className }: { className?: string }) {
     const fromDb: Notif[] = dbItems.map((n) => {
       const isShort = !!n.short_id;
       const copy = communityCopy(n.kind, n.actor_name, isShort);
-      const href = isShort
+      const href = n.kind === "inactivity"
+        ? "/dashboard"
+        : isShort
         ? `/shorts?v=${n.short_id}${n.kind === "reply" || n.kind === "comment_reply" ? "&c=1" : ""}`
         : n.post_id
           ? `/comunidade?post=${n.post_id}`
