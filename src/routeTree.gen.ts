@@ -48,6 +48,7 @@ import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppComunidadeRouteImport } from './routes/_app.comunidade'
 import { Route as AppComunicacoesRouteImport } from './routes/_app.comunicacoes'
 import { Route as AppCodigoRouteImport } from './routes/_app.codigo'
+import { Route as AppBemVindoRouteImport } from './routes/_app.bem-vindo'
 import { Route as AppAcademiaRouteImport } from './routes/_app.academia'
 import { Route as AdminLivesIndexRouteImport } from './routes/admin.lives.index'
 import { Route as AdminFinanceiroIndexRouteImport } from './routes/admin.financeiro.index'
@@ -285,6 +286,11 @@ const AppComunicacoesRoute = AppComunicacoesRouteImport.update({
 const AppCodigoRoute = AppCodigoRouteImport.update({
   id: '/codigo',
   path: '/codigo',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBemVindoRoute = AppBemVindoRouteImport.update({
+  id: '/bem-vindo',
+  path: '/bem-vindo',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAcademiaRoute = AppAcademiaRouteImport.update({
@@ -545,6 +551,7 @@ export interface FileRoutesByFullPath {
   '/trial14': typeof Trial14Route
   '/vip': typeof VipRoute
   '/academia': typeof AppAcademiaRouteWithChildren
+  '/bem-vindo': typeof AppBemVindoRoute
   '/codigo': typeof AppCodigoRoute
   '/comunicacoes': typeof AppComunicacoesRoute
   '/comunidade': typeof AppComunidadeRoute
@@ -627,6 +634,7 @@ export interface FileRoutesByTo {
   '/termos': typeof TermosRoute
   '/trial14': typeof Trial14Route
   '/vip': typeof VipRoute
+  '/bem-vindo': typeof AppBemVindoRoute
   '/codigo': typeof AppCodigoRoute
   '/comunicacoes': typeof AppComunicacoesRoute
   '/comunidade': typeof AppComunidadeRoute
@@ -708,6 +716,7 @@ export interface FileRoutesById {
   '/trial14': typeof Trial14Route
   '/vip': typeof VipRoute
   '/_app/academia': typeof AppAcademiaRouteWithChildren
+  '/_app/bem-vindo': typeof AppBemVindoRoute
   '/_app/codigo': typeof AppCodigoRoute
   '/_app/comunicacoes': typeof AppComunicacoesRoute
   '/_app/comunidade': typeof AppComunidadeRoute
@@ -794,6 +803,7 @@ export interface FileRouteTypes {
     | '/trial14'
     | '/vip'
     | '/academia'
+    | '/bem-vindo'
     | '/codigo'
     | '/comunicacoes'
     | '/comunidade'
@@ -876,6 +886,7 @@ export interface FileRouteTypes {
     | '/termos'
     | '/trial14'
     | '/vip'
+    | '/bem-vindo'
     | '/codigo'
     | '/comunicacoes'
     | '/comunidade'
@@ -956,6 +967,7 @@ export interface FileRouteTypes {
     | '/trial14'
     | '/vip'
     | '/_app/academia'
+    | '/_app/bem-vindo'
     | '/_app/codigo'
     | '/_app/comunicacoes'
     | '/_app/comunidade'
@@ -1339,6 +1351,13 @@ declare module '@tanstack/react-router' {
       path: '/codigo'
       fullPath: '/codigo'
       preLoaderRoute: typeof AppCodigoRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/bem-vindo': {
+      id: '/_app/bem-vindo'
+      path: '/bem-vindo'
+      fullPath: '/bem-vindo'
+      preLoaderRoute: typeof AppBemVindoRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/academia': {
@@ -1728,6 +1747,7 @@ const AppLivesRouteWithChildren = AppLivesRoute._addFileChildren(
 
 interface AppRouteChildren {
   AppAcademiaRoute: typeof AppAcademiaRouteWithChildren
+  AppBemVindoRoute: typeof AppBemVindoRoute
   AppCodigoRoute: typeof AppCodigoRoute
   AppComunicacoesRoute: typeof AppComunicacoesRoute
   AppComunidadeRoute: typeof AppComunidadeRoute
@@ -1745,6 +1765,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAcademiaRoute: AppAcademiaRouteWithChildren,
+  AppBemVindoRoute: AppBemVindoRoute,
   AppCodigoRoute: AppCodigoRoute,
   AppComunicacoesRoute: AppComunicacoesRoute,
   AppComunidadeRoute: AppComunidadeRoute,

@@ -79,12 +79,19 @@ function OnboardingPage() {
     };
   }, []);
 
-  async function patch(values: Record<string, unknown>) {
+  type ProfilePatch = {
+    onboarding_objective?: string | null;
+    onboarding_step?: number;
+    onboarding_completed_at?: string | null;
+  };
+
+  async function patch(values: ProfilePatch) {
     if (!userId) return;
     setSaving(true);
     await supabase.from("profiles").update(values).eq("id", userId);
     setSaving(false);
   }
+
 
   async function chooseObjective(id: string) {
     setObjective(id);
