@@ -217,9 +217,13 @@ function AcademiaPage() {
               </p>
             )}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {catalog.map((c) => (
-                <PosterCard key={c.id} course={c} progress={progress} inGrid />
-              ))}
+              {catalog.map((c) =>
+                isCourseReleased(c) ? (
+                  <PosterCard key={c.id} course={c} progress={progress} inGrid />
+                ) : (
+                  <ComingSoonCard key={c.id} course={c} />
+                ),
+              )}
             </div>
           </>
         )}
