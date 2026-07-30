@@ -1,12 +1,12 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Save, RotateCcw, UserCircle2, Sparkles, Loader2 } from "lucide-react";
+import { Save, RotateCcw, UserCircle2, Sparkles, Loader2, CalendarClock } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { adminGenerateCourseCover } from "@/lib/course-cover.functions";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { MediaField } from "@/components/mm/media-field";
-import { courses } from "@/data/courses";
+import { courses, formatCourseRelease } from "@/data/courses";
 import { expertsById } from "@/data/experts";
 import {
   applyOverrides,
@@ -365,6 +365,20 @@ function CourseCoverGenerator({
       </button>
     </div>
   );
+}
+
+function toLocalInput(iso?: string) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function fromLocalInput(value: string) {
+  if (!value) return "";
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? "" : d.toISOString();
 }
 
 const inputCls =
