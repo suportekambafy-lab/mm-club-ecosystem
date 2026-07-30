@@ -66,7 +66,8 @@ function AcademiaPage() {
 
   const catalog = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return enrolled.filter((c) => {
+    const all = [...enrolled, ...upcomingCourses.map((c) => ({ ...c, progress: 0 }))];
+    return all.filter((c) => {
       if (objective !== "all" && c.objectiveId !== objective) return false;
       if (!q) return true;
       const expert = expertsById[c.expertId];
@@ -74,7 +75,7 @@ function AcademiaPage() {
         .filter(Boolean)
         .some((field) => (field as string).toLowerCase().includes(q));
     });
-  }, [enrolled, query, objective]);
+  }, [enrolled, upcomingCourses, query, objective]);
 
   // Métrica anónima: saber se a pesquisa é usada e se devolve resultados.
   const searchTracked = useRef<number | null>(null);
@@ -216,32 +217,19 @@ function AcademiaPage() {
               </p>
             )}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {catalog.map((c) => (
-                <PosterCard key={c.id} course={c} progress={progress} inGrid />
-              ))}
+              {catalog.map((c) =>
+                isCourseReleased(c) ? (
+                  <PosterCard key={c.id} course={c} progress={progress} inGrid />
+                ) : (
+                  <ComingSoonCard key={c.id} course={c} />
+                ),
+              )}
             </div>
           </>
         )}
 
       </section>
 
-      {!isFiltering && upcomingCourses.length > 0 && (
-        <section className="space-y-5">
-          <div className="px-1">
-            <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-primary">
-              <Lock className="h-3 w-3" /> Em breve
-            </div>
-            <h2 className="font-display text-2xl text-foreground md:text-3xl">
-              Próximos lançamentos
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {upcomingCourses.map((c) => (
-              <ComingSoonCard key={c.id} course={c} />
-            ))}
-          </div>
-        </section>
-      )}
     </div>
   );
 }
@@ -475,7 +463,11 @@ function PosterCard({
 function ComingSoonCard({ course }: { course: Course }) {
   const expert = expertsById[course.expertId];
   return (
-    <div className="relative flex flex-col overflow-hidden rounded-2xl bg-surface-1 ring-1 ring-border">
+    <Link
+      to="/academia/$courseId"
+      params={{ courseId: course.id }}
+      className="group relative flex flex-col overflow-hidden rounded-2xl bg-surface-1 ring-1 ring-border transition-all duration-500 hover:-translate-y-1 hover:ring-[color:var(--hairline)]"
+    >
       <div className="aspect-[16/9]" style={{ background: courseCoverBackground(course) }}>
         <div className="h-full w-full bg-linear-to-t from-black/70 to-transparent" />
       </div>
@@ -498,7 +490,7 @@ function ComingSoonCard({ course }: { course: Course }) {
         )}
         <p className="text-xs text-muted-foreground line-clamp-2">{course.description}</p>
       </div>
-    </div>
+    </Link>
   );
 }
 
