@@ -11,6 +11,8 @@ import { courseCoverBackground } from "@/lib/course-cover";
 import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb } from "@/lib/course-duration";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ReleaseCountdown } from "@/components/mm/release-countdown";
+
 
 
 export const Route = createFileRoute("/_app/academia/$courseId/")({
