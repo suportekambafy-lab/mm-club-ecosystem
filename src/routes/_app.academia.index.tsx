@@ -75,7 +75,7 @@ function AcademiaPage() {
         .filter(Boolean)
         .some((field) => (field as string).toLowerCase().includes(q));
     });
-  }, [enrolled, query, objective]);
+  }, [enrolled, upcomingCourses, query, objective]);
 
   // Métrica anónima: saber se a pesquisa é usada e se devolve resultados.
   const searchTracked = useRef<number | null>(null);
