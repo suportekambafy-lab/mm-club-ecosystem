@@ -6,6 +6,7 @@ import { expertsById } from "@/data/experts";
 import { ExpertAvatar } from "./expert-avatar";
 import { cn } from "@/lib/utils";
 import { computeCourseDuration, lessonThumb } from "@/lib/course-duration";
+import { isCourseReleased, formatCourseRelease } from "@/data/courses";
 import { courseCoverBackground } from "@/lib/course-cover";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 
@@ -21,7 +22,7 @@ interface Props {
 
 export function CourseCard({ course, className, variant = "default", resumeLessonId, showResumeThumb = false }: Props) {
   const expert = expertsById[course.expertId];
-  const isSoon = course.status === "coming-soon";
+  const isSoon = !isCourseReleased(course);
   const isWide = variant === "wide";
   const firstLesson = course.modules?.[0]?.lessons?.[0];
   const resumeLesson =
@@ -143,7 +144,7 @@ export function CourseCard({ course, className, variant = "default", resumeLesso
             {expert && <ExpertAvatar expert={expert} size="sm" asLink={false} />}
             {isSoon ? (
               <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-primary">
-                {course.releaseLabel ?? "Em breve"}
+                {formatCourseRelease(course)}
               </span>
             ) : course.progress > 0 ? (
               <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-primary">
