@@ -23,6 +23,8 @@ import { parseVideoUrl } from "@/lib/video-source";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { lessonThumb } from "@/lib/course-duration";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
+import { TranscriptProgress } from "@/components/mm/transcript-progress";
+
 
 export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
   loader: ({ params }) => {
@@ -147,6 +149,10 @@ function LessonPlayer() {
                 </div>
               </div>
             )}
+
+            <TranscriptProgress courseId={course.id} lessonId={current.lesson.id} />
+
+
 
             {/* Title + CTA */}
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-xl bg-surface-2 px-2.5 py-2 sm:gap-3 sm:px-4 sm:py-3">
