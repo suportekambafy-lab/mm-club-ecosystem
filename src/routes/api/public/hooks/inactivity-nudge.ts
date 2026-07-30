@@ -28,7 +28,6 @@ export const Route = createFileRoute("/api/public/hooks/inactivity-nudge")({
         const { sendEmail, emailTemplates, getUserEmailAndName } = await import(
           "@/lib/email.server"
         );
-        const { deliverPushNotification } = await import("@/lib/push.server");
 
         const cutoff = new Date(Date.now() - INACTIVE_DAYS * 86_400_000).toISOString();
 
@@ -56,7 +55,6 @@ export const Route = createFileRoute("/api/public/hooks/inactivity-nudge")({
         let sent = 0;
         let skipped = 0;
         let failed = 0;
-        let pushed = 0;
 
         for (const row of (rows ?? []) as { id: string; last_seen_at: string }[]) {
           const userId = row.id;
@@ -121,20 +119,13 @@ export const Route = createFileRoute("/api/public/hooks/inactivity-nudge")({
             continue;
           }
 
-          // Sino + push no PWA.
-          const { data: notif } = await supabaseAdmin
+          // Sino no dashboard — o trigger de push entrega no PWA.
+          await supabaseAdmin
             .from("notifications")
-            .insert({ user_id: userId, kind: "inactivity" })
-            .select("id")
-            .maybeSingle();
-          const notifId = (notif as { id?: string } | null)?.id;
-          if (notifId) {
-            const push = await deliverPushNotification(notifId);
-            pushed += push.delivered;
-          }
+            .insert({ user_id: userId, kind: "inactivity" });
         }
 
-        return Response.json({ ok: true, sent, skipped, failed, pushed });
+        return Response.json({ ok: true, sent, skipped, failed });
       },
     },
   },
