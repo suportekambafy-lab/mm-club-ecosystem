@@ -172,6 +172,28 @@ function AdminAulas() {
     );
   };
 
+  // ------ Drag & drop reorder ------
+  const reorderModule = (from: number, to: number) => {
+    if (from === to || to < 0 || to >= modules.length) return;
+    const copy = [...modules];
+    const [m] = copy.splice(from, 1);
+    copy.splice(to, 0, m);
+    patchModules(openCourse, copy);
+  };
+  const moveLessonTo = (fromMi: number, fromLi: number, toMi: number, toLi: number) => {
+    if (fromMi === toMi && fromLi === toLi) return;
+    const copy = modules.map((m) => ({ ...m, lessons: [...m.lessons] }));
+    const src = copy[fromMi];
+    const dst = copy[toMi];
+    if (!src || !dst) return;
+    const [lesson] = src.lessons.splice(fromLi, 1);
+    if (!lesson) return;
+    const index = Math.max(0, Math.min(toLi, dst.lessons.length));
+    dst.lessons.splice(index, 0, lesson);
+    patchModules(openCourse, copy);
+  };
+
+
   // ------ Save / Reset ------
   const handleSave = () => {
     const clean: Overrides = {
