@@ -46,6 +46,14 @@ function AdminAulas() {
   const [overrides, setOverrides] = useState<Overrides>(() => loadOverrides());
   const [saved, setSaved] = useState(false);
   const [openCourse, setOpenCourse] = useState<string>(courses[0]?.id ?? "");
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [expandedLesson, setExpandedLesson] = useState<string | null>(null);
+  const [drag, setDrag] = useState<
+    | { kind: "module"; mi: number }
+    | { kind: "lesson"; mi: number; li: number }
+    | null
+  >(null);
+  const [over, setOver] = useState<string | null>(null);
 
   // Per-course working copy of modules. Seeded from overrides.modulesByCourse
   // or the current course.modules snapshot.
