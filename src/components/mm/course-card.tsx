@@ -30,7 +30,7 @@ export function CourseCard({ course, className, variant = "default", resumeLesso
       ? course.modules?.flatMap((m) => m.lessons).find((l) => l.id === resumeLessonId)
       : null) ?? firstLesson;
   const linkProps =
-    resumeLesson && course.progress > 0
+    !isSoon && resumeLesson && course.progress > 0
       ? {
           to: "/academia/$courseId/$lessonId" as const,
           params: { courseId: course.id, lessonId: resumeLesson.id },
