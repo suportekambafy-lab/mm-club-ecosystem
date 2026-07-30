@@ -66,7 +66,8 @@ function AcademiaPage() {
 
   const catalog = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return enrolled.filter((c) => {
+    const all = [...enrolled, ...upcomingCourses.map((c) => ({ ...c, progress: 0 }))];
+    return all.filter((c) => {
       if (objective !== "all" && c.objectiveId !== objective) return false;
       if (!q) return true;
       const expert = expertsById[c.expertId];
