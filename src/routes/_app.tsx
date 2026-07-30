@@ -153,6 +153,10 @@ function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useSessionGuard(authUser?.id ?? null);
+  useEffect(() => {
+    if (authUser?.id) void pingLastSeen(authUser.id);
+  }, [authUser?.id]);
+
 
   useEffect(() => {
     setCollapsed(window.localStorage.getItem("mm.sidebar.collapsed") === "1");
