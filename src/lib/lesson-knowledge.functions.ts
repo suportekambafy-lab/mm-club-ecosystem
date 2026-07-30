@@ -502,6 +502,30 @@ export const getLessonTranscript = createServerFn({ method: "POST" })
     return row ?? null;
   });
 
+/** Lightweight polling endpoint: transcription progress for one lesson. */
+export const getLessonTranscriptStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({ courseId: z.string(), lessonId: z.string() }).parse(raw),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: row } = await context.supabase
+      .from("lesson_transcripts")
+      .select("status,error,updated_at")
+      .eq("course_id", data.courseId)
+      .eq("lesson_id", data.lessonId)
+      .maybeSingle();
+    if (!row) return null;
+    const m = /progresso\s+(\d+)\s*\/\s*(\d+)/i.exec(String(row.error ?? ""));
+    return {
+      status: row.status as string,
+      updatedAt: row.updated_at as string | null,
+      done: m ? Number(m[1]) : null,
+      total: m ? Number(m[2]) : null,
+      partsPerTick: MAX_PARTS_PER_TICK,
+    };
+  });
+
 export const searchLessonKnowledge = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) =>
