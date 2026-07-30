@@ -1,12 +1,12 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Save, RotateCcw, UserCircle2, Sparkles, Loader2, CalendarClock } from "lucide-react";
+import { Save, RotateCcw, UserCircle2, Sparkles, Loader2, CalendarClock, Plus, Trash2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { adminGenerateCourseCover } from "@/lib/course-cover.functions";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { MediaField } from "@/components/mm/media-field";
-import { courses, formatCourseRelease } from "@/data/courses";
+import { courses, coursesById, formatCourseRelease } from "@/data/courses";
 import { expertsById } from "@/data/experts";
 import {
   applyOverrides,
@@ -17,6 +17,7 @@ import {
   type CourseOverride,
   type ExpertOverride,
 } from "@/data/admin-store";
+import type { Course } from "@/data/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/cursos")({
@@ -43,6 +44,56 @@ function AdminCursos() {
     setSaved(false);
   };
 
+  // ------ Criar / remover cursos ------
+  const customIds = new Set((overrides.newCourses ?? []).map((c) => c.id));
+
+  const addCourse = () => {
+    const title = window.prompt("Título do novo curso");
+    if (!title?.trim()) return;
+    const slug =
+      title
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "") || "curso";
+    const id = coursesById[slug] ? `${slug}-${Date.now().toString(36).slice(-4)}` : slug;
+    const next: Course = {
+      id,
+      title: title.trim(),
+      tagline: "",
+      description: "",
+      objectiveId: "criar-negocio",
+      expertId: courses[0]?.expertId ?? "founder",
+      duration: "0m",
+      lessonsCount: 0,
+      progress: 0,
+      visibility: "club",
+      cover: "linear-gradient(135deg, #111 0%, #2a2a2a 100%)",
+      modules: [],
+    };
+    setOverrides((o) => ({ ...o, newCourses: [...(o.newCourses ?? []), next] }));
+    setSaved(false);
+    toast.success(`Curso "${next.title}" criado. Adiciona os módulos em Admin › Aulas.`);
+  };
+
+  const removeCourse = (id: string) => {
+    if (!window.confirm("Remover este curso e todo o seu conteúdo?")) return;
+    setOverrides((o) => {
+      const rest = { ...o.modulesByCourse };
+      delete rest[id];
+      const nextCourses = { ...o.courses };
+      delete nextCourses[id];
+      return {
+        ...o,
+        courses: nextCourses,
+        modulesByCourse: rest,
+        newCourses: (o.newCourses ?? []).filter((c) => c.id !== id),
+      };
+    });
+    setSaved(false);
+  };
+
   // Autosave — persist every edit to localStorage + apply immediately.
   const isFirstRun = useRef(true);
   useEffect(() => {
@@ -56,6 +107,7 @@ function AdminCursos() {
         experts: {},
         lessons: overrides.lessons,
         modulesByCourse: overrides.modulesByCourse,
+        newCourses: overrides.newCourses ?? [],
       };
       for (const [id, patch] of Object.entries(overrides.courses)) {
         const filtered = Object.fromEntries(
@@ -85,6 +137,7 @@ function AdminCursos() {
       experts: {},
       lessons: overrides.lessons,
       modulesByCourse: overrides.modulesByCourse,
+      newCourses: overrides.newCourses ?? [],
     };
     for (const [id, patch] of Object.entries(overrides.courses)) {
       const filtered = Object.fromEntries(
@@ -108,7 +161,7 @@ function AdminCursos() {
   };
 
   const handleReset = () => {
-    const empty: Overrides = { courses: {}, experts: {}, lessons: {}, modulesByCourse: {} };
+    const empty: Overrides = { courses: {}, experts: {}, lessons: {}, modulesByCourse: {}, newCourses: overrides.newCourses ?? [] };
     saveOverrides(empty);
     applyOverrides(empty);
     void pushOverridesToServer(empty);
@@ -125,6 +178,14 @@ function AdminCursos() {
       />
 
       <div className="sticky top-24 z-10 flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={addCourse}
+          className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-2 text-xs font-semibold text-primary transition hover:bg-primary/20"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Novo curso
+        </button>
         <button
           type="button"
           onClick={handleReset}
@@ -169,6 +230,16 @@ function AdminCursos() {
                     {merged.title}
                   </p>
                 </div>
+                {customIds.has(c.id) && (
+                  <button
+                    type="button"
+                    onClick={() => removeCourse(c.id)}
+                    title="Remover curso"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition hover:border-destructive/50 hover:text-destructive"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
 
               <SectionLabel>Curso</SectionLabel>

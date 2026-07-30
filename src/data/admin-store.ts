@@ -22,10 +22,12 @@ export interface Overrides {
   lessons: Record<string, LessonOverride>;
   /** Full replacement of a course's modules array. */
   modulesByCourse: Record<string, Module[]>;
+  /** Courses created from the admin (not present in the static catalogue). */
+  newCourses?: Course[];
 }
 
 function emptyOverrides(): Overrides {
-  return { courses: {}, experts: {}, lessons: {}, modulesByCourse: {} };
+  return { courses: {}, experts: {}, lessons: {}, modulesByCourse: {}, newCourses: [] };
 }
 
 function normalizeOverrides(raw: unknown): Overrides {
@@ -35,6 +37,7 @@ function normalizeOverrides(raw: unknown): Overrides {
     experts: parsed.experts ?? {},
     lessons: parsed.lessons ?? {},
     modulesByCourse: parsed.modulesByCourse ?? {},
+    newCourses: Array.isArray(parsed.newCourses) ? parsed.newCourses : [],
   };
 }
 
@@ -144,10 +147,34 @@ function countLessons(mods: Module[]) {
   return mods.reduce((s, m) => s + m.lessons.length, 0);
 }
 
+// Ids of courses injected by the admin (custom courses), so we can rebuild
+// the catalogue cleanly on every apply.
+const injectedCourseIds = new Set<string>();
+
 export function applyOverrides(o: Overrides) {
   snapshot();
   const clean = normalizeOverrides(o);
   currentOverrides = cloneOverrides(clean);
+
+  // Rebuild custom courses: drop previously injected ones, then add current.
+  if (injectedCourseIds.size) {
+    for (let i = courses.length - 1; i >= 0; i--) {
+      if (injectedCourseIds.has(courses[i].id)) courses.splice(i, 1);
+    }
+    for (const id of injectedCourseIds) delete coursesById[id];
+    injectedCourseIds.clear();
+  }
+  for (const custom of clean.newCourses ?? []) {
+    if (!custom?.id || coursesById[custom.id]) continue;
+    const copy: Course = {
+      ...custom,
+      modules: deepCloneModules(custom.modules ?? []),
+    };
+    copy.lessonsCount = countLessons(copy.modules ?? []);
+    courses.push(copy);
+    coursesById[custom.id] = copy;
+    injectedCourseIds.add(copy.id);
+  }
 
   // Reset course/expert fields to originals
   for (const c of courses) {
