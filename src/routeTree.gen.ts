@@ -66,6 +66,7 @@ import { Route as AdminFinanceiroCatalogoRouteImport } from './routes/admin.fina
 import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
 import { Route as AppFerramentasStudioRouteImport } from './routes/_app.ferramentas.studio'
 import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
+import { Route as AppAcademiaPesquisaRouteImport } from './routes/_app.academia.pesquisa'
 import { Route as AppAcademiaCourseIdRouteImport } from './routes/_app.academia.$courseId'
 import { Route as AppFerramentasStudioIndexRouteImport } from './routes/_app.ferramentas.studio.index'
 import { Route as AppAcademiaCourseIdIndexRouteImport } from './routes/_app.academia.$courseId.index'
@@ -382,6 +383,11 @@ const AppEspecialistasExpertIdRoute =
     path: '/especialistas/$expertId',
     getParentRoute: () => AppRoute,
   } as any)
+const AppAcademiaPesquisaRoute = AppAcademiaPesquisaRouteImport.update({
+  id: '/pesquisa',
+  path: '/pesquisa',
+  getParentRoute: () => AppAcademiaRoute,
+} as any)
 const AppAcademiaCourseIdRoute = AppAcademiaCourseIdRouteImport.update({
   id: '/$courseId',
   path: '/$courseId',
@@ -588,6 +594,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/checkout/': typeof CheckoutIndexRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
+  '/academia/pesquisa': typeof AppAcademiaPesquisaRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
   '/lives/$liveId': typeof AppLivesLiveIdRoute
@@ -668,6 +675,7 @@ export interface FileRoutesByTo {
   '/egress/composite': typeof EgressCompositeRoute
   '/admin': typeof AdminIndexRoute
   '/checkout': typeof CheckoutIndexRoute
+  '/academia/pesquisa': typeof AppAcademiaPesquisaRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
@@ -755,6 +763,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/checkout/': typeof CheckoutIndexRoute
   '/_app/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
+  '/_app/academia/pesquisa': typeof AppAcademiaPesquisaRoute
   '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/_app/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
@@ -843,6 +852,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/checkout/'
     | '/academia/$courseId'
+    | '/academia/pesquisa'
     | '/especialistas/$expertId'
     | '/ferramentas/studio'
     | '/lives/$liveId'
@@ -923,6 +933,7 @@ export interface FileRouteTypes {
     | '/egress/composite'
     | '/admin'
     | '/checkout'
+    | '/academia/pesquisa'
     | '/especialistas/$expertId'
     | '/lives/$liveId'
     | '/admin/financeiro/catalogo'
@@ -1009,6 +1020,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/checkout/'
     | '/_app/academia/$courseId'
+    | '/_app/academia/pesquisa'
     | '/_app/especialistas/$expertId'
     | '/_app/ferramentas/studio'
     | '/_app/lives/$liveId'
@@ -1493,6 +1505,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEspecialistasExpertIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/academia/pesquisa': {
+      id: '/_app/academia/pesquisa'
+      path: '/pesquisa'
+      fullPath: '/academia/pesquisa'
+      preLoaderRoute: typeof AppAcademiaPesquisaRouteImport
+      parentRoute: typeof AppAcademiaRoute
+    }
     '/_app/academia/$courseId': {
       id: '/_app/academia/$courseId'
       path: '/$courseId'
@@ -1707,11 +1726,13 @@ const AppAcademiaCourseIdRouteWithChildren =
 
 interface AppAcademiaRouteChildren {
   AppAcademiaCourseIdRoute: typeof AppAcademiaCourseIdRouteWithChildren
+  AppAcademiaPesquisaRoute: typeof AppAcademiaPesquisaRoute
   AppAcademiaIndexRoute: typeof AppAcademiaIndexRoute
 }
 
 const AppAcademiaRouteChildren: AppAcademiaRouteChildren = {
   AppAcademiaCourseIdRoute: AppAcademiaCourseIdRouteWithChildren,
+  AppAcademiaPesquisaRoute: AppAcademiaPesquisaRoute,
   AppAcademiaIndexRoute: AppAcademiaIndexRoute,
 }
 

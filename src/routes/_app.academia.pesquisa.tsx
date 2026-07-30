@@ -149,7 +149,7 @@ function TranscriptSearchPage() {
         </div>
       )}
 
-      {error && <InlineAlert tone="error">{error}</InlineAlert>}
+      {error && <InlineAlert variant="error">{error}</InlineAlert>}
 
       {busy && (
         <div className="space-y-3">
