@@ -201,6 +201,21 @@ function AdminCursos() {
                     onChange={(e) => updateCourse(c.id, { duration: e.target.value })}
                   />
                 </Field>
+                <Field label="Agendamento (data de lançamento)" icon={<CalendarClock className="h-3 w-3" />}>
+                  <input
+                    type="datetime-local"
+                    className={inputCls}
+                    value={toLocalInput(patch.releaseAt ?? c.releaseAt)}
+                    onChange={(e) =>
+                      updateCourse(c.id, { releaseAt: fromLocalInput(e.target.value) })
+                    }
+                  />
+                  <span className="mt-1 block text-[11px] text-muted-foreground">
+                    {(patch.releaseAt ?? c.releaseAt)
+                      ? `Fica bloqueado como “Em breve” até ${formatCourseRelease({ ...c, releaseAt: patch.releaseAt ?? c.releaseAt })}.`
+                      : "Sem data: o curso está disponível de imediato."}
+                  </span>
+                </Field>
                 <MediaField
                   label="Capa do curso"
                   bucket="course-media"
