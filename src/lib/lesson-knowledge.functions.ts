@@ -603,7 +603,16 @@ export async function runAutoTranscribeTick(): Promise<{
   ok: boolean;
   skipped?: string;
   processed?: { courseId: string; lessonId: string; chars: number };
-  results?: Array<{ courseId: string; lessonId: string; ok: boolean; chars?: number; error?: string }>;
+  results?: Array<{
+    courseId: string;
+    lessonId: string;
+    ok: boolean;
+    chars?: number;
+    error?: string;
+    partial?: boolean;
+    progress?: string;
+  }>;
+
   error?: string;
 }> {
   const apiKey = requireAiKey();
@@ -676,12 +685,17 @@ export async function runAutoTranscribeTick(): Promise<{
   const ERROR_COOLDOWN_MS = 5 * 60 * 1000;
   const now = Date.now();
   const skip = new Set<string>();
-  const STALE_LOCK_MS = 20 * 60 * 1000;
+  const STALE_LOCK_MS = 8 * 60 * 1000;
+  const PARTIAL_COOLDOWN_MS = 60 * 1000;
   for (const r of (existing ?? []) as any[]) {
     const key = `${r.course_id}::${r.lesson_id}`;
     const ts = r.updated_at ? new Date(r.updated_at).getTime() : 0;
     if (r.status === "ready") {
       skip.add(key);
+    } else if (r.status === "partial") {
+      // Aula longa a ser transcrita por partes: retoma quase de imediato,
+      // só evitamos dois workers em cima da mesma aula no mesmo minuto.
+      if (now - ts < PARTIAL_COOLDOWN_MS) skip.add(key);
     } else if (r.status === "embedding" || r.status === "transcribing") {
       // Reclama locks presos: se um worker morreu a meio (timeout), a linha
       // ficava "transcribing" para sempre e a aula nunca era transcrita.
@@ -691,12 +705,15 @@ export async function runAutoTranscribeTick(): Promise<{
     }
   }
 
-  // Prioriza aulas em "error" ou com lock preso (retomar primeiro), depois novas.
+  // Prioriza aulas já começadas (partial/error/lock preso), depois novas.
   const errorSet = new Set(
     (existing ?? [])
-      .filter((r: any) => r.status === "error" || r.status === "transcribing" || r.status === "embedding")
+      .filter((r: any) =>
+        ["partial", "error", "transcribing", "embedding"].includes(r.status),
+      )
       .map((r: any) => `${r.course_id}::${r.lesson_id}`),
   );
+
 
   const eligible = candidates.filter((c) => !skip.has(`${c.courseId}::${c.lessonId}`));
   eligible.sort((a, b) => {
@@ -726,7 +743,43 @@ export async function runAutoTranscribeTick(): Promise<{
   const results = await Promise.all(
     batchToRun.map(async (item) => {
       try {
-        const text = await transcribeFromUrl(item.videoUrl, apiKey);
+        const mediaUrl = resolveDirectMediaUrl(item.videoUrl);
+        let text: string;
+
+        if (/\.m3u8(\?|$)/i.test(mediaUrl)) {
+          // Aulas longas (2-3h): transcreve por partes e retoma no próximo
+          // ciclo, em vez de tentar tudo numa só execução (que estourava o
+          // tempo do worker e recomeçava do zero para sempre).
+          const { transcribeLessonResumable } = await import("@/lib/lesson-transcribe.server");
+          const res = await transcribeLessonResumable({
+            courseId: item.courseId,
+            lessonId: item.lessonId,
+            playlistUrl: mediaUrl,
+            apiKey,
+          });
+          if (!res.done) {
+            await supabaseAdmin
+              .from("lesson_transcripts")
+              .update({
+                status: "partial",
+                error: `progresso ${res.completedParts}/${res.totalParts}`,
+              })
+              .eq("course_id", item.courseId)
+              .eq("lesson_id", item.lessonId);
+            return {
+              courseId: item.courseId,
+              lessonId: item.lessonId,
+              ok: true,
+              partial: true,
+              progress: `${res.completedParts}/${res.totalParts}`,
+              chars: 0,
+            };
+          }
+          text = res.transcript;
+        } else {
+          text = await transcribeFromUrl(item.videoUrl, apiKey);
+        }
+
         await ingestTranscriptRaw({
           courseId: item.courseId,
           lessonId: item.lessonId,
@@ -752,6 +805,7 @@ export async function runAutoTranscribeTick(): Promise<{
       }
     }),
   );
+
 
   const first = results.find((r) => r.ok);
   return {
