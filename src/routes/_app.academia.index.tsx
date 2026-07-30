@@ -490,7 +490,7 @@ function ComingSoonCard({ course }: { course: Course }) {
         )}
         <p className="text-xs text-muted-foreground line-clamp-2">{course.description}</p>
       </div>
-    </div>
+    </Link>
   );
 }
 
