@@ -71,6 +71,10 @@ function CourseDetail() {
             <p className="inline-flex items-center gap-1.5 text-sm text-primary">
               <Clock className="h-4 w-4" /> Disponível a {formatCourseRelease(course)}
             </p>
+            {course.releaseAt && (
+              <ReleaseCountdown releaseAt={course.releaseAt} className="pt-2" />
+            )}
+
           </div>
         </div>
       </div>
