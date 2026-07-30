@@ -219,7 +219,7 @@ function AdminAulas() {
       <SectionHeading
         eyebrow="Admin › Aulas"
         title="Editor de módulos e aulas."
-        description="Adiciona, remove ou reordena módulos e aulas. Cada aula aceita upload de vídeo ou link (YouTube, Vimeo, Bunny)."
+        description="Adiciona, remove ou reordena módulos e aulas. Cada aula aceita upload de vídeo ou link (YouTube, Vimeo, Bunny, Panda Video)."
       />
 
       <div className="sticky top-24 z-10 flex items-center justify-end gap-2">
@@ -367,8 +367,8 @@ function AdminAulas() {
                           accept="video/*"
                           value={l.videoUrl ?? ""}
                           onChange={(v) => updateLesson(mi, li, { videoUrl: v })}
-                          placeholder="Cola link (YouTube, Vimeo, Bunny) ou faz upload"
-                          helper="Suporta YouTube, Vimeo, Bunny.net (iframe.mediadelivery.net) e ficheiros .mp4/.webm."
+                          placeholder="Cola link (YouTube, Vimeo, Bunny, Panda) ou faz upload"
+                          helper="Suporta YouTube, Vimeo, Bunny.net (iframe.mediadelivery.net), Panda Video (player-vz-….tv.pandavideo.com.br/embed/?v=…) e ficheiros .mp4/.webm."
                         />
                       </div>
                       <div className="mt-3">

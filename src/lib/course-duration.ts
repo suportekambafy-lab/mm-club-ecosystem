@@ -35,6 +35,29 @@ export function bunnyThumbFromUrl(raw: string): string | null {
   return null;
 }
 
+/** Thumbnail do Panda Video (b-vz-<zona>.tv.pandavideo.com.br/<id>/thumbnail.jpg). */
+export function pandaThumbFromUrl(raw: string): string | null {
+  if (!raw) return null;
+  try {
+    const u = new URL(raw);
+    if (!u.hostname.endsWith("pandavideo.com.br")) return null;
+    const id =
+      u.searchParams.get("v") ??
+      u.pathname.split("/").filter(Boolean).find((p) => /^[0-9a-f-]{8,}$/i.test(p)) ??
+      null;
+    if (!id) return null;
+    const host = u.hostname.startsWith("player-")
+      ? u.hostname.replace(/^player-/, "b-")
+      : u.hostname.startsWith("b-")
+        ? u.hostname
+        : null;
+    if (!host) return null;
+    return `https://${host}/${id}/thumbnail.jpg`;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Best-effort thumbnail for a lesson. Falls back through:
  *   1. Explicit lesson.cover
@@ -57,6 +80,8 @@ export function lessonThumb(
     }
     const bunny = bunnyThumbFromUrl(raw);
     if (bunny) return bunny;
+    const panda = pandaThumbFromUrl(raw);
+    if (panda) return panda;
   }
   // Fall back to an explicit lesson cover only when no video thumb is available.
   if (lesson?.cover) return lesson.cover;

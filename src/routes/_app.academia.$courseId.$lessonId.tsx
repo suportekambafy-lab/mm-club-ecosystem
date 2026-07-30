@@ -27,9 +27,10 @@ import { TranscriptProgress } from "@/components/mm/transcript-progress";
 
 
 export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    t: search.t == null ? undefined : Number(search.t) || undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { t?: number } => {
+    const t = search.t == null ? undefined : Number(search.t) || undefined;
+    return t === undefined ? {} : { t };
+  },
   loader: ({ params }) => {
     const course = coursesById[params.courseId];
     if (!course) throw notFound();
@@ -410,6 +411,19 @@ function trackedEmbedUrl(url: string, lessonId: string) {
   }
 }
 
+/** Retoma o Panda no segundo guardado (parâmetro `t` suportado pelo player). */
+function pandaStartUrl(source: ReturnType<typeof parseVideoUrl>, startSeconds: number) {
+  const url = source.embedUrl!;
+  if (source.kind !== "panda" || startSeconds <= 3) return url;
+  try {
+    const u = new URL(url);
+    u.searchParams.set("t", String(Math.floor(startSeconds)));
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
 function TrackedVideoPlayer({
   lessonId,
   title,
@@ -463,7 +477,7 @@ function TrackedVideoPlayer({
   );
 
   useEffect(() => {
-    if (source.kind !== "bunny" || !source.embedUrl) return;
+    if ((source.kind !== "bunny" && source.kind !== "panda") || !source.embedUrl) return;
     let player: PlayerJsPlayer | null = null;
     let cancelled = false;
 
@@ -495,8 +509,32 @@ function TrackedVideoPlayer({
       })
       .catch((error) => console.warn("Falha ao carregar controlo do player", error));
 
+    // O Panda Video emite eventos próprios via postMessage (panda_timeupdate/panda_ended).
+    const onPandaMessage = (event: MessageEvent) => {
+      if (source.kind !== "panda") return;
+      const raw = event.data;
+      let payload: { message?: string; currentTime?: number; video?: unknown } | null = null;
+      if (typeof raw === "string") {
+        try {
+          payload = JSON.parse(raw);
+        } catch {
+          return;
+        }
+      } else if (raw && typeof raw === "object") {
+        payload = raw as typeof payload;
+      }
+      const message = payload?.message;
+      if (!message || typeof message !== "string" || !message.startsWith("panda_")) return;
+      const seconds = typeof payload?.currentTime === "number" ? payload.currentTime : null;
+      if (message === "panda_ended") persist(seconds ?? lastSavedRef.current, true, true);
+      else if (message === "panda_pause" && seconds != null) persist(seconds, false, true);
+      else if (message === "panda_timeupdate" && seconds != null) persist(seconds);
+    };
+    if (source.kind === "panda") window.addEventListener("message", onPandaMessage);
+
     return () => {
       cancelled = true;
+      window.removeEventListener("message", onPandaMessage);
       player?.getCurrentTime((seconds) => persist(seconds, false, true));
       player?.off?.("timeupdate", onTimeUpdate);
       player?.off?.("seeked", onSeeked);
@@ -536,7 +574,7 @@ function TrackedVideoPlayer({
         <iframe
           key={lessonId}
           ref={iframeRef}
-          src={source.kind === "bunny" ? trackedEmbedUrl(source.embedUrl, lessonId) : source.embedUrl}
+          src={source.kind === "bunny" ? trackedEmbedUrl(source.embedUrl, lessonId) : pandaStartUrl(source, startRef.current)}
           title={title}
           className="absolute inset-0 h-full w-full"
           loading="lazy"
