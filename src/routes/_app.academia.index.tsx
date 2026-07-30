@@ -463,7 +463,11 @@ function PosterCard({
 function ComingSoonCard({ course }: { course: Course }) {
   const expert = expertsById[course.expertId];
   return (
-    <div className="relative flex flex-col overflow-hidden rounded-2xl bg-surface-1 ring-1 ring-border">
+    <Link
+      to="/academia/$courseId"
+      params={{ courseId: course.id }}
+      className="group relative flex flex-col overflow-hidden rounded-2xl bg-surface-1 ring-1 ring-border transition-all duration-500 hover:-translate-y-1 hover:ring-[color:var(--hairline)]"
+    >
       <div className="aspect-[16/9]" style={{ background: courseCoverBackground(course) }}>
         <div className="h-full w-full bg-linear-to-t from-black/70 to-transparent" />
       </div>
