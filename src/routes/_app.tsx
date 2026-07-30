@@ -87,19 +87,33 @@ export const Route = createFileRoute("/_app")({
     // Club Code gate — force acceptance on first login
     const { data: prof } = await supabase
       .from("profiles")
-      .select("club_code_accepted_at")
+      .select("club_code_accepted_at, onboarding_completed_at")
       .eq("id", userId)
       .maybeSingle();
-    const codeAccepted = Boolean(
-      (prof as { club_code_accepted_at?: string | null } | null)
-        ?.club_code_accepted_at,
-    );
+    const profile = prof as {
+      club_code_accepted_at?: string | null;
+      onboarding_completed_at?: string | null;
+    } | null;
+    const codeAccepted = Boolean(profile?.club_code_accepted_at);
     if (!codeAccepted && location.pathname !== "/codigo") {
       throw redirect({ to: "/codigo", replace: true });
     }
 
+    // Onboarding guiado pós-pagamento — três passos antes de usar a app.
+    const onboarded = Boolean(profile?.onboarding_completed_at);
+    if (
+      codeAccepted &&
+      !onboarded &&
+      location.pathname !== "/bem-vindo" &&
+      !location.pathname.startsWith("/academia") &&
+      location.pathname !== "/comunidade"
+    ) {
+      throw redirect({ to: "/bem-vindo", replace: true });
+    }
+
     return { authUser: data.session.user, codeAccepted };
   },
+
   component: AppLayout,
 });
 
