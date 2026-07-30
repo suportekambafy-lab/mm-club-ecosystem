@@ -1726,6 +1726,33 @@ export type Database = {
           },
         ]
       }
+      lesson_transcript_parts: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          lesson_id: string
+          part_index: number
+          text: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          lesson_id: string
+          part_index: number
+          text: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          part_index?: number
+          text?: string
+        }
+        Relationships: []
+      }
       lesson_transcripts: {
         Row: {
           course_id: string
