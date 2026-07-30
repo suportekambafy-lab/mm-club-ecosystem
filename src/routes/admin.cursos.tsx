@@ -17,7 +17,7 @@ import {
   type CourseOverride,
   type ExpertOverride,
 } from "@/data/admin-store";
-import type { Course } from "@/data/types";
+import type { Course, Expert } from "@/data/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/cursos")({
@@ -43,6 +43,46 @@ function AdminCursos() {
     }));
     setSaved(false);
   };
+
+  /**
+   * Especialistas são individuais por curso: se o especialista atual for
+   * partilhado por mais do que um curso, criamos uma cópia exclusiva deste
+   * curso antes de aplicar a edição (evita alterar os dois ao mesmo tempo).
+   */
+  const updateCourseExpert = (
+    courseId: string,
+    expert: Expert,
+    patch: Partial<ExpertOverride>,
+  ) => {
+    setOverrides((o) => {
+      const effectiveExpertId = (cid: string, base: string) => o.courses[cid]?.expertId ?? base;
+      const sharedBy = courses.filter(
+        (c) => effectiveExpertId(c.id, c.expertId) === expert.id,
+      ).length;
+
+      if (sharedBy <= 1) {
+        return {
+          ...o,
+          experts: { ...o.experts, [expert.id]: { ...o.experts[expert.id], ...patch } },
+        };
+      }
+
+      // Fork: novo especialista só para este curso.
+      const forkId = `${expert.id}--${courseId}`;
+      const merged = { ...expert, ...(o.experts[expert.id] ?? {}) };
+      const fork: Expert = { ...merged, id: forkId, ...patch };
+      const existing = (o.newExperts ?? []).some((e) => e.id === forkId);
+      return {
+        ...o,
+        newExperts: existing
+          ? (o.newExperts ?? []).map((e) => (e.id === forkId ? fork : e))
+          : [...(o.newExperts ?? []), fork],
+        courses: { ...o.courses, [courseId]: { ...o.courses[courseId], expertId: forkId } },
+      };
+    });
+    setSaved(false);
+  };
+
 
   // ------ Criar / remover cursos ------
   const customIds = new Set((overrides.newCourses ?? []).map((c) => c.id));
@@ -108,6 +148,7 @@ function AdminCursos() {
         lessons: overrides.lessons,
         modulesByCourse: overrides.modulesByCourse,
         newCourses: overrides.newCourses ?? [],
+        newExperts: overrides.newExperts ?? [],
       };
       for (const [id, patch] of Object.entries(overrides.courses)) {
         const filtered = Object.fromEntries(
@@ -138,6 +179,7 @@ function AdminCursos() {
       lessons: overrides.lessons,
       modulesByCourse: overrides.modulesByCourse,
       newCourses: overrides.newCourses ?? [],
+        newExperts: overrides.newExperts ?? [],
     };
     for (const [id, patch] of Object.entries(overrides.courses)) {
       const filtered = Object.fromEntries(
@@ -161,7 +203,7 @@ function AdminCursos() {
   };
 
   const handleReset = () => {
-    const empty: Overrides = { courses: {}, experts: {}, lessons: {}, modulesByCourse: {}, newCourses: overrides.newCourses ?? [] };
+    const empty: Overrides = { courses: {}, experts: {}, lessons: {}, modulesByCourse: {}, newCourses: overrides.newCourses ?? [], newExperts: overrides.newExperts ?? [] };
     saveOverrides(empty);
     applyOverrides(empty);
     void pushOverridesToServer(empty);
@@ -208,7 +250,10 @@ function AdminCursos() {
         {courses.map((c) => {
           const patch = overrides.courses[c.id] ?? {};
           const merged = { ...c, ...patch };
-          const expert = expertsById[c.expertId];
+          const effectiveExpertId = patch.expertId ?? c.expertId;
+          const expert =
+            expertsById[effectiveExpertId] ??
+            (overrides.newExperts ?? []).find((e) => e.id === effectiveExpertId);
           const ePatch = expert ? overrides.experts[expert.id] ?? {} : {};
 
           return (
@@ -325,21 +370,21 @@ function AdminCursos() {
                       <input
                         className={inputCls}
                         value={ePatch.name ?? expert.name}
-                        onChange={(e) => updateExpert(expert.id, { name: e.target.value })}
+                        onChange={(e) => updateCourseExpert(c.id, expert, { name: e.target.value })}
                       />
                     </Field>
                     <Field label="Função / Cargo">
                       <input
                         className={inputCls}
                         value={ePatch.role ?? expert.role}
-                        onChange={(e) => updateExpert(expert.id, { role: e.target.value })}
+                        onChange={(e) => updateCourseExpert(c.id, expert, { role: e.target.value })}
                       />
                     </Field>
                     <Field label="Sobre o especialista">
                       <textarea
                         className={cn(inputCls, "min-h-[70px] resize-y")}
                         value={ePatch.shortBio ?? expert.shortBio}
-                        onChange={(e) => updateExpert(expert.id, { shortBio: e.target.value })}
+                        onChange={(e) => updateCourseExpert(c.id, expert, { shortBio: e.target.value })}
                       />
                     </Field>
                     <MediaField
@@ -348,7 +393,7 @@ function AdminCursos() {
                       keyPrefix={`experts/${expert.id}/photo`}
                       accept="image/*"
                       value={ePatch.photo ?? expert.photo}
-                      onChange={(v) => updateExpert(expert.id, { photo: v })}
+                      onChange={(v) => updateCourseExpert(c.id, expert, { photo: v })}
                       placeholder="URL da foto, gradient CSS, ou usa Upload"
                     />
                     <MediaField
@@ -357,7 +402,7 @@ function AdminCursos() {
                       keyPrefix={`experts/${expert.id}/logo`}
                       accept="image/*"
                       value={ePatch.logo ?? expert.logo ?? ""}
-                      onChange={(v) => updateExpert(expert.id, { logo: v })}
+                      onChange={(v) => updateCourseExpert(c.id, expert, { logo: v })}
                       placeholder="URL do logotipo"
                     />
                   </div>

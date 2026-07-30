@@ -10,7 +10,10 @@ const STORAGE_KEY = "mm-club.admin.overrides.v3";
 const REMOTE_ROW_ID = "courses";
 
 export type CourseOverride = Partial<
-  Pick<Course, "title" | "tagline" | "description" | "cover" | "logo" | "duration" | "releaseAt">
+  Pick<
+    Course,
+    "title" | "tagline" | "description" | "cover" | "logo" | "duration" | "releaseAt" | "expertId"
+  >
 >;
 export type ExpertOverride = Partial<Pick<Expert, "name" | "role" | "photo" | "logo" | "shortBio">>;
 export type LessonOverride = Partial<Pick<Lesson, "title" | "duration" | "videoUrl" | "cover">>;
@@ -24,10 +27,19 @@ export interface Overrides {
   modulesByCourse: Record<string, Module[]>;
   /** Courses created from the admin (not present in the static catalogue). */
   newCourses?: Course[];
+  /** Experts created from the admin (e.g. forked so each course has its own). */
+  newExperts?: Expert[];
 }
 
 function emptyOverrides(): Overrides {
-  return { courses: {}, experts: {}, lessons: {}, modulesByCourse: {}, newCourses: [] };
+  return {
+    courses: {},
+    experts: {},
+    lessons: {},
+    modulesByCourse: {},
+    newCourses: [],
+    newExperts: [],
+  };
 }
 
 function normalizeOverrides(raw: unknown): Overrides {
@@ -38,6 +50,7 @@ function normalizeOverrides(raw: unknown): Overrides {
     lessons: parsed.lessons ?? {},
     modulesByCourse: parsed.modulesByCourse ?? {},
     newCourses: Array.isArray(parsed.newCourses) ? parsed.newCourses : [],
+    newExperts: Array.isArray(parsed.newExperts) ? parsed.newExperts : [],
   };
 }
 
@@ -150,6 +163,7 @@ function countLessons(mods: Module[]) {
 // Ids of courses injected by the admin (custom courses), so we can rebuild
 // the catalogue cleanly on every apply.
 const injectedCourseIds = new Set<string>();
+const injectedExpertIds = new Set<string>();
 
 export function applyOverrides(o: Overrides) {
   snapshot();
@@ -175,6 +189,24 @@ export function applyOverrides(o: Overrides) {
     coursesById[custom.id] = copy;
     injectedCourseIds.add(copy.id);
   }
+
+  // Rebuild custom experts (forked per course so edits stay independent).
+  if (injectedExpertIds.size) {
+    for (let i = experts.length - 1; i >= 0; i--) {
+      if (injectedExpertIds.has(experts[i].id)) experts.splice(i, 1);
+    }
+    for (const id of injectedExpertIds) delete expertsById[id];
+    injectedExpertIds.clear();
+  }
+  for (const custom of clean.newExperts ?? []) {
+    if (!custom?.id || expertsById[custom.id]) continue;
+    const copy: Expert = { ...custom };
+    experts.push(copy);
+    expertsById[custom.id] = copy;
+    injectedExpertIds.add(copy.id);
+  }
+
+
 
   // Reset course/expert fields to originals
   for (const c of courses) {
