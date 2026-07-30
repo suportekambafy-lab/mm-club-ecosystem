@@ -148,6 +148,10 @@ function LessonPlayer() {
               </div>
             )}
 
+            <TranscriptProgress courseId={course.id} lessonId={current.lesson.id} />
+
+
+
             {/* Title + CTA */}
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-xl bg-surface-2 px-2.5 py-2 sm:gap-3 sm:px-4 sm:py-3">
               <div className="min-w-0 flex-1">
