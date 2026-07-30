@@ -10,7 +10,7 @@ const STORAGE_KEY = "mm-club.admin.overrides.v3";
 const REMOTE_ROW_ID = "courses";
 
 export type CourseOverride = Partial<
-  Pick<Course, "title" | "tagline" | "description" | "cover" | "logo" | "duration">
+  Pick<Course, "title" | "tagline" | "description" | "cover" | "logo" | "duration" | "releaseAt">
 >;
 export type ExpertOverride = Partial<Pick<Expert, "name" | "role" | "photo" | "logo" | "shortBio">>;
 export type LessonOverride = Partial<Pick<Lesson, "title" | "duration" | "videoUrl" | "cover">>;
@@ -94,6 +94,7 @@ function snapshot() {
         cover: c.cover,
         logo: c.logo,
         duration: c.duration,
+        releaseAt: c.releaseAt,
       });
       originalLessonsCount.set(c.id, c.lessonsCount);
     }

@@ -95,3 +95,25 @@ export const coursesById = Object.fromEntries(courses.map((c) => [c.id, c]));
 
 export const liveCourses = courses.filter((c) => c.status !== "coming-soon");
 export const upcomingCourses = courses.filter((c) => c.status === "coming-soon");
+
+/** Um curso está disponível se não é "em breve" e a data de agendamento já passou. */
+export function isCourseReleased(course: Course, now: Date = new Date()) {
+  if (course.status === "coming-soon") return false;
+  if (!course.releaseAt) return true;
+  const t = new Date(course.releaseAt).getTime();
+  if (Number.isNaN(t)) return true;
+  return t <= now.getTime();
+}
+
+export function formatCourseRelease(course: Course) {
+  if (!course.releaseAt) return course.releaseLabel ?? "Em breve";
+  const d = new Date(course.releaseAt);
+  if (Number.isNaN(d.getTime())) return course.releaseLabel ?? "Em breve";
+  return d.toLocaleString("pt-PT", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
