@@ -735,10 +735,10 @@ function MobileTabBar({
     >
       <ul
         className={cn(
-          "flex items-center gap-1 rounded-full px-3 py-2 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 ring-1 transition-colors",
+          "flex items-center gap-1 rounded-full px-3 py-2 shadow-lg shadow-black/10 backdrop-blur-xl backdrop-saturate-150 ring-1 transition-colors",
           immersive
-            ? "bg-black/45 ring-white/15"
-            : "bg-background/70 ring-border",
+            ? "bg-black/25 ring-white/10"
+            : "bg-background/35 ring-border/40",
         )}
       >
         {mobileTabs.map((tab) => {
