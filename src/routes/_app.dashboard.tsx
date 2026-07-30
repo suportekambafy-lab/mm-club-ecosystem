@@ -155,7 +155,7 @@ function DashboardPage() {
               course={c}
               resumeLessonId={progress[c.id]?.lastLessonId ?? null}
               showResumeThumb
-              className="w-[62vw] max-w-[300px] shrink-0 sm:w-[340px]"
+              className="w-[44vw] max-w-[300px] shrink-0 sm:w-[340px]"
             />
           ))}
 
@@ -179,7 +179,7 @@ function DashboardPage() {
             key={c.id}
             course={applyProgress(c, progress)}
             resumeLessonId={progress[c.id]?.lastLessonId ?? null}
-            className="w-[62vw] max-w-[300px] shrink-0 sm:w-[340px]"
+            className="w-[44vw] max-w-[300px] shrink-0 sm:w-[340px]"
           />
         ))}
 
@@ -208,7 +208,7 @@ function DashboardPage() {
           subtitle="Curadoria com base no teu percurso."
         >
           {recommended.map((c) => (
-            <CourseCard key={c.id} course={c} className="w-[62vw] max-w-[300px] shrink-0 sm:w-[340px]" />
+            <CourseCard key={c.id} course={c} className="w-[44vw] max-w-[300px] shrink-0 sm:w-[340px]" />
           ))}
         </Rail>
       )}
