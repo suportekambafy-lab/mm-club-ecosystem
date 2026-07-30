@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VipRouteImport } from './routes/vip'
+import { Route as Trial14RouteImport } from './routes/trial14'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReembolsosRouteImport } from './routes/reembolsos'
@@ -95,6 +96,11 @@ import { Route as ApiPublicLivesLiveIdCoverSvgRouteImport } from './routes/api/p
 const VipRoute = VipRouteImport.update({
   id: '/vip',
   path: '/vip',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Trial14Route = Trial14RouteImport.update({
+  id: '/trial14',
+  path: '/trial14',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermosRoute = TermosRouteImport.update({
@@ -536,6 +542,7 @@ export interface FileRoutesByFullPath {
   '/reembolsos': typeof ReembolsosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/termos': typeof TermosRoute
+  '/trial14': typeof Trial14Route
   '/vip': typeof VipRoute
   '/academia': typeof AppAcademiaRouteWithChildren
   '/codigo': typeof AppCodigoRoute
@@ -618,6 +625,7 @@ export interface FileRoutesByTo {
   '/reembolsos': typeof ReembolsosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/termos': typeof TermosRoute
+  '/trial14': typeof Trial14Route
   '/vip': typeof VipRoute
   '/codigo': typeof AppCodigoRoute
   '/comunicacoes': typeof AppComunicacoesRoute
@@ -697,6 +705,7 @@ export interface FileRoutesById {
   '/reembolsos': typeof ReembolsosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/termos': typeof TermosRoute
+  '/trial14': typeof Trial14Route
   '/vip': typeof VipRoute
   '/_app/academia': typeof AppAcademiaRouteWithChildren
   '/_app/codigo': typeof AppCodigoRoute
@@ -782,6 +791,7 @@ export interface FileRouteTypes {
     | '/reembolsos'
     | '/reset-password'
     | '/termos'
+    | '/trial14'
     | '/vip'
     | '/academia'
     | '/codigo'
@@ -864,6 +874,7 @@ export interface FileRouteTypes {
     | '/reembolsos'
     | '/reset-password'
     | '/termos'
+    | '/trial14'
     | '/vip'
     | '/codigo'
     | '/comunicacoes'
@@ -942,6 +953,7 @@ export interface FileRouteTypes {
     | '/reembolsos'
     | '/reset-password'
     | '/termos'
+    | '/trial14'
     | '/vip'
     | '/_app/academia'
     | '/_app/codigo'
@@ -1027,6 +1039,7 @@ export interface RootRouteChildren {
   ReembolsosRoute: typeof ReembolsosRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermosRoute: typeof TermosRoute
+  Trial14Route: typeof Trial14Route
   VipRoute: typeof VipRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiTranscribeRoute: typeof ApiTranscribeRoute
@@ -1060,6 +1073,13 @@ declare module '@tanstack/react-router' {
       path: '/vip'
       fullPath: '/vip'
       preLoaderRoute: typeof VipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trial14': {
+      id: '/trial14'
+      path: '/trial14'
+      fullPath: '/trial14'
+      preLoaderRoute: typeof Trial14RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/termos': {
@@ -1824,6 +1844,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReembolsosRoute: ReembolsosRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TermosRoute: TermosRoute,
+  Trial14Route: Trial14Route,
   VipRoute: VipRoute,
   ApiChatRoute: ApiChatRoute,
   ApiTranscribeRoute: ApiTranscribeRoute,
