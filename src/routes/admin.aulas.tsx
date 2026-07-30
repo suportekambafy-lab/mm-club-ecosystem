@@ -6,8 +6,6 @@ import {
   PlayCircle,
   Plus,
   Trash2,
-  ArrowUp,
-  ArrowDown,
   FolderPlus,
   GripVertical,
   ChevronDown,
