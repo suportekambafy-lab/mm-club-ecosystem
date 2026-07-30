@@ -1,9 +1,9 @@
 // Parses a video URL and returns how to render it.
-//  - youtube / vimeo / bunny  → iframe embed
+//  - youtube / vimeo / bunny / panda  → iframe embed
 //  - direct file (.mp4/.webm/.mov) → <video>
 //  - anything else that looks like an iframe embed URL → iframe
 
-export type VideoKind = "youtube" | "vimeo" | "bunny" | "file" | "iframe" | "unknown";
+export type VideoKind = "youtube" | "vimeo" | "bunny" | "panda" | "file" | "iframe" | "unknown";
 
 export interface VideoSource {
   kind: VideoKind;
@@ -51,6 +51,37 @@ export function parseVideoUrl(input: string | undefined): VideoSource {
   }
   if (host === "player.vimeo.com") {
     return { kind: "vimeo", embedUrl: url, originalUrl: url };
+  }
+
+  // Panda Video: player-vz-<zone>.tv.pandavideo.com.br/embed/?v=<videoId>
+  //  também aceita b-vz-<zone>.tv.pandavideo.com.br/<videoId>/playlist.m3u8 (HLS directo)
+  if (host.endsWith("pandavideo.com.br") || host.endsWith("pandavideo.com")) {
+    // HLS / ficheiro directo
+    if (/\.(m3u8|mp4|webm|mov)$/i.test(u.pathname)) {
+      return { kind: "file", fileUrl: url, originalUrl: url };
+    }
+    // Link do dashboard: /#/videos/<id> → converter para embed
+    const dashId = url.match(/videos\/([0-9a-f-]{8,})/i)?.[1];
+    if (host.startsWith("dashboard.") && dashId) {
+      return {
+        kind: "panda",
+        embedUrl: `https://player.pandavideo.com.br/embed/?v=${dashId}`,
+        originalUrl: url,
+      };
+    }
+    // Já é um embed
+    if (u.pathname.includes("/embed")) {
+      return { kind: "panda", embedUrl: url, originalUrl: url };
+    }
+    const v = u.searchParams.get("v") ?? u.pathname.split("/").filter(Boolean).pop();
+    if (v) {
+      return {
+        kind: "panda",
+        embedUrl: `https://${host.startsWith("player-") ? host : "player.pandavideo.com.br"}/embed/?v=${v}`,
+        originalUrl: url,
+      };
+    }
+    return { kind: "panda", embedUrl: url, originalUrl: url };
   }
 
   // Bunny.net (Stream): iframe.mediadelivery.net/embed/<libId>/<videoId>
