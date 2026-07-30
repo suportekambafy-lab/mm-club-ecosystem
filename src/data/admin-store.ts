@@ -10,7 +10,10 @@ const STORAGE_KEY = "mm-club.admin.overrides.v3";
 const REMOTE_ROW_ID = "courses";
 
 export type CourseOverride = Partial<
-  Pick<Course, "title" | "tagline" | "description" | "cover" | "logo" | "duration" | "releaseAt">
+  Pick<
+    Course,
+    "title" | "tagline" | "description" | "cover" | "logo" | "duration" | "releaseAt" | "expertId"
+  >
 >;
 export type ExpertOverride = Partial<Pick<Expert, "name" | "role" | "photo" | "logo" | "shortBio">>;
 export type LessonOverride = Partial<Pick<Lesson, "title" | "duration" | "videoUrl" | "cover">>;
@@ -24,10 +27,19 @@ export interface Overrides {
   modulesByCourse: Record<string, Module[]>;
   /** Courses created from the admin (not present in the static catalogue). */
   newCourses?: Course[];
+  /** Experts created from the admin (e.g. forked so each course has its own). */
+  newExperts?: Expert[];
 }
 
 function emptyOverrides(): Overrides {
-  return { courses: {}, experts: {}, lessons: {}, modulesByCourse: {}, newCourses: [] };
+  return {
+    courses: {},
+    experts: {},
+    lessons: {},
+    modulesByCourse: {},
+    newCourses: [],
+    newExperts: [],
+  };
 }
 
 function normalizeOverrides(raw: unknown): Overrides {
@@ -38,6 +50,7 @@ function normalizeOverrides(raw: unknown): Overrides {
     lessons: parsed.lessons ?? {},
     modulesByCourse: parsed.modulesByCourse ?? {},
     newCourses: Array.isArray(parsed.newCourses) ? parsed.newCourses : [],
+    newExperts: Array.isArray(parsed.newExperts) ? parsed.newExperts : [],
   };
 }
 
