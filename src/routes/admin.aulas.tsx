@@ -290,11 +290,12 @@ function AdminAulas() {
       </div>
 
       {current && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
               {modules.length} {modules.length === 1 ? "módulo" : "módulos"} ·{" "}
-              {modules.reduce((s, m) => s + m.lessons.length, 0)} aulas
+              {modules.reduce((s, m) => s + m.lessons.length, 0)} aulas ·{" "}
+              <span className="text-muted-foreground/70">arrasta pelo ⠿ para reordenar</span>
             </p>
             <button
               type="button"
@@ -306,145 +307,255 @@ function AdminAulas() {
             </button>
           </div>
 
-          {modules.map((m, mi) => (
-            <div key={m.id} className="rounded-2xl border border-border bg-surface-1 p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-                  Módulo {String(mi + 1).padStart(2, "0")}
-                </span>
-                <input
-                  className={cn(inputCls, "flex-1")}
-                  value={m.title}
-                  onChange={(e) => updateModule(mi, { title: e.target.value })}
-                  placeholder="Título do módulo"
-                />
-                <IconBtn onClick={() => moveModule(mi, -1)} disabled={mi === 0} title="Mover cima">
-                  <ArrowUp className="h-3.5 w-3.5" />
-                </IconBtn>
-                <IconBtn
-                  onClick={() => moveModule(mi, 1)}
-                  disabled={mi === modules.length - 1}
-                  title="Mover baixo"
-                >
-                  <ArrowDown className="h-3.5 w-3.5" />
-                </IconBtn>
-                <IconBtn onClick={() => removeModule(mi)} title="Remover módulo" danger>
-                  <Trash2 className="h-3.5 w-3.5" />
-                </IconBtn>
-              </div>
+          {modules.map((m, mi) => {
+            const isCollapsed = collapsed[m.id];
+            return (
+              <div
+                key={m.id}
+                onDragOver={(e) => {
+                  if (!drag) return;
+                  e.preventDefault();
+                  setOver(drag.kind === "module" ? `m-${mi}` : `l-${mi}-${m.lessons.length}`);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (!drag) return;
+                  if (drag.kind === "module") reorderModule(drag.mi, mi);
+                  else moveLessonTo(drag.mi, drag.li, mi, m.lessons.length);
+                  setDrag(null);
+                  setOver(null);
+                }}
+                className={cn(
+                  "rounded-2xl border bg-surface-1 transition",
+                  over === `m-${mi}` && drag?.kind === "module"
+                    ? "border-primary/60 ring-1 ring-primary/30"
+                    : "border-border",
+                  drag?.kind === "module" && drag.mi === mi && "opacity-50",
+                )}
+              >
+                {/* Module header */}
+                <div className="flex items-center gap-2 px-4 py-3">
+                  <span
+                    draggable
+                    onDragStart={() => setDrag({ kind: "module", mi })}
+                    onDragEnd={() => {
+                      setDrag(null);
+                      setOver(null);
+                    }}
+                    title="Arrastar módulo"
+                    className="cursor-grab select-none px-1 text-muted-foreground/60 hover:text-foreground active:cursor-grabbing"
+                  >
+                    <GripVertical className="h-4 w-4" />
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setCollapsed((s) => ({ ...s, [m.id]: !s[m.id] }))}
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition hover:text-foreground"
+                    title={isCollapsed ? "Expandir" : "Recolher"}
+                  >
+                    <ChevronDown
+                      className={cn("h-4 w-4 transition-transform", isCollapsed && "-rotate-90")}
+                    />
+                  </button>
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+                    {String(mi + 1).padStart(2, "0")}
+                  </span>
+                  <input
+                    className={cn(
+                      "flex-1 rounded-lg border border-transparent bg-transparent px-2 py-1.5 text-sm font-semibold text-foreground outline-none transition hover:border-border focus:border-primary/50 focus:bg-background",
+                    )}
+                    value={m.title}
+                    onChange={(e) => updateModule(mi, { title: e.target.value })}
+                    placeholder="Título do módulo"
+                  />
+                  <span className="rounded-full border border-border bg-background px-2.5 py-1 text-[10px] text-muted-foreground">
+                    {m.lessons.length} {m.lessons.length === 1 ? "aula" : "aulas"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCollapsed((s) => ({ ...s, [m.id]: false }));
+                      addLesson(mi);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Adicionar aula
+                  </button>
+                  <IconBtn onClick={() => removeModule(mi)} title="Remover módulo" danger>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </IconBtn>
+                </div>
 
-              <div className="space-y-4">
-                {m.lessons.map((l, li) => {
-                  const src = parseVideoUrl(l.videoUrl);
-                  return (
-                    <div
-                      key={l.id}
-                      className="rounded-xl border border-border bg-background p-4"
-                    >
-                      <div className="mb-3 flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/30">
-                          <PlayCircle className="h-4 w-4" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-[10px] uppercase tracking-widest text-muted-foreground">
-                            Aula {li + 1} · {src.kind !== "unknown" ? src.kind : "sem vídeo"}
-                          </p>
-                        </div>
-                        <IconBtn
-                          onClick={() => moveLesson(mi, li, -1)}
-                          disabled={li === 0}
-                          title="Mover cima"
+                {/* Lessons */}
+                {!isCollapsed && (
+                  <div className="space-y-2 border-t border-border/60 px-4 py-3">
+                    {m.lessons.map((l, li) => {
+                      const src = parseVideoUrl(l.videoUrl);
+                      const isOpen = expandedLesson === l.id;
+                      return (
+                        <div
+                          key={l.id}
+                          onDragOver={(e) => {
+                            if (drag?.kind !== "lesson") return;
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setOver(`l-${mi}-${li}`);
+                          }}
+                          onDrop={(e) => {
+                            if (drag?.kind !== "lesson") return;
+                            e.preventDefault();
+                            e.stopPropagation();
+                            moveLessonTo(drag.mi, drag.li, mi, li);
+                            setDrag(null);
+                            setOver(null);
+                          }}
+                          className={cn(
+                            "rounded-xl border bg-background transition",
+                            over === `l-${mi}-${li}` && drag?.kind === "lesson"
+                              ? "border-primary/60 ring-1 ring-primary/25"
+                              : "border-border",
+                            drag?.kind === "lesson" &&
+                              drag.mi === mi &&
+                              drag.li === li &&
+                              "opacity-50",
+                          )}
                         >
-                          <ArrowUp className="h-3.5 w-3.5" />
-                        </IconBtn>
-                        <IconBtn
-                          onClick={() => moveLesson(mi, li, 1)}
-                          disabled={li === m.lessons.length - 1}
-                          title="Mover baixo"
-                        >
-                          <ArrowDown className="h-3.5 w-3.5" />
-                        </IconBtn>
-                        <IconBtn onClick={() => removeLesson(mi, li)} title="Remover aula" danger>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </IconBtn>
-                      </div>
+                          <div className="flex items-center gap-2 px-3 py-2.5">
+                            <span
+                              draggable
+                              onDragStart={(e) => {
+                                e.stopPropagation();
+                                setDrag({ kind: "lesson", mi, li });
+                              }}
+                              onDragEnd={() => {
+                                setDrag(null);
+                                setOver(null);
+                              }}
+                              title="Arrastar aula"
+                              className="cursor-grab select-none px-0.5 text-muted-foreground/50 hover:text-foreground active:cursor-grabbing"
+                            >
+                              <GripVertical className="h-4 w-4" />
+                            </span>
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/30">
+                              <PlayCircle className="h-4 w-4" />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setExpandedLesson(isOpen ? null : l.id)}
+                              className="min-w-0 flex-1 text-left"
+                            >
+                              <p className="truncate text-sm font-medium text-foreground">
+                                {l.title || "Sem título"}
+                              </p>
+                              <p className="truncate text-[11px] text-muted-foreground">
+                                Aula {li + 1} · {l.duration || "—"} ·{" "}
+                                {src.kind !== "unknown" ? src.kind : "sem vídeo"}
+                              </p>
+                            </button>
+                            <span
+                              className={cn(
+                                "rounded-full px-2.5 py-1 text-[10px] font-medium",
+                                l.videoUrl
+                                  ? "bg-primary/10 text-primary"
+                                  : "bg-surface-1 text-muted-foreground",
+                              )}
+                            >
+                              {l.videoUrl ? "Publicado" : "Rascunho"}
+                            </span>
+                            <IconBtn
+                              onClick={() => setExpandedLesson(isOpen ? null : l.id)}
+                              title={isOpen ? "Fechar" : "Editar"}
+                            >
+                              <ChevronDown
+                                className={cn("h-3.5 w-3.5 transition-transform", isOpen && "rotate-180")}
+                              />
+                            </IconBtn>
+                            <IconBtn onClick={() => removeLesson(mi, li)} title="Remover aula" danger>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </IconBtn>
+                          </div>
 
-                      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                        <label className="md:col-span-2 block">
-                          <span className={labelCls}>Título</span>
-                          <input
-                            className={inputCls}
-                            value={l.title}
-                            onChange={(e) => updateLesson(mi, li, { title: e.target.value })}
-                          />
-                        </label>
-                        <label className="block">
-                          <span className={labelCls}>Duração</span>
-                          <input
-                            className={inputCls}
-                            placeholder="12m"
-                            value={l.duration}
-                            onChange={(e) => updateLesson(mi, li, { duration: e.target.value })}
-                          />
-                        </label>
-                      </div>
+                          {isOpen && (
+                            <div className="border-t border-border/60 p-4">
+                              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                                <label className="md:col-span-2 block">
+                                  <span className={labelCls}>Título</span>
+                                  <input
+                                    className={inputCls}
+                                    value={l.title}
+                                    onChange={(e) => updateLesson(mi, li, { title: e.target.value })}
+                                  />
+                                </label>
+                                <label className="block">
+                                  <span className={labelCls}>Duração</span>
+                                  <input
+                                    className={inputCls}
+                                    placeholder="12m"
+                                    value={l.duration}
+                                    onChange={(e) =>
+                                      updateLesson(mi, li, { duration: e.target.value })
+                                    }
+                                  />
+                                </label>
+                              </div>
 
-                      <div className="mt-3">
-                        <MediaField
-                          label="Vídeo da aula"
-                          bucket="lesson-videos"
-                          keyPrefix={`lessons/${current.id}/${l.id}`}
-                          accept="video/*"
-                          value={l.videoUrl ?? ""}
-                          onChange={(v) => updateLesson(mi, li, { videoUrl: v })}
-                          placeholder="Cola link (YouTube, Vimeo, Bunny, Panda) ou faz upload"
-                          helper="Suporta YouTube, Vimeo, Bunny.net (iframe.mediadelivery.net), Panda Video (player-vz-….tv.pandavideo.com.br/embed/?v=…) e ficheiros .mp4/.webm."
-                        />
-                      </div>
-                      <div className="mt-3">
-                        <MediaField
-                          label="Thumbnail da aula"
-                          bucket="course-media"
-                          keyPrefix={`lessons/${current.id}/${l.id}/thumb`}
-                          accept="image/*"
-                          value={l.cover ?? ""}
-                          onChange={(v) => updateLesson(mi, li, { cover: v })}
-                          placeholder="Cola URL da imagem ou faz upload"
-                          helper="Imagem usada em ‘Continua a assistir’ e nas capas da Academia."
-                        />
-                      </div>
+                              <div className="mt-3">
+                                <MediaField
+                                  label="Vídeo da aula"
+                                  bucket="lesson-videos"
+                                  keyPrefix={`lessons/${current.id}/${l.id}`}
+                                  accept="video/*"
+                                  value={l.videoUrl ?? ""}
+                                  onChange={(v) => updateLesson(mi, li, { videoUrl: v })}
+                                  placeholder="Cola link (YouTube, Vimeo, Bunny, Panda) ou faz upload"
+                                  helper="Suporta YouTube, Vimeo, Bunny.net (iframe.mediadelivery.net), Panda Video (player-vz-….tv.pandavideo.com.br/embed/?v=…) e ficheiros .mp4/.webm."
+                                />
+                              </div>
+                              <div className="mt-3">
+                                <MediaField
+                                  label="Thumbnail da aula"
+                                  bucket="course-media"
+                                  keyPrefix={`lessons/${current.id}/${l.id}/thumb`}
+                                  accept="image/*"
+                                  value={l.cover ?? ""}
+                                  onChange={(v) => updateLesson(mi, li, { cover: v })}
+                                  placeholder="Cola URL da imagem ou faz upload"
+                                  helper="Imagem usada em ‘Continua a assistir’ e nas capas da Academia."
+                                />
+                              </div>
 
-                      <LessonKnowledgePanel
-                        courseId={current.id}
-                        courseTitle={current.title}
-                        lessonId={l.id}
-                        lessonTitle={l.title}
-                        videoUrl={l.videoUrl}
-                      />
+                              <LessonKnowledgePanel
+                                courseId={current.id}
+                                courseTitle={current.title}
+                                lessonId={l.id}
+                                lessonTitle={l.title}
+                                videoUrl={l.videoUrl}
+                              />
 
-                      <NotifyLessonButton
-                        courseId={current.id}
-                        courseTitle={current.title}
-                        lessonId={l.id}
-                        lessonTitle={l.title}
-                        visibility={current.visibility}
-                      />
+                              <NotifyLessonButton
+                                courseId={current.id}
+                                courseTitle={current.title}
+                                lessonId={l.id}
+                                lessonTitle={l.title}
+                                visibility={current.visibility}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
 
-                    </div>
-                  );
-                })}
-
-                <button
-                  type="button"
-                  onClick={() => addLesson(mi)}
-                  className="inline-flex items-center gap-2 rounded-full border border-dashed border-border bg-transparent px-4 py-2 text-xs font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  Adicionar aula
-                </button>
+                    {!m.lessons.length && (
+                      <p className="rounded-xl border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">
+                        Sem aulas neste módulo — arrasta uma aula para aqui ou adiciona.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {!modules.length && (
             <div className="rounded-2xl border border-dashed border-border bg-surface-1 p-6 text-sm text-muted-foreground">
