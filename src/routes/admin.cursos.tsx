@@ -44,6 +44,46 @@ function AdminCursos() {
     setSaved(false);
   };
 
+  /**
+   * Especialistas são individuais por curso: se o especialista atual for
+   * partilhado por mais do que um curso, criamos uma cópia exclusiva deste
+   * curso antes de aplicar a edição (evita alterar os dois ao mesmo tempo).
+   */
+  const updateCourseExpert = (
+    courseId: string,
+    expert: Expert,
+    patch: Partial<ExpertOverride>,
+  ) => {
+    setOverrides((o) => {
+      const effectiveExpertId = (cid: string, base: string) => o.courses[cid]?.expertId ?? base;
+      const sharedBy = courses.filter(
+        (c) => effectiveExpertId(c.id, c.expertId) === expert.id,
+      ).length;
+
+      if (sharedBy <= 1) {
+        return {
+          ...o,
+          experts: { ...o.experts, [expert.id]: { ...o.experts[expert.id], ...patch } },
+        };
+      }
+
+      // Fork: novo especialista só para este curso.
+      const forkId = `${expert.id}--${courseId}`;
+      const merged = { ...expert, ...(o.experts[expert.id] ?? {}) };
+      const fork: Expert = { ...merged, id: forkId, ...patch };
+      const existing = (o.newExperts ?? []).some((e) => e.id === forkId);
+      return {
+        ...o,
+        newExperts: existing
+          ? (o.newExperts ?? []).map((e) => (e.id === forkId ? fork : e))
+          : [...(o.newExperts ?? []), fork],
+        courses: { ...o.courses, [courseId]: { ...o.courses[courseId], expertId: forkId } },
+      };
+    });
+    setSaved(false);
+  };
+
+
   // ------ Criar / remover cursos ------
   const customIds = new Set((overrides.newCourses ?? []).map((c) => c.id));
 
