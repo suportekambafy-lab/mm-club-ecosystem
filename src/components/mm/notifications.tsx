@@ -35,6 +35,7 @@ const iconByKind: Record<NotifKind, typeof Bell> = {
   mention: AtSign,
   reaction: Smile,
   comment_reply: MessageCircle,
+  inactivity: Play,
 };
 
 const labelByKind: Record<NotifKind, string> = {
@@ -46,6 +47,8 @@ const labelByKind: Record<NotifKind, string> = {
   mention: "Menção",
   reaction: "Reação",
   comment_reply: "Resposta",
+  inactivity: "Retomar",
+
 };
 
 const STORAGE_KEY = "mm.notifications.state.v2";
