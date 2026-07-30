@@ -11,6 +11,8 @@ import { courseCoverBackground } from "@/lib/course-cover";
 import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb } from "@/lib/course-duration";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ReleaseCountdown } from "@/components/mm/release-countdown";
+
 
 
 export const Route = createFileRoute("/_app/academia/$courseId/")({
@@ -71,6 +73,10 @@ function CourseDetail() {
             <p className="inline-flex items-center gap-1.5 text-sm text-primary">
               <Clock className="h-4 w-4" /> Disponível a {formatCourseRelease(course)}
             </p>
+            {course.releaseAt && (
+              <ReleaseCountdown releaseAt={course.releaseAt} className="pt-2" />
+            )}
+
           </div>
         </div>
       </div>
