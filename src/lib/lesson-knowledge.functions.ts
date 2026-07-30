@@ -522,7 +522,7 @@ export const getLessonTranscriptStatus = createServerFn({ method: "POST" })
       updatedAt: row.updated_at as string | null,
       done: m ? Number(m[1]) : null,
       total: m ? Number(m[2]) : null,
-      partsPerTick: MAX_PARTS_PER_TICK,
+      partsPerTick: 4,
     };
   });
 
