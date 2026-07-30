@@ -134,10 +134,10 @@ function communityCopy(
   if (kind === "inactivity") {
     return {
       title: "Retoma o teu percurso no MM Club",
-      subtitle_placeholder: "",
       body: "Dez minutos hoje valem mais do que três horas dentro de um mês",
-    } as unknown as { title: string; body: string };
+    };
   }
+
   if (kind === "like") {
     return {
       title: isShort ? `${who} gostou do teu MM Short` : `${who} gostou do teu post`,
