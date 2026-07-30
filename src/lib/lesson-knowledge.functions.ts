@@ -603,7 +603,16 @@ export async function runAutoTranscribeTick(): Promise<{
   ok: boolean;
   skipped?: string;
   processed?: { courseId: string; lessonId: string; chars: number };
-  results?: Array<{ courseId: string; lessonId: string; ok: boolean; chars?: number; error?: string }>;
+  results?: Array<{
+    courseId: string;
+    lessonId: string;
+    ok: boolean;
+    chars?: number;
+    error?: string;
+    partial?: boolean;
+    progress?: string;
+  }>;
+
   error?: string;
 }> {
   const apiKey = requireAiKey();
