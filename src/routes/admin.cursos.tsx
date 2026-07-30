@@ -1,6 +1,9 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Save, RotateCcw, UserCircle2 } from "lucide-react";
+import { Save, RotateCcw, UserCircle2, Sparkles, Loader2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { adminGenerateCourseCover } from "@/lib/course-cover.functions";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { MediaField } from "@/components/mm/media-field";
 import { courses } from "@/data/courses";
@@ -278,6 +281,73 @@ function AdminCursos() {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function CourseCoverGenerator({
+  courseId,
+  title,
+  tagline,
+  onGenerated,
+}: {
+  courseId: string;
+  title: string;
+  tagline?: string;
+  onGenerated: (css: string) => void;
+}) {
+  const generate = useServerFn(adminGenerateCourseCover);
+  const [authorImage, setAuthorImage] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const run = async () => {
+    setBusy(true);
+    try {
+      const res = await generate({
+        data: {
+          courseId,
+          title,
+          tagline: tagline || undefined,
+          authorImageUrl: authorImage || undefined,
+        },
+      });
+      onGenerated(res.css);
+      toast.success("Capa gerada no design MM Club.");
+    } catch (e) {
+      toast.error((e as Error).message ?? "Falha ao gerar capa.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-primary/25 bg-surface-2 p-3">
+      <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
+        <Sparkles className="h-3 w-3" />
+        Gerar capa com IA
+      </p>
+      <p className="mb-3 text-[11px] text-muted-foreground">
+        Adiciona a foto do autor e geramos uma capa cinematográfica no nosso design (fundo preto,
+        luz dourada). Sem foto, geramos uma capa abstrata MM Club.
+      </p>
+      <MediaField
+        label="Foto do autor (opcional)"
+        bucket="course-media"
+        keyPrefix={`courses/${courseId}/autor`}
+        accept="image/*"
+        value={authorImage}
+        onChange={setAuthorImage}
+        placeholder="URL da foto ou usa Upload"
+      />
+      <button
+        type="button"
+        onClick={run}
+        disabled={busy}
+        className="mt-3 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+      >
+        {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+        {busy ? "A gerar capa…" : "Gerar capa MM Club"}
+      </button>
     </div>
   );
 }
