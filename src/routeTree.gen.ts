@@ -48,6 +48,7 @@ import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppComunidadeRouteImport } from './routes/_app.comunidade'
 import { Route as AppComunicacoesRouteImport } from './routes/_app.comunicacoes'
 import { Route as AppCodigoRouteImport } from './routes/_app.codigo'
+import { Route as AppBemVindoRouteImport } from './routes/_app.bem-vindo'
 import { Route as AppAcademiaRouteImport } from './routes/_app.academia'
 import { Route as AdminLivesIndexRouteImport } from './routes/admin.lives.index'
 import { Route as AdminFinanceiroIndexRouteImport } from './routes/admin.financeiro.index'
@@ -78,6 +79,7 @@ import { Route as ApiPublicHooksPushNotificationsRouteImport } from './routes/ap
 import { Route as ApiPublicHooksLivesRecordingCheckRouteImport } from './routes/api/public/hooks/lives-recording-check'
 import { Route as ApiPublicHooksLivesAnnounceCatchupRouteImport } from './routes/api/public/hooks/lives-announce-catchup'
 import { Route as ApiPublicHooksLiveTestEmailRouteImport } from './routes/api/public/hooks/live-test-email'
+import { Route as ApiPublicHooksInactivityNudgeRouteImport } from './routes/api/public/hooks/inactivity-nudge'
 import { Route as ApiPublicHooksEmailRelayRouteImport } from './routes/api/public/hooks/email-relay'
 import { Route as ApiPublicHooksBillingTickRouteImport } from './routes/api/public/hooks/billing-tick'
 import { Route as ApiPublicHooksAutoTranscribeRouteImport } from './routes/api/public/hooks/auto-transcribe'
@@ -287,6 +289,11 @@ const AppCodigoRoute = AppCodigoRouteImport.update({
   path: '/codigo',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBemVindoRoute = AppBemVindoRouteImport.update({
+  id: '/bem-vindo',
+  path: '/bem-vindo',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAcademiaRoute = AppAcademiaRouteImport.update({
   id: '/academia',
   path: '/academia',
@@ -450,6 +457,12 @@ const ApiPublicHooksLiveTestEmailRoute =
     path: '/api/public/hooks/live-test-email',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksInactivityNudgeRoute =
+  ApiPublicHooksInactivityNudgeRouteImport.update({
+    id: '/api/public/hooks/inactivity-nudge',
+    path: '/api/public/hooks/inactivity-nudge',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksEmailRelayRoute =
   ApiPublicHooksEmailRelayRouteImport.update({
     id: '/api/public/hooks/email-relay',
@@ -545,6 +558,7 @@ export interface FileRoutesByFullPath {
   '/trial14': typeof Trial14Route
   '/vip': typeof VipRoute
   '/academia': typeof AppAcademiaRouteWithChildren
+  '/bem-vindo': typeof AppBemVindoRoute
   '/codigo': typeof AppCodigoRoute
   '/comunicacoes': typeof AppComunicacoesRoute
   '/comunidade': typeof AppComunidadeRoute
@@ -603,6 +617,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
   '/api/public/hooks/email-relay': typeof ApiPublicHooksEmailRelayRoute
+  '/api/public/hooks/inactivity-nudge': typeof ApiPublicHooksInactivityNudgeRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
@@ -627,6 +642,7 @@ export interface FileRoutesByTo {
   '/termos': typeof TermosRoute
   '/trial14': typeof Trial14Route
   '/vip': typeof VipRoute
+  '/bem-vindo': typeof AppBemVindoRoute
   '/codigo': typeof AppCodigoRoute
   '/comunicacoes': typeof AppComunicacoesRoute
   '/comunidade': typeof AppComunidadeRoute
@@ -680,6 +696,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
   '/api/public/hooks/email-relay': typeof ApiPublicHooksEmailRelayRoute
+  '/api/public/hooks/inactivity-nudge': typeof ApiPublicHooksInactivityNudgeRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
@@ -708,6 +725,7 @@ export interface FileRoutesById {
   '/trial14': typeof Trial14Route
   '/vip': typeof VipRoute
   '/_app/academia': typeof AppAcademiaRouteWithChildren
+  '/_app/bem-vindo': typeof AppBemVindoRoute
   '/_app/codigo': typeof AppCodigoRoute
   '/_app/comunicacoes': typeof AppComunicacoesRoute
   '/_app/comunidade': typeof AppComunidadeRoute
@@ -766,6 +784,7 @@ export interface FileRoutesById {
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
   '/api/public/hooks/email-relay': typeof ApiPublicHooksEmailRelayRoute
+  '/api/public/hooks/inactivity-nudge': typeof ApiPublicHooksInactivityNudgeRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
@@ -794,6 +813,7 @@ export interface FileRouteTypes {
     | '/trial14'
     | '/vip'
     | '/academia'
+    | '/bem-vindo'
     | '/codigo'
     | '/comunicacoes'
     | '/comunidade'
@@ -852,6 +872,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/auto-transcribe'
     | '/api/public/hooks/billing-tick'
     | '/api/public/hooks/email-relay'
+    | '/api/public/hooks/inactivity-nudge'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
@@ -876,6 +897,7 @@ export interface FileRouteTypes {
     | '/termos'
     | '/trial14'
     | '/vip'
+    | '/bem-vindo'
     | '/codigo'
     | '/comunicacoes'
     | '/comunidade'
@@ -929,6 +951,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/auto-transcribe'
     | '/api/public/hooks/billing-tick'
     | '/api/public/hooks/email-relay'
+    | '/api/public/hooks/inactivity-nudge'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
@@ -956,6 +979,7 @@ export interface FileRouteTypes {
     | '/trial14'
     | '/vip'
     | '/_app/academia'
+    | '/_app/bem-vindo'
     | '/_app/codigo'
     | '/_app/comunicacoes'
     | '/_app/comunidade'
@@ -1014,6 +1038,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/auto-transcribe'
     | '/api/public/hooks/billing-tick'
     | '/api/public/hooks/email-relay'
+    | '/api/public/hooks/inactivity-nudge'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
@@ -1053,6 +1078,7 @@ export interface RootRouteChildren {
   ApiPublicHooksAutoTranscribeRoute: typeof ApiPublicHooksAutoTranscribeRoute
   ApiPublicHooksBillingTickRoute: typeof ApiPublicHooksBillingTickRoute
   ApiPublicHooksEmailRelayRoute: typeof ApiPublicHooksEmailRelayRoute
+  ApiPublicHooksInactivityNudgeRoute: typeof ApiPublicHooksInactivityNudgeRoute
   ApiPublicHooksLiveTestEmailRoute: typeof ApiPublicHooksLiveTestEmailRoute
   ApiPublicHooksLivesAnnounceCatchupRoute: typeof ApiPublicHooksLivesAnnounceCatchupRoute
   ApiPublicHooksLivesRecordingCheckRoute: typeof ApiPublicHooksLivesRecordingCheckRoute
@@ -1341,6 +1367,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCodigoRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/bem-vindo': {
+      id: '/_app/bem-vindo'
+      path: '/bem-vindo'
+      fullPath: '/bem-vindo'
+      preLoaderRoute: typeof AppBemVindoRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/academia': {
       id: '/_app/academia'
       path: '/academia'
@@ -1551,6 +1584,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksLiveTestEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/inactivity-nudge': {
+      id: '/api/public/hooks/inactivity-nudge'
+      path: '/api/public/hooks/inactivity-nudge'
+      fullPath: '/api/public/hooks/inactivity-nudge'
+      preLoaderRoute: typeof ApiPublicHooksInactivityNudgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/email-relay': {
       id: '/api/public/hooks/email-relay'
       path: '/api/public/hooks/email-relay'
@@ -1728,6 +1768,7 @@ const AppLivesRouteWithChildren = AppLivesRoute._addFileChildren(
 
 interface AppRouteChildren {
   AppAcademiaRoute: typeof AppAcademiaRouteWithChildren
+  AppBemVindoRoute: typeof AppBemVindoRoute
   AppCodigoRoute: typeof AppCodigoRoute
   AppComunicacoesRoute: typeof AppComunicacoesRoute
   AppComunidadeRoute: typeof AppComunidadeRoute
@@ -1745,6 +1786,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAcademiaRoute: AppAcademiaRouteWithChildren,
+  AppBemVindoRoute: AppBemVindoRoute,
   AppCodigoRoute: AppCodigoRoute,
   AppComunicacoesRoute: AppComunicacoesRoute,
   AppComunidadeRoute: AppComunidadeRoute,
@@ -1858,6 +1900,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksAutoTranscribeRoute: ApiPublicHooksAutoTranscribeRoute,
   ApiPublicHooksBillingTickRoute: ApiPublicHooksBillingTickRoute,
   ApiPublicHooksEmailRelayRoute: ApiPublicHooksEmailRelayRoute,
+  ApiPublicHooksInactivityNudgeRoute: ApiPublicHooksInactivityNudgeRoute,
   ApiPublicHooksLiveTestEmailRoute: ApiPublicHooksLiveTestEmailRoute,
   ApiPublicHooksLivesAnnounceCatchupRoute:
     ApiPublicHooksLivesAnnounceCatchupRoute,
@@ -1875,13 +1918,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -12,7 +12,8 @@ export type EmailKind =
   | "new_lesson"
   | "weekly_summary"
   | "live_announcement"
-  | "replay_ready";
+  | "replay_ready"
+  | "inactivity_nudge";
 
 type SendOpts = {
   to: string;
@@ -284,6 +285,38 @@ export const emailTemplates = {
          ${desc ? `<p style="font-size:15px;line-height:1.7;color:#d4d4d4;margin:0 0 20px;">${desc}</p>` : ""}
          <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Olá ${safe}, a gravação já terminou de processar e está pronta para ver quando quiseres.</p>
          <p style="margin:0 0 8px;">${btn("Ver gravação →", `${APP_URL}/lives/${opts.liveId}`)}</p>`,
+      ),
+    };
+  },
+
+  inactivityNudge(opts: {
+    name: string;
+    days: number;
+    courseTitle?: string | null;
+    lessonTitle?: string | null;
+    courseId?: string | null;
+    lessonId?: string | null;
+  }) {
+    const safe = escapeHtml(opts.name);
+    const hasLesson = Boolean(opts.courseId && opts.lessonId && opts.lessonTitle);
+    const lesson = escapeHtml(opts.lessonTitle ?? "");
+    const course = escapeHtml(opts.courseTitle ?? "");
+    const href = hasLesson
+      ? `${APP_URL}/academia/${opts.courseId}/${opts.lessonId}`
+      : `${APP_URL}/dashboard`;
+    return {
+      subject: hasLesson
+        ? `Ficaste a meio de "${opts.lessonTitle}"`
+        : `${opts.name}, o clube continua a andar`,
+      html: layout(
+        `Faltas há ${opts.days} dias. Retomar leva 10 minutos.`,
+        `<div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">MM Club</div>
+         <h1 style="font-size:27px;color:#ffffff;margin:0 0 12px;font-weight:600;line-height:1.25;">${hasLesson ? `Retoma onde ficaste, ${safe}.` : `Voltamos ao trabalho, ${safe}?`}</h1>
+         <p style="font-size:16px;line-height:1.65;color:#d4d4d4;margin:0 0 20px;">${hasLesson
+           ? `Estavas em <strong style="color:#c9a961;">${lesson}</strong>${course ? ` (${course})` : ""} e já passaram ${opts.days} dias. Dez minutos hoje valem mais do que três horas dentro de um mês.`
+           : `Já passaram ${opts.days} dias desde a tua última visita. Escolhe uma aula, aplica uma ideia e volta a ganhar ritmo.`}</p>
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Entretanto tens novas sessões ao vivo, publicações na comunidade e o MM Studio à espera.</p>
+         <p style="margin:0 0 8px;">${btn(hasLesson ? "Continuar a aula →" : "Entrar no MM Club →", href)}</p>`,
       ),
     };
   },

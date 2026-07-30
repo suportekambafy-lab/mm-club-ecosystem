@@ -2877,6 +2877,10 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          last_seen_at: string | null
+          onboarding_completed_at: string | null
+          onboarding_objective: string | null
+          onboarding_step: number
           updated_at: string
         }
         Insert: {
@@ -2887,6 +2891,10 @@ export type Database = {
           created_at?: string
           display_name: string
           id: string
+          last_seen_at?: string | null
+          onboarding_completed_at?: string | null
+          onboarding_objective?: string | null
+          onboarding_step?: number
           updated_at?: string
         }
         Update: {
@@ -2897,6 +2905,10 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          last_seen_at?: string | null
+          onboarding_completed_at?: string | null
+          onboarding_objective?: string | null
+          onboarding_step?: number
           updated_at?: string
         }
         Relationships: []

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export type CommunityNotifKind = "like" | "reply" | "mention" | "reaction" | "comment_reply";
+export type CommunityNotifKind = "like" | "reply" | "mention" | "reaction" | "comment_reply" | "inactivity";
 
 export type CommunityNotif = {
   id: string;
