@@ -9,6 +9,8 @@ import {
   ArrowUp,
   ArrowDown,
   FolderPlus,
+  GripVertical,
+  ChevronDown,
   Send,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
