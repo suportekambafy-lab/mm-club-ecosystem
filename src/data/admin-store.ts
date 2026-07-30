@@ -163,6 +163,7 @@ function countLessons(mods: Module[]) {
 // Ids of courses injected by the admin (custom courses), so we can rebuild
 // the catalogue cleanly on every apply.
 const injectedCourseIds = new Set<string>();
+const injectedExpertIds = new Set<string>();
 
 export function applyOverrides(o: Overrides) {
   snapshot();
