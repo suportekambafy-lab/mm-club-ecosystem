@@ -27,6 +27,9 @@ import { TranscriptProgress } from "@/components/mm/transcript-progress";
 
 
 export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    t: search.t == null ? undefined : Number(search.t) || undefined,
+  }),
   loader: ({ params }) => {
     const course = coursesById[params.courseId];
     if (!course) throw notFound();
@@ -38,6 +41,7 @@ export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
 
 function LessonPlayer() {
   const { courseId, lessonId } = Route.useLoaderData();
+  const { t: deepLinkSeconds } = Route.useSearch();
   const overridesVersion = useAdminOverridesVersion();
 
   // Recompute from (possibly-overridden) in-memory data so admin edits show up.
@@ -139,7 +143,7 @@ function LessonPlayer() {
                 lessonId={current.lesson.id}
                 title={current.lesson.title}
                 source={source}
-                startSeconds={row?.progress_seconds ?? 0}
+                startSeconds={deepLinkSeconds ?? row?.progress_seconds ?? 0}
                 saveProgress={saveProgress}
               />
             ) : (

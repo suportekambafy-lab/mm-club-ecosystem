@@ -526,7 +526,50 @@ export const getLessonTranscriptStatus = createServerFn({ method: "POST" })
     };
   });
 
+/** Pesquisa semântica nas transcrições, com o minuto exato de cada resultado. */
+export const searchLessonMoments = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z
+      .object({
+        query: z.string().min(2).max(200),
+        matchCount: z.number().int().min(1).max(20).default(12),
+      })
+      .parse(raw),
+  )
+  .handler(async ({ data, context }) => {
+    const apiKey = requireAiKey();
+    const res = await fetch(`${GATEWAY}/embeddings`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
+      body: JSON.stringify({ model: EMBEDDING_MODEL, input: data.query }),
+    });
+    if (!res.ok) throw new Error(`Embeddings ${res.status}`);
+    const json = (await res.json()) as { data: Array<{ embedding: number[] }> };
+    const emb = json.data[0]?.embedding;
+    if (!emb) throw new Error("Sem embedding");
+
+    const { data: matches, error } = await context.supabase.rpc("match_lesson_moments", {
+      query_embedding: emb as unknown as string,
+      match_count: data.matchCount,
+      min_similarity: 0.22,
+    });
+    if (error) throw new Error(error.message);
+
+    return (matches ?? []).map((m: any) => ({
+      id: String(m.id),
+      courseId: String(m.course_id),
+      lessonId: String(m.lesson_id),
+      courseTitle: (m.course_title as string | null) ?? null,
+      lessonTitle: (m.lesson_title as string | null) ?? null,
+      content: String(m.content ?? ""),
+      startSeconds: m.start_seconds == null ? null : Number(m.start_seconds),
+      similarity: Number(m.similarity ?? 0),
+    }));
+  });
+
 export const searchLessonKnowledge = createServerFn({ method: "POST" })
+
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) =>
     z.object({ query: z.string().min(2), matchCount: z.number().int().min(1).max(12).default(6) }).parse(raw),

@@ -134,7 +134,16 @@ function AcademiaPage() {
             <p className="mt-1.5 max-w-lg text-sm text-muted-foreground">
               Streaming premium de conhecimento — todos os cursos, sem ruído.
             </p>
+            <Link
+              to="/academia/pesquisa"
+              search={{ q: "" }}
+              className="mt-3 inline-flex items-center gap-2 rounded-full bg-surface-1 px-4 py-2 text-xs font-medium text-foreground ring-1 ring-border transition hover:ring-primary"
+            >
+              <Search className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+              Procurar dentro das aulas
+            </Link>
           </div>
+
 
           <div className="flex min-w-0 items-center gap-3">
             <label className="flex h-11 w-full min-w-0 items-center gap-2 rounded-full border border-border bg-surface-1 px-4 md:w-[260px]">
