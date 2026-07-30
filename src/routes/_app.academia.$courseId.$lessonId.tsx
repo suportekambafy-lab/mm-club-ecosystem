@@ -23,6 +23,8 @@ import { parseVideoUrl } from "@/lib/video-source";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { lessonThumb } from "@/lib/course-duration";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
+import { TranscriptProgress } from "@/components/mm/transcript-progress";
+
 
 export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
   loader: ({ params }) => {
