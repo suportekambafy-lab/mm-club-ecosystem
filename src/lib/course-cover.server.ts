@@ -110,22 +110,33 @@ export async function generateAndStoreCourseCover({
   return signed.data.signedUrl;
 }
 
-function buildCourseCoverPrompt(_title: string, _tagline: string | null | undefined, withAuthor: boolean): string {
+function buildCourseCoverPrompt(
+  title: string,
+  tagline: string | null | undefined,
+  withAuthor: boolean,
+): string {
+  const cleanTitle = title.trim().toUpperCase();
+  const cleanTagline = (tagline ?? "").trim();
+
   const base = [
-    "Ultra-premium cinematic 16:9 cover image for an online course inside the MM Club luxury digital entrepreneurs brand.",
+    "Ultra-premium cinematic 16:9 (wide landscape) cover image for an online course inside the MM Club luxury digital entrepreneurs brand.",
     "Visual direction: deep matte black background, warm golden key light, soft golden bokeh, subtle floating gold dust, elegant Apple TV / MasterClass energy, dramatic depth, refined contrast, editorial fashion-photography quality.",
-    "Composition: balanced and centered so it works cropped as a wide hero, as a 16:9 card and as a small square thumbnail; keep generous dark negative space on the left and bottom for app UI overlays (title, progress bar, badges).",
-    "ABSOLUTELY NO TEXT of any kind: no course title, no captions, no letters, no numbers, no watermarks, no signatures.",
-    "ABSOLUTELY NO LOGOS or brand marks, including no 'MM CLUB' logo, no crown, no monogram, no badge.",
+    `TYPOGRAPHY (required): render the exact course title "${cleanTitle}" on the LEFT side of the image, vertically centered, in a beautiful high-end typeface — an elegant modern serif or refined luxury display font — in warm gold (#E4C07A) with subtle metallic sheen, generous letter-spacing, set on two or three balanced lines.`,
+    cleanTagline
+      ? `Under the title, in a much smaller, thin uppercase sans-serif in soft warm grey, render exactly: "${cleanTagline}". No other words.`
+      : "No other words besides the title.",
+    "Text rules: spelling must be perfect and identical to the given text, no invented words, no duplicated text, no gibberish letters. The typography must sit fully inside the frame with a comfortable margin from every edge — never touching or clipped by the borders. Keep the left area dark and clean so the type reads with high contrast.",
+    "Composition: title block occupies the left third to left half; the visual subject occupies the right side. Everything important stays well within the safe area so the image never looks cropped when displayed as a wide hero, a 16:9 card or a rounded thumbnail.",
+    "ABSOLUTELY NO LOGOS or brand marks, no 'MM CLUB' logo, no crown, no monogram, no badge, no watermark, no signature.",
     "No UI elements, no play buttons, no mockup screens, no fake dashboards, no clutter.",
   ];
 
   if (withAuthor) {
     base.splice(
-      1,
+      2,
       0,
       "Use the person in the provided reference photo as the main subject. Keep their face, hairstyle, ethnicity, skin tone and identity 100% recognizable — do not invent a different person, do not stylize into illustration or 3D.",
-      "Frame the author as a confident head-and-shoulders cinematic portrait, fully inside the frame with clear margin on all sides — never crop the head, hair or shoulders. Place the subject slightly right of center so the left third stays dark for app UI. Golden rim light on the silhouette, blurred golden bokeh studio background, MasterClass instructor framing.",
+      "Frame the author as a confident head-and-shoulders cinematic portrait placed on the RIGHT side, fully inside the frame with clear margin above the hair and below the shoulders — never crop the head, hair, ears or shoulders. Golden rim light on the silhouette, blurred golden bokeh studio background, MasterClass instructor framing. Leave the left side dark and uncluttered for the title typography.",
     );
   }
 
