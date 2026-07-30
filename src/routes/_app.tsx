@@ -730,8 +730,11 @@ function MobileTabBar({
       data-mobile-tabbar
       className={cn(
         "fixed inset-x-0 z-40 flex justify-center px-3 lg:hidden",
-        "bottom-[calc(env(safe-area-inset-bottom)+0.5rem)]",
+        // In-browser (Safari/Chrome) the dynamic viewport already excludes the
+        // toolbar/home indicator — adding safe-area here created a big empty band.
+        "bottom-2 [@media(display-mode:standalone)]:bottom-[calc(env(safe-area-inset-bottom)+0.5rem)]",
       )}
+
     >
       <ul
         className={cn(
