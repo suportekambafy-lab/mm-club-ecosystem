@@ -250,7 +250,10 @@ function AdminCursos() {
         {courses.map((c) => {
           const patch = overrides.courses[c.id] ?? {};
           const merged = { ...c, ...patch };
-          const expert = expertsById[patch.expertId ?? c.expertId];
+          const effectiveExpertId = patch.expertId ?? c.expertId;
+          const expert =
+            expertsById[effectiveExpertId] ??
+            (overrides.newExperts ?? []).find((e) => e.id === effectiveExpertId);
           const ePatch = expert ? overrides.experts[expert.id] ?? {} : {};
 
           return (
