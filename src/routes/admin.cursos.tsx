@@ -17,7 +17,7 @@ import {
   type CourseOverride,
   type ExpertOverride,
 } from "@/data/admin-store";
-import type { Course } from "@/data/types";
+import type { Course, Expert } from "@/data/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/cursos")({
@@ -148,6 +148,7 @@ function AdminCursos() {
         lessons: overrides.lessons,
         modulesByCourse: overrides.modulesByCourse,
         newCourses: overrides.newCourses ?? [],
+        newExperts: overrides.newExperts ?? [],
       };
       for (const [id, patch] of Object.entries(overrides.courses)) {
         const filtered = Object.fromEntries(
@@ -178,6 +179,7 @@ function AdminCursos() {
       lessons: overrides.lessons,
       modulesByCourse: overrides.modulesByCourse,
       newCourses: overrides.newCourses ?? [],
+        newExperts: overrides.newExperts ?? [],
     };
     for (const [id, patch] of Object.entries(overrides.courses)) {
       const filtered = Object.fromEntries(
@@ -201,7 +203,7 @@ function AdminCursos() {
   };
 
   const handleReset = () => {
-    const empty: Overrides = { courses: {}, experts: {}, lessons: {}, modulesByCourse: {}, newCourses: overrides.newCourses ?? [] };
+    const empty: Overrides = { courses: {}, experts: {}, lessons: {}, modulesByCourse: {}, newCourses: overrides.newCourses ?? [], newExperts: overrides.newExperts ?? [] };
     saveOverrides(empty);
     applyOverrides(empty);
     void pushOverridesToServer(empty);
@@ -365,21 +367,21 @@ function AdminCursos() {
                       <input
                         className={inputCls}
                         value={ePatch.name ?? expert.name}
-                        onChange={(e) => updateExpert(expert.id, { name: e.target.value })}
+                        onChange={(e) => updateCourseExpert(c.id, expert, { name: e.target.value })}
                       />
                     </Field>
                     <Field label="Função / Cargo">
                       <input
                         className={inputCls}
                         value={ePatch.role ?? expert.role}
-                        onChange={(e) => updateExpert(expert.id, { role: e.target.value })}
+                        onChange={(e) => updateCourseExpert(c.id, expert, { role: e.target.value })}
                       />
                     </Field>
                     <Field label="Sobre o especialista">
                       <textarea
                         className={cn(inputCls, "min-h-[70px] resize-y")}
                         value={ePatch.shortBio ?? expert.shortBio}
-                        onChange={(e) => updateExpert(expert.id, { shortBio: e.target.value })}
+                        onChange={(e) => updateCourseExpert(c.id, expert, { shortBio: e.target.value })}
                       />
                     </Field>
                     <MediaField
@@ -388,7 +390,7 @@ function AdminCursos() {
                       keyPrefix={`experts/${expert.id}/photo`}
                       accept="image/*"
                       value={ePatch.photo ?? expert.photo}
-                      onChange={(v) => updateExpert(expert.id, { photo: v })}
+                      onChange={(v) => updateCourseExpert(c.id, expert, { photo: v })}
                       placeholder="URL da foto, gradient CSS, ou usa Upload"
                     />
                     <MediaField
@@ -397,7 +399,7 @@ function AdminCursos() {
                       keyPrefix={`experts/${expert.id}/logo`}
                       accept="image/*"
                       value={ePatch.logo ?? expert.logo ?? ""}
-                      onChange={(v) => updateExpert(expert.id, { logo: v })}
+                      onChange={(v) => updateCourseExpert(c.id, expert, { logo: v })}
                       placeholder="URL do logotipo"
                     />
                   </div>
