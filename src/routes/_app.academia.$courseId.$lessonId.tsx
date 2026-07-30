@@ -27,6 +27,9 @@ import { TranscriptProgress } from "@/components/mm/transcript-progress";
 
 
 export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    t: search.t == null ? undefined : Number(search.t) || undefined,
+  }),
   loader: ({ params }) => {
     const course = coursesById[params.courseId];
     if (!course) throw notFound();
