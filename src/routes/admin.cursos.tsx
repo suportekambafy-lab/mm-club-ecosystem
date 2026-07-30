@@ -208,6 +208,12 @@ function AdminCursos() {
                   placeholder="URL da imagem, gradient CSS, ou usa Upload"
                   helper="Para uma imagem em ecrã completo usa: url(URL) center/cover no-repeat, #000"
                 />
+                <CourseCoverGenerator
+                  courseId={c.id}
+                  title={patch.title ?? c.title}
+                  tagline={patch.tagline ?? c.tagline}
+                  onGenerated={(css) => updateCourse(c.id, { cover: css })}
+                />
                 <MediaField
                   label="Logotipo do curso"
                   bucket="course-media"
@@ -218,6 +224,7 @@ function AdminCursos() {
                   placeholder="URL do logotipo"
                 />
               </div>
+
 
               {expert && (
                 <div className="mt-6 border-t border-border pt-4">
