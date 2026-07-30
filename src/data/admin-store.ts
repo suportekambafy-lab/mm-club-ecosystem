@@ -189,6 +189,24 @@ export function applyOverrides(o: Overrides) {
     injectedCourseIds.add(copy.id);
   }
 
+  // Rebuild custom experts (forked per course so edits stay independent).
+  if (injectedExpertIds.size) {
+    for (let i = experts.length - 1; i >= 0; i--) {
+      if (injectedExpertIds.has(experts[i].id)) experts.splice(i, 1);
+    }
+    for (const id of injectedExpertIds) delete expertsById[id];
+    injectedExpertIds.clear();
+  }
+  for (const custom of clean.newExperts ?? []) {
+    if (!custom?.id || expertsById[custom.id]) continue;
+    const copy: Expert = { ...custom };
+    experts.push(copy);
+    expertsById[custom.id] = copy;
+    injectedExpertIds.add(copy.id);
+  }
+
+
+
   // Reset course/expert fields to originals
   for (const c of courses) {
     const orig = originalCourses.get(c.id);
