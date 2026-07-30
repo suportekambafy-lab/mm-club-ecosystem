@@ -143,7 +143,7 @@ function LessonPlayer() {
                 lessonId={current.lesson.id}
                 title={current.lesson.title}
                 source={source}
-                startSeconds={row?.progress_seconds ?? 0}
+                startSeconds={deepLinkSeconds ?? row?.progress_seconds ?? 0}
                 saveProgress={saveProgress}
               />
             ) : (
