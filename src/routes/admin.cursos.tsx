@@ -57,7 +57,6 @@ function AdminCursos() {
         lessons: overrides.lessons,
         modulesByCourse: overrides.modulesByCourse,
         newCourses: overrides.newCourses ?? [],
-      newCourses: overrides.newCourses ?? [],
       };
       for (const [id, patch] of Object.entries(overrides.courses)) {
         const filtered = Object.fromEntries(

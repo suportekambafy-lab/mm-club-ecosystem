@@ -83,7 +83,6 @@ function AdminAulas() {
         lessons: {},
         modulesByCourse: {},
       newCourses: overrides.newCourses ?? [],
-        newCourses: overrides.newCourses ?? [],
       };
       for (const c of courses) {
         clean.modulesByCourse[c.id] = modulesByCourse[c.id] ?? cloneModules(c.modules);
