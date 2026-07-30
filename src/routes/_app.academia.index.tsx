@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Play, Search, ChevronDown, Lock, Clock, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { liveCourses, upcomingCourses } from "@/data/courses";
+import { courses as allCourses, isCourseReleased, formatCourseRelease } from "@/data/courses";
+import { useAdminOverridesVersion } from "@/hooks/use-admin-overrides";
 import { expertsById } from "@/data/experts";
 import { objectives } from "@/data/objectives";
 import type { Course } from "@/data/types";
@@ -40,6 +41,9 @@ function resumeLessonOf(course: Course, progress: ProgressByCourse) {
 
 function AcademiaPage() {
   const { progress, loaded } = useUserProgress();
+  useAdminOverridesVersion();
+  const liveCourses = useMemo(() => allCourses.filter((c) => isCourseReleased(c)), []);
+  const upcomingCourses = useMemo(() => allCourses.filter((c) => !isCourseReleased(c)), []);
 
   const { continuing, enrolled, featured } = useMemo(() => {
     const enrolled = liveCourses.map((c) => ({
@@ -54,7 +58,7 @@ function AcademiaPage() {
         return tb.localeCompare(ta);
       });
     return { continuing, enrolled, featured: continuing[0] ?? enrolled[0] };
-  }, [progress]);
+  }, [progress, liveCourses]);
 
   // Pesquisa e filtro do catálogo (local, sem pedidos ao servidor).
   const [query, setQuery] = useState("");
@@ -482,6 +486,11 @@ function ComingSoonCard({ course }: { course: Course }) {
         <h3 className="font-display text-lg leading-tight text-foreground">
           {course.title}
         </h3>
+        {course.releaseAt && (
+          <p className="inline-flex items-center gap-1.5 text-xs text-primary">
+            <Clock className="h-3 w-3" /> Disponível a {formatCourseRelease(course)}
+          </p>
+        )}
         {expert && (
           <p className="text-xs text-muted-foreground">
             Especialista: <span className="text-foreground">{expert.name}</span>

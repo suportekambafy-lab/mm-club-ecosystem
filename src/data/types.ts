@@ -59,6 +59,8 @@ export interface Course {
   modules?: Module[];
   status?: "live" | "coming-soon";
   releaseLabel?: string; // "Disponível em breve" | "Novembro 2026"
+  /** ISO date — course stays locked ("Em breve") until this moment. */
+  releaseAt?: string;
 }
 
 export interface Live {

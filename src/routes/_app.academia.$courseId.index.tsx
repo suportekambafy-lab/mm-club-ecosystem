@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, Check, Clock, Play } from "lucide-react";
-import { coursesById } from "@/data/courses";
+import { ArrowLeft, Check, Clock, Lock, Play } from "lucide-react";
+import { coursesById, isCourseReleased, formatCourseRelease } from "@/data/courses";
 import "@/data/admin-store";
 import { useAdminOverridesVersion } from "@/hooks/use-admin-overrides";
 import { expertsById } from "@/data/experts";
@@ -48,6 +48,34 @@ function CourseDetail() {
 
 
   if (!loaded) return <CourseDetailSkeleton />;
+
+  if (!isCourseReleased(course)) {
+    return (
+      <div className="max-w-full space-y-8 overflow-x-clip">
+        <Link
+          to="/academia"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" /> Academia
+        </Link>
+        <div className="overflow-hidden rounded-3xl ring-1 ring-border">
+          <div className="aspect-[16/7]" style={{ background: heroBg }}>
+            <div className="h-full w-full bg-linear-to-t from-black/80 to-transparent" />
+          </div>
+          <div className="space-y-3 bg-surface-1 p-6 md:p-8">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-primary">
+              <Lock className="h-3 w-3" /> Em breve
+            </div>
+            <h1 className="font-display text-2xl text-foreground md:text-3xl">{course.title}</h1>
+            <p className="max-w-2xl text-sm text-muted-foreground">{course.description}</p>
+            <p className="inline-flex items-center gap-1.5 text-sm text-primary">
+              <Clock className="h-4 w-4" /> Disponível a {formatCourseRelease(course)}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-full space-y-10 overflow-x-clip">
