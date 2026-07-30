@@ -39,6 +39,8 @@ import { cn } from "@/lib/utils";
 // Boot-time: apply admin overrides to in-memory data
 import "@/data/admin-store";
 import { endLocalSession, useSessionGuard } from "@/lib/security/session-guard";
+import { pingLastSeen } from "@/lib/last-seen";
+
 
 
 export const Route = createFileRoute("/_app")({
