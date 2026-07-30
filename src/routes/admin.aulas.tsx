@@ -82,6 +82,8 @@ function AdminAulas() {
         experts: overrides.experts,
         lessons: {},
         modulesByCourse: {},
+      newCourses: overrides.newCourses ?? [],
+        newCourses: overrides.newCourses ?? [],
       };
       for (const c of courses) {
         clean.modulesByCourse[c.id] = modulesByCourse[c.id] ?? cloneModules(c.modules);
@@ -209,6 +211,7 @@ function AdminAulas() {
       experts: {},
       lessons: {}, // legacy per-lesson patches no longer written from this page
       modulesByCourse: {},
+      newCourses: overrides.newCourses ?? [],
     };
     // Preserve untouched sections from stored overrides
     for (const [k, v] of Object.entries(overrides.courses)) clean.courses[k] = v;
@@ -233,6 +236,7 @@ function AdminAulas() {
       ...overrides,
       lessons: {},
       modulesByCourse: {},
+      newCourses: overrides.newCourses ?? [],
     };
     saveOverrides(cleared);
     applyOverrides(cleared);

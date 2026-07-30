@@ -56,6 +56,8 @@ function AdminCursos() {
         experts: {},
         lessons: overrides.lessons,
         modulesByCourse: overrides.modulesByCourse,
+        newCourses: overrides.newCourses ?? [],
+      newCourses: overrides.newCourses ?? [],
       };
       for (const [id, patch] of Object.entries(overrides.courses)) {
         const filtered = Object.fromEntries(
@@ -85,6 +87,7 @@ function AdminCursos() {
       experts: {},
       lessons: overrides.lessons,
       modulesByCourse: overrides.modulesByCourse,
+      newCourses: overrides.newCourses ?? [],
     };
     for (const [id, patch] of Object.entries(overrides.courses)) {
       const filtered = Object.fromEntries(
@@ -108,7 +111,7 @@ function AdminCursos() {
   };
 
   const handleReset = () => {
-    const empty: Overrides = { courses: {}, experts: {}, lessons: {}, modulesByCourse: {} };
+    const empty: Overrides = { courses: {}, experts: {}, lessons: {}, modulesByCourse: {}, newCourses: overrides.newCourses ?? [] };
     saveOverrides(empty);
     applyOverrides(empty);
     void pushOverridesToServer(empty);
