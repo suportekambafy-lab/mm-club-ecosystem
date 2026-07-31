@@ -69,7 +69,7 @@ export function RoomControls({ state, actions, onLeave }: Props) {
           <DeviceMenu kind="videoinput" actions={actions} label="Escolher câmara" />
         </div>
       )}
-      {isPublisher && local?.screenAllowed && (
+      {isPublisher && canShareScreen && (
         canScreenShare ? (
           <IconButton
             active={local?.isScreenSharing}
