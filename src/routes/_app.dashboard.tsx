@@ -233,10 +233,12 @@ function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
           fetchPriority="high"
           width={1600}
           height={693}
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover brightness-[0.62] contrast-[1.05] saturate-[0.9]"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/10" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-transparent to-background/30" />
+        <div className="absolute inset-0 bg-black/25" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/25" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/20 to-background/45" />
+
 
         <div className="absolute inset-0 flex items-end">
           <div className="w-full px-6 pb-8 md:px-14 md:pb-16">
