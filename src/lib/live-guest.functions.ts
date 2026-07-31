@@ -137,7 +137,7 @@ export const joinLiveAsGuest = createServerFn({ method: "POST" })
       publishOverride: {
         mic: Boolean(existing?.mic_allowed) && onStage,
         cam: Boolean(existing?.cam_allowed) && onStage,
-        screen: Boolean(existing?.screen_allowed) && onStage,
+        screen: onStage,
       },
       ttlSeconds: 60 * 60 * 6,
     });
