@@ -90,23 +90,89 @@ export function buildLogoPrompt(input: LogoInput): string {
   const name = input.brandName.trim();
 
   const parts = [
-    `Professional vector-style brand logo design for "${name}".`,
+    `Master-level brand identity logo design for "${name}", of the craft quality produced by world-class identity studios (Pentagram, Chermayeff & Geismar, Collins, Base Design) — the level of restraint and precision seen in the marks of the world's most valuable technology, payments and fashion brands.`,
     style ? `Design direction: ${style.prompt}.` : "",
     layout ? `Composition: ${layout.prompt}.` : "",
     input.layout === "icone"
       ? "Absolutely no text, no letters, no words anywhere in the image."
-      : `The only text allowed is the exact brand name "${name}" spelled perfectly, correct letters, no misspelling, no extra words.`,
+      : `The only text allowed is the exact brand name "${name}" spelled perfectly, correct letters, no misspelling, no extra words, no duplicated name.`,
     input.tagline && input.layout !== "icone"
       ? `Optionally a small tagline underneath reading exactly "${input.tagline}", set much smaller and lighter.`
       : "",
     input.industry ? `Industry context: ${input.industry}.` : "",
     paletteDirective(input.palette, input.colors ?? []),
-    bg ? `Presentation: single centered logo ${bg.prompt}, generous margins around the mark.` : "",
-    "Flat 2D vector aesthetic, crisp clean edges, perfectly scalable, print-ready identity design by a top branding studio.",
-    "Do NOT include: mockups, business cards, photographs, 3D renders, bevels, drop shadows, glossy reflections, watermarks, grids of multiple logos, UI frames, or lorem text.",
-    "Only ONE single logo in the frame.",
+    // Craft rules — o que separa um logo amador de um logo de marca real.
+    "Construction rules: built on a strict geometric grid with mathematically consistent stroke weights, optical corrections and even visual mass; a single clear idea reduced to its simplest possible form; instantly recognisable as a silhouette; legible and balanced at 16px favicon size as well as on a building.",
+    "Typography rules: use one impeccable typeface only (grotesk, neo-grotesk or high-craft serif), with tightly optically-corrected kerning, consistent x-height, and no default system fonts, no faux bold, no letter-spacing artefacts, no distortion or stretching.",
+    bg ? `Presentation: one single centered logo lockup ${bg.prompt}, generous even margins around the mark, nothing else in the frame.` : "",
+    "Pure flat 2D vector aesthetic: solid fills, razor-sharp edges, infinitely scalable, print- and screen-ready identity artwork.",
+    "STRICTLY AVOID (these mark it as amateur): clip-art, generic swooshes, globes, lightbulbs, gradients meshes, rainbow colours, more than two colours, 3D renders, bevels, embossing, drop shadows, glossy reflections, sparkles, AI-looking flourishes, decorative frames, stock icon libraries, mockups, business cards, photographs, watermarks, grids of multiple logo options, UI frames, placeholder or lorem text, spelling errors, extra random letters.",
+    "Exactly ONE final logo in the frame — a finished, client-ready deliverable.",
     input.notes ? `Additional direction: ${input.notes}` : "",
   ];
 
   return parts.filter(Boolean).join(" ");
 }
+
+// ============ APLICAÇÕES / MOCKUPS SOBRE O LOGO ============
+export const LOGO_APPLICATION_COST = STUDIO_COSTS.imageSingle;
+
+export type LogoApplicationId =
+  | "cartao"
+  | "papelaria"
+  | "sinalizacao"
+  | "vitrine"
+  | "embalagem"
+  | "tshirt"
+  | "tote"
+  | "app_icon"
+  | "website"
+  | "instagram"
+  | "banner_ads"
+  | "outdoor";
+
+export const LOGO_APPLICATIONS: {
+  id: LogoApplicationId;
+  label: string;
+  hint: string;
+  size: "1024x1024" | "1536x1024" | "1024x1536";
+  prompt: string;
+}[] = [
+  { id: "cartao", label: "Cartão de visita", hint: "Par de cartões premium", size: "1536x1024", prompt: "a premium business card mockup: two thick uncoated cards, one face-up showing the logo, one back showing a subtle detail, photographed top-down on a refined neutral surface, soft directional daylight, shallow depth of field" },
+  { id: "papelaria", label: "Papelaria", hint: "Estacionário completo", size: "1536x1024", prompt: "a full stationery flat-lay: letterhead, envelope, business card and folder, arranged with editorial precision, top-down, soft daylight, premium paper texture" },
+  { id: "sinalizacao", label: "Fachada / sinalética", hint: "Letras na fachada", size: "1536x1024", prompt: "the logo as brushed-metal or acrylic dimensional signage on an architectural facade wall, realistic depth and contact shadow, late-afternoon light, minimal architecture" },
+  { id: "vitrine", label: "Vitrine / loja", hint: "Retalho premium", size: "1536x1024", prompt: "the logo applied to a premium retail storefront window in a design-forward flagship store, evening reflections, cinematic and aspirational" },
+  { id: "embalagem", label: "Embalagem", hint: "Caixa + saco", size: "1536x1024", prompt: "premium packaging mockup: a rigid box and a matte shopping bag carrying the logo, studio lighting, soft shadows, luxury unboxing feeling" },
+  { id: "tshirt", label: "T-shirt", hint: "Merch vestido", size: "1024x1024", prompt: "the logo printed small and tastefully on a heavyweight cotton t-shirt, apparel product photography, clean neutral studio background, realistic fabric texture" },
+  { id: "tote", label: "Tote bag", hint: "Merch têxtil", size: "1024x1024", prompt: "the logo screen-printed on a natural canvas tote bag, studio product photography, soft shadow, realistic weave texture" },
+  { id: "app_icon", label: "Ícone de app", hint: "No ecrã do telefone", size: "1024x1024", prompt: "the logo mark as a rounded-square app icon shown on a modern smartphone home screen, crisp UI rendering, realistic device, other icons blurred out" },
+  { id: "website", label: "Website", hint: "Hero de site", size: "1536x1024", prompt: "an elegant desktop website homepage design using the logo in the header, generous whitespace, refined type hierarchy, shown on a clean laptop screen in a minimal workspace" },
+  { id: "instagram", label: "Instagram", hint: "Grelha de perfil", size: "1024x1024", prompt: "a social media brand kit board: profile avatar with the logo plus a coherent 3-post grid using the brand colours and typography, flat clean layout" },
+  { id: "banner_ads", label: "Banner publicitário", hint: "Anúncio horizontal", size: "1536x1024", prompt: "a polished horizontal advertising banner using the logo, strong composition with room for a short headline, premium brand-campaign art direction" },
+  { id: "outdoor", label: "Outdoor", hint: "Billboard urbano", size: "1536x1024", prompt: "the logo on a large urban billboard, photographed from street level at dusk, cinematic and confident brand campaign feeling" },
+];
+
+/** Prompt para aplicar um logotipo existente num mockup/banner (image edit com o logo como referência). */
+export function buildLogoApplicationPrompt(opts: {
+  application: LogoApplicationId;
+  brandName: string;
+  colors?: string[];
+  notes?: string;
+}): string {
+  const app = LOGO_APPLICATIONS.find((a) => a.id === opts.application);
+  const name = opts.brandName.trim();
+  const colors = (opts.colors ?? []).filter(Boolean).slice(0, 4);
+
+  return [
+    `Brand application mockup for "${name}".`,
+    "The attached reference image is the brand's FINAL logo. Reproduce it exactly as it is — identical shapes, proportions, letterforms, spelling and colours. Do not redraw, restyle, recolour, crop, mirror or add elements to the logo.",
+    app ? `Create ${app.prompt}.` : "",
+    colors.length > 0 ? `Supporting palette: ${colors.join(", ")}.` : "Supporting palette: refined neutrals with one accent taken from the logo.",
+    "Art direction: high-end brand presentation board quality, photorealistic materials, believable lighting and contact shadows, editorial composition, generous negative space.",
+    "No text other than the brand name inside the logo (and, where the scene naturally requires it, one short realistic line). No lorem ipsum, no watermarks, no multiple competing logos, no distorted or misspelled lettering, no collage of many mockups — one single hero scene.",
+    opts.notes ? `Additional direction: ${opts.notes}` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
