@@ -588,3 +588,13 @@ export const adminSetReplayTrim = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true as const };
   });
+
+// Reenvia (ou envia) o email "AO VIVO agora" a todos os subscritores.
+export const adminSendLiveStartEmails = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const { sendLiveStartEmails } = await import("./live-start-email.server");
+    return await sendLiveStartEmails(data.id);
+  });
