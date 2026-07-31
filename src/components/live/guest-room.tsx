@@ -257,6 +257,9 @@ export function GuestRoom({
   const cameraParticipants = screenSharer
     ? participants.filter((p) => p.identity !== screenSharer.identity)
     : participants;
+  const screenSharerHasCamera = Boolean(
+    screenSharer?.getTrackPublication(Track.Source.Camera)?.track,
+  );
   const cols = participants.length <= 1 ? 1 : participants.length <= 4 ? 2 : 3;
 
   return (
@@ -270,12 +273,14 @@ export function GuestRoom({
             className="absolute inset-0 h-full w-full rounded-none ring-0"
           />
           <div className="pointer-events-none absolute right-3 top-3 z-10 flex max-h-[calc(100%-5rem)] flex-col gap-2 overflow-hidden">
-            <GuestTile
-              participant={screenSharer}
-              isLocal={screenSharer.identity === room?.localParticipant.identity}
-              cameraOnly
-              className="aspect-video w-28 shadow-2xl ring-2 ring-amber-400 sm:w-36 lg:w-44"
-            />
+            {screenSharerHasCamera && (
+              <GuestTile
+                participant={screenSharer}
+                isLocal={screenSharer.identity === room?.localParticipant.identity}
+                cameraOnly
+                className="aspect-video w-28 shadow-2xl ring-2 ring-amber-400 sm:w-36 lg:w-44"
+              />
+            )}
             {cameraParticipants.map((p) => (
               <GuestTile
                 key={p.identity}
