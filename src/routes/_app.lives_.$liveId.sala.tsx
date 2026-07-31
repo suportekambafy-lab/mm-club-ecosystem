@@ -475,7 +475,7 @@ function SalaShell({
           </button>
         </div>
       </header>
-       <div className="relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
+       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:flex-row">
          <main className="relative min-h-0 min-w-0 flex-1 overflow-hidden">{children}</main>
         {chatOpen && (
           <aside className="flex h-[42%] min-h-0 w-full shrink-0 flex-col border-t border-white/10 bg-neutral-950/95 lg:h-full lg:w-[clamp(280px,28vw,340px)] lg:border-l lg:border-t-0">
