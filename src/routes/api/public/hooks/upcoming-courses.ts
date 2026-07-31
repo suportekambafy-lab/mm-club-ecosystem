@@ -5,7 +5,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { courses } from "@/data/courses";
 import type { Course } from "@/data/types";
 
-const ACTIVE_STATUSES = ["trialing", "active"];
+const ACTIVE_STATUSES = ["trialing", "active"] as const;
 const MAX_BATCH = 500;
 
 function isUpcoming(c: Course, now: number) {
