@@ -6,7 +6,7 @@
  * effectiveLayout is a pure derivation from the abstract state; changing
  * it does NOT reconnect the room.
  */
-import { memo, useMemo } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { RoomActions, RoomParticipant, RoomState } from "@/lib/room-state";
 import { MediaTile } from "./media-tile";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,8 @@ interface StageProps {
 
 function StageBase({ state, actions, className }: StageProps) {
   const { effectiveLayout, onStage, spotlightUserId } = state;
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
 
   // A screen share always takes visual priority — bump layout to spotlight-like
   // behavior without persisting to the server.
@@ -26,6 +28,25 @@ function StageBase({ state, actions, className }: StageProps) {
     () => onStage.find((p) => p.isScreenSharing),
     [onStage],
   );
+
+  useEffect(() => {
+    const node = stageRef.current;
+    if (!node) return;
+    const update = () => {
+      const rect = node.getBoundingClientRect();
+      setStageSize((current) =>
+        current.width === rect.width && current.height === rect.height
+          ? current
+          : { width: rect.width, height: rect.height },
+      );
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [effectiveLayout, onStage.length, screenSharer?.userId]);
+
+  const compact = stageSize.width > 0 && (stageSize.width < 720 || stageSize.height < 460);
 
   const spotlightPerson =
     (spotlightUserId && onStage.find((p) => p.userId === spotlightUserId)) ||
@@ -36,7 +57,7 @@ function StageBase({ state, actions, className }: StageProps) {
 
   if (onStage.length === 0) {
     return (
-      <div className={cn("grid h-full w-full place-items-center rounded-2xl bg-neutral-950 text-white/60", className)}>
+      <div ref={stageRef} className={cn("grid h-full min-h-0 w-full min-w-0 place-items-center bg-neutral-950 text-white/60", className)}>
         <div className="text-center">
           <div className="text-lg font-medium">A aguardar oradores</div>
           <div className="mt-1 text-sm text-white/40">O palco ficará ativo assim que alguém entrar em direto.</div>
@@ -55,17 +76,31 @@ function StageBase({ state, actions, className }: StageProps) {
     );
     const cameraParticipants = onStage.filter((p) => p.userId !== screenSharer.userId);
     return (
-      <div className={cn("relative h-full min-h-0 w-full min-w-0 overflow-hidden bg-neutral-950", className)}>
-        <MediaTile
-          participant={screenSharer}
-          actions={actions}
-          preferScreen
-          showName={false}
-          className="absolute inset-0 h-full w-full rounded-none ring-0"
-        />
-        <div className="pointer-events-none absolute right-3 top-3 z-10 flex max-h-[calc(100%-5rem)] flex-col gap-2 overflow-hidden">
+      <div
+        ref={stageRef}
+        className={cn(
+          "flex h-full min-h-0 w-full min-w-0 overflow-hidden bg-neutral-950",
+          compact ? "flex-col" : "flex-row",
+          className,
+        )}
+      >
+        <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
+          <MediaTile
+            participant={screenSharer}
+            actions={actions}
+            preferScreen
+            showName={false}
+            className="absolute inset-0 h-full w-full rounded-none ring-0"
+          />
+        </div>
+        <div
+          className={cn(
+            "pointer-events-none z-10 flex shrink-0 gap-2 overflow-x-auto overflow-y-hidden bg-black/60 p-2",
+            compact ? "h-20 w-full flex-row" : "h-full w-[clamp(112px,18vw,176px)] flex-col overflow-y-auto",
+          )}
+        >
           {sharerHasCam && (
-            <div className="aspect-video w-28 overflow-hidden rounded-lg shadow-2xl ring-2 ring-[hsl(45_86%_60%)] sm:w-36 lg:w-44">
+            <div className={cn("shrink-0 overflow-hidden rounded-lg shadow-2xl ring-2 ring-[hsl(45_86%_60%)]", compact ? "aspect-video h-full" : "aspect-video w-full")}>
               <MediaTile
                 participant={screenSharer}
                 actions={actions}
@@ -77,7 +112,7 @@ function StageBase({ state, actions, className }: StageProps) {
             </div>
           )}
           {cameraParticipants.map((p) => (
-            <div key={p.userId} className="aspect-video w-28 overflow-hidden rounded-lg shadow-2xl ring-1 ring-white/15 sm:w-36 lg:w-44">
+            <div key={p.userId} className={cn("shrink-0 overflow-hidden rounded-lg shadow-2xl ring-1 ring-white/15", compact ? "aspect-video h-full" : "aspect-video w-full")}>
               <MediaTile participant={p} actions={actions} preferScreen={false} className="h-full w-full" />
             </div>
           ))}
@@ -87,14 +122,15 @@ function StageBase({ state, actions, className }: StageProps) {
   }
 
   if (effectiveLayout === "spotlight") {
-    const primary = spotlightPerson!;
+    const primary = spotlightPerson;
+    if (!primary) return null;
     return (
-      <div className={cn("grid h-full min-h-0 w-full min-w-0 gap-2 lg:grid-cols-[minmax(0,1fr)_180px]", className)}>
-        <MediaTile participant={primary} actions={actions} className="h-full min-h-[240px] w-full" />
+      <div ref={stageRef} className={cn("flex h-full min-h-0 w-full min-w-0 gap-2", compact ? "flex-col" : "flex-row", className)}>
+        <MediaTile participant={primary} actions={actions} className="min-h-0 min-w-0 flex-1" />
         {others.length > 0 && (
-          <div className="flex min-w-0 flex-row gap-2 overflow-x-auto lg:flex-col lg:overflow-y-auto">
+          <div className={cn("flex shrink-0 gap-2 overflow-auto", compact ? "h-24 w-full flex-row" : "h-full w-40 flex-col")}>
             {others.map((p) => (
-              <MediaTile key={p.userId} participant={p} actions={actions} className="aspect-video h-24 shrink-0 lg:h-auto lg:w-full" />
+              <MediaTile key={p.userId} participant={p} actions={actions} className={cn("shrink-0", compact ? "aspect-video h-full" : "aspect-video w-full")} />
             ))}
           </div>
         )}
@@ -103,28 +139,42 @@ function StageBase({ state, actions, className }: StageProps) {
   }
 
   if (effectiveLayout === "solo") {
-    return <MediaTile participant={onStage[0]} actions={actions} className={cn("h-full w-full", className)} />;
+    return <div ref={stageRef} className="h-full min-h-0 w-full min-w-0"><MediaTile participant={onStage[0]} actions={actions} className={cn("h-full w-full", className)} /></div>;
   }
 
   if (effectiveLayout === "host_guest") {
+    const hostGuestColumns = compact ? 1 : 2;
+    const hostGuestRows = Math.ceil(Math.min(onStage.length, 2) / hostGuestColumns);
     return (
-      <div className={cn("grid h-full w-full gap-2 md:grid-cols-2", className)}>
+      <div
+        ref={stageRef}
+        className={cn("grid h-full min-h-0 w-full min-w-0 gap-2", className)}
+        style={{
+          gridTemplateColumns: `repeat(${hostGuestColumns}, minmax(0, 1fr))`,
+          gridTemplateRows: `repeat(${hostGuestRows}, minmax(0, 1fr))`,
+        }}
+      >
         {onStage.slice(0, 2).map((p) => (
-          <MediaTile key={p.userId} participant={p} actions={actions} className="h-full min-h-[220px]" />
+          <MediaTile key={p.userId} participant={p} actions={actions} className="h-full min-h-0 min-w-0" />
         ))}
       </div>
     );
   }
 
   // grid — adaptive
-  const cols = onStage.length <= 4 ? 2 : onStage.length <= 9 ? 3 : 4;
+  const cols = compact ? (onStage.length <= 2 ? 1 : 2) : onStage.length <= 4 ? 2 : onStage.length <= 9 ? 3 : 4;
+  const rows = Math.ceil(onStage.length / cols);
   return (
     <div
-      className={cn("grid h-full w-full gap-2", className)}
-      style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}
+      ref={stageRef}
+      className={cn("grid h-full min-h-0 w-full min-w-0 gap-2 overflow-y-auto", className)}
+      style={{
+        gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))`,
+        gridTemplateRows: `repeat(${rows}, minmax(0,1fr))`,
+      }}
     >
       {onStage.map((p) => (
-        <MediaTile key={p.userId} participant={p} actions={actions} className="min-h-[160px]" />
+        <MediaTile key={p.userId} participant={p} actions={actions} className="min-h-0 min-w-0" />
       ))}
     </div>
   );
