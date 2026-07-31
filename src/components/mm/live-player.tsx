@@ -15,9 +15,22 @@ type Props = {
   // If provided and > 1, the player auto-advances through them so the whole
   // session plays even when the host reconnected mid-stream.
   segments?: ReplaySegment[];
+  /** Replay trim (seconds) applied to the first / last segment. */
+  trimStart?: number | null;
+  trimEnd?: number | null;
 };
 
-export function LivePlayer({ videoUid, playbackToken, live, poster, className, segments }: Props) {
+export function LivePlayer({
+  videoUid,
+  playbackToken,
+  live,
+  poster,
+  className,
+  segments,
+  trimStart,
+  trimEnd,
+}: Props) {
+
   const isLive = !!live;
 
   // Normalise segments: for live sessions we always play the input directly.
