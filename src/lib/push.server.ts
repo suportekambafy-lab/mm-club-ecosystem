@@ -27,6 +27,7 @@ type NotificationRow = {
   post_id: string | null;
   comment_id: string | null;
   short_id: string | null;
+  live_id: string | null;
   created_at: string;
   read_at: string | null;
   dismissed_at: string | null;
@@ -131,6 +132,12 @@ function communityCopy(
 ): { title: string; body: string } {
   const who = actorName?.trim() || "Alguém";
   const where = isShort ? "no teu MM Short" : "no teu post";
+  if (kind === "live") {
+    return {
+      title: "MM Club em direto",
+      body: "A transmissão começou — toca para entrares agora",
+    };
+  }
   if (kind === "inactivity") {
     return {
       title: "Retoma o teu percurso no MM Club",
@@ -170,6 +177,7 @@ function communityCopy(
 
 function hrefForNotification(n: NotificationRow): string {
   if (n.kind === "inactivity") return "/dashboard";
+  if (n.kind === "live" && n.live_id) return `/lives/${n.live_id}`;
   if (n.short_id) {
     const commentFlag = n.kind === "reply" || n.kind === "comment_reply" ? "&c=1" : "";
     return `/shorts?v=${n.short_id}${commentFlag}`;
@@ -198,7 +206,7 @@ export async function deliverPushNotification(
   const { data: notification } = await supabaseAdmin
     .from("notifications")
     .select(
-      "id, user_id, actor_id, kind, post_id, comment_id, short_id, created_at, read_at, dismissed_at, push_sent_at, push_attempts",
+      "id, user_id, actor_id, kind, post_id, comment_id, short_id, live_id, created_at, read_at, dismissed_at, push_sent_at, push_attempts",
     )
     .eq("id", notificationId)
     .maybeSingle();
