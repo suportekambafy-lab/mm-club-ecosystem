@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
-import { Loader2, Sparkles, Download, Check, BadgeCheck } from "lucide-react";
-import { generateLogos, setBrandLogo } from "@/lib/studio.functions";
+import { Loader2, Sparkles, Download, Check, BadgeCheck, Layers } from "lucide-react";
+import { generateLogos, setBrandLogo, generateLogoApplications } from "@/lib/studio.functions";
 import {
   LOGO_STYLES,
   LOGO_LAYOUTS,
@@ -11,13 +11,17 @@ import {
   LOGO_PALETTES,
   LOGO_BATCH_COST,
   LOGO_VARIANTS,
+  LOGO_APPLICATIONS,
+  LOGO_APPLICATION_COST,
   type LogoStyle,
   type LogoLayout,
   type LogoBackground,
   type LogoPalette,
+  type LogoApplicationId,
 } from "@/lib/studio-logo";
 import { useStudio } from "@/lib/studio-context";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/_app/ferramentas/studio/logotipos")({
   head: () => ({
