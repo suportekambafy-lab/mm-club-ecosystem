@@ -172,7 +172,7 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
 
 
 
-      <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden pb-16 sm:pb-14">
+      <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
         {inBackstage && isPublisher ? (
           <Backstage state={state} actions={actions} onGoLive={handleGoLive} goingLive={goingLive} />
         ) : audienceWaiting ? (
@@ -187,8 +187,8 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
         <HostRequestsPanel state={state} actions={actions} />
       )}
 
-      {/* Floating controls */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-[max(0.5rem,env(safe-area-inset-bottom))] z-20 flex min-w-0 justify-center px-2 sm:px-3">
+      {/* Reserved controls dock: never covers shared content or browser UI. */}
+      <div className="pointer-events-none z-20 flex min-w-0 shrink-0 justify-center border-t border-white/5 bg-black px-2 pb-[max(0.45rem,env(safe-area-inset-bottom))] pt-1.5 sm:px-3">
         <RoomControls state={state} actions={actions} onLeave={onLeave} />
       </div>
     </div>

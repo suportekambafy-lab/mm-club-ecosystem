@@ -477,8 +477,8 @@ function SalaShell({
       </header>
        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:flex-row">
          <main className="relative min-h-0 min-w-0 flex-1 overflow-hidden">{children}</main>
-        {chatOpen && (
-          <aside className="flex h-[42%] min-h-0 w-full shrink-0 flex-col border-t border-white/10 bg-neutral-950/95 lg:h-full lg:w-[clamp(280px,28vw,340px)] lg:border-l lg:border-t-0">
+         {chatOpen && (
+           <aside className="flex h-[38%] min-h-[180px] w-full shrink-0 flex-col border-t border-white/10 bg-neutral-950/95 sm:h-[34%] lg:h-full lg:min-h-0 lg:w-[clamp(280px,28vw,340px)] lg:border-l lg:border-t-0">
             <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-3 py-2 lg:hidden">
               <div className="text-sm font-medium">Chat</div>
               <button

@@ -265,16 +265,14 @@ export function GuestRoom({
   return (
     <div className="relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-black">
       {screenSharer ? (
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-neutral-950 sm:flex-row">
-          <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
-            <GuestTile
-              participant={screenSharer}
-              isLocal={screenSharer.identity === room?.localParticipant.identity}
-              preferScreen
-              className="absolute inset-0 h-full w-full rounded-none ring-0"
-            />
-          </div>
-          <div className="pointer-events-none z-10 flex h-20 w-full shrink-0 flex-row gap-2 overflow-x-auto bg-black/60 p-2 sm:h-full sm:w-[clamp(112px,18vw,176px)] sm:flex-col sm:overflow-y-auto">
+        <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden bg-black">
+          <GuestTile
+            participant={screenSharer}
+            isLocal={screenSharer.identity === room?.localParticipant.identity}
+            preferScreen
+            className="absolute inset-0 h-full w-full rounded-none ring-0"
+          />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex h-[clamp(68px,20%,96px)] flex-row gap-2 overflow-x-auto bg-gradient-to-t from-black/80 to-transparent p-2 pt-3 [scrollbar-width:none] sm:inset-x-auto sm:bottom-auto sm:right-0 sm:top-0 sm:h-auto sm:max-h-full sm:w-[clamp(120px,16vw,180px)] sm:flex-col sm:overflow-y-auto sm:bg-gradient-to-l sm:pl-3 [&::-webkit-scrollbar]:hidden">
             {screenSharerHasCamera && (
               <GuestTile
                 participant={screenSharer}
@@ -328,7 +326,7 @@ export function GuestRoom({
 
 
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-[max(0.5rem,env(safe-area-inset-bottom))] flex min-w-0 justify-center px-2">
+      <div className="pointer-events-none shrink-0 border-t border-white/5 bg-black px-2 pb-[max(0.45rem,env(safe-area-inset-bottom))] pt-1.5">
         <div className="pointer-events-auto flex max-w-full items-center gap-2 overflow-x-auto rounded-full bg-black/70 px-3 py-2 ring-1 ring-white/10 backdrop-blur-md [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {onStage ? (
             <>
