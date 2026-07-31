@@ -320,7 +320,42 @@ export const emailTemplates = {
       ),
     };
   },
+
+  upcomingCourses(
+    name: string,
+    items: { title: string; tagline?: string; release: string; courseId: string }[],
+  ) {
+    const safe = escapeHtml(name);
+    const cards = items
+      .map(
+        (c) => `
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 12px;background:#161616;border:1px solid #232323;border-radius:12px;">
+          <tr><td style="padding:16px 18px;">
+            <div style="font-size:11px;color:#c9a961;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">${escapeHtml(c.release)}</div>
+            <div style="font-size:17px;color:#ffffff;font-weight:600;line-height:1.3;">${escapeHtml(c.title)}</div>
+            ${c.tagline ? `<div style="font-size:14px;color:#a3a3a3;line-height:1.55;margin-top:6px;">${escapeHtml(c.tagline)}</div>` : ""}
+          </td></tr>
+        </table>`,
+      )
+      .join("");
+    return {
+      subject:
+        items.length === 1
+          ? `A caminho: ${items[0].title}`
+          : `${items.length} novos cursos a caminho do MM Club`,
+      html: layout(
+        "Novos cursos a caminho — já incluídos no teu acesso.",
+        `<div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">Academia</div>
+         <h1 style="font-size:27px;color:#ffffff;margin:0 0 12px;font-weight:600;line-height:1.25;">Novos cursos a caminho, ${safe}.</h1>
+         <p style="font-size:16px;line-height:1.65;color:#d4d4d4;margin:0 0 22px;">Estão a chegar novas formações à Academia — e já estão incluídas no teu acesso, sem custo adicional. Assim que abrirem, avisamos-te.</p>
+         ${cards}
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:18px 0 26px;">Podes vê-los já na Academia, com contador para a data de lançamento.</p>
+         <p style="margin:0 0 8px;">${btn("Ver na Academia →", `${APP_URL}/academia`)}</p>`,
+      ),
+    };
+  },
 };
+
 
 // ---------- helpers ----------
 
