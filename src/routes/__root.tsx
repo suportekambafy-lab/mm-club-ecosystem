@@ -148,21 +148,36 @@ try {
 const PWA_RUNTIME_SCRIPT = `
 try {
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/sw.js').then(function (registration) {
-        registration.update && registration.update();
-        if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    var h = location.hostname;
+    var blocked = window.top !== window.self
+      || location.search.indexOf('sw=off') > -1
+      || h === 'localhost' || h === '127.0.0.1'
+      || h.indexOf('id-preview--') === 0 || h.indexOf('preview--') === 0
+      || h === 'lovableproject.com' || h.indexOf('.lovableproject.com') > -1
+      || h === 'lovableproject-dev.com' || h.indexOf('.lovableproject-dev.com') > -1
+      || h === 'beta.lovable.dev' || h.indexOf('.beta.lovable.dev') > -1;
+    if (blocked) {
+      navigator.serviceWorker.getRegistrations().then(function (rs) {
+        rs.forEach(function (r) { r.unregister(); });
       }).catch(function () {});
-    });
-    navigator.serviceWorker.addEventListener('controllerchange', function () {
-      if (!window.__mmClubControllerChanged) {
-        window.__mmClubControllerChanged = true;
-        window.location.reload();
-      }
-    });
+    } else {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js').then(function (registration) {
+          registration.update && registration.update();
+          if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }).catch(function () {});
+      });
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (!window.__mmClubControllerChanged) {
+          window.__mmClubControllerChanged = true;
+          window.location.reload();
+        }
+      });
+    }
   }
 } catch(e) {}
 `;
+
 
 
 function RootShell({ children }: { children: ReactNode }) {
