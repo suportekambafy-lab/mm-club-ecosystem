@@ -194,6 +194,8 @@ function LiveDetail() {
 
 
   const { live, playbackToken, videoUid, actualDurationSeconds, replaySegments, replayStatus } = data;
+  const trimStart = (data as { trimStart?: number | null }).trimStart ?? null;
+  const trimEnd = (data as { trimEnd?: number | null }).trimEnd ?? null;
   const isLive = live.status === "live";
   const isReplay = live.status === "ended" || live.status === "published";
   const expert = live.expert_id ? expertsById[live.expert_id] : undefined;
@@ -253,6 +255,8 @@ function LiveDetail() {
         videoUid={videoUid}
         playbackToken={playbackToken}
         segments={replaySegments}
+        trimStart={trimStart}
+        trimEnd={trimEnd}
         live={isLive}
         className={mobile ? "aspect-video w-full max-w-full rounded-none shadow-none ring-0" : undefined}
       />

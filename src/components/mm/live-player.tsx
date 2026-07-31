@@ -15,9 +15,22 @@ type Props = {
   // If provided and > 1, the player auto-advances through them so the whole
   // session plays even when the host reconnected mid-stream.
   segments?: ReplaySegment[];
+  /** Replay trim (seconds) applied to the first / last segment. */
+  trimStart?: number | null;
+  trimEnd?: number | null;
 };
 
-export function LivePlayer({ videoUid, playbackToken, live, poster, className, segments }: Props) {
+export function LivePlayer({
+  videoUid,
+  playbackToken,
+  live,
+  poster,
+  className,
+  segments,
+  trimStart,
+  trimEnd,
+}: Props) {
+
   const isLive = !!live;
 
   // Normalise segments: for live sessions we always play the input directly.
@@ -100,6 +113,40 @@ export function LivePlayer({ videoUid, playbackToken, live, poster, className, s
       /* browsers may block; user can press play */
     });
   }, [isLive, segIndex]);
+
+  // Replay trim: skip the dark head on the first segment and stop at the tail
+  // on the last one. Implemented by seeking/pausing on the player API so we
+  // never have to re-encode the recording.
+  const isFirstSeg = segIndex === 0;
+  const isLastSeg = segIndex === effectiveSegments.length - 1;
+  const start = !isLive && isFirstSeg && trimStart && trimStart > 0 ? trimStart : 0;
+  const end = !isLive && isLastSeg && trimEnd && trimEnd > 0 ? trimEnd : null;
+
+  useEffect(() => {
+    if (isLive) return;
+    if (!start && end == null) return;
+    let seeked = start === 0;
+    const id = window.setInterval(() => {
+      const api = streamRef.current;
+      if (!api) return;
+      const t = api.currentTime ?? 0;
+      if (!seeked && start > 0 && t < start - 0.5) {
+        api.currentTime = start;
+        seeked = true;
+        return;
+      }
+      if (start > 0 && t < start - 1.5) {
+        api.currentTime = start;
+        return;
+      }
+      if (end != null && t >= end) {
+        api.pause();
+        api.currentTime = Math.max(start, end - 0.1);
+      }
+    }, 250);
+    return () => window.clearInterval(id);
+  }, [isLive, start, end, segIndex, src]);
+
 
   return (
     <div

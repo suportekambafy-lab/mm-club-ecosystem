@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { Copy, Plus, Trash2, Radio, Loader2, Video, Upload, CalendarClock, Sparkles } from "lucide-react";
+import { Copy, Plus, Trash2, Radio, Loader2, Video, Upload, CalendarClock, Sparkles, Scissors } from "lucide-react";
 import { SectionHeading } from "@/components/mm/section-heading";
 import {
   adminListLives,
@@ -563,6 +563,15 @@ function AdminLives() {
                   >
                     Ver gravação
                   </Link>
+                  <Link
+                    to="/admin/lives/$liveId/editor"
+                    params={{ liveId: r.id }}
+                    className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                    title="Cortar o início escuro da gravação"
+                  >
+                    <Scissors className="h-3 w-3" /> Editar gravação
+                  </Link>
+
                   <button
                     type="button"
                     onClick={() => handleDelete(r.id)}

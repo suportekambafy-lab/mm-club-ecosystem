@@ -51,8 +51,9 @@ export const getLive = createServerFn({ method: "GET" })
     const { data: live, error } = await context.supabase
       .from("lives")
       .select(
-        "id,title,description,expert_id,starts_at,started_at,ended_at,updated_at,stream_generation,duration_minutes,visibility,cover_url,status,cf_playback_id,cf_live_input_id,recording_video_uid,mode",
+        "id,title,description,expert_id,starts_at,started_at,ended_at,updated_at,stream_generation,duration_minutes,visibility,cover_url,status,cf_playback_id,cf_live_input_id,recording_video_uid,mode,replay_trim_start_seconds,replay_trim_end_seconds",
       )
+
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -207,7 +208,12 @@ export const getLive = createServerFn({ method: "GET" })
       actualDurationSeconds,
       replaySegments,
       replayStatus,
+      trimStart:
+        typeof live.replay_trim_start_seconds === "number" ? live.replay_trim_start_seconds : null,
+      trimEnd:
+        typeof live.replay_trim_end_seconds === "number" ? live.replay_trim_end_seconds : null,
     };
+
   });
 
 
@@ -552,4 +558,33 @@ export const adminListLives = createServerFn({ method: "GET" })
       .order("starts_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
+  });
+
+// Replay editor — trim the dark/silent head (and optional tail) of a recording.
+export const adminSetReplayTrim = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        trimStart: z.number().min(0).max(86400).nullable(),
+        trimEnd: z.number().min(0).max(86400).nullable(),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.supabase, context.userId);
+    if (data.trimStart != null && data.trimEnd != null && data.trimEnd <= data.trimStart) {
+      throw new Error("O fim tem de ser depois do início.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("lives")
+      .update({
+        replay_trim_start_seconds: data.trimStart,
+        replay_trim_end_seconds: data.trimEnd,
+      })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
   });
