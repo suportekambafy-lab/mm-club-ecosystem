@@ -224,6 +224,14 @@ export const goLive = createServerFn({ method: "POST" })
       console.warn("[goLive] recording start failed", err);
     }
 
+    // Aviso por email a todos os subscritores (trial + pago). Dedupe por live.
+    try {
+      const { sendLiveStartEmails } = await import("./live-start-email.server");
+      await sendLiveStartEmails(data.liveId);
+    } catch (err) {
+      console.error("[goLive] live start emails failed", err);
+    }
+
     await logEvent(supabase, { liveId: data.liveId, actorId: userId, kind: "go_live" });
     return { ok: true };
   });
