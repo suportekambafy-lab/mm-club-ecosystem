@@ -732,7 +732,7 @@ function MobileTabBar({
         "fixed inset-x-0 z-40 flex justify-center px-3 lg:hidden",
         // Flush to the very bottom in-browser (no empty band); only PWA
         // standalone keeps the home-indicator inset.
-        "bottom-0 [@media(display-mode:standalone)]:bottom-[env(safe-area-inset-bottom)]",
+        "bottom-2 [@media(display-mode:standalone)]:bottom-[calc(env(safe-area-inset-bottom)+0.25rem)]",
       )}
 
 
