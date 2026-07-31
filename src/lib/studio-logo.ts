@@ -145,11 +145,12 @@ export const LOGO_APPLICATIONS: {
   { id: "embalagem", label: "Embalagem", hint: "Caixa + saco", size: "1536x1024", prompt: "premium packaging mockup: a rigid box and a matte shopping bag carrying the logo, studio lighting, soft shadows, luxury unboxing feeling" },
   { id: "tshirt", label: "T-shirt", hint: "Merch vestido", size: "1024x1024", prompt: "the logo printed small and tastefully on a heavyweight cotton t-shirt, apparel product photography, clean neutral studio background, realistic fabric texture" },
   { id: "tote", label: "Tote bag", hint: "Merch têxtil", size: "1024x1024", prompt: "the logo screen-printed on a natural canvas tote bag, studio product photography, soft shadow, realistic weave texture" },
-  { id: "app_icon", label: "Ícone de app", hint: "No ecrã do telefone", size: "1024x1024", prompt: "the logo mark as a rounded-square app icon shown on a modern smartphone home screen, crisp UI rendering, realistic device, other icons blurred out" },
-  { id: "website", label: "Website", hint: "Hero de site", size: "1536x1024", prompt: "an elegant desktop website homepage design using the logo in the header, generous whitespace, refined type hierarchy, shown on a clean laptop screen in a minimal workspace" },
-  { id: "instagram", label: "Instagram", hint: "Grelha de perfil", size: "1024x1024", prompt: "a social media brand kit board: profile avatar with the logo plus a coherent 3-post grid using the brand colours and typography, flat clean layout" },
-  { id: "banner_ads", label: "Banner publicitário", hint: "Anúncio horizontal", size: "1536x1024", prompt: "a polished horizontal advertising banner using the logo, strong composition with room for a short headline, premium brand-campaign art direction" },
+  { id: "app_icon", label: "Ícone de app", hint: "Ícone quadrado", size: "1024x1024", prompt: "the logo mark centred as a flat rounded-square app icon: solid brand-colour background, the mark perfectly optically centred with generous padding, crisp flat vector rendering, filling the whole frame. No phone, no device, no hand, no home screen, no other icons, no photography" },
+  { id: "website", label: "Banner de site (hero)", hint: "Banner grande, sem PC", size: "1536x1024", prompt: "a large full-bleed website hero BANNER artwork (flat graphic design, edge to edge, filling the entire frame): the logo placed with confident scale in the composition, a wide premium brand background using the brand colours, room for one short headline, editorial layout and generous negative space. Absolutely NO laptop, NO monitor, NO phone, NO device, NO desk, NO workspace photo, NO browser window or UI chrome, NO mockup framing — this is the flat banner artwork itself" },
+  { id: "instagram", label: "Instagram", hint: "Grelha de perfil", size: "1024x1024", prompt: "a flat social media brand kit board: profile avatar with the logo plus a coherent 3-post grid using the brand colours and typography, flat clean graphic layout, no phone, no device, no photography of screens" },
+  { id: "banner_ads", label: "Banner publicitário", hint: "Anúncio horizontal", size: "1536x1024", prompt: "a polished flat horizontal advertising banner artwork filling the whole frame, using the logo with strong composition and room for a short headline, premium brand-campaign art direction. No device, no mockup frame, no browser chrome" },
   { id: "outdoor", label: "Outdoor", hint: "Billboard urbano", size: "1536x1024", prompt: "the logo on a large urban billboard, photographed from street level at dusk, cinematic and confident brand campaign feeling" },
+
 ];
 
 /** Prompt para aplicar um logotipo existente num mockup/banner (image edit com o logo como referência). */
@@ -163,16 +164,23 @@ export function buildLogoApplicationPrompt(opts: {
   const name = opts.brandName.trim();
   const colors = (opts.colors ?? []).filter(Boolean).slice(0, 4);
 
+  // Formatos que são artwork plano (não cenas fotografadas nem mockups em dispositivos).
+  const FLAT: LogoApplicationId[] = ["website", "banner_ads", "instagram", "app_icon"];
+  const isFlat = FLAT.includes(opts.application);
+
   return [
-    `Brand application mockup for "${name}".`,
+    isFlat ? `Flat brand artwork for "${name}".` : `Brand application mockup for "${name}".`,
     "The attached reference image is the brand's FINAL logo. Reproduce it exactly as it is — identical shapes, proportions, letterforms, spelling and colours. Do not redraw, restyle, recolour, crop, mirror or add elements to the logo.",
     app ? `Create ${app.prompt}.` : "",
     colors.length > 0 ? `Supporting palette: ${colors.join(", ")}.` : "Supporting palette: refined neutrals with one accent taken from the logo.",
-    "Art direction: high-end brand presentation board quality, photorealistic materials, believable lighting and contact shadows, editorial composition, generous negative space.",
-    "No text other than the brand name inside the logo (and, where the scene naturally requires it, one short realistic line). No lorem ipsum, no watermarks, no multiple competing logos, no distorted or misspelled lettering, no collage of many mockups — one single hero scene.",
+    isFlat
+      ? "Art direction: flat 2D graphic design of art-director quality, edge-to-edge composition that fills the entire frame, crisp vector rendering, refined type hierarchy, generous negative space. No photorealistic props, no device mockups, no perspective frames, no shadows simulating physical objects."
+      : "Art direction: high-end brand presentation board quality, photorealistic materials, believable lighting and contact shadows, editorial composition, generous negative space.",
+    "No text other than the brand name inside the logo (and, where the composition naturally requires it, one short realistic headline). No lorem ipsum, no watermarks, no multiple competing logos, no distorted or misspelled lettering, no collage of many mockups — one single hero scene.",
     opts.notes ? `Additional direction: ${opts.notes}` : "",
   ]
     .filter(Boolean)
     .join(" ");
 }
+
 
