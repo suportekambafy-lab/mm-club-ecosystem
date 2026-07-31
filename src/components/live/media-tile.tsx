@@ -81,10 +81,11 @@ function MediaTileBase({ participant, actions, className, preferScreen, showName
           muted
           disablePictureInPicture
           controls={false}
+          style={isScreen ? { objectFit: "contain", objectPosition: "center", transform: "none" } : undefined}
           className={cn(
-            "h-full w-full",
+            "block h-full max-h-full w-full max-w-full",
             // Screen shares must never be cropped/zoomed — fit the whole frame.
-            isScreen ? "bg-black object-contain" : "object-cover",
+            isScreen ? "bg-black" : "object-cover",
             participant.isLocal && videoTrack?.source === "camera" && "scale-x-[-1]",
           )}
         />

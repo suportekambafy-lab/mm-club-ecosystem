@@ -250,18 +250,58 @@ export function GuestRoom({
     );
   }
 
+  const screenSharer = participants.find((p) => {
+    const publication = p.getTrackPublication(Track.Source.ScreenShare);
+    return Boolean(publication?.track && !(publication as RemoteTrackPublication).isMuted);
+  });
+  const cameraParticipants = screenSharer
+    ? participants.filter((p) => p.identity !== screenSharer.identity)
+    : participants;
+  const screenSharerHasCamera = Boolean(
+    screenSharer?.getTrackPublication(Track.Source.Camera)?.track,
+  );
   const cols = participants.length <= 1 ? 1 : participants.length <= 4 ? 2 : 3;
 
   return (
     <div className="relative flex h-full w-full flex-col bg-black">
-      <div
-        className="grid flex-1 gap-2 overflow-hidden p-2"
-        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
-      >
-        {participants.map((p) => (
-          <GuestTile key={p.identity} participant={p} isLocal={p.identity === room?.localParticipant.identity} />
-        ))}
-      </div>
+      {screenSharer ? (
+        <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden bg-neutral-950">
+          <GuestTile
+            participant={screenSharer}
+            isLocal={screenSharer.identity === room?.localParticipant.identity}
+            preferScreen
+            className="absolute inset-0 h-full w-full rounded-none ring-0"
+          />
+          <div className="pointer-events-none absolute right-3 top-3 z-10 flex max-h-[calc(100%-5rem)] flex-col gap-2 overflow-hidden">
+            {screenSharerHasCamera && (
+              <GuestTile
+                participant={screenSharer}
+                isLocal={screenSharer.identity === room?.localParticipant.identity}
+                cameraOnly
+                className="aspect-video w-28 shadow-2xl ring-2 ring-amber-400 sm:w-36 lg:w-44"
+              />
+            )}
+            {cameraParticipants.map((p) => (
+              <GuestTile
+                key={p.identity}
+                participant={p}
+                isLocal={p.identity === room?.localParticipant.identity}
+                cameraOnly
+                className="aspect-video w-28 shadow-2xl sm:w-36 lg:w-44"
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div
+          className="grid min-h-0 flex-1 gap-2 overflow-hidden p-2"
+          style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+        >
+          {participants.map((p) => (
+            <GuestTile key={p.identity} participant={p} isLocal={p.identity === room?.localParticipant.identity} />
+          ))}
+        </div>
+      )}
 
       {!onStage && (
         <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-center px-3">
@@ -346,13 +386,26 @@ export function GuestRoom({
   );
 }
 
-function GuestTile({ participant, isLocal }: { participant: Participant; isLocal: boolean }) {
+function GuestTile({
+  participant,
+  isLocal,
+  preferScreen = false,
+  cameraOnly = false,
+  className,
+}: {
+  participant: Participant;
+  isLocal: boolean;
+  preferScreen?: boolean;
+  cameraOnly?: boolean;
+  className?: string;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const screenPub = participant.getTrackPublication(Track.Source.ScreenShare);
-  const videoPub = screenPub ?? participant.getTrackPublication(Track.Source.Camera);
-  const isScreen = Boolean(screenPub);
+  const cameraPub = participant.getTrackPublication(Track.Source.Camera);
+  const videoPub = cameraOnly ? cameraPub : preferScreen ? screenPub : cameraPub ?? screenPub;
+  const isScreen = videoPub?.source === Track.Source.ScreenShare;
   const audioPub = participant.getTrackPublication(Track.Source.Microphone);
 
   const speaking = participant.isSpeaking;
@@ -387,6 +440,7 @@ function GuestTile({ participant, isLocal }: { participant: Participant; isLocal
       className={cn(
         "relative overflow-hidden rounded-2xl bg-neutral-950 ring-1",
         speaking ? "ring-2 ring-emerald-400/70" : "ring-white/10",
+        className,
       )}
     >
       {hasVideo ? (
@@ -395,9 +449,10 @@ function GuestTile({ participant, isLocal }: { participant: Participant; isLocal
           autoPlay
           playsInline
           muted
+          style={isScreen ? { objectFit: "contain", objectPosition: "center", transform: "none" } : undefined}
           className={cn(
-            "h-full w-full",
-            isScreen ? "bg-black object-contain" : "object-cover",
+            "block h-full max-h-full w-full max-w-full",
+            isScreen ? "bg-black" : "object-cover",
             isLocal && !isScreen && "scale-x-[-1]",
           )}
 
