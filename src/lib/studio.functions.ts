@@ -287,8 +287,8 @@ async function callImageModel(
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    if (isModerationError(res.status, text)) {
-      // Moda/biquíni/fitness: a OpenAI bloqueia, o Gemini gera.
+    if (isModerationError(res.status, text) || isBillingError(res.status, text)) {
+      // Moderação ou limite de faturação da OpenAI: geramos pelo motor alternativo.
       return callGeminiImageModel(prompt, refs);
     }
     if (res.status === 401) throw new Error("Chave OpenAI inválida. Verifica OPENAI_API_KEY.");
