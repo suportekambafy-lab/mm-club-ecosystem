@@ -483,6 +483,15 @@ export const adminSetLiveBroadcastState = createServerFn({ method: "POST" })
         .update({ status: "live", started_at: startedAt, stream_generation: nextGen })
         .eq("id", data.id);
       if (error) throw new Error(error.message);
+
+      // Aviso automático por email (dedupe por live no email_log).
+      try {
+        const { sendLiveStartEmails } = await import("./live-start-email.server");
+        await sendLiveStartEmails(data.id);
+      } catch (e) {
+        console.error("[setBroadcastState] live start emails failed", e);
+      }
+
       return { ok: true as const, started_at: startedAt, stream_generation: nextGen };
     }
 

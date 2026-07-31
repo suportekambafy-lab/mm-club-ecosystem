@@ -53,10 +53,18 @@ export const Route = createFileRoute("/api/public/cloudflare-stream/webhook")({
 
         try {
           if (liveInputId && state === "live-inprogress") {
-            await supabaseAdmin
+            const { data: rows } = await supabaseAdmin
               .from("lives")
               .update({ status: "live" })
-              .eq("cf_live_input_id", liveInputId);
+              .eq("cf_live_input_id", liveInputId)
+              .select("id");
+            // Aviso automático por email (dedupe por live no email_log).
+            try {
+              const { sendLiveStartEmails } = await import("@/lib/live-start-email.server");
+              for (const r of rows ?? []) await sendLiveStartEmails(r.id);
+            } catch (e) {
+              console.error("[cf-stream webhook] live start emails failed", e);
+            }
           }
 
           if (liveInputId && (state === "live-ended" || state === "ready")) {
