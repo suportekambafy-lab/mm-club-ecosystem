@@ -126,8 +126,11 @@ function LogotiposPage() {
     setAssets([]);
     setError(null);
     setSavedUrl(null);
+    setBaseLogo(null);
+    setAppAssets([]);
     mutation.mutate();
   };
+
 
   return (
     <div className="space-y-8">
