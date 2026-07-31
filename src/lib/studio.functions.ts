@@ -1453,6 +1453,34 @@ export const listAssets = createServerFn({ method: "GET" })
     return rows ?? [];
   });
 
+export const listLogoHistory = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: rows, error } = await supabase
+      .from("mm_studio_assets")
+      .select("id, url, format, created_at, metadata")
+      .eq("user_id", userId)
+      .like("format", "logo%")
+      .order("created_at", { ascending: false })
+      .limit(60);
+    if (error) throw new Error(error.message);
+    return (rows ?? []).map((r) => {
+      const meta = (r.metadata ?? {}) as { kind?: string; application?: string; brand_name?: string };
+      return {
+        id: r.id as string,
+        url: r.url as string,
+        format: (r.format ?? "logo") as string,
+        createdAt: r.created_at as string,
+        isApplication: meta.kind === "logo_application",
+        application: meta.application ?? null,
+        brandName: meta.brand_name ?? null,
+      };
+    });
+  });
+
+
+
 export const deleteAsset = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((v: unknown) => z.object({ id: z.string().uuid() }).parse(v))
