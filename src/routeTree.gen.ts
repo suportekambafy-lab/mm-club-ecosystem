@@ -76,6 +76,7 @@ import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/em
 import { Route as ApiPublicPaymentsGatewayWebhookRouteImport } from './routes/api/public/payments/gateway-webhook'
 import { Route as ApiPublicHooksWeeklySummaryRouteImport } from './routes/api/public/hooks/weekly-summary'
 import { Route as ApiPublicHooksWaitlistBroadcastRouteImport } from './routes/api/public/hooks/waitlist-broadcast'
+import { Route as ApiPublicHooksUpcomingCoursesRouteImport } from './routes/api/public/hooks/upcoming-courses'
 import { Route as ApiPublicHooksPushNotificationsRouteImport } from './routes/api/public/hooks/push-notifications'
 import { Route as ApiPublicHooksLivesRecordingCheckRouteImport } from './routes/api/public/hooks/lives-recording-check'
 import { Route as ApiPublicHooksLivesAnnounceCatchupRouteImport } from './routes/api/public/hooks/lives-announce-catchup'
@@ -439,6 +440,12 @@ const ApiPublicHooksWaitlistBroadcastRoute =
     path: '/api/public/hooks/waitlist-broadcast',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksUpcomingCoursesRoute =
+  ApiPublicHooksUpcomingCoursesRouteImport.update({
+    id: '/api/public/hooks/upcoming-courses',
+    path: '/api/public/hooks/upcoming-courses',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksPushNotificationsRoute =
   ApiPublicHooksPushNotificationsRouteImport.update({
     id: '/api/public/hooks/push-notifications',
@@ -629,6 +636,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/push-notifications': typeof ApiPublicHooksPushNotificationsRoute
+  '/api/public/hooks/upcoming-courses': typeof ApiPublicHooksUpcomingCoursesRoute
   '/api/public/hooks/waitlist-broadcast': typeof ApiPublicHooksWaitlistBroadcastRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
@@ -709,6 +717,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/push-notifications': typeof ApiPublicHooksPushNotificationsRoute
+  '/api/public/hooks/upcoming-courses': typeof ApiPublicHooksUpcomingCoursesRoute
   '/api/public/hooks/waitlist-broadcast': typeof ApiPublicHooksWaitlistBroadcastRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
@@ -798,6 +807,7 @@ export interface FileRoutesById {
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/push-notifications': typeof ApiPublicHooksPushNotificationsRoute
+  '/api/public/hooks/upcoming-courses': typeof ApiPublicHooksUpcomingCoursesRoute
   '/api/public/hooks/waitlist-broadcast': typeof ApiPublicHooksWaitlistBroadcastRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
@@ -887,6 +897,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/push-notifications'
+    | '/api/public/hooks/upcoming-courses'
     | '/api/public/hooks/waitlist-broadcast'
     | '/api/public/hooks/weekly-summary'
     | '/api/public/payments/gateway-webhook'
@@ -967,6 +978,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/push-notifications'
+    | '/api/public/hooks/upcoming-courses'
     | '/api/public/hooks/waitlist-broadcast'
     | '/api/public/hooks/weekly-summary'
     | '/api/public/payments/gateway-webhook'
@@ -1055,6 +1067,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/push-notifications'
+    | '/api/public/hooks/upcoming-courses'
     | '/api/public/hooks/waitlist-broadcast'
     | '/api/public/hooks/weekly-summary'
     | '/api/public/payments/gateway-webhook'
@@ -1095,6 +1108,7 @@ export interface RootRouteChildren {
   ApiPublicHooksLivesAnnounceCatchupRoute: typeof ApiPublicHooksLivesAnnounceCatchupRoute
   ApiPublicHooksLivesRecordingCheckRoute: typeof ApiPublicHooksLivesRecordingCheckRoute
   ApiPublicHooksPushNotificationsRoute: typeof ApiPublicHooksPushNotificationsRoute
+  ApiPublicHooksUpcomingCoursesRoute: typeof ApiPublicHooksUpcomingCoursesRoute
   ApiPublicHooksWaitlistBroadcastRoute: typeof ApiPublicHooksWaitlistBroadcastRoute
   ApiPublicHooksWeeklySummaryRoute: typeof ApiPublicHooksWeeklySummaryRoute
   ApiPublicPaymentsGatewayWebhookRoute: typeof ApiPublicPaymentsGatewayWebhookRoute
@@ -1575,6 +1589,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksWaitlistBroadcastRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/upcoming-courses': {
+      id: '/api/public/hooks/upcoming-courses'
+      path: '/api/public/hooks/upcoming-courses'
+      fullPath: '/api/public/hooks/upcoming-courses'
+      preLoaderRoute: typeof ApiPublicHooksUpcomingCoursesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/push-notifications': {
       id: '/api/public/hooks/push-notifications'
       path: '/api/public/hooks/push-notifications'
@@ -1928,6 +1949,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksLivesRecordingCheckRoute:
     ApiPublicHooksLivesRecordingCheckRoute,
   ApiPublicHooksPushNotificationsRoute: ApiPublicHooksPushNotificationsRoute,
+  ApiPublicHooksUpcomingCoursesRoute: ApiPublicHooksUpcomingCoursesRoute,
   ApiPublicHooksWaitlistBroadcastRoute: ApiPublicHooksWaitlistBroadcastRoute,
   ApiPublicHooksWeeklySummaryRoute: ApiPublicHooksWeeklySummaryRoute,
   ApiPublicPaymentsGatewayWebhookRoute: ApiPublicPaymentsGatewayWebhookRoute,
