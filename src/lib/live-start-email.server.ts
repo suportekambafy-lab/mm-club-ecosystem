@@ -5,7 +5,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { sendEmail, emailTemplates, getUserEmailAndName } from "@/lib/email.server";
 
-const ACTIVE_STATUSES = ["trialing", "active"] as const;
+
 const MAX_BATCH = 500;
 
 export async function sendLiveStartEmails(liveId: string) {
