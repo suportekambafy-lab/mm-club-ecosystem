@@ -22,6 +22,13 @@ function StageBase({ state, actions, className }: StageProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
 
+  // A screen share always takes visual priority — bump layout to spotlight-like
+  // behavior without persisting to the server.
+  const screenSharer = useMemo(
+    () => onStage.find((p) => p.isScreenSharing),
+    [onStage],
+  );
+
   useEffect(() => {
     const node = stageRef.current;
     if (!node) return;
@@ -40,13 +47,6 @@ function StageBase({ state, actions, className }: StageProps) {
   }, [effectiveLayout, onStage.length, screenSharer?.userId]);
 
   const compact = stageSize.width > 0 && (stageSize.width < 720 || stageSize.height < 460);
-
-  // A screen share always takes visual priority — bump layout to spotlight-like
-  // behavior without persisting to the server.
-  const screenSharer = useMemo(
-    () => onStage.find((p) => p.isScreenSharing),
-    [onStage],
-  );
 
   const spotlightPerson =
     (spotlightUserId && onStage.find((p) => p.userId === spotlightUserId)) ||
