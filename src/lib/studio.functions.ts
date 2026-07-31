@@ -222,7 +222,11 @@ async function callGeminiImageModel(
 
   const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
     method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    headers: {
+      "Lovable-API-Key": key,
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({
       model: GEMINI_IMAGE_MODEL,
       messages: [{ role: "user", content }],
