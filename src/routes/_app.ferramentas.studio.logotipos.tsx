@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
-import { Loader2, Sparkles, Download, Check, BadgeCheck, Layers } from "lucide-react";
-import { generateLogos, setBrandLogo, generateLogoApplications } from "@/lib/studio.functions";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { Loader2, Sparkles, Download, Check, BadgeCheck, Layers, History } from "lucide-react";
+import { generateLogos, setBrandLogo, generateLogoApplications, listLogoHistory } from "@/lib/studio.functions";
+
 import {
   LOGO_STYLES,
   LOGO_LAYOUTS,
