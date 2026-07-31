@@ -63,6 +63,24 @@ function LogotiposPage() {
   const fn = useServerFn(generateLogos);
   const saveFn = useServerFn(setBrandLogo);
   const appsFn = useServerFn(generateLogoApplications);
+  const historyFn = useServerFn(listLogoHistory);
+
+  const history = useQuery({
+    queryKey: ["studio", "logo-history"],
+    queryFn: () => historyFn({}),
+    staleTime: 30_000,
+  });
+
+  // Recupera a última geração quando a página é recarregada (nada se perde).
+  useEffect(() => {
+    if (!history.data || assets.length > 0) return;
+    const logos = history.data.filter((h) => !h.isApplication).slice(0, LOGO_VARIANTS);
+    if (logos.length === 0) return;
+    setAssets(logos.map((l) => ({ id: l.id, url: l.url })));
+    setBaseLogo((prev) => prev ?? logos[0]?.url ?? null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [history.data]);
+
 
   const mutation = useMutation({
     mutationFn: () =>
