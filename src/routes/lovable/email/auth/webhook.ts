@@ -13,13 +13,13 @@ const SITE_NAME = "MM Club"
 const SENDER_DOMAIN = "notify.mmclub.pt"
 const ROOT_DOMAIN = "mmclub.pt"
 const FROM_DOMAIN = "mmclub.pt"
-const SITE_URL = "https://mmclub.online"
+const SITE_URL = "https://mmclub.pt"
 
 // The SDK handler owns verification, dispatch, and retry semantics; this file
 // owns only the email decisions: subjects, templates, and per-type props.
 // `sendUrl` points at our own relay so every auth email is delivered by
 // Resend (and therefore visible in the Resend dashboard).
-// NOTE: must be the canonical host (mmclub.pt). www.mmclub.online answers with a
+// NOTE: must be the canonical host (mmclub.pt). www.mmclub.pt answers with a
 // cross-host 307 redirect, and fetch drops the Authorization header on those,
 // so the relay replied 401 and auth emails silently never reached Resend.
 const RELAY_URL =

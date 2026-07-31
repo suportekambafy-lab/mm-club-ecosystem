@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 const FROM = "MM Club <geral@mmclub.pt>";
-const APP_URL = "https://mmclub.online";
+const APP_URL = "https://mmclub.pt";
 
 export type EmailKind =
   | "welcome"
@@ -123,7 +123,7 @@ function layout(previewText: string, bodyHtml: string): string {
 </td></tr>
 <tr><td style="padding:24px 40px 32px;">${bodyHtml}</td></tr>
 <tr><td style="padding:20px 40px;border-top:1px solid #1f1f1f;font-size:12px;color:#666;text-align:center;line-height:1.6;">
-MM Club · <a href="${APP_URL}" style="color:#c9a961;text-decoration:none;">mmclub.online</a><br>
+MM Club · <a href="${APP_URL}" style="color:#c9a961;text-decoration:none;">mmclub.pt</a><br>
 Recebeste este email porque tens conta no MM Club.
 </td></tr>
 </table>

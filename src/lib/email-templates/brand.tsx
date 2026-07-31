@@ -12,7 +12,7 @@ import {
   Text,
 } from '@react-email/components'
 
-export const SITE_URL = 'https://mmclub.online'
+export const SITE_URL = 'https://mmclub.pt'
 
 export const styles = {
   main: {
@@ -110,7 +110,7 @@ export const Shell = ({
           <Text style={styles.footer}>
             MM Club ·{' '}
             <Link href={SITE_URL} style={styles.link}>
-              mmclub.online
+              mmclub.pt
             </Link>
             <br />
             Recebeste este email porque tens conta no MM Club.

@@ -7,7 +7,7 @@
  */
 import type { TemplateCategory, TemplateDefinition } from "./types";
 
-export const APP_URL = "https://mmclub.online";
+export const APP_URL = "https://mmclub.pt";
 
 export const CATEGORY_LABEL: Record<TemplateCategory, string> = {
   account: "Conta",

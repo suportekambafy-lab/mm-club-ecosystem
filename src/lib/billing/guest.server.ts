@@ -232,7 +232,7 @@ export async function provisionAccountForIntent(
 }
 
 async function sendAccountReadyEmail(userId: string, email: string) {
-  const origin = "https://mmclub.online";
+  const origin = "https://mmclub.pt";
   let actionUrl = `${origin}/auth?mode=recover&email=${encodeURIComponent(email)}`;
   try {
     const { data } = await supabaseAdmin.auth.admin.generateLink({
