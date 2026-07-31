@@ -478,13 +478,8 @@ function SalaShell({
        <div className="relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
          <main className="relative min-h-0 min-w-0 flex-1 overflow-hidden">{children}</main>
         {chatOpen && (
-           <aside className="hidden w-[clamp(280px,28vw,340px)] shrink-0 border-l border-white/5 bg-neutral-950/60 p-2 lg:block">
-            <LiveChat liveId={liveId} currentUserId={userId} />
-          </aside>
-        )}
-        {chatOpen && (
-           <div className="absolute inset-0 z-40 flex min-h-0 flex-col bg-black/90 backdrop-blur-sm lg:hidden">
-            <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
+          <aside className="flex h-[42%] min-h-0 w-full shrink-0 flex-col border-t border-white/10 bg-neutral-950/95 lg:h-full lg:w-[clamp(280px,28vw,340px)] lg:border-l lg:border-t-0">
+            <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-3 py-2 lg:hidden">
               <div className="text-sm font-medium">Chat</div>
               <button
                 type="button"
@@ -495,10 +490,10 @@ function SalaShell({
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="flex-1 min-h-0 p-2">
+            <div className="min-h-0 flex-1 p-2">
               <LiveChat liveId={liveId} currentUserId={userId} />
             </div>
-          </div>
+          </aside>
         )}
         {peopleOpen && (
           <div className="absolute inset-y-0 right-0 z-50 flex w-full max-w-sm flex-col border-l border-white/10 bg-neutral-950/95 backdrop-blur-md md:w-[340px]">
