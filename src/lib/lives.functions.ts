@@ -51,8 +51,9 @@ export const getLive = createServerFn({ method: "GET" })
     const { data: live, error } = await context.supabase
       .from("lives")
       .select(
-        "id,title,description,expert_id,starts_at,started_at,ended_at,updated_at,stream_generation,duration_minutes,visibility,cover_url,status,cf_playback_id,cf_live_input_id,recording_video_uid,mode",
+        "id,title,description,expert_id,starts_at,started_at,ended_at,updated_at,stream_generation,duration_minutes,visibility,cover_url,status,cf_playback_id,cf_live_input_id,recording_video_uid,mode,replay_trim_start_seconds,replay_trim_end_seconds",
       )
+
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
