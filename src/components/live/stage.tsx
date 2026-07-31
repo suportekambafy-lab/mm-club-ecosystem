@@ -37,7 +37,7 @@ function StageBase({ state, actions, className }: StageProps) {
     const observer = new ResizeObserver(update);
     observer.observe(node);
     return () => observer.disconnect();
-  }, []);
+  }, [effectiveLayout, onStage.length, screenSharer?.userId]);
 
   const compact = stageSize.width > 0 && (stageSize.width < 720 || stageSize.height < 460);
 

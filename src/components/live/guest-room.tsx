@@ -263,22 +263,24 @@ export function GuestRoom({
   const cols = participants.length <= 1 ? 1 : participants.length <= 4 ? 2 : 3;
 
   return (
-    <div className="relative flex h-full w-full flex-col bg-black">
+    <div className="relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-black">
       {screenSharer ? (
-        <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden bg-neutral-950">
-          <GuestTile
-            participant={screenSharer}
-            isLocal={screenSharer.identity === room?.localParticipant.identity}
-            preferScreen
-            className="absolute inset-0 h-full w-full rounded-none ring-0"
-          />
-          <div className="pointer-events-none absolute right-3 top-3 z-10 flex max-h-[calc(100%-5rem)] flex-col gap-2 overflow-hidden">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-neutral-950 sm:flex-row">
+          <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
+            <GuestTile
+              participant={screenSharer}
+              isLocal={screenSharer.identity === room?.localParticipant.identity}
+              preferScreen
+              className="absolute inset-0 h-full w-full rounded-none ring-0"
+            />
+          </div>
+          <div className="pointer-events-none z-10 flex h-20 w-full shrink-0 flex-row gap-2 overflow-x-auto bg-black/60 p-2 sm:h-full sm:w-[clamp(112px,18vw,176px)] sm:flex-col sm:overflow-y-auto">
             {screenSharerHasCamera && (
               <GuestTile
                 participant={screenSharer}
                 isLocal={screenSharer.identity === room?.localParticipant.identity}
                 cameraOnly
-                className="aspect-video w-28 shadow-2xl ring-2 ring-amber-400 sm:w-36 lg:w-44"
+                className="aspect-video h-full shrink-0 shadow-2xl ring-2 ring-amber-400 sm:h-auto sm:w-full"
               />
             )}
             {cameraParticipants.map((p) => (
@@ -287,7 +289,7 @@ export function GuestRoom({
                 participant={p}
                 isLocal={p.identity === room?.localParticipant.identity}
                 cameraOnly
-                className="aspect-video w-28 shadow-2xl sm:w-36 lg:w-44"
+                className="aspect-video h-full shrink-0 shadow-2xl sm:h-auto sm:w-full"
               />
             ))}
           </div>
@@ -326,8 +328,8 @@ export function GuestRoom({
 
 
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center">
-        <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-black/70 px-3 py-2 ring-1 ring-white/10 backdrop-blur-md">
+      <div className="pointer-events-none absolute inset-x-0 bottom-[max(0.5rem,env(safe-area-inset-bottom))] flex min-w-0 justify-center px-2">
+        <div className="pointer-events-auto flex max-w-full items-center gap-2 overflow-x-auto rounded-full bg-black/70 px-3 py-2 ring-1 ring-white/10 backdrop-blur-md [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {onStage ? (
             <>
               <button

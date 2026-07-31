@@ -446,7 +446,7 @@ function SalaShell({
           {wentLiveAt && (
             <span className="inline-flex min-w-0 items-center gap-1 rounded-full bg-red-500/15 px-2 py-1 font-medium text-red-300 ring-1 ring-red-500/30 sm:gap-1.5 sm:px-2.5">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
-              <span className="hidden xs:inline">AO VIVO</span>
+              <span className="hidden sm:inline">AO VIVO</span>
               <span className="tabular-nums text-red-200/90">· {elapsed}</span>
             </span>
           )}
