@@ -208,7 +208,12 @@ export const getLive = createServerFn({ method: "GET" })
       actualDurationSeconds,
       replaySegments,
       replayStatus,
+      trimStart:
+        typeof live.replay_trim_start_seconds === "number" ? live.replay_trim_start_seconds : null,
+      trimEnd:
+        typeof live.replay_trim_end_seconds === "number" ? live.replay_trim_end_seconds : null,
     };
+
   });
 
 
