@@ -164,16 +164,23 @@ export function buildLogoApplicationPrompt(opts: {
   const name = opts.brandName.trim();
   const colors = (opts.colors ?? []).filter(Boolean).slice(0, 4);
 
+  // Formatos que são artwork plano (não cenas fotografadas nem mockups em dispositivos).
+  const FLAT: LogoApplicationId[] = ["website", "banner_ads", "instagram", "app_icon"];
+  const isFlat = FLAT.includes(opts.application);
+
   return [
-    `Brand application mockup for "${name}".`,
+    isFlat ? `Flat brand artwork for "${name}".` : `Brand application mockup for "${name}".`,
     "The attached reference image is the brand's FINAL logo. Reproduce it exactly as it is — identical shapes, proportions, letterforms, spelling and colours. Do not redraw, restyle, recolour, crop, mirror or add elements to the logo.",
     app ? `Create ${app.prompt}.` : "",
     colors.length > 0 ? `Supporting palette: ${colors.join(", ")}.` : "Supporting palette: refined neutrals with one accent taken from the logo.",
-    "Art direction: high-end brand presentation board quality, photorealistic materials, believable lighting and contact shadows, editorial composition, generous negative space.",
-    "No text other than the brand name inside the logo (and, where the scene naturally requires it, one short realistic line). No lorem ipsum, no watermarks, no multiple competing logos, no distorted or misspelled lettering, no collage of many mockups — one single hero scene.",
+    isFlat
+      ? "Art direction: flat 2D graphic design of art-director quality, edge-to-edge composition that fills the entire frame, crisp vector rendering, refined type hierarchy, generous negative space. No photorealistic props, no device mockups, no perspective frames, no shadows simulating physical objects."
+      : "Art direction: high-end brand presentation board quality, photorealistic materials, believable lighting and contact shadows, editorial composition, generous negative space.",
+    "No text other than the brand name inside the logo (and, where the composition naturally requires it, one short realistic headline). No lorem ipsum, no watermarks, no multiple competing logos, no distorted or misspelled lettering, no collage of many mockups — one single hero scene.",
     opts.notes ? `Additional direction: ${opts.notes}` : "",
   ]
     .filter(Boolean)
     .join(" ");
 }
+
 
