@@ -149,6 +149,30 @@ function StudioHome() {
         </Link>
       </section>
 
+      {/* LOGO GENERATOR */}
+      <section>
+        <Link
+          to="/ferramentas/studio/logotipos"
+          className="group flex flex-col gap-4 rounded-3xl border border-[color:var(--hairline)] bg-surface-1 p-6 transition hover:border-primary/50 md:flex-row md:items-center md:justify-between md:p-8"
+        >
+          <div>
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-[color:var(--hairline)]">
+              <Palette className="h-5 w-5" />
+            </span>
+            <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">120 créditos · 3 variações</p>
+            <h3 className="mt-1 font-display text-3xl text-foreground md:text-4xl">MM Identity</h3>
+            <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+              Gerador de logotipos: monograma, wordmark, emblema ou mascote — no estilo da tua marca e pronto a usar em minutos.
+            </p>
+          </div>
+          <span className="inline-flex items-center gap-2 text-sm font-medium text-primary">
+            Criar logotipo <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+          </span>
+        </Link>
+      </section>
+
+
+
 
 
       {/* INSPIRATION MASONRY */}
