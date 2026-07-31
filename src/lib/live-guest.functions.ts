@@ -229,7 +229,7 @@ export const guestSync = createServerFn({ method: "POST" })
         publishOverride: {
           mic: Boolean(me.mic_allowed) && onStage,
           cam: Boolean(me.cam_allowed) && onStage,
-          screen: Boolean(me.screen_allowed) && onStage,
+          screen: onStage,
         },
         ttlSeconds: 60 * 60 * 6,
       });
