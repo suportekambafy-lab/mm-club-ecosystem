@@ -350,10 +350,11 @@ function GuestTile({ participant, isLocal }: { participant: Participant; isLocal
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const videoPub =
-    participant.getTrackPublication(Track.Source.ScreenShare) ??
-    participant.getTrackPublication(Track.Source.Camera);
+  const screenPub = participant.getTrackPublication(Track.Source.ScreenShare);
+  const videoPub = screenPub ?? participant.getTrackPublication(Track.Source.Camera);
+  const isScreen = Boolean(screenPub);
   const audioPub = participant.getTrackPublication(Track.Source.Microphone);
+
   const speaking = participant.isSpeaking;
 
   useEffect(() => {
