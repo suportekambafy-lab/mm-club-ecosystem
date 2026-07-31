@@ -77,7 +77,7 @@ ${body}${cta}${secondary}
 </td></tr>
 <tr><td style="padding:20px 40px;border-top:1px solid #1f1f1f;font-size:12px;color:#666;text-align:center;line-height:1.6;">
 ${opts.footerNote ? `${escapeHtml(opts.footerNote)}<br>` : ""}
-MM Club · <a href="${APP_URL}" style="color:#c9a961;text-decoration:none;">mmclub.online</a><br>
+MM Club · <a href="${APP_URL}" style="color:#c9a961;text-decoration:none;">mmclub.pt</a><br>
 Recebeste este email porque tens conta no MM Club.
 </td></tr>
 </table>

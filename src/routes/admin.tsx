@@ -220,7 +220,7 @@ function AdminLayout() {
 
         <div className="space-y-0.5 px-3 pb-4">
           <a
-            href="mailto:suporte@mmclub.online"
+            href="mailto:suporte@mmclub.pt"
             className="flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] text-admin-muted transition hover:bg-admin-panel hover:text-admin-fg"
           >
             <LifeBuoy strokeWidth={1.6} className="h-[15px] w-[15px]" />
