@@ -321,6 +321,27 @@ function SalaShell({
   const [elapsed, setElapsed] = useState<string>("");
   const [wentLiveAt, setWentLiveAt] = useState<string | null>(null);
 
+  // Safari's visible viewport changes as its address/tab bars expand and
+  // collapse. Keep the room exactly inside that visible area so the controls
+  // dock is never pushed behind browser chrome.
+  useEffect(() => {
+    const root = document.documentElement;
+    const viewport = window.visualViewport;
+    const measure = () => {
+      root.style.setProperty("--interactive-room-height", `${viewport?.height ?? window.innerHeight}px`);
+    };
+    measure();
+    viewport?.addEventListener("resize", measure);
+    viewport?.addEventListener("scroll", measure);
+    window.addEventListener("resize", measure);
+    return () => {
+      root.style.removeProperty("--interactive-room-height");
+      viewport?.removeEventListener("resize", measure);
+      viewport?.removeEventListener("scroll", measure);
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+
   // Track live status timestamp (went_live_at) directly, incl. realtime updates.
   useEffect(() => {
     let cancelled = false;
@@ -432,7 +453,10 @@ function SalaShell({
   }, [wentLiveAt]);
 
   return (
-    <div className="fixed inset-0 z-50 flex h-svh min-h-0 w-screen flex-col overflow-hidden bg-black text-white">
+    <div
+      className="fixed inset-x-0 top-0 z-50 flex min-h-0 w-screen flex-col overflow-hidden bg-black text-white"
+      style={{ height: "var(--interactive-room-height, 100dvh)" }}
+    >
       <header className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 border-b border-white/5 px-2 py-2 sm:gap-3 sm:px-4 sm:py-2.5">
         <button
           type="button"

@@ -82,7 +82,7 @@ function StageBase({ state, actions, className }: StageProps) {
           className,
         )}
       >
-        <div className={cn("grid h-full min-h-0 w-full min-w-0 gap-2 p-2", compact ? "grid-rows-[minmax(0,1fr)_72px]" : "grid-cols-[minmax(0,1fr)_clamp(120px,16vw,180px)]")}>
+        <div className={cn("grid h-full min-h-0 w-full min-w-0 gap-2 p-2", compact ? "grid-rows-[minmax(0,1fr)_72px]" : "grid-cols-[minmax(0,1fr)_clamp(120px,22%,180px)]")}>
           <MediaTile
             participant={screenSharer}
             actions={actions}

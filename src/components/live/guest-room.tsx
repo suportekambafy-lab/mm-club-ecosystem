@@ -435,6 +435,14 @@ function GuestTile({
 
   const hasVideo = Boolean(videoPub?.track && !(videoPub as RemoteTrackPublication).isMuted);
 
+  const restoreScreenFit = () => {
+    const el = videoRef.current;
+    if (!el || !isScreen) return;
+    el.style.objectFit = "contain";
+    el.style.objectPosition = "center";
+    el.style.transform = "none";
+  };
+
   return (
     <div
       className={cn(
@@ -449,6 +457,8 @@ function GuestTile({
           autoPlay
           playsInline
           muted
+          onLoadedMetadata={restoreScreenFit}
+          onResize={restoreScreenFit}
           style={isScreen ? { objectFit: "contain", objectPosition: "center", transform: "none" } : undefined}
           className={cn(
             "block h-full max-h-full w-full max-w-full",
