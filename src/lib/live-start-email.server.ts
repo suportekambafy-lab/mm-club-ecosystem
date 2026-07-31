@@ -19,7 +19,7 @@ export async function sendLiveStartEmails(liveId: string) {
   const { data: subs, error } = await supabaseAdmin
     .from("billing_subscriptions")
     .select("user_id, status")
-    .in("status", ACTIVE_STATUSES as unknown as string[])
+    .in("status", ["trialing", "active"])
     .limit(MAX_BATCH);
   if (error) {
     console.error("[live-start-email] subs failed", error);
