@@ -1309,7 +1309,124 @@ export const generateLogos = createServerFn({ method: "POST" })
     return { assets: generated, balance: finalBalance, cost: cost - refund };
   });
 
+/** Gera mockups / banners a partir de um logotipo já criado. */
+export const generateLogoApplications = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v: unknown) =>
+    z
+      .object({
+        logoUrl: z.string().url().max(2000),
+        applications: z.array(z.string().min(1)).min(1).max(6),
+        brandName: z.string().min(1).max(60),
+        notes: z.string().max(600).optional(),
+      })
+      .parse(v),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { buildLogoApplicationPrompt, LOGO_APPLICATIONS, LOGO_APPLICATION_COST } = await import("./studio-logo");
+
+    const picked = data.applications
+      .map((id) => LOGO_APPLICATIONS.find((a) => a.id === id))
+      .filter((a): a is (typeof LOGO_APPLICATIONS)[number] => Boolean(a));
+    if (picked.length === 0) throw new Error("Escolhe pelo menos uma aplicação.");
+
+    const cost = picked.length * LOGO_APPLICATION_COST;
+
+    const { data: brandRow } = await supabase
+      .from("mm_studio_brand")
+      .select("colors")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const rawColors = (brandRow?.colors as unknown) ?? [];
+    const colors = Array.isArray(rawColors) ? rawColors.map(String).slice(0, 6) : [];
+
+    // O logo tem de estar no nosso armazenamento (protege contra SSRF).
+    const logoRef = await fetchAsBytes(data.logoUrl);
+
+    const { data: newBal, error: spendErr } = await supabase.rpc("mm_studio_spend_credits", {
+      _user_id: userId,
+      _amount: cost,
+      _reason: "logo_applications",
+    });
+    if (spendErr) {
+      if (String(spendErr.message).includes("insufficient_credits")) {
+        throw new Error("Créditos insuficientes. Compra mais créditos para continuar.");
+      }
+      throw new Error(spendErr.message);
+    }
+
+    const generateOne = async (app: (typeof LOGO_APPLICATIONS)[number]) => {
+      const prompt = buildLogoApplicationPrompt({
+        application: app.id,
+        brandName: data.brandName,
+        colors,
+        notes: data.notes,
+      });
+      const b64 = await callImageModel(prompt, app.size, [logoRef]);
+      const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const path = `${userId}/logos/apps/${Date.now()}-${app.id}-${Math.random().toString(36).slice(2, 8)}.png`;
+      const up = await supabase.storage.from(BUCKET).upload(path, bytes, {
+        contentType: "image/png",
+        upsert: false,
+      });
+      if (up.error) throw new Error(up.error.message);
+      const signed = await supabase.storage.from(BUCKET).createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (signed.error || !signed.data) throw new Error(signed.error?.message ?? "URL falhou");
+      const url = signed.data.signedUrl;
+      const { data: asset, error: aErr } = await supabase
+        .from("mm_studio_assets")
+        .insert({
+          user_id: userId,
+          kind: "image",
+          url,
+          thumb_url: url,
+          format: `logo_${app.id}`,
+          style: "branding",
+          credits_used: LOGO_APPLICATION_COST,
+          metadata: {
+            prompt,
+            kind: "logo_application",
+            application: app.id,
+            brand_name: data.brandName,
+            size: app.size,
+            storage_path: path,
+          },
+        })
+        .select("id, url")
+        .single();
+      if (aErr) throw new Error(aErr.message);
+      return { id: asset.id, url: asset.url, application: app.id, label: app.label };
+    };
+
+    const results = await Promise.allSettled(picked.map(generateOne));
+    const generated: { id: string; url: string; application: string; label: string }[] = [];
+    let firstError: unknown = null;
+    for (const r of results) {
+      if (r.status === "fulfilled") generated.push(r.value);
+      else if (!firstError) firstError = r.reason;
+    }
+
+    const refund = (picked.length - generated.length) * LOGO_APPLICATION_COST;
+    let finalBalance = newBal as number;
+    if (refund > 0) {
+      const { data: refunded } = await supabase.rpc("mm_studio_refund_credits", {
+        _user_id: userId,
+        _amount: refund,
+        _reason: "logo_applications_refund",
+      });
+      if (typeof refunded === "number") finalBalance = refunded;
+    }
+
+    if (generated.length === 0) {
+      throw firstError instanceof Error ? firstError : new Error("Falha ao gerar aplicações.");
+    }
+
+    return { assets: generated, balance: finalBalance, cost: cost - refund };
+  });
+
 /** Guarda um logotipo gerado como logo oficial do Brand DNA. */
+
 export const setBrandLogo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((v: unknown) => z.object({ url: z.string().url().max(2000) }).parse(v))

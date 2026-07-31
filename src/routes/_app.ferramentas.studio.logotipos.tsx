@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
-import { Loader2, Sparkles, Download, Check, BadgeCheck } from "lucide-react";
-import { generateLogos, setBrandLogo } from "@/lib/studio.functions";
+import { Loader2, Sparkles, Download, Check, BadgeCheck, Layers } from "lucide-react";
+import { generateLogos, setBrandLogo, generateLogoApplications } from "@/lib/studio.functions";
 import {
   LOGO_STYLES,
   LOGO_LAYOUTS,
@@ -11,13 +11,17 @@ import {
   LOGO_PALETTES,
   LOGO_BATCH_COST,
   LOGO_VARIANTS,
+  LOGO_APPLICATIONS,
+  LOGO_APPLICATION_COST,
   type LogoStyle,
   type LogoLayout,
   type LogoBackground,
   type LogoPalette,
+  type LogoApplicationId,
 } from "@/lib/studio-logo";
 import { useStudio } from "@/lib/studio-context";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/_app/ferramentas/studio/logotipos")({
   head: () => ({
@@ -51,9 +55,13 @@ function LogotiposPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [savedUrl, setSavedUrl] = useState<string | null>(null);
+  const [baseLogo, setBaseLogo] = useState<string | null>(null);
+  const [apps, setApps] = useState<LogoApplicationId[]>(["cartao", "sinalizacao", "embalagem"]);
+  const [appAssets, setAppAssets] = useState<{ id: string; url: string; label: string }[]>([]);
 
   const fn = useServerFn(generateLogos);
   const saveFn = useServerFn(setBrandLogo);
+  const appsFn = useServerFn(generateLogoApplications);
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -71,6 +79,7 @@ function LogotiposPage() {
       }),
     onSuccess: (data) => {
       setAssets(data.assets);
+      setBaseLogo(data.assets[0]?.url ?? null);
       setError(null);
       refresh();
     },
@@ -86,6 +95,29 @@ function LogotiposPage() {
     onError: (e) => setError((e as Error).message),
   });
 
+  const appsMutation = useMutation({
+    mutationFn: () =>
+      appsFn({
+        data: {
+          logoUrl: baseLogo as string,
+          applications: apps,
+          brandName: name.trim(),
+          notes: notes.trim() || undefined,
+        },
+      }),
+    onSuccess: (data) => {
+      setAppAssets(data.assets.map((a) => ({ id: a.id, url: a.url, label: a.label })));
+      setError(null);
+      refresh();
+    },
+    onError: (e) => setError((e as Error).message),
+  });
+
+  const appsCost = apps.length * LOGO_APPLICATION_COST;
+  const toggleApp = (id: LogoApplicationId) =>
+    setApps((prev) => (prev.includes(id) ? prev.filter((a) => a !== id) : prev.length >= 6 ? prev : [...prev, id]));
+
+
   const insufficient = balance < LOGO_BATCH_COST;
   const canGenerate = Boolean(style) && name.trim().length > 0 && !mutation.isPending;
 
@@ -94,8 +126,11 @@ function LogotiposPage() {
     setAssets([]);
     setError(null);
     setSavedUrl(null);
+    setBaseLogo(null);
+    setAppAssets([]);
     mutation.mutate();
   };
+
 
   return (
     <div className="space-y-8">
@@ -254,8 +289,16 @@ function LogotiposPage() {
                   <div key={i} className="aspect-square animate-pulse rounded-2xl border border-[color:var(--hairline)] bg-surface-2" />
                 ))
               : assets.map((a) => (
-                  <div key={a.id} className="overflow-hidden rounded-2xl border border-[color:var(--hairline)] bg-surface-1">
-                    <img src={a.url} alt={`Logotipo ${name}`} loading="lazy" decoding="async" className="aspect-square w-full object-contain" />
+                  <div
+                    key={a.id}
+                    className={cn(
+                      "overflow-hidden rounded-2xl border bg-surface-1 transition",
+                      baseLogo === a.url ? "border-primary shadow-[0_20px_60px_-25px_oklch(0.82_0.13_82/0.5)]" : "border-[color:var(--hairline)]",
+                    )}
+                  >
+                    <button type="button" onClick={() => setBaseLogo(a.url)} className="block w-full">
+                      <img src={a.url} alt={`Logotipo ${name}`} loading="lazy" decoding="async" className="aspect-square w-full object-contain" />
+                    </button>
                     <div className="flex items-center justify-between gap-2 border-t border-[color:var(--hairline)] p-3">
                       <a
                         href={a.url}
@@ -284,8 +327,104 @@ function LogotiposPage() {
                   </div>
                 ))}
           </div>
+          {assets.length > 0 && (
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Clica numa variação para a usar como base dos mockups e banners.
+            </p>
+          )}
         </section>
       )}
+
+      {/* 04 — APLICAÇÕES / MOCKUPS */}
+      {baseLogo && (
+        <Step number="04" title="Mockups e banners" description="Aplica o logotipo escolhido em cartões, fachadas, embalagem, app, banners…">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start">
+            <img
+              src={baseLogo}
+              alt={`Logotipo base ${name}`}
+              className="h-24 w-24 shrink-0 rounded-2xl border border-[color:var(--hairline)] bg-surface-1 object-contain p-2"
+            />
+            <div className="flex-1 space-y-3">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+                {LOGO_APPLICATIONS.map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => toggleApp(a.id)}
+                    className={cn(
+                      "rounded-2xl border p-3 text-left transition",
+                      apps.includes(a.id)
+                        ? "border-primary bg-primary/10"
+                        : "border-border bg-surface-1 hover:border-[color:var(--hairline)]",
+                    )}
+                  >
+                    <p className="font-display text-sm text-foreground">{a.label}</p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">{a.hint}</p>
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[color:var(--hairline)] bg-surface-1 p-4">
+                <p className="font-display text-base text-foreground">
+                  {appsCost} créditos{" "}
+                  <span className="text-xs font-normal text-muted-foreground">· {apps.length} aplicações</span>
+                </p>
+                <button
+                  type="button"
+                  disabled={apps.length === 0 || appsMutation.isPending || balance < appsCost}
+                  onClick={() => {
+                    setAppAssets([]);
+                    setError(null);
+                    appsMutation.mutate();
+                  }}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition",
+                    (apps.length === 0 || appsMutation.isPending || balance < appsCost) && "cursor-not-allowed opacity-50",
+                  )}
+                >
+                  {appsMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> A montar…
+                    </>
+                  ) : balance < appsCost ? (
+                    "Créditos insuficientes"
+                  ) : (
+                    <>
+                      <Layers className="h-4 w-4" /> Gerar aplicações
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {(appsMutation.isPending || appAssets.length > 0) && (
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {appsMutation.isPending && appAssets.length === 0
+                ? apps.map((id) => (
+                    <div key={id} className="aspect-[3/2] animate-pulse rounded-2xl border border-[color:var(--hairline)] bg-surface-2" />
+                  ))
+                : appAssets.map((a) => (
+                    <figure key={a.id} className="overflow-hidden rounded-2xl border border-[color:var(--hairline)] bg-surface-1">
+                      <img src={a.url} alt={`${a.label} — ${name}`} loading="lazy" decoding="async" className="w-full object-cover" />
+                      <figcaption className="flex items-center justify-between gap-2 border-t border-[color:var(--hairline)] p-3">
+                        <span className="text-xs text-muted-foreground">{a.label}</span>
+                        <a
+                          href={a.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          download
+                          className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-[11px] text-foreground transition hover:border-primary/50"
+                        >
+                          <Download className="h-3 w-3" /> Download
+                        </a>
+                      </figcaption>
+                    </figure>
+                  ))}
+            </div>
+          )}
+        </Step>
+      )}
+
     </div>
   );
 }
