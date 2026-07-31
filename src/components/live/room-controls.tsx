@@ -29,7 +29,10 @@ export function RoomControls({ state, actions, onLeave }: Props) {
     [state.participants, state.localUserId],
   );
   const [busy, setBusy] = useState<string | null>(null);
-  const isPublisher = local?.onStage || local?.micAllowed || local?.camAllowed;
+  const isPublisher = local?.onStage || local?.micAllowed || local?.camAllowed || local?.screenAllowed;
+  // Screen share never depends on having a camera: anyone on stage can share.
+  const canShareScreen = Boolean(local?.screenAllowed || local?.onStage);
+
 
   const run = async (key: string, fn: () => Promise<void>) => {
     setBusy(key);
@@ -66,7 +69,7 @@ export function RoomControls({ state, actions, onLeave }: Props) {
           <DeviceMenu kind="videoinput" actions={actions} label="Escolher câmara" />
         </div>
       )}
-      {isPublisher && local?.screenAllowed && (
+      {isPublisher && canShareScreen && (
         canScreenShare ? (
           <IconButton
             active={local?.isScreenSharing}

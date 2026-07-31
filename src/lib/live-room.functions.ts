@@ -164,8 +164,11 @@ export const joinRoom = createServerFn({ method: "POST" })
       displayName: profile?.display_name ?? "Membro",
       role: me!.role,
       publishOverride: me!.on_stage
-        ? { mic: me!.mic_allowed, cam: me!.cam_allowed, screen: me!.screen_allowed }
+        ? // Screen share is always granted on stage — it must work even when
+          // the camera is off or was never allowed.
+          { mic: me!.mic_allowed, cam: me!.cam_allowed, screen: true }
         : undefined,
+
     });
 
     return {
