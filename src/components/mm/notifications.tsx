@@ -195,6 +195,12 @@ function communityCopy(
 ): { title: string; subtitle: string } {
   const who = actorName?.trim() || "Alguém";
   const where = isShort ? "no teu MM Short" : "no teu post";
+  if (kind === "live") {
+    return {
+      title: "Estamos em direto",
+      subtitle: "A transmissão começou — entra agora",
+    };
+  }
   if (kind === "inactivity") {
     return {
       title: "Retoma o teu percurso",
@@ -298,6 +304,8 @@ export function NotificationsBell({ className }: { className?: string }) {
       const copy = communityCopy(n.kind, n.actor_name, isShort);
       const href = n.kind === "inactivity"
         ? "/dashboard"
+        : n.kind === "live" && n.live_id
+        ? `/lives/${n.live_id}`
         : isShort
         ? `/shorts?v=${n.short_id}${n.kind === "reply" || n.kind === "comment_reply" ? "&c=1" : ""}`
         : n.post_id
