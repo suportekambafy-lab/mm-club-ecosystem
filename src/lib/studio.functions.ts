@@ -245,15 +245,12 @@ async function callGeminiImageModel(
   return b64;
 }
 
-async function callImageModel(
+async function callOpenAiImage(
+  key: string,
   prompt: string,
   size: string,
-  refs: { bytes: Uint8Array; mime: string }[] = [],
-): Promise<string> {
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) throw new Error("OPENAI_API_KEY não configurada. Adiciona a chave nos secrets do backend.");
-
-  let res: Response;
+  refs: { bytes: Uint8Array; mime: string }[],
+): Promise<Response> {
   if (refs.length > 0) {
     // Image edit — usa o produto como referência real (mantém identidade).
     const form = new FormData();
@@ -267,44 +264,76 @@ async function callImageModel(
       const blob = new Blob([r.bytes as unknown as BlobPart], { type: r.mime });
       form.append("image[]", blob, `ref-${i}.${ext}`);
     });
-    res = await fetch("https://api.openai.com/v1/images/edits", {
+    return fetch("https://api.openai.com/v1/images/edits", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}` },
       body: form,
     });
-  } else {
-    res = await fetch("https://api.openai.com/v1/images/generations", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: OPENAI_IMAGE_MODEL,
-        prompt,
-        size,
-        quality: OPENAI_IMAGE_QUALITY,
-        n: 1,
-      }),
-    });
+  }
+  return fetch("https://api.openai.com/v1/images/generations", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: OPENAI_IMAGE_MODEL,
+      prompt,
+      size,
+      quality: OPENAI_IMAGE_QUALITY,
+      n: 1,
+    }),
+  });
+}
+
+async function callImageModel(
+  prompt: string,
+  size: string,
+  refs: { bytes: Uint8Array; mime: string }[] = [],
+): Promise<string> {
+  // Cadeia de contas OpenAI: quando a primeira fica sem crédito/limite, passa à
+  // seguinte; se todas falharem por faturação, o motor alternativo assume.
+  const keys = [process.env.OPENAI_API_KEY, process.env.OPENAI_API_KEY_FALLBACK].filter(
+    (k): k is string => Boolean(k),
+  );
+  if (keys.length === 0) {
+    throw new Error("OPENAI_API_KEY não configurada. Adiciona a chave nos secrets do backend.");
   }
 
-  if (!res.ok) {
+  let lastBilling = false;
+  let lastError = "";
+  let lastStatus = 0;
+
+  for (const key of keys) {
+    const res = await callOpenAiImage(key, prompt, size, refs);
+
+    if (res.ok) {
+      const json = (await res.json()) as { data?: { b64_json?: string }[] };
+      const b64 = json.data?.[0]?.b64_json;
+      if (!b64) throw new Error("Resposta inesperada da OpenAI.");
+      return b64;
+    }
+
     const text = await res.text().catch(() => "");
-    if (isModerationError(res.status, text) || isBillingError(res.status, text)) {
-      // Moderação ou limite de faturação da OpenAI: geramos pelo motor alternativo.
+    if (isModerationError(res.status, text)) {
+      // Moda/biquíni/fitness: a OpenAI bloqueia, o Gemini gera.
       return callGeminiImageModel(prompt, refs);
     }
-    if (res.status === 401) throw new Error("Chave OpenAI inválida. Verifica OPENAI_API_KEY.");
-    if (res.status === 402 || res.status === 429) {
-      throw new Error("OpenAI recusou o pedido (créditos ou rate limit). Tenta novamente daqui a pouco.");
-    }
-    throw new Error(`OpenAI ${res.status}: ${text.slice(0, 240)}`);
+
+    lastStatus = res.status;
+    lastError = text;
+    lastBilling = isBillingError(res.status, text) || res.status === 401;
+    if (!lastBilling) break; // erro real do pedido: não vale tentar outra conta
   }
-  const json = (await res.json()) as { data?: { b64_json?: string }[] };
-  const b64 = json.data?.[0]?.b64_json;
-  if (!b64) throw new Error("Resposta inesperada da OpenAI.");
-  return b64;
+
+  if (lastBilling) {
+    // Todas as contas OpenAI sem crédito: motor alternativo (Lovable AI).
+    return callGeminiImageModel(prompt, refs);
+  }
+  if (lastStatus === 429) {
+    throw new Error("OpenAI recusou o pedido (rate limit). Tenta novamente daqui a pouco.");
+  }
+  throw new Error(`OpenAI ${lastStatus}: ${lastError.slice(0, 240)}`);
 }
 
 
