@@ -190,7 +190,7 @@ function SalaRoute() {
           const prev = prevOnStageRef.current;
           const prevPerms = prevPermsRef.current;
           prevOnStageRef.current = row.on_stage;
-          const perms = { mic: row.mic_allowed, cam: row.cam_allowed, screen: row.screen_allowed };
+          const perms = { mic: row.mic_allowed, cam: row.cam_allowed, screen: row.screen_allowed || row.on_stage };
           prevPermsRef.current = perms;
           // Reissue token when promoted (off→on) OR when publish permissions
           // change while on stage — LiveKit tokens embed canPublishSources,
