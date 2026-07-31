@@ -13,7 +13,8 @@ export type EmailKind =
   | "weekly_summary"
   | "live_announcement"
   | "replay_ready"
-  | "inactivity_nudge";
+  | "inactivity_nudge"
+  | "upcoming_courses";
 
 type SendOpts = {
   to: string;
