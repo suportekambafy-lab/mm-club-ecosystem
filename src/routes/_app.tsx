@@ -659,7 +659,7 @@ function AppLayout() {
             ? "relative min-w-0 max-w-full overflow-x-clip"
             : /^\/lives\/[^/]+/.test(pathname)
               ? "relative min-w-0 max-w-full overflow-hidden lg:mx-auto lg:overflow-x-clip lg:px-8 lg:pt-8 lg:pb-12 lg:max-w-7xl xl:max-w-[1600px] 2xl:max-w-[1760px]"
-              : "relative mx-auto min-w-0 max-w-7xl overflow-x-clip px-3 pb-24 pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8 lg:pb-12 xl:max-w-[1600px] 2xl:max-w-[1760px]",
+              : "relative mx-auto min-w-0 max-w-7xl overflow-x-clip px-3 pb-[72px] pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8 lg:pb-12 xl:max-w-[1600px] 2xl:max-w-[1760px]",
         )}>
           {/* Ambient editorial glow — matches landing page atmosphere */}
           {pathname !== "/shorts" && (
