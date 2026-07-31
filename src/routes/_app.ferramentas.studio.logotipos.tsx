@@ -123,7 +123,7 @@ function LogotiposPage() {
         data: {
           logoUrl: baseLogo as string,
           applications: apps,
-          brandName: name.trim(),
+          brandName: name.trim() || brandName.trim() || "Marca",
           notes: notes.trim() || undefined,
         },
       }),
