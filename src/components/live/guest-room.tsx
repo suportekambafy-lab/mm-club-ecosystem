@@ -395,7 +395,12 @@ function GuestTile({ participant, isLocal }: { participant: Participant; isLocal
           autoPlay
           playsInline
           muted
-          className={cn("h-full w-full object-cover", isLocal && "scale-x-[-1]")}
+          className={cn(
+            "h-full w-full",
+            isScreen ? "bg-black object-contain" : "object-cover",
+            isLocal && !isScreen && "scale-x-[-1]",
+          )}
+
         />
       ) : (
         <div className="grid h-full w-full place-items-center text-sm text-white/50">
