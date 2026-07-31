@@ -19,7 +19,7 @@ const SITE_URL = "https://mmclub.pt"
 // owns only the email decisions: subjects, templates, and per-type props.
 // `sendUrl` points at our own relay so every auth email is delivered by
 // Resend (and therefore visible in the Resend dashboard).
-// NOTE: must be the canonical host (mmclub.pt). www.mmclub.pt answers with a
+// NOTE: must be the canonical host (mmclub.pt). Other hosts answer with a
 // cross-host 307 redirect, and fetch drops the Authorization header on those,
 // so the relay replied 401 and auth emails silently never reached Resend.
 const RELAY_URL =
