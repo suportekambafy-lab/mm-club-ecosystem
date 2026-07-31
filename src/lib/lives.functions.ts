@@ -559,3 +559,32 @@ export const adminListLives = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return data ?? [];
   });
+
+// Replay editor — trim the dark/silent head (and optional tail) of a recording.
+export const adminSetReplayTrim = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        trimStart: z.number().min(0).max(86400).nullable(),
+        trimEnd: z.number().min(0).max(86400).nullable(),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.supabase, context.userId);
+    if (data.trimStart != null && data.trimEnd != null && data.trimEnd <= data.trimStart) {
+      throw new Error("O fim tem de ser depois do início.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("lives")
+      .update({
+        replay_trim_start_seconds: data.trimStart,
+        replay_trim_end_seconds: data.trimEnd,
+      })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
