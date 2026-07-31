@@ -185,6 +185,19 @@ function isModerationError(status: number, body: string): boolean {
   );
 }
 
+/** Conta OpenAI sem saldo / limite de faturação atingido → usamos o motor alternativo. */
+function isBillingError(status: number, body: string): boolean {
+  const b = body.toLowerCase();
+  return (
+    (status === 400 || status === 402 || status === 429) &&
+    (b.includes("billing_hard_limit_reached") ||
+      b.includes("billing hard limit") ||
+      b.includes("billing_limit") ||
+      b.includes("insufficient_quota") ||
+      b.includes("quota"))
+  );
+}
+
 /**
  * Fallback: quando a OpenAI recusa o prompt por moderação (roupa justa, biquíni,
  * fitness, mais pele visível), geramos com o Gemini via Lovable AI, que tem
