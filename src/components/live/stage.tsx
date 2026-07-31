@@ -67,9 +67,8 @@ function StageBase({ state, actions, className }: StageProps) {
   }
 
   if (screenSharer) {
-    // A shared screen owns the whole stage. Participant cameras float above it
-    // instead of taking a grid column, which used to squeeze wide shares and
-    // made browser windows look cropped/zoomed on smaller viewports.
+    // A shared screen owns every available pixel. Cameras are true overlays:
+    // they must never consume width/height from the shared frame.
     const sharerHasCam = Boolean(
       screenSharer.camOn !== false &&
         screenSharer.tracks.some((t) => t.kind === "video" && t.source === "camera" && !t.muted),
@@ -79,28 +78,27 @@ function StageBase({ state, actions, className }: StageProps) {
       <div
         ref={stageRef}
         className={cn(
-          "flex h-full min-h-0 w-full min-w-0 overflow-hidden bg-neutral-950",
-          compact ? "flex-col" : "flex-row",
+          "relative h-full min-h-0 w-full min-w-0 overflow-hidden bg-black",
           className,
         )}
       >
-        <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
-          <MediaTile
-            participant={screenSharer}
-            actions={actions}
-            preferScreen
-            showName={false}
-            className="absolute inset-0 h-full w-full rounded-none ring-0"
-          />
-        </div>
+        <MediaTile
+          participant={screenSharer}
+          actions={actions}
+          preferScreen
+          showName={false}
+          className="absolute inset-0 h-full w-full rounded-none ring-0"
+        />
         <div
           className={cn(
-            "pointer-events-none z-10 flex shrink-0 gap-2 overflow-x-auto overflow-y-hidden bg-black/60 p-2",
-            compact ? "h-20 w-full flex-row" : "h-full w-[clamp(112px,18vw,176px)] flex-col overflow-y-auto",
+            "pointer-events-none absolute z-10 flex gap-2 overflow-x-auto overflow-y-hidden p-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+            compact
+              ? "inset-x-0 bottom-0 h-[clamp(68px,20%,96px)] flex-row items-stretch bg-gradient-to-t from-black/80 to-transparent pt-3"
+              : "right-0 top-0 h-auto max-h-full w-[clamp(120px,16vw,180px)] flex-col overflow-y-auto bg-gradient-to-l from-black/65 to-transparent pl-3",
           )}
         >
           {sharerHasCam && (
-            <div className={cn("shrink-0 overflow-hidden rounded-lg shadow-2xl ring-2 ring-[hsl(45_86%_60%)]", compact ? "aspect-video h-full" : "aspect-video w-full")}>
+            <div className={cn("shrink-0 overflow-hidden rounded-lg bg-black shadow-2xl ring-2 ring-[hsl(45_86%_60%)]", compact ? "aspect-video h-full" : "aspect-video w-full")}>
               <MediaTile
                 participant={screenSharer}
                 actions={actions}
@@ -112,7 +110,7 @@ function StageBase({ state, actions, className }: StageProps) {
             </div>
           )}
           {cameraParticipants.map((p) => (
-            <div key={p.userId} className={cn("shrink-0 overflow-hidden rounded-lg shadow-2xl ring-1 ring-white/15", compact ? "aspect-video h-full" : "aspect-video w-full")}>
+            <div key={p.userId} className={cn("shrink-0 overflow-hidden rounded-lg bg-black shadow-2xl ring-1 ring-white/15", compact ? "aspect-video h-full" : "aspect-video w-full")}>
               <MediaTile participant={p} actions={actions} preferScreen={false} className="h-full w-full" />
             </div>
           ))}
