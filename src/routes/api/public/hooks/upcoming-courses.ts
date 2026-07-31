@@ -69,16 +69,19 @@ export const Route = createFileRoute("/api/public/hooks/upcoming-courses")({
           return Response.json({ ok: true, upcoming: 0, sent: 0 });
         }
 
-        const ref = upcoming
+        const { courseCoverImage } = await import("@/lib/course-cover");
+
+        const ref = `${upcoming
           .map((c) => c.id)
           .sort()
-          .join(",");
+          .join(",")}|v2`;
 
         const items = upcoming.map((c) => ({
           courseId: c.id,
           title: c.title,
           tagline: c.tagline,
           release: releaseLabel(c),
+          cover: courseCoverImage(c),
         }));
 
         // ---- destinatários: trial + pago -----------------------------------

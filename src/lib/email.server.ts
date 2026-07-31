@@ -325,20 +325,37 @@ export const emailTemplates = {
 
   upcomingCourses(
     name: string,
-    items: { title: string; tagline?: string; release: string; courseId: string }[],
+    items: {
+      title: string;
+      tagline?: string;
+      release: string;
+      courseId: string;
+      cover?: string | null;
+    }[],
   ) {
     const safe = escapeHtml(name);
     const cards = items
-      .map(
-        (c) => `
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 12px;background:#161616;border:1px solid #232323;border-radius:12px;">
+      .map((c) => {
+        const cover = c.cover
+          ? c.cover.startsWith("http")
+            ? c.cover
+            : `${APP_URL}${c.cover}`
+          : null;
+        const img = cover
+          ? `<tr><td style="padding:0;">
+              <img src="${cover}" alt="${escapeHtml(c.title)}" width="560" style="display:block;width:100%;max-width:560px;height:auto;border:0;outline:none;text-decoration:none;border-radius:12px 12px 0 0;">
+            </td></tr>`
+          : "";
+        return `
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 14px;background:#161616;border:1px solid #232323;border-radius:12px;overflow:hidden;">
+          ${img}
           <tr><td style="padding:16px 18px;">
             <div style="font-size:11px;color:#c9a961;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">${escapeHtml(c.release)}</div>
             <div style="font-size:17px;color:#ffffff;font-weight:600;line-height:1.3;">${escapeHtml(c.title)}</div>
             ${c.tagline ? `<div style="font-size:14px;color:#a3a3a3;line-height:1.55;margin-top:6px;">${escapeHtml(c.tagline)}</div>` : ""}
           </td></tr>
-        </table>`,
-      )
+        </table>`;
+      })
       .join("");
     return {
       subject:
