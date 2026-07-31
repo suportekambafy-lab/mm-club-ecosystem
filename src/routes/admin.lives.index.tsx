@@ -1,13 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { Copy, Plus, Trash2, Radio, Loader2, Video, Upload, CalendarClock, Sparkles, Scissors } from "lucide-react";
+import { Copy, Plus, Trash2, Radio, Loader2, Video, Upload, CalendarClock, Sparkles, Scissors, Mail } from "lucide-react";
 import { SectionHeading } from "@/components/mm/section-heading";
 import {
   adminListLives,
   adminCreateLive,
   adminDeleteLive,
   adminGetLiveIngest,
+  adminSendLiveStartEmails,
 } from "@/lib/lives.functions";
 import { adminGetGuestLink } from "@/lib/live-guest.functions";
 import { uploadMedia } from "@/lib/media-upload";
@@ -67,6 +68,8 @@ function AdminLives() {
   const del = useServerFn(adminDeleteLive);
   const getIngest = useServerFn(adminGetLiveIngest);
   const guestLink = useServerFn(adminGetGuestLink);
+  const sendLiveEmails = useServerFn(adminSendLiveStartEmails);
+  const [emailBusy, setEmailBusy] = useState<string | null>(null);
 
   const [rows, setRows] = useState<LiveRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -184,6 +187,18 @@ function AdminLives() {
       }
     } catch (e) {
       setError((e as Error).message);
+    }
+  }
+
+  async function handleSendLiveEmails(id: string) {
+    setEmailBusy(id);
+    try {
+      const r = await sendLiveEmails({ data: { id } });
+      toast.success(`Emails enviados: ${r.sent} (ignorados ${r.skipped}, falhas ${r.failed})`);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setEmailBusy(null);
     }
   }
 
@@ -530,6 +545,16 @@ function AdminLives() {
                   >
                     {guestBusy === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Copy className="h-3 w-3" />}
                     Link de convidado
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSendLiveEmails(r.id)}
+                    disabled={emailBusy === r.id}
+                    className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40 disabled:opacity-60"
+                    title="Enviar email “AO VIVO agora” a todos os subscritores"
+                  >
+                    {emailBusy === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mail className="h-3 w-3" />}
+                    Avisar por email
                   </button>
                   <button
                     type="button"
