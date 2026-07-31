@@ -143,7 +143,7 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
   const audienceWaiting = !inBackstage && state.status !== "live" && state.status !== "ended";
 
   return (
-    <div className="relative flex h-full w-full flex-col">
+    <div className="relative flex h-full min-h-0 w-full min-w-0 flex-col">
       {/* Connection indicator */}
       {state.connection.state !== "connected" && (
         <div className="absolute inset-x-0 top-0 z-30 flex justify-center pt-2">
@@ -172,7 +172,7 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
 
 
 
-      <div className="relative flex-1 overflow-hidden">
+      <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden pb-16 sm:pb-14">
         {inBackstage && isPublisher ? (
           <Backstage state={state} actions={actions} onGoLive={handleGoLive} goingLive={goingLive} />
         ) : audienceWaiting ? (
@@ -188,7 +188,7 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
       )}
 
       {/* Floating controls */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-3 z-20 flex justify-center px-3">
+      <div className="pointer-events-none absolute inset-x-0 bottom-[max(0.5rem,env(safe-area-inset-bottom))] z-20 flex min-w-0 justify-center px-2 sm:px-3">
         <RoomControls state={state} actions={actions} onLeave={onLeave} />
       </div>
     </div>

@@ -44,9 +44,9 @@ export function RoomControls({ state, actions, onLeave }: Props) {
   };
 
   return (
-    <div className="pointer-events-auto flex items-center gap-1.5 rounded-2xl border border-white/10 bg-black/60 p-1.5 backdrop-blur-md">
+    <div className="pointer-events-auto flex max-w-full items-center gap-1 overflow-x-auto rounded-2xl border border-white/10 bg-black/60 p-1.5 backdrop-blur-md [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {isPublisher && local?.micAllowed && (
-        <div className="flex items-center">
+        <div className="flex shrink-0 items-center">
           <IconButton
             active={local.micOn}
             onClick={() => run("mic", actions.toggleMic)}
@@ -58,7 +58,7 @@ export function RoomControls({ state, actions, onLeave }: Props) {
         </div>
       )}
       {isPublisher && local?.camAllowed && (
-        <div className="flex items-center">
+        <div className="flex shrink-0 items-center">
           <IconButton
             active={local.camOn}
             onClick={() => run("cam", actions.toggleCam)}

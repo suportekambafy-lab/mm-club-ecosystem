@@ -311,7 +311,7 @@ function SalaShell({
   onLeave: () => void;
   children: React.ReactNode;
 }) {
-  const [chatOpen, setChatOpen] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
   const [peopleOpen, setPeopleOpen] = useState(false);
   const [viewerCount, setViewerCount] = useState<number>(0);
   const adminIds = useAdminIds();
@@ -432,8 +432,8 @@ function SalaShell({
   }, [wentLiveAt]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-black text-white">
-      <header className="flex items-center justify-between gap-3 border-b border-white/5 px-3 py-2.5 sm:px-4">
+    <div className="fixed inset-0 z-50 flex h-svh min-h-0 w-screen flex-col overflow-hidden bg-black text-white">
+      <header className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 border-b border-white/5 px-2 py-2 sm:gap-3 sm:px-4 sm:py-2.5">
         <button
           type="button"
           onClick={onLeave}
@@ -442,11 +442,11 @@ function SalaShell({
           <ChevronLeft className="h-4 w-4" />
           <span className="hidden sm:inline">Sair da sala</span>
         </button>
-        <div className="flex min-w-0 items-center gap-2 text-xs">
+        <div className="flex min-w-0 items-center justify-end gap-1.5 text-xs sm:gap-2">
           {wentLiveAt && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-2.5 py-1 font-medium text-red-300 ring-1 ring-red-500/30">
+            <span className="inline-flex min-w-0 items-center gap-1 rounded-full bg-red-500/15 px-2 py-1 font-medium text-red-300 ring-1 ring-red-500/30 sm:gap-1.5 sm:px-2.5">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
-              AO VIVO
+              <span className="hidden xs:inline">AO VIVO</span>
               <span className="tabular-nums text-red-200/90">· {elapsed}</span>
             </span>
           )}
@@ -475,15 +475,15 @@ function SalaShell({
           </button>
         </div>
       </header>
-      <div className="relative flex flex-1 min-h-0 overflow-hidden">
-        <div className="relative flex-1 min-w-0">{children}</div>
+       <div className="relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
+         <main className="relative min-h-0 min-w-0 flex-1 overflow-hidden">{children}</main>
         {chatOpen && (
-          <aside className="hidden w-[340px] shrink-0 border-l border-white/5 bg-neutral-950/60 p-2 md:block">
+           <aside className="hidden w-[clamp(280px,28vw,340px)] shrink-0 border-l border-white/5 bg-neutral-950/60 p-2 lg:block">
             <LiveChat liveId={liveId} currentUserId={userId} />
           </aside>
         )}
         {chatOpen && (
-          <div className="absolute inset-0 z-40 flex flex-col bg-black/70 backdrop-blur-sm md:hidden">
+           <div className="absolute inset-0 z-40 flex min-h-0 flex-col bg-black/90 backdrop-blur-sm lg:hidden">
             <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
               <div className="text-sm font-medium">Chat</div>
               <button
