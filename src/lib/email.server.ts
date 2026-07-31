@@ -42,6 +42,7 @@ export async function sendEmail(opts: SendOpts): Promise<{
       .eq("user_id", userId)
       .eq("kind", kind)
       .eq("ref", ref)
+      .eq("status", "sent")
       .maybeSingle();
     if (existing) {
       return { sent: false, skipped: true };
