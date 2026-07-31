@@ -55,9 +55,13 @@ function LogotiposPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [savedUrl, setSavedUrl] = useState<string | null>(null);
+  const [baseLogo, setBaseLogo] = useState<string | null>(null);
+  const [apps, setApps] = useState<LogoApplicationId[]>(["cartao", "sinalizacao", "embalagem"]);
+  const [appAssets, setAppAssets] = useState<{ id: string; url: string; label: string }[]>([]);
 
   const fn = useServerFn(generateLogos);
   const saveFn = useServerFn(setBrandLogo);
+  const appsFn = useServerFn(generateLogoApplications);
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -75,6 +79,7 @@ function LogotiposPage() {
       }),
     onSuccess: (data) => {
       setAssets(data.assets);
+      setBaseLogo(data.assets[0]?.url ?? null);
       setError(null);
       refresh();
     },
@@ -89,6 +94,29 @@ function LogotiposPage() {
     },
     onError: (e) => setError((e as Error).message),
   });
+
+  const appsMutation = useMutation({
+    mutationFn: () =>
+      appsFn({
+        data: {
+          logoUrl: baseLogo as string,
+          applications: apps,
+          brandName: name.trim(),
+          notes: notes.trim() || undefined,
+        },
+      }),
+    onSuccess: (data) => {
+      setAppAssets(data.assets.map((a) => ({ id: a.id, url: a.url, label: a.label })));
+      setError(null);
+      refresh();
+    },
+    onError: (e) => setError((e as Error).message),
+  });
+
+  const appsCost = apps.length * LOGO_APPLICATION_COST;
+  const toggleApp = (id: LogoApplicationId) =>
+    setApps((prev) => (prev.includes(id) ? prev.filter((a) => a !== id) : prev.length >= 6 ? prev : [...prev, id]));
+
 
   const insufficient = balance < LOGO_BATCH_COST;
   const canGenerate = Boolean(style) && name.trim().length > 0 && !mutation.isPending;
