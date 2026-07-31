@@ -78,6 +78,8 @@ function LogotiposPage() {
     if (logos.length === 0) return;
     setAssets(logos.map((l) => ({ id: l.id, url: l.url })));
     setBaseLogo((prev) => prev ?? logos[0]?.url ?? null);
+    const restoredName = logos.find((l) => l.brandName)?.brandName;
+    if (restoredName) setName((prev) => (prev.trim() ? prev : restoredName));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [history.data]);
 
@@ -121,7 +123,7 @@ function LogotiposPage() {
         data: {
           logoUrl: baseLogo as string,
           applications: apps,
-          brandName: name.trim(),
+          brandName: name.trim() || brandName.trim() || "Marca",
           notes: notes.trim() || undefined,
         },
       }),
