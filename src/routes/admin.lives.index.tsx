@@ -563,6 +563,15 @@ function AdminLives() {
                   >
                     Ver gravação
                   </Link>
+                  <Link
+                    to="/admin/lives/$liveId/editor"
+                    params={{ liveId: r.id }}
+                    className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                    title="Cortar o início escuro da gravação"
+                  >
+                    <Scissors className="h-3 w-3" /> Editar gravação
+                  </Link>
+
                   <button
                     type="button"
                     onClick={() => handleDelete(r.id)}
