@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Compass, Image as ImageIcon, Film, Library, Package, Gem, Coins } from "lucide-react";
+import { Compass, Image as ImageIcon, Film, Library, Package, Gem, Coins, PenTool } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
@@ -8,6 +8,7 @@ type StudioNav = {
     | "/ferramentas/studio"
     | "/ferramentas/studio/imagens"
     | "/ferramentas/studio/videos"
+    | "/ferramentas/studio/logotipos"
     | "/ferramentas/studio/criativos"
     | "/ferramentas/studio/produtos"
     | "/ferramentas/studio/marca";
@@ -20,10 +21,12 @@ const nav: StudioNav[] = [
   { to: "/ferramentas/studio", label: "Descobrir", icon: Compass, exact: true },
   { to: "/ferramentas/studio/imagens", label: "IA de Imagens", icon: ImageIcon },
   { to: "/ferramentas/studio/videos", label: "IA de Vídeos", icon: Film },
+  { to: "/ferramentas/studio/logotipos", label: "Logotipos", icon: PenTool },
   { to: "/ferramentas/studio/criativos", label: "Os meus criativos", icon: Library },
   { to: "/ferramentas/studio/produtos", label: "Produtos", icon: Package },
   { to: "/ferramentas/studio/marca", label: "Brand DNA", icon: Gem },
 ];
+
 
 export function StudioShell({
   balance,

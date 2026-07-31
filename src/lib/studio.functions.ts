@@ -1134,6 +1134,147 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
 
 
 
+// ============ LOGO GENERATION ============
+const GenerateLogosSchema = z.object({
+  brandName: z.string().min(1).max(60),
+  tagline: z.string().max(80).optional(),
+  industry: z.string().max(120).optional(),
+  style: z.enum([
+    "monograma", "wordmark", "emblema", "minimalista", "luxo",
+    "geometrico", "organico", "tech", "vintage", "mascote",
+  ]),
+  layout: z.enum(["icone", "horizontal", "vertical"]).default("horizontal"),
+  background: z.enum(["branco", "preto", "transparente"]).default("branco"),
+  palette: z.enum(["marca", "mono_preto", "mono_branco", "ouro", "livre"]).default("marca"),
+  notes: z.string().max(600).optional(),
+});
+
+export const generateLogos = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v: unknown) => GenerateLogosSchema.parse(v))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { buildLogoPrompt, LOGO_VARIANTS, LOGO_COST_PER_VARIANT } = await import("./studio-logo");
+    const cost = LOGO_VARIANTS * LOGO_COST_PER_VARIANT;
+
+    const { data: brandRow } = await supabase
+      .from("mm_studio_brand")
+      .select("colors")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const rawColors = (brandRow?.colors as unknown) ?? [];
+    const colors = Array.isArray(rawColors) ? rawColors.map(String).slice(0, 6) : [];
+
+    const { data: newBal, error: spendErr } = await supabase.rpc("mm_studio_spend_credits", {
+      _user_id: userId,
+      _amount: cost,
+      _reason: "logo_generation",
+    });
+    if (spendErr) {
+      if (String(spendErr.message).includes("insufficient_credits")) {
+        throw new Error("Créditos insuficientes. Compra mais créditos para continuar.");
+      }
+      throw new Error(spendErr.message);
+    }
+
+    const basePrompt = buildLogoPrompt({
+      brandName: data.brandName,
+      tagline: data.tagline,
+      industry: data.industry,
+      style: data.style,
+      layout: data.layout,
+      background: data.background,
+      palette: data.palette,
+      colors,
+      notes: data.notes,
+    });
+
+    const directions = [
+      "Variation A: the most iconic, reduced and confident interpretation.",
+      "Variation B: a distinctly different construction — rethink the symbol geometry and proportions.",
+      "Variation C: a bolder, more expressive interpretation while staying premium and timeless.",
+    ];
+
+    const generateOne = async (i: number) => {
+      const b64 = await callImageModel(`${basePrompt} ${directions[i] ?? ""}`.trim(), "1024x1024");
+      const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const path = `${userId}/logos/${Date.now()}-${i}-${Math.random().toString(36).slice(2, 8)}.png`;
+      const up = await supabase.storage.from(BUCKET).upload(path, bytes, {
+        contentType: "image/png",
+        upsert: false,
+      });
+      if (up.error) throw new Error(up.error.message);
+      const signed = await supabase.storage.from(BUCKET).createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (signed.error || !signed.data) throw new Error(signed.error?.message ?? "URL falhou");
+      const url = signed.data.signedUrl;
+      const { data: asset, error: aErr } = await supabase
+        .from("mm_studio_assets")
+        .insert({
+          user_id: userId,
+          kind: "image",
+          url,
+          thumb_url: url,
+          format: "logo",
+          style: data.style,
+          credits_used: LOGO_COST_PER_VARIANT,
+          metadata: {
+            prompt: basePrompt,
+            kind: "logo",
+            brand_name: data.brandName,
+            layout: data.layout,
+            background: data.background,
+            palette: data.palette,
+            size: "1024x1024",
+            model: OPENAI_IMAGE_MODEL,
+            storage_path: path,
+          },
+        })
+        .select("id, url")
+        .single();
+      if (aErr) throw new Error(aErr.message);
+      return { id: asset.id, url: asset.url };
+    };
+
+    const results = await Promise.allSettled(
+      Array.from({ length: LOGO_VARIANTS }, (_, i) => generateOne(i)),
+    );
+    const generated: { id: string; url: string }[] = [];
+    let firstError: unknown = null;
+    for (const r of results) {
+      if (r.status === "fulfilled") generated.push(r.value);
+      else if (!firstError) firstError = r.reason;
+    }
+
+    const refund = (LOGO_VARIANTS - generated.length) * LOGO_COST_PER_VARIANT;
+    let finalBalance = newBal as number;
+    if (refund > 0) {
+      const { data: refunded } = await supabase.rpc("mm_studio_refund_credits", {
+        _user_id: userId,
+        _amount: refund,
+        _reason: "logo_generation_refund",
+      });
+      if (typeof refunded === "number") finalBalance = refunded;
+    }
+
+    if (generated.length === 0) {
+      throw firstError instanceof Error ? firstError : new Error("Falha ao gerar logotipos.");
+    }
+
+    return { assets: generated, balance: finalBalance, cost: cost - refund };
+  });
+
+/** Guarda um logotipo gerado como logo oficial do Brand DNA. */
+export const setBrandLogo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v: unknown) => z.object({ url: z.string().url().max(2000) }).parse(v))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase
+      .from("mm_studio_brand")
+      .upsert({ user_id: userId, logo_url: data.url }, { onConflict: "user_id" });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
 
 
 // ============ ASSETS ============
