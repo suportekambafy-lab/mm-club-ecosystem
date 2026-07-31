@@ -143,8 +143,17 @@ function StageBase({ state, actions, className }: StageProps) {
   }
 
   if (effectiveLayout === "host_guest") {
+    const hostGuestColumns = compact ? 1 : 2;
+    const hostGuestRows = Math.ceil(Math.min(onStage.length, 2) / hostGuestColumns);
     return (
-      <div ref={stageRef} className={cn("grid h-full min-h-0 w-full min-w-0 gap-2", !compact && "grid-cols-2", className)}>
+      <div
+        ref={stageRef}
+        className={cn("grid h-full min-h-0 w-full min-w-0 gap-2", className)}
+        style={{
+          gridTemplateColumns: `repeat(${hostGuestColumns}, minmax(0, 1fr))`,
+          gridTemplateRows: `repeat(${hostGuestRows}, minmax(0, 1fr))`,
+        }}
+      >
         {onStage.slice(0, 2).map((p) => (
           <MediaTile key={p.userId} participant={p} actions={actions} className="h-full min-h-0 min-w-0" />
         ))}
@@ -154,11 +163,15 @@ function StageBase({ state, actions, className }: StageProps) {
 
   // grid — adaptive
   const cols = compact ? (onStage.length <= 2 ? 1 : 2) : onStage.length <= 4 ? 2 : onStage.length <= 9 ? 3 : 4;
+  const rows = Math.ceil(onStage.length / cols);
   return (
     <div
       ref={stageRef}
       className={cn("grid h-full min-h-0 w-full min-w-0 gap-2 overflow-y-auto", className)}
-      style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}
+      style={{
+        gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))`,
+        gridTemplateRows: `repeat(${rows}, minmax(0,1fr))`,
+      }}
     >
       {onStage.map((p) => (
         <MediaTile key={p.userId} participant={p} actions={actions} className="min-h-0 min-w-0" />
