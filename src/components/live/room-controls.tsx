@@ -44,7 +44,7 @@ export function RoomControls({ state, actions, onLeave }: Props) {
   };
 
   return (
-    <div className="pointer-events-auto flex max-w-full items-center gap-1 overflow-x-auto rounded-xl border border-white/10 bg-neutral-950 p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="pointer-events-auto flex max-w-full items-center justify-center gap-1 overflow-x-auto rounded-xl border border-white/10 bg-neutral-950 p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {isPublisher && local?.micAllowed && (
         <div className="flex shrink-0 items-center">
           <IconButton
