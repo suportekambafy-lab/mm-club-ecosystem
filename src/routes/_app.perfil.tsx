@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { courses } from "@/data/courses";
+import { courseCoverBackground } from "@/lib/course-cover";
+
 import { cn } from "@/lib/utils";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { useAdminIds } from "@/hooks/use-admin-ids";
