@@ -2745,6 +2745,7 @@ export type Database = {
           dismissed_at: string | null
           id: string
           kind: string
+          live_id: string | null
           post_id: string | null
           push_attempts: number
           push_error: string | null
@@ -2761,6 +2762,7 @@ export type Database = {
           dismissed_at?: string | null
           id?: string
           kind: string
+          live_id?: string | null
           post_id?: string | null
           push_attempts?: number
           push_error?: string | null
@@ -2777,6 +2779,7 @@ export type Database = {
           dismissed_at?: string | null
           id?: string
           kind?: string
+          live_id?: string | null
           post_id?: string | null
           push_attempts?: number
           push_error?: string | null
@@ -2792,6 +2795,13 @@ export type Database = {
             columns: ["comment_id"]
             isOneToOne: false
             referencedRelation: "community_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_live_id_fkey"
+            columns: ["live_id"]
+            isOneToOne: false
+            referencedRelation: "lives"
             referencedColumns: ["id"]
           },
           {
