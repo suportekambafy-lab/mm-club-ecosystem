@@ -45,30 +45,27 @@ function StageBase({ state, actions, className }: StageProps) {
     );
   }
 
-  if (screenSharer || effectiveLayout === "spotlight") {
-    const primary = spotlightPerson!;
-    // When a screen share is active, the primary tile shows the screen.
-    // We overlay the sharer's camera (if enabled) as a golden-framed PiP so
-    // the audience keeps seeing the presenter's face — Meet/Zoom convention.
+  if (screenSharer) {
+    // A shared screen owns the whole stage. Participant cameras float above it
+    // instead of taking a grid column, which used to squeeze wide shares and
+    // made browser windows look cropped/zoomed on smaller viewports.
     const sharerHasCam = Boolean(
-      screenSharer &&
-        screenSharer.camOn !== false &&
+      screenSharer.camOn !== false &&
         screenSharer.tracks.some((t) => t.kind === "video" && t.source === "camera" && !t.muted),
     );
+    const cameraParticipants = onStage.filter((p) => p.userId !== screenSharer.userId);
     return (
-      <div className={cn("grid h-full w-full gap-2 lg:grid-cols-[1fr_auto]", className)}>
-        <div className="relative h-full min-h-[240px]">
-          <MediaTile
-            participant={primary}
-            actions={actions}
-            preferScreen={Boolean(screenSharer)}
-            className="h-full w-full"
-          />
-          {screenSharer && sharerHasCam && (
-            <div className="pointer-events-none absolute bottom-3 right-3 z-10 aspect-video w-32 overflow-hidden rounded-xl shadow-2xl ring-2 ring-[hsl(45_86%_60%)] sm:w-44 md:w-56">
-              {/* Force camera-only view for the PiP by rendering a second tile
-                  with preferScreen=false. The Stage <MediaTile> shows screen;
-                  this one shows the same participant's camera. */}
+      <div className={cn("relative h-full min-h-0 w-full min-w-0 overflow-hidden bg-neutral-950", className)}>
+        <MediaTile
+          participant={screenSharer}
+          actions={actions}
+          preferScreen
+          showName={false}
+          className="absolute inset-0 h-full w-full rounded-none ring-0"
+        />
+        <div className="pointer-events-none absolute right-3 top-3 z-10 flex max-h-[calc(100%-5rem)] flex-col gap-2 overflow-hidden">
+          {sharerHasCam && (
+            <div className="aspect-video w-28 overflow-hidden rounded-lg shadow-2xl ring-2 ring-[hsl(45_86%_60%)] sm:w-36 lg:w-44">
               <MediaTile
                 participant={screenSharer}
                 actions={actions}
@@ -79,9 +76,23 @@ function StageBase({ state, actions, className }: StageProps) {
               />
             </div>
           )}
+          {cameraParticipants.map((p) => (
+            <div key={p.userId} className="aspect-video w-28 overflow-hidden rounded-lg shadow-2xl ring-1 ring-white/15 sm:w-36 lg:w-44">
+              <MediaTile participant={p} actions={actions} preferScreen={false} className="h-full w-full" />
+            </div>
+          ))}
         </div>
+      </div>
+    );
+  }
+
+  if (effectiveLayout === "spotlight") {
+    const primary = spotlightPerson!;
+    return (
+      <div className={cn("grid h-full min-h-0 w-full min-w-0 gap-2 lg:grid-cols-[minmax(0,1fr)_180px]", className)}>
+        <MediaTile participant={primary} actions={actions} className="h-full min-h-[240px] w-full" />
         {others.length > 0 && (
-          <div className="flex flex-row gap-2 overflow-x-auto lg:flex-col lg:overflow-y-auto lg:w-[180px]">
+          <div className="flex min-w-0 flex-row gap-2 overflow-x-auto lg:flex-col lg:overflow-y-auto">
             {others.map((p) => (
               <MediaTile key={p.userId} participant={p} actions={actions} className="aspect-video h-24 shrink-0 lg:h-auto lg:w-full" />
             ))}
