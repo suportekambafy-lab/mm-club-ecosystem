@@ -185,6 +185,19 @@ function isModerationError(status: number, body: string): boolean {
   );
 }
 
+/** Conta OpenAI sem saldo / limite de faturação atingido → usamos o motor alternativo. */
+function isBillingError(status: number, body: string): boolean {
+  const b = body.toLowerCase();
+  return (
+    (status === 400 || status === 402 || status === 429) &&
+    (b.includes("billing_hard_limit_reached") ||
+      b.includes("billing hard limit") ||
+      b.includes("billing_limit") ||
+      b.includes("insufficient_quota") ||
+      b.includes("quota"))
+  );
+}
+
 /**
  * Fallback: quando a OpenAI recusa o prompt por moderação (roupa justa, biquíni,
  * fitness, mais pele visível), geramos com o Gemini via Lovable AI, que tem
@@ -209,7 +222,11 @@ async function callGeminiImageModel(
 
   const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
     method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    headers: {
+      "Lovable-API-Key": key,
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({
       model: GEMINI_IMAGE_MODEL,
       messages: [{ role: "user", content }],
@@ -274,8 +291,8 @@ async function callImageModel(
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    if (isModerationError(res.status, text)) {
-      // Moda/biquíni/fitness: a OpenAI bloqueia, o Gemini gera.
+    if (isModerationError(res.status, text) || isBillingError(res.status, text)) {
+      // Moderação ou limite de faturação da OpenAI: geramos pelo motor alternativo.
       return callGeminiImageModel(prompt, refs);
     }
     if (res.status === 401) throw new Error("Chave OpenAI inválida. Verifica OPENAI_API_KEY.");
