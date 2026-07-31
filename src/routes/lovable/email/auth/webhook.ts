@@ -19,8 +19,11 @@ const SITE_URL = "https://mmclub.online"
 // owns only the email decisions: subjects, templates, and per-type props.
 // `sendUrl` points at our own relay so every auth email is delivered by
 // Resend (and therefore visible in the Resend dashboard).
+// NOTE: must be the canonical host (mmclub.pt). www.mmclub.online answers with a
+// cross-host 307 redirect, and fetch drops the Authorization header on those,
+// so the relay replied 401 and auth emails silently never reached Resend.
 const RELAY_URL =
-  process.env.LOVABLE_SEND_URL ?? 'https://www.mmclub.online/api/public/hooks/email-relay'
+  process.env.LOVABLE_SEND_URL ?? 'https://mmclub.pt/api/public/hooks/email-relay'
 
 const handler = createAuthEmailHandler({
   apiKey: process.env.LOVABLE_API_KEY!,
