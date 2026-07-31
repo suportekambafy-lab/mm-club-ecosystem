@@ -537,7 +537,7 @@ function AppLayout() {
 
   return (
     <div
-      className="h-dvh max-h-dvh max-w-full overflow-hidden bg-background text-foreground"
+      className="h-[100svh] max-h-[100svh] max-w-full overflow-hidden bg-background text-foreground lg:h-dvh lg:max-h-dvh"
       style={{ ["--mm-sidebar-w" as string]: collapsed ? "76px" : "256px" } as React.CSSProperties}
     >
 
