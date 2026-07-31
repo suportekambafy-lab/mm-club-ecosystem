@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
-import { Loader2, Sparkles, Download, Check, BadgeCheck, Layers } from "lucide-react";
-import { generateLogos, setBrandLogo, generateLogoApplications } from "@/lib/studio.functions";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { Loader2, Sparkles, Download, Check, BadgeCheck, Layers, History } from "lucide-react";
+import { generateLogos, setBrandLogo, generateLogoApplications, listLogoHistory } from "@/lib/studio.functions";
+
 import {
   LOGO_STYLES,
   LOGO_LAYOUTS,
@@ -62,6 +63,24 @@ function LogotiposPage() {
   const fn = useServerFn(generateLogos);
   const saveFn = useServerFn(setBrandLogo);
   const appsFn = useServerFn(generateLogoApplications);
+  const historyFn = useServerFn(listLogoHistory);
+
+  const history = useQuery({
+    queryKey: ["studio", "logo-history"],
+    queryFn: () => historyFn({}),
+    staleTime: 30_000,
+  });
+
+  // Recupera a última geração quando a página é recarregada (nada se perde).
+  useEffect(() => {
+    if (!history.data || assets.length > 0) return;
+    const logos = history.data.filter((h) => !h.isApplication).slice(0, LOGO_VARIANTS);
+    if (logos.length === 0) return;
+    setAssets(logos.map((l) => ({ id: l.id, url: l.url })));
+    setBaseLogo((prev) => prev ?? logos[0]?.url ?? null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [history.data]);
+
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -82,6 +101,7 @@ function LogotiposPage() {
       setBaseLogo(data.assets[0]?.url ?? null);
       setError(null);
       refresh();
+      history.refetch();
     },
     onError: (e) => setError((e as Error).message),
   });
@@ -109,6 +129,7 @@ function LogotiposPage() {
       setAppAssets(data.assets.map((a) => ({ id: a.id, url: a.url, label: a.label })));
       setError(null);
       refresh();
+      history.refetch();
     },
     onError: (e) => setError((e as Error).message),
   });
@@ -425,6 +446,40 @@ function LogotiposPage() {
         </Step>
       )}
 
+      {/* HISTÓRICO */}
+      {(history.data?.length ?? 0) > 0 && (
+        <section>
+          <h2 className="mb-1 flex items-center gap-2 font-display text-xl text-foreground">
+            <History className="h-4 w-4 text-primary" /> Histórico
+          </h2>
+          <p className="mb-3 text-[11px] text-muted-foreground">
+            Tudo o que geraste fica guardado aqui — mesmo que recarregues a página.
+          </p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6">
+            {history.data!.map((h) => (
+              <div key={h.id} className="overflow-hidden rounded-2xl border border-[color:var(--hairline)] bg-surface-1">
+                <button type="button" onClick={() => !h.isApplication && setBaseLogo(h.url)} className="block w-full">
+                  <img
+                    src={h.url}
+                    alt={h.brandName ? `Logotipo ${h.brandName}` : "Logotipo gerado"}
+                    loading="lazy"
+                    decoding="async"
+                    className="aspect-square w-full object-contain"
+                  />
+                </button>
+                <div className="flex items-center justify-between gap-1 border-t border-[color:var(--hairline)] px-2 py-1.5">
+                  <span className="truncate text-[10px] text-muted-foreground">
+                    {h.isApplication ? (h.application ?? "mockup") : "logotipo"}
+                  </span>
+                  <a href={h.url} target="_blank" rel="noreferrer" download className="text-muted-foreground transition hover:text-primary">
+                    <Download className="h-3 w-3" />
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
