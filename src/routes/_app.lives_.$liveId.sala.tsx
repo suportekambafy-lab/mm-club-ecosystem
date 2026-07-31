@@ -321,6 +321,27 @@ function SalaShell({
   const [elapsed, setElapsed] = useState<string>("");
   const [wentLiveAt, setWentLiveAt] = useState<string | null>(null);
 
+  // Safari's visible viewport changes as its address/tab bars expand and
+  // collapse. Keep the room exactly inside that visible area so the controls
+  // dock is never pushed behind browser chrome.
+  useEffect(() => {
+    const root = document.documentElement;
+    const viewport = window.visualViewport;
+    const measure = () => {
+      root.style.setProperty("--interactive-room-height", `${viewport?.height ?? window.innerHeight}px`);
+    };
+    measure();
+    viewport?.addEventListener("resize", measure);
+    viewport?.addEventListener("scroll", measure);
+    window.addEventListener("resize", measure);
+    return () => {
+      root.style.removeProperty("--interactive-room-height");
+      viewport?.removeEventListener("resize", measure);
+      viewport?.removeEventListener("scroll", measure);
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+
   // Track live status timestamp (went_live_at) directly, incl. realtime updates.
   useEffect(() => {
     let cancelled = false;
@@ -432,7 +453,10 @@ function SalaShell({
   }, [wentLiveAt]);
 
   return (
-    <div className="fixed inset-0 z-50 flex h-svh min-h-0 w-screen flex-col overflow-hidden bg-black text-white">
+    <div
+      className="fixed inset-x-0 top-0 z-50 flex min-h-0 w-screen flex-col overflow-hidden bg-black text-white"
+      style={{ height: "var(--interactive-room-height, 100dvh)" }}
+    >
       <header className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 border-b border-white/5 px-2 py-2 sm:gap-3 sm:px-4 sm:py-2.5">
         <button
           type="button"
@@ -475,10 +499,17 @@ function SalaShell({
           </button>
         </div>
       </header>
-       <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
-          <main className="absolute inset-0 min-h-0 min-w-0 overflow-hidden">{children}</main>
+       <div
+         className={cn(
+           "relative grid min-h-0 min-w-0 flex-1 overflow-hidden",
+           chatOpen
+             ? "grid-rows-[minmax(0,3fr)_minmax(190px,2fr)] sm:grid-cols-[minmax(0,1fr)_minmax(280px,32vw)] sm:grid-rows-1"
+             : "grid-cols-1 grid-rows-1",
+         )}
+       >
+          <main className="relative min-h-0 min-w-0 overflow-hidden">{children}</main>
          {chatOpen && (
-           <aside className="absolute inset-x-2 bottom-2 z-40 flex h-[min(46%,360px)] min-h-[190px] flex-col overflow-hidden rounded-xl border border-white/10 bg-neutral-950/95 shadow-2xl backdrop-blur-xl sm:inset-x-auto sm:bottom-3 sm:right-3 sm:top-3 sm:h-auto sm:min-h-0 sm:w-[min(360px,42vw)]">
+           <aside className="relative z-40 flex min-h-0 min-w-0 flex-col overflow-hidden border-t border-white/10 bg-neutral-950 sm:border-l sm:border-t-0">
              <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-3 py-2">
               <div className="text-sm font-medium">Chat</div>
               <button
@@ -495,7 +526,7 @@ function SalaShell({
             </div>
           </aside>
         )}
-        {peopleOpen && (
+         {peopleOpen && (
           <div className="absolute inset-y-0 right-0 z-50 flex w-full max-w-sm flex-col border-l border-white/10 bg-neutral-950/95 backdrop-blur-md md:w-[340px]">
             <div className="flex items-center justify-between border-b border-white/5 px-3 py-2.5">
               <div className="text-sm font-semibold">

@@ -65,6 +65,16 @@ function MediaTileBase({ participant, actions, className, preferScreen, showName
   const isScreen = videoTrack?.source === "screen";
   const hasVideo = Boolean(videoTrack) && !videoTrack?.muted && (isScreen || participant.camOn !== false);
 
+  const restoreScreenFit = () => {
+    const el = videoRef.current;
+    if (!el || !isScreen) return;
+    // Safari can lose object-fit when a screen track reports its intrinsic
+    // dimensions after mount. Reassigning after metadata forces a fresh fit.
+    el.style.objectFit = "contain";
+    el.style.objectPosition = "center";
+    el.style.transform = "none";
+  };
+
   return (
     <div
       className={cn(
@@ -81,6 +91,8 @@ function MediaTileBase({ participant, actions, className, preferScreen, showName
           muted
           disablePictureInPicture
           controls={false}
+          onLoadedMetadata={restoreScreenFit}
+          onResize={restoreScreenFit}
           style={isScreen ? { objectFit: "contain", objectPosition: "center", transform: "none" } : undefined}
           className={cn(
             "block h-full max-h-full w-full max-w-full",
