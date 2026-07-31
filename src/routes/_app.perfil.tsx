@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { courses } from "@/data/courses";
+import { courseCoverBackground } from "@/lib/course-cover";
+
 import { cn } from "@/lib/utils";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { useAdminIds } from "@/hooks/use-admin-ids";
@@ -607,9 +609,10 @@ function ProfilePage() {
               )}
             >
               <div
-                className="h-10 w-10 shrink-0 rounded-lg ring-1 ring-[color:var(--hairline)]"
-                style={{ background: c.cover }}
+                className="h-10 w-10 shrink-0 rounded-lg bg-surface-3 ring-1 ring-[color:var(--hairline)]"
+                style={{ background: courseCoverBackground(c) }}
               />
+
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-foreground">{c.title}</p>
                 <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface-3">
