@@ -62,7 +62,8 @@ function MediaTileBase({ participant, actions, className, preferScreen, showName
     };
   }, [audioTrack?.id, actions]);
 
-  const hasVideo = Boolean(videoTrack) && !videoTrack?.muted && participant.camOn !== false;
+  const isScreen = videoTrack?.source === "screen";
+  const hasVideo = Boolean(videoTrack) && !videoTrack?.muted && (isScreen || participant.camOn !== false);
 
   return (
     <div
@@ -81,11 +82,14 @@ function MediaTileBase({ participant, actions, className, preferScreen, showName
           disablePictureInPicture
           controls={false}
           className={cn(
-            "h-full w-full object-cover",
+            "h-full w-full",
+            // Screen shares must never be cropped/zoomed — fit the whole frame.
+            isScreen ? "bg-black object-contain" : "object-cover",
             participant.isLocal && videoTrack?.source === "camera" && "scale-x-[-1]",
           )}
         />
       ) : (
+
         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-900 to-neutral-950">
           <MemberAvatar
             name={participant.displayName}
