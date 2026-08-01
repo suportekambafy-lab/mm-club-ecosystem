@@ -1,8 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { BarList, money, Panel, StatCard } from "@/components/admin/finance-ui";
+import {
+  BarList,
+  money,
+  Panel,
+  RangeFilter,
+  StatCard,
+} from "@/components/admin/finance-ui";
 import { getFinanceOverview } from "@/lib/admin-finance.functions";
+import type { FinanceRange } from "@/lib/admin/finance-types";
 
 export const Route = createFileRoute("/admin/financeiro/receita")({
   ssr: false,
@@ -29,29 +37,45 @@ export const Route = createFileRoute("/admin/financeiro/receita")({
 
 function RevenuePage() {
   const fetchOverview = useServerFn(getFinanceOverview);
+  const [range, setRange] = useState<FinanceRange>("month");
   const { data, isLoading } = useQuery({
-    queryKey: ["finance-overview"],
-    queryFn: () => fetchOverview({ data: undefined as never }),
+    queryKey: ["finance-overview", range],
+    queryFn: () => fetchOverview({ data: { range } }),
   });
 
   if (isLoading || !data)
     return (
-      <div className="grid gap-4 lg:grid-cols-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-56 animate-pulse rounded-2xl border border-border bg-surface-1"
-          />
-        ))}
+      <div className="space-y-4">
+        <RangeFilter value={range} onChange={setRange} />
+        <div className="grid gap-4 lg:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-56 animate-pulse rounded-2xl border border-border bg-surface-1"
+            />
+          ))}
+        </div>
       </div>
     );
 
+  const p = data.period;
+
   return (
     <div className="space-y-6">
+      <RangeFilter value={range} onChange={setRange} />
+
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Últimos 30 dias" value={money(data.revenue.last30Cents)} />
-        <StatCard label="Este mês" value={money(data.revenue.monthCents)} />
-        <StatCard label="Mês anterior" value={money(data.revenue.prevMonthCents)} />
+        <StatCard
+          label={`Receita · ${p.label}`}
+          value={money(p.revenueCents)}
+          tone="accent"
+          hint={`${p.paymentsCount} pagamento(s)`}
+        />
+        <StatCard
+          label="Ticket médio"
+          value={p.avgTicketCents == null ? "—" : money(p.avgTicketCents)}
+        />
+        <StatCard label="Reembolsos no período" value={money(p.refundedCents)} />
         <StatCard
           label="Recuperado por dunning"
           value={money(data.dunningRecoveredCents)}
@@ -61,23 +85,36 @@ function RevenuePage() {
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <Panel title="Por plano">
-          <BarList items={data.revenueByPlan} />
+        <Panel title={`Por plano · ${p.label}`}>
+          <BarList items={p.byPlan} emptyLabel="Sem receita neste período." />
         </Panel>
-        <Panel title="Por período (mensal)">
-          <BarList items={data.revenueByMonth} />
+        <Panel title={`Por dia · ${p.label}`}>
+          <BarList items={p.byDay} emptyLabel="Sem receita neste período." />
         </Panel>
-        <Panel title="Por país">
+        <Panel title={`Por país · ${p.label}`}>
           <BarList
-            items={data.revenueByCountry}
+            items={p.byCountry}
             emptyLabel="Sem país registado nos clientes."
           />
         </Panel>
-        <Panel title="Por cupão">
+        <Panel title={`Por cupão · ${p.label}`}>
           <BarList
-            items={data.revenueByCoupon}
+            items={p.byCoupon}
             emptyLabel="Ainda sem receita associada a cupões."
           />
+        </Panel>
+        <Panel title={`Métodos de pagamento · ${p.label}`}>
+          <BarList
+            items={p.byMethod.map((m) => ({
+              label: m.method,
+              cents: m.cents,
+              count: m.count,
+            }))}
+            emptyLabel="Sem pagamentos neste período."
+          />
+        </Panel>
+        <Panel title="Histórico mensal (todo o tempo)">
+          <BarList items={data.revenueByMonth} />
         </Panel>
       </section>
     </div>
