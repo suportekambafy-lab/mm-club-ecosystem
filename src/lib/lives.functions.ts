@@ -24,6 +24,7 @@ export const listLives = createServerFn({ method: "GET" }).handler(async () => {
     .select(
       "id,title,description,expert_id,starts_at,duration_minutes,visibility,cover_url,status,cf_playback_id,recording_video_uid,mode",
     )
+    .eq("is_test", false)
     .order("starts_at", { ascending: false });
   if (error) throw new Error(error.message);
   return data ?? [];
@@ -38,10 +39,12 @@ export const listLivesAuthed = createServerFn({ method: "GET" })
       .select(
         "id,title,description,expert_id,starts_at,duration_minutes,visibility,cover_url,status,cf_playback_id,recording_video_uid,mode",
       )
+      .eq("is_test", false)
       .order("starts_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
   });
+
 
 // Detail + short-lived playback token if the caller has access.
 export const getLive = createServerFn({ method: "GET" })
