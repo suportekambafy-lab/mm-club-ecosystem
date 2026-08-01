@@ -580,7 +580,7 @@ export const adminListLives = createServerFn({ method: "GET" })
     await requireAdmin(context.supabase, context.userId);
     const { data, error } = await context.supabase
       .from("lives")
-      .select("id,title,expert_id,starts_at,duration_minutes,visibility,status,cf_live_input_id,cover_url")
+      .select("id,title,expert_id,starts_at,duration_minutes,visibility,status,cf_live_input_id,cover_url,is_test")
       .order("starts_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
