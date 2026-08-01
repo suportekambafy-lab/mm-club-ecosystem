@@ -53,8 +53,14 @@ function HlsVideo({ src }: { src: string }) {
     el.muted = false;
     el.volume = 1;
     setMuted(false);
+    try {
+      el.currentTime = 0;
+    } catch {
+      /* ignore */
+    }
     void el.play().catch(() => {});
   };
+
 
   return (
     <>
