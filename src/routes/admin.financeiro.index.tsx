@@ -1,15 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   BarList,
   money,
   Panel,
+  RangeFilter,
   StatCard,
   STATUS_LABEL,
 } from "@/components/admin/finance-ui";
 import { getFinanceOverview } from "@/lib/admin-finance.functions";
+import type { FinanceRange } from "@/lib/admin/finance-types";
 import type { SubscriptionStatus } from "@/lib/billing/types";
+
 
 export const Route = createFileRoute("/admin/financeiro/")({
   ssr: false,
