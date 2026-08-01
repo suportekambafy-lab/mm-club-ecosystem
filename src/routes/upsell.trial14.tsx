@@ -51,15 +51,49 @@ function HlsVideo({ src }: { src: string }) {
   );
 }
 
+/** Aceita os nomes de campo mais usados pelas plataformas externas
+ * (Hotmart, Kiwify, Eduzz, Ticto, Stripe, Paddle…). */
+function pickParam(search: Record<string, unknown>, keys: string[]) {
+  for (const k of keys) {
+    const v = search[k];
+    if (typeof v === "string" && v.trim()) return v.trim();
+  }
+  return undefined;
+}
+
 export const Route = createFileRoute("/upsell/trial14")({
   validateSearch: (
     search: Record<string, unknown>,
-  ): { v?: string; email?: string; name?: string; trial?: string } => ({
-    v: typeof search.v === "string" ? search.v : undefined,
-    email: typeof search.email === "string" ? search.email : undefined,
-    name: typeof search.name === "string" ? search.name : undefined,
-    trial: typeof search.trial === "string" ? search.trial : undefined,
-  }),
+  ): { v?: string; email?: string; name?: string; trial?: string } => {
+    const email = pickParam(search, [
+      "email",
+      "e",
+      "buyer_email",
+      "customer_email",
+      "checkout_email",
+      "client_email",
+      "customer[email]",
+    ]);
+    const first = pickParam(search, [
+      "name",
+      "nome",
+      "first_name",
+      "firstname",
+      "buyer_name",
+      "customer_name",
+      "full_name",
+      "customer[name]",
+    ]);
+    const last = pickParam(search, ["last_name", "lastname", "surname"]);
+    const name = first && last ? `${first} ${last}` : (first ?? last);
+    return {
+      v: typeof search.v === "string" ? search.v : undefined,
+      email: email ? email.replace(/\s/g, "") : undefined,
+      name,
+      trial: typeof search.trial === "string" ? search.trial : undefined,
+    };
+  },
+
   head: () => ({
     meta: [
       { title: "Oferta exclusiva — 14 dias grátis no MM Club" },
