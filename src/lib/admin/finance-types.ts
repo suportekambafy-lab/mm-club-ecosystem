@@ -8,8 +8,42 @@ import type {
 
 export type MoneyPoint = { label: string; cents: number; count: number };
 
+/** Periods available in the admin date filter. */
+export type FinanceRange =
+  | "today"
+  | "yesterday"
+  | "7d"
+  | "30d"
+  | "month"
+  | "prev_month"
+  | "90d"
+  | "year"
+  | "all";
+
+export type FinancePeriod = {
+  range: FinanceRange;
+  label: string;
+  startISO: string;
+  endISO: string;
+  revenueCents: number;
+  paymentsCount: number;
+  refundedCents: number;
+  failedCount: number;
+  chargebacksCount: number;
+  newSubs: number;
+  cancellations: number;
+  avgTicketCents: number | null;
+  byPlan: MoneyPoint[];
+  byCountry: MoneyPoint[];
+  byCoupon: MoneyPoint[];
+  byMethod: { method: string; count: number; cents: number }[];
+  byDay: MoneyPoint[];
+};
+
 export type FinanceOverview = {
   generatedAt: string;
+  period: FinancePeriod;
+
   revenue: {
     todayCents: number;
     monthCents: number;
