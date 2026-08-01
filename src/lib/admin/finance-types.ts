@@ -38,6 +38,10 @@ export type FinancePeriod = {
   byCoupon: MoneyPoint[];
   byMethod: { method: string; count: number; cents: number }[];
   byDay: MoneyPoint[];
+  /** Split between trial-related payments (verification/trial start) and real sales. */
+  trial: MoneyPoint;
+  regular: MoneyPoint;
+  byKind: MoneyPoint[];
 };
 
 export type FinanceOverview = {
