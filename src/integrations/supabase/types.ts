@@ -2178,6 +2178,7 @@ export type Database = {
           expert_id: string | null
           guest_token: string | null
           id: string
+          is_test: boolean
           livekit_room_prefix: string | null
           mode: Database["public"]["Enums"]["live_mode"]
           published_lesson_id: string | null
@@ -2217,6 +2218,7 @@ export type Database = {
           expert_id?: string | null
           guest_token?: string | null
           id?: string
+          is_test?: boolean
           livekit_room_prefix?: string | null
           mode?: Database["public"]["Enums"]["live_mode"]
           published_lesson_id?: string | null
@@ -2256,6 +2258,7 @@ export type Database = {
           expert_id?: string | null
           guest_token?: string | null
           id?: string
+          is_test?: boolean
           livekit_room_prefix?: string | null
           mode?: Database["public"]["Enums"]["live_mode"]
           published_lesson_id?: string | null

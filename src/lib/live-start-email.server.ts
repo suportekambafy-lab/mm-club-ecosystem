@@ -11,10 +11,11 @@ const MAX_BATCH = 500;
 export async function sendLiveStartEmails(liveId: string) {
   const { data: live } = await supabaseAdmin
     .from("lives")
-    .select("id, title, description, starts_at, went_live_at, cover_url")
+    .select("id, title, description, starts_at, went_live_at, cover_url, is_test")
     .eq("id", liveId)
     .maybeSingle();
-  if (!live) return { sent: 0, skipped: 0, failed: 0 };
+  // Test lives never email members.
+  if (!live || live.is_test) return { sent: 0, skipped: 0, failed: 0 };
 
   const { data: subs, error } = await supabaseAdmin
     .from("billing_subscriptions")

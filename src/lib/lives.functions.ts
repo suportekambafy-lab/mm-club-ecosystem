@@ -24,6 +24,7 @@ export const listLives = createServerFn({ method: "GET" }).handler(async () => {
     .select(
       "id,title,description,expert_id,starts_at,duration_minutes,visibility,cover_url,status,cf_playback_id,recording_video_uid,mode",
     )
+    .eq("is_test", false)
     .order("starts_at", { ascending: false });
   if (error) throw new Error(error.message);
   return data ?? [];
@@ -38,10 +39,12 @@ export const listLivesAuthed = createServerFn({ method: "GET" })
       .select(
         "id,title,description,expert_id,starts_at,duration_minutes,visibility,cover_url,status,cf_playback_id,recording_video_uid,mode",
       )
+      .eq("is_test", false)
       .order("starts_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
   });
+
 
 // Detail + short-lived playback token if the caller has access.
 export const getLive = createServerFn({ method: "GET" })
@@ -303,7 +306,10 @@ export const adminCreateLive = createServerFn({ method: "POST" })
           .url()
           .optional()
           .or(z.literal("").transform(() => undefined)),
+        // Test sessions stay hidden from members and never trigger emails/notifications.
+        is_test: z.boolean().optional(),
       })
+
       .parse(i),
   )
   .handler(async ({ data, context }) => {
@@ -331,26 +337,31 @@ export const adminCreateLive = createServerFn({ method: "POST" })
         cf_webrtc_url: input.webRTC?.url ?? null,
         cf_playback_id: input.uid, // For live inputs, playback uses the input UID.
         created_by: context.userId,
+        is_test: data.is_test ?? false,
       })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
 
+    const isTest = data.is_test ?? false;
+
     // Auto-generate a premium MM Club cover when the admin didn't upload one.
     let finalCoverUrl: string | null = data.cover_url ?? null;
     if (!data.cover_url) {
       let autoCover = `/api/public/lives/${row.id}/cover/svg`;
-      try {
-        const { generateAndStoreLiveCover } = await import("@/lib/live-cover.server");
-        autoCover = await generateAndStoreLiveCover({
-          liveId: row.id,
-          title: data.title,
-          startsAt,
-          supabaseAdmin,
-          speakerImageUrl: data.speaker_image_url,
-        });
-      } catch (e) {
-        console.error("[lives] AI cover generation failed, using fallback", e);
+      if (!isTest) {
+        try {
+          const { generateAndStoreLiveCover } = await import("@/lib/live-cover.server");
+          autoCover = await generateAndStoreLiveCover({
+            liveId: row.id,
+            title: data.title,
+            startsAt,
+            supabaseAdmin,
+            speakerImageUrl: data.speaker_image_url,
+          });
+        } catch (e) {
+          console.error("[lives] AI cover generation failed, using fallback", e);
+        }
       }
       await supabaseAdmin
         .from("lives")
@@ -359,8 +370,14 @@ export const adminCreateLive = createServerFn({ method: "POST" })
       finalCoverUrl = autoCover;
     }
 
+    // Test sessions never announce to members.
+    if (isTest) {
+      return { id: row.id, rtmps: input.rtmps, webRTC: input.webRTC ?? null };
+    }
+
     // Fire email announcements to all confirmed users (idempotent via email_log).
     try {
+
       const { sendEmail, emailTemplates } = await import("@/lib/email.server");
       const isScheduled = new Date(startsAt).getTime() > Date.now() + 5 * 60 * 1000;
       let page = 1;
@@ -563,7 +580,7 @@ export const adminListLives = createServerFn({ method: "GET" })
     await requireAdmin(context.supabase, context.userId);
     const { data, error } = await context.supabase
       .from("lives")
-      .select("id,title,expert_id,starts_at,duration_minutes,visibility,status,cf_live_input_id,cover_url")
+      .select("id,title,expert_id,starts_at,duration_minutes,visibility,status,cf_live_input_id,cover_url,is_test")
       .order("starts_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];

@@ -6,11 +6,12 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 export async function notifyReplayReady(liveId: string): Promise<{ sent: boolean }> {
   const { data: live } = await supabaseAdmin
     .from("lives")
-    .select("id,title,description,starts_at,cover_url,replay_notified_at,recording_video_uid")
+    .select("id,title,description,starts_at,cover_url,replay_notified_at,recording_video_uid,is_test")
     .eq("id", liveId)
     .maybeSingle();
 
-  if (!live || !live.recording_video_uid || live.replay_notified_at) return { sent: false };
+  // Test lives never notify members.
+  if (!live || live.is_test || !live.recording_video_uid || live.replay_notified_at) return { sent: false };
 
   // Atomic claim: only the first caller flips the flag from NULL.
   const { data: claimed } = await supabaseAdmin

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { Copy, Plus, Trash2, Radio, Loader2, Video, Upload, CalendarClock, Sparkles, Scissors, Mail } from "lucide-react";
+import { Copy, Plus, Trash2, Radio, Loader2, Video, Upload, CalendarClock, Sparkles, Scissors, Mail, FlaskConical } from "lucide-react";
 import { SectionHeading } from "@/components/mm/section-heading";
 import {
   adminListLives,
@@ -74,6 +74,8 @@ function AdminLives() {
   const [rows, setRows] = useState<LiveRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [creatingTest, setCreatingTest] = useState(false);
+  const [testLiveId, setTestLiveId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [ingest, setIngest] = useState<{ id: string; url: string; key: string } | null>(null);
   const [guestUrl, setGuestUrl] = useState<{ id: string; url: string } | null>(null);
@@ -177,6 +179,36 @@ function AdminLives() {
       setCreating(false);
     }
   }
+
+  // Cria uma live de teste: invisível para membros, sem emails nem notificações.
+  async function handleCreateTest() {
+    setError(null);
+    setCreatingTest(true);
+    try {
+      const stamp = new Date().toLocaleString("pt-PT", {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      const res = await create({
+        data: {
+          title: `Live de teste — ${stamp}`,
+          description: "Sessão interna para testar funcionalidades das lives.",
+          visibility: "premium" as const,
+          is_test: true,
+        },
+      });
+      setTestLiveId(res.id);
+      toast.success("Live de teste criada. Ninguém foi notificado.");
+      await refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setCreatingTest(false);
+    }
+  }
+
 
   async function handleShowIngest(id: string) {
     setError(null);
@@ -294,6 +326,62 @@ function AdminLives() {
         </div>
       )}
 
+      <div className="rounded-2xl border border-dashed border-border bg-surface-1 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="flex items-center gap-2 font-display text-sm text-foreground">
+              <FlaskConical className="h-4 w-4 text-primary" /> Live de teste
+            </p>
+            <p className="mt-1 max-w-xl text-xs text-muted-foreground">
+              Cria uma sessão só para testar funcionalidades (sala interativa, partilha de ecrã, convidados, chat,
+              gravação). Fica escondida dos membros e não envia emails, notificações nem push.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleCreateTest}
+            disabled={creatingTest}
+            className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/20 disabled:opacity-60"
+          >
+            {creatingTest ? <Loader2 className="h-4 w-4 animate-spin" /> : <FlaskConical className="h-4 w-4" />}
+            {creatingTest ? "A criar…" : "Criar live de teste"}
+          </button>
+        </div>
+
+        {testLiveId && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+            <Link
+              to="/lives/$liveId/sala"
+              params={{ liveId: testLiveId }}
+              reloadDocument
+              className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              <Video className="h-3 w-3" /> Entrar na sala de teste
+            </Link>
+            <Link
+              to="/admin/lives/$liveId/studio"
+              params={{ liveId: testLiveId }}
+              className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40"
+            >
+              <Video className="h-3 w-3" /> Estúdio
+            </Link>
+            <button
+              type="button"
+              onClick={() => handleGuestLink(testLiveId)}
+              className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40"
+            >
+              <Copy className="h-3 w-3" /> Link de convidado
+            </button>
+            <button
+              type="button"
+              onClick={() => setTestLiveId(null)}
+              className="text-[11px] text-muted-foreground underline"
+            >
+              Fechar
+            </button>
+          </div>
+        )}
+      </div>
 
 
       <form
@@ -509,10 +597,57 @@ function AdminLives() {
       </form>
 
       {(() => {
-        const active = rows.filter((r) => r.status === "scheduled" || r.status === "live");
-        const finished = rows.filter((r) => r.status === "ended" || r.status === "published");
+        const testRows = rows.filter((r) => r.is_test);
+        const real = rows.filter((r) => !r.is_test);
+        const active = real.filter((r) => r.status === "scheduled" || r.status === "live");
+        const finished = real.filter((r) => r.status === "ended" || r.status === "published");
         return (
           <>
+            {testRows.length > 0 && (
+              <LivesSection
+                title="Lives de teste (escondidas dos membros)"
+                loading={loading}
+                rows={testRows}
+                emptyText="Sem lives de teste."
+                renderActions={(r) => (
+                  <>
+                    <Link
+                      to="/lives/$liveId/sala"
+                      params={{ liveId: r.id }}
+                      reloadDocument
+                      className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                    >
+                      <Video className="h-3 w-3" /> Sala de teste
+                    </Link>
+                    <Link
+                      to="/admin/lives/$liveId/studio"
+                      params={{ liveId: r.id }}
+                      className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40"
+                    >
+                      <Video className="h-3 w-3" /> Estúdio
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => handleGuestLink(r.id)}
+                      disabled={guestBusy === r.id}
+                      className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40 disabled:opacity-60"
+                    >
+                      {guestBusy === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Copy className="h-3 w-3" />}
+                      Link de convidado
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(r.id)}
+                      className="inline-flex items-center gap-1 rounded-full border border-red-500/40 px-3 py-1.5 text-xs text-red-300 hover:bg-red-500/10"
+                    >
+                      <Trash2 className="h-3 w-3" /> Apagar
+                    </button>
+                  </>
+                )}
+                statusBadge={(r) => `teste · ${r.status}`}
+              />
+            )}
+
             <LivesSection
               title="Lives programadas"
               loading={loading}
