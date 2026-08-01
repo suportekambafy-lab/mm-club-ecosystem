@@ -66,8 +66,8 @@ function UpsellTrial14() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [askEmail, setAskEmail] = useState(false);
-  const [guestEmail, setGuestEmail] = useState(search.email ?? "");
-  const [guestName, setGuestName] = useState(search.name ?? "");
+  const [guestEmail, setGuestEmail] = useState<string>(search.email ?? "");
+  const [guestName, setGuestName] = useState<string>(search.name ?? "");
 
   const video = parseVideoUrl(search.v ?? UPSELL_VIDEO_URL);
 
