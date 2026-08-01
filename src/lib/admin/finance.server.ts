@@ -272,12 +272,13 @@ export async function collectFinanceOverview(
       todayCents += value;
       todayCount += 1;
     }
+    const dayOfMonth = tzParts(at).day;
     if (at >= startOfMonth) {
       monthCents += value;
-      dayCurrent.set(at.getUTCDate(), (dayCurrent.get(at.getUTCDate()) ?? 0) + value);
+      dayCurrent.set(dayOfMonth, (dayCurrent.get(dayOfMonth) ?? 0) + value);
     } else if (at >= startOfPrevMonth) {
       prevMonthCents += value;
-      dayPrev.set(at.getUTCDate(), (dayPrev.get(at.getUTCDate()) ?? 0) + value);
+      dayPrev.set(dayOfMonth, (dayPrev.get(dayOfMonth) ?? 0) + value);
     }
     if (at >= since30) last30Cents += value;
 
