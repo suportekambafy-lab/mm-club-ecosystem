@@ -287,11 +287,7 @@ export async function collectFinanceOverview(
       ? (productById.get(price.product_id)?.name ?? price.slug)
       : "Avulso";
     bump(byPlan, planName, value);
-    bump(
-      byMonth,
-      `${at.getUTCFullYear()}-${String(at.getUTCMonth() + 1).padStart(2, "0")}`,
-      value,
-    );
+    bump(byMonth, tzDay(at).slice(0, 7), value);
     bump(byCountry, countryByUser.get(p.user_id) ?? "—", value);
     const coupon = couponByUser.get(p.user_id);
     if (coupon) bump(byCoupon, coupon, value);
