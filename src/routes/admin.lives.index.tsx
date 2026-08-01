@@ -326,6 +326,62 @@ function AdminLives() {
         </div>
       )}
 
+      <div className="rounded-2xl border border-dashed border-border bg-surface-1 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="flex items-center gap-2 font-display text-sm text-foreground">
+              <FlaskConical className="h-4 w-4 text-primary" /> Live de teste
+            </p>
+            <p className="mt-1 max-w-xl text-xs text-muted-foreground">
+              Cria uma sessão só para testar funcionalidades (sala interativa, partilha de ecrã, convidados, chat,
+              gravação). Fica escondida dos membros e não envia emails, notificações nem push.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleCreateTest}
+            disabled={creatingTest}
+            className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/20 disabled:opacity-60"
+          >
+            {creatingTest ? <Loader2 className="h-4 w-4 animate-spin" /> : <FlaskConical className="h-4 w-4" />}
+            {creatingTest ? "A criar…" : "Criar live de teste"}
+          </button>
+        </div>
+
+        {testLiveId && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+            <Link
+              to="/lives/$liveId/sala"
+              params={{ liveId: testLiveId }}
+              reloadDocument
+              className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              <Video className="h-3 w-3" /> Entrar na sala de teste
+            </Link>
+            <Link
+              to="/admin/lives/$liveId/studio"
+              params={{ liveId: testLiveId }}
+              className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40"
+            >
+              <Video className="h-3 w-3" /> Estúdio
+            </Link>
+            <button
+              type="button"
+              onClick={() => handleGuestLink(testLiveId)}
+              className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40"
+            >
+              <Copy className="h-3 w-3" /> Link de convidado
+            </button>
+            <button
+              type="button"
+              onClick={() => setTestLiveId(null)}
+              className="text-[11px] text-muted-foreground underline"
+            >
+              Fechar
+            </button>
+          </div>
+        )}
+      </div>
 
 
       <form
