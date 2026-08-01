@@ -156,10 +156,14 @@ function UpsellTrial14() {
   }, []);
 
   const handleStart = async () => {
-    if (!user && !askEmail) {
+    // Dados já trazidos pela plataforma externa (?email=&name=) → salta o passo.
+    const prefilled =
+      guestEmail.includes("@") && guestName.trim().length >= 2;
+    if (!user && !askEmail && !prefilled) {
       setAskEmail(true);
       return;
     }
+
     setPending(true);
     setError(null);
     rememberIntendedPlan(PRICE_SLUG, "vip");
