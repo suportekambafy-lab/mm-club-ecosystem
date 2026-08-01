@@ -69,11 +69,31 @@ function RevenuePage() {
           label={`Receita · ${p.label}`}
           value={money(p.revenueCents)}
           tone="accent"
-          hint={`${p.paymentsCount} pagamento(s)`}
+          hint={`${p.paymentsCount} pagamento(s) · ${p.regular.count} venda(s) + ${p.trial.count} trial`}
         />
         <StatCard
-          label="Ticket médio"
-          value={p.avgTicketCents == null ? "—" : money(p.avgTicketCents)}
+          label="Vendas pagas"
+          value={money(p.regular.cents)}
+          tone="positive"
+          hint={`${p.regular.count} pagamento(s) reais`}
+        />
+        <StatCard
+          label="Trial / verificação"
+          value={money(p.trial.cents)}
+          hint={`${p.trial.count} pagamento(s) de trial`}
+        />
+        <StatCard
+          label="Ticket médio (vendas)"
+          value={
+            p.regular.count > 0
+              ? money(Math.round(p.regular.cents / p.regular.count))
+              : "—"
+          }
+          hint={
+            p.avgTicketCents == null
+              ? undefined
+              : `Global: ${money(p.avgTicketCents)}`
+          }
         />
         <StatCard label="Reembolsos no período" value={money(p.refundedCents)} />
         <StatCard
@@ -82,6 +102,12 @@ function RevenuePage() {
           tone="positive"
           hint={`${data.payments.recovered30d} recuperação(ões) em 30 d`}
         />
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <Panel title={`Trial vs. vendas pagas · ${p.label}`}>
+          <BarList items={p.byKind} emptyLabel="Sem pagamentos neste período." />
+        </Panel>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
