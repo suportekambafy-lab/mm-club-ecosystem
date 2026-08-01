@@ -11,7 +11,45 @@ const PRICE_SLUG = "mm_club_trial14";
 
 /** Vídeo do upsell. Pode ser substituído por qualquer link (YouTube, Vimeo,
  * Bunny, Panda ou ficheiro directo) ou passado em ?v=<url>. */
-const UPSELL_VIDEO_URL = "";
+const UPSELL_VIDEO_URL =
+  "https://vz-5c879716-268.b-cdn.net/6a7d5a58-6740-4e2f-8915-d29bdc1051b9/playlist.m3u8";
+
+/** Reprodutor que suporta HLS (.m3u8) em todos os browsers. */
+function HlsVideo({ src }: { src: string }) {
+  const ref = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const isHls = /\.m3u8(\?|$)/i.test(src);
+    if (!isHls || el.canPlayType("application/vnd.apple.mpegurl")) {
+      el.src = src;
+      return;
+    }
+    let destroy: (() => void) | undefined;
+    void import("hls.js").then(({ default: Hls }) => {
+      if (!Hls.isSupported()) {
+        el.src = src;
+        return;
+      }
+      const hls = new Hls();
+      hls.loadSource(src);
+      hls.attachMedia(el);
+      destroy = () => hls.destroy();
+    });
+    return () => destroy?.();
+  }, [src]);
+
+  return (
+    <video
+      ref={ref}
+      controls
+      playsInline
+      preload="metadata"
+      className="absolute inset-0 h-full w-full object-contain"
+    />
+  );
+}
 
 export const Route = createFileRoute("/upsell/trial14")({
   validateSearch: (
