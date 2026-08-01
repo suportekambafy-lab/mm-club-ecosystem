@@ -17,39 +17,73 @@ const UPSELL_VIDEO_URL =
 /** Reprodutor que suporta HLS (.m3u8) em todos os browsers. */
 function HlsVideo({ src }: { src: string }) {
   const ref = useRef<HTMLVideoElement | null>(null);
+  const [muted, setMuted] = useState(true);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    const tryPlay = () => {
+      void el.play().catch(() => {});
+    };
     const isHls = /\.m3u8(\?|$)/i.test(src);
     if (!isHls || el.canPlayType("application/vnd.apple.mpegurl")) {
       el.src = src;
+      tryPlay();
       return;
     }
     let destroy: (() => void) | undefined;
     void import("hls.js").then(({ default: Hls }) => {
       if (!Hls.isSupported()) {
         el.src = src;
+        tryPlay();
         return;
       }
       const hls = new Hls();
       hls.loadSource(src);
       hls.attachMedia(el);
+      hls.on(Hls.Events.MANIFEST_PARSED, tryPlay);
       destroy = () => hls.destroy();
     });
     return () => destroy?.();
   }, [src]);
 
+  const unmute = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.muted = false;
+    el.volume = 1;
+    setMuted(false);
+    void el.play().catch(() => {});
+  };
+
   return (
-    <video
-      ref={ref}
-      controls
-      playsInline
-      preload="metadata"
-      className="absolute inset-0 h-full w-full object-contain"
-    />
+    <>
+      <video
+        ref={ref}
+        controls
+        autoPlay
+        muted={muted}
+        playsInline
+        preload="auto"
+        onVolumeChange={(e) => setMuted(e.currentTarget.muted)}
+        className="absolute inset-0 h-full w-full object-contain"
+      />
+      {muted && (
+        <button
+          type="button"
+          onClick={unmute}
+          className="absolute inset-0 z-10 flex items-end justify-center pb-14"
+          aria-label="Ativar som do vídeo"
+        >
+          <span className="rounded-full bg-background/80 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-foreground backdrop-blur">
+            Toque para ouvir
+          </span>
+        </button>
+      )}
+    </>
   );
 }
+
 
 /** Aceita os nomes de campo mais usados pelas plataformas externas
  * (Hotmart, Kiwify, Eduzz, Ticto, Stripe, Paddle…). */
