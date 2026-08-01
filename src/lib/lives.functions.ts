@@ -306,7 +306,10 @@ export const adminCreateLive = createServerFn({ method: "POST" })
           .url()
           .optional()
           .or(z.literal("").transform(() => undefined)),
+        // Test sessions stay hidden from members and never trigger emails/notifications.
+        is_test: z.boolean().optional(),
       })
+
       .parse(i),
   )
   .handler(async ({ data, context }) => {
