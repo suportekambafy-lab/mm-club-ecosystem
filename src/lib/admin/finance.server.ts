@@ -86,7 +86,52 @@ type SubRaw = {
   cancel_at_period_end: boolean;
 };
 
-export async function collectFinanceOverview(): Promise<FinanceOverview> {
+const RANGE_LABEL: Record<FinanceRange, string> = {
+  today: "Hoje",
+  yesterday: "Ontem",
+  "7d": "Últimos 7 dias",
+  "30d": "Últimos 30 dias",
+  month: "Este mês",
+  prev_month: "Mês passado",
+  "90d": "Últimos 90 dias",
+  year: "Este ano",
+  all: "Desde sempre",
+};
+
+function resolveRange(range: FinanceRange, now: Date) {
+  const y = now.getUTCFullYear();
+  const m = now.getUTCMonth();
+  const d = now.getUTCDate();
+  const startOfDay = Date.UTC(y, m, d);
+  switch (range) {
+    case "today":
+      return { start: new Date(startOfDay), end: now };
+    case "yesterday":
+      return { start: new Date(startOfDay - DAY), end: new Date(startOfDay) };
+    case "7d":
+      return { start: new Date(now.getTime() - 7 * DAY), end: now };
+    case "30d":
+      return { start: new Date(now.getTime() - 30 * DAY), end: now };
+    case "month":
+      return { start: new Date(Date.UTC(y, m, 1)), end: now };
+    case "prev_month":
+      return {
+        start: new Date(Date.UTC(y, m - 1, 1)),
+        end: new Date(Date.UTC(y, m, 1)),
+      };
+    case "90d":
+      return { start: new Date(now.getTime() - 90 * DAY), end: now };
+    case "year":
+      return { start: new Date(Date.UTC(y, 0, 1)), end: now };
+    case "all":
+    default:
+      return { start: new Date(0), end: now };
+  }
+}
+
+export async function collectFinanceOverview(
+  range: FinanceRange = "30d",
+): Promise<FinanceOverview> {
   const now = new Date();
   const startOfToday = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
@@ -99,6 +144,8 @@ export async function collectFinanceOverview(): Promise<FinanceOverview> {
   );
   const since30 = new Date(now.getTime() - 30 * DAY);
   const since400 = new Date(now.getTime() - 400 * DAY);
+  const period = resolveRange(range, now);
+
 
   const [paymentsRes, subsRes, pricesRes, productsRes, customersRes, couponsRes, recoveredRes] =
     await Promise.all([
