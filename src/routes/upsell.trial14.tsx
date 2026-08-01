@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Check, Play, ShieldCheck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { rememberIntendedPlan } from "@/lib/intended-plan";
 import { startCheckout, startGuestCheckout } from "@/lib/billing.functions";
