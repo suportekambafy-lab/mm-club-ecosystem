@@ -197,8 +197,8 @@ function UpsellTrial14() {
 
   const handleStart = async () => {
     // Dados já trazidos pela plataforma externa (?email=&name=) → salta o passo.
-    const prefilled =
-      guestEmail.includes("@") && guestName.trim().length >= 2;
+    // O nome é opcional: basta o email para avançar direto ao checkout.
+    const prefilled = guestEmail.includes("@");
     if (!user && !askEmail && !prefilled) {
       setAskEmail(true);
       return;
@@ -212,7 +212,7 @@ function UpsellTrial14() {
         const res = await startGuestCheckout({
           data: {
             email: guestEmail.trim(),
-            name: guestName.trim(),
+            name: guestName.trim() || null,
             priceSlug: PRICE_SLUG,
             origin: window.location.origin,
           },
