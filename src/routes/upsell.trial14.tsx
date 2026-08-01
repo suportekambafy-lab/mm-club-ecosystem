@@ -231,13 +231,7 @@ function UpsellTrial14() {
         >
           <div className="relative aspect-video w-full">
             {video.kind === "file" && video.fileUrl ? (
-              <video
-                src={video.fileUrl}
-                controls
-                playsInline
-                autoPlay
-                className="absolute inset-0 h-full w-full object-contain"
-              />
+              <HlsVideo src={video.fileUrl} />
             ) : video.embedUrl ? (
               <iframe
                 src={video.embedUrl}
