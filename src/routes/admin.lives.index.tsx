@@ -178,6 +178,36 @@ function AdminLives() {
     }
   }
 
+  // Cria uma live de teste: invisível para membros, sem emails nem notificações.
+  async function handleCreateTest() {
+    setError(null);
+    setCreatingTest(true);
+    try {
+      const stamp = new Date().toLocaleString("pt-PT", {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      const res = await create({
+        data: {
+          title: `Live de teste — ${stamp}`,
+          description: "Sessão interna para testar funcionalidades das lives.",
+          visibility: "premium" as const,
+          is_test: true,
+        },
+      });
+      setTestLiveId(res.id);
+      toast.success("Live de teste criada. Ninguém foi notificado.");
+      await refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setCreatingTest(false);
+    }
+  }
+
+
   async function handleShowIngest(id: string) {
     setError(null);
     try {
