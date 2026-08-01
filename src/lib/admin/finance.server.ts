@@ -14,7 +14,10 @@ import type {
   CouponRow,
   CustomerDetail,
   FinanceOverview,
+  FinancePeriod,
+  FinanceRange,
   MoneyPoint,
+
   SearchHit,
   SubscriptionStateRow,
 } from "./finance-types";
