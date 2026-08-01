@@ -187,15 +187,10 @@ export async function collectFinanceOverview(
   range: FinanceRange = "30d",
 ): Promise<FinanceOverview> {
   const now = new Date();
-  const startOfToday = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-  );
-  const startOfMonth = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
-  );
-  const startOfPrevMonth = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1),
-  );
+  const nowTz = tzParts(now);
+  const startOfToday = tzStartOfDay(nowTz.year, nowTz.month - 1, nowTz.day);
+  const startOfMonth = tzStartOfDay(nowTz.year, nowTz.month - 1, 1);
+  const startOfPrevMonth = tzStartOfDay(nowTz.year, nowTz.month - 2, 1);
   const since30 = new Date(now.getTime() - 30 * DAY);
   const since400 = new Date(now.getTime() - 400 * DAY);
   const period = resolveRange(range, now);
