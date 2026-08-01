@@ -453,6 +453,17 @@ export async function collectFinanceOverview(
       .map(([method, v]) => ({ method, ...v }))
       .sort((a, b) => b.cents - a.cents),
     byDay: [...pDay.values()].sort((a, b) => a.label.localeCompare(b.label)),
+    trial: {
+      label: "Trial / verificação",
+      cents: pTrialCents,
+      count: pTrialCount,
+    },
+    regular: {
+      label: "Venda paga",
+      cents: pRevenue - pTrialCents,
+      count: pCount - pTrialCount,
+    },
+    byKind: sortDesc(pKind),
   };
 
   return {
