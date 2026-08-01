@@ -101,31 +101,82 @@ const RANGE_LABEL: Record<FinanceRange, string> = {
   all: "Desde sempre",
 };
 
+/** Business timezone — all day/month buckets follow Lisbon, not UTC. */
+const TZ = "Europe/Lisbon";
+
+const TZ_FMT = new Intl.DateTimeFormat("en-CA", {
+  timeZone: TZ,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false,
+});
+
+function tzParts(date: Date) {
+  const p: Record<string, string> = {};
+  for (const part of TZ_FMT.formatToParts(date)) {
+    if (part.type !== "literal") p[part.type] = part.value;
+  }
+  return {
+    year: Number(p.year),
+    month: Number(p.month),
+    day: Number(p.day),
+    hour: Number(p.hour === "24" ? "0" : p.hour),
+    minute: Number(p.minute),
+    second: Number(p.second),
+  };
+}
+
+/** Local (Lisbon) calendar day of an instant, as YYYY-MM-DD. */
+function tzDay(date: Date) {
+  const t = tzParts(date);
+  return `${t.year}-${String(t.month).padStart(2, "0")}-${String(t.day).padStart(2, "0")}`;
+}
+
+function tzOffsetMs(date: Date) {
+  const t = tzParts(date);
+  const asUTC = Date.UTC(t.year, t.month - 1, t.day, t.hour, t.minute, t.second);
+  return asUTC - date.getTime();
+}
+
+/** The UTC instant of local midnight for the given Lisbon calendar date. */
+function tzStartOfDay(year: number, month0: number, day: number) {
+  const guess = Date.UTC(year, month0, day);
+  let ms = guess - tzOffsetMs(new Date(guess));
+  // Re-check once in case the guess landed on the other side of a DST switch.
+  ms = guess - tzOffsetMs(new Date(ms));
+  return new Date(ms);
+}
+
 function resolveRange(range: FinanceRange, now: Date) {
-  const y = now.getUTCFullYear();
-  const m = now.getUTCMonth();
-  const d = now.getUTCDate();
-  const startOfDay = Date.UTC(y, m, d);
+  const t = tzParts(now);
+  const y = t.year;
+  const m = t.month - 1;
+  const d = t.day;
+  const startOfDay = tzStartOfDay(y, m, d);
   switch (range) {
     case "today":
-      return { start: new Date(startOfDay), end: now };
+      return { start: startOfDay, end: now };
     case "yesterday":
-      return { start: new Date(startOfDay - DAY), end: new Date(startOfDay) };
+      return { start: tzStartOfDay(y, m, d - 1), end: startOfDay };
     case "7d":
       return { start: new Date(now.getTime() - 7 * DAY), end: now };
     case "30d":
       return { start: new Date(now.getTime() - 30 * DAY), end: now };
     case "month":
-      return { start: new Date(Date.UTC(y, m, 1)), end: now };
+      return { start: tzStartOfDay(y, m, 1), end: now };
     case "prev_month":
       return {
-        start: new Date(Date.UTC(y, m - 1, 1)),
-        end: new Date(Date.UTC(y, m, 1)),
+        start: tzStartOfDay(y, m - 1, 1),
+        end: tzStartOfDay(y, m, 1),
       };
     case "90d":
       return { start: new Date(now.getTime() - 90 * DAY), end: now };
     case "year":
-      return { start: new Date(Date.UTC(y, 0, 1)), end: now };
+      return { start: tzStartOfDay(y, 0, 1), end: now };
     case "all":
     default:
       return { start: new Date(0), end: now };
@@ -136,15 +187,10 @@ export async function collectFinanceOverview(
   range: FinanceRange = "30d",
 ): Promise<FinanceOverview> {
   const now = new Date();
-  const startOfToday = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-  );
-  const startOfMonth = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
-  );
-  const startOfPrevMonth = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1),
-  );
+  const nowTz = tzParts(now);
+  const startOfToday = tzStartOfDay(nowTz.year, nowTz.month - 1, nowTz.day);
+  const startOfMonth = tzStartOfDay(nowTz.year, nowTz.month - 1, 1);
+  const startOfPrevMonth = tzStartOfDay(nowTz.year, nowTz.month - 2, 1);
   const since30 = new Date(now.getTime() - 30 * DAY);
   const since400 = new Date(now.getTime() - 400 * DAY);
   const period = resolveRange(range, now);
@@ -226,12 +272,13 @@ export async function collectFinanceOverview(
       todayCents += value;
       todayCount += 1;
     }
+    const dayOfMonth = tzParts(at).day;
     if (at >= startOfMonth) {
       monthCents += value;
-      dayCurrent.set(at.getUTCDate(), (dayCurrent.get(at.getUTCDate()) ?? 0) + value);
+      dayCurrent.set(dayOfMonth, (dayCurrent.get(dayOfMonth) ?? 0) + value);
     } else if (at >= startOfPrevMonth) {
       prevMonthCents += value;
-      dayPrev.set(at.getUTCDate(), (dayPrev.get(at.getUTCDate()) ?? 0) + value);
+      dayPrev.set(dayOfMonth, (dayPrev.get(dayOfMonth) ?? 0) + value);
     }
     if (at >= since30) last30Cents += value;
 
@@ -241,11 +288,7 @@ export async function collectFinanceOverview(
       ? (productById.get(price.product_id)?.name ?? price.slug)
       : "Avulso";
     bump(byPlan, planName, value);
-    bump(
-      byMonth,
-      `${at.getUTCFullYear()}-${String(at.getUTCMonth() + 1).padStart(2, "0")}`,
-      value,
-    );
+    bump(byMonth, tzDay(at).slice(0, 7), value);
     bump(byCountry, countryByUser.get(p.user_id) ?? "—", value);
     const coupon = couponByUser.get(p.user_id);
     if (coupon) bump(byCoupon, coupon, value);
@@ -352,7 +395,7 @@ export async function collectFinanceOverview(
     bump(pCountry, countryByUser.get(p.user_id) ?? "—", value);
     const coupon = couponByUser.get(p.user_id);
     if (coupon) bump(pCoupon, coupon, value);
-    bump(pDay, at.toISOString().slice(0, 10), value);
+    bump(pDay, tzDay(at), value);
     const m = p.method ?? "desconhecido";
     const cur = pMethod.get(m) ?? { count: 0, cents: 0 };
     cur.count += 1;
