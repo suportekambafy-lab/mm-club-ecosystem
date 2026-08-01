@@ -22,6 +22,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutIndexRouteImport } from './routes/checkout.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as UpsellTrial14RouteImport } from './routes/upsell.trial14'
 import { Route as EgressCompositeRouteImport } from './routes/egress.composite'
 import { Route as ConvidadoLiveIdRouteImport } from './routes/convidado.$liveId'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
@@ -162,6 +163,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const UpsellTrial14Route = UpsellTrial14RouteImport.update({
+  id: '/upsell/trial14',
+  path: '/upsell/trial14',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const EgressCompositeRoute = EgressCompositeRouteImport.update({
   id: '/egress/composite',
@@ -611,6 +617,7 @@ export interface FileRoutesByFullPath {
   '/checkout/return': typeof CheckoutReturnRoute
   '/convidado/$liveId': typeof ConvidadoLiveIdRoute
   '/egress/composite': typeof EgressCompositeRoute
+  '/upsell/trial14': typeof UpsellTrial14Route
   '/admin/': typeof AdminIndexRoute
   '/checkout/': typeof CheckoutIndexRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
@@ -696,6 +703,7 @@ export interface FileRoutesByTo {
   '/checkout/return': typeof CheckoutReturnRoute
   '/convidado/$liveId': typeof ConvidadoLiveIdRoute
   '/egress/composite': typeof EgressCompositeRoute
+  '/upsell/trial14': typeof UpsellTrial14Route
   '/admin': typeof AdminIndexRoute
   '/checkout': typeof CheckoutIndexRoute
   '/academia/pesquisa': typeof AppAcademiaPesquisaRoute
@@ -786,6 +794,7 @@ export interface FileRoutesById {
   '/checkout/return': typeof CheckoutReturnRoute
   '/convidado/$liveId': typeof ConvidadoLiveIdRoute
   '/egress/composite': typeof EgressCompositeRoute
+  '/upsell/trial14': typeof UpsellTrial14Route
   '/admin/': typeof AdminIndexRoute
   '/checkout/': typeof CheckoutIndexRoute
   '/_app/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
@@ -878,6 +887,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/convidado/$liveId'
     | '/egress/composite'
+    | '/upsell/trial14'
     | '/admin/'
     | '/checkout/'
     | '/academia/$courseId'
@@ -963,6 +973,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/convidado/$liveId'
     | '/egress/composite'
+    | '/upsell/trial14'
     | '/admin'
     | '/checkout'
     | '/academia/pesquisa'
@@ -1052,6 +1063,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/convidado/$liveId'
     | '/egress/composite'
+    | '/upsell/trial14'
     | '/admin/'
     | '/checkout/'
     | '/_app/academia/$courseId'
@@ -1121,6 +1133,7 @@ export interface RootRouteChildren {
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ConvidadoLiveIdRoute: typeof ConvidadoLiveIdRoute
   EgressCompositeRoute: typeof EgressCompositeRoute
+  UpsellTrial14Route: typeof UpsellTrial14Route
   CheckoutIndexRoute: typeof CheckoutIndexRoute
   ApiKnowledgeSearchRoute: typeof ApiKnowledgeSearchRoute
   ApiRealtimeSessionRoute: typeof ApiRealtimeSessionRoute
@@ -1235,6 +1248,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/upsell/trial14': {
+      id: '/upsell/trial14'
+      path: '/upsell/trial14'
+      fullPath: '/upsell/trial14'
+      preLoaderRoute: typeof UpsellTrial14RouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/egress/composite': {
       id: '/egress/composite'
@@ -1978,6 +1998,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutReturnRoute: CheckoutReturnRoute,
   ConvidadoLiveIdRoute: ConvidadoLiveIdRoute,
   EgressCompositeRoute: EgressCompositeRoute,
+  UpsellTrial14Route: UpsellTrial14Route,
   CheckoutIndexRoute: CheckoutIndexRoute,
   ApiKnowledgeSearchRoute: ApiKnowledgeSearchRoute,
   ApiRealtimeSessionRoute: ApiRealtimeSessionRoute,
@@ -2004,13 +2025,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
