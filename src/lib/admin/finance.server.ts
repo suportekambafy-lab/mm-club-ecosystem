@@ -373,23 +373,48 @@ export async function collectFinanceOverview(
     const at = new Date(iso);
     return at >= period.start && at < period.end;
   };
+  const subById = new Map(subs.map((s) => [s.id, s] as const));
+  /**
+   * A payment counts as "trial" when it happened inside the subscription's
+   * trial window (card verification / trial activation) or the price itself is
+   * a trial price. Those euros are not real sales.
+   */
+  const isTrialPayment = (p: PaymentRaw) => {
+    const price = p.price_id ? priceById.get(p.price_id) : null;
+    if (price && /trial|vip/i.test(price.slug)) return true;
+    const sub = p.subscription_id ? subById.get(p.subscription_id) : null;
+    if (sub?.trial_end && p.paid_at) {
+      return new Date(p.paid_at) <= new Date(sub.trial_end);
+    }
+    return false;
+  };
+
   const pPlan = new Map<string, MoneyPoint>();
   const pCountry = new Map<string, MoneyPoint>();
   const pCoupon = new Map<string, MoneyPoint>();
   const pDay = new Map<string, MoneyPoint>();
   const pMethod = new Map<string, { count: number; cents: number }>();
+  const pKind = new Map<string, MoneyPoint>();
   let pRevenue = 0;
   let pCount = 0;
+  let pTrialCents = 0;
+  let pTrialCount = 0;
   for (const p of paid) {
     if (!inPeriod(p.paid_at)) continue;
     const at = new Date(p.paid_at as string);
     const value = net(p);
     pRevenue += value;
     pCount += 1;
+    const trial = isTrialPayment(p);
+    if (trial) {
+      pTrialCents += value;
+      pTrialCount += 1;
+    }
+    bump(pKind, trial ? "Trial / verificação" : "Venda paga", value);
     const price = p.price_id ? priceById.get(p.price_id) : null;
     bump(
       pPlan,
-      price ? (productById.get(price.product_id)?.name ?? price.slug) : "Avulso",
+      `${price ? (productById.get(price.product_id)?.name ?? price.slug) : "Avulso"}${trial ? " · trial" : ""}`,
       value,
     );
     bump(pCountry, countryByUser.get(p.user_id) ?? "—", value);
