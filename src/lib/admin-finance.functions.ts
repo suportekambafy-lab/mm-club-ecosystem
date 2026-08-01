@@ -13,6 +13,8 @@ import type {
   CouponRow,
   CustomerDetail,
   FinanceOverview,
+  FinanceRange,
+
   SearchHit,
   SubscriptionStateRow,
 } from "@/lib/admin/finance-types";
@@ -33,13 +35,34 @@ async function assertAdmin(context: {
 
 export const getFinanceOverview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<FinanceOverview> => {
+  .inputValidator((input: unknown) =>
+    z
+      .object({ range: z.string().max(20).optional() })
+      .default({})
+      .parse(input ?? {}),
+  )
+  .handler(async ({ data, context }): Promise<FinanceOverview> => {
     await assertAdmin(context as never);
     const { collectFinanceOverview } = await import(
       "@/lib/admin/finance.server"
     );
-    return collectFinanceOverview();
+    const allowed = [
+      "today",
+      "yesterday",
+      "7d",
+      "30d",
+      "month",
+      "prev_month",
+      "90d",
+      "year",
+      "all",
+    ];
+    const range = (
+      allowed.includes(data.range ?? "") ? data.range : "30d"
+    ) as FinanceRange;
+    return collectFinanceOverview(range);
   });
+
 
 export const listAdminSubscriptions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

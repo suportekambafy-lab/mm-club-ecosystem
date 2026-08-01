@@ -1,15 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   BarList,
   money,
   Panel,
+  RangeFilter,
   StatCard,
   STATUS_LABEL,
 } from "@/components/admin/finance-ui";
 import { getFinanceOverview } from "@/lib/admin-finance.functions";
+import type { FinanceRange } from "@/lib/admin/finance-types";
 import type { SubscriptionStatus } from "@/lib/billing/types";
+
 
 export const Route = createFileRoute("/admin/financeiro/")({
   ssr: false,
@@ -50,9 +54,10 @@ function pct(n: number | null) {
 
 function OverviewPage() {
   const fetchOverview = useServerFn(getFinanceOverview);
+  const [range, setRange] = useState<FinanceRange>("30d");
   const { data, isLoading, error } = useQuery({
-    queryKey: ["finance-overview"],
-    queryFn: () => fetchOverview({ data: undefined as never }),
+    queryKey: ["finance-overview", range],
+    queryFn: () => fetchOverview({ data: { range } }),
     refetchInterval: 60_000,
   });
 
@@ -65,17 +70,21 @@ function OverviewPage() {
 
   if (isLoading || !data)
     return (
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-28 animate-pulse rounded-2xl border border-border bg-surface-1"
-          />
-        ))}
+      <div className="space-y-4">
+        <RangeFilter value={range} onChange={setRange} />
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-28 animate-pulse rounded-2xl border border-border bg-surface-1"
+            />
+          ))}
+        </div>
       </div>
     );
 
   const r = data.revenue;
+  const p = data.period;
   const growth =
     r.prevMonthCents > 0
       ? (r.monthCents - r.prevMonthCents) / r.prevMonthCents
@@ -83,7 +92,43 @@ function OverviewPage() {
 
   return (
     <div className="space-y-6">
+      <RangeFilter value={range} onChange={setRange} />
+
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label={`Receita · ${p.label}`}
+          value={money(p.revenueCents)}
+          tone="accent"
+          hint={`${p.paymentsCount} pagamento(s)${p.avgTicketCents != null ? ` · média ${money(p.avgTicketCents)}` : ""}`}
+        />
+        <StatCard
+          label={`Novas subscrições · ${p.label}`}
+          value={p.newSubs}
+          tone="positive"
+        />
+        <StatCard
+          label={`Cancelamentos · ${p.label}`}
+          value={p.cancellations}
+          tone={p.cancellations > 0 ? "negative" : "default"}
+        />
+        <StatCard
+          label={`Falhados / reembolsos · ${p.label}`}
+          value={p.failedCount}
+          hint={`${money(p.refundedCents)} reembolsado · ${p.chargebacksCount} chargeback(s)`}
+        />
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <Panel title={`Receita por plano · ${p.label}`}>
+          <BarList items={p.byPlan} emptyLabel="Sem receita neste período." />
+        </Panel>
+        <Panel title={`Receita por dia · ${p.label}`}>
+          <BarList items={p.byDay} emptyLabel="Sem receita neste período." />
+        </Panel>
+      </section>
+
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+
         <StatCard label="Receita hoje" value={money(r.todayCents)} hint={`${data.payments.todayCount} pagamento(s)`} />
         <StatCard
           label="Receita este mês"

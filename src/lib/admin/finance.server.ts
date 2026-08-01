@@ -14,7 +14,10 @@ import type {
   CouponRow,
   CustomerDetail,
   FinanceOverview,
+  FinancePeriod,
+  FinanceRange,
   MoneyPoint,
+
   SearchHit,
   SubscriptionStateRow,
 } from "./finance-types";
@@ -86,7 +89,52 @@ type SubRaw = {
   cancel_at_period_end: boolean;
 };
 
-export async function collectFinanceOverview(): Promise<FinanceOverview> {
+const RANGE_LABEL: Record<FinanceRange, string> = {
+  today: "Hoje",
+  yesterday: "Ontem",
+  "7d": "Últimos 7 dias",
+  "30d": "Últimos 30 dias",
+  month: "Este mês",
+  prev_month: "Mês passado",
+  "90d": "Últimos 90 dias",
+  year: "Este ano",
+  all: "Desde sempre",
+};
+
+function resolveRange(range: FinanceRange, now: Date) {
+  const y = now.getUTCFullYear();
+  const m = now.getUTCMonth();
+  const d = now.getUTCDate();
+  const startOfDay = Date.UTC(y, m, d);
+  switch (range) {
+    case "today":
+      return { start: new Date(startOfDay), end: now };
+    case "yesterday":
+      return { start: new Date(startOfDay - DAY), end: new Date(startOfDay) };
+    case "7d":
+      return { start: new Date(now.getTime() - 7 * DAY), end: now };
+    case "30d":
+      return { start: new Date(now.getTime() - 30 * DAY), end: now };
+    case "month":
+      return { start: new Date(Date.UTC(y, m, 1)), end: now };
+    case "prev_month":
+      return {
+        start: new Date(Date.UTC(y, m - 1, 1)),
+        end: new Date(Date.UTC(y, m, 1)),
+      };
+    case "90d":
+      return { start: new Date(now.getTime() - 90 * DAY), end: now };
+    case "year":
+      return { start: new Date(Date.UTC(y, 0, 1)), end: now };
+    case "all":
+    default:
+      return { start: new Date(0), end: now };
+  }
+}
+
+export async function collectFinanceOverview(
+  range: FinanceRange = "30d",
+): Promise<FinanceOverview> {
   const now = new Date();
   const startOfToday = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
@@ -99,6 +147,8 @@ export async function collectFinanceOverview(): Promise<FinanceOverview> {
   );
   const since30 = new Date(now.getTime() - 30 * DAY);
   const since400 = new Date(now.getTime() - 400 * DAY);
+  const period = resolveRange(range, now);
+
 
   const [paymentsRes, subsRes, pricesRes, productsRes, customersRes, couponsRes, recoveredRes] =
     await Promise.all([
@@ -274,8 +324,73 @@ export async function collectFinanceOverview(): Promise<FinanceOverview> {
   const sortDesc = (m: Map<string, MoneyPoint>) =>
     [...m.values()].sort((a, b) => b.cents - a.cents);
 
+  // ---- Selected period ---------------------------------------------------
+  const inPeriod = (iso: string | null) => {
+    if (!iso) return false;
+    const at = new Date(iso);
+    return at >= period.start && at < period.end;
+  };
+  const pPlan = new Map<string, MoneyPoint>();
+  const pCountry = new Map<string, MoneyPoint>();
+  const pCoupon = new Map<string, MoneyPoint>();
+  const pDay = new Map<string, MoneyPoint>();
+  const pMethod = new Map<string, { count: number; cents: number }>();
+  let pRevenue = 0;
+  let pCount = 0;
+  for (const p of paid) {
+    if (!inPeriod(p.paid_at)) continue;
+    const at = new Date(p.paid_at as string);
+    const value = net(p);
+    pRevenue += value;
+    pCount += 1;
+    const price = p.price_id ? priceById.get(p.price_id) : null;
+    bump(
+      pPlan,
+      price ? (productById.get(price.product_id)?.name ?? price.slug) : "Avulso",
+      value,
+    );
+    bump(pCountry, countryByUser.get(p.user_id) ?? "—", value);
+    const coupon = couponByUser.get(p.user_id);
+    if (coupon) bump(pCoupon, coupon, value);
+    bump(pDay, at.toISOString().slice(0, 10), value);
+    const m = p.method ?? "desconhecido";
+    const cur = pMethod.get(m) ?? { count: 0, cents: 0 };
+    cur.count += 1;
+    cur.cents += value;
+    pMethod.set(m, cur);
+  }
+  const periodBlock: FinancePeriod = {
+    range,
+    label: RANGE_LABEL[range],
+    startISO: period.start.toISOString(),
+    endISO: period.end.toISOString(),
+    revenueCents: pRevenue,
+    paymentsCount: pCount,
+    refundedCents: payments
+      .filter((p) => inPeriod(p.created_at))
+      .reduce((sum, p) => sum + (p.refunded_cents ?? 0), 0),
+    failedCount: payments.filter(
+      (p) => p.status === "failed" && inPeriod(p.created_at),
+    ).length,
+    chargebacksCount: payments.filter(
+      (p) => p.status === "chargeback" && inPeriod(p.created_at),
+    ).length,
+    newSubs: subs.filter((s) => inPeriod(s.created_at)).length,
+    cancellations: subs.filter((s) => inPeriod(s.cancelled_at)).length,
+    avgTicketCents: pCount > 0 ? Math.round(pRevenue / pCount) : null,
+    byPlan: sortDesc(pPlan),
+    byCountry: sortDesc(pCountry),
+    byCoupon: sortDesc(pCoupon),
+    byMethod: [...pMethod.entries()]
+      .map(([method, v]) => ({ method, ...v }))
+      .sort((a, b) => b.cents - a.cents),
+    byDay: [...pDay.values()].sort((a, b) => a.label.localeCompare(b.label)),
+  };
+
   return {
     generatedAt: new Date().toISOString(),
+    period: periodBlock,
+
     revenue: {
       todayCents,
       monthCents,

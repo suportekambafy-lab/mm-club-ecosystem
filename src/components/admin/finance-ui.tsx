@@ -1,6 +1,48 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import type { SubscriptionStatus } from "@/lib/billing/types";
+import type { FinanceRange } from "@/lib/admin/finance-types";
+
+export const FINANCE_RANGES: { value: FinanceRange; label: string }[] = [
+  { value: "today", label: "Hoje" },
+  { value: "yesterday", label: "Ontem" },
+  { value: "7d", label: "7 dias" },
+  { value: "30d", label: "30 dias" },
+  { value: "month", label: "Este mês" },
+  { value: "prev_month", label: "Mês passado" },
+  { value: "90d", label: "90 dias" },
+  { value: "year", label: "Este ano" },
+  { value: "all", label: "Sempre" },
+];
+
+export function RangeFilter({
+  value,
+  onChange,
+}: {
+  value: FinanceRange;
+  onChange: (r: FinanceRange) => void;
+}) {
+  return (
+    <div className="-mx-1 flex snap-x gap-1.5 overflow-x-auto px-1 pb-1">
+      {FINANCE_RANGES.map((r) => (
+        <button
+          key={r.value}
+          type="button"
+          onClick={() => onChange(r.value)}
+          className={cn(
+            "shrink-0 snap-start rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition-colors",
+            value === r.value
+              ? "bg-primary/15 text-primary ring-primary/40"
+              : "bg-surface-1 text-muted-foreground ring-border hover:text-foreground",
+          )}
+        >
+          {r.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 
 export function money(cents: number, currency = "EUR") {
   return new Intl.NumberFormat("pt-PT", {
