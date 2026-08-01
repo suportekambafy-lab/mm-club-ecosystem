@@ -597,10 +597,57 @@ function AdminLives() {
       </form>
 
       {(() => {
-        const active = rows.filter((r) => r.status === "scheduled" || r.status === "live");
-        const finished = rows.filter((r) => r.status === "ended" || r.status === "published");
+        const testRows = rows.filter((r) => r.is_test);
+        const real = rows.filter((r) => !r.is_test);
+        const active = real.filter((r) => r.status === "scheduled" || r.status === "live");
+        const finished = real.filter((r) => r.status === "ended" || r.status === "published");
         return (
           <>
+            {testRows.length > 0 && (
+              <LivesSection
+                title="Lives de teste (escondidas dos membros)"
+                loading={loading}
+                rows={testRows}
+                emptyText="Sem lives de teste."
+                renderActions={(r) => (
+                  <>
+                    <Link
+                      to="/lives/$liveId/sala"
+                      params={{ liveId: r.id }}
+                      reloadDocument
+                      className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                    >
+                      <Video className="h-3 w-3" /> Sala de teste
+                    </Link>
+                    <Link
+                      to="/admin/lives/$liveId/studio"
+                      params={{ liveId: r.id }}
+                      className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40"
+                    >
+                      <Video className="h-3 w-3" /> Estúdio
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => handleGuestLink(r.id)}
+                      disabled={guestBusy === r.id}
+                      className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40 disabled:opacity-60"
+                    >
+                      {guestBusy === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Copy className="h-3 w-3" />}
+                      Link de convidado
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(r.id)}
+                      className="inline-flex items-center gap-1 rounded-full border border-red-500/40 px-3 py-1.5 text-xs text-red-300 hover:bg-red-500/10"
+                    >
+                      <Trash2 className="h-3 w-3" /> Apagar
+                    </button>
+                  </>
+                )}
+                statusBadge={(r) => `teste · ${r.status}`}
+              />
+            )}
+
             <LivesSection
               title="Lives programadas"
               loading={loading}
