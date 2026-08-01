@@ -398,7 +398,7 @@ export async function collectFinanceOverview(
     bump(pCountry, countryByUser.get(p.user_id) ?? "—", value);
     const coupon = couponByUser.get(p.user_id);
     if (coupon) bump(pCoupon, coupon, value);
-    bump(pDay, at.toISOString().slice(0, 10), value);
+    bump(pDay, tzDay(at), value);
     const m = p.method ?? "desconhecido";
     const cur = pMethod.get(m) ?? { count: 0, cents: 0 };
     cur.count += 1;
