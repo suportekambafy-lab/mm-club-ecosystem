@@ -74,6 +74,8 @@ function AdminLives() {
   const [rows, setRows] = useState<LiveRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [creatingTest, setCreatingTest] = useState(false);
+  const [testLiveId, setTestLiveId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [ingest, setIngest] = useState<{ id: string; url: string; key: string } | null>(null);
   const [guestUrl, setGuestUrl] = useState<{ id: string; url: string } | null>(null);
