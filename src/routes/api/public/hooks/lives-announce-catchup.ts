@@ -26,6 +26,7 @@ export const Route = createFileRoute("/api/public/hooks/lives-announce-catchup")
             .from("lives")
             .select("id,title,description,starts_at,cover_url")
             .eq("status", "scheduled")
+            .eq("is_test", false)
             .gt("starts_at", new Date().toISOString())
             .order("starts_at", { ascending: true })
             .limit(10);
