@@ -13,6 +13,8 @@ import type {
   CouponRow,
   CustomerDetail,
   FinanceOverview,
+  FinanceRange,
+
   SearchHit,
   SubscriptionStateRow,
 } from "@/lib/admin/finance-types";
