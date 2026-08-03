@@ -483,13 +483,24 @@ export function useRoomState({
   const toggleMic = useCallback(async () => {
     const lp: LocalParticipant | undefined = roomRef.current?.localParticipant;
     if (!lp) return;
-    await lp.setMicrophoneEnabled(!lp.isMicrophoneEnabled);
+    try {
+      await lp.setMicrophoneEnabled(!lp.isMicrophoneEnabled);
+    } catch (err) {
+      console.error("[useRoomState] toggleMic failed", err);
+      toast.error("Não foi possível ligar o microfone. Verifica as permissões do browser.");
+    }
   }, []);
   const toggleCam = useCallback(async () => {
-    const lp = roomRef.current?.localParticipant;
-    if (!lp) return;
-    await lp.setCameraEnabled(!lp.isCameraEnabled);
-  }, []);
+    const room = roomRef.current;
+    const lp = room?.localParticipant;
+    if (!room || !lp) return;
+    if (lp.isCameraEnabled) {
+      await lp.setCameraEnabled(false).catch((e) => console.warn("[useRoomState] camera off failed", e));
+      return;
+    }
+    const err = await enableCameraResilient(room, activeVideoIn ?? undefined);
+    if (err) toast.error(err);
+  }, [activeVideoIn]);
   const startScreenShare = useCallback(async () => {
     const lp = roomRef.current?.localParticipant;
     if (!lp) return;
