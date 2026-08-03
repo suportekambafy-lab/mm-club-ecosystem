@@ -263,14 +263,15 @@ function DeviceMenu({
               {active === d.deviceId && <span className="text-[hsl(45_86%_60%)]">•</span>}
             </button>
           ))}
-        </div>
-      )}
+        </>
+      </AnchoredMenu>
     </div>
   );
 }
 
 function LayoutMenu({ state, actions }: { state: RoomState; actions: RoomActions }) {
   const [open, setOpen] = useState(false);
+  const anchorRef = useRef<HTMLButtonElement | null>(null);
   const layouts: { key: RoomState["layout"]; label: string }[] = [
     { key: "auto", label: "Auto" },
     { key: "solo", label: "Solo" },
@@ -279,8 +280,9 @@ function LayoutMenu({ state, actions }: { state: RoomState; actions: RoomActions
     { key: "grid", label: "Grelha" },
   ];
   return (
-    <div className="relative">
+    <div className="relative shrink-0">
       <button
+        ref={anchorRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="grid h-9 w-9 place-items-center rounded-xl bg-white/5 text-white/80 hover:bg-white/10"
@@ -289,8 +291,8 @@ function LayoutMenu({ state, actions }: { state: RoomState; actions: RoomActions
       >
         <Layout className="h-4 w-4" />
       </button>
-      {open && (
-        <div className="absolute bottom-full right-0 mb-2 min-w-[180px] rounded-xl border border-white/10 bg-neutral-900/95 p-1 shadow-2xl backdrop-blur-md">
+      <AnchoredMenu open={open} onClose={() => setOpen(false)} anchorRef={anchorRef} align="right" width={200}>
+        <>
           {layouts.map((l) => (
             <button
               key={l.key}
@@ -308,8 +310,8 @@ function LayoutMenu({ state, actions }: { state: RoomState; actions: RoomActions
               {state.layout === l.key && <span className="text-[hsl(45_86%_60%)]">•</span>}
             </button>
           ))}
-        </div>
-      )}
+        </>
+      </AnchoredMenu>
     </div>
   );
 }
