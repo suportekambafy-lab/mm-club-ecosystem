@@ -551,9 +551,18 @@ export function useRoomState({
   const setDevice = useCallback(async (kind: "videoinput" | "audioinput", deviceId: string) => {
     const room = roomRef.current;
     if (!room) return;
-    await room.switchActiveDevice(kind, deviceId, true);
-    if (kind === "videoinput") setActiveVideoIn(deviceId);
-    else setActiveAudioIn(deviceId);
+    try {
+      await room.switchActiveDevice(kind, deviceId, true);
+      if (kind === "videoinput") setActiveVideoIn(deviceId);
+      else setActiveAudioIn(deviceId);
+    } catch (err) {
+      console.error("[useRoomState] setDevice failed", err);
+      toast.error(
+        kind === "videoinput"
+          ? "Essa câmara não está disponível (pode estar em uso noutra aplicação)."
+          : "Esse microfone não está disponível.",
+      );
+    }
   }, []);
 
   const getActiveDevice = useCallback(
