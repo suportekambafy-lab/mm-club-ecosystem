@@ -13,10 +13,12 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { readMediaPrefs } from "@/lib/media-prefs";
+import { toast } from "sonner";
 import {
   Room,
   RoomEvent,
   Track,
+  VideoPresets,
   type RemoteTrack,
   type RemoteTrackPublication,
   type Participant,
@@ -52,6 +54,57 @@ function mapQuality(q: LKConnectionQuality | undefined): RoomParticipant["connec
     default:
       return undefined;
   }
+}
+
+/** True when the saved deviceId still exists on this machine. */
+async function knownDevice(kind: MediaDeviceKind, id?: string) {
+  if (!id) return false;
+  try {
+    const list = await navigator.mediaDevices.enumerateDevices();
+    return list.some((d) => d.kind === kind && d.deviceId === id);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Enable the camera with progressive fallbacks.
+ *
+ * Real-world failures on desktops: a saved deviceId from another machine
+ * (OverconstrainedError), a webcam that cannot do 1080p, or a device already
+ * held by another app. We retry with looser constraints before giving up and
+ * always return a human-readable reason on failure.
+ */
+async function enableCameraResilient(room: Room, deviceId?: string): Promise<string | null> {
+  const lp = room.localParticipant;
+  const usable = (await knownDevice("videoinput", deviceId)) ? deviceId : undefined;
+  const attempts: (Parameters<LocalParticipant["setCameraEnabled"]>[1] | undefined)[] = [
+    usable ? { deviceId: usable } : undefined,
+    { resolution: VideoPresets.h720.resolution },
+    { resolution: VideoPresets.h360.resolution },
+    undefined,
+  ];
+  let lastErr: unknown = null;
+  for (const opts of attempts) {
+    try {
+      await lp.setCameraEnabled(true, opts);
+      if (lp.isCameraEnabled) return null;
+    } catch (err) {
+      lastErr = err;
+      console.warn("[useRoomState] camera attempt failed", opts, err);
+    }
+  }
+  const msg = lastErr instanceof Error ? `${lastErr.name}: ${lastErr.message}` : String(lastErr ?? "desconhecido");
+  if (/NotAllowedError|Permission/i.test(msg)) {
+    return "Permissão de câmara bloqueada neste browser. Autoriza a câmara no ícone da barra de endereço e tenta de novo.";
+  }
+  if (/NotReadableError|TrackStartError|could not start/i.test(msg)) {
+    return "A câmara está a ser usada por outra aplicação (Zoom, Meet, OBS…). Fecha-a e tenta de novo.";
+  }
+  if (/NotFoundError|DevicesNotFound|OverconstrainedError/i.test(msg)) {
+    return "Não encontrámos nenhuma câmara disponível neste dispositivo.";
+  }
+  return `Não foi possível ligar a câmara (${msg}).`;
 }
 
 function mapConnectionState(s: ConnectionState): RoomState["connection"]["state"] {
@@ -306,14 +359,15 @@ export function useRoomState({
           const allowsMic = allowsAll || allowedSources.some((s) => Number(s) === Number(Track.Source.Microphone));
           const allowsCam = allowsAll || allowedSources.some((s) => Number(s) === Number(Track.Source.Camera));
           if (canPublish) {
-            // Honour the device + on/off choices made in the pre-join screen.
-            if (prefs.cameraId) {
-              await room.switchActiveDevice("videoinput", prefs.cameraId).catch(() => {});
-              setActiveVideoIn(prefs.cameraId);
+            // Honour the device + on/off choices made in the pre-join screen,
+            // but only when those devices still exist on this machine.
+            if (await knownDevice("videoinput", prefs.cameraId)) {
+              await room.switchActiveDevice("videoinput", prefs.cameraId!).catch(() => {});
+              setActiveVideoIn(prefs.cameraId!);
             }
-            if (prefs.micId) {
-              await room.switchActiveDevice("audioinput", prefs.micId).catch(() => {});
-              setActiveAudioIn(prefs.micId);
+            if (await knownDevice("audioinput", prefs.micId)) {
+              await room.switchActiveDevice("audioinput", prefs.micId!).catch(() => {});
+              setActiveAudioIn(prefs.micId!);
             }
             if (allowsMic && prefs.micEnabled && !lp.isMicrophoneEnabled) {
               await lp.setMicrophoneEnabled(true).catch((e) => {
@@ -321,9 +375,8 @@ export function useRoomState({
               });
             }
             if (allowsCam && prefs.camEnabled && !lp.isCameraEnabled) {
-              await lp.setCameraEnabled(true).catch((e) => {
-                console.warn("[useRoomState] cam auto-enable failed", e);
-              });
+              const err = await enableCameraResilient(room, prefs.cameraId);
+              if (err) toast.error(err);
             }
             rebuildParticipantTracks(lp);
             void syncStudioProcessors(room);
@@ -430,13 +483,24 @@ export function useRoomState({
   const toggleMic = useCallback(async () => {
     const lp: LocalParticipant | undefined = roomRef.current?.localParticipant;
     if (!lp) return;
-    await lp.setMicrophoneEnabled(!lp.isMicrophoneEnabled);
+    try {
+      await lp.setMicrophoneEnabled(!lp.isMicrophoneEnabled);
+    } catch (err) {
+      console.error("[useRoomState] toggleMic failed", err);
+      toast.error("Não foi possível ligar o microfone. Verifica as permissões do browser.");
+    }
   }, []);
   const toggleCam = useCallback(async () => {
-    const lp = roomRef.current?.localParticipant;
-    if (!lp) return;
-    await lp.setCameraEnabled(!lp.isCameraEnabled);
-  }, []);
+    const room = roomRef.current;
+    const lp = room?.localParticipant;
+    if (!room || !lp) return;
+    if (lp.isCameraEnabled) {
+      await lp.setCameraEnabled(false).catch((e) => console.warn("[useRoomState] camera off failed", e));
+      return;
+    }
+    const err = await enableCameraResilient(room, activeVideoIn ?? undefined);
+    if (err) toast.error(err);
+  }, [activeVideoIn]);
   const startScreenShare = useCallback(async () => {
     const lp = roomRef.current?.localParticipant;
     if (!lp) return;
@@ -487,9 +551,18 @@ export function useRoomState({
   const setDevice = useCallback(async (kind: "videoinput" | "audioinput", deviceId: string) => {
     const room = roomRef.current;
     if (!room) return;
-    await room.switchActiveDevice(kind, deviceId, true);
-    if (kind === "videoinput") setActiveVideoIn(deviceId);
-    else setActiveAudioIn(deviceId);
+    try {
+      await room.switchActiveDevice(kind, deviceId, true);
+      if (kind === "videoinput") setActiveVideoIn(deviceId);
+      else setActiveAudioIn(deviceId);
+    } catch (err) {
+      console.error("[useRoomState] setDevice failed", err);
+      toast.error(
+        kind === "videoinput"
+          ? "Essa câmara não está disponível (pode estar em uso noutra aplicação)."
+          : "Esse microfone não está disponível.",
+      );
+    }
   }, []);
 
   const getActiveDevice = useCallback(

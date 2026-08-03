@@ -68,10 +68,20 @@ export function PreJoin({ title = "Pronto para entrar?", subtitle, entering, onE
       setLoading(true);
       stopStream();
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: prefs.camEnabled ? (prefs.cameraId ? { deviceId: { exact: prefs.cameraId } } : true) : false,
-          audio: prefs.micId ? { deviceId: { exact: prefs.micId } } : true,
-        });
+        // Um deviceId guardado noutro computador provoca OverconstrainedError:
+        // tentamos com o dispositivo escolhido e, se falhar, com o predefinido.
+        let stream: MediaStream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: prefs.camEnabled ? (prefs.cameraId ? { deviceId: { exact: prefs.cameraId } } : true) : false,
+            audio: prefs.micId ? { deviceId: { exact: prefs.micId } } : true,
+          });
+        } catch {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: prefs.camEnabled,
+            audio: true,
+          });
+        }
         if (cancelled) {
           stream.getTracks().forEach((t) => t.stop());
           return;
