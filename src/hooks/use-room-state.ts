@@ -359,14 +359,15 @@ export function useRoomState({
           const allowsMic = allowsAll || allowedSources.some((s) => Number(s) === Number(Track.Source.Microphone));
           const allowsCam = allowsAll || allowedSources.some((s) => Number(s) === Number(Track.Source.Camera));
           if (canPublish) {
-            // Honour the device + on/off choices made in the pre-join screen.
-            if (prefs.cameraId) {
-              await room.switchActiveDevice("videoinput", prefs.cameraId).catch(() => {});
-              setActiveVideoIn(prefs.cameraId);
+            // Honour the device + on/off choices made in the pre-join screen,
+            // but only when those devices still exist on this machine.
+            if (await knownDevice("videoinput", prefs.cameraId)) {
+              await room.switchActiveDevice("videoinput", prefs.cameraId!).catch(() => {});
+              setActiveVideoIn(prefs.cameraId!);
             }
-            if (prefs.micId) {
-              await room.switchActiveDevice("audioinput", prefs.micId).catch(() => {});
-              setActiveAudioIn(prefs.micId);
+            if (await knownDevice("audioinput", prefs.micId)) {
+              await room.switchActiveDevice("audioinput", prefs.micId!).catch(() => {});
+              setActiveAudioIn(prefs.micId!);
             }
             if (allowsMic && prefs.micEnabled && !lp.isMicrophoneEnabled) {
               await lp.setMicrophoneEnabled(true).catch((e) => {
@@ -374,9 +375,8 @@ export function useRoomState({
               });
             }
             if (allowsCam && prefs.camEnabled && !lp.isCameraEnabled) {
-              await lp.setCameraEnabled(true).catch((e) => {
-                console.warn("[useRoomState] cam auto-enable failed", e);
-              });
+              const err = await enableCameraResilient(room, prefs.cameraId);
+              if (err) toast.error(err);
             }
             rebuildParticipantTracks(lp);
             void syncStudioProcessors(room);
