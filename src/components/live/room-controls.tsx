@@ -1,7 +1,8 @@
 /**
  * Floating controls bar (Meet-style). Pure UI reading abstract state.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { MediaDeviceOption, RoomActions, RoomState } from "@/lib/room-state";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Video, VideoOff, ScreenShare, Hand, PhoneOff, Layout, LogOut, ChevronUp } from "lucide-react";
@@ -215,9 +216,12 @@ function DeviceMenu({
     }
   };
 
+  const anchorRef = useRef<HTMLButtonElement | null>(null);
+
   return (
-    <div className="relative">
+    <div className="relative shrink-0">
       <button
+        ref={anchorRef}
         type="button"
         onClick={openMenu}
         aria-label={label}
@@ -226,8 +230,8 @@ function DeviceMenu({
       >
         <ChevronUp className="h-3.5 w-3.5" />
       </button>
-      {open && (
-        <div className="absolute bottom-full left-1/2 z-50 mb-2 min-w-[220px] max-w-[280px] -translate-x-1/2 rounded-xl border border-white/10 bg-neutral-900/95 p-1 shadow-2xl backdrop-blur-md">
+      <AnchoredMenu open={open} onClose={() => setOpen(false)} anchorRef={anchorRef} width={240}>
+        <>
           <div className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-white/40">
             {kind === "videoinput" ? "Câmara" : "Microfone"}
           </div>
@@ -259,14 +263,15 @@ function DeviceMenu({
               {active === d.deviceId && <span className="text-[hsl(45_86%_60%)]">•</span>}
             </button>
           ))}
-        </div>
-      )}
+        </>
+      </AnchoredMenu>
     </div>
   );
 }
 
 function LayoutMenu({ state, actions }: { state: RoomState; actions: RoomActions }) {
   const [open, setOpen] = useState(false);
+  const anchorRef = useRef<HTMLButtonElement | null>(null);
   const layouts: { key: RoomState["layout"]; label: string }[] = [
     { key: "auto", label: "Auto" },
     { key: "solo", label: "Solo" },
@@ -275,8 +280,9 @@ function LayoutMenu({ state, actions }: { state: RoomState; actions: RoomActions
     { key: "grid", label: "Grelha" },
   ];
   return (
-    <div className="relative">
+    <div className="relative shrink-0">
       <button
+        ref={anchorRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="grid h-9 w-9 place-items-center rounded-xl bg-white/5 text-white/80 hover:bg-white/10"
@@ -285,8 +291,8 @@ function LayoutMenu({ state, actions }: { state: RoomState; actions: RoomActions
       >
         <Layout className="h-4 w-4" />
       </button>
-      {open && (
-        <div className="absolute bottom-full right-0 mb-2 min-w-[180px] rounded-xl border border-white/10 bg-neutral-900/95 p-1 shadow-2xl backdrop-blur-md">
+      <AnchoredMenu open={open} onClose={() => setOpen(false)} anchorRef={anchorRef} align="right" width={200}>
+        <>
           {layouts.map((l) => (
             <button
               key={l.key}
@@ -304,8 +310,8 @@ function LayoutMenu({ state, actions }: { state: RoomState; actions: RoomActions
               {state.layout === l.key && <span className="text-[hsl(45_86%_60%)]">•</span>}
             </button>
           ))}
-        </div>
-      )}
+        </>
+      </AnchoredMenu>
     </div>
   );
 }
@@ -408,6 +414,80 @@ function HostLeaveMenu({
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * Dropdown rendered in a portal, anchored above its trigger.
+ *
+ * The controls bar uses `overflow-x-auto` (so it can scroll on mobile), which
+ * clips any absolutely-positioned child. Rendering the menu in a portal with
+ * fixed coordinates keeps it visible and clickable.
+ */
+function AnchoredMenu({
+  open,
+  onClose,
+  anchorRef,
+  children,
+  align = "center",
+  width = 220,
+}: {
+  open: boolean;
+  onClose: () => void;
+  anchorRef: React.RefObject<HTMLElement | null>;
+  children: React.ReactNode;
+  align?: "center" | "right";
+  width?: number;
+}) {
+  const [rect, setRect] = useState<DOMRect | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const update = () => setRect(anchorRef.current?.getBoundingClientRect() ?? null);
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [open, anchorRef]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      const node = e.target as Node;
+      if (anchorRef.current?.contains(node)) return;
+      if ((node as HTMLElement)?.closest?.("[data-anchored-menu]")) return;
+      onClose();
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("touchstart", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("touchstart", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, onClose, anchorRef]);
+
+  if (!open || typeof document === "undefined" || !rect) return null;
+
+  const left =
+    align === "right"
+      ? Math.min(Math.max(8, rect.right - width), window.innerWidth - width - 8)
+      : Math.min(Math.max(8, rect.left + rect.width / 2 - width / 2), window.innerWidth - width - 8);
+
+  return createPortal(
+    <div
+      data-anchored-menu
+      style={{ position: "fixed", left, bottom: Math.max(8, window.innerHeight - rect.top + 8), width }}
+      className="z-[100] max-h-[60vh] overflow-y-auto rounded-xl border border-white/10 bg-neutral-900/95 p-1 shadow-2xl backdrop-blur-md"
+    >
+      {children}
+    </div>,
+    document.body,
   );
 }
 
