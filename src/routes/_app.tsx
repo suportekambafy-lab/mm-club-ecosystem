@@ -717,6 +717,9 @@ function MobileTabBar({
 }) {
   // Hide on lesson pages for a distraction-free view
   if (/^\/academia\/[^/]+\/[^/]+/.test(pathname)) return null;
+  // Hide inside live rooms (immersive full-screen stage + controls)
+  if (/^\/lives\/[^/]+\/sala/.test(pathname)) return null;
+
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
