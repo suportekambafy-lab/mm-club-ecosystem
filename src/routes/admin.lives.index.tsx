@@ -14,15 +14,7 @@ import { adminGetGuestLink } from "@/lib/live-guest.functions";
 import { uploadMedia } from "@/lib/media-upload";
 import { toast } from "sonner";
 
-/**
- * Guest links are built from the origin the admin is currently on.
- * Hardcoding the production domain sent testers to the published (older)
- * build of the room instead of the environment being tested.
- */
-function guestLinkOrigin() {
-  if (typeof window !== "undefined" && window.location?.origin) return window.location.origin;
-  return "https://mmclub.pt";
-}
+const GUEST_LINK_ORIGIN = "https://mmclub.pt";
 
 
 async function copyText(value: string) {
@@ -247,7 +239,7 @@ function AdminLives() {
     setGuestBusy(id);
     try {
       const r = await guestLink({ data: { liveId: id, rotate } });
-      const url = `${guestLinkOrigin()}${r.path}`;
+      const url = `${GUEST_LINK_ORIGIN}${r.path}`;
       setGuestUrl({ id, url });
       const copied = await copyText(url);
       toast[copied ? "success" : "message"](
