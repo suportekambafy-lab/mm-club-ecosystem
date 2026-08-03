@@ -252,36 +252,76 @@ function HostRequestsPanel({ state, actions }: { state: RoomState; actions: Room
                   {onStage.map((p) => (
                     <li
                       key={p.userId}
-                      className="flex items-center gap-2 rounded-xl bg-white/[0.03] px-2.5 py-2 ring-1 ring-white/5"
+                      className="rounded-xl bg-white/[0.03] px-2.5 py-2 ring-1 ring-white/5"
                     >
-                      <MemberAvatar
-                        name={p.displayName}
-                        avatarUrl={p.avatarUrl}
-                        verified={adminIds.has(p.userId) || p.role === "host"}
-                        size={36}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm text-white">{p.displayName}</div>
-                        <div className="text-[10.5px] text-white/50">
-                          {p.role === "cohost" ? "Co-host" : "Orador"}
+                      <div className="flex items-center gap-2">
+                        <MemberAvatar
+                          name={p.displayName}
+                          avatarUrl={p.avatarUrl}
+                          verified={adminIds.has(p.userId) || p.role === "host"}
+                          size={36}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm text-white">{p.displayName}</div>
+                          <div className="text-[10.5px] text-white/50">
+                            {p.role === "cohost" ? "Co-host" : "Orador"}
+                          </div>
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        disabled={removing === p.userId}
-                        onClick={async () => {
-                          setRemoving(p.userId);
-                          try {
-                            await actions.demoteFromStage(p.userId);
-                          } finally {
-                            setRemoving(null);
-                          }
-                        }}
-                        className="inline-flex items-center gap-1 rounded-lg bg-white/5 px-2.5 py-1.5 text-[11px] font-medium text-white/80 ring-1 ring-white/10 transition hover:bg-red-500/15 hover:text-red-300 disabled:opacity-50"
-                      >
-                        <UserMinus className="h-3.5 w-3.5" />
-                        {removing === p.userId ? "A remover…" : "Remover do palco"}
-                      </button>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {isHost && (
+                          <button
+                            type="button"
+                            disabled={roleBusy === p.userId}
+                            onClick={async () => {
+                              setRoleBusy(p.userId);
+                              try {
+                                await setRoleFn({
+                                  data: {
+                                    liveId: state.liveId,
+                                    targetUserId: p.userId,
+                                    role: p.role === "cohost" ? "speaker" : "cohost",
+                                  },
+                                });
+                              } finally {
+                                setRoleBusy(null);
+                              }
+                            }}
+                            className={
+                              p.role === "cohost"
+                                ? "inline-flex items-center gap-1 rounded-lg bg-white/5 px-2.5 py-1.5 text-[11px] font-medium text-white/80 ring-1 ring-white/10 transition hover:bg-white/10 disabled:opacity-50"
+                                : "inline-flex items-center gap-1 rounded-lg bg-amber-400/15 px-2.5 py-1.5 text-[11px] font-semibold text-amber-300 ring-1 ring-amber-400/30 transition hover:bg-amber-400/25 disabled:opacity-50"
+                            }
+                          >
+                            {p.role === "cohost" ? (
+                              <ShieldOff className="h-3.5 w-3.5" />
+                            ) : (
+                              <ShieldCheck className="h-3.5 w-3.5" />
+                            )}
+                            {roleBusy === p.userId
+                              ? "A atualizar…"
+                              : p.role === "cohost"
+                                ? "Retirar co-host"
+                                : "Tornar co-host"}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          disabled={removing === p.userId}
+                          onClick={async () => {
+                            setRemoving(p.userId);
+                            try {
+                              await actions.demoteFromStage(p.userId);
+                            } finally {
+                              setRemoving(null);
+                            }
+                          }}
+                          className="inline-flex items-center gap-1 rounded-lg bg-white/5 px-2.5 py-1.5 text-[11px] font-medium text-white/80 ring-1 ring-white/10 transition hover:bg-red-500/15 hover:text-red-300 disabled:opacity-50"
+                        >
+                          <UserMinus className="h-3.5 w-3.5" />
+                          {removing === p.userId ? "A remover…" : "Remover do palco"}
+                        </button>
+                      </div>
                     </li>
                   ))}
                 </ul>
