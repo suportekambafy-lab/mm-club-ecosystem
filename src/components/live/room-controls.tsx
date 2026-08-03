@@ -412,3 +412,77 @@ function HostLeaveMenu({
   );
 }
 
+/**
+ * Dropdown rendered in a portal, anchored above its trigger.
+ *
+ * The controls bar uses `overflow-x-auto` (so it can scroll on mobile), which
+ * clips any absolutely-positioned child. Rendering the menu in a portal with
+ * fixed coordinates keeps it visible and clickable.
+ */
+function AnchoredMenu({
+  open,
+  onClose,
+  anchorRef,
+  children,
+  align = "center",
+  width = 220,
+}: {
+  open: boolean;
+  onClose: () => void;
+  anchorRef: React.RefObject<HTMLElement | null>;
+  children: React.ReactNode;
+  align?: "center" | "right";
+  width?: number;
+}) {
+  const [rect, setRect] = useState<DOMRect | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const update = () => setRect(anchorRef.current?.getBoundingClientRect() ?? null);
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [open, anchorRef]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      const node = e.target as Node;
+      if (anchorRef.current?.contains(node)) return;
+      if ((node as HTMLElement)?.closest?.("[data-anchored-menu]")) return;
+      onClose();
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("touchstart", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("touchstart", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, onClose, anchorRef]);
+
+  if (!open || typeof document === "undefined" || !rect) return null;
+
+  const left =
+    align === "right"
+      ? Math.min(Math.max(8, rect.right - width), window.innerWidth - width - 8)
+      : Math.min(Math.max(8, rect.left + rect.width / 2 - width / 2), window.innerWidth - width - 8);
+
+  return createPortal(
+    <div
+      data-anchored-menu
+      style={{ position: "fixed", left, bottom: Math.max(8, window.innerHeight - rect.top + 8), width }}
+      className="z-[100] max-h-[60vh] overflow-y-auto rounded-xl border border-white/10 bg-neutral-900/95 p-1 shadow-2xl backdrop-blur-md"
+    >
+      {children}
+    </div>,
+    document.body,
+  );
+}
+
