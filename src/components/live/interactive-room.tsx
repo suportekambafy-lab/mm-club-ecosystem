@@ -354,14 +354,26 @@ function HostRequestsPanel({ state, actions }: { state: RoomState; actions: Room
                       <div className="truncate text-sm text-white">{p.displayName}</div>
                       <div className="text-[10.5px] text-amber-300/80">Levantou a mão</div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => actions.promoteToStage(p.userId, { role: "speaker" })}
-                      className="inline-flex items-center gap-1 rounded-lg bg-amber-400 px-2.5 py-1.5 text-[11px] font-semibold text-black hover:brightness-105"
-                    >
-                      <UserPlus className="h-3.5 w-3.5" />
-                      Convidar
-                    </button>
+                    <div className="flex shrink-0 flex-col gap-1">
+                      <button
+                        type="button"
+                        onClick={() => actions.promoteToStage(p.userId, { role: "speaker" })}
+                        className="inline-flex items-center gap-1 rounded-lg bg-amber-400 px-2.5 py-1.5 text-[11px] font-semibold text-black hover:brightness-105"
+                      >
+                        <UserPlus className="h-3.5 w-3.5" />
+                        Convidar
+                      </button>
+                      {isHost && (
+                        <button
+                          type="button"
+                          onClick={() => actions.promoteToStage(p.userId, { role: "cohost" })}
+                          className="inline-flex items-center gap-1 rounded-lg bg-amber-400/15 px-2.5 py-1.5 text-[11px] font-semibold text-amber-300 ring-1 ring-amber-400/30 hover:bg-amber-400/25"
+                        >
+                          <ShieldCheck className="h-3.5 w-3.5" />
+                          Como co-host
+                        </button>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>
