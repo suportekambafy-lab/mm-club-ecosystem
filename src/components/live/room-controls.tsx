@@ -216,9 +216,12 @@ function DeviceMenu({
     }
   };
 
+  const anchorRef = useRef<HTMLButtonElement | null>(null);
+
   return (
-    <div className="relative">
+    <div className="relative shrink-0">
       <button
+        ref={anchorRef}
         type="button"
         onClick={openMenu}
         aria-label={label}
@@ -227,8 +230,8 @@ function DeviceMenu({
       >
         <ChevronUp className="h-3.5 w-3.5" />
       </button>
-      {open && (
-        <div className="absolute bottom-full left-1/2 z-50 mb-2 min-w-[220px] max-w-[280px] -translate-x-1/2 rounded-xl border border-white/10 bg-neutral-900/95 p-1 shadow-2xl backdrop-blur-md">
+      <AnchoredMenu open={open} onClose={() => setOpen(false)} anchorRef={anchorRef} width={240}>
+        <>
           <div className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-white/40">
             {kind === "videoinput" ? "Câmara" : "Microfone"}
           </div>
