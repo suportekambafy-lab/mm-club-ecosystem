@@ -199,6 +199,9 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
 function HostRequestsPanel({ state, actions }: { state: RoomState; actions: RoomActions }) {
   const [open, setOpen] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
+  const [roleBusy, setRoleBusy] = useState<string | null>(null);
+  const setRoleFn = useServerFn(setRole);
+  const isHost = state.localRole === "host";
   const adminIds = useAdminIds();
   const onStage = useMemo(
     () =>
