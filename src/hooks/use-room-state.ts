@@ -54,6 +54,57 @@ function mapQuality(q: LKConnectionQuality | undefined): RoomParticipant["connec
   }
 }
 
+/** True when the saved deviceId still exists on this machine. */
+async function knownDevice(kind: MediaDeviceKind, id?: string) {
+  if (!id) return false;
+  try {
+    const list = await navigator.mediaDevices.enumerateDevices();
+    return list.some((d) => d.kind === kind && d.deviceId === id);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Enable the camera with progressive fallbacks.
+ *
+ * Real-world failures on desktops: a saved deviceId from another machine
+ * (OverconstrainedError), a webcam that cannot do 1080p, or a device already
+ * held by another app. We retry with looser constraints before giving up and
+ * always return a human-readable reason on failure.
+ */
+async function enableCameraResilient(room: Room, deviceId?: string): Promise<string | null> {
+  const lp = room.localParticipant;
+  const usable = (await knownDevice("videoinput", deviceId)) ? deviceId : undefined;
+  const attempts: (Parameters<LocalParticipant["setCameraEnabled"]>[1] | undefined)[] = [
+    usable ? { deviceId: usable } : undefined,
+    { resolution: VideoPresets.h720.resolution },
+    { resolution: VideoPresets.h360.resolution },
+    undefined,
+  ];
+  let lastErr: unknown = null;
+  for (const opts of attempts) {
+    try {
+      await lp.setCameraEnabled(true, opts);
+      if (lp.isCameraEnabled) return null;
+    } catch (err) {
+      lastErr = err;
+      console.warn("[useRoomState] camera attempt failed", opts, err);
+    }
+  }
+  const msg = lastErr instanceof Error ? `${lastErr.name}: ${lastErr.message}` : String(lastErr ?? "desconhecido");
+  if (/NotAllowedError|Permission/i.test(msg)) {
+    return "Permissão de câmara bloqueada neste browser. Autoriza a câmara no ícone da barra de endereço e tenta de novo.";
+  }
+  if (/NotReadableError|TrackStartError|could not start/i.test(msg)) {
+    return "A câmara está a ser usada por outra aplicação (Zoom, Meet, OBS…). Fecha-a e tenta de novo.";
+  }
+  if (/NotFoundError|DevicesNotFound|OverconstrainedError/i.test(msg)) {
+    return "Não encontrámos nenhuma câmara disponível neste dispositivo.";
+  }
+  return `Não foi possível ligar a câmara (${msg}).`;
+}
+
 function mapConnectionState(s: ConnectionState): RoomState["connection"]["state"] {
   switch (s) {
     case "connected":
