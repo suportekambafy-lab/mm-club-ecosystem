@@ -13,10 +13,12 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { readMediaPrefs } from "@/lib/media-prefs";
+import { toast } from "sonner";
 import {
   Room,
   RoomEvent,
   Track,
+  VideoPresets,
   type RemoteTrack,
   type RemoteTrackPublication,
   type Participant,
