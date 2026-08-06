@@ -22,6 +22,8 @@ import {
   Pencil,
   Paperclip,
   Check,
+  Pin,
+  PinOff,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -1287,6 +1289,7 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
             {confirmDialog}
           </div>
         )}
+        </div>
       </header>
 
       {editing ? (
