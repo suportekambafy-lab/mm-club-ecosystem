@@ -613,6 +613,7 @@ function AdminLives() {
                 emptyText="Sem lives de teste."
                 renderActions={(r) => (
                   <>
+                    <EditLiveButton row={r} onSaved={refresh} />
                     <Link
                       to="/lives/$liveId/sala"
                       params={{ liveId: r.id }}
@@ -657,6 +658,7 @@ function AdminLives() {
               emptyText="Ainda não tens lives agendadas ou a decorrer."
               renderActions={(r) => (
                 <>
+                  <EditLiveButton row={r} onSaved={refresh} />
                   <Link
                     to="/admin/lives/$liveId/studio"
                     params={{ liveId: r.id }}
@@ -718,6 +720,7 @@ function AdminLives() {
               emptyText="Ainda não há lives terminadas."
               renderActions={(r) => (
                 <>
+                  <EditLiveButton row={r} onSaved={refresh} />
                   <Link
                     to="/lives/$liveId"
                     params={{ liveId: r.id }}
