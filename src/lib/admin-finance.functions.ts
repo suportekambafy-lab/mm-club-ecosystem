@@ -17,6 +17,7 @@ import type {
 
   SearchHit,
   SubscriptionStateRow,
+  UpcomingChargeRow,
 } from "@/lib/admin/finance-types";
 import type { RecoveryOverview } from "@/lib/admin/recovery-types";
 import type { IntelligenceOverview } from "@/lib/admin/intelligence-types";
@@ -419,4 +420,15 @@ export const rescoreMember = createServerFn({ method: "POST" })
       "@/lib/billing/recovery/engine.server"
     );
     return rescoreOpenCycles(data.userId, "manual");
+  });
+
+/** Próximos débitos — every scheduled future charge, soonest first. */
+export const listUpcomingCharges = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<UpcomingChargeRow[]> => {
+    await assertAdmin(context as never);
+    const { listUpcomingCharges: run } = await import(
+      "@/lib/admin/finance.server"
+    );
+    return run();
   });

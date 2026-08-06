@@ -20,6 +20,7 @@ import type {
 
   SearchHit,
   SubscriptionStateRow,
+  UpcomingChargeRow,
 } from "./finance-types";
 
 const DAY = 86_400_000;
@@ -1198,4 +1199,79 @@ export async function listSubscriptionStates(): Promise<SubscriptionStateRow[]> 
         .sort((a, b) => a.featureKey.localeCompare(b.featureKey)),
     } satisfies SubscriptionStateRow;
   });
+}
+
+// ---------------------------------------------------------------------------
+// Upcoming charges (próximos débitos)
+// ---------------------------------------------------------------------------
+
+/**
+ * Every subscription that is expected to be charged again, sorted by date.
+ * The charge date is the trial end while trialing, otherwise the end of the
+ * current period. Subscriptions set to cancel at period end are flagged but
+ * still listed so admins can see the revenue that is about to drop off.
+ */
+export async function listUpcomingCharges(): Promise<UpcomingChargeRow[]> {
+  const { data, error } = await supabaseAdmin
+    .from("billing_subscriptions")
+    .select(
+      "id, user_id, status, gateway, gateway_subscription_id, trial_end, current_period_end, cancel_at_period_end, product:catalog_products(name), price:catalog_prices!billing_subscriptions_price_id_fkey(slug, amount_cents, currency, interval, interval_count)",
+    )
+    .in("status", ACTIVE_LIKE)
+    .limit(1000);
+  if (error) throw new Error(`listUpcomingCharges failed: ${error.message}`);
+
+  const subs = (data ?? []) as unknown as {
+    id: string;
+    user_id: string;
+    status: SubscriptionStatus;
+    gateway: string | null;
+    gateway_subscription_id: string | null;
+    trial_end: string | null;
+    current_period_end: string | null;
+    cancel_at_period_end: boolean | null;
+    product: { name: string } | null;
+    price: {
+      slug: string;
+      amount_cents: number;
+      currency: string;
+      interval: string;
+      interval_count: number | null;
+    } | null;
+  }[];
+
+  const identities = await loadIdentities([
+    ...new Set(subs.map((s) => s.user_id)),
+  ]);
+
+  const rows: UpcomingChargeRow[] = [];
+  for (const s of subs) {
+    const trialing = s.status === "trialing" && s.trial_end;
+    const chargeAt = trialing ? s.trial_end : s.current_period_end;
+    if (!chargeAt) continue;
+    const interval = s.price?.interval ?? "month";
+    if (interval === "one_time" || interval === "lifetime") continue;
+    const id = identities.get(s.user_id);
+    rows.push({
+      subscriptionId: s.id,
+      userId: s.user_id,
+      email: id?.email ?? null,
+      name: id?.name ?? null,
+      status: s.status,
+      productName: s.product?.name ?? "MM Club",
+      priceSlug: s.price?.slug ?? "",
+      amountCents: s.price?.amount_cents ?? 0,
+      currency: s.price?.currency ?? "EUR",
+      interval,
+      intervalCount: s.price?.interval_count ?? 1,
+      chargeAt,
+      isFirstChargeAfterTrial: Boolean(trialing),
+      cancelAtPeriodEnd: Boolean(s.cancel_at_period_end),
+      gateway: s.gateway ?? null,
+      gatewaySubscriptionId: s.gateway_subscription_id ?? null,
+    });
+  }
+
+  rows.sort((a, b) => a.chargeAt.localeCompare(b.chargeAt));
+  return rows;
 }
