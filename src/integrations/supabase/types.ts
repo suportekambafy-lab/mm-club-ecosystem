@@ -1351,6 +1351,8 @@ export type Database = {
           edited_at: string | null
           id: string
           image_url: string | null
+          pinned_at: string | null
+          pinned_by: string | null
           updated_at: string
         }
         Insert: {
@@ -1361,6 +1363,8 @@ export type Database = {
           edited_at?: string | null
           id?: string
           image_url?: string | null
+          pinned_at?: string | null
+          pinned_by?: string | null
           updated_at?: string
         }
         Update: {
@@ -1371,6 +1375,8 @@ export type Database = {
           edited_at?: string | null
           id?: string
           image_url?: string | null
+          pinned_at?: string | null
+          pinned_by?: string | null
           updated_at?: string
         }
         Relationships: [
