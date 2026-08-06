@@ -62,6 +62,7 @@ import { Route as AdminFinanceiroRecoveryRouteImport } from './routes/admin.fina
 import { Route as AdminFinanceiroReceitaRouteImport } from './routes/admin.financeiro.receita'
 import { Route as AdminFinanceiroInteligenciaRouteImport } from './routes/admin.financeiro.inteligencia'
 import { Route as AdminFinanceiroEstadoRouteImport } from './routes/admin.financeiro.estado'
+import { Route as AdminFinanceiroDebitosRouteImport } from './routes/admin.financeiro.debitos'
 import { Route as AdminFinanceiroCupoesRouteImport } from './routes/admin.financeiro.cupoes'
 import { Route as AdminFinanceiroCatalogoRouteImport } from './routes/admin.financeiro.catalogo'
 import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
@@ -366,6 +367,11 @@ const AdminFinanceiroEstadoRoute = AdminFinanceiroEstadoRouteImport.update({
   path: '/estado',
   getParentRoute: () => AdminFinanceiroRoute,
 } as any)
+const AdminFinanceiroDebitosRoute = AdminFinanceiroDebitosRouteImport.update({
+  id: '/debitos',
+  path: '/debitos',
+  getParentRoute: () => AdminFinanceiroRoute,
+} as any)
 const AdminFinanceiroCupoesRoute = AdminFinanceiroCupoesRouteImport.update({
   id: '/cupoes',
   path: '/cupoes',
@@ -627,6 +633,7 @@ export interface FileRoutesByFullPath {
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
+  '/admin/financeiro/debitos': typeof AdminFinanceiroDebitosRoute
   '/admin/financeiro/estado': typeof AdminFinanceiroEstadoRoute
   '/admin/financeiro/inteligencia': typeof AdminFinanceiroInteligenciaRoute
   '/admin/financeiro/receita': typeof AdminFinanceiroReceitaRoute
@@ -711,6 +718,7 @@ export interface FileRoutesByTo {
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
+  '/admin/financeiro/debitos': typeof AdminFinanceiroDebitosRoute
   '/admin/financeiro/estado': typeof AdminFinanceiroEstadoRoute
   '/admin/financeiro/inteligencia': typeof AdminFinanceiroInteligenciaRoute
   '/admin/financeiro/receita': typeof AdminFinanceiroReceitaRoute
@@ -804,6 +812,7 @@ export interface FileRoutesById {
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
+  '/admin/financeiro/debitos': typeof AdminFinanceiroDebitosRoute
   '/admin/financeiro/estado': typeof AdminFinanceiroEstadoRoute
   '/admin/financeiro/inteligencia': typeof AdminFinanceiroInteligenciaRoute
   '/admin/financeiro/receita': typeof AdminFinanceiroReceitaRoute
@@ -897,6 +906,7 @@ export interface FileRouteTypes {
     | '/lives/$liveId'
     | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cupoes'
+    | '/admin/financeiro/debitos'
     | '/admin/financeiro/estado'
     | '/admin/financeiro/inteligencia'
     | '/admin/financeiro/receita'
@@ -981,6 +991,7 @@ export interface FileRouteTypes {
     | '/lives/$liveId'
     | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cupoes'
+    | '/admin/financeiro/debitos'
     | '/admin/financeiro/estado'
     | '/admin/financeiro/inteligencia'
     | '/admin/financeiro/receita'
@@ -1073,6 +1084,7 @@ export interface FileRouteTypes {
     | '/_app/lives/$liveId'
     | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cupoes'
+    | '/admin/financeiro/debitos'
     | '/admin/financeiro/estado'
     | '/admin/financeiro/inteligencia'
     | '/admin/financeiro/receita'
@@ -1529,6 +1541,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFinanceiroEstadoRouteImport
       parentRoute: typeof AdminFinanceiroRoute
     }
+    '/admin/financeiro/debitos': {
+      id: '/admin/financeiro/debitos'
+      path: '/debitos'
+      fullPath: '/admin/financeiro/debitos'
+      preLoaderRoute: typeof AdminFinanceiroDebitosRouteImport
+      parentRoute: typeof AdminFinanceiroRoute
+    }
     '/admin/financeiro/cupoes': {
       id: '/admin/financeiro/cupoes'
       path: '/cupoes'
@@ -1910,6 +1929,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 interface AdminFinanceiroRouteChildren {
   AdminFinanceiroCatalogoRoute: typeof AdminFinanceiroCatalogoRoute
   AdminFinanceiroCupoesRoute: typeof AdminFinanceiroCupoesRoute
+  AdminFinanceiroDebitosRoute: typeof AdminFinanceiroDebitosRoute
   AdminFinanceiroEstadoRoute: typeof AdminFinanceiroEstadoRoute
   AdminFinanceiroInteligenciaRoute: typeof AdminFinanceiroInteligenciaRoute
   AdminFinanceiroReceitaRoute: typeof AdminFinanceiroReceitaRoute
@@ -1922,6 +1942,7 @@ interface AdminFinanceiroRouteChildren {
 const AdminFinanceiroRouteChildren: AdminFinanceiroRouteChildren = {
   AdminFinanceiroCatalogoRoute: AdminFinanceiroCatalogoRoute,
   AdminFinanceiroCupoesRoute: AdminFinanceiroCupoesRoute,
+  AdminFinanceiroDebitosRoute: AdminFinanceiroDebitosRoute,
   AdminFinanceiroEstadoRoute: AdminFinanceiroEstadoRoute,
   AdminFinanceiroInteligenciaRoute: AdminFinanceiroInteligenciaRoute,
   AdminFinanceiroReceitaRoute: AdminFinanceiroReceitaRoute,
@@ -2025,13 +2046,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
