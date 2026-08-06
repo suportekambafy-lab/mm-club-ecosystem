@@ -70,6 +70,7 @@ type Post = {
   image_url: string | null;
   created_at: string;
   edited_at: string | null;
+  pinned_at: string | null;
   author: Profile | null;
   category: Category | null;
   like_count: number;
@@ -158,13 +159,14 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
       let q = supabase
         .from("community_posts")
         .select(
-          `id, author_id, category_id, content, image_url, created_at, edited_at,
+          `id, author_id, category_id, content, image_url, created_at, edited_at, pinned_at,
            author:profiles!community_posts_author_id_fkey (id, display_name, avatar_url, bio),
            category:community_categories (id, slug, name, color, sort_order),
            likes:community_likes (user_id),
            comments:community_comments (id),
            reactions:community_reactions (emoji, user_id)`,
         )
+        .order("pinned_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false })
         .limit(50);
       if (categoryId) q = q.eq("category_id", categoryId);
@@ -178,6 +180,7 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
         image_url: p.image_url,
         created_at: p.created_at,
         edited_at: p.edited_at ?? null,
+        pinned_at: p.pinned_at ?? null,
         author: Array.isArray(p.author) ? p.author[0] : p.author,
         category: Array.isArray(p.category) ? p.category[0] : p.category,
         like_count: p.likes?.length ?? 0,
@@ -1119,6 +1122,26 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
   const { confirm: askConfirm, dialog: confirmDialog } = useConfirm();
   const adminIds = useAdminIds();
   const authorIsAdmin = adminIds.has(post.author_id);
+  const viewerIsAdmin = currentUserId ? adminIds.has(currentUserId) : false;
+  const isPinned = Boolean(post.pinned_at);
+
+  const pin = useMutation({
+    mutationFn: async () => {
+      const { error } = await (supabase.from("community_posts") as any)
+        .update(
+          isPinned
+            ? { pinned_at: null, pinned_by: null }
+            : { pinned_at: new Date().toISOString(), pinned_by: currentUserId },
+        )
+        .eq("id", post.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["community", "posts"] });
+      toast.success(isPinned ? "Publicação desafixada." : "Publicação afixada no topo.");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
+  });
 
   useEffect(() => {
     setLiked(post.liked_by_me);
@@ -1183,7 +1206,18 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
   const authorName = post.author?.display_name ?? "Membro";
 
   return (
-    <article className="rounded-2xl border border-border bg-surface-1 p-5">
+    <article
+      className={cn(
+        "rounded-2xl border bg-surface-1 p-5",
+        isPinned ? "border-primary/50 ring-1 ring-primary/20" : "border-border",
+      )}
+    >
+      {isPinned && (
+        <div className="mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+          <Pin className="h-3.5 w-3.5" />
+          Afixado
+        </div>
+      )}
       <header className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <Avatar name={authorName} url={post.author?.avatar_url ?? null} />
@@ -1210,6 +1244,21 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
             </div>
           </div>
         </div>
+        <div className="flex items-center gap-1">
+        {viewerIsAdmin && !editing && (
+          <button
+            onClick={() => pin.mutate()}
+            disabled={pin.isPending}
+            title={isPinned ? "Desafixar publicação" : "Afixar publicação"}
+            aria-label={isPinned ? "Desafixar publicação" : "Afixar publicação"}
+            className={cn(
+              "rounded-full p-2 transition hover:bg-surface-2",
+              isPinned ? "text-primary" : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
+          </button>
+        )}
         {isOwner && !editing && (
           <div className="flex items-center gap-1">
             <button
