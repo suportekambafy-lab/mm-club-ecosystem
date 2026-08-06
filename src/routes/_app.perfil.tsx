@@ -1,5 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { getMyEmailPreferences, updateMyEmailPreferences } from "@/lib/community-email.functions";
 import { useEffect, useRef, useState } from "react";
+
 import { Camera, CreditCard, Loader2, LogOut, Mail, Pencil, Save, Sparkles, Trophy, X } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
