@@ -16,7 +16,9 @@ export type EmailKind =
   | "replay_ready"
   | "inactivity_nudge"
   | "upcoming_courses"
-  | "community_post";
+  | "community_post"
+  | "short_published"
+  | "short_reply";
 
 type SendOpts = {
   to: string;
