@@ -104,7 +104,14 @@ export const Route = createFileRoute("/api/public/hooks/upcoming-courses")({
         let skipped = 0;
         let failed = 0;
 
+        const { optedOutUserIds } = await import("@/lib/community-email.server");
+        const optedOut = await optedOutUserIds("courses");
+
         for (const userId of userIds) {
+          if (optedOut.has(userId)) {
+            skipped++;
+            continue;
+          }
           const user = await getUserEmailAndName(userId);
           if (!user) {
             skipped++;

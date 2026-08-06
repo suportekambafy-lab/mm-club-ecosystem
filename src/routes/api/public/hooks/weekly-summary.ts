@@ -118,7 +118,14 @@ export const Route = createFileRoute("/api/public/hooks/weekly-summary")({
         let skipped = 0;
         let failed = 0;
 
+        const { optedOutUserIds } = await import("@/lib/community-email.server");
+        const optedOutWeekly = await optedOutUserIds("weekly_summary");
+
         for (const [userId, prog] of byUser) {
+          if (optedOutWeekly.has(userId)) {
+            skipped++;
+            continue;
+          }
           const lesson = findLesson(prog.course_id, prog.lesson_id);
           if (!lesson) {
             skipped++;
