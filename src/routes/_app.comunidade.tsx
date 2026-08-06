@@ -255,6 +255,7 @@ function CommunityPage() {
 
 function CommunityPageInner() {
   const user = useUser();
+  const { open: openMember } = useMemberProfile();
   const [tab, setTab] = useState<"feed" | "chat">("feed");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const catQ = useCategories(user != null);
