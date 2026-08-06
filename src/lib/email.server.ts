@@ -15,7 +15,8 @@ export type EmailKind =
   | "live_started"
   | "replay_ready"
   | "inactivity_nudge"
-  | "upcoming_courses";
+  | "upcoming_courses"
+  | "community_post";
 
 type SendOpts = {
   to: string;
@@ -146,6 +147,42 @@ const btn = (label: string, href: string) =>
 // ---------- templates ----------
 
 export const emailTemplates = {
+  communityPost(opts: {
+    name: string;
+    authorName: string;
+    body: string;
+    imageUrl?: string | null;
+    postId: string;
+    categoryLabel?: string | null;
+  }) {
+    const safe = escapeHtml(opts.name);
+    const author = escapeHtml(opts.authorName);
+    const raw = opts.body.trim();
+    const excerpt = escapeHtml(raw.length > 420 ? `${raw.slice(0, 420)}…` : raw);
+    const image = opts.imageUrl
+      ? opts.imageUrl.startsWith("http")
+        ? opts.imageUrl
+        : `${APP_URL}${opts.imageUrl}`
+      : null;
+    const heroImg = image
+      ? `<div style="margin:0 -40px 24px;"><img src="${image}" alt="Publicação na comunidade" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;text-decoration:none;"></div>`
+      : "";
+    const firstLine = raw.split("\n")[0] ?? "";
+    const short = firstLine.length > 60 ? `${firstLine.slice(0, 60)}…` : firstLine;
+    return {
+      subject: `${opts.authorName} publicou na comunidade${short ? `: ${short}` : ""}`,
+      html: layout(
+        `${opts.authorName} publicou na comunidade do MM Club.`,
+        `${heroImg}
+         <div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">MM Club · Comunidade${opts.categoryLabel ? ` · ${escapeHtml(opts.categoryLabel)}` : ""}</div>
+         <h1 style="font-size:24px;color:#ffffff;margin:0 0 16px;font-weight:600;line-height:1.3;">${author} publicou na comunidade</h1>
+         ${excerpt ? `<div style="background:#0a0a0a;border-left:3px solid #c9a961;padding:18px 22px;margin:0 0 24px;border-radius:8px;font-size:15px;line-height:1.7;color:#e5e5e5;white-space:pre-wrap;">${excerpt}</div>` : ""}
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Olá ${safe}, entra na comunidade para responder e participar na conversa.</p>
+         <p style="margin:0 0 8px;">${btn("Ver publicação →", `${APP_URL}/comunidade?post=${opts.postId}`)}</p>`,
+      ),
+    };
+  },
+
   welcome(name: string, planLabel: string) {
     const safe = escapeHtml(name);
     const plan = escapeHtml(planLabel);
