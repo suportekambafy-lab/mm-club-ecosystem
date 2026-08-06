@@ -34,6 +34,11 @@ import { useConfirm } from "@/components/mm/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CommunitySpotlight } from "@/components/mm/community-spotlight";
 import { useCommunityPresence } from "@/lib/community-presence";
+import {
+  MemberProfileProvider,
+  MemberNameButton,
+  useMemberProfile,
+} from "@/components/mm/member-profile";
 
 
 export const Route = createFileRoute("/_app/comunidade")({
