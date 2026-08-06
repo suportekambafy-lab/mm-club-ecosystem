@@ -34,6 +34,9 @@ export async function notifyReplayReady(liveId: string): Promise<{ sent: boolean
     const allowed = new Set((subs ?? []).map((s) => s.user_id as string));
     if (allowed.size === 0) return { sent: true };
 
+    const { optedOutUserIds } = await import("@/lib/community-email.server");
+    const optedOut = await optedOutUserIds("lives");
+
     let page = 1;
     for (let i = 0; i < 20; i++) {
       const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 100 });
