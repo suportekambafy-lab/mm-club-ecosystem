@@ -580,11 +580,48 @@ export const adminListLives = createServerFn({ method: "GET" })
     await requireAdmin(context.supabase, context.userId);
     const { data, error } = await context.supabase
       .from("lives")
-      .select("id,title,expert_id,starts_at,duration_minutes,visibility,status,cf_live_input_id,cover_url,is_test")
+      .select("id,title,description,expert_id,starts_at,duration_minutes,visibility,status,cf_live_input_id,cover_url,is_test")
       .order("starts_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
   });
+
+// Editar metadados de uma live (agendada ou já terminada).
+export const adminUpdateLive = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        title: z.string().min(3).max(180),
+        description: z.string().max(2000).nullable().optional(),
+        expert_id: z.string().max(120).nullable().optional(),
+        starts_at: z.string().min(4),
+        duration_minutes: z.number().int().min(5).max(600),
+        visibility: z.enum(["public", "club", "premium"]),
+        cover_url: z.string().url().nullable().optional(),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("lives")
+      .update({
+        title: data.title,
+        description: data.description ?? null,
+        expert_id: data.expert_id ?? null,
+        starts_at: new Date(data.starts_at).toISOString(),
+        duration_minutes: data.duration_minutes,
+        visibility: data.visibility,
+        cover_url: data.cover_url ?? null,
+      })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
 
 // Replay editor — trim the dark/silent head (and optional tail) of a recording.
 export const adminSetReplayTrim = createServerFn({ method: "POST" })

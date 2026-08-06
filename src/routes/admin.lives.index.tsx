@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { Copy, Plus, Trash2, Radio, Loader2, Video, Upload, CalendarClock, Sparkles, Scissors, Mail, FlaskConical } from "lucide-react";
+import { Copy, Plus, Trash2, Radio, Loader2, Video, Upload, CalendarClock, Sparkles, Scissors, Mail, FlaskConical, Pencil } from "lucide-react";
 import { SectionHeading } from "@/components/mm/section-heading";
 import {
   adminListLives,
@@ -9,7 +9,9 @@ import {
   adminDeleteLive,
   adminGetLiveIngest,
   adminSendLiveStartEmails,
+  adminUpdateLive,
 } from "@/lib/lives.functions";
+
 import { adminGetGuestLink } from "@/lib/live-guest.functions";
 import { uploadMedia } from "@/lib/media-upload";
 import { toast } from "sonner";
@@ -611,6 +613,7 @@ function AdminLives() {
                 emptyText="Sem lives de teste."
                 renderActions={(r) => (
                   <>
+                    <EditLiveButton row={r} onSaved={refresh} />
                     <Link
                       to="/lives/$liveId/sala"
                       params={{ liveId: r.id }}
@@ -655,6 +658,7 @@ function AdminLives() {
               emptyText="Ainda não tens lives agendadas ou a decorrer."
               renderActions={(r) => (
                 <>
+                  <EditLiveButton row={r} onSaved={refresh} />
                   <Link
                     to="/admin/lives/$liveId/studio"
                     params={{ liveId: r.id }}
@@ -716,6 +720,7 @@ function AdminLives() {
               emptyText="Ainda não há lives terminadas."
               renderActions={(r) => (
                 <>
+                  <EditLiveButton row={r} onSaved={refresh} />
                   <Link
                     to="/lives/$liveId"
                     params={{ liveId: r.id }}
@@ -793,6 +798,210 @@ function LivesSection({
     </div>
   );
 }
+
+function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void }) {
+  const update = useServerFn(adminUpdateLive);
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [title, setTitle] = useState(row.title);
+  const [description, setDescription] = useState(row.description ?? "");
+  const [expert, setExpert] = useState(row.expert_id ?? "");
+  const [visibility, setVisibility] = useState<"public" | "club" | "premium">(
+    row.visibility as "public" | "club" | "premium",
+  );
+  const [duration, setDuration] = useState(row.duration_minutes ?? 60);
+  const [startsAt, setStartsAt] = useState(() => toLocalInput(row.starts_at));
+  const [coverUrl, setCoverUrl] = useState(row.cover_url ?? "");
+
+  function reset() {
+    setTitle(row.title);
+    setDescription(row.description ?? "");
+    setExpert(row.expert_id ?? "");
+    setVisibility(row.visibility as "public" | "club" | "premium");
+    setDuration(row.duration_minutes ?? 60);
+    setStartsAt(toLocalInput(row.starts_at));
+    setCoverUrl(row.cover_url ?? "");
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await update({
+        data: {
+          id: row.id,
+          title: title.trim(),
+          description: description.trim() || null,
+          expert_id: expert.trim() || null,
+          starts_at: new Date(startsAt).toISOString(),
+          duration_minutes: Number(duration) || 60,
+          visibility,
+          cover_url: coverUrl.trim() || null,
+        },
+      });
+      toast.success("Live atualizada");
+      setOpen(false);
+      onSaved();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          reset();
+          setOpen(true);
+        }}
+        className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40"
+        title="Editar título, descrição, data e capa"
+      >
+        <Pencil className="h-3 w-3" /> Editar
+      </button>
+
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-6">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-border bg-surface-1 p-5 sm:rounded-2xl">
+            <p className="font-display text-base">Editar live</p>
+            <div className="mt-4 space-y-3">
+              <Field label="Título">
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm outline-none focus:border-primary/50"
+                />
+              </Field>
+              <Field label="Descrição">
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm outline-none focus:border-primary/50"
+                />
+              </Field>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Field label="Especialista (id)">
+                  <input
+                    value={expert}
+                    onChange={(e) => setExpert(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm outline-none focus:border-primary/50"
+                  />
+                </Field>
+                <Field label="Visibilidade">
+                  <select
+                    value={visibility}
+                    onChange={(e) => setVisibility(e.target.value as "public" | "club" | "premium")}
+                    className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm outline-none focus:border-primary/50"
+                  >
+                    <option value="public">Pública</option>
+                    <option value="club">Clube</option>
+                    <option value="premium">Premium</option>
+                  </select>
+                </Field>
+                <Field label="Data e hora">
+                  <input
+                    type="datetime-local"
+                    value={startsAt}
+                    onChange={(e) => setStartsAt(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm outline-none focus:border-primary/50"
+                  />
+                </Field>
+                <Field label="Duração (min)">
+                  <input
+                    type="number"
+                    min={5}
+                    max={600}
+                    value={duration}
+                    onChange={(e) => setDuration(Number(e.target.value))}
+                    className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm outline-none focus:border-primary/50"
+                  />
+                </Field>
+              </div>
+              <Field label="Capa (URL)">
+                <div className="flex items-center gap-2">
+                  <input
+                    value={coverUrl}
+                    onChange={(e) => setCoverUrl(e.target.value)}
+                    placeholder="https://…"
+                    className="flex-1 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm outline-none focus:border-primary/50"
+                  />
+                  <label className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40">
+                    {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                    Carregar
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploading(true);
+                        try {
+                          const { url } = await uploadMedia("course-media", file, "lives-covers");
+                          setCoverUrl(url);
+                        } catch (err) {
+                          toast.error((err as Error).message);
+                        } finally {
+                          setUploading(false);
+                          e.target.value = "";
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+              </Field>
+              {coverUrl ? (
+                <img
+                  src={coverUrl}
+                  alt="Capa da live"
+                  loading="lazy"
+                  className="h-32 w-full rounded-lg object-cover"
+                />
+              ) : null}
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="rounded-full border border-border px-4 py-2 text-xs"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving || title.trim().length < 3}
+                className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground disabled:opacity-60"
+              >
+                {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : null} Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="mb-1 text-[11px] uppercase tracking-widest text-muted-foreground">{label}</p>
+      {children}
+    </div>
+  );
+}
+
+function toLocalInput(iso: string) {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 
 function ModeButton({
   active,
