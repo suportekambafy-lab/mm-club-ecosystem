@@ -10,6 +10,7 @@ import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/mm/confirm-dialog";
+import { notifyShortPublishedByEmail, notifyShortReplyByEmail } from "@/lib/shorts-email.functions";
 
 export const Route = createFileRoute("/_app/shorts")({
   ssr: false,
@@ -96,12 +97,21 @@ function ShortsPage() {
           .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
         if (urlErr || !urlData) throw urlErr ?? new Error("Falha ao gerar URL do vídeo");
 
-        const { error: insertErr } = await supabase.from("mm_shorts").insert({
-          author_id: user.id,
-          video_url: urlData.signedUrl,
-          caption: caption.trim() || null,
-        });
+        const { data: inserted, error: insertErr } = await supabase
+          .from("mm_shorts")
+          .insert({
+            author_id: user.id,
+            video_url: urlData.signedUrl,
+            caption: caption.trim() || null,
+          })
+          .select("id")
+          .single();
         if (insertErr) throw insertErr;
+
+        // Email fan-out happens server-side and only for admin authors.
+        if (inserted?.id) {
+          notifyShortPublishedByEmail({ data: { shortId: inserted.id } }).catch(() => {});
+        }
 
         setUpload({ progress: 100, status: "done" });
         toast.success("MM Short publicado!");
@@ -981,15 +991,22 @@ function CommentsDrawer({
     if (!body || !currentUserId || sending) return;
     setSending(true);
     try {
-      const { error } = await supabase
+      const parentId = replyTo?.parent_id ?? replyTo?.id ?? null;
+      const { data: newComment, error } = await supabase
         .from("mm_short_comments")
         .insert({
           short_id: short.id,
           user_id: currentUserId,
           body,
-          parent_id: replyTo?.parent_id ?? replyTo?.id ?? null,
-        });
+          parent_id: parentId,
+        })
+        .select("id")
+        .single();
       if (error) throw error;
+
+      if (parentId && newComment?.id) {
+        notifyShortReplyByEmail({ data: { commentId: newComment.id } }).catch(() => {});
+      }
       setText("");
       setReplyTo(null);
       qc.invalidateQueries({ queryKey: ["mm-short-comments", short.id] });
