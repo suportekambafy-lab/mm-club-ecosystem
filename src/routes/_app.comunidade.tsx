@@ -372,7 +372,7 @@ function CommunityPageInner() {
                 >
                   <Avatar name={m.display_name ?? "Membro"} url={m.avatar_url} size={36} />
                   <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border-2 border-surface-1 bg-emerald-500" />
-                </div>
+                </button>
               ))}
               {onlineMembers.length === 0 && (
                 <p className="col-span-5 text-center text-xs text-muted-foreground">
