@@ -253,3 +253,24 @@ export type SubscriptionStateRow = {
     expiresAt: string | null;
   }[];
 };
+
+export type UpcomingChargeRow = {
+  subscriptionId: string;
+  userId: string;
+  email: string | null;
+  name: string | null;
+  status: SubscriptionStatus;
+  productName: string;
+  priceSlug: string;
+  amountCents: number;
+  currency: string;
+  interval: string;
+  intervalCount: number;
+  /** ISO date of the next expected charge. */
+  chargeAt: string;
+  /** True when this is the first charge right after a trial. */
+  isFirstChargeAfterTrial: boolean;
+  cancelAtPeriodEnd: boolean;
+  gateway: string | null;
+  gatewaySubscriptionId: string | null;
+};
