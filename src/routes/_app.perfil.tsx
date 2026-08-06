@@ -629,9 +629,118 @@ function ProfilePage() {
           ))}
         </div>
       </section>
+
+      {/* Permissões de email */}
+      <EmailPermissions />
     </div>
   );
 }
+
+const EMAIL_PREF_ITEMS: {
+  key: "community_posts" | "community_replies" | "community_mentions" | "lives" | "courses" | "weekly_summary";
+  label: string;
+  hint: string;
+}[] = [
+  {
+    key: "community_posts",
+    label: "Novas publicações na comunidade",
+    hint: "“X publicou …” quando alguém publica no feed.",
+  },
+  { key: "community_replies", label: "Respostas e comentários", hint: "Quando respondem às tuas publicações." },
+  { key: "community_mentions", label: "Menções", hint: "Quando alguém te menciona com @." },
+  { key: "lives", label: "Lives e gravações", hint: "Avisos de direto a começar e replays disponíveis." },
+  { key: "courses", label: "Novos cursos e aulas", hint: "Lançamentos e conteúdo novo na Academia." },
+  { key: "weekly_summary", label: "Resumo semanal", hint: "O resumo do que aprendeste na semana." },
+];
+
+function EmailPermissions() {
+  const load = useServerFn(getMyEmailPreferences);
+  const save = useServerFn(updateMyEmailPreferences);
+  const [prefs, setPrefs] = useState<Record<string, boolean> | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    load()
+      .then((p) => setPrefs(p as unknown as Record<string, boolean>))
+      .catch(() => setPrefs(Object.fromEntries(EMAIL_PREF_ITEMS.map((i) => [i.key, true]))));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function toggle(key: string) {
+    if (!prefs) return;
+    const next = { ...prefs, [key]: !prefs[key] };
+    setPrefs(next);
+    setSaving(true);
+    try {
+      await save({
+        data: {
+          community_posts: next.community_posts ?? true,
+          community_replies: next.community_replies ?? true,
+          community_mentions: next.community_mentions ?? true,
+          lives: next.lives ?? true,
+          courses: next.courses ?? true,
+          weekly_summary: next.weekly_summary ?? true,
+        },
+      });
+      toast.success("Preferências guardadas");
+    } catch (e) {
+      setPrefs(prefs);
+      toast.error(e instanceof Error ? e.message : "Não foi possível guardar");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-baseline justify-between px-1">
+        <h2 className="font-display text-xl text-foreground md:text-2xl">Permissões de email</h2>
+        {saving ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
+      </div>
+      <p className="px-1 text-sm text-muted-foreground">
+        Escolhe o que queres receber por email. Emails essenciais (segurança, faturação e acesso à conta)
+        são sempre enviados.
+      </p>
+
+      <div className="rounded-2xl bg-surface-1 ring-1 ring-border">
+        {EMAIL_PREF_ITEMS.map((item, i) => {
+          const on = prefs?.[item.key] ?? true;
+          return (
+            <div
+              key={item.key}
+              className={cn("flex items-center gap-4 px-5 py-4", i > 0 && "border-t border-border")}
+            >
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-foreground">{item.label}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{item.hint}</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={on}
+                aria-label={item.label}
+                disabled={!prefs}
+                onClick={() => toggle(item.key)}
+                className={cn(
+                  "relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50",
+                  on ? "bg-primary" : "bg-surface-3 ring-1 ring-border",
+                )}
+              >
+                <span
+                  className={cn(
+                    "absolute top-0.5 h-5 w-5 rounded-full bg-background transition-all",
+                    on ? "left-[22px]" : "left-0.5",
+                  )}
+                />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 
 function Field({
   label,
