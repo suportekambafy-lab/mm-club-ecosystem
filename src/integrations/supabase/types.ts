@@ -1501,6 +1501,42 @@ export type Database = {
         }
         Relationships: []
       }
+      email_preferences: {
+        Row: {
+          community_mentions: boolean
+          community_posts: boolean
+          community_replies: boolean
+          courses: boolean
+          created_at: string
+          lives: boolean
+          updated_at: string
+          user_id: string
+          weekly_summary: boolean
+        }
+        Insert: {
+          community_mentions?: boolean
+          community_posts?: boolean
+          community_replies?: boolean
+          courses?: boolean
+          created_at?: string
+          lives?: boolean
+          updated_at?: string
+          user_id: string
+          weekly_summary?: boolean
+        }
+        Update: {
+          community_mentions?: boolean
+          community_posts?: boolean
+          community_replies?: boolean
+          courses?: boolean
+          created_at?: string
+          lives?: boolean
+          updated_at?: string
+          user_id?: string
+          weekly_summary?: boolean
+        }
+        Relationships: []
+      }
       entitlement_features: {
         Row: {
           created_at: string

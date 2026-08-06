@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { notifyCommunityPostByEmail } from "@/lib/community-email.functions";
 import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 import { assertUploadAllowed } from "@/lib/security/uploads";
 import {
@@ -765,13 +766,23 @@ function Composer({
 
   const create = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("community_posts").insert({
-        author_id: user.id,
-        category_id: categoryId || null,
-        content: content.trim(),
-        image_url: imageUrl.trim() || null,
-      });
+      const { data: row, error } = await supabase
+        .from("community_posts")
+        .insert({
+          author_id: user.id,
+          category_id: categoryId || null,
+          content: content.trim(),
+          image_url: imageUrl.trim() || null,
+        })
+        .select("id")
+        .single();
       if (error) throw error;
+      // Aviso por email aos membros que não desativaram nas permissões.
+      if (row?.id) {
+        notifyCommunityPostByEmail({ data: { postId: row.id } }).catch((e) =>
+          console.error("[community] email announce failed", e),
+        );
+      }
     },
     onSuccess: () => {
       setContent("");
