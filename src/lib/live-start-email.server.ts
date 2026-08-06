@@ -4,6 +4,7 @@
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { sendEmail, emailTemplates, getUserEmailAndName } from "@/lib/email.server";
+import { optedOutUserIds } from "@/lib/community-email.server";
 
 
 const MAX_BATCH = 500;
@@ -32,7 +33,13 @@ export async function sendLiveStartEmails(liveId: string) {
   let skipped = 0;
   let failed = 0;
 
+  const optedOut = await optedOutUserIds("lives");
+
   for (const userId of userIds) {
+    if (optedOut.has(userId)) {
+      skipped += 1;
+      continue;
+    }
     const user = await getUserEmailAndName(userId);
     if (!user) {
       skipped += 1;

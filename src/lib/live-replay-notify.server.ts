@@ -40,6 +40,7 @@ export async function notifyReplayReady(liveId: string): Promise<{ sent: boolean
       if (error || !list?.users?.length) break;
       for (const u of list.users) {
         if (!u.email || !u.email_confirmed_at) continue;
+        if (optedOut.has(u.id)) continue;
         if (!allowed.has(u.id)) continue;
         const name =
           (u.user_metadata as { display_name?: string } | null)?.display_name ??
