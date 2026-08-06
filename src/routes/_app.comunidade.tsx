@@ -363,7 +363,13 @@ function CommunityPageInner() {
           <SidebarCard title="Membros online" subtitle={`${onlineMembers.length} online`}>
             <div className="grid grid-cols-5 gap-2">
               {onlineMembers.slice(0, 15).map((m) => (
-                <div key={m.id} className="group relative" title={m.display_name ?? "Membro"}>
+                <button
+                  type="button"
+                  key={m.id}
+                  onClick={() => openMember(m.id)}
+                  className="group relative transition hover:opacity-80"
+                  title={m.display_name ?? "Membro"}
+                >
                   <Avatar name={m.display_name ?? "Membro"} url={m.avatar_url} size={36} />
                   <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border-2 border-surface-1 bg-emerald-500" />
                 </div>
@@ -581,7 +587,7 @@ function LatestUpdatesCard({ posts }: { posts: Post[] }) {
               />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-medium text-foreground flex items-center gap-1">
-                  <span className="truncate">{p.author?.display_name ?? "Membro"}</span>
+                  <MemberNameButton userId={p.author_id}>{p.author?.display_name ?? "Membro"}</MemberNameButton>
                   {adminIds.has(p.author_id) && <VerifiedBadge size={12} />}
                 </p>
                 <p className="line-clamp-2 text-[11px] text-muted-foreground">
@@ -1238,7 +1244,7 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
           <Avatar name={authorName} url={post.author?.avatar_url ?? null} />
           <div>
             <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
-              <span>{authorName}</span>
+              <MemberNameButton userId={post.author_id}>{authorName}</MemberNameButton>
               {authorIsAdmin && <VerifiedBadge size={14} />}
             </p>
             <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
@@ -1550,7 +1556,7 @@ function CommentItem({
         <div className="rounded-2xl bg-surface-2 px-3.5 py-2">
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-medium text-foreground flex items-center gap-1">
-              <span>{comment.author?.display_name ?? "Membro"}</span>
+              <MemberNameButton userId={comment.author_id}>{comment.author?.display_name ?? "Membro"}</MemberNameButton>
               {authorIsAdmin && <VerifiedBadge size={12} />}
             </p>
             {isOwner && !editing && (
@@ -1782,7 +1788,7 @@ function ChatRoom({ user }: { user: User }) {
               <div className={cn("flex max-w-[75%] flex-col", mine && "items-end")}>
                 <div className="flex items-baseline gap-1.5">
                   <p className="text-[11px] font-medium text-foreground flex items-center gap-1">
-                    <span>{mine ? "Você" : name}</span>
+                    {mine ? <span>Você</span> : <MemberNameButton userId={m.author_id}>{name}</MemberNameButton>}
                     {adminIds.has(m.author_id) && <VerifiedBadge size={11} />}
                   </p>
                   <p className="text-[10px] text-muted-foreground">{timeAgo(m.created_at)}</p>
