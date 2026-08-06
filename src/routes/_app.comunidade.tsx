@@ -241,6 +241,14 @@ function useMyProfile(userId: string | null) {
 
 /* ---------------- Page ---------------- */
 function CommunityPage() {
+  return (
+    <MemberProfileProvider>
+      <CommunityPageInner />
+    </MemberProfileProvider>
+  );
+}
+
+function CommunityPageInner() {
   const user = useUser();
   const [tab, setTab] = useState<"feed" | "chat">("feed");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
