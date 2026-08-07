@@ -266,15 +266,21 @@ function EgressComposite() {
 
 function TileView({ tile, large }: { tile: Tile; large?: boolean }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const boundId = useRef<string | null>(null);
+  const trackId = tile.track?.id ?? null;
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    el.srcObject = tile.stream;
+    if (!el || !tile.track) return;
+    // Só voltamos a ligar o srcObject quando o track muda de facto: reatribuir
+    // o mesmo track faz o <video> voltar a preto por um instante (o "piscar").
+    if (boundId.current === trackId) return;
+    boundId.current = trackId;
+    el.srcObject = new MediaStream([tile.track]);
     el.muted = true;
     const p = el.play();
     if (p && typeof p.catch === "function") p.catch(() => {});
-  }, [tile.stream]);
+  }, [trackId, tile.track]);
 
   return (
     <div
@@ -288,7 +294,8 @@ function TileView({ tile, large }: { tile: Tile; large?: boolean }) {
           : "0 20px 60px rgba(0,0,0,0.45)",
       }}
     >
-      {tile.stream ? (
+      {tile.track ? (
+
         <video
           ref={ref}
           autoPlay
