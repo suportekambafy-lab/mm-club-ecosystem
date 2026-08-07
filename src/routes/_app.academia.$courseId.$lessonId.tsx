@@ -14,6 +14,7 @@ import {
   Circle,
   Loader2,
 } from "lucide-react";
+import { VideoWatermark } from "@/components/mm/video-watermark";
 import { coursesById } from "@/data/courses";
 import "@/data/admin-store";
 import { useAdminOverridesVersion } from "@/hooks/use-admin-overrides";
