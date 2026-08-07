@@ -745,7 +745,7 @@ function LessonEndOverlay({
             </button>
             <button
               type="button"
-              onClick={onAdvance}
+              onClick={handleAdvanceClick}
               className="relative inline-flex h-10 items-center gap-2 overflow-hidden rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft"
             >
               <span
@@ -755,13 +755,6 @@ function LessonEndOverlay({
               <span className="relative">Avançar ({remaining}s)</span>
             </button>
           </div>
-          <button
-            type="button"
-            onClick={onDismiss}
-            className="text-xs text-white/50 underline-offset-4 transition hover:text-white/80 hover:underline"
-          >
-            Cancelar
-          </button>
         </>
       ) : (
         <>
