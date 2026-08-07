@@ -60,6 +60,8 @@ function AdminAulas() {
     | null
   >(null);
   const [over, setOver] = useState<string | null>(null);
+  const [syncingAll, setSyncingAll] = useState(false);
+
 
   // Per-course working copy of modules. Seeded from overrides.modulesByCourse
   // or the current course.modules snapshot.
