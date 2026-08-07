@@ -156,3 +156,14 @@ export async function mutePublisher(
   const room = livekitRoomName(liveId, target);
   await svc.mutePublishedTrack(room, userId, trackSid, muted);
 }
+
+/** Encerra a sala LiveKit e desliga todos os participantes ligados. */
+export async function deleteLiveKitRoom(roomName: string) {
+  const svc = roomServiceClient();
+  try {
+    await svc.deleteRoom(roomName);
+  } catch (err) {
+    // Sala já não existe / nunca foi criada — nada a fazer.
+    console.warn("[livekit] deleteRoom failed", roomName, err);
+  }
+}
