@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { pandaThumbFromUrl } from "@/lib/course-duration";
+import { captureHlsFrame } from "@/lib/video-frame";
 
 /**
  * Resolve a Bunny Stream thumbnail from any supported URL.
@@ -48,6 +50,15 @@ function isBunnyEmbed(url: string): boolean {
   }
 }
 
+function isPanda(url: string): boolean {
+  try {
+    return new URL(url).hostname.endsWith("pandavideo.com.br");
+  } catch {
+    return false;
+  }
+}
+
+
 export function useBunnyThumb(url: string | null | undefined): {
   thumb: string | null;
   status: Status;
@@ -80,11 +91,34 @@ export function useBunnyThumb(url: string | null | undefined): {
       setStatus("done");
       return;
     }
+    if (isPanda(key)) {
+      const poster = pandaThumbFromUrl(key);
+      if (!poster) {
+        memory.set(key, null);
+        setStatus("done");
+        return;
+      }
+      let cancelledPanda = false;
+      setStatus("loading");
+      void captureHlsFrame(poster.replace(/thumbnail\.jpg$/, "playlist.m3u8")).then(
+        (frame) => {
+          if (cancelledPanda) return;
+          const resolved = frame ?? poster;
+          memory.set(key, resolved);
+          setThumb(resolved);
+          setStatus("done");
+        },
+      );
+      return () => {
+        cancelledPanda = true;
+      };
+    }
     if (!isBunnyEmbed(key)) {
       memory.set(key, null);
       setStatus("done");
       return;
     }
+
 
     let cancelled = false;
     setStatus("loading");
