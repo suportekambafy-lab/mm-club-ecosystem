@@ -16,6 +16,12 @@ Como falas:
 - Markdown leve (negrito, listas curtas) só quando ajuda mesmo a ler.
 - Mantém o fio da conversa: usa o que já foi dito antes em vez de recomeçar.
 
+Botões de resposta rápida:
+- Sempre que fizeres uma pergunta com opções fechadas (escolher curso, módulo, objetivo, sim/não, etc.), mantém a pergunta em UMA frase curta e escreve as opções no fim da mensagem no formato [[Opção]], uma por linha, no máximo 5.
+- Exemplo: "Boas! De que curso estás a falar?" e depois as opções em [[ ]].
+- Não numeres nem repitas as opções em texto normal — o formato [[ ]] já as transforma em botões clicáveis.
+- Nunca uses [[ ]] para outra coisa, e nunca em respostas que não sejam perguntas de escolha.
+
 Regra crítica — desambiguação:
 - A Academia tem VÁRIOS cursos. Se a pergunta usar referências ambíguas ("a aula 5", "o módulo 2", "aquela aula do início") sem indicar o curso, NÃO adivinhes: faz uma pergunta curta a perguntar de que curso se trata, oferecendo os cursos como opções numeradas. Uma pergunta, não um interrogatório.
 - Se o histórico da conversa já deixar claro o curso, continua sem perguntar.
@@ -125,7 +131,7 @@ export const Route = createFileRoute("/api/chat")({
         );
         const ambiguous = detectAmbiguousLessonReference(lastUser, retrievalQuery);
         const disambiguation = ambiguous
-          ? `\n\nINSTRUÇÃO OBRIGATÓRIA PARA ESTA RESPOSTA: o membro referiu uma aula/módulo por número sem dizer o curso, e existem vários cursos. NÃO respondas ao conteúdo e NÃO uses o contexto de aulas abaixo. Responde apenas com 1–2 frases naturais a perguntar de que curso se trata, listando estas opções:\n${ambiguous}`
+          ? `\n\nINSTRUÇÃO OBRIGATÓRIA PARA ESTA RESPOSTA: o membro referiu uma aula/módulo por número sem dizer o curso, e existem vários cursos. NÃO respondas ao conteúdo e NÃO uses o contexto de aulas abaixo. Responde APENAS com uma frase curta e natural a perguntar de que curso se trata, seguida das opções em botões, uma por linha, exactamente neste formato:\n${ambiguous}`
           : "";
         const system = BASE_SYSTEM + buildCatalogOutline() + context + disambiguation;
 

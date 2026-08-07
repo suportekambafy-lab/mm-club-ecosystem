@@ -241,8 +241,13 @@ function SuporteIAPage() {
             </div>
           )}
 
-          {messages.map((m) => (
-            <Bubble key={m.id} message={m} />
+          {messages.map((m, i) => (
+            <Bubble
+              key={m.id}
+              message={m}
+              onPick={send}
+              interactive={!isBusy && i === messages.length - 1}
+            />
           ))}
 
           {status === "submitted" && <TypingIndicator />}
@@ -338,11 +343,36 @@ function messageText(m: UIMessage): string {
     .join("");
 }
 
-function Bubble({ message }: { message: UIMessage }) {
+const OPTION_RE = /\[\[([^\]\n]{1,80})\]\]/g;
+
+function splitOptions(raw: string): { text: string; options: string[] } {
+  const options: string[] = [];
+  for (const m of raw.matchAll(OPTION_RE)) {
+    const value = m[1].trim();
+    if (value && !options.includes(value)) options.push(value);
+  }
+  const text = raw
+    .replace(OPTION_RE, "")
+    .replace(/^[\s]*[-•*]\s*$/gm, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return { text, options: options.slice(0, 5) };
+}
+
+function Bubble({
+  message,
+  onPick,
+  interactive,
+}: {
+  message: UIMessage;
+  onPick?: (text: string) => void;
+  interactive?: boolean;
+}) {
   const isUser = message.role === "user";
-  const text = messageText(message);
+  const raw = messageText(message);
+  const { text, options } = isUser ? { text: raw, options: [] as string[] } : splitOptions(raw);
   return (
-    <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>
+    <div className={cn("flex flex-col gap-2", isUser ? "items-end" : "items-start")}>
       <div
         className={cn(
           "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
@@ -359,6 +389,21 @@ function Bubble({ message }: { message: UIMessage }) {
           </div>
         )}
       </div>
+      {!isUser && options.length > 0 && (
+        <div className="flex max-w-[95%] flex-wrap gap-2">
+          {options.map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              disabled={!interactive}
+              onClick={() => onPick?.(opt)}
+              className="rounded-full border border-primary/40 bg-primary/10 px-3.5 py-1.5 text-xs font-medium text-primary transition hover:bg-primary hover:text-primary-foreground disabled:opacity-40"
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

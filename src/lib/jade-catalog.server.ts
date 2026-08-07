@@ -46,5 +46,5 @@ export function detectAmbiguousLessonReference(
     return haystack.includes(title) || haystack.includes(c.id.toLowerCase());
   });
   if (mentioned.length === 1) return null;
-  return courses.map((c, i) => `${i + 1}. ${c.title}`).join("\n");
+  return courses.map((c) => `[[${c.title}]]`).join("\n");
 }
