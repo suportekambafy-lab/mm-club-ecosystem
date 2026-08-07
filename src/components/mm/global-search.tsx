@@ -118,11 +118,9 @@ export function GlobalSearch({ variant = "bar" }: { variant?: "bar" | "icon" }) 
       ) : (
         <div
           className={cn(
-            "absolute left-0 top-0 z-50 overflow-hidden border bg-surface-1 transition-all duration-200",
-            open
-              ? "rounded-[22px] border-primary/50 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.6)]"
-              : "rounded-full border-border",
-            variant === "icon" ? (open ? "w-80" : "w-72") : "right-0",
+            "absolute left-0 top-0 z-50 overflow-hidden rounded-2xl border border-border bg-surface-1",
+            open && "border-border",
+            variant === "icon" ? "w-72" : "right-0",
           )}
         >
           <div className="flex h-10 items-center gap-2.5 px-4">
