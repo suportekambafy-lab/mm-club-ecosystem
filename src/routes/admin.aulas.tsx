@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { MediaField } from "@/components/mm/media-field";
 import { LessonKnowledgePanel } from "@/components/mm/lesson-knowledge-panel";
+import { LessonResourcesEditor } from "@/components/mm/lesson-resources-editor";
 import { courses } from "@/data/courses";
 import {
   applyOverrides,
@@ -577,6 +578,14 @@ function AdminAulas() {
                                   helper="Imagem usada em ‘Continua a assistir’ e nas capas da Academia."
                                 />
                               </div>
+
+                              <LessonResourcesEditor
+                                keyPrefix={`lessons/${current.id}/${l.id}`}
+                                description={l.description}
+                                links={l.links}
+                                materials={l.materials}
+                                onChange={(patch) => updateLesson(mi, li, patch)}
+                              />
 
                               <LessonKnowledgePanel
                                 courseId={current.id}

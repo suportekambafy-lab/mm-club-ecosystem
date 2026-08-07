@@ -2,7 +2,7 @@
  * Upload allow-lists. The client checks these for fast feedback; storage RLS
  * scopes every path to the owner so a bypass still can't write elsewhere.
  */
-export type UploadKind = "image" | "video" | "media";
+export type UploadKind = "image" | "video" | "media" | "document";
 
 const IMAGE_TYPES = [
   "image/jpeg",
@@ -18,6 +18,23 @@ const VIDEO_TYPES = [
   "video/x-m4v",
 ];
 
+const DOC_TYPES = [
+  "application/pdf",
+  "application/zip",
+  "application/x-zip-compressed",
+  "application/x-7z-compressed",
+  "application/vnd.rar",
+  "application/x-rar-compressed",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "text/plain",
+  "text/csv",
+];
+
 const LIMITS: Record<UploadKind, { types: string[]; maxBytes: number; label: string }> = {
   image: { types: IMAGE_TYPES, maxBytes: 15 * 1024 * 1024, label: "imagem (JPG, PNG, WEBP, GIF) até 15 MB" },
   video: { types: VIDEO_TYPES, maxBytes: 2 * 1024 * 1024 * 1024, label: "vídeo (MP4, MOV, WEBM) até 2 GB" },
@@ -25,6 +42,11 @@ const LIMITS: Record<UploadKind, { types: string[]; maxBytes: number; label: str
     types: [...IMAGE_TYPES, ...VIDEO_TYPES],
     maxBytes: 2 * 1024 * 1024 * 1024,
     label: "imagem até 15 MB ou vídeo até 2 GB",
+  },
+  document: {
+    types: DOC_TYPES,
+    maxBytes: 200 * 1024 * 1024,
+    label: "documento (PDF, ZIP, DOC, XLS, PPT, TXT, CSV) até 200 MB",
   },
 };
 
