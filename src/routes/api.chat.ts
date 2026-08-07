@@ -126,14 +126,14 @@ export const Route = createFileRoute("/api/chat")({
         const lastUser = extractLastUserText(messages as UIMessage[]);
         const retrievalQuery = extractRecentUserText(messages as UIMessage[]) || lastUser;
         const context = retrievalQuery ? await buildKnowledgeContext(retrievalQuery, key) : "";
-        const { buildCatalogOutline, detectAmbiguousLessonReference } = await import(
-          "@/lib/jade-catalog.server"
-        );
-        const ambiguous = detectAmbiguousLessonReference(lastUser, retrievalQuery);
+        const { buildCatalogOutline, detectAmbiguousLessonReference, loadEffectiveCourses } =
+          await import("@/lib/jade-catalog.server");
+        const catalog = await loadEffectiveCourses();
+        const ambiguous = detectAmbiguousLessonReference(lastUser, retrievalQuery, catalog);
         const disambiguation = ambiguous
           ? `\n\nINSTRUÇÃO OBRIGATÓRIA PARA ESTA RESPOSTA: o membro referiu uma aula/módulo por número sem dizer o curso, e existem vários cursos. NÃO respondas ao conteúdo e NÃO uses o contexto de aulas abaixo. Responde APENAS com uma frase curta e natural a perguntar de que curso se trata, seguida das opções em botões, uma por linha, exactamente neste formato:\n${ambiguous}`
           : "";
-        const system = BASE_SYSTEM + buildCatalogOutline() + context + disambiguation;
+        const system = BASE_SYSTEM + buildCatalogOutline(catalog) + context + disambiguation;
 
         const gateway = createLovableAiGatewayProvider(key);
         const model = gateway("google/gemini-3.5-flash");
