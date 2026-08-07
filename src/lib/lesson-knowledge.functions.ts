@@ -72,7 +72,10 @@ async function embedBatch(inputs: string[], apiKey: string): Promise<number[][]>
   return out;
 }
 
-function resolveDirectMediaUrl(url: string): string {
+function resolveDirectMediaUrl(input: string): string {
+  // Limpa espaços acidentais colados no URL (ex.: ".../ embed/?v=...").
+  const url = (input ?? "").replace(/\s+/g, "").trim();
+
   // Bunny Stream iframe embed → direct HLS playlist via pull zone env var.
   const m = url.match(/iframe\.mediadelivery\.net\/(?:embed|play)\/(\d+)\/([0-9a-f-]{36})/i);
   if (m) {
@@ -82,6 +85,22 @@ function resolveDirectMediaUrl(url: string): string {
       return `https://${pullZone}.b-cdn.net/${guid}/playlist.m3u8`;
     }
   }
+
+  // Panda Video embed → HLS directo no CDN de entrega (b-vz-<zona>).
+  //  player-vz-<zona>.tv.pandavideo.com.br/embed/?v=<id>
+  //  player.pandavideo.com.br/embed/?v=<id>  (sem zona → não resolvível)
+  //  → https://b-vz-<zona>.tv.pandavideo.com.br/<id>/playlist.m3u8
+  if (/pandavideo\.com(\.br)?/i.test(url) && !/\.(m3u8|mp4|mp3|m4a|webm|mov)(\?|$)/i.test(url)) {
+    const videoId = url.match(/[?&]v=([0-9a-f-]{8,})/i)?.[1] ?? url.match(/videos\/([0-9a-f-]{8,})/i)?.[1];
+    const zone =
+      url.match(/(?:player|b)-vz-([0-9a-z-]+)\.tv\.pandavideo\.com\.br/i)?.[1] ??
+      process.env.PANDA_DELIVERY_ZONE ||
+      undefined;
+    if (videoId && zone) {
+      return `https://b-vz-${zone}.tv.pandavideo.com.br/${videoId}/playlist.m3u8`;
+    }
+  }
+
   return url;
 }
 
