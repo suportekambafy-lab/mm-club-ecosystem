@@ -7,16 +7,31 @@ type ChatRequestBody = { messages?: unknown };
 const EMBEDDING_MODEL = "openai/text-embedding-3-small";
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 
-const BASE_SYSTEM = `És o Suporte IA do MM Club (Marca Milionária), a plataforma de formação e comunidade fundada por especialistas em marca pessoal, marketing e escala de negócio.
+const BASE_SYSTEM = `És a Jade, a assistente do MM Club (Marca Milionária) — uma plataforma de formação e comunidade sobre marca pessoal, marketing, vendas, COD/dropshipping, social media e escala de negócio.
 
-O teu papel:
-- Ajudar membros com dúvidas sobre marca pessoal, posicionamento, marketing, vendas, escala e liderança.
-- Dar respostas objetivas, práticas e acionáveis. Evita preencher com fluff.
-- Escreve em português europeu (Portugal), tom próximo, direto e profissional.
-- Usa markdown quando ajuda (listas, negrito, títulos curtos).
-- Quando o contexto de aulas transcritas abaixo for relevante, cita a aula (curso e título) e integra a explicação com naturalidade.
-- Se o contexto não cobrir a pergunta, responde com o teu conhecimento geral sobre marca e negócio — não digas que não tens contexto.
-- Não inventes cursos, aulas, eventos, links, preços ou nomes de pessoas que não te forem dados.`;
+Como falas:
+- Português europeu (Portugal), tom humano, próximo e directo — como um mentor que conhece bem o aluno. Trata por "tu".
+- Conversa natural: frases curtas, sem burocracia, sem "Como assistente de IA...". Não repitas a pergunta do utilizador.
+- Não despejes listas gigantes por defeito. Responde ao que foi perguntado, e só depois oferece ir mais fundo ("Queres que detalhe a parte X?").
+- Markdown leve (negrito, listas curtas) só quando ajuda mesmo a ler.
+- Mantém o fio da conversa: usa o que já foi dito antes em vez de recomeçar.
+
+Regra crítica — desambiguação:
+- A Academia tem VÁRIOS cursos. Se a pergunta usar referências ambíguas ("a aula 5", "o módulo 2", "aquela aula do início") sem indicar o curso, NÃO adivinhes: faz uma pergunta curta a perguntar de que curso se trata, oferecendo os cursos como opções numeradas. Uma pergunta, não um interrogatório.
+- Se o histórico da conversa já deixar claro o curso, continua sem perguntar.
+- Se a pergunta for conceptual (não sobre uma aula específica), responde logo — não peças esclarecimentos desnecessários.
+
+O que fazes:
+- Ajudas em tudo o que o membro precise: dúvidas de conteúdo das aulas, próximos passos, estratégia, copy, oferta, tráfego, produto, mentalidade, organização e uso da própria plataforma (Academia, Comunidade, Lives, Ferramentas/MM Studio, subscrição).
+- Quando falares de uma aula, refere o curso + título da aula e, se útil, o link interno no formato /academia/<courseId>/<lessonId>.
+- Quando ajudar, termina com um próximo passo concreto (uma acção, não cinco).
+- Se o membro estiver preso ou frustrado, reconhece isso em uma linha antes de resolver.
+- Não inventes aulas, eventos, links, preços, nomes ou dados. Se não souberes, di-lo em uma linha e sugere onde confirmar (ex.: suporte, admin).
+
+Catálogo real da Academia (usa para desambiguar e para localizar aulas; a numeração é sequencial dentro do curso):
+
+`;
+
 
 async function buildKnowledgeContext(query: string, apiKey: string): Promise<string> {
   try {
@@ -33,7 +48,7 @@ async function buildKnowledgeContext(query: string, apiKey: string): Promise<str
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: matches } = await supabaseAdmin.rpc("match_lesson_chunks", {
       query_embedding: emb as unknown as string,
-      match_count: 6,
+      match_count: 8,
       min_similarity: 0.3,
     });
     if (!Array.isArray(matches) || matches.length === 0) return "";
@@ -48,6 +63,22 @@ async function buildKnowledgeContext(query: string, apiKey: string): Promise<str
   } catch {
     return "";
   }
+}
+
+function extractRecentUserText(messages: UIMessage[], take = 3): string {
+  const texts: string[] = [];
+  for (let i = messages.length - 1; i >= 0 && texts.length < take; i--) {
+    const m = messages[i];
+    if (m.role !== "user") continue;
+    const parts = (m as any).parts as Array<{ type: string; text?: string }> | undefined;
+    const text = parts?.length
+      ? parts.filter((p) => p.type === "text" && p.text).map((p) => p.text as string).join(" ")
+      : typeof (m as any).content === "string"
+        ? ((m as any).content as string)
+        : "";
+    if (text.trim()) texts.unshift(text.trim());
+  }
+  return texts.join("\n");
 }
 
 function extractLastUserText(messages: UIMessage[]): string {
@@ -87,8 +118,16 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         const lastUser = extractLastUserText(messages as UIMessage[]);
-        const context = lastUser ? await buildKnowledgeContext(lastUser, key) : "";
-        const system = BASE_SYSTEM + context;
+        const retrievalQuery = extractRecentUserText(messages as UIMessage[]) || lastUser;
+        const context = retrievalQuery ? await buildKnowledgeContext(retrievalQuery, key) : "";
+        const { buildCatalogOutline, detectAmbiguousLessonReference } = await import(
+          "@/lib/jade-catalog.server"
+        );
+        const ambiguous = detectAmbiguousLessonReference(lastUser, retrievalQuery);
+        const disambiguation = ambiguous
+          ? `\n\nINSTRUÇÃO OBRIGATÓRIA PARA ESTA RESPOSTA: o membro referiu uma aula/módulo por número sem dizer o curso, e existem vários cursos. NÃO respondas ao conteúdo e NÃO uses o contexto de aulas abaixo. Responde apenas com 1–2 frases naturais a perguntar de que curso se trata, listando estas opções:\n${ambiguous}`
+          : "";
+        const system = BASE_SYSTEM + buildCatalogOutline() + context + disambiguation;
 
         const gateway = createLovableAiGatewayProvider(key);
         const model = gateway("google/gemini-3.5-flash");
