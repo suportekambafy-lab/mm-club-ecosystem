@@ -363,6 +363,7 @@ type SaveLessonProgress = ReturnType<typeof useLessonProgress>["saveProgress"];
 type PlayerJsPlayer = {
   on: (event: string, callback: (data?: { seconds?: number; duration?: number }) => void) => void;
   off?: (event: string, callback?: (data?: { seconds?: number; duration?: number }) => void) => void;
+  play?: () => void;
   setCurrentTime: (seconds: number) => void;
   getCurrentTime: (callback: (seconds: number) => void) => void;
 };
