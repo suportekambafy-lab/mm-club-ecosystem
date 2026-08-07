@@ -147,7 +147,18 @@ function LessonPlayer() {
                 source={source}
                 startSeconds={deepLinkSeconds ?? row?.progress_seconds ?? 0}
                 saveProgress={saveProgress}
+                nextTitle={next?.lesson.title ?? null}
+                onAdvance={
+                  next
+                    ? () =>
+                        navigate({
+                          to: "/academia/$courseId/$lessonId",
+                          params: { courseId: course.id, lessonId: next.lesson.id },
+                        })
+                    : undefined
+                }
               />
+
             ) : (
               <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
                 <div className="absolute inset-0 flex items-center justify-center">
