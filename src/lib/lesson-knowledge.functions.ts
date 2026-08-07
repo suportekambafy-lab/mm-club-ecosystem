@@ -90,11 +90,20 @@ function resolveDirectMediaUrl(input: string): string {
   //  player-vz-<zona>.tv.pandavideo.com.br/embed/?v=<id>
   //  player.pandavideo.com.br/embed/?v=<id>  (sem zona → não resolvível)
   //  → https://b-vz-<zona>.tv.pandavideo.com.br/<id>/playlist.m3u8
-  if (/pandavideo\.com(\.br)?/i.test(url) && !/\.(m3u8|mp4|mp3|m4a|webm|mov)(\?|$)/i.test(url)) {
-    const videoId = url.match(/[?&]v=([0-9a-f-]{8,})/i)?.[1] ?? url.match(/videos\/([0-9a-f-]{8,})/i)?.[1];
+  if (/pandavideo\.com(?:\.br)?/i.test(url) && !/\.(m3u8|mp4|mp3|m4a|webm|mov)(?:\?|$)/i.test(url)) {
+    let parsed: URL | undefined;
+    try {
+      parsed = new URL(url);
+    } catch {
+      parsed = undefined;
+    }
+    const videoId =
+      parsed?.searchParams.get("v")?.match(/[0-9a-f-]{8,}/i)?.[0] ??
+      url.match(/[?&]v=([0-9a-f-]{8,})/i)?.[1] ??
+      url.match(/videos\/([0-9a-f-]{8,})/i)?.[1];
     const zone =
-      url.match(/(?:player|b)-vz-([0-9a-z-]+)\.tv\.pandavideo\.com\.br/i)?.[1] ??
-      (process.env.PANDA_DELIVERY_ZONE || undefined);
+      parsed?.hostname.match(/^(?:player|b)-vz-(.+?)\.tv\.pandavideo\.com\.br$/i)?.[1] ??
+      process.env.PANDA_DELIVERY_ZONE;
     if (videoId && zone) {
       return `https://b-vz-${zone}.tv.pandavideo.com.br/${videoId}/playlist.m3u8`;
     }
@@ -820,7 +829,7 @@ export async function runAutoTranscribeTick(): Promise<{
       lesson_id: c.lessonId,
       course_title: c.courseTitle,
       lesson_title: c.lessonTitle,
-      video_url: c.videoUrl,
+      video_url: resolveDirectMediaUrl(c.videoUrl),
       status: "transcribing",
       error: null,
       model: TRANSCRIBE_MODEL,
