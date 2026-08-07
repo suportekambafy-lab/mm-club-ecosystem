@@ -757,7 +757,9 @@ export async function runAutoTranscribeTick(): Promise<{
   for (const r of (existing ?? []) as any[]) {
     const key = `${r.course_id}::${r.lesson_id}`;
     const ts = r.updated_at ? new Date(r.updated_at).getTime() : 0;
-    if (r.status === "ready") {
+    if (r.status === "ready" || r.status === "skipped") {
+      // "skipped": posta de parte manualmente (ou URL não suportado). Nunca
+      // volta à fila até um admin premir "Retomar".
       skip.add(key);
     } else if (r.status === "partial") {
       // Aula longa a ser transcrita por partes: retoma quase de imediato,
@@ -771,6 +773,7 @@ export async function runAutoTranscribeTick(): Promise<{
       if (now - ts < ERROR_COOLDOWN_MS) skip.add(key);
     }
   }
+
 
   // Prioriza aulas já começadas (partial/error/lock preso), depois novas.
   const errorSet = new Set(
