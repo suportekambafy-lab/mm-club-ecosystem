@@ -8,7 +8,7 @@
  * The engine (LiveKit) is bootstrapped by useRoomState; this component
  * only reads the abstract RoomState / RoomActions.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useRoomState } from "@/hooks/use-room-state";
 import type { RoomActions, RoomState, StageLayout } from "@/lib/room-state";
@@ -24,6 +24,7 @@ import {
   endLive,
   raiseHand,
   leaveStage,
+  leaveRoom,
   inviteToStage,
   promoteToStage,
   demoteFromStage,
@@ -49,6 +50,7 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
   const endLiveFn = useServerFn(endLive);
   const raiseHandFn = useServerFn(raiseHand);
   const leaveStageFn = useServerFn(leaveStage);
+  const leaveRoomFn = useServerFn(leaveRoom);
   const inviteFn = useServerFn(inviteToStage);
   const promoteFn = useServerFn(promoteToStage);
   const demoteFn = useServerFn(demoteFromStage);
@@ -219,7 +221,7 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
 
       {/* Reserved controls dock: never covers shared content or browser UI. */}
       <div className="pointer-events-none z-20 flex min-w-0 shrink-0 justify-center border-t border-white/5 bg-black px-2 pb-[max(0.45rem,env(safe-area-inset-bottom))] pt-1.5 sm:px-3">
-        <RoomControls state={state} actions={actions} onLeave={onLeave} />
+        <RoomControls state={state} actions={actions} onLeave={() => void handleLeave()} />
       </div>
     </div>
   );
