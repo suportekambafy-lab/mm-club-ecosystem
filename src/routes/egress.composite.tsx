@@ -21,6 +21,8 @@ export const Route = createFileRoute("/egress/composite")({
     meta: [
       { title: "MM Club — Gravação" },
       { name: "robots", content: "noindex, nofollow" },
+      // Impede a barra do Google Translate de aparecer dentro da gravação.
+      { name: "google", content: "notranslate" },
     ],
   }),
 });
@@ -31,8 +33,9 @@ type Tile = {
   isHost: boolean;
   isSpeaking: boolean;
   isScreen: boolean;
-  /** MediaStream to bind to the <video> element. */
-  stream: MediaStream | null;
+  /** Track de vídeo a ligar ao <video>. Mantemos o track (não um MediaStream
+   * novo a cada render) para o vídeo não piscar em cada evento da sala. */
+  track: MediaStreamTrack | null;
 };
 
 function initials(name: string) {
@@ -44,10 +47,29 @@ function initials(name: string) {
     .join("");
 }
 
+
 function EgressComposite() {
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [ready, setReady] = useState(false);
   const audioHost = useRef<HTMLDivElement>(null);
+
+  // O browser da gravação é Chrome: sem isto aparece a barra "Google Translate"
+  // sobreposta ao vídeo gravado.
+  useEffect(() => {
+    const html = document.documentElement;
+    html.setAttribute("lang", "pt-PT");
+    html.setAttribute("translate", "no");
+    html.classList.add("notranslate");
+    document.body.classList.add("notranslate");
+    if (!document.querySelector('meta[name="google"][content="notranslate"]')) {
+      const m = document.createElement("meta");
+      m.name = "google";
+      m.content = "notranslate";
+      document.head.appendChild(m);
+    }
+  }, []);
+
+
 
   useEffect(() => {
     let cancelled = false;
@@ -94,7 +116,7 @@ function EgressComposite() {
               isHost,
               isSpeaking: false,
               isScreen: true,
-              stream: new MediaStream([screen.track.mediaStreamTrack]),
+              track: screen.track.mediaStreamTrack ?? null,
             });
           }
           next.push({
@@ -103,18 +125,28 @@ function EgressComposite() {
             isHost,
             isSpeaking: Boolean(p.isSpeaking),
             isScreen: false,
-            stream: cam?.track ? new MediaStream([cam.track.mediaStreamTrack]) : null,
+            track: cam?.track?.mediaStreamTrack ?? null,
           });
         }
 
-        // Screen share first, then hosts, then speakers, then the rest.
+        // Ordem estável: partilha de ecrã, depois hosts, depois alfabética.
+        // (Quem fala não altera a ordem — senão a grelha salta e o vídeo pisca.)
         next.sort((a, b) => {
-          const score = (t: Tile) =>
-            (t.isScreen ? 8 : 0) + (t.isHost ? 4 : 0) + (t.isSpeaking ? 2 : 0);
-          return score(b) - score(a);
+          const score = (t: Tile) => (t.isScreen ? 8 : 0) + (t.isHost ? 4 : 0);
+          const diff = score(b) - score(a);
+          if (diff !== 0) return diff;
+          return a.id.localeCompare(b.id);
         });
-        setTiles(next);
+        setTiles((prev) => {
+          // Evita re-render (e o consequente flicker) quando nada mudou.
+          const sig = (list: Tile[]) =>
+            list
+              .map((t) => `${t.id}|${t.name}|${t.track?.id ?? "-"}|${t.isSpeaking ? 1 : 0}`)
+              .join(";");
+          return sig(prev) === sig(next) ? prev : next;
+        });
       };
+
 
       const attachAudio = (track: any) => {
         if (track.kind !== "audio" || !audioHost.current) return;
@@ -252,15 +284,21 @@ function EgressComposite() {
 
 function TileView({ tile, large }: { tile: Tile; large?: boolean }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const boundId = useRef<string | null>(null);
+  const trackId = tile.track?.id ?? null;
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    el.srcObject = tile.stream;
+    if (!el || !tile.track) return;
+    // Só voltamos a ligar o srcObject quando o track muda de facto: reatribuir
+    // o mesmo track faz o <video> voltar a preto por um instante (o "piscar").
+    if (boundId.current === trackId) return;
+    boundId.current = trackId;
+    el.srcObject = new MediaStream([tile.track]);
     el.muted = true;
     const p = el.play();
     if (p && typeof p.catch === "function") p.catch(() => {});
-  }, [tile.stream]);
+  }, [trackId, tile.track]);
 
   return (
     <div
@@ -274,7 +312,8 @@ function TileView({ tile, large }: { tile: Tile; large?: boolean }) {
           : "0 20px 60px rgba(0,0,0,0.45)",
       }}
     >
-      {tile.stream ? (
+      {tile.track ? (
+
         <video
           ref={ref}
           autoPlay
