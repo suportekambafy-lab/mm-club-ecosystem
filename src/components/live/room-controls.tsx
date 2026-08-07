@@ -349,6 +349,11 @@ function HostLeaveMenu({
       // redirects everyone to the replay view. Still, close the room locally.
       if (onLeave) onLeave();
       else await actions.leave();
+    } catch (err) {
+      console.error("[room-controls] endLive failed", err);
+      toast.error("Não foi possível terminar a live", {
+        description: err instanceof Error ? err.message : "Tenta novamente.",
+      });
     } finally {
       setEnding(false);
       setConfirming(false);

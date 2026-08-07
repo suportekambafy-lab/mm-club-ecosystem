@@ -161,6 +161,7 @@ interface ParticipantRow {
   banned: boolean;
   guest_name?: string | null;
   is_guest?: boolean | null;
+  left_at?: string | null;
 }
 
 export interface UseRoomStateArgs {
@@ -209,7 +210,7 @@ export function useRoomState({
     async function hydrate() {
       const [liveRes, partsRes] = await Promise.all([
         supabase.from("lives").select("id,status,mode,stage_layout,spotlight_user_id,started_at,went_live_at,backstage_started_at,enabled_modules").eq("id", liveId).maybeSingle(),
-        supabase.from("live_participants").select("id,user_id,role,room,on_stage,mic_allowed,cam_allowed,screen_allowed,hand_raised_at,invited_to_stage_at,banned,guest_name,is_guest").eq("live_id", liveId),
+        supabase.from("live_participants").select("id,user_id,role,room,on_stage,mic_allowed,cam_allowed,screen_allowed,hand_raised_at,invited_to_stage_at,banned,guest_name,is_guest,left_at").eq("live_id", liveId).is("left_at", null),
       ]);
       if (!mounted) return;
       if (liveRes.data) setLive(liveRes.data as LiveRow);
@@ -253,6 +254,8 @@ export function useRoomState({
           setParticipants((prev) => {
             if (payload.eventType === "DELETE") return prev.filter((r) => r.id !== (payload.old as ParticipantRow).id);
             const row = payload.new as ParticipantRow;
+            // Quem saiu deixa de contar (e sai do palco/audiência) de imediato.
+            if (row.left_at) return prev.filter((r) => r.id !== row.id);
             const idx = prev.findIndex((r) => r.id === row.id);
             if (idx === -1) return [...prev, row];
             const copy = prev.slice();

@@ -198,7 +198,10 @@ export const goLive = createServerFn({ method: "POST" })
     await requireHostOrCohost(supabase, data.liveId, userId);
 
     const nowIso = new Date().toISOString();
-    const { error } = await supabase
+    // `lives` só é editável por admins via RLS — a permissão de host/cohost já
+    // foi validada acima, por isso a escrita usa o cliente privilegiado.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
       .from("lives")
       .update({ status: "live", started_at: nowIso, went_live_at: nowIso })
       .eq("id", data.liveId);
@@ -246,18 +249,28 @@ export const endLive = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     await requireHostOrCohost(supabase, data.liveId, userId);
 
+    // `lives` só é editável por admins via RLS; host/cohost já foi validado.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
     // Stop server-side recording if one is running.
-    const { data: liveRow } = await supabase
+    const { data: liveRow } = await supabaseAdmin
       .from("lives")
       .select("recording_egress_id,cf_live_input_id")
       .eq("id", data.liveId)
       .maybeSingle();
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from("lives")
       .update({ status: "ended", ended_at: new Date().toISOString() })
       .eq("id", data.liveId);
     if (error) throw new Error(error.message);
+
+    // Liberta a sala: ninguém fica a contar como presente depois de encerrar.
+    await supabaseAdmin
+      .from("live_participants")
+      .update({ left_at: new Date().toISOString(), on_stage: false, hand_raised_at: null })
+      .eq("live_id", data.liveId)
+      .is("left_at", null);
 
     try {
       const { livekitRoomName } = await import("./livekit.server");
@@ -265,12 +278,23 @@ export const endLive = createServerFn({ method: "POST" })
       if (liveRow?.recording_egress_id) await stopLiveRecording(liveRow.recording_egress_id);
       // Belt and braces: stop any other active egress bound to this room.
       await stopAllRoomEgress(livekitRoomName(data.liveId, "main"));
-      await supabase
+      await supabaseAdmin
         .from("lives")
         .update({ recording_stopped_at: new Date().toISOString() })
         .eq("id", data.liveId);
     } catch (err) {
       console.warn("[endLive] recording stop failed", err);
+    }
+
+    // Desliga todos da sala LiveKit — sem isto, quem ficou com a página aberta
+    // continua ligado ao vídeo mesmo depois de a live terminar.
+    try {
+      const { livekitRoomName } = await import("./livekit.server");
+      const { deleteLiveKitRoom } = await import("./livekit.server");
+      await deleteLiveKitRoom(livekitRoomName(data.liveId, "main"));
+      await deleteLiveKitRoom(livekitRoomName(data.liveId, "backstage"));
+    } catch (err) {
+      console.warn("[endLive] room teardown failed", err);
     }
 
     // Best effort: if Cloudflare already finalized a recording, attach it now.
@@ -285,7 +309,7 @@ export const endLive = createServerFn({ method: "POST" })
           .filter((v) => v.readyToStream)
           .sort((a, b) => (b.duration ?? 0) - (a.duration ?? 0))[0];
         if (ready?.uid) {
-          await supabase
+          await supabaseAdmin
             .from("lives")
             .update({ recording_video_uid: ready.uid, status: "published" })
             .eq("id", data.liveId);
@@ -299,6 +323,25 @@ export const endLive = createServerFn({ method: "POST" })
     await logEvent(supabase, { liveId: data.liveId, actorId: userId, kind: "end_live" });
     return { ok: true };
   });
+
+/**
+ * leaveRoom — o membro saiu da sala (botão "Sair", fechar o separador).
+ * Liberta o lugar para que a contagem de pessoas reflita a realidade.
+ */
+export const leaveRoom = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => liveIdOnly.parse(i))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase
+      .from("live_participants")
+      .update({ left_at: new Date().toISOString(), on_stage: false, hand_raised_at: null })
+      .eq("live_id", data.liveId)
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 
 
 // -------------------------------------------------------------------------
