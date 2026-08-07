@@ -564,7 +564,10 @@ function TrackedVideoPlayer({
       const message = payload?.message;
       if (!message || typeof message !== "string" || !message.startsWith("panda_")) return;
       const seconds = typeof payload?.currentTime === "number" ? payload.currentTime : null;
-      if (message === "panda_ended") persist(seconds ?? lastSavedRef.current, true, true);
+      if (message === "panda_ended") {
+        persist(seconds ?? lastSavedRef.current, true, true);
+        setEnded(true);
+      }
       else if (message === "panda_pause" && seconds != null) persist(seconds, false, true);
       else if (message === "panda_timeupdate" && seconds != null) persist(seconds);
     };
