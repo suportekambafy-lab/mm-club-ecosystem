@@ -10,6 +10,7 @@ import {
   GripVertical,
   ChevronDown,
   Send,
+  RefreshCw,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -26,8 +27,13 @@ import {
 } from "@/data/admin-store";
 import type { Module, Lesson } from "@/data/types";
 import { parseVideoUrl } from "@/lib/video-source";
+import {
+  resolveVideoDurationSeconds,
+  formatDurationFromSeconds,
+} from "@/lib/video-duration";
 import { cn } from "@/lib/utils";
 import { notifyNewLesson } from "@/lib/broadcasts.functions";
+
 
 export const Route = createFileRoute("/admin/aulas")({
   component: AdminAulas,
