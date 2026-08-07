@@ -94,8 +94,7 @@ function resolveDirectMediaUrl(input: string): string {
     const videoId = url.match(/[?&]v=([0-9a-f-]{8,})/i)?.[1] ?? url.match(/videos\/([0-9a-f-]{8,})/i)?.[1];
     const zone =
       url.match(/(?:player|b)-vz-([0-9a-z-]+)\.tv\.pandavideo\.com\.br/i)?.[1] ??
-      process.env.PANDA_DELIVERY_ZONE ||
-      undefined;
+      (process.env.PANDA_DELIVERY_ZONE || undefined);
     if (videoId && zone) {
       return `https://b-vz-${zone}.tv.pandavideo.com.br/${videoId}/playlist.m3u8`;
     }
