@@ -80,9 +80,11 @@ export function lessonThumb(
     }
     const bunny = bunnyThumbFromUrl(raw);
     if (bunny) return bunny;
-    const panda = pandaThumbFromUrl(raw);
-    if (panda) return panda;
+    // Panda: return null so the async hook can capture a mid-video frame
+    // (Panda's static thumbnail.jpg is the first frame, usually black).
+    if (pandaThumbFromUrl(raw)) return null;
   }
+
   // Fall back to an explicit lesson cover only when no video thumb is available.
   if (lesson?.cover) return lesson.cover;
   if (course.logo) return course.logo;
