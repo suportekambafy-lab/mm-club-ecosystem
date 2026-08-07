@@ -89,11 +89,34 @@ export function useBunnyThumb(url: string | null | undefined): {
       setStatus("done");
       return;
     }
+    if (isPanda(key)) {
+      const poster = pandaThumbFromUrl(key);
+      if (!poster) {
+        memory.set(key, null);
+        setStatus("done");
+        return;
+      }
+      let cancelledPanda = false;
+      setStatus("loading");
+      void captureHlsFrame(poster.replace(/thumbnail\.jpg$/, "playlist.m3u8")).then(
+        (frame) => {
+          if (cancelledPanda) return;
+          const resolved = frame ?? poster;
+          memory.set(key, resolved);
+          setThumb(resolved);
+          setStatus("done");
+        },
+      );
+      return () => {
+        cancelledPanda = true;
+      };
+    }
     if (!isBunnyEmbed(key)) {
       memory.set(key, null);
       setStatus("done");
       return;
     }
+
 
     let cancelled = false;
     setStatus("loading");
