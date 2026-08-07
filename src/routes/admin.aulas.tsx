@@ -188,6 +188,38 @@ function AdminAulas() {
     );
   };
 
+  // Sync every lesson duration with the real video length.
+  const syncAllDurations = async () => {
+    if (syncingAll) return;
+    setSyncingAll(true);
+    let ok = 0;
+    let fail = 0;
+    try {
+      const next = modules.map((m) => ({ ...m, lessons: [...m.lessons] }));
+      for (const mod of next) {
+        for (let li = 0; li < mod.lessons.length; li++) {
+          const lesson = mod.lessons[li];
+          const url = (lesson.videoUrl ?? "").trim();
+          if (!url) continue;
+          const seconds = await resolveVideoDurationSeconds(url);
+          if (seconds) {
+            mod.lessons[li] = { ...lesson, duration: formatDurationFromSeconds(seconds) };
+            ok += 1;
+          } else {
+            fail += 1;
+          }
+        }
+      }
+      patchModules(openCourse, next);
+      toast.success(
+        `Durações sincronizadas: ${ok}${fail ? ` · sem leitura: ${fail}` : ""}`,
+      );
+    } finally {
+      setSyncingAll(false);
+    }
+  };
+
+
   // ------ Drag & drop reorder ------
   const reorderModule = (from: number, to: number) => {
     if (from === to || to < 0 || to >= modules.length) return;
