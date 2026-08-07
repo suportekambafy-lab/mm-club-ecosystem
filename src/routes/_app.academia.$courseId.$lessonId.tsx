@@ -525,6 +525,7 @@ function TrackedVideoPlayer({
     };
     const onEnded = (data?: { seconds?: number; duration?: number }) => {
       persist(data?.duration ?? data?.seconds ?? lastSavedRef.current, true, true);
+      setEnded(true);
     };
     const onPause = () => {
       player?.getCurrentTime((seconds) => persist(seconds, false, true));
