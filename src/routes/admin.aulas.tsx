@@ -10,6 +10,7 @@ import {
   GripVertical,
   ChevronDown,
   Send,
+  RefreshCw,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -26,8 +27,13 @@ import {
 } from "@/data/admin-store";
 import type { Module, Lesson } from "@/data/types";
 import { parseVideoUrl } from "@/lib/video-source";
+import {
+  resolveVideoDurationSeconds,
+  formatDurationFromSeconds,
+} from "@/lib/video-duration";
 import { cn } from "@/lib/utils";
 import { notifyNewLesson } from "@/lib/broadcasts.functions";
+
 
 export const Route = createFileRoute("/admin/aulas")({
   component: AdminAulas,
@@ -54,6 +60,8 @@ function AdminAulas() {
     | null
   >(null);
   const [over, setOver] = useState<string | null>(null);
+  const [syncingAll, setSyncingAll] = useState(false);
+
 
   // Per-course working copy of modules. Seeded from overrides.modulesByCourse
   // or the current course.modules snapshot.
@@ -182,6 +190,38 @@ function AdminAulas() {
     );
   };
 
+  // Sync every lesson duration with the real video length.
+  const syncAllDurations = async () => {
+    if (syncingAll) return;
+    setSyncingAll(true);
+    let ok = 0;
+    let fail = 0;
+    try {
+      const next = modules.map((m) => ({ ...m, lessons: [...m.lessons] }));
+      for (const mod of next) {
+        for (let li = 0; li < mod.lessons.length; li++) {
+          const lesson = mod.lessons[li];
+          const url = (lesson.videoUrl ?? "").trim();
+          if (!url) continue;
+          const seconds = await resolveVideoDurationSeconds(url);
+          if (seconds) {
+            mod.lessons[li] = { ...lesson, duration: formatDurationFromSeconds(seconds) };
+            ok += 1;
+          } else {
+            fail += 1;
+          }
+        }
+      }
+      patchModules(openCourse, next);
+      toast.success(
+        `Durações sincronizadas: ${ok}${fail ? ` · sem leitura: ${fail}` : ""}`,
+      );
+    } finally {
+      setSyncingAll(false);
+    }
+  };
+
+
   // ------ Drag & drop reorder ------
   const reorderModule = (from: number, to: number) => {
     if (from === to || to < 0 || to >= modules.length) return;
@@ -303,14 +343,26 @@ function AdminAulas() {
               {modules.reduce((s, m) => s + m.lessons.length, 0)} aulas ·{" "}
               <span className="text-muted-foreground/70">arrasta pelo ⠿ para reordenar</span>
             </p>
-            <button
-              type="button"
-              onClick={addModule}
-              className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
-            >
-              <FolderPlus className="h-3.5 w-3.5" />
-              Adicionar módulo
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void syncAllDurations()}
+                disabled={syncingAll}
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-1 px-4 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground disabled:opacity-50"
+              >
+                <RefreshCw className={cn("h-3.5 w-3.5", syncingAll && "animate-spin")} />
+                {syncingAll ? "A sincronizar..." : "Sincronizar durações"}
+              </button>
+              <button
+                type="button"
+                onClick={addModule}
+                className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
+              >
+                <FolderPlus className="h-3.5 w-3.5" />
+                Adicionar módulo
+              </button>
+            </div>
+
           </div>
 
           {modules.map((m, mi) => {
@@ -493,17 +545,12 @@ function AdminAulas() {
                                     onChange={(e) => updateLesson(mi, li, { title: e.target.value })}
                                   />
                                 </label>
-                                <label className="block">
-                                  <span className={labelCls}>Duração</span>
-                                  <input
-                                    className={inputCls}
-                                    placeholder="12m"
-                                    value={l.duration}
-                                    onChange={(e) =>
-                                      updateLesson(mi, li, { duration: e.target.value })
-                                    }
-                                  />
-                                </label>
+                                <DurationField
+                                  value={l.duration}
+                                  videoUrl={l.videoUrl}
+                                  onChange={(v) => updateLesson(mi, li, { duration: v })}
+                                />
+
                               </div>
 
                               <div className="mt-3">
@@ -606,6 +653,69 @@ function IconBtn({
     </button>
   );
 }
+
+function DurationField(props: {
+  value: string;
+  videoUrl?: string;
+  onChange: (value: string) => void;
+}) {
+  const { value, videoUrl, onChange } = props;
+  const [syncing, setSyncing] = useState(false);
+  const autoRef = useRef<string | null>(null);
+
+  const sync = async (silent = false) => {
+    const url = (videoUrl ?? "").trim();
+    if (!url || syncing) return;
+    setSyncing(true);
+    try {
+      const seconds = await resolveVideoDurationSeconds(url);
+      if (seconds) {
+        onChange(formatDurationFromSeconds(seconds));
+        if (!silent) toast.success(`Duração sincronizada: ${formatDurationFromSeconds(seconds)}`);
+      } else if (!silent) {
+        toast.error("Não foi possível ler a duração deste vídeo — escreve manualmente.");
+      }
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  // Auto-sync when the video changes and the duration is still a placeholder.
+  useEffect(() => {
+    const url = (videoUrl ?? "").trim();
+    if (!url || autoRef.current === url) return;
+    autoRef.current = url;
+    const v = (value ?? "").trim();
+    if (v && v !== "10m" && v !== "12m") return;
+    void sync(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoUrl]);
+
+  return (
+    <label className="block">
+      <span className={labelCls}>Duração</span>
+      <div className="flex items-center gap-2">
+        <input
+          className={inputCls}
+          placeholder="12:34"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        <button
+          type="button"
+          onClick={() => void sync()}
+          disabled={syncing || !(videoUrl ?? "").trim()}
+          title="Sincronizar com a duração real do vídeo"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-2 text-[11px] font-medium text-primary transition hover:bg-primary/20 disabled:opacity-40"
+        >
+          <RefreshCw className={cn("h-3.5 w-3.5", syncing && "animate-spin")} />
+          {syncing ? "..." : "Auto"}
+        </button>
+      </div>
+    </label>
+  );
+}
+
 
 function NotifyLessonButton(props: {
   courseId: string;
