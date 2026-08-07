@@ -118,6 +118,35 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
     }
   };
 
+  // Sair da sala: liberta o lugar no servidor (a contagem baixa em tempo real),
+  // desliga o motor de vídeo e só depois navega.
+  const handleLeave = useCallback(async () => {
+    try {
+      await leaveRoomFn({ data: { liveId } });
+    } catch {
+      /* melhor esforço — a navegação nunca deve ficar bloqueada */
+    }
+    try {
+      await actions.leave();
+    } catch {
+      /* ignore */
+    }
+    onLeave?.();
+  }, [leaveRoomFn, liveId, actions, onLeave]);
+
+  // Fechar o separador / recarregar também liberta o lugar.
+  useEffect(() => {
+    const release = () => {
+      void leaveRoomFn({ data: { liveId } }).catch(() => {});
+    };
+    window.addEventListener("pagehide", release);
+    return () => {
+      window.removeEventListener("pagehide", release);
+      release();
+    };
+  }, [leaveRoomFn, liveId]);
+
+
   // Força o desbloqueio do áudio remoto: tenta imediatamente e, se o browser
   // exigir gesto do utilizador, ao primeiro toque/clique/tecla.
   useEffect(() => {
