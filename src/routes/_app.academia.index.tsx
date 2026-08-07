@@ -42,8 +42,9 @@ function resumeLessonOf(course: Course, progress: ProgressByCourse) {
 function AcademiaPage() {
   const { progress, loaded } = useUserProgress();
   useAdminOverridesVersion();
-  const liveCourses = useMemo(() => allCourses.filter((c) => isCourseReleased(c)), []);
-  const upcomingCourses = useMemo(() => allCourses.filter((c) => !isCourseReleased(c)), []);
+  const { canOpen } = useCourseAccess();
+  const liveCourses = useMemo(() => allCourses.filter((c) => canOpen(c)), [canOpen]);
+  const upcomingCourses = useMemo(() => allCourses.filter((c) => !canOpen(c)), [canOpen]);
 
   const { continuing, enrolled, featured } = useMemo(() => {
     const enrolled = liveCourses.map((c) => ({
