@@ -21,6 +21,8 @@ export const Route = createFileRoute("/egress/composite")({
     meta: [
       { title: "MM Club — Gravação" },
       { name: "robots", content: "noindex, nofollow" },
+      // Impede a barra do Google Translate de aparecer dentro da gravação.
+      { name: "google", content: "notranslate" },
     ],
   }),
 });
@@ -31,8 +33,9 @@ type Tile = {
   isHost: boolean;
   isSpeaking: boolean;
   isScreen: boolean;
-  /** MediaStream to bind to the <video> element. */
-  stream: MediaStream | null;
+  /** Track de vídeo a ligar ao <video>. Mantemos o track (não um MediaStream
+   * novo a cada render) para o vídeo não piscar em cada evento da sala. */
+  track: MediaStreamTrack | null;
 };
 
 function initials(name: string) {
@@ -43,6 +46,7 @@ function initials(name: string) {
     .map((w) => w[0]?.toUpperCase() ?? "")
     .join("");
 }
+
 
 function EgressComposite() {
   const [tiles, setTiles] = useState<Tile[]>([]);
