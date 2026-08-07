@@ -83,6 +83,7 @@ import { Route as ApiPublicHooksPushNotificationsRouteImport } from './routes/ap
 import { Route as ApiPublicHooksLivesRecordingCheckRouteImport } from './routes/api/public/hooks/lives-recording-check'
 import { Route as ApiPublicHooksLivesAnnounceCatchupRouteImport } from './routes/api/public/hooks/lives-announce-catchup'
 import { Route as ApiPublicHooksLiveTestEmailRouteImport } from './routes/api/public/hooks/live-test-email'
+import { Route as ApiPublicHooksLiveForceEndRouteImport } from './routes/api/public/hooks/live-force-end'
 import { Route as ApiPublicHooksInactivityNudgeRouteImport } from './routes/api/public/hooks/inactivity-nudge'
 import { Route as ApiPublicHooksEmailRelayRouteImport } from './routes/api/public/hooks/email-relay'
 import { Route as ApiPublicHooksBillingTickRouteImport } from './routes/api/public/hooks/billing-tick'
@@ -484,6 +485,12 @@ const ApiPublicHooksLiveTestEmailRoute =
     path: '/api/public/hooks/live-test-email',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksLiveForceEndRoute =
+  ApiPublicHooksLiveForceEndRouteImport.update({
+    id: '/api/public/hooks/live-force-end',
+    path: '/api/public/hooks/live-force-end',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksInactivityNudgeRoute =
   ApiPublicHooksInactivityNudgeRouteImport.update({
     id: '/api/public/hooks/inactivity-nudge',
@@ -661,6 +668,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
   '/api/public/hooks/email-relay': typeof ApiPublicHooksEmailRelayRoute
   '/api/public/hooks/inactivity-nudge': typeof ApiPublicHooksInactivityNudgeRoute
+  '/api/public/hooks/live-force-end': typeof ApiPublicHooksLiveForceEndRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
@@ -746,6 +754,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
   '/api/public/hooks/email-relay': typeof ApiPublicHooksEmailRelayRoute
   '/api/public/hooks/inactivity-nudge': typeof ApiPublicHooksInactivityNudgeRoute
+  '/api/public/hooks/live-force-end': typeof ApiPublicHooksLiveForceEndRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
@@ -840,6 +849,7 @@ export interface FileRoutesById {
   '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
   '/api/public/hooks/email-relay': typeof ApiPublicHooksEmailRelayRoute
   '/api/public/hooks/inactivity-nudge': typeof ApiPublicHooksInactivityNudgeRoute
+  '/api/public/hooks/live-force-end': typeof ApiPublicHooksLiveForceEndRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
@@ -934,6 +944,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/billing-tick'
     | '/api/public/hooks/email-relay'
     | '/api/public/hooks/inactivity-nudge'
+    | '/api/public/hooks/live-force-end'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
@@ -1019,6 +1030,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/billing-tick'
     | '/api/public/hooks/email-relay'
     | '/api/public/hooks/inactivity-nudge'
+    | '/api/public/hooks/live-force-end'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
@@ -1112,6 +1124,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/billing-tick'
     | '/api/public/hooks/email-relay'
     | '/api/public/hooks/inactivity-nudge'
+    | '/api/public/hooks/live-force-end'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
@@ -1154,6 +1167,7 @@ export interface RootRouteChildren {
   ApiPublicHooksBillingTickRoute: typeof ApiPublicHooksBillingTickRoute
   ApiPublicHooksEmailRelayRoute: typeof ApiPublicHooksEmailRelayRoute
   ApiPublicHooksInactivityNudgeRoute: typeof ApiPublicHooksInactivityNudgeRoute
+  ApiPublicHooksLiveForceEndRoute: typeof ApiPublicHooksLiveForceEndRoute
   ApiPublicHooksLiveTestEmailRoute: typeof ApiPublicHooksLiveTestEmailRoute
   ApiPublicHooksLivesAnnounceCatchupRoute: typeof ApiPublicHooksLivesAnnounceCatchupRoute
   ApiPublicHooksLivesRecordingCheckRoute: typeof ApiPublicHooksLivesRecordingCheckRoute
@@ -1688,6 +1702,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksLiveTestEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/live-force-end': {
+      id: '/api/public/hooks/live-force-end'
+      path: '/api/public/hooks/live-force-end'
+      fullPath: '/api/public/hooks/live-force-end'
+      preLoaderRoute: typeof ApiPublicHooksLiveForceEndRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/inactivity-nudge': {
       id: '/api/public/hooks/inactivity-nudge'
       path: '/api/public/hooks/inactivity-nudge'
@@ -2028,6 +2049,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksBillingTickRoute: ApiPublicHooksBillingTickRoute,
   ApiPublicHooksEmailRelayRoute: ApiPublicHooksEmailRelayRoute,
   ApiPublicHooksInactivityNudgeRoute: ApiPublicHooksInactivityNudgeRoute,
+  ApiPublicHooksLiveForceEndRoute: ApiPublicHooksLiveForceEndRoute,
   ApiPublicHooksLiveTestEmailRoute: ApiPublicHooksLiveTestEmailRoute,
   ApiPublicHooksLivesAnnounceCatchupRoute:
     ApiPublicHooksLivesAnnounceCatchupRoute,
