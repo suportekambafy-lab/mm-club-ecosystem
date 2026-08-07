@@ -161,6 +161,7 @@ interface ParticipantRow {
   banned: boolean;
   guest_name?: string | null;
   is_guest?: boolean | null;
+  left_at?: string | null;
 }
 
 export interface UseRoomStateArgs {
