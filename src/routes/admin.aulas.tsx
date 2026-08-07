@@ -343,14 +343,26 @@ function AdminAulas() {
               {modules.reduce((s, m) => s + m.lessons.length, 0)} aulas ·{" "}
               <span className="text-muted-foreground/70">arrasta pelo ⠿ para reordenar</span>
             </p>
-            <button
-              type="button"
-              onClick={addModule}
-              className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
-            >
-              <FolderPlus className="h-3.5 w-3.5" />
-              Adicionar módulo
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void syncAllDurations()}
+                disabled={syncingAll}
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-1 px-4 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground disabled:opacity-50"
+              >
+                <RefreshCw className={cn("h-3.5 w-3.5", syncingAll && "animate-spin")} />
+                {syncingAll ? "A sincronizar..." : "Sincronizar durações"}
+              </button>
+              <button
+                type="button"
+                onClick={addModule}
+                className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
+              >
+                <FolderPlus className="h-3.5 w-3.5" />
+                Adicionar módulo
+              </button>
+            </div>
+
           </div>
 
           {modules.map((m, mi) => {
