@@ -11,11 +11,11 @@ import { JadeCallOverlay } from "@/components/mm/jade-call";
 export const Route = createFileRoute("/_app/jade")({
   head: () => ({
     meta: [
-      { title: "Suporte IA — MM Club" },
+      { title: "MM Inteligente — MM Club" },
       {
         name: "description",
         content:
-          "Suporte IA do MM Club: pergunte sobre marca, marketing, vendas, escala e liderança.",
+          "MM Inteligente do MM Club: pergunte sobre marca, marketing, vendas, escala e liderança.",
       },
     ],
   }),
@@ -188,7 +188,7 @@ function SuporteIAPage() {
 
       <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-8 md:py-4">
         <div className="min-w-0">
-          <h1 className="font-display text-lg text-foreground">Suporte IA</h1>
+          <h1 className="font-display text-lg text-foreground">MM Inteligente</h1>
           <p className="text-xs text-muted-foreground">
             Marca, marketing, vendas e escala.
           </p>
@@ -249,7 +249,7 @@ function SuporteIAPage() {
 
           {error && (
             <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              Ocorreu um erro ao contactar o Suporte IA. Tenta novamente.
+              Ocorreu um erro ao contactar o MM Inteligente. Tenta novamente.
             </div>
           )}
         </div>
@@ -325,7 +325,7 @@ function SuporteIAPage() {
           <p className="mx-auto mt-2 max-w-2xl text-center text-[11px] text-destructive">{recError}</p>
         )}
         <p className="mx-auto mt-2 max-w-2xl text-center text-[10px] text-muted-foreground">
-          Suporte IA pode cometer erros. Verifica informação importante.
+          MM Inteligente pode cometer erros. Verifica informação importante.
         </p>
       </div>
     </div>

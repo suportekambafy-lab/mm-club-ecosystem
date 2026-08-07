@@ -108,7 +108,7 @@ export function LessonKnowledgePanel({
       >
         <span className="flex items-center gap-2 text-sm font-medium">
           <Brain className="h-4 w-4 text-primary" />
-          Base de conhecimento MM Intelligence
+          Base de conhecimento MM Inteligente
           {status === "ready" && (
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-500">
               <CheckCircle2 className="h-3 w-3" /> pronto

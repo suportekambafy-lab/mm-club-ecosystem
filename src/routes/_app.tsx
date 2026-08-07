@@ -132,7 +132,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { to: "/dashboard", label: "Início", icon: Home, exact: true },
   { to: "/academia", label: "Academia", icon: GraduationCap },
-  { to: "/jade", label: "MM Intelligence", icon: Star },
+  { to: "/jade", label: "MM Inteligente", icon: Star },
   { to: "/lives", label: "Ao Vivo", icon: Radio },
   { to: "/comunidade", label: "Comunidade", icon: Users },
   { to: "/shorts", label: "MM Shorts", icon: Clapperboard },
@@ -283,7 +283,7 @@ function AppLayout() {
   }, [authUser, pathname, router]);
 
   // Native-app feel: lock the page itself, let only the content column scroll
-  // (same approach used on the Suporte IA chat screen).
+  // (same approach used on the MM Inteligente chat screen).
   useEffect(() => {
     const html = document.documentElement;
     const body = document.body;
@@ -699,7 +699,7 @@ const mobileTabs: TabItem[] = [
   { to: "/dashboard", label: "Início", icon: Home, exact: true },
   { to: "/shorts", label: "Shorts", icon: Clapperboard },
   { to: "/comunidade", label: "Comunidade", icon: Users },
-  { to: "/jade", label: "MM AI", icon: Star },
+  { to: "/jade", label: "MM Inteligente", icon: Star },
 ];
 
 function MobileTabBar({

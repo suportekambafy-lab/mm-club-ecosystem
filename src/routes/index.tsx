@@ -38,7 +38,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "O clube privado da Marca Milionária. Academia, Suporte IA, comunidade, lives e ferramentas para empreendedores portugueses. Premium por design.",
+          "O clube privado da Marca Milionária. Academia, MM Inteligente, comunidade, lives e ferramentas para empreendedores portugueses. Premium por design.",
       },
     ],
   }),
@@ -102,7 +102,7 @@ function Nav({ scrolled }: { scrolled: boolean }) {
         <nav className="hidden items-center gap-8 md:flex">
           {[
             ["Academia", "academia"],
-            ["Suporte IA", "jade"],
+            ["MM Inteligente", "jade"],
             ["Comunidade", "comunidade"],
             ["Lives", "lives"],
             ["Planos", "planos"],
@@ -176,7 +176,7 @@ function Hero() {
           </h1>
 
           <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Cursos, Suporte IA, comunidade, lives e ferramentas — desenhados
+            Cursos, MM Inteligente, comunidade, lives e ferramentas — desenhados
             como um único produto. Para empreendedores portugueses que exigem
             padrão.
           </p>
@@ -260,7 +260,7 @@ function Hero() {
                 <Sparkles className="h-4 w-4" />
               </div>
               <div className="pr-1">
-                <p className="text-xs font-semibold">Suporte IA online</p>
+                <p className="text-xs font-semibold">MM Inteligente online</p>
                 <p className="text-[10px] text-muted-foreground">Resposta em segundos</p>
               </div>
             </div>
@@ -293,7 +293,7 @@ function Hero() {
 /* ---------- TRUST STRIP ---------- */
 
 function TrustStrip() {
-  const items = ["Método Marca Milionária", "Comunidade privada", "Suporte IA 24/7", "Lives semanais", "Ferramentas exclusivas"];
+  const items = ["Método Marca Milionária", "Comunidade privada", "MM Inteligente 24/7", "Lives semanais", "Ferramentas exclusivas"];
   return (
     <section className="border-y border-border py-8">
       <div className="mx-auto max-w-7xl px-6">
@@ -471,7 +471,7 @@ function FeatureJade() {
     <FeatureSection
       id="jade"
       index="02"
-      eyebrow="Suporte IA"
+      eyebrow="MM Inteligente"
       reverse
       title={
         <>
@@ -479,7 +479,7 @@ function FeatureJade() {
           <br /> a qualquer hora.
         </>
       }
-      description="MM Intelligence — assistente treinada no método Marca Milionária. Faz perguntas, pede feedback, valida ideias — como se tivesses o Rui contigo, 24/7."
+      description="MM Inteligente — assistente treinada no método Marca Milionária. Faz perguntas, pede feedback, valida ideias — como se tivesses o Rui contigo, 24/7."
       bullets={[
         "Contexto completo do método MM",
         "Sugestões acionáveis, não respostas genéricas",
@@ -519,7 +519,7 @@ function FeatureJade() {
           <div className="mt-5 flex items-center gap-2 rounded-full border border-border bg-surface-2/60 px-4 py-2.5">
             <input
               readOnly
-              value="Escreve à MM Intelligence…"
+              value="Escreve à MM Inteligente…"
               className="flex-1 bg-transparent text-sm text-muted-foreground outline-none"
             />
             <button className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
@@ -835,7 +835,7 @@ function FinalCTA() {
               <ul className="mt-7 grid gap-2 text-sm sm:grid-cols-2">
                 {[
                   "Todos os cursos e módulos",
-                  "Suporte IA ilimitado",
+                  "MM Inteligente ilimitado",
                   "Comunidade privada",
                   "Lives + replays",
                   "Ferramentas e templates",

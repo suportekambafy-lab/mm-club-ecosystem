@@ -26,7 +26,7 @@ export const Route = createFileRoute("/checkout/")({
       {
         name: "description",
         content:
-          "Adesão ao MM Club: Academia completa, comunidade privada, lives, MM Studio e MM Intelligence. Mensal ou anual, cancelas quando quiseres.",
+          "Adesão ao MM Club: Academia completa, comunidade privada, lives, MM Studio e MM Inteligente. Mensal ou anual, cancelas quando quiseres.",
       },
       { property: "og:title", content: "Planos MM Club" },
       {
@@ -45,7 +45,7 @@ const INCLUDED = [
   "Academia completa e novos cursos",
   "Comunidade privada de empreendedores",
   "Lives e salas interativas + replays",
-  "MM Intelligence (assistente de IA)",
+  "MM Inteligente (assistente de IA)",
   "MM Studio para criativos e vídeo",
   "MM Shorts e eventos do clube",
 ];
