@@ -9,7 +9,7 @@ const memory = new Map<string, string | null>();
 
 export async function captureHlsFrame(
   playlistUrl: string,
-  atFraction = 0.18,
+  atFraction = 0.5,
 ): Promise<string | null> {
   if (typeof document === "undefined" || !playlistUrl) return null;
   if (memory.has(playlistUrl)) return memory.get(playlistUrl) ?? null;
