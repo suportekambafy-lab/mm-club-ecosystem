@@ -53,6 +53,24 @@ function EgressComposite() {
   const [ready, setReady] = useState(false);
   const audioHost = useRef<HTMLDivElement>(null);
 
+  // O browser da gravação é Chrome: sem isto aparece a barra "Google Translate"
+  // sobreposta ao vídeo gravado.
+  useEffect(() => {
+    const html = document.documentElement;
+    html.setAttribute("lang", "pt-PT");
+    html.setAttribute("translate", "no");
+    html.classList.add("notranslate");
+    document.body.classList.add("notranslate");
+    if (!document.querySelector('meta[name="google"][content="notranslate"]')) {
+      const m = document.createElement("meta");
+      m.name = "google";
+      m.content = "notranslate";
+      document.head.appendChild(m);
+    }
+  }, []);
+
+
+
   useEffect(() => {
     let cancelled = false;
     let room: any = null;
