@@ -241,6 +241,12 @@ function LessonPlayer() {
                 )}
               </div>
             </div>
+
+            <LessonResources
+              description={current.lesson.description}
+              links={current.lesson.links}
+              materials={current.lesson.materials}
+            />
           </div>
         </div>
       </div>
