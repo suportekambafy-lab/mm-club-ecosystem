@@ -602,6 +602,69 @@ function IconBtn({
   );
 }
 
+function DurationField(props: {
+  value: string;
+  videoUrl?: string;
+  onChange: (value: string) => void;
+}) {
+  const { value, videoUrl, onChange } = props;
+  const [syncing, setSyncing] = useState(false);
+  const autoRef = useRef<string | null>(null);
+
+  const sync = async (silent = false) => {
+    const url = (videoUrl ?? "").trim();
+    if (!url || syncing) return;
+    setSyncing(true);
+    try {
+      const seconds = await resolveVideoDurationSeconds(url);
+      if (seconds) {
+        onChange(formatDurationFromSeconds(seconds));
+        if (!silent) toast.success(`Duração sincronizada: ${formatDurationFromSeconds(seconds)}`);
+      } else if (!silent) {
+        toast.error("Não foi possível ler a duração deste vídeo — escreve manualmente.");
+      }
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  // Auto-sync when the video changes and the duration is still a placeholder.
+  useEffect(() => {
+    const url = (videoUrl ?? "").trim();
+    if (!url || autoRef.current === url) return;
+    autoRef.current = url;
+    const v = (value ?? "").trim();
+    if (v && v !== "10m" && v !== "12m") return;
+    void sync(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoUrl]);
+
+  return (
+    <label className="block">
+      <span className={labelCls}>Duração</span>
+      <div className="flex items-center gap-2">
+        <input
+          className={inputCls}
+          placeholder="12:34"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        <button
+          type="button"
+          onClick={() => void sync()}
+          disabled={syncing || !(videoUrl ?? "").trim()}
+          title="Sincronizar com a duração real do vídeo"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-2 text-[11px] font-medium text-primary transition hover:bg-primary/20 disabled:opacity-40"
+        >
+          <RefreshCw className={cn("h-3.5 w-3.5", syncing && "animate-spin")} />
+          {syncing ? "..." : "Auto"}
+        </button>
+      </div>
+    </label>
+  );
+}
+
+
 function NotifyLessonButton(props: {
   courseId: string;
   courseTitle: string;
