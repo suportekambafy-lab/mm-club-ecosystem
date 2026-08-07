@@ -48,7 +48,7 @@ async function buildKnowledgeContext(query: string, apiKey: string): Promise<str
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: matches } = await supabaseAdmin.rpc("match_lesson_chunks", {
       query_embedding: emb as unknown as string,
-      match_count: 6,
+      match_count: 8,
       min_similarity: 0.3,
     });
     if (!Array.isArray(matches) || matches.length === 0) return "";
@@ -63,6 +63,22 @@ async function buildKnowledgeContext(query: string, apiKey: string): Promise<str
   } catch {
     return "";
   }
+}
+
+function extractRecentUserText(messages: UIMessage[], take = 3): string {
+  const texts: string[] = [];
+  for (let i = messages.length - 1; i >= 0 && texts.length < take; i--) {
+    const m = messages[i];
+    if (m.role !== "user") continue;
+    const parts = (m as any).parts as Array<{ type: string; text?: string }> | undefined;
+    const text = parts?.length
+      ? parts.filter((p) => p.type === "text" && p.text).map((p) => p.text as string).join(" ")
+      : typeof (m as any).content === "string"
+        ? ((m as any).content as string)
+        : "";
+    if (text.trim()) texts.unshift(text.trim());
+  }
+  return texts.join("\n");
 }
 
 function extractLastUserText(messages: UIMessage[]): string {
@@ -102,8 +118,10 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         const lastUser = extractLastUserText(messages as UIMessage[]);
-        const context = lastUser ? await buildKnowledgeContext(lastUser, key) : "";
-        const system = BASE_SYSTEM + context;
+        const retrievalQuery = extractRecentUserText(messages as UIMessage[]) || lastUser;
+        const context = retrievalQuery ? await buildKnowledgeContext(retrievalQuery, key) : "";
+        const { buildCatalogOutline } = await import("@/lib/jade-catalog.server");
+        const system = BASE_SYSTEM + buildCatalogOutline() + context;
 
         const gateway = createLovableAiGatewayProvider(key);
         const model = gateway("google/gemini-3.5-flash");
