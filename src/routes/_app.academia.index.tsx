@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Play, Search, ChevronDown, Lock, Clock, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { courses as allCourses, isCourseReleased, formatCourseRelease } from "@/data/courses";
+import { courses as allCourses, formatCourseRelease } from "@/data/courses";
+import { useCourseAccess } from "@/hooks/use-course-release";
 import { useAdminOverridesVersion } from "@/hooks/use-admin-overrides";
 import { expertsById } from "@/data/experts";
 import { objectives } from "@/data/objectives";
@@ -42,8 +43,9 @@ function resumeLessonOf(course: Course, progress: ProgressByCourse) {
 function AcademiaPage() {
   const { progress, loaded } = useUserProgress();
   useAdminOverridesVersion();
-  const liveCourses = useMemo(() => allCourses.filter((c) => isCourseReleased(c)), []);
-  const upcomingCourses = useMemo(() => allCourses.filter((c) => !isCourseReleased(c)), []);
+  const { canOpen } = useCourseAccess();
+  const liveCourses = useMemo(() => allCourses.filter((c) => canOpen(c)), [canOpen]);
+  const upcomingCourses = useMemo(() => allCourses.filter((c) => !canOpen(c)), [canOpen]);
 
   const { continuing, enrolled, featured } = useMemo(() => {
     const enrolled = liveCourses.map((c) => ({
@@ -218,7 +220,7 @@ function AcademiaPage() {
             )}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {catalog.map((c) =>
-                isCourseReleased(c) ? (
+                canOpen(c) ? (
                   <PosterCard key={c.id} course={c} progress={progress} inGrid />
                 ) : (
                   <ComingSoonCard key={c.id} course={c} />
