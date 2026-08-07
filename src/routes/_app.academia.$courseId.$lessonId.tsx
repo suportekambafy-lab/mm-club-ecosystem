@@ -6,10 +6,8 @@ import {
   ChevronUp,
   ChevronDown,
   PlayCircle,
-  Download,
   MessagesSquare,
   ArrowRight,
-  Crown,
   CheckCircle2,
   Circle,
   Loader2,
@@ -25,6 +23,7 @@ import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { lessonThumb } from "@/lib/course-duration";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 import { TranscriptProgress } from "@/components/mm/transcript-progress";
+import { LessonResources } from "@/components/mm/lesson-resources";
 
 
 export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
@@ -210,19 +209,6 @@ function LessonPlayer() {
                     {completed ? "Concluída" : "Marcar concluída"}
                   </span>
                 </button>
-                <a
-                  href={videoUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="Abrir vídeo original"
-                  className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-surface-1 text-foreground transition hover:border-primary/40"
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                    <Crown className="h-2 w-2 fill-current" />
-                  </span>
-                </a>
-
                 <Link
                   to="/comunidade"
                   aria-label="Sala de discussão"
