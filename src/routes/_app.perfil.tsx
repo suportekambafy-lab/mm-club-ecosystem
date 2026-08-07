@@ -9,7 +9,8 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 import { SectionHeading } from "@/components/mm/section-heading";
-import { courses } from "@/data/courses";
+import { courses as allCourses } from "@/data/courses";
+import { useUserProgress, applyProgress } from "@/hooks/use-user-progress";
 import { courseCoverBackground } from "@/lib/course-cover";
 
 import { cn } from "@/lib/utils";
@@ -43,6 +44,7 @@ type ProfileRow = {
 };
 
 function ProfilePage() {
+  const { progress: userProgress } = useUserProgress();
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [loading, setLoading] = useState(true);
@@ -306,6 +308,7 @@ function ProfilePage() {
   const isAdmin = authUser ? adminIds.has(authUser.id) : false;
 
 
+  const courses = allCourses.map((c) => applyProgress(c, userProgress));
   const inProgress = courses.filter((c) => c.progress > 0 && c.progress < 1);
   const completed = courses.filter((c) => c.progress >= 1);
   const overall =
