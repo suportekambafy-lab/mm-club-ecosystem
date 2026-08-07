@@ -27,6 +27,17 @@ export interface Expert {
   expertise: string[];
 }
 
+export interface LessonLink {
+  label?: string;
+  url: string;
+}
+
+export interface LessonMaterial {
+  name: string;
+  url: string;
+  size?: number;
+}
+
 export interface Lesson {
   id: string;
   title: string;
@@ -34,6 +45,9 @@ export interface Lesson {
   completed?: boolean;
   videoUrl?: string;
   cover?: string; // URL for lesson thumbnail
+  description?: string;
+  links?: LessonLink[];
+  materials?: LessonMaterial[];
 }
 
 
