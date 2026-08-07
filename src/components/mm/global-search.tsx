@@ -99,7 +99,10 @@ export function GlobalSearch({ variant = "bar" }: { variant?: "bar" | "icon" }) 
   }
 
   return (
-    <div ref={wrapRef} className={cn("relative", variant === "bar" ? "w-full max-w-md" : "")}>
+    <div
+      ref={wrapRef}
+      className={cn("relative h-10", variant === "bar" ? "w-full max-w-md" : "w-10")}
+    >
       {variant === "icon" && !open ? (
         <button
           type="button"
@@ -115,47 +118,50 @@ export function GlobalSearch({ variant = "bar" }: { variant?: "bar" | "icon" }) 
       ) : (
         <div
           className={cn(
-            "flex h-10 items-center gap-2.5 rounded-full border bg-surface-1/70 px-4 transition",
-            open ? "border-primary/60 bg-surface-2/70" : "border-border",
-            variant === "icon" && "w-72",
+            "absolute left-0 top-0 z-50 overflow-hidden border bg-surface-1 transition-all duration-200",
+            open
+              ? "rounded-[22px] border-primary/50 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.6)]"
+              : "rounded-full border-border",
+            variant === "icon" ? (open ? "w-80" : "w-72") : "right-0",
           )}
         >
-          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <input
-            ref={inputRef}
-            value={term}
-            onChange={(e) => {
-              setTerm(e.target.value);
-              setOpen(true);
-            }}
-            onFocus={() => setOpen(true)}
-            onKeyDown={onKeyDown}
-            placeholder="Pesquisar no MM Club…"
-            aria-label="Pesquisar no MM Club"
-            className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
-          />
-          {term ? (
-            <button
-              type="button"
-              aria-label="Limpar"
-              onClick={() => {
-                setTerm("");
-                inputRef.current?.focus();
+          <div className="flex h-10 items-center gap-2.5 px-4">
+            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <input
+              ref={inputRef}
+              value={term}
+              onChange={(e) => {
+                setTerm(e.target.value);
+                setOpen(true);
               }}
-              className="text-muted-foreground transition hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          ) : (
-            <kbd className="hidden rounded border border-border bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground md:inline-flex">
-              ⌘K
-            </kbd>
-          )}
-        </div>
-      )}
+              onFocus={() => setOpen(true)}
+              onKeyDown={onKeyDown}
+              placeholder="Pesquisar no MM Club…"
+              aria-label="Pesquisar no MM Club"
+              className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+            />
+            {term ? (
+              <button
+                type="button"
+                aria-label="Limpar"
+                onClick={() => {
+                  setTerm("");
+                  inputRef.current?.focus();
+                }}
+                className="text-muted-foreground transition hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            ) : (
+              <kbd className="hidden rounded border border-border bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground md:inline-flex">
+                ⌘K
+              </kbd>
+            )}
+          </div>
 
-      {open && (
-        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-[min(60vh,420px)] overflow-y-auto overscroll-contain rounded-2xl border border-border bg-surface-1 p-1.5 shadow-2xl">
+          {open && (
+            <div className="max-h-[min(58vh,420px)] overflow-y-auto overscroll-contain border-t border-border/60 p-1.5">
+
           {flat.length === 0 ? (
             <p className="px-3 py-6 text-center text-sm text-muted-foreground">
               Sem resultados para “{term.trim()}”.
