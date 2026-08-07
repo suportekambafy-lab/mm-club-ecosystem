@@ -31,7 +31,7 @@ const BENEFITS = [
   "Acesso completo ao MM Club durante 3 meses",
   "Todos os cursos, aulas e novos lançamentos",
   "Comunidade privada, lives e ferramentas",
-  "Suporte MM Intelligence 24/7",
+  "Suporte MM Inteligente 24/7",
   "Apenas 1 € de validação do cartão — os 3 meses continuam grátis",
   "Cancelas quando quiseres antes do fim do trial",
   "Depois do 3.º mês, apenas 29,90 €/mês",

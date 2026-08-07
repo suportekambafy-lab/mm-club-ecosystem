@@ -100,7 +100,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "O clube privado da Marca Milionária. Academia, Suporte IA, comunidade, lives e ferramentas para empreendedores portugueses. Premium por design.",
+          "O clube privado da Marca Milionária. Academia, MM Inteligente, comunidade, lives e ferramentas para empreendedores portugueses. Premium por design.",
       },
       { name: "author", content: "Marca Milionária" },
       { name: "theme-color", content: "#0d0c0a" },
@@ -108,12 +108,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:description",
         content:
-          "O clube privado da Marca Milionária. Academia, Suporte IA, comunidade, lives e ferramentas para empreendedores portugueses. Premium por design.",
+          "O clube privado da Marca Milionária. Academia, MM Inteligente, comunidade, lives e ferramentas para empreendedores portugueses. Premium por design.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "MM Club — Ecossistema privado da Marca Milionária" },
-      { name: "twitter:description", content: "O clube privado da Marca Milionária. Academia, Suporte IA, comunidade, lives e ferramentas para empreendedores portugueses. Premium por design." },
+      { name: "twitter:description", content: "O clube privado da Marca Milionária. Academia, MM Inteligente, comunidade, lives e ferramentas para empreendedores portugueses. Premium por design." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/bf418ae8-168a-4717-89ff-021ffc2e0334" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/bf418ae8-168a-4717-89ff-021ffc2e0334" },
     ],

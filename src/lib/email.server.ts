@@ -193,7 +193,7 @@ export const emailTemplates = {
       html: layout(
         `Ativaste o teu acesso ${planLabel}.`,
         `<h1 style="font-size:28px;color:#ffffff;margin:0 0 12px;font-weight:600;line-height:1.2;">Bem-vindo, ${safe}.</h1>
-         <p style="font-size:16px;line-height:1.65;color:#d4d4d4;margin:0 0 20px;">Ativaste o teu acesso <strong style="color:#c9a961;">${plan}</strong>. Já tens acesso completo à Academia, MM Studio, MM Intelligence e à comunidade privada.</p>
+         <p style="font-size:16px;line-height:1.65;color:#d4d4d4;margin:0 0 20px;">Ativaste o teu acesso <strong style="color:#c9a961;">${plan}</strong>. Já tens acesso completo à Academia, MM Studio, MM Inteligente e à comunidade privada.</p>
          <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Sugestão para começar: entra em <em>Marca Milionária</em> — o método completo de posicionamento premium.</p>
          <p style="margin:0 0 8px;">${btn("Entrar no MM Club →", `${APP_URL}/dashboard`)}</p>`,
       ),
