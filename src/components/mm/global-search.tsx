@@ -197,8 +197,11 @@ export function GlobalSearch({ variant = "bar" }: { variant?: "bar" | "icon" }) 
               </div>
             ))
           )}
+            </div>
+          )}
         </div>
       )}
     </div>
+
   );
 }
