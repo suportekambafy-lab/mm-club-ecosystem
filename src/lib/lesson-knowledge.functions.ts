@@ -895,3 +895,93 @@ export async function runAutoTranscribeTick(): Promise<{
 }
 
 
+// -------- admin queue controls (skip / finalize partial / resume) --------
+
+const QueueActionInput = z.object({
+  courseId: z.string().min(1),
+  lessonId: z.string().min(1),
+  keepPartial: z.boolean().optional(),
+});
+
+/**
+ * Põe uma aula de parte na fila de transcrição. Se já existirem partes
+ * transcritas (aulas longas), com `keepPartial` guardamos a transcrição até
+ * onde a IA conseguiu e marcamos como concluída; caso contrário fica
+ * simplesmente "skipped" e deixa de ocupar workers.
+ */
+export const skipLessonTranscription = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => QueueActionInput.parse(raw))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: parts } = await supabaseAdmin
+      .from("lesson_transcript_parts")
+      .select("part_index,text")
+      .eq("course_id", data.courseId)
+      .eq("lesson_id", data.lessonId);
+
+    const rows = ((parts ?? []) as Array<{ part_index: number; text: string }>).sort(
+      (a, b) => a.part_index - b.part_index,
+    );
+    const partial = rows
+      .map((r) => r.text ?? "")
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (data.keepPartial && partial.length > 200) {
+      const { data: meta } = await supabaseAdmin
+        .from("lesson_transcripts")
+        .select("course_title,lesson_title,video_url")
+        .eq("course_id", data.courseId)
+        .eq("lesson_id", data.lessonId)
+        .maybeSingle();
+      await ingestTranscriptRaw({
+        courseId: data.courseId,
+        lessonId: data.lessonId,
+        courseTitle: (meta as any)?.course_title ?? null,
+        lessonTitle: (meta as any)?.lesson_title ?? null,
+        videoUrl: (meta as any)?.video_url ?? null,
+        transcript: partial,
+      });
+      await supabaseAdmin
+        .from("lesson_transcripts")
+        .update({ error: `parcial: ${rows.length} parte(s) transcritas` })
+        .eq("course_id", data.courseId)
+        .eq("lesson_id", data.lessonId);
+      await supabaseAdmin
+        .from("lesson_transcript_parts")
+        .delete()
+        .eq("course_id", data.courseId)
+        .eq("lesson_id", data.lessonId);
+      return { ok: true, finalized: true, chars: partial.length };
+    }
+
+    await supabaseAdmin.from("lesson_transcripts").upsert(
+      {
+        course_id: data.courseId,
+        lesson_id: data.lessonId,
+        status: "skipped",
+        error: "posta de parte manualmente",
+      },
+      { onConflict: "course_id,lesson_id" },
+    );
+    return { ok: true, finalized: false, chars: 0 };
+  });
+
+/** Volta a colocar a aula na fila (limpa lock/erro/skip). */
+export const resumeLessonTranscription = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => QueueActionInput.parse(raw))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
+      .from("lesson_transcripts")
+      .update({ status: "pending", error: null })
+      .eq("course_id", data.courseId)
+      .eq("lesson_id", data.lessonId);
+    return { ok: true };
+  });
