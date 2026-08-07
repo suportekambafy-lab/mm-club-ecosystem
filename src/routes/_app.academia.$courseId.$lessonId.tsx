@@ -535,6 +535,7 @@ function TrackedVideoPlayer({
       .then(() => {
         if (cancelled || !iframeRef.current || !window.playerjs?.Player) return;
         player = new window.playerjs.Player(iframeRef.current);
+        playerRef.current = player;
         player.on("ready", () => {
           if (cancelled) return;
           if (startRef.current > 3) player?.setCurrentTime(startRef.current);
