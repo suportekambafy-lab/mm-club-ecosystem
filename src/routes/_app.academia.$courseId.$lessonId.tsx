@@ -44,6 +44,7 @@ export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
 function LessonPlayer() {
   const { courseId, lessonId } = Route.useLoaderData();
   const { t: deepLinkSeconds } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const overridesVersion = useAdminOverridesVersion();
 
   // Recompute from (possibly-overridden) in-memory data so admin edits show up.
@@ -147,7 +148,18 @@ function LessonPlayer() {
                 source={source}
                 startSeconds={deepLinkSeconds ?? row?.progress_seconds ?? 0}
                 saveProgress={saveProgress}
+                nextTitle={next?.lesson.title ?? null}
+                onAdvance={
+                  next
+                    ? () =>
+                        navigate({
+                          to: "/academia/$courseId/$lessonId",
+                          params: { courseId: course.id, lessonId: next.lesson.id },
+                        })
+                    : undefined
+                }
               />
+
             ) : (
               <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -363,6 +375,7 @@ type SaveLessonProgress = ReturnType<typeof useLessonProgress>["saveProgress"];
 type PlayerJsPlayer = {
   on: (event: string, callback: (data?: { seconds?: number; duration?: number }) => void) => void;
   off?: (event: string, callback?: (data?: { seconds?: number; duration?: number }) => void) => void;
+  play?: () => void;
   setCurrentTime: (seconds: number) => void;
   getCurrentTime: (callback: (seconds: number) => void) => void;
 };
@@ -431,17 +444,24 @@ function TrackedVideoPlayer({
   source,
   startSeconds,
   saveProgress,
+  nextTitle,
+  onAdvance,
 }: {
   lessonId: string;
   title: string;
   source: ReturnType<typeof parseVideoUrl>;
   startSeconds: number;
   saveProgress: SaveLessonProgress;
+  nextTitle?: string | null;
+  onAdvance?: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const playerRef = useRef<PlayerJsPlayer | null>(null);
   const lastSavedRef = useRef(0);
   const initialSeekDoneRef = useRef(false);
+  const [ended, setEnded] = useState(false);
+  const [embedKey, setEmbedKey] = useState(0);
   // Snapshot the resume position once per lesson. Without this, every saveProgress
   // updates the row → startSeconds prop changes → seek effect re-fires → video
   // jumps back and appears to loop.
@@ -453,6 +473,33 @@ function TrackedVideoPlayer({
     initialSeekDoneRef.current = false;
     lastSavedRef.current = Math.max(0, Math.floor(startSeconds));
   }
+
+  useEffect(() => {
+    setEnded(false);
+  }, [lessonId]);
+
+  const handleReplay = useCallback(() => {
+    setEnded(false);
+    startRef.current = 0;
+    lastSavedRef.current = 0;
+    if (source.kind === "file") {
+      const video = videoRef.current;
+      if (video) {
+        video.currentTime = 0;
+        void video.play().catch(() => {});
+      }
+      return;
+    }
+    const player = playerRef.current;
+    if (player) {
+      player.setCurrentTime(0);
+      player.play?.();
+      return;
+    }
+    // Sem controlo remoto (ex.: Panda sem player.js) — recarrega o embed do início.
+    setEmbedKey((k) => k + 1);
+  }, [source.kind]);
+
 
   useEffect(() => {
     const video = videoRef.current;
@@ -490,6 +537,7 @@ function TrackedVideoPlayer({
     };
     const onEnded = (data?: { seconds?: number; duration?: number }) => {
       persist(data?.duration ?? data?.seconds ?? lastSavedRef.current, true, true);
+      setEnded(true);
     };
     const onPause = () => {
       player?.getCurrentTime((seconds) => persist(seconds, false, true));
@@ -499,6 +547,7 @@ function TrackedVideoPlayer({
       .then(() => {
         if (cancelled || !iframeRef.current || !window.playerjs?.Player) return;
         player = new window.playerjs.Player(iframeRef.current);
+        playerRef.current = player;
         player.on("ready", () => {
           if (cancelled) return;
           if (startRef.current > 3) player?.setCurrentTime(startRef.current);
@@ -527,7 +576,10 @@ function TrackedVideoPlayer({
       const message = payload?.message;
       if (!message || typeof message !== "string" || !message.startsWith("panda_")) return;
       const seconds = typeof payload?.currentTime === "number" ? payload.currentTime : null;
-      if (message === "panda_ended") persist(seconds ?? lastSavedRef.current, true, true);
+      if (message === "panda_ended") {
+        persist(seconds ?? lastSavedRef.current, true, true);
+        setEnded(true);
+      }
       else if (message === "panda_pause" && seconds != null) persist(seconds, false, true);
       else if (message === "panda_timeupdate" && seconds != null) persist(seconds);
     };
@@ -543,6 +595,16 @@ function TrackedVideoPlayer({
       player?.off?.("ended", onEnded);
     };
   }, [persist, source.embedUrl, source.kind, lessonId]);
+
+  const endOverlay = (
+    <LessonEndOverlay
+      open={ended}
+      nextTitle={nextTitle ?? null}
+      onAdvance={onAdvance}
+      onReplay={handleReplay}
+      onDismiss={() => setEnded(false)}
+    />
+  );
 
   if (source.kind === "file" && source.fileUrl) {
     return (
@@ -563,9 +625,14 @@ function TrackedVideoPlayer({
           }}
           onTimeUpdate={(event) => persist(event.currentTarget.currentTime)}
           onPause={(event) => persist(event.currentTarget.currentTime, false, true)}
-          onEnded={(event) => persist(event.currentTarget.duration || event.currentTarget.currentTime, true, true)}
+          onPlay={() => setEnded(false)}
+          onEnded={(event) => {
+            persist(event.currentTarget.duration || event.currentTarget.currentTime, true, true);
+            setEnded(true);
+          }}
         />
         <VideoWatermark />
+        {endOverlay}
       </div>
     );
   }
@@ -574,7 +641,7 @@ function TrackedVideoPlayer({
     return (
       <div className="group relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
         <iframe
-          key={lessonId}
+          key={`${lessonId}-${embedKey}`}
           ref={iframeRef}
           src={source.kind === "bunny" ? trackedEmbedUrl(source.embedUrl, lessonId) : pandaStartUrl(source, startRef.current)}
           title={title}
@@ -585,12 +652,14 @@ function TrackedVideoPlayer({
           allowFullScreen
         />
         <VideoWatermark />
+        {endOverlay}
       </div>
     );
   }
 
 
   return (
+
     <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
       <div className="absolute inset-0 flex items-center justify-center text-sm text-white/60">
         Vídeo não configurado para esta aula.
@@ -599,3 +668,98 @@ function TrackedVideoPlayer({
   );
 }
 
+
+/**
+ * Ecrã de fim de aula (estilo YouTube): contagem de 10 segundos com
+ * "Avançar" e "Repetir". Sem interação, avança automaticamente.
+ */
+function LessonEndOverlay({
+  open,
+  nextTitle,
+  onAdvance,
+  onReplay,
+  onDismiss,
+}: {
+  open: boolean;
+  nextTitle: string | null;
+  onAdvance?: () => void;
+  onReplay: () => void;
+  onDismiss: () => void;
+}) {
+  const COUNTDOWN = 10;
+  const [remaining, setRemaining] = useState(COUNTDOWN);
+
+  useEffect(() => {
+    if (!open) {
+      setRemaining(COUNTDOWN);
+      return;
+    }
+    if (!onAdvance) return;
+    setRemaining(COUNTDOWN);
+    const id = window.setInterval(() => {
+      setRemaining((r) => (r <= 1 ? 0 : r - 1));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [open, onAdvance]);
+
+  useEffect(() => {
+    if (!open || !onAdvance || remaining > 0) return;
+    onAdvance();
+  }, [open, onAdvance, remaining]);
+
+  if (!open) return null;
+
+  const progress = onAdvance ? ((COUNTDOWN - remaining) / COUNTDOWN) * 100 : 0;
+
+  return (
+    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/85 px-5 text-center backdrop-blur-sm">
+      <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">Aula concluída</p>
+
+      {onAdvance ? (
+        <>
+          <p className="max-w-md text-sm text-white/80 sm:text-base">
+            A seguir: <span className="font-medium text-white">{nextTitle}</span>
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={onReplay}
+              className="inline-flex h-10 items-center gap-2 rounded-full border border-white/25 px-4 text-sm font-medium text-white transition hover:bg-white/10"
+            >
+              Repetir
+            </button>
+            <button
+              type="button"
+              onClick={onAdvance}
+              className="relative inline-flex h-10 items-center gap-2 overflow-hidden rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft"
+            >
+              <span
+                className="absolute inset-y-0 left-0 bg-black/20 transition-[width] duration-1000 ease-linear"
+                style={{ width: `${progress}%` }}
+              />
+              <span className="relative">Avançar ({remaining}s)</span>
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={onDismiss}
+            className="text-xs text-white/50 underline-offset-4 transition hover:text-white/80 hover:underline"
+          >
+            Cancelar
+          </button>
+        </>
+      ) : (
+        <>
+          <p className="max-w-md text-sm text-white/80">Terminaste a última aula deste curso.</p>
+          <button
+            type="button"
+            onClick={onReplay}
+            className="inline-flex h-10 items-center gap-2 rounded-full border border-white/25 px-4 text-sm font-medium text-white transition hover:bg-white/10"
+          >
+            Repetir
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
