@@ -584,6 +584,16 @@ function TrackedVideoPlayer({
     };
   }, [persist, source.embedUrl, source.kind, lessonId]);
 
+  const endOverlay = (
+    <LessonEndOverlay
+      open={ended}
+      nextTitle={nextTitle ?? null}
+      onAdvance={onAdvance}
+      onReplay={handleReplay}
+      onDismiss={() => setEnded(false)}
+    />
+  );
+
   if (source.kind === "file" && source.fileUrl) {
     return (
       <div className="group relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
@@ -603,9 +613,14 @@ function TrackedVideoPlayer({
           }}
           onTimeUpdate={(event) => persist(event.currentTarget.currentTime)}
           onPause={(event) => persist(event.currentTarget.currentTime, false, true)}
-          onEnded={(event) => persist(event.currentTarget.duration || event.currentTarget.currentTime, true, true)}
+          onPlay={() => setEnded(false)}
+          onEnded={(event) => {
+            persist(event.currentTarget.duration || event.currentTarget.currentTime, true, true);
+            setEnded(true);
+          }}
         />
         <VideoWatermark />
+        {endOverlay}
       </div>
     );
   }
@@ -614,7 +629,7 @@ function TrackedVideoPlayer({
     return (
       <div className="group relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
         <iframe
-          key={lessonId}
+          key={`${lessonId}-${embedKey}`}
           ref={iframeRef}
           src={source.kind === "bunny" ? trackedEmbedUrl(source.embedUrl, lessonId) : pandaStartUrl(source, startRef.current)}
           title={title}
@@ -625,12 +640,14 @@ function TrackedVideoPlayer({
           allowFullScreen
         />
         <VideoWatermark />
+        {endOverlay}
       </div>
     );
   }
 
 
   return (
+
     <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
       <div className="absolute inset-0 flex items-center justify-center text-sm text-white/60">
         Vídeo não configurado para esta aula.
