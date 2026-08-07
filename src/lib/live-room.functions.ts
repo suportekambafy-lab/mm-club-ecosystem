@@ -198,7 +198,10 @@ export const goLive = createServerFn({ method: "POST" })
     await requireHostOrCohost(supabase, data.liveId, userId);
 
     const nowIso = new Date().toISOString();
-    const { error } = await supabase
+    // `lives` só é editável por admins via RLS — a permissão de host/cohost já
+    // foi validada acima, por isso a escrita usa o cliente privilegiado.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
       .from("lives")
       .update({ status: "live", started_at: nowIso, went_live_at: nowIso })
       .eq("id", data.liveId);
