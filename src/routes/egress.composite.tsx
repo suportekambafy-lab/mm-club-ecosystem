@@ -98,7 +98,7 @@ function EgressComposite() {
               isHost,
               isSpeaking: false,
               isScreen: true,
-              stream: new MediaStream([screen.track.mediaStreamTrack]),
+              track: screen.track.mediaStreamTrack ?? null,
             });
           }
           next.push({
@@ -107,18 +107,28 @@ function EgressComposite() {
             isHost,
             isSpeaking: Boolean(p.isSpeaking),
             isScreen: false,
-            stream: cam?.track ? new MediaStream([cam.track.mediaStreamTrack]) : null,
+            track: cam?.track?.mediaStreamTrack ?? null,
           });
         }
 
-        // Screen share first, then hosts, then speakers, then the rest.
+        // Ordem estável: partilha de ecrã, depois hosts, depois alfabética.
+        // (Quem fala não altera a ordem — senão a grelha salta e o vídeo pisca.)
         next.sort((a, b) => {
-          const score = (t: Tile) =>
-            (t.isScreen ? 8 : 0) + (t.isHost ? 4 : 0) + (t.isSpeaking ? 2 : 0);
-          return score(b) - score(a);
+          const score = (t: Tile) => (t.isScreen ? 8 : 0) + (t.isHost ? 4 : 0);
+          const diff = score(b) - score(a);
+          if (diff !== 0) return diff;
+          return a.id.localeCompare(b.id);
         });
-        setTiles(next);
+        setTiles((prev) => {
+          // Evita re-render (e o consequente flicker) quando nada mudou.
+          const sig = (list: Tile[]) =>
+            list
+              .map((t) => `${t.id}|${t.name}|${t.track?.id ?? "-"}|${t.isSpeaking ? 1 : 0}`)
+              .join(";");
+          return sig(prev) === sig(next) ? prev : next;
+        });
       };
+
 
       const attachAudio = (track: any) => {
         if (track.kind !== "audio" || !audioHost.current) return;
