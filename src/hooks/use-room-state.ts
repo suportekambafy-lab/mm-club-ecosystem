@@ -254,6 +254,8 @@ export function useRoomState({
           setParticipants((prev) => {
             if (payload.eventType === "DELETE") return prev.filter((r) => r.id !== (payload.old as ParticipantRow).id);
             const row = payload.new as ParticipantRow;
+            // Quem saiu deixa de contar (e sai do palco/audiência) de imediato.
+            if (row.left_at) return prev.filter((r) => r.id !== row.id);
             const idx = prev.findIndex((r) => r.id === row.id);
             if (idx === -1) return [...prev, row];
             const copy = prev.slice();
