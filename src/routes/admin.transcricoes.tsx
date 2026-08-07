@@ -1,6 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { RefreshCw, CheckCircle2, Loader2, AlertCircle, Clock, Search, Play } from "lucide-react";
+import { RefreshCw, CheckCircle2, Loader2, AlertCircle, Clock, Search, Play, SkipForward, Scissors, RotateCcw } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import {
+  skipLessonTranscription,
+  resumeLessonTranscription,
+} from "@/lib/lesson-knowledge.functions";
 import { SectionHeading } from "@/components/mm/section-heading";
 import { supabase } from "@/integrations/supabase/client";
 import { courses } from "@/data/courses";
@@ -32,7 +38,7 @@ type Row = {
   courseTitle: string;
   lessonTitle: string;
   hasVideo: boolean;
-  status: "ready" | "embedding" | "transcribing" | "error" | "pending";
+  status: "ready" | "embedding" | "transcribing" | "error" | "pending" | "partial" | "skipped";
   error: string | null;
   duration: number | null;
   updatedAt: string | null;
@@ -41,7 +47,7 @@ type Row = {
   model: string | null;
 };
 
-type Filter = "all" | "ready" | "transcribing" | "embedding" | "error" | "pending";
+type Filter = "all" | "ready" | "transcribing" | "embedding" | "error" | "pending" | "skipped";
 
 function statusMeta(status: Row["status"]) {
   switch (status) {
@@ -51,6 +57,10 @@ function statusMeta(status: Row["status"]) {
       return { label: "A indexar", icon: Loader2, tone: "text-sky-400", bg: "bg-sky-500/10 ring-sky-500/30", spin: true };
     case "transcribing":
       return { label: "A processar", icon: Loader2, tone: "text-admin-accent", bg: "bg-admin-accent/10 ring-admin-accent/30", spin: true };
+    case "partial":
+      return { label: "Parcial", icon: Loader2, tone: "text-amber-400", bg: "bg-amber-500/10 ring-amber-500/30", spin: true };
+    case "skipped":
+      return { label: "De parte", icon: SkipForward, tone: "text-muted-foreground", bg: "bg-muted/40 ring-[color:var(--hairline)]" };
     case "error":
       return { label: "Falhou", icon: AlertCircle, tone: "text-red-400", bg: "bg-red-500/10 ring-red-500/30" };
     case "pending":
@@ -155,7 +165,7 @@ function AdminTranscricoes() {
       });
     }
     // Sort: processing → error → pending → ready
-    const order: Record<Row["status"], number> = { transcribing: 0, embedding: 1, error: 2, pending: 3, ready: 4 };
+    const order: Record<Row["status"], number> = { transcribing: 0, partial: 1, embedding: 2, error: 3, pending: 4, ready: 5, skipped: 6 };
     list.sort((a, b) => {
       const d = order[a.status] - order[b.status];
       if (d !== 0) return d;
@@ -165,7 +175,7 @@ function AdminTranscricoes() {
   }, [rows, overridesLoaded]);
 
   const counts = useMemo(() => {
-    const c = { total: merged.length, ready: 0, transcribing: 0, embedding: 0, error: 0, pending: 0 };
+    const c = { total: merged.length, ready: 0, transcribing: 0, embedding: 0, error: 0, pending: 0, partial: 0, skipped: 0 };
     for (const r of merged) c[r.status] += 1;
     return c;
   }, [merged]);
@@ -188,11 +198,33 @@ function AdminTranscricoes() {
     fetchRows();
   };
 
+  const skipFn = useServerFn(skipLessonTranscription);
+  const resumeFn = useServerFn(resumeLessonTranscription);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const runAction = async (
+    key: string,
+    label: string,
+    fn: () => Promise<unknown>,
+  ) => {
+    setBusy(key);
+    try {
+      await fn();
+      toast.success(label);
+      fetchRows();
+    } catch (e: any) {
+      toast.error(String(e?.message ?? e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const chips: Array<{ id: Filter; label: string; count: number }> = [
     { id: "all", label: "Todas", count: counts.total },
     { id: "transcribing", label: "A processar", count: counts.transcribing },
     { id: "embedding", label: "A indexar", count: counts.embedding },
     { id: "error", label: "Falhou", count: counts.error },
+    { id: "skipped", label: "De parte", count: counts.skipped },
     { id: "pending", label: "Pendente", count: counts.pending },
     { id: "ready", label: "Concluída", count: counts.ready },
   ];
@@ -215,7 +247,7 @@ function AdminTranscricoes() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-7">
         {chips.map((c) => {
           const meta = c.id === "all" ? null : statusMeta(c.id as Row["status"]);
           const active = filter === c.id;
@@ -253,12 +285,13 @@ function AdminTranscricoes() {
 
       {/* Table */}
       <div className="overflow-hidden rounded-2xl border border-border bg-surface-1">
-        <div className="hidden grid-cols-[minmax(0,1fr)_140px_100px_120px_170px] gap-4 border-b border-border px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground md:grid">
+        <div className="hidden grid-cols-[minmax(0,1fr)_140px_100px_120px_170px_180px] gap-4 border-b border-border px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground md:grid">
           <span>Aula</span>
           <span>Estado</span>
           <span>Duração</span>
           <span>Modelo</span>
           <span>Atualizado</span>
+          <span>Ações</span>
         </div>
         {loading ? (
           <div className="p-10 text-center text-sm text-muted-foreground">A carregar…</div>
@@ -271,7 +304,7 @@ function AdminTranscricoes() {
               return (
                 <li
                   key={`${r.courseId}::${r.lessonId}`}
-                  className="grid grid-cols-1 gap-2 px-5 py-4 md:grid-cols-[minmax(0,1fr)_140px_100px_120px_170px] md:items-center md:gap-4"
+                  className="grid grid-cols-1 gap-2 px-5 py-4 md:grid-cols-[minmax(0,1fr)_140px_100px_120px_170px_180px] md:items-center md:gap-4"
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
@@ -310,6 +343,62 @@ function AdminTranscricoes() {
                     {r.createdAt && r.createdAt !== r.updatedAt && (
                       <div className="text-[10px] opacity-70">criado {formatDate(r.createdAt)}</div>
                     )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {(() => {
+                      const key = `${r.courseId}::${r.lessonId}`;
+                      const isBusy = busy === key;
+                      const btn =
+                        "inline-flex items-center gap-1 rounded-full border border-border bg-surface-2 px-2.5 py-1 text-[11px] text-muted-foreground transition hover:text-foreground disabled:opacity-50";
+                      if (r.status === "skipped" || r.status === "error" || r.status === "ready") {
+                        return (
+                          <button
+                            disabled={isBusy}
+                            className={btn}
+                            onClick={() =>
+                              runAction(key, "Aula de volta à fila", () =>
+                                resumeFn({ data: { courseId: r.courseId, lessonId: r.lessonId } }),
+                              )
+                            }
+                          >
+                            {isBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
+                            {r.status === "ready" ? "Refazer" : "Retomar"}
+                          </button>
+                        );
+                      }
+                      return (
+                        <>
+                          <button
+                            disabled={isBusy}
+                            className={btn}
+                            title="Guardar o que a IA já transcreveu e marcar como concluída"
+                            onClick={() =>
+                              runAction(key, "Transcrição parcial guardada", () =>
+                                skipFn({
+                                  data: { courseId: r.courseId, lessonId: r.lessonId, keepPartial: true },
+                                }),
+                              )
+                            }
+                          >
+                            {isBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Scissors className="h-3 w-3" />}
+                            Guardar parcial
+                          </button>
+                          <button
+                            disabled={isBusy}
+                            className={btn}
+                            title="Deixar esta aula de parte e libertar a fila"
+                            onClick={() =>
+                              runAction(key, "Aula posta de parte", () =>
+                                skipFn({ data: { courseId: r.courseId, lessonId: r.lessonId } }),
+                              )
+                            }
+                          >
+                            <SkipForward className="h-3 w-3" />
+                            De parte
+                          </button>
+                        </>
+                      );
+                    })()}
                   </div>
                 </li>
               );
