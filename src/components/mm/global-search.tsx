@@ -167,7 +167,7 @@ export function GlobalSearch({ variant = "bar" }: { variant?: "bar" | "icon" }) 
           ) : (
             groups.map((g) => (
               <div key={g.type} className="py-1">
-                <p className="px-3 pb-1 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
                   {searchLabel(g.type)}
                 </p>
                 {g.items.map((item) => {
