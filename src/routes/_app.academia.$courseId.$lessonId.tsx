@@ -432,17 +432,24 @@ function TrackedVideoPlayer({
   source,
   startSeconds,
   saveProgress,
+  nextTitle,
+  onAdvance,
 }: {
   lessonId: string;
   title: string;
   source: ReturnType<typeof parseVideoUrl>;
   startSeconds: number;
   saveProgress: SaveLessonProgress;
+  nextTitle?: string | null;
+  onAdvance?: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const playerRef = useRef<PlayerJsPlayer | null>(null);
   const lastSavedRef = useRef(0);
   const initialSeekDoneRef = useRef(false);
+  const [ended, setEnded] = useState(false);
+  const [embedKey, setEmbedKey] = useState(0);
   // Snapshot the resume position once per lesson. Without this, every saveProgress
   // updates the row → startSeconds prop changes → seek effect re-fires → video
   // jumps back and appears to loop.
@@ -454,6 +461,33 @@ function TrackedVideoPlayer({
     initialSeekDoneRef.current = false;
     lastSavedRef.current = Math.max(0, Math.floor(startSeconds));
   }
+
+  useEffect(() => {
+    setEnded(false);
+  }, [lessonId]);
+
+  const handleReplay = useCallback(() => {
+    setEnded(false);
+    startRef.current = 0;
+    lastSavedRef.current = 0;
+    if (source.kind === "file") {
+      const video = videoRef.current;
+      if (video) {
+        video.currentTime = 0;
+        void video.play().catch(() => {});
+      }
+      return;
+    }
+    const player = playerRef.current;
+    if (player) {
+      player.setCurrentTime(0);
+      player.play?.();
+      return;
+    }
+    // Sem controlo remoto (ex.: Panda sem player.js) — recarrega o embed do início.
+    setEmbedKey((k) => k + 1);
+  }, [source.kind]);
+
 
   useEffect(() => {
     const video = videoRef.current;
