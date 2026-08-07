@@ -114,7 +114,7 @@ function LessonPlayer() {
         </div>
 
         {/* Layout: modules sidebar + main content */}
-        <div className="grid min-h-0 min-w-0 flex-1 gap-4 md:gap-6 lg:grid-cols-[minmax(280px,330px)_minmax(0,1fr)]">
+        <div className="grid min-w-0 gap-4 md:gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(280px,330px)_minmax(0,1fr)]">
           {/* Modules sidebar — scrollable independently on desktop; below content on mobile */}
           <aside className="order-2 flex min-h-0 min-w-0 flex-col rounded-2xl border border-border bg-surface-1 p-3 sm:p-4 md:rounded-3xl md:p-5 lg:order-1">
             <p className="mb-4 shrink-0 font-display text-lg text-foreground">Módulos</p>
