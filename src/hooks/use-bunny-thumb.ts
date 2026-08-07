@@ -48,6 +48,15 @@ function isBunnyEmbed(url: string): boolean {
   }
 }
 
+function isPanda(url: string): boolean {
+  try {
+    return new URL(url).hostname.endsWith("pandavideo.com.br");
+  } catch {
+    return false;
+  }
+}
+
+
 export function useBunnyThumb(url: string | null | undefined): {
   thumb: string | null;
   status: Status;
