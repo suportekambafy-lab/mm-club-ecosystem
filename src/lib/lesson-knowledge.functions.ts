@@ -866,15 +866,21 @@ export async function runAutoTranscribeTick(): Promise<{
         };
       } catch (e: any) {
         const error = String(e?.message ?? e);
+        // Falhas permanentes (URL embed, sem media directo) não devem ficar a
+        // ocupar slots da fila em loop — ficam de parte até intervenção.
+        const permanent = /não é um ficheiro áudio\/vídeo directo|Não consegui obter o vídeo/i.test(
+          error,
+        );
         await supabaseAdmin
           .from("lesson_transcripts")
-          .update({ status: "error", error })
+          .update({ status: permanent ? "skipped" : "error", error })
           .eq("course_id", item.courseId)
           .eq("lesson_id", item.lessonId);
         return { courseId: item.courseId, lessonId: item.lessonId, ok: false, error };
       }
     }),
   );
+
 
 
   const first = results.find((r) => r.ok);
