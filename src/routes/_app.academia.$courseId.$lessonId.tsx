@@ -545,7 +545,7 @@ function TrackedVideoPlayer({
 
   if (source.kind === "file" && source.fileUrl) {
     return (
-      <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
+      <div className="group relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
         <video
           key={lessonId}
           ref={videoRef}
@@ -564,13 +564,14 @@ function TrackedVideoPlayer({
           onPause={(event) => persist(event.currentTarget.currentTime, false, true)}
           onEnded={(event) => persist(event.currentTarget.duration || event.currentTarget.currentTime, true, true)}
         />
+        <VideoWatermark />
       </div>
     );
   }
 
   if (source.embedUrl) {
     return (
-      <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
+      <div className="group relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
         <iframe
           key={lessonId}
           ref={iframeRef}
@@ -582,9 +583,11 @@ function TrackedVideoPlayer({
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
           allowFullScreen
         />
+        <VideoWatermark />
       </div>
     );
   }
+
 
   return (
     <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
