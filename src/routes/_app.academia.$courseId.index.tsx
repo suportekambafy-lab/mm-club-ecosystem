@@ -63,7 +63,7 @@ function CourseDetail() {
           <ArrowLeft className="h-4 w-4" /> Academia
         </Link>
         <div className="overflow-hidden rounded-3xl ring-1 ring-border">
-          <div className="aspect-[16/7]" style={{ background: heroBg }}>
+          <div className="aspect-[16/7]" style={{ background: courseCoverBackground(course) }}>
             <div className="h-full w-full bg-linear-to-t from-black/80 to-transparent" />
           </div>
           <div className="space-y-3 bg-surface-1 p-6 md:p-8">
