@@ -602,7 +602,6 @@ function TrackedVideoPlayer({
       nextTitle={nextTitle ?? null}
       onAdvance={onAdvance}
       onReplay={handleReplay}
-      onDismiss={() => setEnded(false)}
     />
   );
 
@@ -678,34 +677,47 @@ function LessonEndOverlay({
   nextTitle,
   onAdvance,
   onReplay,
-  onDismiss,
 }: {
   open: boolean;
   nextTitle: string | null;
   onAdvance?: () => void;
   onReplay: () => void;
-  onDismiss: () => void;
 }) {
   const COUNTDOWN = 10;
   const [remaining, setRemaining] = useState(COUNTDOWN);
+  const firedRef = useRef(false);
+  const advanceRef = useRef(onAdvance);
+  advanceRef.current = onAdvance;
 
   useEffect(() => {
     if (!open) {
+      firedRef.current = false;
       setRemaining(COUNTDOWN);
       return;
     }
-    if (!onAdvance) return;
+    if (!advanceRef.current) return;
     setRemaining(COUNTDOWN);
     const id = window.setInterval(() => {
       setRemaining((r) => (r <= 1 ? 0 : r - 1));
     }, 1000);
     return () => window.clearInterval(id);
-  }, [open, onAdvance]);
+  }, [open]);
 
+  // Avanço automático: dispara UMA única vez por aula terminada, para nunca
+  // saltar duas aulas de seguida.
   useEffect(() => {
-    if (!open || !onAdvance || remaining > 0) return;
-    onAdvance();
-  }, [open, onAdvance, remaining]);
+    if (!open || remaining > 0 || firedRef.current) return;
+    const advance = advanceRef.current;
+    if (!advance) return;
+    firedRef.current = true;
+    advance();
+  }, [open, remaining]);
+
+  const handleAdvanceClick = () => {
+    if (firedRef.current) return;
+    firedRef.current = true;
+    onAdvance?.();
+  };
 
   if (!open) return null;
 
@@ -730,7 +742,7 @@ function LessonEndOverlay({
             </button>
             <button
               type="button"
-              onClick={onAdvance}
+              onClick={handleAdvanceClick}
               className="relative inline-flex h-10 items-center gap-2 overflow-hidden rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft"
             >
               <span
@@ -740,13 +752,6 @@ function LessonEndOverlay({
               <span className="relative">Avançar ({remaining}s)</span>
             </button>
           </div>
-          <button
-            type="button"
-            onClick={onDismiss}
-            className="text-xs text-white/50 underline-offset-4 transition hover:text-white/80 hover:underline"
-          >
-            Cancelar
-          </button>
         </>
       ) : (
         <>
