@@ -688,24 +688,39 @@ function LessonEndOverlay({
 }) {
   const COUNTDOWN = 10;
   const [remaining, setRemaining] = useState(COUNTDOWN);
+  const firedRef = useRef(false);
+  const advanceRef = useRef(onAdvance);
+  advanceRef.current = onAdvance;
 
   useEffect(() => {
     if (!open) {
+      firedRef.current = false;
       setRemaining(COUNTDOWN);
       return;
     }
-    if (!onAdvance) return;
+    if (!advanceRef.current) return;
     setRemaining(COUNTDOWN);
     const id = window.setInterval(() => {
       setRemaining((r) => (r <= 1 ? 0 : r - 1));
     }, 1000);
     return () => window.clearInterval(id);
-  }, [open, onAdvance]);
+  }, [open]);
 
+  // Avanço automático: dispara UMA única vez por aula terminada, para nunca
+  // saltar duas aulas de seguida.
   useEffect(() => {
-    if (!open || !onAdvance || remaining > 0) return;
-    onAdvance();
-  }, [open, onAdvance, remaining]);
+    if (!open || remaining > 0 || firedRef.current) return;
+    const advance = advanceRef.current;
+    if (!advance) return;
+    firedRef.current = true;
+    advance();
+  }, [open, remaining]);
+
+  const handleAdvanceClick = () => {
+    if (firedRef.current) return;
+    firedRef.current = true;
+    onAdvance?.();
+  };
 
   if (!open) return null;
 
