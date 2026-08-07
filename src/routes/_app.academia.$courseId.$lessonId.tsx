@@ -602,7 +602,6 @@ function TrackedVideoPlayer({
       nextTitle={nextTitle ?? null}
       onAdvance={onAdvance}
       onReplay={handleReplay}
-      onDismiss={() => setEnded(false)}
     />
   );
 
@@ -678,13 +677,11 @@ function LessonEndOverlay({
   nextTitle,
   onAdvance,
   onReplay,
-  onDismiss,
 }: {
   open: boolean;
   nextTitle: string | null;
   onAdvance?: () => void;
   onReplay: () => void;
-  onDismiss: () => void;
 }) {
   const COUNTDOWN = 10;
   const [remaining, setRemaining] = useState(COUNTDOWN);
