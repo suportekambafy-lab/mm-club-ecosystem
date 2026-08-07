@@ -493,17 +493,12 @@ function AdminAulas() {
                                     onChange={(e) => updateLesson(mi, li, { title: e.target.value })}
                                   />
                                 </label>
-                                <label className="block">
-                                  <span className={labelCls}>Duração</span>
-                                  <input
-                                    className={inputCls}
-                                    placeholder="12m"
-                                    value={l.duration}
-                                    onChange={(e) =>
-                                      updateLesson(mi, li, { duration: e.target.value })
-                                    }
-                                  />
-                                </label>
+                                <DurationField
+                                  value={l.duration}
+                                  videoUrl={l.videoUrl}
+                                  onChange={(v) => updateLesson(mi, li, { duration: v })}
+                                />
+
                               </div>
 
                               <div className="mt-3">
