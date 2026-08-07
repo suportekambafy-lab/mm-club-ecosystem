@@ -1,5 +1,4 @@
 import type { Course } from "@/data/types";
-import { lessonThumb } from "@/lib/course-duration";
 import marcaMilionariaCoverAsset from "@/assets/marca-milionaria-cover.png.asset.json";
 
 const FALLBACK_COVERS: Record<string, string> = {
