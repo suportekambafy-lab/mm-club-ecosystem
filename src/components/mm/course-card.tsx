@@ -6,7 +6,8 @@ import { expertsById } from "@/data/experts";
 import { ExpertAvatar } from "./expert-avatar";
 import { cn } from "@/lib/utils";
 import { computeCourseDuration, lessonThumb } from "@/lib/course-duration";
-import { isCourseReleased, formatCourseRelease } from "@/data/courses";
+import { formatCourseRelease } from "@/data/courses";
+import { useCourseAccess } from "@/hooks/use-course-release";
 import { courseCoverBackground } from "@/lib/course-cover";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 
@@ -22,7 +23,8 @@ interface Props {
 
 export function CourseCard({ course, className, variant = "default", resumeLessonId, showResumeThumb = false }: Props) {
   const expert = expertsById[course.expertId];
-  const isSoon = !isCourseReleased(course);
+  const { canOpen } = useCourseAccess();
+  const isSoon = !canOpen(course);
   const isWide = variant === "wide";
   const firstLesson = course.modules?.[0]?.lessons?.[0];
   const resumeLesson =

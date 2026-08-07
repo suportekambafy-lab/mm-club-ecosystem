@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, Check, Clock, Lock, Play } from "lucide-react";
-import { coursesById, isCourseReleased, formatCourseRelease } from "@/data/courses";
+import { coursesById, formatCourseRelease } from "@/data/courses";
+import { useCourseAccess } from "@/hooks/use-course-release";
 import "@/data/admin-store";
 import { useAdminOverridesVersion } from "@/hooks/use-admin-overrides";
 import { expertsById } from "@/data/experts";
@@ -30,6 +31,7 @@ function CourseDetail() {
   const course = coursesById[courseId];
   const expert = expertsById[course.expertId];
   const { progress, loaded } = useUserProgress();
+  const { canOpen } = useCourseAccess();
   const p = progress[course.id];
 
   const percent = Math.round((p?.progress ?? 0) * 100);
@@ -51,7 +53,7 @@ function CourseDetail() {
 
   if (!loaded) return <CourseDetailSkeleton />;
 
-  if (!isCourseReleased(course)) {
+  if (!canOpen(course)) {
     return (
       <div className="max-w-full space-y-8 overflow-x-clip">
         <Link
