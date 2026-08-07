@@ -479,7 +479,7 @@ function FeatureJade() {
           <br /> a qualquer hora.
         </>
       }
-      description="MM Inteligente — assistente treinada no método Marca Milionária. Faz perguntas, pede feedback, valida ideias — como se tivesses o Rui contigo, 24/7."
+      description="MM Inteligente — assistente treinado no método Marca Milionária. Faz perguntas, pede feedback, valida ideias — como se tivesses o Rui contigo, 24/7."
       bullets={[
         "Contexto completo do método MM",
         "Sugestões acionáveis, não respostas genéricas",
@@ -519,7 +519,7 @@ function FeatureJade() {
           <div className="mt-5 flex items-center gap-2 rounded-full border border-border bg-surface-2/60 px-4 py-2.5">
             <input
               readOnly
-              value="Escreve à MM Inteligente…"
+              value="Escreve ao MM Inteligente…"
               className="flex-1 bg-transparent text-sm text-muted-foreground outline-none"
             />
             <button className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">

@@ -699,7 +699,7 @@ const mobileTabs: TabItem[] = [
   { to: "/dashboard", label: "Início", icon: Home, exact: true },
   { to: "/shorts", label: "Shorts", icon: Clapperboard },
   { to: "/comunidade", label: "Comunidade", icon: Users },
-  { to: "/jade", label: "MM Inteligente", icon: Star },
+  { to: "/jade", label: "Inteligente", icon: Star },
 ];
 
 function MobileTabBar({
