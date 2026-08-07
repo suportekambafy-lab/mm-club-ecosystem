@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { pandaThumbFromUrl } from "@/lib/course-duration";
+import { captureHlsFrame } from "@/lib/video-frame";
 
 /**
  * Resolve a Bunny Stream thumbnail from any supported URL.
