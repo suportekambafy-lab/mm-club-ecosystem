@@ -656,3 +656,98 @@ function TrackedVideoPlayer({
   );
 }
 
+
+/**
+ * Ecrã de fim de aula (estilo YouTube): contagem de 10 segundos com
+ * "Avançar" e "Repetir". Sem interação, avança automaticamente.
+ */
+function LessonEndOverlay({
+  open,
+  nextTitle,
+  onAdvance,
+  onReplay,
+  onDismiss,
+}: {
+  open: boolean;
+  nextTitle: string | null;
+  onAdvance?: () => void;
+  onReplay: () => void;
+  onDismiss: () => void;
+}) {
+  const COUNTDOWN = 10;
+  const [remaining, setRemaining] = useState(COUNTDOWN);
+
+  useEffect(() => {
+    if (!open) {
+      setRemaining(COUNTDOWN);
+      return;
+    }
+    if (!onAdvance) return;
+    setRemaining(COUNTDOWN);
+    const id = window.setInterval(() => {
+      setRemaining((r) => (r <= 1 ? 0 : r - 1));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [open, onAdvance]);
+
+  useEffect(() => {
+    if (!open || !onAdvance || remaining > 0) return;
+    onAdvance();
+  }, [open, onAdvance, remaining]);
+
+  if (!open) return null;
+
+  const progress = onAdvance ? ((COUNTDOWN - remaining) / COUNTDOWN) * 100 : 0;
+
+  return (
+    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/85 px-5 text-center backdrop-blur-sm">
+      <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">Aula concluída</p>
+
+      {onAdvance ? (
+        <>
+          <p className="max-w-md text-sm text-white/80 sm:text-base">
+            A seguir: <span className="font-medium text-white">{nextTitle}</span>
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={onReplay}
+              className="inline-flex h-10 items-center gap-2 rounded-full border border-white/25 px-4 text-sm font-medium text-white transition hover:bg-white/10"
+            >
+              Repetir
+            </button>
+            <button
+              type="button"
+              onClick={onAdvance}
+              className="relative inline-flex h-10 items-center gap-2 overflow-hidden rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft"
+            >
+              <span
+                className="absolute inset-y-0 left-0 bg-black/20 transition-[width] duration-1000 ease-linear"
+                style={{ width: `${progress}%` }}
+              />
+              <span className="relative">Avançar ({remaining}s)</span>
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={onDismiss}
+            className="text-xs text-white/50 underline-offset-4 transition hover:text-white/80 hover:underline"
+          >
+            Cancelar
+          </button>
+        </>
+      ) : (
+        <>
+          <p className="max-w-md text-sm text-white/80">Terminaste a última aula deste curso.</p>
+          <button
+            type="button"
+            onClick={onReplay}
+            className="inline-flex h-10 items-center gap-2 rounded-full border border-white/25 px-4 text-sm font-medium text-white transition hover:bg-white/10"
+          >
+            Repetir
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
