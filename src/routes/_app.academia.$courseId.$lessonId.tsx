@@ -44,6 +44,7 @@ export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
 function LessonPlayer() {
   const { courseId, lessonId } = Route.useLoaderData();
   const { t: deepLinkSeconds } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const overridesVersion = useAdminOverridesVersion();
 
   // Recompute from (possibly-overridden) in-memory data so admin edits show up.
