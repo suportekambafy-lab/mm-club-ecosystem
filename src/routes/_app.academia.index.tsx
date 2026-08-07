@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Play, Search, ChevronDown, Lock, Clock, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { courses as allCourses, isCourseReleased, formatCourseRelease } from "@/data/courses";
+import { useCourseAccess } from "@/hooks/use-course-release";
 import { useAdminOverridesVersion } from "@/hooks/use-admin-overrides";
 import { expertsById } from "@/data/experts";
 import { objectives } from "@/data/objectives";
