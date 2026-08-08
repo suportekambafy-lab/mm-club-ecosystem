@@ -14,7 +14,7 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key !== VERSION)
+            .filter((key) => key !== VERSION && key !== ASSET_CACHE && key !== MEDIA_CACHE)
             .map((key) => caches.delete(key)),
         ),
       )
