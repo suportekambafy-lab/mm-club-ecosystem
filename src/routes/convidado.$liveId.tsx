@@ -126,7 +126,14 @@ function GuestEntry() {
   if (step === "room" && session && prefs) {
     return (
       <div className="h-[100dvh] w-full bg-black">
-        <Suspense fallback={<RoomLoader />}>
+        <Suspense
+          fallback={
+            <div className="flex h-full w-full items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-white/70" />
+            </div>
+          }
+        >
+
           <GuestRoom
             token={session.token}
             url={session.url}
