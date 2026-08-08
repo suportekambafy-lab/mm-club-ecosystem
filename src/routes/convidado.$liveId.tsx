@@ -127,21 +127,23 @@ function GuestEntry() {
     return (
       <div className="h-[100dvh] w-full bg-black">
         <Suspense fallback={<RoomLoader />}>
-        <GuestRoom
-          token={session.token}
-          url={session.url}
-          prefs={prefs}
-          liveId={liveId}
-          code={c}
-          guestId={session.guestId}
-          displayName={name.trim()}
-          onStage={session.onStage}
-          onLeave={() => {
-            setStep("name");
-            setSession(null);
-          }}
-        />
+          <GuestRoom
+            token={session.token}
+            url={session.url}
+            prefs={prefs}
+            liveId={liveId}
+            code={c}
+            guestId={session.guestId}
+            displayName={name.trim()}
+            onStage={session.onStage}
+            onLeave={() => {
+              setStep("name");
+              setSession(null);
+            }}
+          />
+        </Suspense>
       </div>
+
     );
   }
 
