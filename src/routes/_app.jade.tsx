@@ -45,6 +45,13 @@ function JadeLayout() {
     });
   };
 
+  // Pré-carrega a conversa mais recente para abrir instantaneamente.
+  const firstId = threads[0]?.id;
+  useEffect(() => {
+    if (firstId) prefetchThread(firstId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstId]);
+
 
   const create = useMutation({
     mutationFn: () => newThread(),
