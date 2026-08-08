@@ -67,6 +67,7 @@ import { Route as AdminFinanceiroDebitosRouteImport } from './routes/admin.finan
 import { Route as AdminFinanceiroCupoesRouteImport } from './routes/admin.financeiro.cupoes'
 import { Route as AdminFinanceiroCatalogoRouteImport } from './routes/admin.financeiro.catalogo'
 import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
+import { Route as AppJadeThreadIdRouteImport } from './routes/_app.jade.$threadId'
 import { Route as AppFerramentasStudioRouteImport } from './routes/_app.ferramentas.studio'
 import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
 import { Route as AppAcademiaPesquisaRouteImport } from './routes/_app.academia.pesquisa'
@@ -393,6 +394,11 @@ const AppLivesLiveIdRoute = AppLivesLiveIdRouteImport.update({
   path: '/$liveId',
   getParentRoute: () => AppLivesRoute,
 } as any)
+const AppJadeThreadIdRoute = AppJadeThreadIdRouteImport.update({
+  id: '/$threadId',
+  path: '/$threadId',
+  getParentRoute: () => AppJadeRoute,
+} as any)
 const AppFerramentasStudioRoute = AppFerramentasStudioRouteImport.update({
   id: '/studio',
   path: '/studio',
@@ -636,6 +642,7 @@ export interface FileRoutesByFullPath {
   '/academia/pesquisa': typeof AppAcademiaPesquisaRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
+  '/jade/$threadId': typeof AppJadeThreadIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
@@ -721,6 +728,7 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutIndexRoute
   '/academia/pesquisa': typeof AppAcademiaPesquisaRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
+  '/jade/$threadId': typeof AppJadeThreadIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
@@ -816,6 +824,7 @@ export interface FileRoutesById {
   '/_app/academia/pesquisa': typeof AppAcademiaPesquisaRoute
   '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/_app/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
+  '/_app/jade/$threadId': typeof AppJadeThreadIdRoute
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
@@ -911,6 +920,7 @@ export interface FileRouteTypes {
     | '/academia/pesquisa'
     | '/especialistas/$expertId'
     | '/ferramentas/studio'
+    | '/jade/$threadId'
     | '/lives/$liveId'
     | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cupoes'
@@ -996,6 +1006,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/academia/pesquisa'
     | '/especialistas/$expertId'
+    | '/jade/$threadId'
     | '/lives/$liveId'
     | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cupoes'
@@ -1090,6 +1101,7 @@ export interface FileRouteTypes {
     | '/_app/academia/pesquisa'
     | '/_app/especialistas/$expertId'
     | '/_app/ferramentas/studio'
+    | '/_app/jade/$threadId'
     | '/_app/lives/$liveId'
     | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cupoes'
@@ -1586,6 +1598,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLivesLiveIdRouteImport
       parentRoute: typeof AppLivesRoute
     }
+    '/_app/jade/$threadId': {
+      id: '/_app/jade/$threadId'
+      path: '/$threadId'
+      fullPath: '/jade/$threadId'
+      preLoaderRoute: typeof AppJadeThreadIdRouteImport
+      parentRoute: typeof AppJadeRoute
+    }
     '/_app/ferramentas/studio': {
       id: '/_app/ferramentas/studio'
       path: '/studio'
@@ -1892,10 +1911,12 @@ const AppFerramentasRouteWithChildren = AppFerramentasRoute._addFileChildren(
 )
 
 interface AppJadeRouteChildren {
+  AppJadeThreadIdRoute: typeof AppJadeThreadIdRoute
   AppJadeIndexRoute: typeof AppJadeIndexRoute
 }
 
 const AppJadeRouteChildren: AppJadeRouteChildren = {
+  AppJadeThreadIdRoute: AppJadeThreadIdRoute,
   AppJadeIndexRoute: AppJadeIndexRoute,
 }
 
