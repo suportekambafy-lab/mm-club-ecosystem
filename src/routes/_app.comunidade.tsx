@@ -266,6 +266,27 @@ function CommunityPageInner() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const catQ = useCategories(user != null);
   const postsQ = usePosts(activeCategory, user?.id ?? null, user != null && tab === "feed");
+  const posts = useMemo(
+    () => (postsQ.data?.pages ?? []).flat() as Post[],
+    [postsQ.data],
+  );
+
+  // Sentinela: carrega a próxima página antes de o membro chegar ao fim.
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const node = loadMoreRef.current;
+    if (!node || !postsQ.hasNextPage) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && !postsQ.isFetchingNextPage) {
+          void postsQ.fetchNextPage();
+        }
+      },
+      { rootMargin: "600px 0px" },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [postsQ.hasNextPage, postsQ.isFetchingNextPage, postsQ.fetchNextPage, posts.length]);
   const myProfileQ = useMyProfile(user?.id ?? null);
   const onlineMembers = useCommunityPresence(
     user
@@ -283,8 +304,8 @@ function CommunityPageInner() {
       : null,
   );
 
-  const totalPosts = postsQ.data?.length ?? 0;
-  const todayCount = (postsQ.data ?? []).filter(
+  const totalPosts = posts.length;
+  const todayCount = posts.filter(
     (p) => Date.now() - new Date(p.created_at).getTime() < 86_400_000,
   ).length;
 
@@ -467,7 +488,7 @@ function CommunityPageInner() {
                     Não foi possível carregar o feed.
                   </div>
                 )}
-                {postsQ.data?.length === 0 && (
+                {!postsQ.isLoading && posts.length === 0 && (
                   <div className="rounded-2xl border border-dashed border-border bg-surface-1 p-10 text-center">
                     <p className="text-sm text-muted-foreground">
                       Ainda não há publicações
@@ -480,9 +501,25 @@ function CommunityPageInner() {
                     )}
                   </div>
                 )}
-                {postsQ.data?.map((p) => (
+                {posts.map((p) => (
                   <PostCard key={p.id} post={p} currentUserId={user?.id ?? null} />
                 ))}
+                <div ref={loadMoreRef} className="h-1 w-full" aria-hidden />
+                {postsQ.isFetchingNextPage && (
+                  <div className="rounded-2xl border border-border bg-surface-1 p-5">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-10 w-10 rounded-full" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-3 w-32" />
+                        <Skeleton className="h-3 w-20" />
+                      </div>
+                    </div>
+                    <div className="mt-4 space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           ) : user === undefined ? (
@@ -496,7 +533,7 @@ function CommunityPageInner() {
           {/* Cards que só aparecem na sidebar direita a partir de 2xl — em telas menores ficam por baixo do feed */}
           {tab === "feed" && (
             <div className="grid gap-4 pt-2 sm:grid-cols-2 xl:grid-cols-3 2xl:hidden">
-              <LatestUpdatesCard posts={postsQ.data ?? []} />
+              <LatestUpdatesCard posts={posts} />
               <QuickLinksCard />
             </div>
           )}
@@ -505,7 +542,7 @@ function CommunityPageInner() {
         {/* RIGHT SIDEBAR — perfil + últimas atualizações + atalhos */}
         <aside className="hidden space-y-4 2xl:sticky 2xl:top-24 2xl:block 2xl:max-h-[calc(100vh-7rem)] 2xl:overflow-y-auto 2xl:pr-1 [scrollbar-width:thin]">
 
-          <LatestUpdatesCard posts={postsQ.data ?? []} />
+          <LatestUpdatesCard posts={posts} />
           <QuickLinksCard />
         </aside>
       </div>
