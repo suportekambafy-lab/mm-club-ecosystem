@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyCommunityPostByEmail } from "@/lib/community-email.functions";
@@ -157,12 +157,18 @@ function useCategories(enabled: boolean) {
   });
 }
 
+const POSTS_PAGE_SIZE = 12;
+
 function usePosts(categoryId: string | null, userId: string | null, enabled: boolean) {
   const qc = useQueryClient();
-  const query = useQuery({
+  const query = useInfiniteQuery({
     queryKey: ["community", "posts", categoryId ?? "all", userId ?? "anon"],
     enabled,
-    queryFn: async (): Promise<Post[]> => {
+    initialPageParam: 0,
+    getNextPageParam: (lastPage: Post[], allPages) =>
+      lastPage.length < POSTS_PAGE_SIZE ? undefined : allPages.length,
+    queryFn: async ({ pageParam }): Promise<Post[]> => {
+      const from = (pageParam as number) * POSTS_PAGE_SIZE;
       let q = supabase
         .from("community_posts")
         .select(
@@ -175,7 +181,7 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
         )
         .order("pinned_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false })
-        .limit(50);
+        .range(from, from + POSTS_PAGE_SIZE - 1);
       if (categoryId) q = q.eq("category_id", categoryId);
       const { data, error } = await q;
       if (error) throw error;
