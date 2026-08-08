@@ -8,13 +8,13 @@ import { createThread, listThreads } from "@/lib/jade-threads.functions";
 export const Route = createFileRoute("/_app/jade/")({
   head: () => ({
     meta: [
-      { title: "MM Inteligente — MM Club" },
+      { title: "MM Inteligence — MM Club" },
       {
         name: "description",
         content:
-          "MM Inteligente do MM Club: pergunta sobre marca, marketing, vendas, escala e liderança.",
+          "MM Inteligence do MM Club: pergunta sobre marca, marketing, vendas, escala e liderança.",
       },
-      { property: "og:title", content: "MM Inteligente — MM Club" },
+      { property: "og:title", content: "MM Inteligence — MM Club" },
       {
         property: "og:description",
         content: "O assistente do MM Club, com todas as tuas conversas guardadas na conta.",

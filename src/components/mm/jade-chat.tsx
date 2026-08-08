@@ -182,7 +182,7 @@ export function JadeChat({
     <div className="flex min-h-0 flex-1 flex-col">
       <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 pl-14 md:py-4 lg:px-8 lg:pl-8">
         <div className="min-w-0">
-          <h1 className="font-display text-lg text-foreground">MM Inteligente</h1>
+          <h1 className="font-display text-lg text-foreground">MM Inteligence</h1>
           <p className="text-xs text-muted-foreground">Marca, marketing, vendas e escala.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -236,7 +236,7 @@ export function JadeChat({
 
           {error && (
             <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              Ocorreu um erro ao contactar o MM Inteligente. Tenta novamente.
+              Ocorreu um erro ao contactar o MM Inteligence. Tenta novamente.
             </div>
           )}
         </div>
@@ -312,7 +312,7 @@ export function JadeChat({
           </p>
         )}
         <p className="mx-auto mt-2 max-w-2xl text-center text-[10px] text-muted-foreground">
-          MM Inteligente pode cometer erros. Verifica informação importante.
+          MM Inteligence pode cometer erros. Verifica informação importante.
         </p>
       </div>
     </div>

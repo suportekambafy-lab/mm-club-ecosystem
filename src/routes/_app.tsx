@@ -132,7 +132,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { to: "/dashboard", label: "Início", icon: Home, exact: true },
   { to: "/academia", label: "Academia", icon: GraduationCap },
-  { to: "/jade", label: "MM Inteligente", icon: Star },
+  { to: "/jade", label: "MM Inteligence", icon: Star },
   { to: "/lives", label: "Ao Vivo", icon: Radio },
   { to: "/comunidade", label: "Comunidade", icon: Users },
   { to: "/shorts", label: "MM Shorts", icon: Clapperboard },
@@ -283,7 +283,7 @@ function AppLayout() {
   }, [authUser, pathname, router]);
 
   // Native-app feel: lock the page itself, let only the content column scroll
-  // (same approach used on the MM Inteligente chat screen).
+  // (same approach used on the MM Inteligence chat screen).
   useEffect(() => {
     const html = document.documentElement;
     const body = document.body;

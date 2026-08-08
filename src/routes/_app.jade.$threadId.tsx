@@ -10,16 +10,16 @@ import { JadeChat } from "@/components/mm/jade-chat";
 export const Route = createFileRoute("/_app/jade/$threadId")({
   head: () => ({
     meta: [
-      { title: "Conversa — MM Inteligente | MM Club" },
+      { title: "Conversa — MM Inteligence | MM Club" },
       {
         name: "description",
         content:
-          "Retoma a tua conversa com o MM Inteligente: marca, marketing, vendas, escala e liderança.",
+          "Retoma a tua conversa com o MM Inteligence: marca, marketing, vendas, escala e liderança.",
       },
-      { property: "og:title", content: "Conversa — MM Inteligente | MM Club" },
+      { property: "og:title", content: "Conversa — MM Inteligence | MM Club" },
       {
         property: "og:description",
-        content: "As tuas conversas com o MM Inteligente, guardadas na tua conta.",
+        content: "As tuas conversas com o MM Inteligence, guardadas na tua conta.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
