@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Heart, Volume2, VolumeX, Plus, X, Upload, Trash2, Eye, Play, MessageCircle, ArrowUp, CornerDownRight, MoreHorizontal, Share2, Link2, Flag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { assertUploadAllowed } from "@/lib/security/uploads";
@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/mm/confirm-dialog";
 import { notifyShortPublishedByEmail, notifyShortReplyByEmail } from "@/lib/shorts-email.functions";
+
+const SHORTS_PAGE_SIZE = 6;
 
 export const Route = createFileRoute("/_app/shorts")({
   ssr: false,
