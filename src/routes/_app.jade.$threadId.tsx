@@ -2,10 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useMemo } from "react";
-import { Loader2 } from "lucide-react";
 import type { UIMessage } from "ai";
 import { getThread, type AiMessageRow } from "@/lib/jade-threads.functions";
 import { JadeChat } from "@/components/mm/jade-chat";
+import { JadeChatSkeleton } from "@/components/mm/jade-skeleton";
+
 
 export const Route = createFileRoute("/_app/jade/$threadId")({
   head: () => ({
