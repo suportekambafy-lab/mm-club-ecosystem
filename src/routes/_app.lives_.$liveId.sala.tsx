@@ -293,14 +293,15 @@ function SalaRoute() {
     <SalaShell liveId={live.id} userId={userId} onLeave={handleLeave}>
       <Suspense fallback={<FullscreenLoader label="A ligar à sala…" />}>
         <InteractiveRoom
-        liveId={live.id}
-        localUserId={userId}
-        token={session.token}
-        url={session.url}
-        target={target}
+          liveId={live.id}
+          localUserId={userId}
+          token={session.token}
+          url={session.url}
+          target={target}
           onLeave={handleLeave}
         />
       </Suspense>
+
     </SalaShell>
   );
 }
