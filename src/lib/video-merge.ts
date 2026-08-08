@@ -1,25 +1,40 @@
-import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile, toBlobURL } from "@ffmpeg/util";
+// ffmpeg.wasm é enorme (vários MB). É carregado dinamicamente, só quando o
+// membro pede realmente a junção de vídeos no MM Studio — nunca no arranque.
+type FFmpegInstance = Awaited<ReturnType<typeof loadFFmpeg>>;
 
-let ffmpegInstance: FFmpeg | null = null;
-let loadPromise: Promise<FFmpeg> | null = null;
+let ffmpegInstance: FFmpegInstance | null = null;
+let loadPromise: Promise<FFmpegInstance> | null = null;
+
+async function loadFFmpeg(onProgress?: (msg: string) => void) {
+  const [{ FFmpeg }, { toBlobURL }] = await Promise.all([
+    import("@ffmpeg/ffmpeg"),
+    import("@ffmpeg/util"),
+  ]);
+  onProgress?.("A carregar motor de vídeo…");
+  const ff = new FFmpeg();
+  const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
+  await ff.load({
+    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
+    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
+  });
+  return ff;
+}
 
 async function getFFmpeg(onProgress?: (msg: string) => void) {
   if (ffmpegInstance) return ffmpegInstance;
   if (loadPromise) return loadPromise;
-  loadPromise = (async () => {
-    onProgress?.("A carregar motor de vídeo…");
-    const ff = new FFmpeg();
-    const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
-    await ff.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-    });
+  loadPromise = loadFFmpeg(onProgress).then((ff) => {
     ffmpegInstance = ff;
     return ff;
-  })();
+  });
   return loadPromise;
 }
+
+async function fetchFileData(url: string): Promise<Uint8Array> {
+  const { fetchFile } = await import("@ffmpeg/util");
+  return (await fetchFile(url)) as Uint8Array;
+}
+
 
 /**
  * Merges multiple MP4 URLs into a single MP4 Blob using ffmpeg.wasm concat demuxer.
@@ -41,7 +56,7 @@ export async function mergeVideos(
   const names: string[] = [];
   for (let i = 0; i < urls.length; i++) {
     const name = `seg_${i}.mp4`;
-    await ff.writeFile(name, await fetchFile(urls[i]));
+    await ff.writeFile(name, await fetchFileData(urls[i]));
     names.push(name);
     onProgress?.(`Segmento ${i + 1}/${urls.length} carregado`, ((i + 1) / (urls.length + 1)) * 100);
   }

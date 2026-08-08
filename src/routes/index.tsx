@@ -268,10 +268,11 @@ function Hero() {
               <div className="flex -space-x-2">
                 {[avatar1, avatar5, avatar2].map((src, i) => (
                   <img
+                    loading="lazy"
+                    decoding="async"
                     key={i}
                     src={src}
                     alt=""
-                    loading="lazy"
                     width={28}
                     height={28}
                     className="h-7 w-7 rounded-full border-2 border-surface-1 object-cover"
@@ -574,9 +575,10 @@ function FeatureComunidade() {
               <div key={p.n} className="rounded-xl border border-border bg-surface-2/40 p-4">
                 <div className="flex items-center gap-3">
                   <img
+                    loading="lazy"
+                    decoding="async"
                     src={i ? avatar2 : avatar1}
                     alt=""
-                    loading="lazy"
                     width={36}
                     height={36}
                     className="h-9 w-9 rounded-full object-cover"

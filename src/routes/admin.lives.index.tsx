@@ -956,9 +956,10 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
               </Field>
               {coverUrl ? (
                 <img
+                  loading="lazy"
+                  decoding="async"
                   src={coverUrl}
                   alt="Capa da live"
-                  loading="lazy"
                   className="h-32 w-full rounded-lg object-cover"
                 />
               ) : null}

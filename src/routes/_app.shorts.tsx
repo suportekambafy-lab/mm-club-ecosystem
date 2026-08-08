@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Heart, Volume2, VolumeX, Plus, X, Upload, Trash2, Eye, Play, MessageCircle, ArrowUp, CornerDownRight, MoreHorizontal, Share2, Link2, Flag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { assertUploadAllowed } from "@/lib/security/uploads";
@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/mm/confirm-dialog";
 import { notifyShortPublishedByEmail, notifyShortReplyByEmail } from "@/lib/shorts-email.functions";
+
+const SHORTS_PAGE_SIZE = 6;
 
 export const Route = createFileRoute("/_app/shorts")({
   ssr: false,
@@ -127,14 +129,18 @@ function ShortsPage() {
     [user, qc],
   );
 
-  const shortsQuery = useQuery<ShortWithAuthor[]>({
+  const shortsQuery = useInfiniteQuery<ShortWithAuthor[]>({
     queryKey: ["mm-shorts", user?.id ?? "anon"],
-    queryFn: async () => {
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length < SHORTS_PAGE_SIZE ? undefined : allPages.length,
+    queryFn: async ({ pageParam }) => {
+      const from = (pageParam as number) * SHORTS_PAGE_SIZE;
       const { data: shorts, error } = await supabase
         .from("mm_shorts")
         .select("id, author_id, video_url, thumbnail_url, caption, views_count, likes_count, comments_count, created_at")
         .order("created_at", { ascending: false })
-        .limit(50);
+        .range(from, from + SHORTS_PAGE_SIZE - 1);
       if (error) throw error;
       const rows = (shorts ?? []) as ShortRow[];
       if (rows.length === 0) return [];
@@ -176,7 +182,10 @@ function ShortsPage() {
     },
   });
 
-  const shorts = shortsQuery.data ?? [];
+  const shorts = useMemo(
+    () => (shortsQuery.data?.pages ?? []).flat() as ShortWithAuthor[],
+    [shortsQuery.data],
+  );
 
   const toggleLike = useMutation({
     mutationFn: async ({ shortId, liked }: { shortId: string; liked: boolean }) => {
@@ -189,13 +198,21 @@ function ShortsPage() {
     },
     onMutate: async ({ shortId, liked }) => {
       await qc.cancelQueries({ queryKey: ["mm-shorts", user?.id ?? "anon"] });
-      const prev = qc.getQueryData<ShortWithAuthor[]>(["mm-shorts", user?.id ?? "anon"]);
-      qc.setQueryData<ShortWithAuthor[]>(["mm-shorts", user?.id ?? "anon"], (old) =>
-        (old ?? []).map((s) =>
-          s.id === shortId
-            ? { ...s, liked: !liked, likes_count: Math.max(0, s.likes_count + (liked ? -1 : 1)) }
-            : s,
-        ),
+      type Pages = { pages: ShortWithAuthor[][]; pageParams: unknown[] };
+      const prev = qc.getQueryData<Pages>(["mm-shorts", user?.id ?? "anon"]);
+      qc.setQueryData<Pages>(["mm-shorts", user?.id ?? "anon"], (old) =>
+        old
+          ? {
+              ...old,
+              pages: old.pages.map((page) =>
+                page.map((s) =>
+                  s.id === shortId
+                    ? { ...s, liked: !liked, likes_count: Math.max(0, s.likes_count + (liked ? -1 : 1)) }
+                    : s,
+                ),
+              ),
+            }
+          : old,
       );
       return { prev };
     },
@@ -246,6 +263,11 @@ function ShortsPage() {
         <ShortsFeed
           shorts={shorts}
           currentUserId={user?.id}
+          onNearEnd={() => {
+            if (shortsQuery.hasNextPage && !shortsQuery.isFetchingNextPage) {
+              void shortsQuery.fetchNextPage();
+            }
+          }}
           onToggleLike={(s) => toggleLike.mutate({ shortId: s.id, liked: s.liked })}
           onDelete={async (id) => {
             const ok = await askConfirm({
@@ -320,11 +342,13 @@ function ShortsFeed({
   currentUserId,
   onToggleLike,
   onDelete,
+  onNearEnd,
 }: {
   shorts: ShortWithAuthor[];
   currentUserId: string | undefined;
   onToggleLike: (s: ShortWithAuthor) => void;
   onDelete: (id: string) => void;
+  onNearEnd: () => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [muted, setMuted] = useState(true);
@@ -358,6 +382,12 @@ function ShortsFeed({
     viewedRef.current.add(s.id);
     supabase.rpc("mm_short_increment_view", { _short_id: s.id }).then(() => {});
   }, [activeIdx, shorts]);
+
+  // Vai buscar mais Shorts quando faltarem 3 para o fim — a lista nunca cresce
+  // toda de uma vez, por isso o telemóvel guarda muito menos vídeos em memória.
+  useEffect(() => {
+    if (shorts.length > 0 && activeIdx >= shorts.length - 3) onNearEnd();
+  }, [activeIdx, shorts.length, onNearEnd]);
 
   const [commentsFor, setCommentsFor] = useState<ShortWithAuthor | null>(null);
 

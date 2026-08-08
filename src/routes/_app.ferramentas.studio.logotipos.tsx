@@ -363,6 +363,8 @@ function LogotiposPage() {
         <Step number="04" title="Mockups e banners" description="Aplica o logotipo escolhido em cartões, fachadas, embalagem, app, banners…">
           <div className="flex flex-col gap-4 md:flex-row md:items-start">
             <img
+              loading="lazy"
+              decoding="async"
               src={baseLogo}
               alt={`Logotipo base ${name}`}
               className="h-24 w-24 shrink-0 rounded-2xl border border-[color:var(--hairline)] bg-surface-1 object-contain p-2"
@@ -462,10 +464,10 @@ function LogotiposPage() {
               <div key={h.id} className="overflow-hidden rounded-2xl border border-[color:var(--hairline)] bg-surface-1">
                 <button type="button" onClick={() => !h.isApplication && setBaseLogo(h.url)} className="block w-full">
                   <img
-                    src={h.url}
-                    alt={h.brandName ? `Logotipo ${h.brandName}` : "Logotipo gerado"}
                     loading="lazy"
                     decoding="async"
+                    src={h.url}
+                    alt={h.brandName ? `Logotipo ${h.brandName}` : "Logotipo gerado"}
                     className="aspect-square w-full object-contain"
                   />
                 </button>

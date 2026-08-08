@@ -669,9 +669,10 @@ function ProofStep({
       <div className="mt-6 flex justify-center">
         <div className="w-full max-w-[320px] overflow-hidden rounded-2xl border border-border bg-surface-2 shadow-lg">
           <img
+            loading="lazy"
+            decoding="async"
             src={beat.image}
             alt={beat.title}
-            loading="lazy"
             className="block h-auto w-full"
           />
         </div>
@@ -713,10 +714,11 @@ function GalleryStep({ onNext, onBack }: { onNext: () => void; onBack: () => voi
             )}
           >
             <img
+              loading="lazy"
+              decoding="async"
               src={src}
               alt=""
               aria-hidden
-              loading="lazy"
               className="h-full w-full object-cover"
               style={{ aspectRatio: idx === 0 ? "16/11" : "1/1" }}
             />

@@ -43,11 +43,11 @@ function FerramentasLayout() {
         <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-r from-black via-black/70 to-black/20" />
         <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-black/90 via-transparent to-black/40" />
         <img
+          loading="lazy"
+          decoding="async"
           src={showcase1}
           alt="MM Studio — criativos publicitários com IA"
           className="absolute inset-0 h-full w-full object-cover object-right opacity-80"
-          loading="eager"
-          decoding="async"
           fetchPriority="high"
         />
         <div className="relative z-20 flex flex-col gap-6 p-8 md:p-14 lg:p-16 min-h-[520px] md:min-h-[560px] justify-end md:justify-center max-w-[720px]">
@@ -97,9 +97,10 @@ function FerramentasLayout() {
               className="group relative aspect-[4/5] overflow-hidden rounded-2xl border border-[color:var(--hairline)] bg-surface-1"
             >
               <img
+                loading="lazy"
+                decoding="async"
                 src={s.src}
                 alt={s.label}
-                loading="lazy"
                 className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]"
               />
               <figcaption className="absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-3 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-4">

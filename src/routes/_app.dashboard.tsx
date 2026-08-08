@@ -292,10 +292,11 @@ function ContinueHero({ course }: { course: import("@/data/types").Course }) {
       >
         {coverImage && (
           <img
+            loading="lazy"
+            decoding="async"
             src={coverImage}
             alt={course.title}
             className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
-            loading="lazy"
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-black/10 to-transparent" />

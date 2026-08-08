@@ -77,30 +77,9 @@ function ProfilePage() {
     }
   };
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) {
-        if (mounted) setSubLoading(false);
-        return;
-      }
-      if (!mounted) return;
-      await loadBilling();
-    })();
-    return () => {
-      mounted = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-
-
-
-
-
-
-  // Load session + profile
+  // Sessão, perfil e faturação num único arranque: antes eram dois efeitos que
+  // pediam a sessão em série, o que atrasava a página. Agora o perfil e a
+  // subscrição são pedidos ao mesmo tempo.
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -109,26 +88,37 @@ function ProfilePage() {
       setAuthUser(s.user ?? null);
       if (!s.user) {
         setLoading(false);
+        setSubLoading(false);
         return;
       }
-      const { data: p, error: pErr } = await supabase
+
+      const profilePromise = supabase
         .from("profiles")
         .select("id, display_name, avatar_url, cover_url, bio")
         .eq("id", s.user.id)
         .maybeSingle();
-      if (!mounted) return;
-      if (pErr) setError(pErr.message);
-      if (p) {
-        setProfile(p);
-        setDisplayName(p.display_name ?? "");
-        setBio(p.bio ?? "");
+
+      const billingPromise = loadBilling();
+
+      const { data: p, error: pErr } = await profilePromise;
+      if (mounted) {
+        if (pErr) setError(pErr.message);
+        if (p) {
+          setProfile(p);
+          setDisplayName(p.display_name ?? "");
+          setBio(p.bio ?? "");
+        }
+        setLoading(false);
       }
-      setLoading(false);
+
+      await billingPromise;
     })();
     return () => {
       mounted = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   // Resolve signed URL for private avatar bucket
   const avatarResolving = Boolean(profile?.avatar_url) && avatarUrl === null;
