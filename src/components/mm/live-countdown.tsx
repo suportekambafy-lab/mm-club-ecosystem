@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { CalendarClock } from "lucide-react";
+import { useTicker } from "@/hooks/use-ticker";
 
-function computeDelta(target: number) {
-  const diff = Math.max(0, target - Date.now());
+function computeDelta(target: number, now: number) {
+  const diff = Math.max(0, target - now);
   const days = Math.floor(diff / 86_400_000);
   const hours = Math.floor((diff % 86_400_000) / 3_600_000);
   const minutes = Math.floor((diff % 3_600_000) / 60_000);
@@ -18,12 +19,9 @@ export function LiveCountdown({
   variant?: "chip" | "hero";
 }) {
   const target = new Date(startsAt).getTime();
-  const [delta, setDelta] = useState(() => computeDelta(target));
+  const now = useTicker(1000);
+  const delta = useMemo(() => computeDelta(target, now), [target, now]);
 
-  useEffect(() => {
-    const id = setInterval(() => setDelta(computeDelta(target)), 1000);
-    return () => clearInterval(id);
-  }, [target]);
 
   if (delta.diff <= 0) return null;
 
