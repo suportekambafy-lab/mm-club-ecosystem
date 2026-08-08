@@ -33,9 +33,14 @@ type Tile = {
   isHost: boolean;
   isSpeaking: boolean;
   isScreen: boolean;
-  /** Track de vídeo a ligar ao <video>. Mantemos o track (não um MediaStream
-   * novo a cada render) para o vídeo não piscar em cada evento da sala. */
-  track: MediaStreamTrack | null;
+  /** RemoteTrack estável do LiveKit. O próprio SDK gere o MediaStream do
+   * elemento; criar MediaStreams manualmente provoca frames pretos. */
+  track: {
+    sid?: string;
+    mediaStreamTrack?: MediaStreamTrack;
+    attach: (element: HTMLMediaElement) => HTMLMediaElement;
+    detach: (element?: HTMLMediaElement) => HTMLMediaElement[];
+  } | null;
 };
 
 function initials(name: string) {
@@ -116,7 +121,7 @@ function EgressComposite() {
               isHost,
               isSpeaking: false,
               isScreen: true,
-              track: screen.track.mediaStreamTrack ?? null,
+              track: screen.track ?? null,
             });
           }
           next.push({
@@ -125,7 +130,7 @@ function EgressComposite() {
             isHost,
             isSpeaking: Boolean(p.isSpeaking),
             isScreen: false,
-            track: cam?.track?.mediaStreamTrack ?? null,
+            track: cam?.track ?? null,
           });
         }
 
@@ -141,7 +146,7 @@ function EgressComposite() {
           // Evita re-render (e o consequente flicker) quando nada mudou.
           const sig = (list: Tile[]) =>
             list
-              .map((t) => `${t.id}|${t.name}|${t.track?.id ?? "-"}|${t.isSpeaking ? 1 : 0}`)
+              .map((t) => `${t.id}|${t.name}|${t.track?.sid ?? t.track?.mediaStreamTrack?.id ?? "-"}`)
               .join(";");
           return sig(prev) === sig(next) ? prev : next;
         });
@@ -173,7 +178,6 @@ function EgressComposite() {
         .on(RoomEvent.ParticipantDisconnected, rebuild)
         .on(RoomEvent.TrackMuted, rebuild)
         .on(RoomEvent.TrackUnmuted, rebuild)
-        .on(RoomEvent.ActiveSpeakersChanged, rebuild)
         .on(RoomEvent.Disconnected, () => {
           console.log("END_RECORDING");
         });
@@ -205,6 +209,7 @@ function EgressComposite() {
 
   return (
     <div
+      translate="no"
       className="fixed inset-0 overflow-hidden font-sans text-white"
       style={{
         background:
@@ -285,19 +290,31 @@ function EgressComposite() {
 function TileView({ tile, large }: { tile: Tile; large?: boolean }) {
   const ref = useRef<HTMLVideoElement>(null);
   const boundId = useRef<string | null>(null);
-  const trackId = tile.track?.id ?? null;
+  const trackId = tile.track?.sid ?? tile.track?.mediaStreamTrack?.id ?? null;
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || !tile.track) return;
+    if (!el) return;
+    if (!tile.track) {
+      boundId.current = null;
+      el.srcObject = null;
+      return;
+    }
     // Só voltamos a ligar o srcObject quando o track muda de facto: reatribuir
     // o mesmo track faz o <video> voltar a preto por um instante (o "piscar").
     if (boundId.current === trackId) return;
     boundId.current = trackId;
-    el.srcObject = new MediaStream([tile.track]);
     el.muted = true;
+    tile.track.attach(el);
     const p = el.play();
     if (p && typeof p.catch === "function") p.catch(() => {});
+    return () => {
+      try {
+        tile.track?.detach(el);
+      } catch {
+        /* noop */
+      }
+    };
   }, [trackId, tile.track]);
 
   return (
@@ -312,17 +329,15 @@ function TileView({ tile, large }: { tile: Tile; large?: boolean }) {
           : "0 20px 60px rgba(0,0,0,0.45)",
       }}
     >
-      {tile.track ? (
-
-        <video
-          ref={ref}
-          autoPlay
-          playsInline
-          muted
-          className="h-full w-full"
-          style={{ objectFit: tile.isScreen ? "contain" : "cover" }}
-        />
-      ) : (
+      <video
+        ref={ref}
+        autoPlay
+        playsInline
+        muted
+        className={tile.track ? "h-full w-full" : "invisible absolute h-full w-full"}
+        style={{ objectFit: tile.isScreen ? "contain" : "cover" }}
+      />
+      {!tile.track && (
         <div className="grid h-full w-full place-items-center bg-gradient-to-br from-neutral-900 to-black">
           <div
             className="grid place-items-center rounded-full font-semibold text-black"

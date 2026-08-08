@@ -96,6 +96,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "MM Club" },
       { name: "application-name", content: "MM Club" },
+      { name: "google", content: "notranslate" },
       { title: "MM Club — Ecossistema privado da Marca Milionária" },
       {
         name: "description",
@@ -182,14 +183,14 @@ try {
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt" suppressHydrationWarning>
+    <html lang="pt-PT" translate="no" className="notranslate" suppressHydrationWarning>
       <head suppressHydrationWarning>
         <HeadContent />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: PWA_RUNTIME_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: META_PIXEL_SCRIPT }} />
       </head>
-      <body suppressHydrationWarning>
+      <body translate="no" className="notranslate" suppressHydrationWarning>
         <noscript>
           <img
             height="1"
