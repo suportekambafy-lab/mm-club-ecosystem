@@ -56,7 +56,7 @@ export async function mergeVideos(
   const names: string[] = [];
   for (let i = 0; i < urls.length; i++) {
     const name = `seg_${i}.mp4`;
-    await ff.writeFile(name, await fetchFile(urls[i]));
+    await ff.writeFile(name, await fetchFileData(urls[i]));
     names.push(name);
     onProgress?.(`Segmento ${i + 1}/${urls.length} carregado`, ((i + 1) / (urls.length + 1)) * 100);
   }
