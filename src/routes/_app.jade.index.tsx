@@ -2,8 +2,9 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2 } from "lucide-react";
-import { createThread, listThreads } from "@/lib/jade-threads.functions";
+import { createThread, listThreads, type AiThread } from "@/lib/jade-threads.functions";
+import { JadeChatSkeleton } from "@/components/mm/jade-skeleton";
+
 
 export const Route = createFileRoute("/_app/jade/")({
   head: () => ({
@@ -38,9 +39,16 @@ function JadeIndex() {
     started.current = true;
     void (async () => {
       try {
-        const threads = await fetchThreads();
+        // Reutiliza a lista já pedida pelo layout — evita um segundo pedido em série.
+        const threads = await queryClient.ensureQueryData<AiThread[]>({
+          queryKey: ["ai-threads"],
+          queryFn: () => fetchThreads(),
+          staleTime: 10_000,
+        });
         const target = threads[0] ?? (await newThread());
-        await queryClient.invalidateQueries({ queryKey: ["ai-threads"] });
+        if (!threads[0]) {
+          await queryClient.invalidateQueries({ queryKey: ["ai-threads"] });
+        }
         void navigate({
           to: "/jade/$threadId",
           params: { threadId: target.id },
@@ -52,9 +60,6 @@ function JadeIndex() {
     })();
   }, [fetchThreads, newThread, navigate, queryClient]);
 
-  return (
-    <div className="flex flex-1 items-center justify-center">
-      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-    </div>
-  );
+  return <JadeChatSkeleton />;
 }
+

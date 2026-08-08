@@ -1,12 +1,13 @@
 import { createFileRoute, Outlet, useNavigate, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MessageSquare, Plus, Trash2, PanelLeft, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   createThread,
   deleteThread,
+  getThread,
   listThreads,
   type AiThread,
 } from "@/lib/jade-threads.functions";
@@ -27,6 +28,7 @@ function JadeLayout() {
   const fetchThreads = useServerFn(listThreads);
   const newThread = useServerFn(createThread);
   const removeThread = useServerFn(deleteThread);
+  const fetchThread = useServerFn(getThread);
 
   const threadsQuery = useQuery({
     queryKey: ["ai-threads"],
@@ -34,6 +36,22 @@ function JadeLayout() {
     staleTime: 10_000,
   });
   const threads: AiThread[] = threadsQuery.data ?? [];
+
+  const prefetchThread = (id: string) => {
+    void queryClient.prefetchQuery({
+      queryKey: ["ai-thread", id],
+      queryFn: () => fetchThread({ data: { threadId: id } }),
+      staleTime: 60_000,
+    });
+  };
+
+  // Pré-carrega a conversa mais recente para abrir instantaneamente.
+  const firstId = threads[0]?.id;
+  useEffect(() => {
+    if (firstId) prefetchThread(firstId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstId]);
+
 
   const create = useMutation({
     mutationFn: () => newThread(),
@@ -95,8 +113,12 @@ function JadeLayout() {
                 setDrawerOpen(false);
                 void navigate({ to: "/jade/$threadId", params: { threadId: t.id } });
               }}
+              onMouseEnter={() => prefetchThread(t.id)}
+              onFocus={() => prefetchThread(t.id)}
+              onTouchStart={() => prefetchThread(t.id)}
               className="flex min-w-0 flex-1 items-center gap-2 py-2.5 text-left"
             >
+
               <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               <span className="truncate text-sm text-foreground">{t.title}</span>
             </button>

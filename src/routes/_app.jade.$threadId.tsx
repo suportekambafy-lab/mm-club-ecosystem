@@ -2,10 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useMemo } from "react";
-import { Loader2 } from "lucide-react";
 import type { UIMessage } from "ai";
 import { getThread, type AiMessageRow } from "@/lib/jade-threads.functions";
 import { JadeChat } from "@/components/mm/jade-chat";
+import { JadeChatSkeleton } from "@/components/mm/jade-skeleton";
+
 
 export const Route = createFileRoute("/_app/jade/$threadId")({
   head: () => ({
@@ -48,8 +49,8 @@ function JadeThreadPage() {
   const query = useQuery({
     queryKey: ["ai-thread", threadId],
     queryFn: () => fetchThread({ data: { threadId } }),
-    staleTime: Infinity,
-    gcTime: 0,
+    staleTime: 60_000,
+    gcTime: 30 * 60_000,
   });
 
   useEffect(() => {
@@ -67,13 +68,10 @@ function JadeThreadPage() {
     void queryClient.invalidateQueries({ queryKey: ["ai-threads"] });
   }, [queryClient]);
 
-  if (query.isLoading || !query.data) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-      </div>
-    );
+  if (!query.data) {
+    return <JadeChatSkeleton />;
   }
+
 
   return (
     <JadeChat
