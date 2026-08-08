@@ -43,6 +43,8 @@ function FerramentasLayout() {
         <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-r from-black via-black/70 to-black/20" />
         <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-black/90 via-transparent to-black/40" />
         <img
+          loading="lazy"
+          decoding="async"
           src={showcase1}
           alt="MM Studio — criativos publicitários com IA"
           className="absolute inset-0 h-full w-full object-cover object-right opacity-80"
@@ -97,6 +99,8 @@ function FerramentasLayout() {
               className="group relative aspect-[4/5] overflow-hidden rounded-2xl border border-[color:var(--hairline)] bg-surface-1"
             >
               <img
+                loading="lazy"
+                decoding="async"
                 src={s.src}
                 alt={s.label}
                 loading="lazy"

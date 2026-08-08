@@ -1112,6 +1112,8 @@ function Avatar({
   if (src) {
     return (
       <img
+        loading="lazy"
+        decoding="async"
         src={src}
         alt={name}
         loading="lazy"
@@ -1349,6 +1351,8 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
       {post.image_url && !editing && (
         <div className="mt-3 flex justify-center overflow-hidden rounded-xl border border-border bg-surface-2">
           <img
+            loading="lazy"
+            decoding="async"
             src={post.image_url}
             alt=""
             loading="lazy"

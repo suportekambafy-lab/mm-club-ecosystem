@@ -112,6 +112,8 @@ export function CommunitySpotlight({ enabled = true }: { enabled?: boolean }) {
       >
         {cover && (
           <img
+            loading="lazy"
+            decoding="async"
             src={cover}
             alt=""
             width={64}

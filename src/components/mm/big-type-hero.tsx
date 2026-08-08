@@ -376,6 +376,8 @@ export function BigTypeHero() {
             <div className="mt-8 flex items-center justify-between rounded-2xl border border-border bg-surface-2/60 p-3">
               <div className="flex items-center gap-2.5">
                 <img
+                  loading="lazy"
+                  decoding="async"
                   src={realCourse.logo ?? realCourse.cover}
                   alt={realCourse.title}
                   loading="lazy"
@@ -462,6 +464,8 @@ export function BigTypeHero() {
 
                 {[avatar1, avatar3, avatar5, avatar2].map((src, i) => (
                   <img
+                    loading="lazy"
+                    decoding="async"
                     key={i}
                     src={src}
                     alt=""

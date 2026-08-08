@@ -36,6 +36,8 @@ export function ExpertAvatar({
     >
       {expert.logo ? (
         <img
+          loading="lazy"
+          decoding="async"
           src={expert.logo}
           alt=""
           className="h-full w-full object-cover"

@@ -60,6 +60,8 @@ export function MemberAvatar({
     >
       {showImage ? (
         <img
+          loading="lazy"
+          decoding="async"
           src={resolved ?? ""}
           alt=""
           onError={() => setBroken(true)}

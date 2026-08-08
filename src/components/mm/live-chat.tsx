@@ -346,6 +346,8 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
                         <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-surface-2 text-[10px] font-semibold text-muted-foreground ring-1 ring-border/60">
                           {profile?.avatar_url ? (
                             <img
+                              loading="lazy"
+                              decoding="async"
                               src={profile.avatar_url}
                               alt=""
                               loading="lazy"
