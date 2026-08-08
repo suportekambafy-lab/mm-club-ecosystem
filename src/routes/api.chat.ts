@@ -33,8 +33,12 @@ async function persistMessages(
       .filter((r) => r.parts.length > 0);
 
     if (rows.length > 0) {
-      await admin.from("ai_messages").upsert(rows, { onConflict: "thread_id,client_id" });
+      const { error: upsertError } = await admin
+        .from("ai_messages")
+        .upsert(rows, { onConflict: "thread_id,client_id" });
+      if (upsertError) console.error("[api.chat] upsert messages failed", upsertError);
     }
+
 
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (!thread.title || thread.title === "Nova conversa") {
