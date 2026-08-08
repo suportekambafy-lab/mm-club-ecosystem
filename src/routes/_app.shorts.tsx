@@ -127,14 +127,18 @@ function ShortsPage() {
     [user, qc],
   );
 
-  const shortsQuery = useQuery<ShortWithAuthor[]>({
+  const shortsQuery = useInfiniteQuery<ShortWithAuthor[]>({
     queryKey: ["mm-shorts", user?.id ?? "anon"],
-    queryFn: async () => {
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length < SHORTS_PAGE_SIZE ? undefined : allPages.length,
+    queryFn: async ({ pageParam }) => {
+      const from = (pageParam as number) * SHORTS_PAGE_SIZE;
       const { data: shorts, error } = await supabase
         .from("mm_shorts")
         .select("id, author_id, video_url, thumbnail_url, caption, views_count, likes_count, comments_count, created_at")
         .order("created_at", { ascending: false })
-        .limit(50);
+        .range(from, from + SHORTS_PAGE_SIZE - 1);
       if (error) throw error;
       const rows = (shorts ?? []) as ShortRow[];
       if (rows.length === 0) return [];
@@ -176,7 +180,10 @@ function ShortsPage() {
     },
   });
 
-  const shorts = shortsQuery.data ?? [];
+  const shorts = useMemo(
+    () => (shortsQuery.data?.pages ?? []).flat() as ShortWithAuthor[],
+    [shortsQuery.data],
+  );
 
   const toggleLike = useMutation({
     mutationFn: async ({ shortId, liked }: { shortId: string; liked: boolean }) => {
@@ -189,13 +196,21 @@ function ShortsPage() {
     },
     onMutate: async ({ shortId, liked }) => {
       await qc.cancelQueries({ queryKey: ["mm-shorts", user?.id ?? "anon"] });
-      const prev = qc.getQueryData<ShortWithAuthor[]>(["mm-shorts", user?.id ?? "anon"]);
-      qc.setQueryData<ShortWithAuthor[]>(["mm-shorts", user?.id ?? "anon"], (old) =>
-        (old ?? []).map((s) =>
-          s.id === shortId
-            ? { ...s, liked: !liked, likes_count: Math.max(0, s.likes_count + (liked ? -1 : 1)) }
-            : s,
-        ),
+      type Pages = { pages: ShortWithAuthor[][]; pageParams: unknown[] };
+      const prev = qc.getQueryData<Pages>(["mm-shorts", user?.id ?? "anon"]);
+      qc.setQueryData<Pages>(["mm-shorts", user?.id ?? "anon"], (old) =>
+        old
+          ? {
+              ...old,
+              pages: old.pages.map((page) =>
+                page.map((s) =>
+                  s.id === shortId
+                    ? { ...s, liked: !liked, likes_count: Math.max(0, s.likes_count + (liked ? -1 : 1)) }
+                    : s,
+                ),
+              ),
+            }
+          : old,
       );
       return { prev };
     },
