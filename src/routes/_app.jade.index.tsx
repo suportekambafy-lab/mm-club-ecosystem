@@ -39,9 +39,16 @@ function JadeIndex() {
     started.current = true;
     void (async () => {
       try {
-        const threads = await fetchThreads();
+        // Reutiliza a lista já pedida pelo layout — evita um segundo pedido em série.
+        const threads = await queryClient.ensureQueryData<AiThread[]>({
+          queryKey: ["ai-threads"],
+          queryFn: () => fetchThreads(),
+          staleTime: 10_000,
+        });
         const target = threads[0] ?? (await newThread());
-        await queryClient.invalidateQueries({ queryKey: ["ai-threads"] });
+        if (!threads[0]) {
+          await queryClient.invalidateQueries({ queryKey: ["ai-threads"] });
+        }
         void navigate({
           to: "/jade/$threadId",
           params: { threadId: target.id },
@@ -53,9 +60,6 @@ function JadeIndex() {
     })();
   }, [fetchThreads, newThread, navigate, queryClient]);
 
-  return (
-    <div className="flex flex-1 items-center justify-center">
-      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-    </div>
-  );
+  return <JadeChatSkeleton />;
 }
+
