@@ -118,7 +118,6 @@ export function CommunitySpotlight({ enabled = true }: { enabled?: boolean }) {
             alt=""
             width={64}
             height={44}
-            decoding="async"
             fetchPriority="high"
             className="h-11 w-16 shrink-0 rounded-lg bg-muted object-cover"
           />

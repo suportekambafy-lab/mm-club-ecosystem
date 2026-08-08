@@ -1116,8 +1116,6 @@ function Avatar({
         decoding="async"
         src={src}
         alt={name}
-        loading="lazy"
-        decoding="async"
         style={{ width: size, height: size }}
         className="rounded-full object-cover shrink-0"
       />
@@ -1355,7 +1353,6 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
             decoding="async"
             src={post.image_url}
             alt=""
-            loading="lazy"
             className="max-h-[560px] w-auto max-w-full object-contain sm:max-w-[560px]"
           />
         </div>

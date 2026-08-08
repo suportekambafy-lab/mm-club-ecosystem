@@ -673,7 +673,6 @@ function ProofStep({
             decoding="async"
             src={beat.image}
             alt={beat.title}
-            loading="lazy"
             className="block h-auto w-full"
           />
         </div>
@@ -720,7 +719,6 @@ function GalleryStep({ onNext, onBack }: { onNext: () => void; onBack: () => voi
               src={src}
               alt=""
               aria-hidden
-              loading="lazy"
               className="h-full w-full object-cover"
               style={{ aspectRatio: idx === 0 ? "16/11" : "1/1" }}
             />

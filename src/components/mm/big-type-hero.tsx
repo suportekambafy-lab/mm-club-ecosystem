@@ -380,7 +380,6 @@ export function BigTypeHero() {
                   decoding="async"
                   src={realCourse.logo ?? realCourse.cover}
                   alt={realCourse.title}
-                  loading="lazy"
                   className="h-9 w-9 rounded-xl object-cover"
                 />
                 <div>
@@ -469,7 +468,6 @@ export function BigTypeHero() {
                     key={i}
                     src={src}
                     alt=""
-                    loading="lazy"
                     width={24}
                     height={24}
                     className="h-6 w-6 rounded-full border-2 border-surface-1 object-cover"

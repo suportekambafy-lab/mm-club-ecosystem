@@ -468,8 +468,6 @@ function LogotiposPage() {
                     decoding="async"
                     src={h.url}
                     alt={h.brandName ? `Logotipo ${h.brandName}` : "Logotipo gerado"}
-                    loading="lazy"
-                    decoding="async"
                     className="aspect-square w-full object-contain"
                   />
                 </button>

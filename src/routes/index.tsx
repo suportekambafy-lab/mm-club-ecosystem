@@ -273,7 +273,6 @@ function Hero() {
                     key={i}
                     src={src}
                     alt=""
-                    loading="lazy"
                     width={28}
                     height={28}
                     className="h-7 w-7 rounded-full border-2 border-surface-1 object-cover"
@@ -580,7 +579,6 @@ function FeatureComunidade() {
                     decoding="async"
                     src={i ? avatar2 : avatar1}
                     alt=""
-                    loading="lazy"
                     width={36}
                     height={36}
                     className="h-9 w-9 rounded-full object-cover"

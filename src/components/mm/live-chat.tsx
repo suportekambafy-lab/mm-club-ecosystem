@@ -350,8 +350,6 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
                               decoding="async"
                               src={profile.avatar_url}
                               alt=""
-                              loading="lazy"
-                              decoding="async"
                               className="h-full w-full object-cover"
                             />
                           ) : (
