@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import {
   createThread,
   deleteThread,
+  getThread,
   listThreads,
   type AiThread,
 } from "@/lib/jade-threads.functions";
@@ -27,6 +28,7 @@ function JadeLayout() {
   const fetchThreads = useServerFn(listThreads);
   const newThread = useServerFn(createThread);
   const removeThread = useServerFn(deleteThread);
+  const fetchThread = useServerFn(getThread);
 
   const threadsQuery = useQuery({
     queryKey: ["ai-threads"],
@@ -34,6 +36,15 @@ function JadeLayout() {
     staleTime: 10_000,
   });
   const threads: AiThread[] = threadsQuery.data ?? [];
+
+  const prefetchThread = (id: string) => {
+    void queryClient.prefetchQuery({
+      queryKey: ["ai-thread", id],
+      queryFn: () => fetchThread({ data: { threadId: id } }),
+      staleTime: 60_000,
+    });
+  };
+
 
   const create = useMutation({
     mutationFn: () => newThread(),
