@@ -6,12 +6,15 @@
  * both experiences under a single route driven by `lives.mode`.
  */
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { ChevronLeft, Loader2, Users, MessageSquare, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getLive } from "@/lib/lives.functions";
 import { joinRoom } from "@/lib/live-room.functions";
-import { InteractiveRoom } from "@/components/live/interactive-room";
+// A sala interativa carrega o LiveKit — diferida para não pesar no arranque da app.
+const InteractiveRoom = lazy(() =>
+  import("@/components/live/interactive-room").then((m) => ({ default: m.InteractiveRoom })),
+);
 import { PreJoin } from "@/components/live/pre-join";
 import { LiveChat } from "@/components/mm/live-chat";
 import { MemberAvatar } from "@/components/mm/member-avatar";
@@ -288,14 +291,16 @@ function SalaRoute() {
 
   return (
     <SalaShell liveId={live.id} userId={userId} onLeave={handleLeave}>
-      <InteractiveRoom
+      <Suspense fallback={<FullscreenLoader label="A ligar à sala…" />}>
+        <InteractiveRoom
         liveId={live.id}
         localUserId={userId}
         token={session.token}
         url={session.url}
         target={target}
-        onLeave={handleLeave}
-      />
+          onLeave={handleLeave}
+        />
+      </Suspense>
     </SalaShell>
   );
 }

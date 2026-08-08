@@ -7,14 +7,17 @@
  */
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, Radio, CalendarClock } from "lucide-react";
 import { joinLiveAsGuest, getGuestLiveInfo } from "@/lib/live-guest.functions";
 import { LiveCountdown } from "@/components/mm/live-countdown";
 import { resolveLiveCoverUrl } from "@/lib/live-cover-url";
 import { PreJoin } from "@/components/live/pre-join";
-import { GuestRoom } from "@/components/live/guest-room";
+// A sala usa o LiveKit (biblioteca grande) — só carrega quando o convidado entra.
+const GuestRoom = lazy(() =>
+  import("@/components/live/guest-room").then((m) => ({ default: m.GuestRoom })),
+);
 import type { MediaPrefs } from "@/lib/media-prefs";
 
 type Search = { c?: string };
@@ -123,6 +126,7 @@ function GuestEntry() {
   if (step === "room" && session && prefs) {
     return (
       <div className="h-[100dvh] w-full bg-black">
+        <Suspense fallback={<RoomLoader />}>
         <GuestRoom
           token={session.token}
           url={session.url}
