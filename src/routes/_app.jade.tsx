@@ -1,421 +1,153 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { authHeaders } from "@/lib/auth-headers";
-import { useState, useRef, useEffect, useMemo } from "react";
-import { ArrowUp, Square, Mic, Loader2, Phone, Plus } from "lucide-react";
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, type UIMessage } from "ai";
-import ReactMarkdown from "react-markdown";
+import { createFileRoute, Outlet, useNavigate, useParams } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+import { MessageSquare, Plus, Trash2, PanelLeft, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { JadeCallOverlay } from "@/components/mm/jade-call";
+import {
+  createThread,
+  deleteThread,
+  listThreads,
+  type AiThread,
+} from "@/lib/jade-threads.functions";
+import { useConfirm } from "@/components/mm/confirm-dialog";
 
 export const Route = createFileRoute("/_app/jade")({
-  head: () => ({
-    meta: [
-      { title: "MM Inteligente — MM Club" },
-      {
-        name: "description",
-        content:
-          "MM Inteligente do MM Club: pergunte sobre marca, marketing, vendas, escala e liderança.",
-      },
-    ],
-  }),
-  component: SuporteIAPage,
+  component: JadeLayout,
 });
 
-const suggestions = [
-  "Como posiciono a minha marca pessoal num nicho saturado?",
-  "Dá-me uma estrutura para uma oferta premium.",
-  "Como escrever uma bio que converte no Instagram?",
-  "Quais métricas devo acompanhar todas as semanas?",
-];
+function JadeLayout() {
+  const navigate = useNavigate();
+  const params = useParams({ strict: false }) as { threadId?: string };
+  const activeId = params.threadId;
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const { confirm, dialog } = useConfirm();
 
-function SuporteIAPage() {
-  const [chatId, setChatId] = useState(() => `c-${Date.now()}`);
-  const [input, setInput] = useState("");
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const streamRef = useRef<MediaStream | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isTranscribing, setIsTranscribing] = useState(false);
-  const [recError, setRecError] = useState<string | null>(null);
-  const [callOpen, setCallOpen] = useState(false);
+  const fetchThreads = useServerFn(listThreads);
+  const newThread = useServerFn(createThread);
+  const removeThread = useServerFn(deleteThread);
 
-  const transport = useMemo(
-    () =>
-      new DefaultChatTransport({
-        api: "/api/chat",
-        headers: () => authHeaders(),
-      }),
-    [],
-  );
+  const threadsQuery = useQuery({
+    queryKey: ["ai-threads"],
+    queryFn: () => fetchThreads(),
+    staleTime: 10_000,
+  });
+  const threads: AiThread[] = threadsQuery.data ?? [];
 
-  const { messages, sendMessage, status, stop, error, setMessages } = useChat({
-    id: chatId,
-    transport,
+  const create = useMutation({
+    mutationFn: () => newThread(),
+    onSuccess: async (thread) => {
+      await queryClient.invalidateQueries({ queryKey: ["ai-threads"] });
+      setDrawerOpen(false);
+      void navigate({ to: "/jade/$threadId", params: { threadId: thread.id } });
+    },
   });
 
-  const isBusy = status === "submitted" || status === "streaming";
-
-  useEffect(() => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: "smooth",
+  async function onDelete(id: string) {
+    const ok = await confirm({
+      title: "Eliminar esta conversa?",
+      description: "Esta ação não pode ser desfeita.",
+      confirmLabel: "Eliminar",
+      destructive: true,
+      surface: "mm-inteligente",
+      action: "delete-thread",
     });
-  }, [messages, status]);
-
-  useEffect(() => {
-    textareaRef.current?.focus();
-  }, [chatId]);
-
-  // Lock page scroll so only the messages container scrolls (native app feel).
-  useEffect(() => {
-    const html = document.documentElement;
-    const body = document.body;
-    const prevHtml = html.style.overflow;
-    const prevBody = body.style.overflow;
-    const prevOverscroll = body.style.overscrollBehavior;
-    html.style.overflow = "hidden";
-    body.style.overflow = "hidden";
-    body.style.overscrollBehavior = "none";
-    return () => {
-      html.style.overflow = prevHtml;
-      body.style.overflow = prevBody;
-      body.style.overscrollBehavior = prevOverscroll;
-    };
-  }, []);
-
-  function send(text: string) {
-    const trimmed = text.trim();
-    if (!trimmed || isBusy) return;
-    setInput("");
-    void sendMessage({ text: trimmed });
-    requestAnimationFrame(() => textareaRef.current?.focus());
+    if (!ok) return;
+    await removeThread({ data: { threadId: id } });
+    await queryClient.invalidateQueries({ queryKey: ["ai-threads"] });
+    if (activeId === id) void navigate({ to: "/jade", replace: true });
   }
 
-  function pickMimeType(): string {
-    const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/mpeg"];
-    for (const t of candidates) {
-      if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(t)) return t;
-    }
-    return "";
-  }
-
-  async function startRecording() {
-    setRecError(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-      const mimeType = pickMimeType();
-      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-      audioChunksRef.current = [];
-      recorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) audioChunksRef.current.push(e.data);
-      };
-      recorder.onstop = async () => {
-        const type = recorder.mimeType || "audio/webm";
-        const blob = new Blob(audioChunksRef.current, { type });
-        streamRef.current?.getTracks().forEach((t) => t.stop());
-        streamRef.current = null;
-        if (blob.size < 2048) {
-          setRecError("Gravação demasiado curta. Tenta novamente.");
-          setIsTranscribing(false);
-          return;
-        }
-        await transcribeAndFill(blob);
-      };
-      recorder.start();
-      mediaRecorderRef.current = recorder;
-      setIsRecording(true);
-    } catch (err) {
-      setRecError(
-        err instanceof Error && err.name === "NotAllowedError"
-          ? "Permissão do microfone negada."
-          : "Não foi possível iniciar a gravação.",
-      );
-    }
-  }
-
-  function stopRecording() {
-    const rec = mediaRecorderRef.current;
-    if (rec && rec.state !== "inactive") {
-      setIsRecording(false);
-      setIsTranscribing(true);
-      rec.stop();
-    }
-  }
-
-  async function transcribeAndFill(blob: Blob) {
-    try {
-      const form = new FormData();
-      const ext = (blob.type.split(";")[0].split("/")[1] || "webm").replace("mpeg", "mp3");
-      form.append("file", blob, `recording.${ext}`);
-      const res = await fetch("/api/transcribe", {
-        method: "POST",
-        body: form,
-        headers: await authHeaders(),
-      });
-      if (!res.ok) {
-        const t = await res.text().catch(() => "");
-        throw new Error(t || `Falha na transcrição (${res.status})`);
-      }
-      const data = (await res.json()) as { text?: string };
-      const text = (data.text ?? "").trim();
-      if (!text) {
-        setRecError("Não foi possível transcrever o áudio.");
-        return;
-      }
-      setInput((prev) => (prev ? `${prev} ${text}` : text));
-      requestAnimationFrame(() => textareaRef.current?.focus());
-    } catch (e) {
-      setRecError(e instanceof Error ? e.message : "Erro ao transcrever.");
-    } finally {
-      setIsTranscribing(false);
-    }
-  }
-
-  function newConversation() {
-    stop();
-    setMessages([]);
-    setChatId(`c-${Date.now()}`);
-    setInput("");
-  }
-
-  return (
-    <div className="fixed inset-x-0 bottom-0 z-10 flex flex-col overflow-hidden bg-background top-[calc(env(safe-area-inset-top)+4rem)] sm:top-[calc(env(safe-area-inset-top)+4.5rem)] md:top-[calc(env(safe-area-inset-top)+5rem)] lg:left-[var(--mm-sidebar-w,0px)]">
-
-
-      <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-8 md:py-4">
-        <div className="min-w-0">
-          <h1 className="font-display text-lg text-foreground">MM Inteligente</h1>
-          <p className="text-xs text-muted-foreground">
-            Marca, marketing, vendas e escala.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setCallOpen(true)}
-            aria-label="Chamada"
-            title="Chamada"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:bg-gold-soft"
-          >
-            <Phone className="h-4 w-4" />
-          </button>
-          <button
-            onClick={newConversation}
-            aria-label="Nova conversa"
-            title="Nova conversa"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface-1 text-foreground transition hover:bg-surface-2"
-          >
-            <Plus className="h-4 w-4" />
-          </button>
-
-        </div>
-      </header>
-      {callOpen && <JadeCallOverlay onClose={() => setCallOpen(false)} />}
-
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 md:px-8">
-        <div className="mx-auto max-w-2xl space-y-6">
-          {messages.length === 0 && (
-            <div className="space-y-6 py-8 text-center md:py-12">
-              <div>
-                <h2 className="font-display text-2xl text-foreground">
-                  Como te posso ajudar?
-                </h2>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Pergunta sobre marca, marketing, vendas, escala ou liderança.
-                </p>
-              </div>
-              <div className="mx-auto grid max-w-xl grid-cols-1 gap-2 sm:grid-cols-2">
-                {suggestions.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => send(s)}
-                    className="rounded-xl border border-border bg-surface-1 px-4 py-3 text-left text-sm text-foreground transition hover:border-[color:var(--hairline)] hover:bg-surface-2"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {messages.map((m, i) => (
-            <Bubble
-              key={m.id}
-              message={m}
-              onPick={send}
-              interactive={!isBusy && i === messages.length - 1}
-            />
-          ))}
-
-          {status === "submitted" && <TypingIndicator />}
-
-          {error && (
-            <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              Ocorreu um erro ao contactar o MM Inteligente. Tenta novamente.
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="border-t border-border bg-background/80 px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+7.5rem)] backdrop-blur-xl md:px-8 md:pt-4 md:pb-4">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            send(input);
-          }}
-          className="mx-auto flex max-w-2xl items-end gap-3 rounded-2xl bg-surface-1 p-2 ring-1 ring-border transition focus-within:ring-[color:var(--hairline)]"
+  const list = (
+    <nav className="flex h-full flex-col">
+      <div className="flex items-center justify-between gap-2 px-3 py-3">
+        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Conversas
+        </span>
+        <button
+          onClick={() => create.mutate()}
+          disabled={create.isPending}
+          className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-surface-1 px-3 text-xs text-foreground transition hover:bg-surface-2 disabled:opacity-50"
         >
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                send(input);
-              }
-            }}
-            rows={1}
-            placeholder="Escreve a tua pergunta…"
-            className="flex-1 resize-none bg-transparent px-3 py-2.5 text-base text-foreground placeholder:text-muted-foreground focus:outline-none md:text-sm"
-            style={{ fontSize: "16px" }}
-            autoFocus
-          />
-          {!isBusy && !input.trim() && (
-            <button
-              type="button"
-              onClick={isRecording ? stopRecording : startRecording}
-              disabled={isTranscribing}
-              className={cn(
-                "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 transition disabled:opacity-40",
-                isRecording
-                  ? "bg-destructive/15 text-destructive ring-destructive/40 animate-pulse"
-                  : "bg-surface-2 text-foreground ring-border hover:bg-surface-3",
-              )}
-              aria-label={isRecording ? "Parar gravação" : "Gravar áudio"}
-            >
-              {isTranscribing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : isRecording ? (
-                <Square className="h-3.5 w-3.5" />
-              ) : (
-                <Mic className="h-4 w-4" />
-              )}
-            </button>
-          )}
-          {isBusy ? (
-            <button
-              type="button"
-              onClick={() => stop()}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-foreground ring-1 ring-border transition hover:bg-surface-3"
-              aria-label="Parar"
-            >
-              <Square className="h-3.5 w-3.5" />
-            </button>
-          ) : (
-            <button
-              type="submit"
-              disabled={!input.trim()}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground transition hover:bg-gold-soft disabled:opacity-40"
-              aria-label="Enviar"
-            >
-              <ArrowUp className="h-4 w-4" />
-            </button>
-          )}
-        </form>
-        {recError && (
-          <p className="mx-auto mt-2 max-w-2xl text-center text-[11px] text-destructive">{recError}</p>
-        )}
-        <p className="mx-auto mt-2 max-w-2xl text-center text-[10px] text-muted-foreground">
-          MM Inteligente pode cometer erros. Verifica informação importante.
-        </p>
+          <Plus className="h-3.5 w-3.5" /> Nova
+        </button>
       </div>
-    </div>
-  );
-}
-
-function messageText(m: UIMessage): string {
-  return m.parts
-    .map((p) => (p.type === "text" ? p.text : ""))
-    .join("");
-}
-
-const OPTION_RE = /\[\[([^\]\n]{1,80})\]\]/g;
-
-function splitOptions(raw: string): { text: string; options: string[] } {
-  const options: string[] = [];
-  for (const m of raw.matchAll(OPTION_RE)) {
-    const value = m[1].trim();
-    if (value && !options.includes(value)) options.push(value);
-  }
-  const text = raw
-    .replace(OPTION_RE, "")
-    .replace(/^[\s]*[-•*]\s*$/gm, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-  return { text, options: options.slice(0, 5) };
-}
-
-function Bubble({
-  message,
-  onPick,
-  interactive,
-}: {
-  message: UIMessage;
-  onPick?: (text: string) => void;
-  interactive?: boolean;
-}) {
-  const isUser = message.role === "user";
-  const raw = messageText(message);
-  const { text, options } = isUser ? { text: raw, options: [] as string[] } : splitOptions(raw);
-  return (
-    <div className={cn("flex flex-col gap-2", isUser ? "items-end" : "items-start")}>
-      <div
-        className={cn(
-          "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
-          isUser
-            ? "whitespace-pre-wrap bg-primary text-primary-foreground"
-            : "bg-surface-1 text-foreground ring-1 ring-border",
+      <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-4">
+        {threadsQuery.isLoading && (
+          <p className="px-2 py-3 text-xs text-muted-foreground">A carregar…</p>
         )}
-      >
-        {isUser ? (
-          text
-        ) : (
-          <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-headings:font-display prose-headings:text-foreground prose-strong:text-primary prose-a:text-primary">
-            <ReactMarkdown>{text || "…"}</ReactMarkdown>
+        {!threadsQuery.isLoading && threads.length === 0 && (
+          <p className="px-2 py-3 text-xs text-muted-foreground">
+            Ainda sem conversas. Começa uma nova.
+          </p>
+        )}
+        {threads.map((t) => (
+          <div
+            key={t.id}
+            className={cn(
+              "group mb-1 flex items-center gap-1 rounded-xl px-2 transition",
+              activeId === t.id ? "bg-surface-2" : "hover:bg-surface-1",
+            )}
+          >
+            <button
+              onClick={() => {
+                setDrawerOpen(false);
+                void navigate({ to: "/jade/$threadId", params: { threadId: t.id } });
+              }}
+              className="flex min-w-0 flex-1 items-center gap-2 py-2.5 text-left"
+            >
+              <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              <span className="truncate text-sm text-foreground">{t.title}</span>
+            </button>
+            <button
+              onClick={() => void onDelete(t.id)}
+              aria-label="Eliminar conversa"
+              className="shrink-0 rounded-lg p-1.5 text-muted-foreground opacity-0 transition hover:text-destructive focus:opacity-100 group-hover:opacity-100"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
           </div>
-        )}
+        ))}
       </div>
-      {!isUser && options.length > 0 && (
-        <div className="flex max-w-[95%] flex-wrap gap-2">
-          {options.map((opt) => (
+    </nav>
+  );
+
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-10 flex overflow-hidden bg-background top-[calc(env(safe-area-inset-top)+4rem)] sm:top-[calc(env(safe-area-inset-top)+4.5rem)] md:top-[calc(env(safe-area-inset-top)+5rem)] lg:left-[var(--mm-sidebar-w,0px)]">
+      <aside className="hidden w-64 shrink-0 border-r border-border lg:block">{list}</aside>
+
+      {drawerOpen && (
+        <div className="absolute inset-0 z-30 flex lg:hidden">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setDrawerOpen(false)}
+            aria-hidden
+          />
+          <div className="relative z-10 h-full w-72 max-w-[85%] border-r border-border bg-background">
             <button
-              key={opt}
-              type="button"
-              disabled={!interactive}
-              onClick={() => onPick?.(opt)}
-              className="rounded-full border border-primary/40 bg-primary/10 px-3.5 py-1.5 text-xs font-medium text-primary transition hover:bg-primary hover:text-primary-foreground disabled:opacity-40"
+              onClick={() => setDrawerOpen(false)}
+              aria-label="Fechar"
+              className="absolute right-2 top-2 rounded-lg p-2 text-muted-foreground"
             >
-              {opt}
+              <X className="h-4 w-4" />
             </button>
-          ))}
+            {list}
+          </div>
         </div>
       )}
-    </div>
-  );
-}
 
-function TypingIndicator() {
-  return (
-    <div className="flex justify-start">
-      <div className="flex items-center gap-1 rounded-2xl bg-surface-1 px-4 py-3 ring-1 ring-border">
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:150ms]" />
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:300ms]" />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <button
+          onClick={() => setDrawerOpen(true)}
+          className="absolute left-3 top-3 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface-1 text-foreground lg:hidden"
+          aria-label="Conversas"
+        >
+          <PanelLeft className="h-4 w-4" />
+        </button>
+        <Outlet />
       </div>
+      {dialog}
     </div>
   );
 }
