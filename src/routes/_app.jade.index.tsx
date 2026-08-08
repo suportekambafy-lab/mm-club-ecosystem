@@ -2,8 +2,9 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2 } from "lucide-react";
-import { createThread, listThreads } from "@/lib/jade-threads.functions";
+import { createThread, listThreads, type AiThread } from "@/lib/jade-threads.functions";
+import { JadeChatSkeleton } from "@/components/mm/jade-skeleton";
+
 
 export const Route = createFileRoute("/_app/jade/")({
   head: () => ({
