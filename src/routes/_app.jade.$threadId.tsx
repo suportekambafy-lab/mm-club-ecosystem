@@ -49,8 +49,8 @@ function JadeThreadPage() {
   const query = useQuery({
     queryKey: ["ai-thread", threadId],
     queryFn: () => fetchThread({ data: { threadId } }),
-    staleTime: Infinity,
-    gcTime: 0,
+    staleTime: 60_000,
+    gcTime: 30 * 60_000,
   });
 
   useEffect(() => {
@@ -68,13 +68,10 @@ function JadeThreadPage() {
     void queryClient.invalidateQueries({ queryKey: ["ai-threads"] });
   }, [queryClient]);
 
-  if (query.isLoading || !query.data) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-      </div>
-    );
+  if (!query.data) {
+    return <JadeChatSkeleton />;
   }
+
 
   return (
     <JadeChat
