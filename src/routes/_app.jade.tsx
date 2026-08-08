@@ -106,8 +106,12 @@ function JadeLayout() {
                 setDrawerOpen(false);
                 void navigate({ to: "/jade/$threadId", params: { threadId: t.id } });
               }}
+              onMouseEnter={() => prefetchThread(t.id)}
+              onFocus={() => prefetchThread(t.id)}
+              onTouchStart={() => prefetchThread(t.id)}
               className="flex min-w-0 flex-1 items-center gap-2 py-2.5 text-left"
             >
+
               <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               <span className="truncate text-sm text-foreground">{t.title}</span>
             </button>
