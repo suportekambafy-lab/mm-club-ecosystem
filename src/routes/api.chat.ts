@@ -158,10 +158,11 @@ export const Route = createFileRoute("/api/chat")({
         const auth = await requireRequestUser(request);
         if ("denied" in auth) return auth.denied;
 
-        const { messages } = (await request.json()) as ChatRequestBody;
+        const { messages, threadId } = (await request.json()) as ChatRequestBody;
         if (!Array.isArray(messages)) {
           return new Response("Messages are required", { status: 400 });
         }
+        const thread = typeof threadId === "string" && threadId ? threadId : null;
 
         const key = process.env.LOVABLE_API_KEY;
         if (!key) {
@@ -191,7 +192,12 @@ export const Route = createFileRoute("/api/chat")({
 
         return result.toUIMessageStreamResponse({
           originalMessages: messages as UIMessage[],
+          onFinish: async ({ messages: finalMessages }) => {
+            if (!thread) return;
+            await persistMessages(thread, auth.user.id, finalMessages as UIMessage[]);
+          },
         });
+
       },
     },
   },
