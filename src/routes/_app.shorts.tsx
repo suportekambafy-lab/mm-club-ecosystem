@@ -263,6 +263,11 @@ function ShortsPage() {
         <ShortsFeed
           shorts={shorts}
           currentUserId={user?.id}
+          onNearEnd={() => {
+            if (shortsQuery.hasNextPage && !shortsQuery.isFetchingNextPage) {
+              void shortsQuery.fetchNextPage();
+            }
+          }}
           onToggleLike={(s) => toggleLike.mutate({ shortId: s.id, liked: s.liked })}
           onDelete={async (id) => {
             const ok = await askConfirm({
@@ -337,11 +342,13 @@ function ShortsFeed({
   currentUserId,
   onToggleLike,
   onDelete,
+  onNearEnd,
 }: {
   shorts: ShortWithAuthor[];
   currentUserId: string | undefined;
   onToggleLike: (s: ShortWithAuthor) => void;
   onDelete: (id: string) => void;
+  onNearEnd: () => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [muted, setMuted] = useState(true);
@@ -375,6 +382,12 @@ function ShortsFeed({
     viewedRef.current.add(s.id);
     supabase.rpc("mm_short_increment_view", { _short_id: s.id }).then(() => {});
   }, [activeIdx, shorts]);
+
+  // Vai buscar mais Shorts quando faltarem 3 para o fim — a lista nunca cresce
+  // toda de uma vez, por isso o telemóvel guarda muito menos vídeos em memória.
+  useEffect(() => {
+    if (shorts.length > 0 && activeIdx >= shorts.length - 3) onNearEnd();
+  }, [activeIdx, shorts.length, onNearEnd]);
 
   const [commentsFor, setCommentsFor] = useState<ShortWithAuthor | null>(null);
 
