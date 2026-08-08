@@ -54,6 +54,7 @@ import { Route as AppAcademiaRouteImport } from './routes/_app.academia'
 import { Route as AdminLivesIndexRouteImport } from './routes/admin.lives.index'
 import { Route as AdminFinanceiroIndexRouteImport } from './routes/admin.financeiro.index'
 import { Route as AppLivesIndexRouteImport } from './routes/_app.lives.index'
+import { Route as AppJadeIndexRouteImport } from './routes/_app.jade.index'
 import { Route as AppAcademiaIndexRouteImport } from './routes/_app.academia.index'
 import { Route as ApiRealtimeSessionRouteImport } from './routes/api.realtime.session'
 import { Route as ApiKnowledgeSearchRouteImport } from './routes/api.knowledge.search'
@@ -66,6 +67,7 @@ import { Route as AdminFinanceiroDebitosRouteImport } from './routes/admin.finan
 import { Route as AdminFinanceiroCupoesRouteImport } from './routes/admin.financeiro.cupoes'
 import { Route as AdminFinanceiroCatalogoRouteImport } from './routes/admin.financeiro.catalogo'
 import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
+import { Route as AppJadeThreadIdRouteImport } from './routes/_app.jade.$threadId'
 import { Route as AppFerramentasStudioRouteImport } from './routes/_app.ferramentas.studio'
 import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
 import { Route as AppAcademiaPesquisaRouteImport } from './routes/_app.academia.pesquisa'
@@ -325,6 +327,11 @@ const AppLivesIndexRoute = AppLivesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppLivesRoute,
 } as any)
+const AppJadeIndexRoute = AppJadeIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppJadeRoute,
+} as any)
 const AppAcademiaIndexRoute = AppAcademiaIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -386,6 +393,11 @@ const AppLivesLiveIdRoute = AppLivesLiveIdRouteImport.update({
   id: '/$liveId',
   path: '/$liveId',
   getParentRoute: () => AppLivesRoute,
+} as any)
+const AppJadeThreadIdRoute = AppJadeThreadIdRouteImport.update({
+  id: '/$threadId',
+  path: '/$threadId',
+  getParentRoute: () => AppJadeRoute,
 } as any)
 const AppFerramentasStudioRoute = AppFerramentasStudioRouteImport.update({
   id: '/studio',
@@ -603,7 +615,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AppDashboardRoute
   '/eventos': typeof AppEventosRoute
   '/ferramentas': typeof AppFerramentasRouteWithChildren
-  '/jade': typeof AppJadeRoute
+  '/jade': typeof AppJadeRouteWithChildren
   '/lives': typeof AppLivesRouteWithChildren
   '/perfil': typeof AppPerfilRoute
   '/shorts': typeof AppShortsRoute
@@ -630,6 +642,7 @@ export interface FileRoutesByFullPath {
   '/academia/pesquisa': typeof AppAcademiaPesquisaRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
+  '/jade/$threadId': typeof AppJadeThreadIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
@@ -642,6 +655,7 @@ export interface FileRoutesByFullPath {
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia/': typeof AppAcademiaIndexRoute
+  '/jade/': typeof AppJadeIndexRoute
   '/lives/': typeof AppLivesIndexRoute
   '/admin/financeiro/': typeof AdminFinanceiroIndexRoute
   '/admin/lives/': typeof AdminLivesIndexRoute
@@ -693,7 +707,6 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AppDashboardRoute
   '/eventos': typeof AppEventosRoute
   '/ferramentas': typeof AppFerramentasRouteWithChildren
-  '/jade': typeof AppJadeRoute
   '/perfil': typeof AppPerfilRoute
   '/shorts': typeof AppShortsRoute
   '/subscricao': typeof AppSubscricaoRoute
@@ -715,6 +728,7 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutIndexRoute
   '/academia/pesquisa': typeof AppAcademiaPesquisaRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
+  '/jade/$threadId': typeof AppJadeThreadIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
@@ -727,6 +741,7 @@ export interface FileRoutesByTo {
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia': typeof AppAcademiaIndexRoute
+  '/jade': typeof AppJadeIndexRoute
   '/lives': typeof AppLivesIndexRoute
   '/admin/financeiro': typeof AdminFinanceiroIndexRoute
   '/admin/lives': typeof AdminLivesIndexRoute
@@ -782,7 +797,7 @@ export interface FileRoutesById {
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/eventos': typeof AppEventosRoute
   '/_app/ferramentas': typeof AppFerramentasRouteWithChildren
-  '/_app/jade': typeof AppJadeRoute
+  '/_app/jade': typeof AppJadeRouteWithChildren
   '/_app/lives': typeof AppLivesRouteWithChildren
   '/_app/perfil': typeof AppPerfilRoute
   '/_app/shorts': typeof AppShortsRoute
@@ -809,6 +824,7 @@ export interface FileRoutesById {
   '/_app/academia/pesquisa': typeof AppAcademiaPesquisaRoute
   '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/_app/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
+  '/_app/jade/$threadId': typeof AppJadeThreadIdRoute
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
@@ -821,6 +837,7 @@ export interface FileRoutesById {
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/_app/academia/': typeof AppAcademiaIndexRoute
+  '/_app/jade/': typeof AppJadeIndexRoute
   '/_app/lives/': typeof AppLivesIndexRoute
   '/admin/financeiro/': typeof AdminFinanceiroIndexRoute
   '/admin/lives/': typeof AdminLivesIndexRoute
@@ -903,6 +920,7 @@ export interface FileRouteTypes {
     | '/academia/pesquisa'
     | '/especialistas/$expertId'
     | '/ferramentas/studio'
+    | '/jade/$threadId'
     | '/lives/$liveId'
     | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cupoes'
@@ -915,6 +933,7 @@ export interface FileRouteTypes {
     | '/api/knowledge/search'
     | '/api/realtime/session'
     | '/academia/'
+    | '/jade/'
     | '/lives/'
     | '/admin/financeiro/'
     | '/admin/lives/'
@@ -966,7 +985,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/eventos'
     | '/ferramentas'
-    | '/jade'
     | '/perfil'
     | '/shorts'
     | '/subscricao'
@@ -988,6 +1006,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/academia/pesquisa'
     | '/especialistas/$expertId'
+    | '/jade/$threadId'
     | '/lives/$liveId'
     | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cupoes'
@@ -1000,6 +1019,7 @@ export interface FileRouteTypes {
     | '/api/knowledge/search'
     | '/api/realtime/session'
     | '/academia'
+    | '/jade'
     | '/lives'
     | '/admin/financeiro'
     | '/admin/lives'
@@ -1081,6 +1101,7 @@ export interface FileRouteTypes {
     | '/_app/academia/pesquisa'
     | '/_app/especialistas/$expertId'
     | '/_app/ferramentas/studio'
+    | '/_app/jade/$threadId'
     | '/_app/lives/$liveId'
     | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cupoes'
@@ -1093,6 +1114,7 @@ export interface FileRouteTypes {
     | '/api/knowledge/search'
     | '/api/realtime/session'
     | '/_app/academia/'
+    | '/_app/jade/'
     | '/_app/lives/'
     | '/admin/financeiro/'
     | '/admin/lives/'
@@ -1485,6 +1507,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLivesIndexRouteImport
       parentRoute: typeof AppLivesRoute
     }
+    '/_app/jade/': {
+      id: '/_app/jade/'
+      path: '/'
+      fullPath: '/jade/'
+      preLoaderRoute: typeof AppJadeIndexRouteImport
+      parentRoute: typeof AppJadeRoute
+    }
     '/_app/academia/': {
       id: '/_app/academia/'
       path: '/'
@@ -1568,6 +1597,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/lives/$liveId'
       preLoaderRoute: typeof AppLivesLiveIdRouteImport
       parentRoute: typeof AppLivesRoute
+    }
+    '/_app/jade/$threadId': {
+      id: '/_app/jade/$threadId'
+      path: '/$threadId'
+      fullPath: '/jade/$threadId'
+      preLoaderRoute: typeof AppJadeThreadIdRouteImport
+      parentRoute: typeof AppJadeRoute
     }
     '/_app/ferramentas/studio': {
       id: '/_app/ferramentas/studio'
@@ -1874,6 +1910,19 @@ const AppFerramentasRouteWithChildren = AppFerramentasRoute._addFileChildren(
   AppFerramentasRouteChildren,
 )
 
+interface AppJadeRouteChildren {
+  AppJadeThreadIdRoute: typeof AppJadeThreadIdRoute
+  AppJadeIndexRoute: typeof AppJadeIndexRoute
+}
+
+const AppJadeRouteChildren: AppJadeRouteChildren = {
+  AppJadeThreadIdRoute: AppJadeThreadIdRoute,
+  AppJadeIndexRoute: AppJadeIndexRoute,
+}
+
+const AppJadeRouteWithChildren =
+  AppJadeRoute._addFileChildren(AppJadeRouteChildren)
+
 interface AppLivesRouteChildren {
   AppLivesLiveIdRoute: typeof AppLivesLiveIdRoute
   AppLivesIndexRoute: typeof AppLivesIndexRoute
@@ -1897,7 +1946,7 @@ interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
   AppEventosRoute: typeof AppEventosRoute
   AppFerramentasRoute: typeof AppFerramentasRouteWithChildren
-  AppJadeRoute: typeof AppJadeRoute
+  AppJadeRoute: typeof AppJadeRouteWithChildren
   AppLivesRoute: typeof AppLivesRouteWithChildren
   AppPerfilRoute: typeof AppPerfilRoute
   AppShortsRoute: typeof AppShortsRoute
@@ -1915,7 +1964,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
   AppEventosRoute: AppEventosRoute,
   AppFerramentasRoute: AppFerramentasRouteWithChildren,
-  AppJadeRoute: AppJadeRoute,
+  AppJadeRoute: AppJadeRouteWithChildren,
   AppLivesRoute: AppLivesRouteWithChildren,
   AppPerfilRoute: AppPerfilRoute,
   AppShortsRoute: AppShortsRoute,
@@ -2046,13 +2095,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

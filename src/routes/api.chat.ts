@@ -2,7 +2,52 @@ import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 
-type ChatRequestBody = { messages?: unknown };
+type ChatRequestBody = { messages?: unknown; threadId?: unknown };
+
+/** Guarda mensagens da conversa (thread) do membro, se houver thread. */
+async function persistMessages(
+  threadId: string,
+  userId: string,
+  messages: UIMessage[],
+): Promise<void> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as unknown as { from: (t: string) => any };
+
+    const { data: thread } = await admin
+      .from("ai_threads")
+      .select("id, title, user_id")
+      .eq("id", threadId)
+      .maybeSingle();
+    if (!thread || thread.user_id !== userId) return;
+
+    const rows = messages
+      .filter((m) => m.role === "user" || m.role === "assistant")
+      .map((m) => ({
+        thread_id: threadId,
+        user_id: userId,
+        client_id: m.id,
+        role: m.role,
+        parts: (m.parts ?? []).filter((p: { type: string }) => p.type === "text"),
+      }))
+      .filter((r) => r.parts.length > 0);
+
+    if (rows.length > 0) {
+      await admin.from("ai_messages").upsert(rows, { onConflict: "thread_id,client_id" });
+    }
+
+    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (!thread.title || thread.title === "Nova conversa") {
+      const firstUser = messages.find((m) => m.role === "user");
+      const text = firstUser ? extractLastUserText([firstUser]) : "";
+      if (text) patch.title = text.replace(/\s+/g, " ").slice(0, 60);
+    }
+    await admin.from("ai_threads").update(patch).eq("id", threadId);
+  } catch (err) {
+    console.error("[api.chat] persistMessages failed", err);
+  }
+}
+
 
 const EMBEDDING_MODEL = "openai/text-embedding-3-small";
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
@@ -113,10 +158,11 @@ export const Route = createFileRoute("/api/chat")({
         const auth = await requireRequestUser(request);
         if ("denied" in auth) return auth.denied;
 
-        const { messages } = (await request.json()) as ChatRequestBody;
+        const { messages, threadId } = (await request.json()) as ChatRequestBody;
         if (!Array.isArray(messages)) {
           return new Response("Messages are required", { status: 400 });
         }
+        const thread = typeof threadId === "string" && threadId ? threadId : null;
 
         const key = process.env.LOVABLE_API_KEY;
         if (!key) {
@@ -146,7 +192,12 @@ export const Route = createFileRoute("/api/chat")({
 
         return result.toUIMessageStreamResponse({
           originalMessages: messages as UIMessage[],
+          onFinish: async ({ messages: finalMessages }) => {
+            if (!thread) return;
+            await persistMessages(thread, auth.user.id, finalMessages as UIMessage[]);
+          },
         });
+
       },
     },
   },
