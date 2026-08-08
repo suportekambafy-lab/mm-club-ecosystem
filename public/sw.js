@@ -1,4 +1,7 @@
-const VERSION = "mm-club-fresh-runtime-2026-07-27-checkout-1";
+const VERSION = "mm-club-fresh-runtime-2026-08-08-shell-1";
+const ASSET_CACHE = `${VERSION}-assets`;
+const MEDIA_CACHE = `${VERSION}-media`;
+
 
 self.addEventListener("install", (event) => {
   event.waitUntil(self.skipWaiting());
