@@ -233,7 +233,7 @@ function AdminTranscricoes() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <SectionHeading
-          eyebrow="MM Inteligente"
+          eyebrow="MM Inteligence"
           title="Estado das transcrições"
           description="Cada aula com vídeo é transcrita e indexada automaticamente em segundo plano."
         />

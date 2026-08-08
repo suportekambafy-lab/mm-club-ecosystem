@@ -236,7 +236,7 @@ export function JadeCallOverlay({ onClose }: { onClose: () => void }) {
           {status === "error" && "Falha na chamada"}
           {status === "ended" && "Chamada terminada"}
         </p>
-        <h2 className="mt-2 font-display text-2xl text-foreground">MM Inteligente</h2>
+        <h2 className="mt-2 font-display text-2xl text-foreground">MM Inteligence</h2>
         {status === "live" && (
           <p className="mt-1 text-sm tabular-nums text-muted-foreground">{mm}:{ss}</p>
         )}
@@ -296,7 +296,7 @@ export function JadeCallOverlay({ onClose }: { onClose: () => void }) {
           </button>
         </div>
         <p className="text-center text-[10px] text-muted-foreground">
-          Chamada em tempo real • áudio processado por MM Inteligente
+          Chamada em tempo real • áudio processado por MM Inteligence
         </p>
       </div>
     </div>

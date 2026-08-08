@@ -211,7 +211,7 @@ export function BigTypeHero() {
             </span>
           </div>
           <p className="max-w-lg text-sm leading-relaxed text-muted-foreground sm:text-base">
-            O ecossistema privado da Marca Milionária. Cursos, MM Inteligente,
+            O ecossistema privado da Marca Milionária. Cursos, MM Inteligence,
             comunidade, lives e ferramentas — num único acesso.
           </p>
         </div>
@@ -399,7 +399,7 @@ export function BigTypeHero() {
             </div>
           </motion.div>
 
-          {/* Card 2 — MM Inteligente */}
+          {/* Card 2 — MM Inteligence */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
