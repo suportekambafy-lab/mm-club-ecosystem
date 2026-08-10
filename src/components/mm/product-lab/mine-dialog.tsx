@@ -458,38 +458,71 @@ export function MineDialog({
               </div>
             </div>
 
-            <div className="flex items-center gap-4 rounded-3xl border border-[color:var(--hairline)] bg-background/50 p-4">
-              <ScoreRing score={result.score} size={64} />
-              <div className="min-w-0">
-                <p className="font-display text-lg text-foreground">
-                  {result.score != null ? `Score MM ${result.score}/100` : "Sem score suficiente"}
-                </p>
-                <p className={cn("text-xs", tone.className)}>{tone.label}</p>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  Calculado apenas com os critérios MM:{" "}
-                  {PL_CRITERIA.filter((c) => result.scores[c.id] != null)
-                    .map((c) => `${c.label} ${result.scores[c.id]}/10`)
-                    .join(" · ") || "sem notas atribuídas"}
-                </p>
-              </div>
-            </div>
-
             <div className="rounded-3xl border border-[color:var(--hairline)] bg-background/50 p-4">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/80">
-                Análise inicial da IA
+                Guardar na coluna
               </p>
-              {rec && (
-                <p className={cn("mt-2 text-sm font-semibold", rec.cls)}>
-                  {rec.dot} {rec.label}
-                </p>
-              )}
-              <div className="mt-2">
-                <AnalysisBody content={result.analysis} />
+              <div className="mt-2 flex flex-wrap gap-2">
+                {PL_STATUSES.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setStatus(s.id)}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-xs transition",
+                      status === s.id
+                        ? "border-primary bg-primary/15 text-primary"
+                        : "border-[color:var(--hairline)] text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {s.label}
+                  </button>
+                ))}
               </div>
-              <p className="mt-4 border-t border-[color:var(--hairline)] pt-3 text-[11px] text-muted-foreground">
-                Análise gerada por IA. Utilize como apoio à decisão e valide sempre no mercado.
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Podes arrastar o cartão entre colunas do quadro sempre que quiseres.
               </p>
             </div>
+
+            {result.analysis?.trim() ? (
+              <>
+                <div className="flex items-center gap-4 rounded-3xl border border-[color:var(--hairline)] bg-background/50 p-4">
+                  <ScoreRing score={result.score} size={64} />
+                  <div className="min-w-0">
+                    <p className="font-display text-lg text-foreground">
+                      {result.score != null ? `Score MM ${result.score}/100` : "Sem score suficiente"}
+                    </p>
+                    <p className={cn("text-xs", tone.className)}>{tone.label}</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      Calculado apenas com os critérios MM:{" "}
+                      {PL_CRITERIA.filter((c) => result.scores[c.id] != null)
+                        .map((c) => `${c.label} ${result.scores[c.id]}/10`)
+                        .join(" · ") || "sem notas atribuídas"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-[color:var(--hairline)] bg-background/50 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/80">
+                    Análise inicial da IA
+                  </p>
+                  {rec && (
+                    <p className={cn("mt-2 text-sm font-semibold", rec.cls)}>
+                      {rec.dot} {rec.label}
+                    </p>
+                  )}
+                  <div className="mt-2">
+                    <AnalysisBody content={result.analysis} />
+                  </div>
+                  <p className="mt-4 border-t border-[color:var(--hairline)] pt-3 text-[11px] text-muted-foreground">
+                    Análise gerada por IA. Utilize como apoio à decisão e valide sempre no mercado.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <p className="rounded-2xl border border-dashed border-[color:var(--hairline)] px-4 py-3 text-xs text-muted-foreground">
+                Sem análise IA. Depois de guardar, podes analisar quando quiseres a partir do cartão no quadro.
+              </p>
+            )}
 
             {missing.length > 0 && (
               <p className="text-xs text-muted-foreground">
@@ -500,8 +533,9 @@ export function MineDialog({
 
             <div className="flex flex-wrap justify-end gap-2">
               <Button variant="ghost" className="rounded-full" onClick={() => setStage("input")}>
-                <RefreshCw className="h-4 w-4" /> Analisar outro
+                <RefreshCw className="h-4 w-4" /> Adicionar outro
               </Button>
+
               <Button className="rounded-full" disabled={save.isPending} onClick={() => save.mutate()}>
                 {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                 {missing.length > 0 ? "Guardar mesmo assim" : "Guardar no Product Lab"}
