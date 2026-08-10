@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile, BellRing, BellOff, UserRound } from "lucide-react";
+import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile, BellRing, BellOff, UserRound, GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
