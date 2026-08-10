@@ -282,8 +282,8 @@ export function MineDialog({
           <DialogTitle className="font-display text-2xl">Minerar Produto</DialogTitle>
           <DialogDescription>
             {stage === "result"
-              ? "Confirma o que a IA identificou e guarda no teu Product Lab."
-              : "Encontraste um produto interessante? Cola o link e deixa a IA fazer a primeira análise."}
+              ? "Confirma os dados e escolhe em que coluna do quadro queres guardar."
+              : "Cola o link do produto. Adicionamos ao teu quadro em segundos — a análise com IA é opcional."}
           </DialogDescription>
         </DialogHeader>
 
@@ -299,20 +299,30 @@ export function MineDialog({
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && url.trim()) analyse.mutate();
+                    if (e.key === "Enter" && url.trim()) quick.mutate();
                   }}
                   placeholder="Cole aqui o link do produto ou anúncio"
                   className="h-14 rounded-2xl border-primary/25 bg-background text-base"
                 />
                 <Button
                   className="mt-3 h-12 w-full rounded-2xl text-base"
-                  disabled={!url.trim() || analyse.isPending}
+                  disabled={!url.trim() || quick.isPending || analyse.isPending}
+                  onClick={() => quick.mutate()}
+                >
+                  {quick.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  Adicionar produto
+                </Button>
+                <Button
+                  variant="outline"
+                  className="mt-2 h-11 w-full rounded-2xl"
+                  disabled={!url.trim() || quick.isPending || analyse.isPending}
                   onClick={() => analyse.mutate()}
                 >
-                  <Sparkles className="h-4 w-4" /> Analisar com IA
+                  <Sparkles className="h-4 w-4" /> Adicionar e analisar com IA
                 </Button>
                 <p className="mt-3 text-center text-xs text-muted-foreground">
                   Também podes adicionar através de uma imagem ou preencher manualmente.
+
                 </p>
               </div>
             ) : (
