@@ -247,20 +247,34 @@ export const mineFromImage = createServerFn({ method: "POST" })
     };
   });
 
+// Trunca em vez de rejeitar: textos vindos da IA podem exceder os limites.
+const capped = (max: number) =>
+  z
+    .string()
+    .transform((s) => s.trim().slice(0, max))
+    .nullable()
+    .optional();
+
 const SaveSchema = z.object({
-  name: z.string().min(1).max(200),
-  image_url: z.string().max(2000).nullable().optional(),
-  category: z.string().max(120).nullable().optional(),
+  name: z
+    .string()
+    .min(1)
+    .transform((s) => s.trim().slice(0, 200)),
+  image_url: capped(2000),
+  category: capped(120),
   sell_price: z.number().nonnegative().nullable().optional(),
-  market: z.string().max(120).nullable().optional(),
-  supplier: z.string().max(200).nullable().optional(),
-  source: z.string().max(80).nullable().optional(),
-  product_url: z.string().max(2000).nullable().optional(),
-  notes: z.string().max(4000).nullable().optional(),
+  market: capped(120),
+  supplier: capped(200),
+  source: capped(80),
+  product_url: capped(2000),
+  notes: capped(4000),
   scores: z.record(z.string(), z.number()).optional(),
-  analysis: z.string().max(20000).optional(),
-  recommendation: z.string().max(120).nullable().optional(),
-  model: z.string().max(120).optional(),
+  analysis: z
+    .string()
+    .transform((s) => s.slice(0, 20000))
+    .optional(),
+  recommendation: capped(120),
+  model: capped(120),
 });
 
 /** Guarda o produto minerado com score, análise IA e histórico, em "Em análise". */
