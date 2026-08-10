@@ -255,6 +255,7 @@ export function MineDialog({
           image_url: form.image_url || null,
           product_url: form.product_url || null,
           notes: notesParts.length ? notesParts.join("\n") : null,
+          status,
           scores: result?.scores ?? {},
           analysis: result?.analysis ?? "",
           recommendation: result?.recommendation ?? null,
@@ -265,10 +266,11 @@ export function MineDialog({
     },
     onSuccess: (id) => {
       qc.invalidateQueries({ queryKey: ["product-lab"] });
-      toast.success("Produto guardado em Em análise");
+      toast.success(`Produto guardado em ${PL_STATUSES.find((s) => s.id === status)?.label ?? "Encontrados"}`);
       onOpenChange(false);
       onSaved(id);
     },
+
     onError: (e) => toast.error((e as Error).message ?? "Não foi possível guardar."),
   });
 
