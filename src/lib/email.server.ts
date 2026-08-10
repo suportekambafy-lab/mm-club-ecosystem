@@ -12,6 +12,7 @@ export type EmailKind =
   | "new_lesson"
   | "weekly_summary"
   | "live_announcement"
+  | "live_rescheduled"
   | "live_started"
   | "replay_ready"
   | "inactivity_nudge"
