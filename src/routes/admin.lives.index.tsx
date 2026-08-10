@@ -826,12 +826,13 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
     setDuration(row.duration_minutes ?? 60);
     setStartsAt(toLocalInput(row.starts_at));
     setCoverUrl(row.cover_url ?? "");
+    setNotify(true);
   }
 
   async function handleSave() {
     setSaving(true);
     try {
-      await update({
+      const res = await update({
         data: {
           id: row.id,
           title: title.trim(),
@@ -841,9 +842,16 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
           duration_minutes: Number(duration) || 60,
           visibility,
           cover_url: coverUrl.trim() || null,
+          notify_reschedule: notify,
         },
       });
-      toast.success("Live atualizada");
+      const notified = (res as { notified?: number } | undefined)?.notified ?? 0;
+      toast.success(
+        notified > 0
+          ? `Live atualizada · novo horário enviado a ${notified} membro(s)`
+          : "Live atualizada",
+      );
+
       setOpen(false);
       onSaved();
     } catch (e) {
