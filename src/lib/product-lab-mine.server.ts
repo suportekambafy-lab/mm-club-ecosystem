@@ -89,11 +89,13 @@ export function normalizeProductUrl(raw: string): string | null {
 }
 /** A página traz mesmo dados de produto ou é só a casca anti-bot? */
 function hasProductSignals(html: string): boolean {
-  return (
+  if (/captcha|unusual traffic|Access Denied|Are you a robot/i.test(html.slice(0, 4000))) return false;
+  const hasPrice =
     /application\/ld\+json/i.test(html) ||
-    /og:title/i.test(html) ||
-    /"(?:formatedActivityPrice|formatedPrice|salePrice|priceCurrency)"/i.test(html)
-  );
+    /(?:product:price:amount|og:price:amount|itemprop=["']price["'])/i.test(html) ||
+    /"(?:formatedActivityPrice|formatedPrice|salePrice|priceCurrency|priceAmount)"/i.test(html);
+  const hasTitle = /<meta[^>]+og:title[^>]+content\s*=\s*["'][^"']{3,}/i.test(html) || /<title[^>]*>[^<]{3,}/i.test(html);
+  return hasPrice && hasTitle;
 }
 
 /** Fallback com render real: Firecrawl quando ligado, senão leitor público. */
