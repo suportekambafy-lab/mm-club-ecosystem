@@ -342,54 +342,8 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   );
 }
 
-function ProductCard({ p, onMove }: { p: Product; onMove: (s: PlStatus) => void }) {
-  const tone = scoreTone(p.score ?? null);
-  return (
-    <div className="group animate-in fade-in slide-in-from-bottom-1 overflow-hidden rounded-2xl border border-[color:var(--hairline)] bg-surface-1 transition duration-300 hover:border-primary/40 hover:shadow-[0_18px_50px_-30px_oklch(0.82_0.13_82/0.6)]">
-      <Link to="/ferramentas/product-lab/$productId" params={{ productId: p.id }} className="flex gap-3 p-3">
-        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-[color:var(--hairline)] bg-background">
-          {p.image_url ? (
-            <img loading="lazy" decoding="async" src={p.image_url} alt={p.name} className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">sem imagem</div>
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-foreground">{p.name}</p>
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">
-            {p.category || "sem categoria"}
-            {p.sell_price != null ? ` · ${Number(p.sell_price).toFixed(2)} €` : ""}
-          </p>
-          <div className="mt-2 flex items-center gap-2">
-            <ScoreRing score={p.score ?? null} size={34} compact />
-            <div className="min-w-0">
-              <p className="text-[11px] font-medium text-foreground">
-                {p.score != null ? `Score MM ${p.score}/100` : "Sem score"}
-              </p>
-              <p className={cn("truncate text-[10px]", tone.className)}>{tone.label}</p>
-            </div>
-          </div>
-        </div>
-      </Link>
-      <div className="flex items-center justify-between gap-2 border-t border-[color:var(--hairline)] px-3 py-2">
-        <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-          {statusLabel(p.status)} · {new Date(p.created_at).toLocaleDateString("pt-PT")}
-        </span>
-        <select
-          value={p.status}
-          onChange={(e) => onMove(e.target.value as PlStatus)}
-          className="rounded-full border border-[color:var(--hairline)] bg-background px-2 py-1 text-[10px] text-muted-foreground"
-        >
-          {PL_STATUSES.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.label}
-            </option>
-          ))}
-        </select>
-      </div>
-    </div>
-  );
-}
+
+
 
 function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
