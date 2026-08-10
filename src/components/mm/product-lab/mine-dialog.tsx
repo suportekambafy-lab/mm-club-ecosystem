@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MediaField } from "@/components/mm/media-field";
 import { ScoreRing } from "@/components/mm/product-lab/score-ring";
-import { mineFromUrl, mineFromImage, saveMinedProduct } from "@/lib/product-lab-mine.functions";
-import { PL_CRITERIA, PL_SOURCES, scoreTone } from "@/lib/product-lab-config";
+import { mineFromUrl, mineFromImage, quickMineFromUrl, saveMinedProduct } from "@/lib/product-lab-mine.functions";
+import { PL_CRITERIA, PL_SOURCES, PL_STATUSES, scoreTone, type PlStatus } from "@/lib/product-lab-config";
+
 import { cn } from "@/lib/utils";
 
 type Draft = Record<string, string | null>;
@@ -118,6 +119,7 @@ export function MineDialog({
   const qc = useQueryClient();
   const runUrl = useServerFn(mineFromUrl);
   const runImage = useServerFn(mineFromImage);
+  const runQuick = useServerFn(quickMineFromUrl);
   const persist = useServerFn(saveMinedProduct);
 
   const [stage, setStage] = useState<"input" | "analysing" | "result">("input");
@@ -127,6 +129,7 @@ export function MineDialog({
   const [step, setStep] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
   const [result, setResult] = useState<MineResult | null>(null);
+  const [status, setStatus] = useState<PlStatus>("found");
   const [form, setForm] = useState({
     name: "",
     category: "",
@@ -149,6 +152,7 @@ export function MineDialog({
     setStep(0);
     setNotice(null);
     setResult(null);
+    setStatus("found");
   }, [open]);
 
   const startSteps = () => {
@@ -177,6 +181,22 @@ export function MineDialog({
     setStage("result");
   };
 
+  // Fluxo rápido: colar link → extrair dados da página → confirmar → guardar.
+  const quick = useMutation({
+    mutationFn: async () => await runQuick({ data: { url } }),
+    onSuccess: (res) => {
+      if (!res.ok || !res.draft) {
+        toast.info(res.notice ?? "Não conseguimos ler esse link.");
+        return;
+      }
+      applyResult(
+        { draft: res.draft as Draft, analysis: "", recommendation: null, scores: {}, score: null },
+        res.notice ?? null,
+      );
+    },
+    onError: () => toast.error("Não conseguimos ler esse link. Podes adicionar manualmente."),
+  });
+
   const analyse = useMutation({
     mutationFn: async () => {
       startSteps();
@@ -191,6 +211,7 @@ export function MineDialog({
         toast.info(res.notice ?? "Não conseguimos analisar esse link.");
         return;
       }
+      setStatus("analysis");
       applyResult(res.result as MineResult, res.notice ?? null);
     },
     onError: (e) => {
@@ -203,6 +224,7 @@ export function MineDialog({
       );
     },
   });
+
 
   const missing = (() => {
     const list: string[] = [];
@@ -233,6 +255,7 @@ export function MineDialog({
           image_url: form.image_url || null,
           product_url: form.product_url || null,
           notes: notesParts.length ? notesParts.join("\n") : null,
+          status,
           scores: result?.scores ?? {},
           analysis: result?.analysis ?? "",
           recommendation: result?.recommendation ?? null,
@@ -243,10 +266,11 @@ export function MineDialog({
     },
     onSuccess: (id) => {
       qc.invalidateQueries({ queryKey: ["product-lab"] });
-      toast.success("Produto guardado em Em análise");
+      toast.success(`Produto guardado em ${PL_STATUSES.find((s) => s.id === status)?.label ?? "Encontrados"}`);
       onOpenChange(false);
       onSaved(id);
     },
+
     onError: (e) => toast.error((e as Error).message ?? "Não foi possível guardar."),
   });
 
@@ -260,8 +284,8 @@ export function MineDialog({
           <DialogTitle className="font-display text-2xl">Minerar Produto</DialogTitle>
           <DialogDescription>
             {stage === "result"
-              ? "Confirma o que a IA identificou e guarda no teu Product Lab."
-              : "Encontraste um produto interessante? Cola o link e deixa a IA fazer a primeira análise."}
+              ? "Confirma os dados e escolhe em que coluna do quadro queres guardar."
+              : "Cola o link do produto. Adicionamos ao teu quadro em segundos — a análise com IA é opcional."}
           </DialogDescription>
         </DialogHeader>
 
@@ -277,20 +301,30 @@ export function MineDialog({
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && url.trim()) analyse.mutate();
+                    if (e.key === "Enter" && url.trim()) quick.mutate();
                   }}
                   placeholder="Cole aqui o link do produto ou anúncio"
                   className="h-14 rounded-2xl border-primary/25 bg-background text-base"
                 />
                 <Button
                   className="mt-3 h-12 w-full rounded-2xl text-base"
-                  disabled={!url.trim() || analyse.isPending}
+                  disabled={!url.trim() || quick.isPending || analyse.isPending}
+                  onClick={() => quick.mutate()}
+                >
+                  {quick.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  Adicionar produto
+                </Button>
+                <Button
+                  variant="outline"
+                  className="mt-2 h-11 w-full rounded-2xl"
+                  disabled={!url.trim() || quick.isPending || analyse.isPending}
                   onClick={() => analyse.mutate()}
                 >
-                  <Sparkles className="h-4 w-4" /> Analisar com IA
+                  <Sparkles className="h-4 w-4" /> Adicionar e analisar com IA
                 </Button>
                 <p className="mt-3 text-center text-xs text-muted-foreground">
                   Também podes adicionar através de uma imagem ou preencher manualmente.
+
                 </p>
               </div>
             ) : (
@@ -424,38 +458,71 @@ export function MineDialog({
               </div>
             </div>
 
-            <div className="flex items-center gap-4 rounded-3xl border border-[color:var(--hairline)] bg-background/50 p-4">
-              <ScoreRing score={result.score} size={64} />
-              <div className="min-w-0">
-                <p className="font-display text-lg text-foreground">
-                  {result.score != null ? `Score MM ${result.score}/100` : "Sem score suficiente"}
-                </p>
-                <p className={cn("text-xs", tone.className)}>{tone.label}</p>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  Calculado apenas com os critérios MM:{" "}
-                  {PL_CRITERIA.filter((c) => result.scores[c.id] != null)
-                    .map((c) => `${c.label} ${result.scores[c.id]}/10`)
-                    .join(" · ") || "sem notas atribuídas"}
-                </p>
-              </div>
-            </div>
-
             <div className="rounded-3xl border border-[color:var(--hairline)] bg-background/50 p-4">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/80">
-                Análise inicial da IA
+                Guardar na coluna
               </p>
-              {rec && (
-                <p className={cn("mt-2 text-sm font-semibold", rec.cls)}>
-                  {rec.dot} {rec.label}
-                </p>
-              )}
-              <div className="mt-2">
-                <AnalysisBody content={result.analysis} />
+              <div className="mt-2 flex flex-wrap gap-2">
+                {PL_STATUSES.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setStatus(s.id)}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-xs transition",
+                      status === s.id
+                        ? "border-primary bg-primary/15 text-primary"
+                        : "border-[color:var(--hairline)] text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {s.label}
+                  </button>
+                ))}
               </div>
-              <p className="mt-4 border-t border-[color:var(--hairline)] pt-3 text-[11px] text-muted-foreground">
-                Análise gerada por IA. Utilize como apoio à decisão e valide sempre no mercado.
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Podes arrastar o cartão entre colunas do quadro sempre que quiseres.
               </p>
             </div>
+
+            {result.analysis?.trim() ? (
+              <>
+                <div className="flex items-center gap-4 rounded-3xl border border-[color:var(--hairline)] bg-background/50 p-4">
+                  <ScoreRing score={result.score} size={64} />
+                  <div className="min-w-0">
+                    <p className="font-display text-lg text-foreground">
+                      {result.score != null ? `Score MM ${result.score}/100` : "Sem score suficiente"}
+                    </p>
+                    <p className={cn("text-xs", tone.className)}>{tone.label}</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      Calculado apenas com os critérios MM:{" "}
+                      {PL_CRITERIA.filter((c) => result.scores[c.id] != null)
+                        .map((c) => `${c.label} ${result.scores[c.id]}/10`)
+                        .join(" · ") || "sem notas atribuídas"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-[color:var(--hairline)] bg-background/50 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/80">
+                    Análise inicial da IA
+                  </p>
+                  {rec && (
+                    <p className={cn("mt-2 text-sm font-semibold", rec.cls)}>
+                      {rec.dot} {rec.label}
+                    </p>
+                  )}
+                  <div className="mt-2">
+                    <AnalysisBody content={result.analysis} />
+                  </div>
+                  <p className="mt-4 border-t border-[color:var(--hairline)] pt-3 text-[11px] text-muted-foreground">
+                    Análise gerada por IA. Utilize como apoio à decisão e valide sempre no mercado.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <p className="rounded-2xl border border-dashed border-[color:var(--hairline)] px-4 py-3 text-xs text-muted-foreground">
+                Sem análise IA. Depois de guardar, podes analisar quando quiseres a partir do cartão no quadro.
+              </p>
+            )}
 
             {missing.length > 0 && (
               <p className="text-xs text-muted-foreground">
@@ -466,8 +533,9 @@ export function MineDialog({
 
             <div className="flex flex-wrap justify-end gap-2">
               <Button variant="ghost" className="rounded-full" onClick={() => setStage("input")}>
-                <RefreshCw className="h-4 w-4" /> Analisar outro
+                <RefreshCw className="h-4 w-4" /> Adicionar outro
               </Button>
+
               <Button className="rounded-full" disabled={save.isPending} onClick={() => save.mutate()}>
                 {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                 {missing.length > 0 ? "Guardar mesmo assim" : "Guardar no Product Lab"}

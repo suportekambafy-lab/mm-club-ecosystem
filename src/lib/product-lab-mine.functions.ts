@@ -271,6 +271,8 @@ const capped = (max: number) =>
     .nullable()
     .optional();
 
+const STATUSES = ["found", "analysis", "validated", "testing", "winner", "rejected"] as const;
+
 const SaveSchema = z.object({
   name: z
     .string()
@@ -284,6 +286,7 @@ const SaveSchema = z.object({
   source: capped(80),
   product_url: capped(2000),
   notes: capped(4000),
+  status: z.enum(STATUSES).default("found"),
   scores: z.record(z.string(), z.number()).optional(),
   analysis: z
     .string()
@@ -293,22 +296,23 @@ const SaveSchema = z.object({
   model: capped(120),
 });
 
-/** Guarda o produto minerado com score, análise IA e histórico, em "Em análise". */
+/** Guarda o produto minerado com score, análise IA e histórico, na coluna escolhida. */
 export const saveMinedProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((v: unknown) => SaveSchema.parse(v))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { scores = {}, analysis, recommendation, model, ...fields } = data;
+    const { scores = {}, analysis, recommendation, model, status, ...fields } = data;
 
     const entries = Object.entries(scores).filter(([k]) => criterionIds.includes(k));
     const score = computeScore(Object.fromEntries(entries));
 
     const { data: row, error } = await supabase
       .from("pl_products")
-      .insert({ ...fields, status: "analysis", score, user_id: userId })
+      .insert({ ...fields, status, score, user_id: userId })
       .select("id")
       .single();
+
     if (error) throw new Error(error.message);
     const id = row.id as string;
 
@@ -338,8 +342,50 @@ export const saveMinedProduct = createServerFn({ method: "POST" })
       product_id: id,
       user_id: userId,
       event: "created",
-      detail: "Produto minerado com IA",
+      detail: analysis && analysis.trim() ? "Produto minerado com IA" : "Produto adicionado por link",
     });
 
     return { id };
+  });
+
+/** Extração rápida (sem IA): lê a página e devolve os dados encontrados. */
+export const quickMineFromUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v: unknown) => z.object({ url: z.string().min(4).max(2000) }).parse(v))
+  .handler(async ({ data }) => {
+    const { normalizeProductUrl, fetchPageSignals, guessSource, guessSupplier, guessMarket } =
+      await import("./product-lab-mine.server");
+    const url = normalizeProductUrl(data.url);
+    if (!url) {
+      return {
+        ok: false as const,
+        notice: "Esse link não parece válido. Confirma o endereço ou adiciona manualmente.",
+        draft: null,
+      };
+    }
+    const signals = await fetchPageSignals(url);
+    const currency = signals.currency ?? null;
+    const draft = {
+      name: signals.title ?? null,
+      category: null as string | null,
+      price: signals.price ?? null,
+      currency,
+      image_url: signals.image ?? null,
+      product_url: url,
+      store: signals.siteName ?? signals.host ?? null,
+      source: guessSource(signals.host),
+      supplier: guessSupplier(signals.host),
+      market: guessMarket(signals.host, currency),
+      description: signals.description ?? null,
+    };
+    const missing = ["name", "price", "image_url"].filter((k) => !(draft as Record<string, unknown>)[k]);
+    return {
+      ok: true as const,
+      notice: signals.ok
+        ? missing.length > 0
+          ? "Alguns dados não estavam na página. Confirma ou completa antes de guardar."
+          : null
+        : "Esta página não permitiu leitura automática. Confirma os dados manualmente.",
+      draft,
+    };
   });
