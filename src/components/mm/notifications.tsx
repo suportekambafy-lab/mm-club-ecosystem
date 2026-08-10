@@ -36,6 +36,7 @@ const iconByKind: Record<NotifKind, typeof Bell> = {
   reaction: Smile,
   comment_reply: MessageCircle,
   inactivity: Play,
+  course_released: GraduationCap,
 };
 
 const labelByKind: Record<NotifKind, string> = {
@@ -48,6 +49,7 @@ const labelByKind: Record<NotifKind, string> = {
   reaction: "Reação",
   comment_reply: "Resposta",
   inactivity: "Retomar",
+  course_released: "Novo curso",
 
 };
 
@@ -207,6 +209,12 @@ function communityCopy(
       subtitle: "Ficaste uns dias longe — continua onde paraste",
     };
   }
+  if (kind === "course_released") {
+    return {
+      title: "Novo curso disponível",
+      subtitle: "O curso agendado acabou de abrir — começa agora",
+    };
+  }
   if (kind === "like") {
     return {
       title: isShort ? `${who} gostou do teu MM Short` : `${who} gostou do teu post`,
@@ -306,6 +314,8 @@ export function NotificationsBell({ className }: { className?: string }) {
         ? "/dashboard"
         : n.kind === "live" && n.live_id
         ? `/lives/${n.live_id}`
+        : n.kind === "course_released"
+        ? (n.course_id ? `/academia/${n.course_id}` : "/academia")
         : isShort
         ? `/shorts?v=${n.short_id}${n.kind === "reply" || n.kind === "comment_reply" ? "&c=1" : ""}`
         : n.post_id
