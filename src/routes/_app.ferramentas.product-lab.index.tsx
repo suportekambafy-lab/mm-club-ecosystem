@@ -3,11 +3,12 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Plus, Search, LayoutGrid, List, Sparkles, ArrowRight, Gift } from "lucide-react";
+import { Plus, Search, LayoutGrid, List, Sparkles, ArrowRight, Gift, PencilLine } from "lucide-react";
 import { listProducts, setProductStatus } from "@/lib/product-lab.functions";
 import { PL_STATUSES, statusLabel, scoreTone, type PlStatus } from "@/lib/product-lab-config";
 import { ScoreRing } from "@/components/mm/product-lab/score-ring";
 import { ProductDialog } from "@/components/mm/product-lab/product-dialog";
+import { MineDialog } from "@/components/mm/product-lab/mine-dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -48,6 +49,7 @@ function ProductLabDashboard() {
   const products: Product[] = data?.products ?? [];
 
   const [dialog, setDialog] = useState(false);
+  const [mine, setMine] = useState(false);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<PlStatus | "all">("all");
   const [category, setCategory] = useState("all");
@@ -126,19 +128,11 @@ function ProductLabDashboard() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button onClick={() => setDialog(true)} className="rounded-full">
+              <Button onClick={() => setMine(true)} className="rounded-full">
                 <Plus className="h-4 w-4" /> Adicionar Produto
               </Button>
-              <Button
-                variant="outline"
-                className="rounded-full"
-                onClick={() => {
-                  const best = filtered[0] ?? products[0];
-                  if (!best) return toast.info("Adiciona um produto primeiro.");
-                  navigate({ to: "/ferramentas/product-lab/$productId", params: { productId: best.id } });
-                }}
-              >
-                <Sparkles className="h-4 w-4" /> Analisar Produto com IA
+              <Button variant="outline" className="rounded-full" onClick={() => setDialog(true)}>
+                <PencilLine className="h-4 w-4" /> Adicionar manualmente
               </Button>
             </div>
           </div>
@@ -272,7 +266,7 @@ function ProductLabDashboard() {
           ))}
         </div>
       ) : products.length === 0 ? (
-        <EmptyState onAdd={() => setDialog(true)} />
+        <EmptyState onAdd={() => setMine(true)} />
       ) : view === "kanban" ? (
         <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
           {PL_STATUSES.map((s) => {
@@ -307,6 +301,13 @@ function ProductLabDashboard() {
           )}
         </div>
       )}
+
+      <MineDialog
+        open={mine}
+        onOpenChange={setMine}
+        onManual={() => setDialog(true)}
+        onSaved={(id) => navigate({ to: "/ferramentas/product-lab/$productId", params: { productId: id } })}
+      />
 
       <ProductDialog
         open={dialog}

@@ -26,7 +26,7 @@ import {
   deleteNote,
   deleteProduct,
 } from "@/lib/product-lab.functions";
-import { PL_CRITERIA, PL_MAX_NOTE, PL_STATUSES, computeScore, statusLabel, type PlStatus } from "@/lib/product-lab-config";
+import { PL_CRITERIA, PL_MAX_NOTE, PL_STATUSES, computeScore, statusLabel, type PlStatus, missingFields } from "@/lib/product-lab-config";
 import { ScoreRing } from "@/components/mm/product-lab/score-ring";
 import { ProductDialog, productToInput } from "@/components/mm/product-lab/product-dialog";
 import { MediaField } from "@/components/mm/media-field";
@@ -168,12 +168,25 @@ function ProductDetail() {
   const marginValue = sell != null && cost != null ? sell - cost : null;
   const marginPct = marginValue != null && sell ? Math.round((marginValue / sell) * 100) : null;
   const latest = (data?.analyses ?? [])[0] as Row | undefined;
+  const missing = missingFields(product as Record<string, unknown>);
 
   return (
     <div className="space-y-6">
       <Link to="/ferramentas/product-lab" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-3.5 w-3.5" /> Meu Product Lab
       </Link>
+
+      {missing.length > 0 && (
+        <div className="flex flex-col gap-3 rounded-3xl border border-primary/25 bg-primary/[0.06] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-foreground">Completa a ficha para uma análise mais precisa</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Ainda falta: {missing.join(", ")}.</p>
+          </div>
+          <Button className="rounded-full sm:shrink-0" onClick={() => setEdit(true)}>
+            Completar informações
+          </Button>
+        </div>
+      )}
 
       {/* HEADER */}
       <section className="overflow-hidden rounded-[2rem] border border-[color:var(--hairline)] bg-surface-1">
