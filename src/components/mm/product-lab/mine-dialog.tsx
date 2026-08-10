@@ -189,6 +189,7 @@ export function MineDialog({
         toast.info(res.notice ?? "Não conseguimos ler esse link.");
         return;
       }
+      setStatus(res.suggested_status === "supplier" ? "supplier" : "found");
       applyResult(
         { draft: res.draft as Draft, analysis: "", recommendation: null, scores: {}, score: null },
         res.notice ?? null,

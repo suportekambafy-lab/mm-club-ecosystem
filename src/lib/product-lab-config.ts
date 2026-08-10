@@ -5,10 +5,18 @@
  * (score, kanban, filtros) sem tocar na interface.
  */
 
-export type PlStatus = "found" | "analysis" | "validated" | "testing" | "winner" | "rejected";
+export type PlStatus =
+  | "found"
+  | "supplier"
+  | "analysis"
+  | "validated"
+  | "testing"
+  | "winner"
+  | "rejected";
 
 export const PL_STATUSES: { id: PlStatus; label: string; short: string }[] = [
   { id: "found", label: "Encontrados", short: "Encontrado" },
+  { id: "supplier", label: "Fornecedores", short: "Fornecedor" },
   { id: "analysis", label: "Em análise", short: "Em análise" },
   { id: "validated", label: "Validados", short: "Validado" },
   { id: "testing", label: "Em teste", short: "Em teste" },

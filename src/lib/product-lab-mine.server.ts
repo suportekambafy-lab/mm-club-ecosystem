@@ -87,6 +87,67 @@ export function normalizeProductUrl(raw: string): string | null {
   const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
   return isPublicHttpUrl(withScheme)?.toString() ?? null;
 }
+/** A página traz mesmo dados de produto ou é só a casca anti-bot? */
+function hasProductSignals(html: string): boolean {
+  if (/captcha|unusual traffic|Access Denied|Are you a robot/i.test(html.slice(0, 4000))) return false;
+  const hasPrice =
+    /application\/ld\+json/i.test(html) ||
+    /(?:product:price:amount|og:price:amount|itemprop=["']price["'])/i.test(html) ||
+    /"(?:formatedActivityPrice|formatedPrice|salePrice|priceCurrency|priceAmount)"/i.test(html);
+  const hasTitle = /<meta[^>]+og:title[^>]+content\s*=\s*["'][^"']{3,}/i.test(html) || /<title[^>]*>[^<]{3,}/i.test(html);
+  return hasPrice && hasTitle;
+}
+
+/** Fallback com render real: Firecrawl quando ligado, senão leitor público. */
+async function fetchRenderedHtml(url: string): Promise<string | null> {
+  const fcKey = process.env["FIRECRAWL_API_KEY"];
+  const lovableKey = process.env["LOVABLE_API_KEY"];
+  const body = JSON.stringify({ url, formats: ["rawHtml", "markdown"], onlyMainContent: false, waitFor: 2500 });
+
+  if (fcKey) {
+    const gateway = !fcKey.startsWith("fc-");
+    const endpoint = gateway
+      ? "https://connector-gateway.lovable.dev/firecrawl/v2/scrape"
+      : "https://api.firecrawl.dev/v2/scrape";
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (gateway) {
+      if (!lovableKey) return null;
+      headers["Authorization"] = `Bearer ${lovableKey}`;
+      headers["X-Connection-Api-Key"] = fcKey;
+    } else {
+      headers["Authorization"] = `Bearer ${fcKey}`;
+    }
+    try {
+      const res = await fetch(endpoint, { method: "POST", headers, body });
+      if (res.ok) {
+        const json = (await res.json()) as Record<string, any>;
+        const d = json["data"] ?? json;
+        const raw: string | null = d?.rawHtml ?? d?.html ?? null;
+        const md: string | null = d?.markdown ?? null;
+        if (raw) return raw.slice(0, 600_000);
+        if (md) return `<html><body>${md}</body></html>`.slice(0, 600_000);
+      }
+    } catch {
+      /* segue para o leitor público */
+    }
+  }
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15_000);
+    const res = await fetch(`https://r.jina.ai/${url}`, {
+      signal: controller.signal,
+      headers: { Accept: "text/plain", "User-Agent": UA },
+    });
+    clearTimeout(timer);
+    if (!res.ok) return null;
+    const text = (await res.text()).slice(0, 200_000);
+    return text.trim() ? `<html><body>${text}</body></html>` : null;
+  } catch {
+    return null;
+  }
+}
+
 
 export async function fetchPageSignals(url: string): Promise<PageSignals> {
   const u = isPublicHttpUrl(url);
@@ -119,13 +180,22 @@ export async function fetchPageSignals(url: string): Promise<PageSignals> {
       },
     });
     clearTimeout(timer);
-    if (!res.ok) return empty;
     const type = res.headers.get("content-type") ?? "";
-    if (!type.includes("html") && !type.includes("text")) return empty;
-    html = (await res.text()).slice(0, 600_000);
+    if (res.ok && (type.includes("html") || type.includes("text"))) {
+      html = (await res.text()).slice(0, 600_000);
+    }
   } catch {
-    return empty;
+    html = "";
   }
+
+  // Lojas com JS/anti-bot (AliExpress, Temu…) devolvem uma casca sem preço:
+  // nesse caso tenta um leitor de páginas com render real.
+  if (!html || !hasProductSignals(html)) {
+    const rendered = await fetchRenderedHtml(u.toString());
+    if (rendered && (hasProductSignals(rendered) || !html)) html = rendered;
+  }
+  if (!html) return empty;
+
 
   const jsonLdBlocks: string[] = [];
   const ldRe = /<script[^>]+type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
@@ -150,10 +220,15 @@ export async function fetchPageSignals(url: string): Promise<PageSignals> {
   const metaPrice = meta(html, ["product:price:amount", "og:price:amount", "price"]);
   const metaCurrency = meta(html, ["product:price:currency", "og:price:currency", "priceCurrency"]);
   const itemProp = /itemprop\s*=\s*["']price["'][^>]*content\s*=\s*["']([^"']+)["']/i.exec(html)?.[1] ?? null;
+  const embedded = priceFromEmbeddedJson(html);
   const inline = priceFromText(text);
 
-  const price = normalizeAmount(metaPrice ?? fromLd.price ?? itemProp ?? inline.price);
-  const currency = (metaCurrency ?? fromLd.currency ?? inline.currency ?? null)?.toUpperCase() ?? null;
+  const price = normalizeAmount(
+    metaPrice ?? fromLd.price ?? itemProp ?? embedded.price ?? inline.price,
+  );
+  const currency =
+    (metaCurrency ?? fromLd.currency ?? embedded.currency ?? inline.currency ?? null)?.toUpperCase() ??
+    null;
 
   return {
     ok: text.length > 60 || jsonLdBlocks.length > 0,
@@ -204,6 +279,39 @@ function priceFromJsonLd(blocks: string[]): { price: string | null; currency: st
 }
 
 const CURRENCY_SYMBOLS: Record<string, string> = { "€": "EUR", $: "USD", "£": "GBP", "R$": "BRL" };
+
+/**
+ * Lojas SPA (AliExpress, Shopify, Temu…) escondem o preço em JSON embutido no HTML.
+ * Procura pares conhecidos antes de recorrer ao texto visível.
+ */
+function priceFromEmbeddedJson(html: string): { price: string | null; currency: string | null } {
+  const currency =
+    /"(?:currencyCode|priceCurrency|currency)"\s*:\s*"([A-Za-z]{3})"/i.exec(html)?.[1] ??
+    /"currency"\s*:\s*\{[^}]*"code"\s*:\s*"([A-Za-z]{3})"/i.exec(html)?.[1] ??
+    null;
+
+  const patterns: RegExp[] = [
+    /"(?:formatedActivityPrice|formatedPrice)"\s*:\s*"([^"]+)"/i,
+    /"(?:minActivityAmount|minAmount|skuActivityAmount|skuAmount)"\s*:\s*\{[^}]*"value"\s*:\s*([\d.]+)/i,
+    /"(?:salePrice|sale_price|priceAmount|current_price|finalPrice)"\s*:\s*"?([\d.,]+)"?/i,
+    /"price(?:_amount|Amount|Value|)"\s*:\s*"?([\d.,]+)"?/i,
+    /"price"\s*:\s*\{[^}]*"amount"\s*:\s*"?([\d.,]+)"?/i,
+  ];
+  for (const re of patterns) {
+    const raw = re.exec(html)?.[1];
+    if (!raw) continue;
+    const amount = normalizeAmount(raw);
+    if (amount) {
+      // Shopify e afins usam cêntimos em campos *_price inteiros.
+      const cents = /"(?:price|sale_price)"\s*:\s*(\d{4,})[,}]/.exec(html)?.[1];
+      if (cents && cents === raw && !raw.includes(".") && !raw.includes(",")) {
+        return { price: String(Number(cents) / 100), currency };
+      }
+      return { price: amount, currency };
+    }
+  }
+  return { price: null, currency };
+}
 
 /** Último recurso: primeiro valor monetário legível no texto da página. */
 function priceFromText(text: string): { price: string | null; currency: string | null } {
@@ -266,6 +374,16 @@ export function guessSupplier(host: string): string | null {
   for (const [re, name] of known) if (re.test(h)) return name;
   return h;
 }
+
+/** Marketplaces/fornecedores conhecidos: o produto entra logo na coluna Fornecedores. */
+export function isSupplierHost(host: string): boolean {
+  const h = host.toLowerCase();
+  return /aliexpress|alibaba|1688|cjdropshipping|temu|banggood|shein|dsers|zendrop|spocket|amazon|ebay|dhgate|made-in-china|autods/.test(
+    h,
+  );
+}
+
+
 
 const TLD_MARKET: Record<string, string> = {
   pt: "Portugal",
