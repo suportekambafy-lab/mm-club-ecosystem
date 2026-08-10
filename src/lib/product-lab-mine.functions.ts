@@ -73,7 +73,23 @@ async function runMining(prompt: string, imageUrl: string | null) {
     return { output, model };
   } catch (error) {
     if (NoObjectGeneratedError.isInstance(error)) {
-      throw new Error("A análise não ficou completa. Confirma ou preenche os dados manualmente.");
+      // Recupera o que o modelo conseguiu produzir em vez de falhar o fluxo todo.
+      const raw = error.text ?? "";
+      const json = raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1);
+      if (json.length > 2) {
+        try {
+          const parsed = MineSchema.partial().parse(JSON.parse(json));
+          return { output: MineSchema.parse(parsed) as MinedDraft, model };
+        } catch {
+          /* segue para o fallback vazio */
+        }
+      }
+      return {
+        output: MineSchema.parse({
+          analysis: raw.trim() || "Não identificado — precisa de confirmação.",
+        }) as MinedDraft,
+        model,
+      };
     }
     throw error;
   }
