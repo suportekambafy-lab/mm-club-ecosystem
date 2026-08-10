@@ -353,7 +353,7 @@ export const quickMineFromUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((v: unknown) => z.object({ url: z.string().min(4).max(2000) }).parse(v))
   .handler(async ({ data }) => {
-    const { normalizeProductUrl, fetchPageSignals, guessSource, guessSupplier, guessMarket } =
+    const { normalizeProductUrl, fetchPageSignals, guessSource, guessSupplier, guessMarket, isSupplierHost } =
       await import("./product-lab-mine.server");
     const url = normalizeProductUrl(data.url);
     if (!url) {
@@ -361,6 +361,7 @@ export const quickMineFromUrl = createServerFn({ method: "POST" })
         ok: false as const,
         notice: "Esse link não parece válido. Confirma o endereço ou adiciona manualmente.",
         draft: null,
+        suggested_status: "found" as const,
       };
     }
     const signals = await fetchPageSignals(url);
@@ -381,6 +382,7 @@ export const quickMineFromUrl = createServerFn({ method: "POST" })
     const missing = ["name", "price", "image_url"].filter((k) => !(draft as Record<string, unknown>)[k]);
     return {
       ok: true as const,
+      suggested_status: isSupplierHost(signals.host) ? ("supplier" as const) : ("found" as const),
       notice: signals.ok
         ? missing.length > 0
           ? "Alguns dados não estavam na página. Confirma ou completa antes de guardar."
