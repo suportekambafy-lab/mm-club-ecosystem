@@ -192,7 +192,7 @@ export async function fetchPageSignals(url: string): Promise<PageSignals> {
   // nesse caso tenta um leitor de páginas com render real.
   if (!html || !hasProductSignals(html)) {
     const rendered = await fetchRenderedHtml(u.toString());
-    if (rendered) html = rendered;
+    if (rendered && (hasProductSignals(rendered) || !html)) html = rendered;
   }
   if (!html) return empty;
 
