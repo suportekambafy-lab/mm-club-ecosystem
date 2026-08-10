@@ -146,6 +146,15 @@ export async function fetchPageSignals(url: string): Promise<PageSignals> {
     .trim()
     .slice(0, 9000);
 
+  const fromLd = priceFromJsonLd(jsonLdBlocks);
+  const metaPrice = meta(html, ["product:price:amount", "og:price:amount", "price"]);
+  const metaCurrency = meta(html, ["product:price:currency", "og:price:currency", "priceCurrency"]);
+  const itemProp = /itemprop\s*=\s*["']price["'][^>]*content\s*=\s*["']([^"']+)["']/i.exec(html)?.[1] ?? null;
+  const inline = priceFromText(text);
+
+  const price = normalizeAmount(metaPrice ?? fromLd.price ?? itemProp ?? inline.price);
+  const currency = (metaCurrency ?? fromLd.currency ?? inline.currency ?? null)?.toUpperCase() ?? null;
+
   return {
     ok: text.length > 60 || jsonLdBlocks.length > 0,
     url: u.toString(),
@@ -156,9 +165,132 @@ export async function fetchPageSignals(url: string): Promise<PageSignals> {
     description: meta(html, ["og:description", "twitter:description", "description"]),
     image: absolute(meta(html, ["og:image:secure_url", "og:image", "twitter:image", "image"]), u.toString()),
     siteName: meta(html, ["og:site_name", "application-name"]),
-    price: meta(html, ["product:price:amount", "og:price:amount", "price"]),
-    currency: meta(html, ["product:price:currency", "og:price:currency", "priceCurrency"]),
+    price,
+    currency,
     jsonLd: jsonLdBlocks.length ? jsonLdBlocks.join("\n---\n") : null,
     text,
   };
 }
+
+/** Percorre blocos JSON-LD à procura de offers.price / lowPrice. */
+function priceFromJsonLd(blocks: string[]): { price: string | null; currency: string | null } {
+  let price: string | null = null;
+  let currency: string | null = null;
+  const visit = (node: unknown) => {
+    if (Array.isArray(node)) return node.forEach(visit);
+    if (!node || typeof node !== "object") return;
+    for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
+      const key = k.toLowerCase();
+      if (!price && (key === "price" || key === "lowprice") && (typeof v === "string" || typeof v === "number")) {
+        price = String(v);
+      } else if (!currency && key === "pricecurrency" && typeof v === "string") {
+        currency = v;
+      } else if (v && typeof v === "object") {
+        visit(v);
+      }
+    }
+  };
+  for (const block of blocks) {
+    try {
+      visit(JSON.parse(block));
+    } catch {
+      // JSON-LD inválido: procura pares soltos no texto bruto.
+      if (!price) price = /"(?:low)?price"\s*:\s*"?([\d.,]+)"?/i.exec(block)?.[1] ?? null;
+      if (!currency) currency = /"pricecurrency"\s*:\s*"([A-Za-z]{3})"/i.exec(block)?.[1] ?? null;
+    }
+    if (price && currency) break;
+  }
+  return { price, currency };
+}
+
+const CURRENCY_SYMBOLS: Record<string, string> = { "€": "EUR", $: "USD", "£": "GBP", "R$": "BRL" };
+
+/** Último recurso: primeiro valor monetário legível no texto da página. */
+function priceFromText(text: string): { price: string | null; currency: string | null } {
+  const re = /(R\$|€|\$|£)\s?(\d{1,3}(?:[.\s]\d{3})*(?:[.,]\d{1,2})?)|(\d{1,3}(?:[.\s]\d{3})*(?:[.,]\d{1,2})?)\s?(R\$|€|\$|£|EUR|USD|GBP|BRL)/i;
+  const m = re.exec(text);
+  if (!m) return { price: null, currency: null };
+  const symbol = (m[1] ?? m[4] ?? "").trim();
+  const raw = m[2] ?? m[3] ?? null;
+  const code = /^[A-Za-z]{3}$/.test(symbol) ? symbol.toUpperCase() : (CURRENCY_SYMBOLS[symbol] ?? null);
+  return { price: raw, currency: code };
+}
+
+/** "1.234,56" / "1,234.56" / "24,90 €" -> "1234.56". */
+export function normalizeAmount(raw: string | null): string | null {
+  if (!raw) return null;
+  const cleaned = raw.replace(/[^\d.,]/g, "").trim();
+  if (!cleaned) return null;
+  const lastComma = cleaned.lastIndexOf(",");
+  const lastDot = cleaned.lastIndexOf(".");
+  let normalized = cleaned;
+  if (lastComma > -1 && lastDot > -1) {
+    normalized =
+      lastComma > lastDot
+        ? cleaned.replace(/\./g, "").replace(",", ".")
+        : cleaned.replace(/,/g, "");
+  } else if (lastComma > -1) {
+    normalized = cleaned.length - lastComma <= 3 ? cleaned.replace(",", ".") : cleaned.replace(/,/g, "");
+  } else if (lastDot > -1 && cleaned.length - lastDot > 3) {
+    normalized = cleaned.replace(/\./g, "");
+  }
+  const n = Number(normalized);
+  return Number.isFinite(n) && n > 0 ? String(n) : null;
+}
+
+/** Canal de origem provável a partir do domínio (valores de PL_SOURCES). */
+export function guessSource(host: string): string | null {
+  const h = host.toLowerCase();
+  if (/tiktok|douyin/.test(h)) return "TikTok";
+  if (/facebook|fb\.|instagram|meta\.com|fbcdn/.test(h)) return "Meta Ads";
+  if (/aliexpress|alibaba|cjdropshipping|temu|1688|dsers|zendrop|spocket|banggood/.test(h))
+    return "Ferramenta de Dropshipping";
+  if (h) return "Pesquisa própria";
+  return null;
+}
+
+/** Fornecedor provável: marketplace conhecido ou domínio raiz. */
+export function guessSupplier(host: string): string | null {
+  const h = host.toLowerCase().replace(/^www\./, "");
+  if (!h) return null;
+  const known: [RegExp, string][] = [
+    [/aliexpress/, "AliExpress"],
+    [/alibaba|1688/, "Alibaba"],
+    [/cjdropshipping/, "CJ Dropshipping"],
+    [/temu/, "Temu"],
+    [/amazon/, "Amazon"],
+    [/ebay/, "eBay"],
+    [/shein/, "Shein"],
+    [/banggood/, "Banggood"],
+  ];
+  for (const [re, name] of known) if (re.test(h)) return name;
+  return h;
+}
+
+const TLD_MARKET: Record<string, string> = {
+  pt: "Portugal",
+  br: "Brasil",
+  es: "Espanha",
+  fr: "França",
+  it: "Itália",
+  de: "Alemanha",
+  uk: "Reino Unido",
+  nl: "Países Baixos",
+  us: "Estados Unidos",
+};
+
+const CURRENCY_MARKET: Record<string, string> = {
+  EUR: "Europa (zona euro)",
+  BRL: "Brasil",
+  USD: "Estados Unidos",
+  GBP: "Reino Unido",
+};
+
+/** Mercado provável a partir do TLD e, em alternativa, da moeda. */
+export function guessMarket(host: string, currency: string | null): string | null {
+  const tld = host.toLowerCase().split(".").pop() ?? "";
+  if (TLD_MARKET[tld]) return TLD_MARKET[tld]!;
+  if (currency && CURRENCY_MARKET[currency]) return CURRENCY_MARKET[currency]!;
+  return null;
+}
+

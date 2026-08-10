@@ -180,6 +180,7 @@ export const mineFromUrl = createServerFn({ method: "POST" })
         null,
       );
       const clean = sanitize(fallback.output);
+      const { guessSource, guessSupplier, guessMarket } = await import("./product-lab-mine.server");
       return {
         ok: true as const,
         partial: true,
@@ -192,23 +193,38 @@ export const mineFromUrl = createServerFn({ method: "POST" })
             ...clean.draft,
             product_url: url,
             store: clean.draft.store ?? signals.host ?? null,
+            source: clean.draft.source ?? guessSource(signals.host),
+            supplier: clean.draft.supplier ?? guessSupplier(signals.host),
+            market: clean.draft.market ?? guessMarket(signals.host, clean.draft.currency),
           },
         },
       };
+
     }
 
     const run = await runMining(prompt, null);
     const clean = sanitize(run.output);
+    const { guessSource, guessSupplier, guessMarket, normalizeAmount } = await import(
+      "./product-lab-mine.server"
+    );
+    const currency = signals.currency ?? clean.draft.currency ?? null;
     const draft = {
       ...clean.draft,
       product_url: url,
       image_url: clean.draft.image_url ?? signals.image ?? null,
       store: clean.draft.store ?? signals.siteName ?? signals.host ?? null,
       name: clean.draft.name ?? signals.title ?? null,
+      // Sinais da página têm prioridade: a IA não deve adivinhar valores.
+      price: signals.price ?? normalizeAmount(clean.draft.price) ?? null,
+      currency,
+      source: clean.draft.source ?? guessSource(signals.host),
+      supplier: clean.draft.supplier ?? guessSupplier(signals.host),
+      market: clean.draft.market ?? guessMarket(signals.host, currency),
     };
     const missing = ["name", "category", "price", "image_url"].filter(
       (k) => !(draft as Record<string, unknown>)[k],
     );
+
     return {
       ok: true as const,
       partial: missing.length > 0,
