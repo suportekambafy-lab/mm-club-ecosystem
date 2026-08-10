@@ -1912,29 +1912,35 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          guest_id: string | null
+          guest_name: string | null
           id: string
           live_id: string
           pinned_at: string | null
           pinned_by: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           body: string
           created_at?: string
+          guest_id?: string | null
+          guest_name?: string | null
           id?: string
           live_id: string
           pinned_at?: string | null
           pinned_by?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           body?: string
           created_at?: string
+          guest_id?: string | null
+          guest_name?: string | null
           id?: string
           live_id?: string
           pinned_at?: string | null
           pinned_by?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
