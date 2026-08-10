@@ -23,6 +23,7 @@ export type PlProduct = Record<string, any>;
 
 const COLUMN_ACCENT: Record<PlStatus, string> = {
   found: "oklch(0.72 0.02 250)",
+  supplier: "oklch(0.80 0.10 200)",
   analysis: "oklch(0.78 0.12 240)",
   validated: "oklch(0.78 0.14 150)",
   testing: "oklch(0.82 0.13 82)",
