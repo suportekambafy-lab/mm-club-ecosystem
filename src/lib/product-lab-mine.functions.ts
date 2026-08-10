@@ -271,6 +271,8 @@ const capped = (max: number) =>
     .nullable()
     .optional();
 
+const STATUSES = ["found", "analysis", "validated", "testing", "winner", "rejected"] as const;
+
 const SaveSchema = z.object({
   name: z
     .string()
@@ -284,6 +286,7 @@ const SaveSchema = z.object({
   source: capped(80),
   product_url: capped(2000),
   notes: capped(4000),
+  status: z.enum(STATUSES).default("found"),
   scores: z.record(z.string(), z.number()).optional(),
   analysis: z
     .string()
@@ -293,22 +296,23 @@ const SaveSchema = z.object({
   model: capped(120),
 });
 
-/** Guarda o produto minerado com score, análise IA e histórico, em "Em análise". */
+/** Guarda o produto minerado com score, análise IA e histórico, na coluna escolhida. */
 export const saveMinedProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((v: unknown) => SaveSchema.parse(v))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { scores = {}, analysis, recommendation, model, ...fields } = data;
+    const { scores = {}, analysis, recommendation, model, status, ...fields } = data;
 
     const entries = Object.entries(scores).filter(([k]) => criterionIds.includes(k));
     const score = computeScore(Object.fromEntries(entries));
 
     const { data: row, error } = await supabase
       .from("pl_products")
-      .insert({ ...fields, status: "analysis", score, user_id: userId })
+      .insert({ ...fields, status, score, user_id: userId })
       .select("id")
       .single();
+
     if (error) throw new Error(error.message);
     const id = row.id as string;
 
