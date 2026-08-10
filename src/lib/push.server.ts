@@ -28,6 +28,7 @@ type NotificationRow = {
   comment_id: string | null;
   short_id: string | null;
   live_id: string | null;
+  course_id: string | null;
   created_at: string;
   read_at: string | null;
   dismissed_at: string | null;
@@ -144,6 +145,12 @@ function communityCopy(
       body: "Dez minutos hoje valem mais do que três horas dentro de um mês",
     };
   }
+  if (kind === "course_released") {
+    return {
+      title: "Novo curso disponível",
+      body: "O curso que estava agendado acabou de abrir — entra agora",
+    };
+  }
 
   if (kind === "like") {
     return {
@@ -178,6 +185,9 @@ function communityCopy(
 function hrefForNotification(n: NotificationRow): string {
   if (n.kind === "inactivity") return "/dashboard";
   if (n.kind === "live" && n.live_id) return `/lives/${n.live_id}`;
+  if (n.kind === "course_released") {
+    return n.course_id ? `/academia/${n.course_id}` : "/academia";
+  }
   if (n.short_id) {
     const commentFlag = n.kind === "reply" || n.kind === "comment_reply" ? "&c=1" : "";
     return `/shorts?v=${n.short_id}${commentFlag}`;
@@ -206,7 +216,7 @@ export async function deliverPushNotification(
   const { data: notification } = await supabaseAdmin
     .from("notifications")
     .select(
-      "id, user_id, actor_id, kind, post_id, comment_id, short_id, live_id, created_at, read_at, dismissed_at, push_sent_at, push_attempts",
+      "id, user_id, actor_id, kind, post_id, comment_id, short_id, live_id, course_id, created_at, read_at, dismissed_at, push_sent_at, push_attempts",
     )
     .eq("id", notificationId)
     .maybeSingle();
