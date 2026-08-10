@@ -102,6 +102,7 @@ import { Route as AppFerramentasStudioMarcaRouteImport } from './routes/_app.fer
 import { Route as AppFerramentasStudioLogotiposRouteImport } from './routes/_app.ferramentas.studio.logotipos'
 import { Route as AppFerramentasStudioImagensRouteImport } from './routes/_app.ferramentas.studio.imagens'
 import { Route as AppFerramentasStudioCriativosRouteImport } from './routes/_app.ferramentas.studio.criativos'
+import { Route as AppFerramentasProductLabProductIdRouteImport } from './routes/_app.ferramentas.product-lab.$productId'
 import { Route as AppAcademiaCourseIdLessonIdRouteImport } from './routes/_app.academia.$courseId.$lessonId'
 import { Route as ApiPublicLivesLiveIdCoverSvgRouteImport } from './routes/api/public/lives.$liveId.cover.svg'
 
@@ -597,6 +598,12 @@ const AppFerramentasStudioCriativosRoute =
     path: '/criativos',
     getParentRoute: () => AppFerramentasStudioRoute,
   } as any)
+const AppFerramentasProductLabProductIdRoute =
+  AppFerramentasProductLabProductIdRouteImport.update({
+    id: '/product-lab/$productId',
+    path: '/product-lab/$productId',
+    getParentRoute: () => AppFerramentasRoute,
+  } as any)
 const AppAcademiaCourseIdLessonIdRoute =
   AppAcademiaCourseIdLessonIdRouteImport.update({
     id: '/$lessonId',
@@ -674,6 +681,7 @@ export interface FileRoutesByFullPath {
   '/admin/financeiro/': typeof AdminFinanceiroIndexRoute
   '/admin/lives/': typeof AdminLivesIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
+  '/ferramentas/product-lab/$productId': typeof AppFerramentasProductLabProductIdRoute
   '/ferramentas/studio/criativos': typeof AppFerramentasStudioCriativosRoute
   '/ferramentas/studio/imagens': typeof AppFerramentasStudioImagensRoute
   '/ferramentas/studio/logotipos': typeof AppFerramentasStudioLogotiposRoute
@@ -762,6 +770,7 @@ export interface FileRoutesByTo {
   '/admin/financeiro': typeof AdminFinanceiroIndexRoute
   '/admin/lives': typeof AdminLivesIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
+  '/ferramentas/product-lab/$productId': typeof AppFerramentasProductLabProductIdRoute
   '/ferramentas/studio/criativos': typeof AppFerramentasStudioCriativosRoute
   '/ferramentas/studio/imagens': typeof AppFerramentasStudioImagensRoute
   '/ferramentas/studio/logotipos': typeof AppFerramentasStudioLogotiposRoute
@@ -860,6 +869,7 @@ export interface FileRoutesById {
   '/admin/financeiro/': typeof AdminFinanceiroIndexRoute
   '/admin/lives/': typeof AdminLivesIndexRoute
   '/_app/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
+  '/_app/ferramentas/product-lab/$productId': typeof AppFerramentasProductLabProductIdRoute
   '/_app/ferramentas/studio/criativos': typeof AppFerramentasStudioCriativosRoute
   '/_app/ferramentas/studio/imagens': typeof AppFerramentasStudioImagensRoute
   '/_app/ferramentas/studio/logotipos': typeof AppFerramentasStudioLogotiposRoute
@@ -958,6 +968,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro/'
     | '/admin/lives/'
     | '/academia/$courseId/$lessonId'
+    | '/ferramentas/product-lab/$productId'
     | '/ferramentas/studio/criativos'
     | '/ferramentas/studio/imagens'
     | '/ferramentas/studio/logotipos'
@@ -1046,6 +1057,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro'
     | '/admin/lives'
     | '/academia/$courseId/$lessonId'
+    | '/ferramentas/product-lab/$productId'
     | '/ferramentas/studio/criativos'
     | '/ferramentas/studio/imagens'
     | '/ferramentas/studio/logotipos'
@@ -1143,6 +1155,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro/'
     | '/admin/lives/'
     | '/_app/academia/$courseId/$lessonId'
+    | '/_app/ferramentas/product-lab/$productId'
     | '/_app/ferramentas/studio/criativos'
     | '/_app/ferramentas/studio/imagens'
     | '/_app/ferramentas/studio/logotipos'
@@ -1870,6 +1883,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFerramentasStudioCriativosRouteImport
       parentRoute: typeof AppFerramentasStudioRoute
     }
+    '/_app/ferramentas/product-lab/$productId': {
+      id: '/_app/ferramentas/product-lab/$productId'
+      path: '/product-lab/$productId'
+      fullPath: '/ferramentas/product-lab/$productId'
+      preLoaderRoute: typeof AppFerramentasProductLabProductIdRouteImport
+      parentRoute: typeof AppFerramentasRoute
+    }
     '/_app/academia/$courseId/$lessonId': {
       id: '/_app/academia/$courseId/$lessonId'
       path: '/$lessonId'
@@ -1941,11 +1961,14 @@ const AppFerramentasStudioRouteWithChildren =
 
 interface AppFerramentasRouteChildren {
   AppFerramentasStudioRoute: typeof AppFerramentasStudioRouteWithChildren
+  AppFerramentasProductLabProductIdRoute: typeof AppFerramentasProductLabProductIdRoute
   AppFerramentasProductLabIndexRoute: typeof AppFerramentasProductLabIndexRoute
 }
 
 const AppFerramentasRouteChildren: AppFerramentasRouteChildren = {
   AppFerramentasStudioRoute: AppFerramentasStudioRouteWithChildren,
+  AppFerramentasProductLabProductIdRoute:
+    AppFerramentasProductLabProductIdRoute,
   AppFerramentasProductLabIndexRoute: AppFerramentasProductLabIndexRoute,
 }
 
