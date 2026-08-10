@@ -812,6 +812,10 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
   );
   const [duration, setDuration] = useState(row.duration_minutes ?? 60);
   const [startsAt, setStartsAt] = useState(() => toLocalInput(row.starts_at));
+  const [notify, setNotify] = useState(true);
+  const timeChanged =
+    Boolean(startsAt) && new Date(startsAt).toISOString() !== new Date(row.starts_at).toISOString();
+
   const [coverUrl, setCoverUrl] = useState(row.cover_url ?? "");
 
   function reset() {
@@ -822,12 +826,13 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
     setDuration(row.duration_minutes ?? 60);
     setStartsAt(toLocalInput(row.starts_at));
     setCoverUrl(row.cover_url ?? "");
+    setNotify(true);
   }
 
   async function handleSave() {
     setSaving(true);
     try {
-      await update({
+      const res = await update({
         data: {
           id: row.id,
           title: title.trim(),
@@ -837,9 +842,16 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
           duration_minutes: Number(duration) || 60,
           visibility,
           cover_url: coverUrl.trim() || null,
+          notify_reschedule: notify,
         },
       });
-      toast.success("Live atualizada");
+      const notified = (res as { notified?: number } | undefined)?.notified ?? 0;
+      toast.success(
+        notified > 0
+          ? `Live atualizada · novo horário enviado a ${notified} membro(s)`
+          : "Live atualizada",
+      );
+
       setOpen(false);
       onSaved();
     } catch (e) {
@@ -963,7 +975,22 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
                   className="h-32 w-full rounded-lg object-cover"
                 />
               ) : null}
+              {timeChanged && row.status === "scheduled" ? (
+                <label className="flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={notify}
+                    onChange={(e) => setNotify(e.target.checked)}
+                    className="mt-0.5"
+                  />
+                  <span className="text-muted-foreground">
+                    Avisar todos os membros do <strong className="text-foreground">novo horário</strong> (email + sino
+                    + push).
+                  </span>
+                </label>
+              ) : null}
             </div>
+
             <div className="mt-5 flex justify-end gap-2">
               <button
                 type="button"

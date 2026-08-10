@@ -600,27 +600,48 @@ export const adminUpdateLive = createServerFn({ method: "POST" })
         duration_minutes: z.number().int().min(5).max(600),
         visibility: z.enum(["public", "club", "premium"]),
         cover_url: z.string().url().nullable().optional(),
+        notify_reschedule: z.boolean().optional(),
       })
       .parse(i),
   )
   .handler(async ({ data, context }) => {
     await requireAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: before } = await supabaseAdmin
+      .from("lives")
+      .select("starts_at,status")
+      .eq("id", data.id)
+      .maybeSingle();
+    const nextStartsAt = new Date(data.starts_at).toISOString();
     const { error } = await supabaseAdmin
       .from("lives")
       .update({
         title: data.title,
         description: data.description ?? null,
         expert_id: data.expert_id ?? null,
-        starts_at: new Date(data.starts_at).toISOString(),
+        starts_at: nextStartsAt,
         duration_minutes: data.duration_minutes,
         visibility: data.visibility,
         cover_url: data.cover_url ?? null,
       })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
-    return { ok: true as const };
+
+    // Novo horário numa live ainda por acontecer → avisar todos os membros.
+    const oldStartsAt = before?.starts_at ? new Date(before.starts_at as string).toISOString() : null;
+    const changed = Boolean(oldStartsAt) && oldStartsAt !== nextStartsAt;
+    if (data.notify_reschedule !== false && changed && before?.status === "scheduled") {
+      const { notifyLiveRescheduled } = await import("./live-reschedule.server");
+      const r = await notifyLiveRescheduled({
+        liveId: data.id,
+        oldStartsAt: oldStartsAt as string,
+        newStartsAt: nextStartsAt,
+      });
+      return { ok: true as const, notified: r.sent };
+    }
+    return { ok: true as const, notified: 0 };
   });
+
 
 
 // Replay editor — trim the dark/silent head (and optional tail) of a recording.
