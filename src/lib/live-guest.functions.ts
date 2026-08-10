@@ -316,26 +316,14 @@ type GuestChatRow = {
   isGuest: boolean;
 };
 
-async function assertGuestAccess(liveId: string, code: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data: live } = await supabaseAdmin
-    .from("lives")
-    .select("id, guest_token")
-    .eq("id", liveId)
-    .maybeSingle();
-  if (!live || !live.guest_token || live.guest_token !== code) {
-    throw new Error("Link de convidado inválido ou expirado.");
-  }
-  return supabaseAdmin;
-}
-
 /** Public: read the live chat as a guest (name-resolved, server-side). */
 export const listGuestChatMessages = createServerFn({ method: "POST" })
   .inputValidator((i) =>
     z.object({ liveId: uuid, code: z.string().trim().min(8).max(64) }).parse(i),
   )
   .handler(async ({ data }): Promise<GuestChatRow[]> => {
-    const supabaseAdmin = await assertGuestAccess(data.liveId, data.code);
+    const { assertGuestChatAccess } = await import("@/lib/live-guest-chat.server");
+    const supabaseAdmin = await assertGuestChatAccess(data.liveId, data.code);
 
     const { data: rows, error } = await supabaseAdmin
       .from("live_chat_messages")
@@ -386,7 +374,8 @@ export const sendGuestChatMessage = createServerFn({ method: "POST" })
       .parse(i),
   )
   .handler(async ({ data }): Promise<GuestChatRow> => {
-    const supabaseAdmin = await assertGuestAccess(data.liveId, data.code);
+    const { assertGuestChatAccess } = await import("@/lib/live-guest-chat.server");
+    const supabaseAdmin = await assertGuestChatAccess(data.liveId, data.code);
 
     const { data: me } = await supabaseAdmin
       .from("live_participants")
