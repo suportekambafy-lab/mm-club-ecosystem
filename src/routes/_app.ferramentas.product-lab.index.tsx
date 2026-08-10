@@ -1,18 +1,19 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Plus, Search, LayoutGrid, List, Sparkles, ArrowRight, Gift, PencilLine } from "lucide-react";
-import { listProducts, setProductStatus } from "@/lib/product-lab.functions";
-import { PL_STATUSES, statusLabel, scoreTone, type PlStatus } from "@/lib/product-lab-config";
-import { ScoreRing } from "@/components/mm/product-lab/score-ring";
+import { listProducts, setProductStatus, analyseProduct } from "@/lib/product-lab.functions";
+import { PL_STATUSES, statusLabel, type PlStatus } from "@/lib/product-lab-config";
+import { ProductBoard, ProductBoardCard } from "@/components/mm/product-lab/board";
 import { ProductDialog } from "@/components/mm/product-lab/product-dialog";
 import { MineDialog } from "@/components/mm/product-lab/mine-dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/_app/ferramentas/product-lab/")({
   head: () => ({
