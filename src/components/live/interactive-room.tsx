@@ -136,7 +136,10 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
     onLeave?.();
   }, [leaveRoomFn, liveId, actions, onLeave]);
 
-  // Fechar o separador / recarregar também liberta o lugar.
+  // Fechar o separador / recarregar também liberta o lugar. Não chamar
+  // leaveRoom no cleanup do componente: a mesma sala é desmontada durante
+  // backstage → main e renovações de token. Esse cleanup chegava depois do
+  // novo join e retirava novamente o host do palco.
   useEffect(() => {
     const release = () => {
       void leaveRoomFn({ data: { liveId } }).catch(() => {});
@@ -144,7 +147,6 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
     window.addEventListener("pagehide", release);
     return () => {
       window.removeEventListener("pagehide", release);
-      release();
     };
   }, [leaveRoomFn, liveId]);
 
