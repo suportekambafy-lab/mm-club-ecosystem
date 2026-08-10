@@ -150,10 +150,15 @@ export async function fetchPageSignals(url: string): Promise<PageSignals> {
   const metaPrice = meta(html, ["product:price:amount", "og:price:amount", "price"]);
   const metaCurrency = meta(html, ["product:price:currency", "og:price:currency", "priceCurrency"]);
   const itemProp = /itemprop\s*=\s*["']price["'][^>]*content\s*=\s*["']([^"']+)["']/i.exec(html)?.[1] ?? null;
+  const embedded = priceFromEmbeddedJson(html);
   const inline = priceFromText(text);
 
-  const price = normalizeAmount(metaPrice ?? fromLd.price ?? itemProp ?? inline.price);
-  const currency = (metaCurrency ?? fromLd.currency ?? inline.currency ?? null)?.toUpperCase() ?? null;
+  const price = normalizeAmount(
+    metaPrice ?? fromLd.price ?? itemProp ?? embedded.price ?? inline.price,
+  );
+  const currency =
+    (metaCurrency ?? fromLd.currency ?? embedded.currency ?? inline.currency ?? null)?.toUpperCase() ??
+    null;
 
   return {
     ok: text.length > 60 || jsonLdBlocks.length > 0,
