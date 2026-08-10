@@ -87,6 +87,65 @@ export function normalizeProductUrl(raw: string): string | null {
   const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
   return isPublicHttpUrl(withScheme)?.toString() ?? null;
 }
+/** A página traz mesmo dados de produto ou é só a casca anti-bot? */
+function hasProductSignals(html: string): boolean {
+  return (
+    /application\/ld\+json/i.test(html) ||
+    /og:title/i.test(html) ||
+    /"(?:formatedActivityPrice|formatedPrice|salePrice|priceCurrency)"/i.test(html)
+  );
+}
+
+/** Fallback com render real: Firecrawl quando ligado, senão leitor público. */
+async function fetchRenderedHtml(url: string): Promise<string | null> {
+  const fcKey = process.env["FIRECRAWL_API_KEY"];
+  const lovableKey = process.env["LOVABLE_API_KEY"];
+  const body = JSON.stringify({ url, formats: ["rawHtml", "markdown"], onlyMainContent: false, waitFor: 2500 });
+
+  if (fcKey) {
+    const gateway = !fcKey.startsWith("fc-");
+    const endpoint = gateway
+      ? "https://connector-gateway.lovable.dev/firecrawl/v2/scrape"
+      : "https://api.firecrawl.dev/v2/scrape";
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (gateway) {
+      if (!lovableKey) return null;
+      headers["Authorization"] = `Bearer ${lovableKey}`;
+      headers["X-Connection-Api-Key"] = fcKey;
+    } else {
+      headers["Authorization"] = `Bearer ${fcKey}`;
+    }
+    try {
+      const res = await fetch(endpoint, { method: "POST", headers, body });
+      if (res.ok) {
+        const json = (await res.json()) as Record<string, any>;
+        const d = json["data"] ?? json;
+        const raw: string | null = d?.rawHtml ?? d?.html ?? null;
+        const md: string | null = d?.markdown ?? null;
+        if (raw) return raw.slice(0, 600_000);
+        if (md) return `<html><body>${md}</body></html>`.slice(0, 600_000);
+      }
+    } catch {
+      /* segue para o leitor público */
+    }
+  }
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15_000);
+    const res = await fetch(`https://r.jina.ai/${url}`, {
+      signal: controller.signal,
+      headers: { Accept: "text/plain", "User-Agent": UA },
+    });
+    clearTimeout(timer);
+    if (!res.ok) return null;
+    const text = (await res.text()).slice(0, 200_000);
+    return text.trim() ? `<html><body>${text}</body></html>` : null;
+  } catch {
+    return null;
+  }
+}
+
 
 export async function fetchPageSignals(url: string): Promise<PageSignals> {
   const u = isPublicHttpUrl(url);
