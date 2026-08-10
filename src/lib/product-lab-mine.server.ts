@@ -210,6 +210,39 @@ function priceFromJsonLd(blocks: string[]): { price: string | null; currency: st
 
 const CURRENCY_SYMBOLS: Record<string, string> = { "€": "EUR", $: "USD", "£": "GBP", "R$": "BRL" };
 
+/**
+ * Lojas SPA (AliExpress, Shopify, Temu…) escondem o preço em JSON embutido no HTML.
+ * Procura pares conhecidos antes de recorrer ao texto visível.
+ */
+function priceFromEmbeddedJson(html: string): { price: string | null; currency: string | null } {
+  const currency =
+    /"(?:currencyCode|priceCurrency|currency)"\s*:\s*"([A-Za-z]{3})"/i.exec(html)?.[1] ??
+    /"currency"\s*:\s*\{[^}]*"code"\s*:\s*"([A-Za-z]{3})"/i.exec(html)?.[1] ??
+    null;
+
+  const patterns: RegExp[] = [
+    /"(?:formatedActivityPrice|formatedPrice)"\s*:\s*"([^"]+)"/i,
+    /"(?:minActivityAmount|minAmount|skuActivityAmount|skuAmount)"\s*:\s*\{[^}]*"value"\s*:\s*([\d.]+)/i,
+    /"(?:salePrice|sale_price|priceAmount|current_price|finalPrice)"\s*:\s*"?([\d.,]+)"?/i,
+    /"price(?:_amount|Amount|Value|)"\s*:\s*"?([\d.,]+)"?/i,
+    /"price"\s*:\s*\{[^}]*"amount"\s*:\s*"?([\d.,]+)"?/i,
+  ];
+  for (const re of patterns) {
+    const raw = re.exec(html)?.[1];
+    if (!raw) continue;
+    const amount = normalizeAmount(raw);
+    if (amount) {
+      // Shopify e afins usam cêntimos em campos *_price inteiros.
+      const cents = /"(?:price|sale_price)"\s*:\s*(\d{4,})[,}]/.exec(html)?.[1];
+      if (cents && cents === raw && !raw.includes(".") && !raw.includes(",")) {
+        return { price: String(Number(cents) / 100), currency };
+      }
+      return { price: amount, currency };
+    }
+  }
+  return { price: null, currency };
+}
+
 /** Último recurso: primeiro valor monetário legível no texto da página. */
 function priceFromText(text: string): { price: string | null; currency: string | null } {
   const re = /(R\$|€|\$|£)\s?(\d{1,3}(?:[.\s]\d{3})*(?:[.,]\d{1,2})?)|(\d{1,3}(?:[.\s]\d{3})*(?:[.,]\d{1,2})?)\s?(R\$|€|\$|£|EUR|USD|GBP|BRL)/i;
