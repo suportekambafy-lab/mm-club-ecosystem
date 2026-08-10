@@ -180,6 +180,7 @@ export const mineFromUrl = createServerFn({ method: "POST" })
         null,
       );
       const clean = sanitize(fallback.output);
+      const { guessSource, guessSupplier, guessMarket } = await import("./product-lab-mine.server");
       return {
         ok: true as const,
         partial: true,
@@ -192,9 +193,13 @@ export const mineFromUrl = createServerFn({ method: "POST" })
             ...clean.draft,
             product_url: url,
             store: clean.draft.store ?? signals.host ?? null,
+            source: clean.draft.source ?? guessSource(signals.host),
+            supplier: clean.draft.supplier ?? guessSupplier(signals.host),
+            market: clean.draft.market ?? guessMarket(signals.host, clean.draft.currency),
           },
         },
       };
+
     }
 
     const run = await runMining(prompt, null);
