@@ -100,14 +100,37 @@ function ProductLabDashboard() {
 
   const qc = useQueryClient();
   const move = useServerFn(setProductStatus);
+  const runAnalyse = useServerFn(analyseProduct);
+
   const moveMutation = useMutation({
     mutationFn: (v: { id: string; status: PlStatus }) => move({ data: v }),
-    onSuccess: (_r, v) => {
-      qc.invalidateQueries({ queryKey: ["product-lab"] });
-      toast.success(`Movido para ${statusLabel(v.status)}`);
+    onMutate: async (v) => {
+      await qc.cancelQueries({ queryKey: ["product-lab", "list"] });
+      const prev = qc.getQueryData<{ products: Product[] }>(["product-lab", "list"]);
+      qc.setQueryData<{ products: Product[] }>(["product-lab", "list"], (old) =>
+        old
+          ? { ...old, products: old.products.map((p) => (p.id === v.id ? { ...p, status: v.status } : p)) }
+          : old,
+      );
+      return { prev };
     },
-    onError: (e) => toast.error((e as Error).message),
+    onSuccess: (_r, v) => toast.success(`Movido para ${statusLabel(v.status)}`),
+    onError: (e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["product-lab", "list"], ctx.prev);
+      toast.error((e as Error).message);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["product-lab"] }),
   });
+
+  const analyseMutation = useMutation({
+    mutationFn: (v: { id: string }) => runAnalyse({ data: v }),
+    onSuccess: (r) => {
+      qc.invalidateQueries({ queryKey: ["product-lab"] });
+      toast.success((r as any)?.analysis?.recommendation ?? "Análise concluída");
+    },
+    onError: (e) => toast.error((e as Error).message ?? "Não foi possível analisar agora."),
+  });
+
 
   return (
     <div className="space-y-8">
