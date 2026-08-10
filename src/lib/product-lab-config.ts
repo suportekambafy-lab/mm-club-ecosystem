@@ -63,3 +63,20 @@ export function scoreTone(score: number | null): { label: string; className: str
   if (score >= 40) return { label: "Precisa validar", className: "text-muted-foreground" };
   return { label: "Baixo potencial", className: "text-muted-foreground" };
 }
+
+/** Campos que a equipa MM considera essenciais para uma ficha completa. */
+export const PL_REQUIRED_FIELDS: { key: string; label: string }[] = [
+  { key: "category", label: "Categoria / nicho" },
+  { key: "sell_price", label: "Preço final pretendido" },
+  { key: "cost_price", label: "Custo do produto" },
+  { key: "supplier", label: "Fornecedor" },
+  { key: "market", label: "Mercado" },
+  { key: "image_url", label: "Imagem do produto" },
+];
+
+export function missingFields(product: Record<string, unknown>): string[] {
+  return PL_REQUIRED_FIELDS.filter((f) => {
+    const v = product[f.key];
+    return v == null || String(v).trim() === "";
+  }).map((f) => f.label);
+}
