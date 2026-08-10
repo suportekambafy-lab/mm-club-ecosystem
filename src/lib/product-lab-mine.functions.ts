@@ -5,7 +5,8 @@ import { PL_CRITERIA, PL_MAX_NOTE, computeScore } from "./product-lab-config";
 
 const criterionIds = PL_CRITERIA.map((c) => c.id);
 
-const nullableStr = z.string().nullable();
+// Tolerante de propósito: o modelo pode omitir campos sem informação.
+const nullableStr = z.string().nullish().default(null);
 
 const MineSchema = z.object({
   name: nullableStr,
@@ -21,8 +22,8 @@ const MineSchema = z.object({
   problem: nullableStr,
   audience: nullableStr,
   benefits: nullableStr,
-  analysis: z.string(),
-  scores: z.record(z.string(), z.number()),
+  analysis: z.string().nullish().default(""),
+  scores: z.record(z.string(), z.number()).nullish().default({}),
 });
 
 export type MinedDraft = z.infer<typeof MineSchema>;
@@ -72,7 +73,23 @@ async function runMining(prompt: string, imageUrl: string | null) {
     return { output, model };
   } catch (error) {
     if (NoObjectGeneratedError.isInstance(error)) {
-      throw new Error("A análise não ficou completa. Confirma ou preenche os dados manualmente.");
+      // Recupera o que o modelo conseguiu produzir em vez de falhar o fluxo todo.
+      const raw = error.text ?? "";
+      const json = raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1);
+      if (json.length > 2) {
+        try {
+          const parsed = MineSchema.partial().parse(JSON.parse(json));
+          return { output: MineSchema.parse(parsed) as MinedDraft, model };
+        } catch {
+          /* segue para o fallback vazio */
+        }
+      }
+      return {
+        output: MineSchema.parse({
+          analysis: raw.trim() || "Não identificado — precisa de confirmação.",
+        }) as MinedDraft,
+        model,
+      };
     }
     throw error;
   }
