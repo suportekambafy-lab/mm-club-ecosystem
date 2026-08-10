@@ -106,6 +106,7 @@ export const joinRoom = createServerFn({ method: "POST" })
       // First join: host if creator, otherwise default participant / viewer.
       const isCreator = live.created_by === userId;
       const initialRole = isCreator ? "host" : target === "backstage" ? "speaker" : "participant";
+      const isPublisher = initialRole !== "participant";
       const { data: inserted, error: insErr } = await supabase
         .from("live_participants")
         .insert({
@@ -113,10 +114,10 @@ export const joinRoom = createServerFn({ method: "POST" })
           user_id: userId,
           role: initialRole,
           room: target,
-          mic_allowed: isCreator,
-          cam_allowed: isCreator,
-          screen_allowed: isCreator,
-          on_stage: isCreator,
+          mic_allowed: isPublisher,
+          cam_allowed: isPublisher,
+          screen_allowed: isPublisher,
+          on_stage: isPublisher,
         })
         .select()
         .maybeSingle();
