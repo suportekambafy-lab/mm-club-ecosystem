@@ -87,6 +87,7 @@ import { Route as ApiPublicHooksLivesRecordingCheckRouteImport } from './routes/
 import { Route as ApiPublicHooksLivesAnnounceCatchupRouteImport } from './routes/api/public/hooks/lives-announce-catchup'
 import { Route as ApiPublicHooksLiveTestEmailRouteImport } from './routes/api/public/hooks/live-test-email'
 import { Route as ApiPublicHooksInactivityNudgeRouteImport } from './routes/api/public/hooks/inactivity-nudge'
+import { Route as ApiPublicHooksForceEndLiveRouteImport } from './routes/api/public/hooks/force-end-live'
 import { Route as ApiPublicHooksEmailRelayRouteImport } from './routes/api/public/hooks/email-relay'
 import { Route as ApiPublicHooksCourseReleasedRouteImport } from './routes/api/public/hooks/course-released'
 import { Route as ApiPublicHooksBillingTickRouteImport } from './routes/api/public/hooks/billing-tick'
@@ -511,6 +512,12 @@ const ApiPublicHooksInactivityNudgeRoute =
     path: '/api/public/hooks/inactivity-nudge',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksForceEndLiveRoute =
+  ApiPublicHooksForceEndLiveRouteImport.update({
+    id: '/api/public/hooks/force-end-live',
+    path: '/api/public/hooks/force-end-live',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksEmailRelayRoute =
   ApiPublicHooksEmailRelayRouteImport.update({
     id: '/api/public/hooks/email-relay',
@@ -697,6 +704,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
   '/api/public/hooks/course-released': typeof ApiPublicHooksCourseReleasedRoute
   '/api/public/hooks/email-relay': typeof ApiPublicHooksEmailRelayRoute
+  '/api/public/hooks/force-end-live': typeof ApiPublicHooksForceEndLiveRoute
   '/api/public/hooks/inactivity-nudge': typeof ApiPublicHooksInactivityNudgeRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
@@ -786,6 +794,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
   '/api/public/hooks/course-released': typeof ApiPublicHooksCourseReleasedRoute
   '/api/public/hooks/email-relay': typeof ApiPublicHooksEmailRelayRoute
+  '/api/public/hooks/force-end-live': typeof ApiPublicHooksForceEndLiveRoute
   '/api/public/hooks/inactivity-nudge': typeof ApiPublicHooksInactivityNudgeRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
@@ -885,6 +894,7 @@ export interface FileRoutesById {
   '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
   '/api/public/hooks/course-released': typeof ApiPublicHooksCourseReleasedRoute
   '/api/public/hooks/email-relay': typeof ApiPublicHooksEmailRelayRoute
+  '/api/public/hooks/force-end-live': typeof ApiPublicHooksForceEndLiveRoute
   '/api/public/hooks/inactivity-nudge': typeof ApiPublicHooksInactivityNudgeRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
@@ -984,6 +994,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/billing-tick'
     | '/api/public/hooks/course-released'
     | '/api/public/hooks/email-relay'
+    | '/api/public/hooks/force-end-live'
     | '/api/public/hooks/inactivity-nudge'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
@@ -1073,6 +1084,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/billing-tick'
     | '/api/public/hooks/course-released'
     | '/api/public/hooks/email-relay'
+    | '/api/public/hooks/force-end-live'
     | '/api/public/hooks/inactivity-nudge'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
@@ -1171,6 +1183,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/billing-tick'
     | '/api/public/hooks/course-released'
     | '/api/public/hooks/email-relay'
+    | '/api/public/hooks/force-end-live'
     | '/api/public/hooks/inactivity-nudge'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
@@ -1215,6 +1228,7 @@ export interface RootRouteChildren {
   ApiPublicHooksBillingTickRoute: typeof ApiPublicHooksBillingTickRoute
   ApiPublicHooksCourseReleasedRoute: typeof ApiPublicHooksCourseReleasedRoute
   ApiPublicHooksEmailRelayRoute: typeof ApiPublicHooksEmailRelayRoute
+  ApiPublicHooksForceEndLiveRoute: typeof ApiPublicHooksForceEndLiveRoute
   ApiPublicHooksInactivityNudgeRoute: typeof ApiPublicHooksInactivityNudgeRoute
   ApiPublicHooksLiveTestEmailRoute: typeof ApiPublicHooksLiveTestEmailRoute
   ApiPublicHooksLivesAnnounceCatchupRoute: typeof ApiPublicHooksLivesAnnounceCatchupRoute
@@ -1778,6 +1792,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksInactivityNudgeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/force-end-live': {
+      id: '/api/public/hooks/force-end-live'
+      path: '/api/public/hooks/force-end-live'
+      fullPath: '/api/public/hooks/force-end-live'
+      preLoaderRoute: typeof ApiPublicHooksForceEndLiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/email-relay': {
       id: '/api/public/hooks/email-relay'
       path: '/api/public/hooks/email-relay'
@@ -2143,6 +2164,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksBillingTickRoute: ApiPublicHooksBillingTickRoute,
   ApiPublicHooksCourseReleasedRoute: ApiPublicHooksCourseReleasedRoute,
   ApiPublicHooksEmailRelayRoute: ApiPublicHooksEmailRelayRoute,
+  ApiPublicHooksForceEndLiveRoute: ApiPublicHooksForceEndLiveRoute,
   ApiPublicHooksInactivityNudgeRoute: ApiPublicHooksInactivityNudgeRoute,
   ApiPublicHooksLiveTestEmailRoute: ApiPublicHooksLiveTestEmailRoute,
   ApiPublicHooksLivesAnnounceCatchupRoute:
