@@ -135,7 +135,7 @@ function ProductLabDashboard() {
                 onClick={() => {
                   const best = filtered[0] ?? products[0];
                   if (!best) return toast.info("Adiciona um produto primeiro.");
-                  navigate({ to: "/ferramentas/product-lab/$productId", params: { productId: best.id }, search: { ia: 1 } as never });
+                  navigate({ to: "/ferramentas/product-lab/$productId", params: { productId: best.id } });
                 }}
               >
                 <Sparkles className="h-4 w-4" /> Analisar Produto com IA
