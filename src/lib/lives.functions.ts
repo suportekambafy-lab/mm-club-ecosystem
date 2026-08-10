@@ -229,7 +229,7 @@ export const listChatMessages = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { data: rows, error } = await context.supabase
       .from("live_chat_messages")
-      .select("id,live_id,user_id,body,created_at,pinned_at,pinned_by")
+      .select("id,live_id,user_id,body,created_at,pinned_at,pinned_by,guest_id,guest_name")
       .eq("live_id", data.liveId)
       .order("created_at", { ascending: true })
       .limit(200);
@@ -251,7 +251,7 @@ export const sendChatMessage = createServerFn({ method: "POST" })
     const { error, data: row } = await context.supabase
       .from("live_chat_messages")
       .insert({ live_id: data.liveId, body: data.body, user_id: context.userId })
-      .select("id,live_id,user_id,body,created_at,pinned_at,pinned_by")
+      .select("id,live_id,user_id,body,created_at,pinned_at,pinned_by,guest_id,guest_name")
       .single();
     if (error) throw new Error(error.message);
     return row;
@@ -271,7 +271,7 @@ export const setChatMessagePinned = createServerFn({ method: "POST" })
         pinned_by: data.pinned ? context.userId : null,
       })
       .eq("id", data.id)
-      .select("id,live_id,user_id,body,created_at,pinned_at,pinned_by")
+      .select("id,live_id,user_id,body,created_at,pinned_at,pinned_by,guest_id,guest_name")
       .single();
     if (error) throw new Error(error.message);
     return row;
