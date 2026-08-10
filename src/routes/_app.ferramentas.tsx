@@ -32,9 +32,10 @@ const showcase = [
 
 function FerramentasLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isStudio = pathname.startsWith("/ferramentas/studio");
+  const isChild = pathname.replace(/\/$/, "") !== "/ferramentas";
 
-  if (isStudio) return <Outlet />;
+  if (isChild) return <Outlet />;
+
 
   return (
     <div className="space-y-14">
