@@ -344,7 +344,15 @@ function HostLeaveMenu({
   const doEnd = async () => {
     setEnding(true);
     try {
-      await actions.endLive();
+      try {
+        await actions.endLive();
+      } catch (first) {
+        // Sessões longas expiram o token: renova e tenta uma segunda vez antes
+        // de desistir — sem isto o botão "Terminar live" parecia não funcionar.
+        const { supabase } = await import("@/integrations/supabase/client");
+        await supabase.auth.refreshSession().catch(() => {});
+        await actions.endLive();
+      }
       // endLive flips lives.status to "ended"; the live route reacts and
       // redirects everyone to the replay view. Still, close the room locally.
       if (onLeave) onLeave();
@@ -360,6 +368,7 @@ function HostLeaveMenu({
       setOpen(false);
     }
   };
+
 
   return (
     <div className="relative">

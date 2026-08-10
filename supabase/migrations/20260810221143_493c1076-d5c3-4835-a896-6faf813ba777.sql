@@ -1,0 +1,2 @@
+update public.lives set status='ended', ended_at=now(), recording_stopped_at=coalesce(recording_stopped_at, now()) where id='0aa4fd35-b8f1-4cc3-aa52-e83dbc72eb89';
+update public.live_participants set left_at=now(), on_stage=false, hand_raised_at=null where live_id='0aa4fd35-b8f1-4cc3-aa52-e83dbc72eb89' and left_at is null;
