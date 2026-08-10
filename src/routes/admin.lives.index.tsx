@@ -963,7 +963,22 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
                   className="h-32 w-full rounded-lg object-cover"
                 />
               ) : null}
+              {timeChanged && row.status === "scheduled" ? (
+                <label className="flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={notify}
+                    onChange={(e) => setNotify(e.target.checked)}
+                    className="mt-0.5"
+                  />
+                  <span className="text-muted-foreground">
+                    Avisar todos os membros do <strong className="text-foreground">novo horário</strong> (email + sino
+                    + push).
+                  </span>
+                </label>
+              ) : null}
             </div>
+
             <div className="mt-5 flex justify-end gap-2">
               <button
                 type="button"
