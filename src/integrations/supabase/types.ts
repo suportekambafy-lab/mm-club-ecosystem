@@ -2848,6 +2848,7 @@ export type Database = {
         Row: {
           actor_id: string | null
           comment_id: string | null
+          course_id: string | null
           created_at: string
           dismissed_at: string | null
           id: string
@@ -2865,6 +2866,7 @@ export type Database = {
         Insert: {
           actor_id?: string | null
           comment_id?: string | null
+          course_id?: string | null
           created_at?: string
           dismissed_at?: string | null
           id?: string
@@ -2882,6 +2884,7 @@ export type Database = {
         Update: {
           actor_id?: string | null
           comment_id?: string | null
+          course_id?: string | null
           created_at?: string
           dismissed_at?: string | null
           id?: string
