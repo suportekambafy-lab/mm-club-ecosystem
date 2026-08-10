@@ -294,6 +294,54 @@ export const emailTemplates = {
     };
   },
 
+  liveRescheduled(opts: {
+    name: string;
+    title: string;
+    description?: string | null;
+    oldStartsAt: string;
+    startsAt: string;
+    coverUrl?: string | null;
+    liveId: string;
+  }) {
+    const safe = escapeHtml(opts.name);
+    const title = escapeHtml(opts.title);
+    const desc = opts.description ? escapeHtml(opts.description) : "";
+    const fmt = (iso: string) =>
+      new Intl.DateTimeFormat("pt-PT", {
+        dateStyle: "full",
+        timeStyle: "short",
+        timeZone: "Europe/Lisbon",
+      }).format(new Date(iso));
+    const oldFmt = fmt(opts.oldStartsAt);
+    const newFmt = fmt(opts.startsAt);
+    const cover = opts.coverUrl
+      ? opts.coverUrl.startsWith("http")
+        ? opts.coverUrl
+        : `${APP_URL}${opts.coverUrl}`
+      : null;
+    const heroImg = cover
+      ? `<div style="margin:0 -40px 24px;"><img src="${cover}" alt="${title}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;text-decoration:none;"></div>`
+      : "";
+    return {
+      subject: `Novo horário: ${opts.title}`,
+      html: layout(
+        `A live ${opts.title} passou para ${newFmt}.`,
+        `${heroImg}
+         <div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">MM Club · Horário alterado</div>
+         <h1 style="font-size:26px;color:#ffffff;margin:0 0 12px;font-weight:600;line-height:1.25;">${title}</h1>
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 20px;">Olá ${safe}, esta live mudou de horário. Actualiza a tua agenda.</p>
+         <div style="background:#0a0a0a;border-left:3px solid #c9a961;padding:18px 22px;margin:0 0 24px;border-radius:8px;">
+           <p style="margin:0 0 6px;font-size:14px;color:#737373;text-decoration:line-through;">${escapeHtml(oldFmt)}</p>
+           <p style="margin:0;font-size:16px;color:#c9a961;font-weight:600;">${escapeHtml(newFmt)} (Lisboa)</p>
+         </div>
+         ${desc ? `<p style="font-size:15px;line-height:1.7;color:#d4d4d4;margin:0 0 20px;">${desc}</p>` : ""}
+         <p style="margin:0 0 8px;">${btn("Ver detalhes da live →", `${APP_URL}/lives/${opts.liveId}`)}</p>`,
+      ),
+    };
+  },
+
+
+
   replayReady(opts: {
     name: string;
     title: string;
