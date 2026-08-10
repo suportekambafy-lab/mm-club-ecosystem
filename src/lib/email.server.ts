@@ -16,6 +16,7 @@ export type EmailKind =
   | "replay_ready"
   | "inactivity_nudge"
   | "upcoming_courses"
+  | "course_released"
   | "community_post"
   | "short_published"
   | "short_reply";
@@ -410,6 +411,39 @@ export const emailTemplates = {
          ${cards}
          <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:18px 0 26px;">Podes vê-los já na Academia, com contador para a data de lançamento.</p>
          <p style="margin:0 0 8px;">${btn("Ver na Academia →", `${APP_URL}/academia`)}</p>`,
+      ),
+    };
+  },
+
+  courseReleased(
+    name: string,
+    course: {
+      courseId: string;
+      title: string;
+      tagline?: string;
+      cover?: string | null;
+    },
+  ) {
+    const safe = escapeHtml(name);
+    const cover = course.cover
+      ? course.cover.startsWith("http")
+        ? course.cover
+        : `${APP_URL}${course.cover}`
+      : null;
+    const hero = cover
+      ? `<div style="margin:0 -40px 24px;"><img src="${cover}" alt="${escapeHtml(course.title)}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;"></div>`
+      : "";
+    return {
+      subject: `Já está disponível: ${course.title}`,
+      html: layout(
+        `${course.title} acabou de abrir na Academia.`,
+        `${hero}
+         <div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">Academia</div>
+         <h1 style="font-size:27px;color:#ffffff;margin:0 0 12px;font-weight:600;line-height:1.25;">Já está disponível, ${safe}.</h1>
+         <p style="font-size:16px;line-height:1.65;color:#d4d4d4;margin:0 0 6px;"><strong style="color:#c9a961;">${escapeHtml(course.title)}</strong> acabou de abrir e já está incluído no teu acesso.</p>
+         ${course.tagline ? `<p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 22px;">${escapeHtml(course.tagline)}</p>` : ""}
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Começa pela primeira aula hoje — o momento certo é agora.</p>
+         <p style="margin:0 0 8px;">${btn("Começar o curso →", `${APP_URL}/academia/${course.courseId}`)}</p>`,
       ),
     };
   },
