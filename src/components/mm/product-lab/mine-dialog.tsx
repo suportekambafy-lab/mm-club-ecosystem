@@ -118,6 +118,7 @@ export function MineDialog({
   const qc = useQueryClient();
   const runUrl = useServerFn(mineFromUrl);
   const runImage = useServerFn(mineFromImage);
+  const runQuick = useServerFn(quickMineFromUrl);
   const persist = useServerFn(saveMinedProduct);
 
   const [stage, setStage] = useState<"input" | "analysing" | "result">("input");
@@ -127,6 +128,7 @@ export function MineDialog({
   const [step, setStep] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
   const [result, setResult] = useState<MineResult | null>(null);
+  const [status, setStatus] = useState<PlStatus>("found");
   const [form, setForm] = useState({
     name: "",
     category: "",
@@ -149,6 +151,7 @@ export function MineDialog({
     setStep(0);
     setNotice(null);
     setResult(null);
+    setStatus("found");
   }, [open]);
 
   const startSteps = () => {
@@ -177,6 +180,22 @@ export function MineDialog({
     setStage("result");
   };
 
+  // Fluxo rápido: colar link → extrair dados da página → confirmar → guardar.
+  const quick = useMutation({
+    mutationFn: async () => await runQuick({ data: { url } }),
+    onSuccess: (res) => {
+      if (!res.ok || !res.draft) {
+        toast.info(res.notice ?? "Não conseguimos ler esse link.");
+        return;
+      }
+      applyResult(
+        { draft: res.draft as Draft, analysis: "", recommendation: null, scores: {}, score: null },
+        res.notice ?? null,
+      );
+    },
+    onError: () => toast.error("Não conseguimos ler esse link. Podes adicionar manualmente."),
+  });
+
   const analyse = useMutation({
     mutationFn: async () => {
       startSteps();
@@ -191,6 +210,7 @@ export function MineDialog({
         toast.info(res.notice ?? "Não conseguimos analisar esse link.");
         return;
       }
+      setStatus("analysis");
       applyResult(res.result as MineResult, res.notice ?? null);
     },
     onError: (e) => {
@@ -203,6 +223,7 @@ export function MineDialog({
       );
     },
   });
+
 
   const missing = (() => {
     const list: string[] = [];
