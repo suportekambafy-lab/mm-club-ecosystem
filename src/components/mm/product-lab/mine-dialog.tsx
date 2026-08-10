@@ -31,9 +31,22 @@ const STEPS = [
 ];
 
 function num(v: string) {
-  const n = Number(String(v).replace(",", "."));
-  return v.trim() === "" || Number.isNaN(n) ? null : n;
+  const cleaned = String(v).replace(/[^\d.,]/g, "").trim();
+  if (!cleaned) return null;
+  const lastComma = cleaned.lastIndexOf(",");
+  const lastDot = cleaned.lastIndexOf(".");
+  let normalized = cleaned;
+  if (lastComma > -1 && lastDot > -1) {
+    normalized = lastComma > lastDot ? cleaned.replace(/\./g, "").replace(",", ".") : cleaned.replace(/,/g, "");
+  } else if (lastComma > -1) {
+    normalized = cleaned.length - lastComma <= 3 ? cleaned.replace(",", ".") : cleaned.replace(/,/g, "");
+  } else if (lastDot > -1 && cleaned.length - lastDot > 3) {
+    normalized = cleaned.replace(/\./g, "");
+  }
+  const n = Number(normalized);
+  return Number.isNaN(n) ? null : n;
 }
+
 
 function AnalysisBody({ content }: { content: string }) {
   return (
