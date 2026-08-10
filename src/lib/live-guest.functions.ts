@@ -301,3 +301,121 @@ export const guestLeave = createServerFn({ method: "POST" })
       .eq("user_id", data.guestId);
     return { ok: true };
   });
+
+// -------------------------------------------------------------------------
+// Guest chat — guests read and write the same live chat as members.
+// -------------------------------------------------------------------------
+
+type GuestChatRow = {
+  id: string;
+  body: string;
+  created_at: string;
+  pinned_at: string | null;
+  authorId: string;
+  authorName: string;
+  isGuest: boolean;
+};
+
+async function assertGuestAccess(liveId: string, code: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: live } = await supabaseAdmin
+    .from("lives")
+    .select("id, guest_token")
+    .eq("id", liveId)
+    .maybeSingle();
+  if (!live || !live.guest_token || live.guest_token !== code) {
+    throw new Error("Link de convidado inválido ou expirado.");
+  }
+  return supabaseAdmin;
+}
+
+/** Public: read the live chat as a guest (name-resolved, server-side). */
+export const listGuestChatMessages = createServerFn({ method: "POST" })
+  .inputValidator((i) =>
+    z.object({ liveId: uuid, code: z.string().trim().min(8).max(64) }).parse(i),
+  )
+  .handler(async ({ data }): Promise<GuestChatRow[]> => {
+    const supabaseAdmin = await assertGuestAccess(data.liveId, data.code);
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("live_chat_messages")
+      .select("id, body, created_at, pinned_at, user_id, guest_id, guest_name")
+      .eq("live_id", data.liveId)
+      .order("created_at", { ascending: true })
+      .limit(200);
+    if (error) throw new Error(error.message);
+
+    const userIds = Array.from(
+      new Set((rows ?? []).map((r) => r.user_id as string | null).filter(Boolean) as string[]),
+    );
+    const names = new Map<string, string>();
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabaseAdmin
+        .from("profiles")
+        .select("id, display_name")
+        .in("id", userIds);
+      for (const p of profiles ?? []) {
+        names.set(p.id as string, (p.display_name as string | null) ?? "Membro");
+      }
+    }
+
+    return (rows ?? []).map((r) => ({
+      id: r.id as string,
+      body: r.body as string,
+      created_at: r.created_at as string,
+      pinned_at: (r.pinned_at as string | null) ?? null,
+      authorId: (r.user_id as string | null) ?? (r.guest_id as string),
+      authorName: r.user_id
+        ? names.get(r.user_id as string) ?? "Membro"
+        : ((r.guest_name as string | null) ?? "Convidado"),
+      isGuest: !r.user_id,
+    }));
+  });
+
+/** Public: post a chat message as a guest. */
+export const sendGuestChatMessage = createServerFn({ method: "POST" })
+  .inputValidator((i) =>
+    z
+      .object({
+        liveId: uuid,
+        code: z.string().trim().min(8).max(64),
+        guestId: uuid,
+        displayName: z.string().trim().min(2).max(40),
+        body: z.string().trim().min(1).max(2000),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data }): Promise<GuestChatRow> => {
+    const supabaseAdmin = await assertGuestAccess(data.liveId, data.code);
+
+    const { data: me } = await supabaseAdmin
+      .from("live_participants")
+      .select("banned")
+      .eq("live_id", data.liveId)
+      .eq("user_id", data.guestId)
+      .maybeSingle();
+    if (!me) throw new Error("Já não estás nesta sessão.");
+    if (me.banned) throw new Error("Já não tens acesso a esta sessão.");
+
+    const { data: row, error } = await supabaseAdmin
+      .from("live_chat_messages")
+      .insert({
+        live_id: data.liveId,
+        body: data.body,
+        guest_id: data.guestId,
+        guest_name: data.displayName,
+      })
+      .select("id, body, created_at, pinned_at")
+      .single();
+    if (error) throw new Error(error.message);
+
+    return {
+      id: row.id as string,
+      body: row.body as string,
+      created_at: row.created_at as string,
+      pinned_at: (row.pinned_at as string | null) ?? null,
+      authorId: data.guestId,
+      authorName: data.displayName,
+      isGuest: true,
+    };
+  });

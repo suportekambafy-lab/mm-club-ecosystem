@@ -11,7 +11,9 @@ import { cn } from "@/lib/utils";
 type Message = {
   id: string;
   live_id: string;
-  user_id: string;
+  user_id: string | null;
+  guest_id?: string | null;
+  guest_name?: string | null;
   body: string;
   created_at: string;
   pinned_at?: string | null;
@@ -31,6 +33,10 @@ type Props = {
 };
 
 const NEAR_BOTTOM_PX = 80;
+
+function authorKeyOf(m: Message): string {
+  return m.user_id ?? m.guest_id ?? "guest";
+}
 
 function initialsOf(name: string | null | undefined, fallback: string): string {
   const src = (name && name.trim()) || fallback;
@@ -176,7 +182,11 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
   // Fetch profiles for any user_ids we don't have yet.
   useEffect(() => {
     const missing = Array.from(
-      new Set(messages.map((m) => m.user_id).filter((id) => id && !profiles[id])),
+      new Set(
+        messages
+          .map((m) => m.user_id)
+          .filter((id): id is string => Boolean(id) && !profiles[id as string]),
+      ),
     );
     if (missing.length === 0) return;
     let cancelled = false;
@@ -284,8 +294,10 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
       {(() => {
         const pinned = messages.find((m) => m.pinned_at);
         if (!pinned) return null;
-        const p = profiles[pinned.user_id];
-        const pname = p?.display_name || (pinned.user_id === currentUserId ? "Tu" : pinned.user_id.slice(0, 6));
+        const p = pinned.user_id ? profiles[pinned.user_id] : undefined;
+        const pname = pinned.user_id
+          ? p?.display_name || (pinned.user_id === currentUserId ? "Tu" : pinned.user_id.slice(0, 6))
+          : `${pinned.guest_name || "Convidado"} (convidado)`;
         return (
           <div className="flex shrink-0 items-start gap-2 border-b border-border/60 bg-primary/5 px-3 py-2">
             <Pin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
@@ -294,7 +306,7 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
                 <span>Fixada</span>
                 <span className="opacity-60">·</span>
                 <span className="normal-case tracking-normal text-foreground/85">{pname}</span>
-                {isVerified(pinned.user_id) && <VerifiedBadge size={10} />}
+                {pinned.user_id && isVerified(pinned.user_id) && <VerifiedBadge size={10} />}
               </div>
               <p className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-foreground/90 break-words">
                 {renderBody(pinned.body)}
@@ -327,11 +339,13 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
               </p>
             ) : (
               grouped.map(({ m, showHeader }) => {
-                const mine = m.user_id === currentUserId;
-                const profile = profiles[m.user_id];
-                const name = profile?.display_name || (mine ? "Tu" : m.user_id.slice(0, 6));
+                const mine = Boolean(m.user_id) && m.user_id === currentUserId;
+                const profile = m.user_id ? profiles[m.user_id] : undefined;
+                const name = m.user_id
+                  ? profile?.display_name || (mine ? "Tu" : m.user_id.slice(0, 6))
+                  : `${m.guest_name || "Convidado"} (convidado)`;
                 const time = formatTime(m.created_at);
-                const authorIsAdmin = isVerified(m.user_id);
+                const authorIsAdmin = Boolean(m.user_id) && isVerified(m.user_id as string);
                 return (
                   <div
                     key={m.id}
@@ -353,7 +367,10 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            initialsOf(profile?.display_name, mine ? "Tu" : m.user_id)
+                            initialsOf(
+                              profile?.display_name ?? m.guest_name,
+                              mine ? "Tu" : m.user_id ?? m.guest_name ?? "C",
+                            )
                           )}
                         </div>
                       ) : null}

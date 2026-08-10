@@ -17,7 +17,8 @@ import {
   type Participant,
   type RemoteTrackPublication,
 } from "livekit-client";
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, Hand, Volume2 } from "lucide-react";
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, Hand, Volume2, MessagesSquare, X } from "lucide-react";
+import { GuestChat } from "@/components/live/guest-chat";
 import { HQ_ROOM_OPTIONS } from "@/lib/livekit-quality";
 import { cn } from "@/lib/utils";
 import { guestSync, guestLeave } from "@/lib/live-guest.functions";
@@ -60,6 +61,7 @@ export function GuestRoom({
   const [camOn, setCamOn] = useState(prefs.camEnabled && initialOnStage);
   const [, forceTick] = useState(0);
   const [audioBlocked, setAudioBlocked] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const unlockAudio = useCallback(async () => {
     const r = roomRef.current;
@@ -264,6 +266,8 @@ export function GuestRoom({
 
   return (
     <div className="relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-black">
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       {screenSharer ? (
         <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden bg-black">
           <GuestTile
@@ -326,6 +330,23 @@ export function GuestRoom({
 
 
 
+      </div>
+
+      {chatOpen && (
+        <div className="absolute inset-x-0 bottom-0 z-40 h-[52%] min-h-0 border-t border-white/10 bg-black/95 backdrop-blur-md lg:static lg:z-auto lg:h-auto lg:w-[340px] lg:shrink-0 lg:border-l lg:border-t-0">
+          <button
+            type="button"
+            onClick={() => setChatOpen(false)}
+            aria-label="Fechar chat"
+            className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20 lg:hidden"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <GuestChat liveId={liveId} code={code} guestId={guestId} displayName={displayName} />
+        </div>
+      )}
+      </div>
+
       <div className="pointer-events-none shrink-0 border-t border-white/5 bg-black px-2 pb-[max(0.45rem,env(safe-area-inset-bottom))] pt-1.5">
         <div className="pointer-events-auto flex max-w-full items-center gap-2 overflow-x-auto rounded-full bg-black/70 px-3 py-2 ring-1 ring-white/10 backdrop-blur-md [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {onStage ? (
@@ -367,6 +388,18 @@ export function GuestRoom({
               {handRaised ? "Mão levantada" : "Levantar a mão"}
             </button>
           )}
+
+          <button
+            type="button"
+            onClick={() => setChatOpen((v) => !v)}
+            aria-label={chatOpen ? "Fechar chat" : "Abrir chat"}
+            className={cn(
+              "grid h-11 w-11 shrink-0 place-items-center rounded-full transition",
+              chatOpen ? "bg-amber-400 text-black" : "bg-white/10 text-white hover:bg-white/20",
+            )}
+          >
+            <MessagesSquare className="h-4 w-4" />
+          </button>
 
           <button
             type="button"
