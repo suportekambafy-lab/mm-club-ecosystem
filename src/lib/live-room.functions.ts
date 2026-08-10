@@ -127,9 +127,25 @@ export const joinRoom = createServerFn({ method: "POST" })
       if (target === "backstage" && !["host", "cohost", "speaker"].includes(me.role)) {
         throw new Error("Backstage é reservado ao anfitrião e oradores.");
       }
+      // Publishers (host/cohost/speaker) keep the stage on re-join: leaving the
+      // room clears on_stage, which would otherwise leave them off-stage with
+      // no publish permissions ("A aguardar oradores" with a dead camera).
+      const isPublisher = ["host", "cohost", "speaker"].includes(me.role);
       const { data: updated, error: upErr } = await supabase
         .from("live_participants")
-        .update({ room: target, left_at: null, joined_at: new Date().toISOString() })
+        .update({
+          room: target,
+          left_at: null,
+          joined_at: new Date().toISOString(),
+          ...(isPublisher
+            ? {
+                on_stage: true,
+                mic_allowed: true,
+                cam_allowed: true,
+                screen_allowed: true,
+              }
+            : {}),
+        })
         .eq("id", me.id)
         .select()
         .maybeSingle();
