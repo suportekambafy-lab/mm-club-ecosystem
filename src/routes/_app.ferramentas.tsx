@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { ArrowRight, ImageIcon, Film, Wand2, Package, Palette } from "lucide-react";
+import { ArrowRight, ImageIcon, Film, Wand2, Package, Palette, FlaskConical } from "lucide-react";
 import showcase1 from "@/assets/studio-showcase-1.jpg";
 import showcase2 from "@/assets/studio-showcase-2.jpg";
 import showcase3 from "@/assets/studio-showcase-3.jpg";
@@ -32,9 +32,10 @@ const showcase = [
 
 function FerramentasLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isStudio = pathname.startsWith("/ferramentas/studio");
+  const isChild = pathname.replace(/\/$/, "") !== "/ferramentas";
 
-  if (isStudio) return <Outlet />;
+  if (isChild) return <Outlet />;
+
 
   return (
     <div className="space-y-14">
@@ -200,8 +201,47 @@ function FerramentasLayout() {
         </div>
       </section>
 
+      {/* MM PRODUCT LAB */}
+      <section>
+        <Link
+          to="/ferramentas/product-lab"
+          className="group relative flex flex-col gap-6 overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-surface-1 p-8 transition hover:border-primary/50 md:flex-row md:items-center md:justify-between"
+        >
+          <div
+            className="pointer-events-none absolute inset-0 opacity-70 transition group-hover:opacity-100"
+            style={{
+              background:
+                "radial-gradient(ellipse 60% 70% at 0% 0%, oklch(0.82 0.13 82 / 0.18), transparent 60%)",
+            }}
+          />
+          <div className="relative flex flex-col gap-5">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-[color:var(--hairline)]">
+              <FlaskConical className="h-5 w-5" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  MM Product Lab
+                </p>
+                <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary">
+                  Grátis
+                </span>
+              </div>
+              <h3 className="mt-1 font-display text-2xl text-foreground">Mineração e validação de produtos</h3>
+              <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+                Encontra, organiza e analisa os teus produtos num só lugar.
+              </p>
+            </div>
+          </div>
+          <span className="relative inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition group-hover:opacity-90">
+            Começar a minerar <ArrowRight className="h-4 w-4" />
+          </span>
+        </Link>
+      </section>
+
       {/* COMING SOON */}
       <section>
+
         <div className="mb-4 flex items-baseline justify-between">
           <h2 className="font-display text-xl text-foreground">Em breve</h2>
           <p className="text-xs text-muted-foreground">Roadmap MM Studio</p>

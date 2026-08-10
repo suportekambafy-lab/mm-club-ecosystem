@@ -2994,6 +2994,300 @@ export type Database = {
         }
         Relationships: []
       }
+      pl_ai_analyses: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          model: string | null
+          product_id: string
+          recommendation: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          model?: string | null
+          product_id: string
+          recommendation?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          model?: string | null
+          product_id?: string
+          recommendation?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pl_ai_analyses_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "pl_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pl_competitors: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          product_id: string
+          screenshot_url: string | null
+          updated_at: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          product_id: string
+          screenshot_url?: string | null
+          updated_at?: string
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          product_id?: string
+          screenshot_url?: string | null
+          updated_at?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pl_competitors_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "pl_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pl_creative_assets: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          notes: string | null
+          product_id: string
+          title: string | null
+          updated_at: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          notes?: string | null
+          product_id: string
+          title?: string | null
+          updated_at?: string
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          notes?: string | null
+          product_id?: string
+          title?: string | null
+          updated_at?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pl_creative_assets_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "pl_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pl_product_history: {
+        Row: {
+          created_at: string
+          detail: string | null
+          event: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          event: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          event?: string
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pl_product_history_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "pl_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pl_product_notes: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pl_product_notes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "pl_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pl_product_scores: {
+        Row: {
+          created_at: string
+          criterion: string
+          id: string
+          product_id: string
+          updated_at: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          criterion: string
+          id?: string
+          product_id: string
+          updated_at?: string
+          user_id: string
+          value?: number
+        }
+        Update: {
+          created_at?: string
+          criterion?: string
+          id?: string
+          product_id?: string
+          updated_at?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pl_product_scores_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "pl_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pl_products: {
+        Row: {
+          ad_url: string | null
+          category: string | null
+          cost_price: number | null
+          created_at: string
+          id: string
+          image_url: string | null
+          market: string | null
+          name: string
+          notes: string | null
+          product_url: string | null
+          score: number | null
+          sell_price: number | null
+          source: string | null
+          status: string
+          supplier: string | null
+          supplier_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ad_url?: string | null
+          category?: string | null
+          cost_price?: number | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          market?: string | null
+          name: string
+          notes?: string | null
+          product_url?: string | null
+          score?: number | null
+          sell_price?: number | null
+          source?: string | null
+          status?: string
+          supplier?: string | null
+          supplier_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ad_url?: string | null
+          category?: string | null
+          cost_price?: number | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          market?: string | null
+          name?: string
+          notes?: string | null
+          product_url?: string | null
+          score?: number | null
+          sell_price?: number | null
+          source?: string | null
+          status?: string
+          supplier?: string | null
+          supplier_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

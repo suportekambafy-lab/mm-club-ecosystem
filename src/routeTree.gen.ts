@@ -73,6 +73,7 @@ import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.espe
 import { Route as AppAcademiaPesquisaRouteImport } from './routes/_app.academia.pesquisa'
 import { Route as AppAcademiaCourseIdRouteImport } from './routes/_app.academia.$courseId'
 import { Route as AppFerramentasStudioIndexRouteImport } from './routes/_app.ferramentas.studio.index'
+import { Route as AppFerramentasProductLabIndexRouteImport } from './routes/_app.ferramentas.product-lab.index'
 import { Route as AppAcademiaCourseIdIndexRouteImport } from './routes/_app.academia.$courseId.index'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -101,6 +102,7 @@ import { Route as AppFerramentasStudioMarcaRouteImport } from './routes/_app.fer
 import { Route as AppFerramentasStudioLogotiposRouteImport } from './routes/_app.ferramentas.studio.logotipos'
 import { Route as AppFerramentasStudioImagensRouteImport } from './routes/_app.ferramentas.studio.imagens'
 import { Route as AppFerramentasStudioCriativosRouteImport } from './routes/_app.ferramentas.studio.criativos'
+import { Route as AppFerramentasProductLabProductIdRouteImport } from './routes/_app.ferramentas.product-lab.$productId'
 import { Route as AppAcademiaCourseIdLessonIdRouteImport } from './routes/_app.academia.$courseId.$lessonId'
 import { Route as ApiPublicLivesLiveIdCoverSvgRouteImport } from './routes/api/public/lives.$liveId.cover.svg'
 
@@ -427,6 +429,12 @@ const AppFerramentasStudioIndexRoute =
     path: '/',
     getParentRoute: () => AppFerramentasStudioRoute,
   } as any)
+const AppFerramentasProductLabIndexRoute =
+  AppFerramentasProductLabIndexRouteImport.update({
+    id: '/product-lab/',
+    path: '/product-lab/',
+    getParentRoute: () => AppFerramentasRoute,
+  } as any)
 const AppAcademiaCourseIdIndexRoute =
   AppAcademiaCourseIdIndexRouteImport.update({
     id: '/',
@@ -590,6 +598,12 @@ const AppFerramentasStudioCriativosRoute =
     path: '/criativos',
     getParentRoute: () => AppFerramentasStudioRoute,
   } as any)
+const AppFerramentasProductLabProductIdRoute =
+  AppFerramentasProductLabProductIdRouteImport.update({
+    id: '/product-lab/$productId',
+    path: '/product-lab/$productId',
+    getParentRoute: () => AppFerramentasRoute,
+  } as any)
 const AppAcademiaCourseIdLessonIdRoute =
   AppAcademiaCourseIdLessonIdRouteImport.update({
     id: '/$lessonId',
@@ -667,6 +681,7 @@ export interface FileRoutesByFullPath {
   '/admin/financeiro/': typeof AdminFinanceiroIndexRoute
   '/admin/lives/': typeof AdminLivesIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
+  '/ferramentas/product-lab/$productId': typeof AppFerramentasProductLabProductIdRoute
   '/ferramentas/studio/criativos': typeof AppFerramentasStudioCriativosRoute
   '/ferramentas/studio/imagens': typeof AppFerramentasStudioImagensRoute
   '/ferramentas/studio/logotipos': typeof AppFerramentasStudioLogotiposRoute
@@ -695,6 +710,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
+  '/ferramentas/product-lab/': typeof AppFerramentasProductLabIndexRoute
   '/ferramentas/studio/': typeof AppFerramentasStudioIndexRoute
   '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
 }
@@ -754,6 +770,7 @@ export interface FileRoutesByTo {
   '/admin/financeiro': typeof AdminFinanceiroIndexRoute
   '/admin/lives': typeof AdminLivesIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
+  '/ferramentas/product-lab/$productId': typeof AppFerramentasProductLabProductIdRoute
   '/ferramentas/studio/criativos': typeof AppFerramentasStudioCriativosRoute
   '/ferramentas/studio/imagens': typeof AppFerramentasStudioImagensRoute
   '/ferramentas/studio/logotipos': typeof AppFerramentasStudioLogotiposRoute
@@ -782,6 +799,7 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdIndexRoute
+  '/ferramentas/product-lab': typeof AppFerramentasProductLabIndexRoute
   '/ferramentas/studio': typeof AppFerramentasStudioIndexRoute
   '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
 }
@@ -851,6 +869,7 @@ export interface FileRoutesById {
   '/admin/financeiro/': typeof AdminFinanceiroIndexRoute
   '/admin/lives/': typeof AdminLivesIndexRoute
   '/_app/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
+  '/_app/ferramentas/product-lab/$productId': typeof AppFerramentasProductLabProductIdRoute
   '/_app/ferramentas/studio/criativos': typeof AppFerramentasStudioCriativosRoute
   '/_app/ferramentas/studio/imagens': typeof AppFerramentasStudioImagensRoute
   '/_app/ferramentas/studio/logotipos': typeof AppFerramentasStudioLogotiposRoute
@@ -879,6 +898,7 @@ export interface FileRoutesById {
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/_app/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
+  '/_app/ferramentas/product-lab/': typeof AppFerramentasProductLabIndexRoute
   '/_app/ferramentas/studio/': typeof AppFerramentasStudioIndexRoute
   '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
 }
@@ -948,6 +968,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro/'
     | '/admin/lives/'
     | '/academia/$courseId/$lessonId'
+    | '/ferramentas/product-lab/$productId'
     | '/ferramentas/studio/criativos'
     | '/ferramentas/studio/imagens'
     | '/ferramentas/studio/logotipos'
@@ -976,6 +997,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/academia/$courseId/'
+    | '/ferramentas/product-lab/'
     | '/ferramentas/studio/'
     | '/api/public/lives/$liveId/cover/svg'
   fileRoutesByTo: FileRoutesByTo
@@ -1035,6 +1057,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro'
     | '/admin/lives'
     | '/academia/$courseId/$lessonId'
+    | '/ferramentas/product-lab/$productId'
     | '/ferramentas/studio/criativos'
     | '/ferramentas/studio/imagens'
     | '/ferramentas/studio/logotipos'
@@ -1063,6 +1086,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/academia/$courseId'
+    | '/ferramentas/product-lab'
     | '/ferramentas/studio'
     | '/api/public/lives/$liveId/cover/svg'
   id:
@@ -1131,6 +1155,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro/'
     | '/admin/lives/'
     | '/_app/academia/$courseId/$lessonId'
+    | '/_app/ferramentas/product-lab/$productId'
     | '/_app/ferramentas/studio/criativos'
     | '/_app/ferramentas/studio/imagens'
     | '/_app/ferramentas/studio/logotipos'
@@ -1159,6 +1184,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/_app/academia/$courseId/'
+    | '/_app/ferramentas/product-lab/'
     | '/_app/ferramentas/studio/'
     | '/api/public/lives/$liveId/cover/svg'
   fileRoutesById: FileRoutesById
@@ -1654,6 +1680,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFerramentasStudioIndexRouteImport
       parentRoute: typeof AppFerramentasStudioRoute
     }
+    '/_app/ferramentas/product-lab/': {
+      id: '/_app/ferramentas/product-lab/'
+      path: '/product-lab'
+      fullPath: '/ferramentas/product-lab/'
+      preLoaderRoute: typeof AppFerramentasProductLabIndexRouteImport
+      parentRoute: typeof AppFerramentasRoute
+    }
     '/_app/academia/$courseId/': {
       id: '/_app/academia/$courseId/'
       path: '/'
@@ -1850,6 +1883,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFerramentasStudioCriativosRouteImport
       parentRoute: typeof AppFerramentasStudioRoute
     }
+    '/_app/ferramentas/product-lab/$productId': {
+      id: '/_app/ferramentas/product-lab/$productId'
+      path: '/product-lab/$productId'
+      fullPath: '/ferramentas/product-lab/$productId'
+      preLoaderRoute: typeof AppFerramentasProductLabProductIdRouteImport
+      parentRoute: typeof AppFerramentasRoute
+    }
     '/_app/academia/$courseId/$lessonId': {
       id: '/_app/academia/$courseId/$lessonId'
       path: '/$lessonId'
@@ -1921,10 +1961,15 @@ const AppFerramentasStudioRouteWithChildren =
 
 interface AppFerramentasRouteChildren {
   AppFerramentasStudioRoute: typeof AppFerramentasStudioRouteWithChildren
+  AppFerramentasProductLabProductIdRoute: typeof AppFerramentasProductLabProductIdRoute
+  AppFerramentasProductLabIndexRoute: typeof AppFerramentasProductLabIndexRoute
 }
 
 const AppFerramentasRouteChildren: AppFerramentasRouteChildren = {
   AppFerramentasStudioRoute: AppFerramentasStudioRouteWithChildren,
+  AppFerramentasProductLabProductIdRoute:
+    AppFerramentasProductLabProductIdRoute,
+  AppFerramentasProductLabIndexRoute: AppFerramentasProductLabIndexRoute,
 }
 
 const AppFerramentasRouteWithChildren = AppFerramentasRoute._addFileChildren(
