@@ -92,23 +92,30 @@ export const Route = createFileRoute("/api/public/hooks/course-released")({
         let notified = 0;
 
         for (const course of released) {
-          // Sino + push: uma notificação por membro e por curso (índice único).
-          const rows = userIds.map((userId) => ({
-            user_id: userId,
-            kind: "course_released" as const,
-            course_id: course.id,
-          }));
+          // Sino + push: uma notificação por membro e por curso.
+          const { data: existing } = await supabaseAdmin
+            .from("notifications")
+            .select("user_id")
+            .eq("kind", "course_released")
+            .eq("course_id", course.id)
+            .limit(MAX_BATCH * 2);
+          const already = new Set(
+            (existing ?? []).map((r) => r.user_id as string),
+          );
+          const rows = userIds
+            .filter((userId) => !already.has(userId))
+            .map((userId) => ({
+              user_id: userId,
+              kind: "course_released" as const,
+              course_id: course.id,
+            }));
           for (let i = 0; i < rows.length; i += 200) {
             const chunk = rows.slice(i, i + 200);
-            const { error: notifErr, count } = await supabaseAdmin
+            const { error: notifErr } = await supabaseAdmin
               .from("notifications")
-              .upsert(chunk, {
-                onConflict: "user_id,course_id",
-                ignoreDuplicates: true,
-                count: "exact",
-              });
+              .insert(chunk);
             if (notifErr) console.error("[course-released] notif", notifErr);
-            else notified += count ?? 0;
+            else notified += chunk.length;
           }
 
           const tplData = {
