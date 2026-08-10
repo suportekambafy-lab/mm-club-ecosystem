@@ -119,13 +119,22 @@ export async function fetchPageSignals(url: string): Promise<PageSignals> {
       },
     });
     clearTimeout(timer);
-    if (!res.ok) return empty;
     const type = res.headers.get("content-type") ?? "";
-    if (!type.includes("html") && !type.includes("text")) return empty;
-    html = (await res.text()).slice(0, 600_000);
+    if (res.ok && (type.includes("html") || type.includes("text"))) {
+      html = (await res.text()).slice(0, 600_000);
+    }
   } catch {
-    return empty;
+    html = "";
   }
+
+  // Lojas com JS/anti-bot (AliExpress, Temu…) devolvem uma casca sem preço:
+  // nesse caso tenta um leitor de páginas com render real.
+  if (!html || !hasProductSignals(html)) {
+    const rendered = await fetchRenderedHtml(u.toString());
+    if (rendered) html = rendered;
+  }
+  if (!html) return empty;
+
 
   const jsonLdBlocks: string[] = [];
   const ldRe = /<script[^>]+type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
