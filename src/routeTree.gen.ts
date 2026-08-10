@@ -73,6 +73,7 @@ import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.espe
 import { Route as AppAcademiaPesquisaRouteImport } from './routes/_app.academia.pesquisa'
 import { Route as AppAcademiaCourseIdRouteImport } from './routes/_app.academia.$courseId'
 import { Route as AppFerramentasStudioIndexRouteImport } from './routes/_app.ferramentas.studio.index'
+import { Route as AppFerramentasProductLabIndexRouteImport } from './routes/_app.ferramentas.product-lab.index'
 import { Route as AppAcademiaCourseIdIndexRouteImport } from './routes/_app.academia.$courseId.index'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -427,6 +428,12 @@ const AppFerramentasStudioIndexRoute =
     path: '/',
     getParentRoute: () => AppFerramentasStudioRoute,
   } as any)
+const AppFerramentasProductLabIndexRoute =
+  AppFerramentasProductLabIndexRouteImport.update({
+    id: '/product-lab/',
+    path: '/product-lab/',
+    getParentRoute: () => AppFerramentasRoute,
+  } as any)
 const AppAcademiaCourseIdIndexRoute =
   AppAcademiaCourseIdIndexRouteImport.update({
     id: '/',
@@ -695,6 +702,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
+  '/ferramentas/product-lab/': typeof AppFerramentasProductLabIndexRoute
   '/ferramentas/studio/': typeof AppFerramentasStudioIndexRoute
   '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
 }
@@ -782,6 +790,7 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdIndexRoute
+  '/ferramentas/product-lab': typeof AppFerramentasProductLabIndexRoute
   '/ferramentas/studio': typeof AppFerramentasStudioIndexRoute
   '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
 }
@@ -879,6 +888,7 @@ export interface FileRoutesById {
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/_app/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
+  '/_app/ferramentas/product-lab/': typeof AppFerramentasProductLabIndexRoute
   '/_app/ferramentas/studio/': typeof AppFerramentasStudioIndexRoute
   '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
 }
@@ -976,6 +986,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/academia/$courseId/'
+    | '/ferramentas/product-lab/'
     | '/ferramentas/studio/'
     | '/api/public/lives/$liveId/cover/svg'
   fileRoutesByTo: FileRoutesByTo
@@ -1063,6 +1074,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/academia/$courseId'
+    | '/ferramentas/product-lab'
     | '/ferramentas/studio'
     | '/api/public/lives/$liveId/cover/svg'
   id:
@@ -1159,6 +1171,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/_app/academia/$courseId/'
+    | '/_app/ferramentas/product-lab/'
     | '/_app/ferramentas/studio/'
     | '/api/public/lives/$liveId/cover/svg'
   fileRoutesById: FileRoutesById
@@ -1654,6 +1667,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFerramentasStudioIndexRouteImport
       parentRoute: typeof AppFerramentasStudioRoute
     }
+    '/_app/ferramentas/product-lab/': {
+      id: '/_app/ferramentas/product-lab/'
+      path: '/product-lab'
+      fullPath: '/ferramentas/product-lab/'
+      preLoaderRoute: typeof AppFerramentasProductLabIndexRouteImport
+      parentRoute: typeof AppFerramentasRoute
+    }
     '/_app/academia/$courseId/': {
       id: '/_app/academia/$courseId/'
       path: '/'
@@ -1921,10 +1941,12 @@ const AppFerramentasStudioRouteWithChildren =
 
 interface AppFerramentasRouteChildren {
   AppFerramentasStudioRoute: typeof AppFerramentasStudioRouteWithChildren
+  AppFerramentasProductLabIndexRoute: typeof AppFerramentasProductLabIndexRoute
 }
 
 const AppFerramentasRouteChildren: AppFerramentasRouteChildren = {
   AppFerramentasStudioRoute: AppFerramentasStudioRouteWithChildren,
+  AppFerramentasProductLabIndexRoute: AppFerramentasProductLabIndexRoute,
 }
 
 const AppFerramentasRouteWithChildren = AppFerramentasRoute._addFileChildren(
@@ -2117,13 +2139,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
