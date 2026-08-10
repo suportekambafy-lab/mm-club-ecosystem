@@ -34,8 +34,40 @@ export const listProducts = createServerFn({ method: "GET" })
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return { products: data ?? [] };
+    const products = data ?? [];
+    if (products.length === 0) return { products };
+
+    const ids = products.map((p) => p.id as string);
+    const [competitors, analyses] = await Promise.all([
+      supabase.from("pl_competitors").select("product_id").in("product_id", ids),
+      supabase
+        .from("pl_ai_analyses")
+        .select("product_id, recommendation, created_at")
+        .in("product_id", ids)
+        .order("created_at", { ascending: false }),
+    ]);
+
+    const compCount: Record<string, number> = {};
+    for (const c of competitors.data ?? []) {
+      const key = c.product_id as string;
+      compCount[key] = (compCount[key] ?? 0) + 1;
+    }
+    const lastRec: Record<string, string | null> = {};
+    for (const a of analyses.data ?? []) {
+      const key = a.product_id as string;
+      if (!(key in lastRec)) lastRec[key] = (a.recommendation as string | null) ?? null;
+    }
+
+    return {
+      products: products.map((p) => ({
+        ...p,
+        competitors_count: compCount[p.id as string] ?? 0,
+        analysed: (p.id as string) in lastRec,
+        recommendation: lastRec[p.id as string] ?? null,
+      })),
+    };
   });
+
 
 export const getProduct = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
