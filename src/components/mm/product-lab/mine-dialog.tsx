@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MediaField } from "@/components/mm/media-field";
 import { ScoreRing } from "@/components/mm/product-lab/score-ring";
-import { mineFromUrl, mineFromImage, saveMinedProduct } from "@/lib/product-lab-mine.functions";
-import { PL_CRITERIA, PL_SOURCES, scoreTone } from "@/lib/product-lab-config";
+import { mineFromUrl, mineFromImage, quickMineFromUrl, saveMinedProduct } from "@/lib/product-lab-mine.functions";
+import { PL_CRITERIA, PL_SOURCES, PL_STATUSES, scoreTone, type PlStatus } from "@/lib/product-lab-config";
+
 import { cn } from "@/lib/utils";
 
 type Draft = Record<string, string | null>;
