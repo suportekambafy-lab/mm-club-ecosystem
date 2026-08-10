@@ -305,6 +305,16 @@ export function guessSupplier(host: string): string | null {
   return h;
 }
 
+/** Marketplaces/fornecedores conhecidos: o produto entra logo na coluna Fornecedores. */
+export function isSupplierHost(host: string): boolean {
+  const h = host.toLowerCase();
+  return /aliexpress|alibaba|1688|cjdropshipping|temu|banggood|shein|dsers|zendrop|spocket|amazon|ebay|dhgate|made-in-china|autods/.test(
+    h,
+  );
+}
+
+
+
 const TLD_MARKET: Record<string, string> = {
   pt: "Portugal",
   br: "Brasil",
