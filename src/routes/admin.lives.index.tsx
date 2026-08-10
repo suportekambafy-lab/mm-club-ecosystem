@@ -812,6 +812,10 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
   );
   const [duration, setDuration] = useState(row.duration_minutes ?? 60);
   const [startsAt, setStartsAt] = useState(() => toLocalInput(row.starts_at));
+  const [notify, setNotify] = useState(true);
+  const timeChanged =
+    Boolean(startsAt) && new Date(startsAt).toISOString() !== new Date(row.starts_at).toISOString();
+
   const [coverUrl, setCoverUrl] = useState(row.cover_url ?? "");
 
   function reset() {
