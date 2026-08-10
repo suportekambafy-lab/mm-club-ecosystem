@@ -39,45 +39,82 @@ function FerramentasLayout() {
 
   return (
     <div className="space-y-14">
-      {/* CINEMATIC HERO */}
-      <section className="relative overflow-hidden rounded-[2rem] border border-[color:var(--hairline)] bg-black">
-        <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-r from-black via-black/70 to-black/20" />
-        <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-black/90 via-transparent to-black/40" />
-        <img
-          loading="lazy"
-          decoding="async"
-          src={showcase1}
-          alt="MM Studio — criativos publicitários com IA"
-          className="absolute inset-0 h-full w-full object-cover object-right opacity-80"
-          fetchPriority="high"
-        />
-        <div className="relative z-20 flex flex-col gap-6 p-8 md:p-14 lg:p-16 min-h-[520px] md:min-h-[560px] justify-end md:justify-center max-w-[720px]">
-          <span className="inline-flex w-fit items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/90 backdrop-blur">
-            MM Studio · Criativos de Alta Conversão
-          </span>
-          <h1 className="font-display text-5xl leading-[0.95] text-white md:text-7xl">
-            O teu estúdio
-            <span className="block text-primary">de campanhas.</span>
-          </h1>
-          <p className="max-w-xl text-base text-white/80 md:text-lg">
-            Fotografias publicitárias e vídeos cinematográficos com IA — modelos reais, produtos reais, qualidade de agência. Sem prompts, sem editar.
-          </p>
-          <div className="flex flex-wrap gap-3 pt-1">
-            <Link
-              to="/ferramentas/studio"
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_20px_60px_-20px_oklch(0.82_0.13_82/0.7)] transition hover:opacity-90"
-            >
-              Abrir MM Studio <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              to="/ferramentas/studio/marca"
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-3 text-sm font-medium text-white backdrop-blur transition hover:bg-white/10"
-            >
-              Configurar Brand DNA
-            </Link>
-          </div>
-        </div>
+      {/* HEADER */}
+      <section className="space-y-3">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">Ferramentas MM Club</p>
+        <h1 className="font-display text-4xl leading-[1] text-foreground md:text-5xl">Escolhe a tua ferramenta.</h1>
+        <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
+          Criativos publicitários com IA e validação de produtos — tudo num só lugar.
+        </p>
       </section>
+
+      {/* TOOL CHOOSER */}
+      <section className="grid gap-4 md:grid-cols-2">
+        <Link
+          to="/ferramentas/studio"
+          className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-black p-8 transition hover:border-primary/50 min-h-[300px]"
+        >
+          <img
+            loading="lazy"
+            decoding="async"
+            src={showcase1}
+            alt="MM Studio — criativos publicitários com IA"
+            className="absolute inset-0 h-full w-full object-cover object-right opacity-45 transition duration-700 group-hover:opacity-60"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/20" />
+          <div className="relative flex flex-col gap-4">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20 text-primary ring-1 ring-white/10">
+              <Wand2 className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/70">MM Studio</p>
+              <h2 className="mt-1 font-display text-3xl text-white">O teu estúdio de campanhas</h2>
+              <p className="mt-2 max-w-md text-sm text-white/75">
+                Imagens e vídeos publicitários com IA — modelos reais, qualidade de agência. Sem prompts.
+              </p>
+            </div>
+          </div>
+          <span className="relative mt-6 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition group-hover:opacity-90">
+            Abrir MM Studio <ArrowRight className="h-4 w-4" />
+          </span>
+        </Link>
+
+        <Link
+          to="/ferramentas/product-lab"
+          className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-surface-1 p-8 transition hover:border-primary/50 min-h-[300px]"
+        >
+          <div
+            className="pointer-events-none absolute inset-0 opacity-70 transition group-hover:opacity-100"
+            style={{
+              background:
+                "radial-gradient(ellipse 60% 70% at 0% 0%, oklch(0.82 0.13 82 / 0.18), transparent 60%)",
+            }}
+          />
+          <div className="relative flex flex-col gap-4">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-[color:var(--hairline)]">
+              <FlaskConical className="h-5 w-5" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  MM Product Lab
+                </p>
+                <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary">
+                  Grátis
+                </span>
+              </div>
+              <h2 className="mt-1 font-display text-3xl text-foreground">Mineração e validação de produtos</h2>
+              <p className="mt-2 max-w-md text-sm text-muted-foreground">
+                Encontra, organiza e analisa os teus produtos num só lugar, com Score MM e análise IA.
+              </p>
+            </div>
+          </div>
+          <span className="relative mt-6 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition group-hover:opacity-90">
+            Começar a minerar <ArrowRight className="h-4 w-4" />
+          </span>
+        </Link>
+      </section>
+
 
       {/* SHOWCASE GALLERY */}
       <section className="space-y-5">
