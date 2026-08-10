@@ -269,39 +269,34 @@ function ProductLabDashboard() {
       ) : products.length === 0 ? (
         <EmptyState onAdd={() => setMine(true)} />
       ) : view === "kanban" ? (
-        <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
-          {PL_STATUSES.map((s) => {
-            const items = filtered.filter((p) => p.status === s.id);
-            return (
-              <div key={s.id} className="w-[260px] shrink-0 sm:w-[300px]">
-                <div className="mb-2 flex items-center justify-between px-1">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{s.label}</p>
-                  <span className="text-[11px] text-muted-foreground">{items.length}</span>
-                </div>
-                <div className="space-y-2">
-                  {items.map((p) => (
-                    <ProductCard key={p.id} p={p} onMove={(st) => moveMutation.mutate({ id: p.id, status: st })} />
-                  ))}
-                  {items.length === 0 && (
-                    <div className="rounded-2xl border border-dashed border-border p-5 text-center text-xs text-muted-foreground">
-                      Vazio
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+        <div className="space-y-2">
+          <p className="px-1 text-[11px] text-muted-foreground">
+            Arrasta um cartão para outra coluna para mudar o estado — por exemplo, mover para “Em teste”.
+          </p>
+          <ProductBoard
+            products={filtered}
+            onMove={(id, status) => moveMutation.mutate({ id, status })}
+            onAnalyse={(id) => analyseMutation.mutate({ id })}
+            analysingId={analyseMutation.isPending ? (analyseMutation.variables?.id ?? null) : null}
+          />
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((p) => (
-            <ProductCard key={p.id} p={p} onMove={(st) => moveMutation.mutate({ id: p.id, status: st })} />
+            <ProductBoardCard
+              key={p.id}
+              p={p}
+              onMove={(st) => moveMutation.mutate({ id: p.id, status: st })}
+              onAnalyse={() => analyseMutation.mutate({ id: p.id })}
+              analysing={analyseMutation.isPending && analyseMutation.variables?.id === p.id}
+            />
           ))}
           {filtered.length === 0 && (
             <p className="col-span-full py-10 text-center text-sm text-muted-foreground">Nenhum produto corresponde aos filtros.</p>
           )}
         </div>
       )}
+
 
       <MineDialog
         open={mine}
