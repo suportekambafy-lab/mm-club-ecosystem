@@ -5,7 +5,8 @@ import { PL_CRITERIA, PL_MAX_NOTE, computeScore } from "./product-lab-config";
 
 const criterionIds = PL_CRITERIA.map((c) => c.id);
 
-const nullableStr = z.string().nullable();
+// Tolerante de propósito: o modelo pode omitir campos sem informação.
+const nullableStr = z.string().nullish().default(null);
 
 const MineSchema = z.object({
   name: nullableStr,
@@ -21,8 +22,8 @@ const MineSchema = z.object({
   problem: nullableStr,
   audience: nullableStr,
   benefits: nullableStr,
-  analysis: z.string(),
-  scores: z.record(z.string(), z.number()),
+  analysis: z.string().nullish().default(""),
+  scores: z.record(z.string(), z.number()).nullish().default({}),
 });
 
 export type MinedDraft = z.infer<typeof MineSchema>;
