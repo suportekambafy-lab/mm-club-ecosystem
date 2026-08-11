@@ -80,6 +80,14 @@ function DashboardPage() {
             .filter((l) => l.status === "scheduled" && new Date(l.starts_at).getTime() > Date.now() - 3600_000)
             .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0];
           setRealFeaturedLive(active ?? upcoming ?? null);
+          setReplays(
+            list
+              .filter((l) => l.status === "ended" || l.status === "published")
+              .sort(
+                (a, b) => new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime(),
+              ),
+          );
+
           setLivesError(false);
           setLivesLoaded(true);
         })
