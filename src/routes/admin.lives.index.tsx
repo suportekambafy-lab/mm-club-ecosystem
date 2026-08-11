@@ -801,6 +801,7 @@ function LivesSection({
 
 function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void }) {
   const update = useServerFn(adminUpdateLive);
+  const regenCover = useServerFn(adminRegenerateLiveCover);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -813,8 +814,11 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
   const [duration, setDuration] = useState(row.duration_minutes ?? 60);
   const [startsAt, setStartsAt] = useState(() => toLocalInput(row.starts_at));
   const [notify, setNotify] = useState(true);
+  const [askCover, setAskCover] = useState(false);
+  const [speakerUrl, setSpeakerUrl] = useState("");
   const timeChanged =
     Boolean(startsAt) && new Date(startsAt).toISOString() !== new Date(row.starts_at).toISOString();
+  const titleChanged = title.trim() !== row.title.trim();
 
   const [coverUrl, setCoverUrl] = useState(row.cover_url ?? "");
 
@@ -827,9 +831,11 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
     setStartsAt(toLocalInput(row.starts_at));
     setCoverUrl(row.cover_url ?? "");
     setNotify(true);
+    setAskCover(false);
+    setSpeakerUrl("");
   }
 
-  async function handleSave() {
+  async function handleSave(regenerateCover: boolean) {
     setSaving(true);
     try {
       const res = await update({
@@ -852,6 +858,22 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
           : "Live atualizada",
       );
 
+      if (regenerateCover) {
+        toast.loading("A gerar nova capa com o novo título…", { id: `cover-${row.id}` });
+        try {
+          const cov = (await regenCover({
+            data: { id: row.id, speaker_image_url: speakerUrl || undefined },
+          })) as { cover_url?: string };
+          if (cov?.cover_url) setCoverUrl(cov.cover_url);
+          toast.success("Capa atualizada.", { id: `cover-${row.id}` });
+        } catch (err) {
+          toast.error(`Não foi possível gerar a capa: ${(err as Error).message}`, {
+            id: `cover-${row.id}`,
+          });
+        }
+      }
+
+      setAskCover(false);
       setOpen(false);
       onSaved();
     } catch (e) {
@@ -860,6 +882,7 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
       setSaving(false);
     }
   }
+
 
   return (
     <>
