@@ -1384,9 +1384,12 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
           </div>
         </div>
       ) : (
-        <div className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
-          {post.content}
-        </div>
+        <>
+          <div className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+            <PostText text={post.content} />
+          </div>
+          {postLinkUrl && <LinkPreview url={postLinkUrl} />}
+        </>
       )}
 
       {post.image_url && !editing && (
