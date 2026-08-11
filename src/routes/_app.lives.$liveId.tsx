@@ -272,6 +272,8 @@ function LiveDetail() {
         segments={replaySegments}
         trimStart={trimStart}
         trimEnd={trimEnd}
+        progressKey={isReplay ? `${live.id}:${live.stream_generation ?? 0}` : null}
+
         live={isLive}
         className={mobile ? "aspect-video w-full max-w-full rounded-none shadow-none ring-0" : undefined}
       />
