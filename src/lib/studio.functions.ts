@@ -206,19 +206,25 @@ function isBillingError(status: number, body: string): boolean {
 async function callGeminiImageModel(
   prompt: string,
   refs: { bytes: Uint8Array; mime: string }[] = [],
+  opts: { safetySuffix?: boolean } = {},
 ): Promise<string> {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("Fallback de imagem indisponível (LOVABLE_API_KEY não configurada).");
 
+  const suffix =
+    opts.safetySuffix === false
+      ? ""
+      : " Tasteful, professional advertising photography. Non-explicit, commercial catalogue standard suitable for fashion, swimwear, fitness and bodycare brands.";
   const content: Array<Record<string, unknown>> = [
     {
       type: "text",
-      text: `${prompt} Tasteful, professional advertising photography. Non-explicit, commercial catalogue standard suitable for fashion, swimwear, fitness and bodycare brands.`,
+      text: `${prompt}${suffix}`,
     },
   ];
   for (const r of refs.slice(0, 3)) {
     content.push({ type: "image_url", image_url: { url: `data:${r.mime};base64,${bytesToB64(r.bytes)}` } });
   }
+
 
   const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
     method: "POST",
@@ -1538,6 +1544,24 @@ export const generateThumbnails = createServerFn({ method: "POST" })
       }
     }
 
+    // Frame real do vídeo — é isto que dá thumbnails com a pessoa certa.
+    let frame: { bytes: Uint8Array; mime: string } | null = null;
+    if (videoId) {
+      for (const name of ["maxresdefault.jpg", "sddefault.jpg", "hqdefault.jpg"]) {
+        try {
+          const r = await fetch(`https://i.ytimg.com/vi/${videoId}/${name}`);
+          if (!r.ok) continue;
+          const buf = new Uint8Array(await r.arrayBuffer());
+          // O placeholder cinzento do YouTube é minúsculo — ignora-o.
+          if (buf.byteLength < 8000) continue;
+          frame = { bytes: buf, mime: r.headers.get("content-type")?.split(";")[0] || "image/jpeg" };
+          break;
+        } catch {
+          /* tenta a próxima resolução */
+        }
+      }
+    }
+
     const topic = (data.topic?.trim() || videoTitle || "").trim();
     if (!topic && !data.headline?.trim()) {
       throw new Error("Cola o link do vídeo ou descreve o tema para gerarmos a thumbnail.");
@@ -1586,8 +1610,21 @@ export const generateThumbnails = createServerFn({ method: "POST" })
       const prompt = buildThumbnailPrompt(
         { style: data.style, headline, topic: topic || headline, channel, notes: data.notes },
         THUMB_VARIANT_DIRECTIONS[i] ?? "",
+        Boolean(frame),
       );
-      const b64 = await callImageModel(prompt, THUMB_SIZE);
+      // Com frame do vídeo, o motor de edição do Gemini preserva a identidade
+      // muito melhor; sem frame, mantemos o gerador principal.
+      let b64: string;
+      if (frame) {
+        try {
+          b64 = await callGeminiImageModel(prompt, [frame], { safetySuffix: false });
+        } catch {
+          b64 = await callImageModel(prompt, THUMB_SIZE, [frame]);
+        }
+      } else {
+        b64 = await callImageModel(prompt, THUMB_SIZE);
+      }
+
       const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
       const path = `${userId}/thumbnails/${Date.now()}-${i}-${Math.random().toString(36).slice(2, 8)}.png`;
       const up = await supabase.storage.from(BUCKET).upload(path, bytes, {
