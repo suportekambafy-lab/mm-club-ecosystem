@@ -113,7 +113,39 @@ function FerramentasLayout() {
             Começar a minerar <ArrowRight className="h-4 w-4" />
           </span>
         </Link>
+
+        <Link
+          to="/ferramentas/thumbnails"
+          className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-surface-1 p-8 transition hover:border-primary/50 min-h-[220px] md:col-span-2"
+        >
+          <div
+            className="pointer-events-none absolute inset-0 opacity-70 transition group-hover:opacity-100"
+            style={{
+              background:
+                "radial-gradient(ellipse 60% 80% at 100% 0%, oklch(0.82 0.13 82 / 0.16), transparent 60%)",
+            }}
+          />
+          <div className="relative flex flex-col gap-4">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-[color:var(--hairline)]">
+              <Youtube className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                Thumbnail Builder
+              </p>
+              <h2 className="mt-1 font-display text-3xl text-foreground">Thumbnails que fazem clicar</h2>
+              <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+                Cola o link do vídeo do YouTube e recebe duas thumbnails 16:9 prontas. O texto é opcional — se
+                não escreveres, a IA escolhe a frase de maior impacto.
+              </p>
+            </div>
+          </div>
+          <span className="relative mt-6 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition group-hover:opacity-90">
+            Criar thumbnail <ArrowRight className="h-4 w-4" />
+          </span>
+        </Link>
       </section>
+
 
 
       {/* SHOWCASE GALLERY */}
