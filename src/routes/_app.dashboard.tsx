@@ -62,7 +62,9 @@ function DashboardPage() {
   // Real live from backend — takes priority over static nextLive placeholder.
   type RealLive = Awaited<ReturnType<typeof listLives>>[number];
   const [realFeaturedLive, setRealFeaturedLive] = useState<RealLive | null>(null);
+  const [replays, setReplays] = useState<RealLive[]>([]);
   const [livesLoaded, setLivesLoaded] = useState(false);
+
   const [livesError, setLivesError] = useState(false);
   const [livesReloadKey, setLivesReloadKey] = useState(0);
   const startedAt = useRef(typeof performance !== "undefined" ? performance.now() : 0);
