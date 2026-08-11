@@ -175,25 +175,58 @@ export function LivePlayer({
     return () => window.clearInterval(id);
   }, [isLive, end, segIndex, src]);
 
-  // Seek to the trim start as soon as the segment is ready.
+  // Posição inicial do segmento: retoma onde o membro ficou, senão o corte inicial.
   useEffect(() => {
-    if (isLive || start <= 0) return;
-    let done = false;
+    if (isLive) return;
+    const restore = restoreRef.current;
+    const wantsRestore =
+      !!restore && !restoredRef.current && restore.seg === segIndex && restore.t > start + 1;
+    const target = wantsRestore ? restore!.t : start;
+    if (target <= 0) return;
     const id = window.setInterval(() => {
       const api = streamRef.current;
       if (!api) return;
       const d = api.duration;
       if (!(typeof d === "number" && Number.isFinite(d) && d > 0)) return;
-      if (!done && (api.currentTime ?? 0) < start - 0.5) {
-        api.currentTime = start;
-        done = true;
-        window.clearInterval(id);
-      } else if ((api.currentTime ?? 0) >= start - 0.5) {
-        window.clearInterval(id);
-      }
+      const safe = Math.min(target, Math.max(d - 2, 0));
+      if ((api.currentTime ?? 0) < safe - 0.5) api.currentTime = safe;
+      if (wantsRestore) restoredRef.current = true;
+      window.clearInterval(id);
     }, 200);
     return () => window.clearInterval(id);
   }, [isLive, start, segIndex, src]);
+
+  // Guardar a posição (a cada 3s e ao sair do separador).
+  useEffect(() => {
+    if (!storageKey) return;
+    const save = () => {
+      const api = streamRef.current;
+      if (!api) return;
+      const t = api.currentTime ?? 0;
+      const d = api.duration;
+      const limit = end ?? (typeof d === "number" && Number.isFinite(d) ? d : null);
+      try {
+        if (limit != null && t >= limit - 5) {
+          window.localStorage.removeItem(storageKey);
+        } else if (t > 1) {
+          window.localStorage.setItem(storageKey, JSON.stringify({ seg: segIndex, t }));
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+    const id = window.setInterval(save, 3000);
+    const onHide = () => save();
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", onHide);
+    return () => {
+      save();
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("pagehide", onHide);
+    };
+  }, [storageKey, segIndex, end]);
+
 
   const relEnd = (end ?? dur ?? 0) - start;
   const relPos = Math.min(Math.max(pos - start, 0), Math.max(relEnd, 0));
