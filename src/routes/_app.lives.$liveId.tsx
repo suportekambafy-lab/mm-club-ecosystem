@@ -356,12 +356,12 @@ function LiveDetail() {
               <Lock className="h-3 w-3" />
               {visibilityLabel}
             </span>
-            {isReplay && actualDurationSeconds && actualDurationSeconds > 0 && (
+            {isReplay && displayDurationSeconds && displayDurationSeconds > 0 && (
               <>
                 <span className="opacity-40">•</span>
                 <span className="inline-flex items-center gap-1 tabular-nums">
                   <Clock className="h-3 w-3" />
-                  {formatDuration(actualDurationSeconds)}
+                  {formatDuration(displayDurationSeconds)}
                 </span>
               </>
             )}
@@ -417,10 +417,10 @@ function LiveDetail() {
                 <CalendarDays className="h-3.5 w-3.5" />
                 {dateStr}
               </span>
-              {isReplay && actualDurationSeconds && actualDurationSeconds > 0 && (
+              {isReplay && displayDurationSeconds && displayDurationSeconds > 0 && (
                 <span className="inline-flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5" />
-                  {formatDuration(actualDurationSeconds)}
+                  {formatDuration(displayDurationSeconds)}
                 </span>
               )}
             </div>
