@@ -1024,7 +1024,10 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
               </button>
               <button
                 type="button"
-                onClick={handleSave}
+                onClick={() => {
+                  if (titleChanged) setAskCover(true);
+                  else void handleSave(false);
+                }}
                 disabled={saving || title.trim().length < 3}
                 className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground disabled:opacity-60"
               >
@@ -1032,8 +1035,86 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
               </button>
             </div>
           </div>
+
+          {askCover && (
+            <div className="absolute inset-0 z-10 flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-6">
+              <div className="w-full max-w-md rounded-t-2xl border border-border bg-surface-1 p-5 sm:rounded-2xl">
+                <p className="font-display text-base">Atualizar também a capa?</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Mudaste o título desta sessão{row.status === "ended" ? " (replay)" : row.status === "scheduled" ? " agendada" : ""}.
+                  Podemos gerar uma nova capa MM Club com o novo título:{" "}
+                  <strong className="text-foreground">{title.trim()}</strong>
+                </p>
+
+                <div className="mt-3">
+                  <Field label="Foto do palestrante (opcional)">
+                    <div className="flex items-center gap-2">
+                      <label className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40">
+                        {uploading ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Upload className="h-3 w-3" />
+                        )}
+                        {speakerUrl ? "Trocar foto" : "Carregar foto"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            setUploading(true);
+                            try {
+                              const { url } = await uploadMedia("course-media", file, "lives-speakers");
+                              setSpeakerUrl(url);
+                            } catch (err) {
+                              toast.error((err as Error).message);
+                            } finally {
+                              setUploading(false);
+                              e.target.value = "";
+                            }
+                          }}
+                        />
+                      </label>
+                      {speakerUrl ? (
+                        <span className="text-xs text-muted-foreground">Foto carregada.</span>
+                      ) : null}
+                    </div>
+                  </Field>
+                </div>
+
+                <div className="mt-5 flex flex-wrap justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAskCover(false)}
+                    className="rounded-full border border-border px-4 py-2 text-xs"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() => void handleSave(false)}
+                    className="rounded-full border border-border px-4 py-2 text-xs hover:border-primary/40 disabled:opacity-60"
+                  >
+                    Manter capa atual
+                  </button>
+                  <button
+                    type="button"
+                    disabled={saving || uploading}
+                    onClick={() => void handleSave(true)}
+                    className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground disabled:opacity-60"
+                  >
+                    {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                    Gerar nova capa
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
+
     </>
   );
 }
