@@ -10,6 +10,7 @@ import {
   adminGetLiveIngest,
   adminSendLiveStartEmails,
   adminUpdateLive,
+  adminRegenerateLiveCover,
 } from "@/lib/lives.functions";
 
 import { adminGetGuestLink } from "@/lib/live-guest.functions";
@@ -900,7 +901,7 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-6">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-border bg-surface-1 p-5 sm:rounded-2xl">
+          <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-border bg-surface-1 p-5 sm:rounded-2xl">
             <p className="font-display text-base">Editar live</p>
             <div className="mt-4 space-y-3">
               <Field label="Título">
