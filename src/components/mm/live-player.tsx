@@ -40,10 +40,33 @@ export function LivePlayer({
     return [{ uid: videoUid, token: playbackToken, duration: null }];
   }, [isLive, segments, videoUid, playbackToken]);
 
+  // Retomar onde o membro ficou (replays). Guardado no dispositivo.
+  const storageKey = progressKey && !isLive ? `mm:live-progress:${progressKey}` : null;
+  const restoreRef = useRef<{ seg: number; t: number } | null>(null);
+  const restoredRef = useRef(false);
   const [segIndex, setSegIndex] = useState(0);
+
   useEffect(() => {
-    setSegIndex(0);
-  }, [effectiveSegments]);
+    if (!storageKey) return;
+    try {
+      const raw = window.localStorage.getItem(storageKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { seg?: number; t?: number };
+      if (typeof parsed?.t === "number" && parsed.t > 1) {
+        restoreRef.current = { seg: parsed.seg ?? 0, t: parsed.t };
+        restoredRef.current = false;
+        setSegIndex(parsed.seg ?? 0);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [storageKey]);
+
+  const segCount = effectiveSegments.length;
+  useEffect(() => {
+    setSegIndex((i) => (i < segCount ? i : 0));
+  }, [segCount]);
+
 
   const current = effectiveSegments[segIndex];
   const src = isLive
