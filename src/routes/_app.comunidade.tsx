@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { notifyCommunityPostByEmail } from "@/lib/community-email.functions";
 import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 import { assertUploadAllowed } from "@/lib/security/uploads";
+import { LinkPreview, extractFirstUrl } from "@/components/mm/link-preview";
 import {
   Heart,
   MessageCircle,
