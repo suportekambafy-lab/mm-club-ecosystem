@@ -45,25 +45,33 @@ export function LivePlayer({
 
   // Retomar onde o membro ficou (replays). Guardado no dispositivo.
   const storageKey = progressKey && !isLive ? `mm:live-progress:${progressKey}` : null;
-  const restoreRef = useRef<{ seg: number; t: number } | null>(null);
-  const restoredRef = useRef(false);
-  const [segIndex, setSegIndex] = useState(0);
-
-  useEffect(() => {
-    if (!storageKey) return;
+  const readSaved = (): { seg: number; t: number } | null => {
+    if (!storageKey || typeof window === "undefined") return null;
     try {
       const raw = window.localStorage.getItem(storageKey);
-      if (!raw) return;
+      if (!raw) return null;
       const parsed = JSON.parse(raw) as { seg?: number; t?: number };
       if (typeof parsed?.t === "number" && parsed.t > 1) {
-        restoreRef.current = { seg: parsed.seg ?? 0, t: parsed.t };
-        restoredRef.current = false;
-        setSegIndex(parsed.seg ?? 0);
+        return { seg: typeof parsed.seg === "number" ? parsed.seg : 0, t: parsed.t };
       }
     } catch {
       /* ignore */
     }
+    return null;
+  };
+  const savedRef = useRef<{ seg: number; t: number } | null>(null);
+  const [segIndex, setSegIndex] = useState(0);
+
+  // Ler a posição guardada no primeiro render (antes do player montar) e
+  // posicionar já no segmento correto.
+  useEffect(() => {
+    const saved = readSaved();
+    if (!saved) return;
+    savedRef.current = saved;
+    setSegIndex(saved.seg);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey]);
+
 
   const segCount = effectiveSegments.length;
   useEffect(() => {
