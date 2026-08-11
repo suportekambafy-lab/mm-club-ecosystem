@@ -763,6 +763,9 @@ function Composer({
 }) {
   const qc = useQueryClient();
   const [content, setContent] = useState("");
+  const [linkDismissed, setLinkDismissed] = useState<string | null>(null);
+  const detectedLink = useMemo(() => extractFirstUrl(content), [content]);
+  const composerLink = detectedLink && detectedLink !== linkDismissed ? detectedLink : null;
   const [imageUrl, setImageUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [categoryId, setCategoryId] = useState<string>(
