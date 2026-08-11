@@ -1,6 +1,6 @@
 import { Stream, type StreamPlayerApi } from "@cloudflare/stream-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Volume2, VolumeX } from "lucide-react";
+import { Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type ReplaySegment = { uid: string; token: string | null; duration: number | null };
@@ -122,31 +122,93 @@ export function LivePlayer({
   const start = !isLive && isFirstSeg && trimStart && trimStart > 0 ? trimStart : 0;
   const end = !isLive && isLastSeg && trimEnd && trimEnd > 0 ? trimEnd : null;
 
+  // Custom controls: when a trim exists we hide the native controls and expose a
+  // progress bar that treats the trim window as the whole video (0 → end-start).
+  const trimmed = !isLive && (start > 0 || end != null);
+
+  const [playing, setPlaying] = useState(false);
+  const [pos, setPos] = useState(0); // absolute seconds
+  const [dur, setDur] = useState<number | null>(null);
+  const [muted, setMuted] = useState(false);
+
   useEffect(() => {
     if (isLive) return;
-    if (!start && end == null) return;
-    let seeked = start === 0;
     const id = window.setInterval(() => {
       const api = streamRef.current;
       if (!api) return;
       const t = api.currentTime ?? 0;
-      if (!seeked && start > 0 && t < start - 0.5) {
-        api.currentTime = start;
-        seeked = true;
-        return;
-      }
-      if (start > 0 && t < start - 1.5) {
-        api.currentTime = start;
-        return;
-      }
+      setPos(t);
+      const d = api.duration;
+      if (typeof d === "number" && Number.isFinite(d) && d > 0) setDur(d);
+      setMuted(!!api.muted);
       if (end != null && t >= end) {
         api.pause();
-        api.currentTime = Math.max(start, end - 0.1);
+        setPlaying(false);
       }
-    }, 250);
+    }, 200);
     return () => window.clearInterval(id);
-  }, [isLive, start, end, segIndex, src]);
+  }, [isLive, end, segIndex, src]);
 
+  // Seek to the trim start as soon as the segment is ready.
+  useEffect(() => {
+    if (isLive || start <= 0) return;
+    let done = false;
+    const id = window.setInterval(() => {
+      const api = streamRef.current;
+      if (!api) return;
+      const d = api.duration;
+      if (!(typeof d === "number" && Number.isFinite(d) && d > 0)) return;
+      if (!done && (api.currentTime ?? 0) < start - 0.5) {
+        api.currentTime = start;
+        done = true;
+        window.clearInterval(id);
+      } else if ((api.currentTime ?? 0) >= start - 0.5) {
+        window.clearInterval(id);
+      }
+    }, 200);
+    return () => window.clearInterval(id);
+  }, [isLive, start, segIndex, src]);
+
+  const relEnd = (end ?? dur ?? 0) - start;
+  const relPos = Math.min(Math.max(pos - start, 0), Math.max(relEnd, 0));
+
+  const togglePlay = async () => {
+    const api = streamRef.current;
+    if (!api) return;
+    if (playing) {
+      api.pause();
+      setPlaying(false);
+      return;
+    }
+    if (end != null && (api.currentTime ?? 0) >= end - 0.2) api.currentTime = start;
+    try {
+      await api.play();
+      setPlaying(true);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const seekRel = (v: number) => {
+    const api = streamRef.current;
+    if (!api) return;
+    const abs = start + Math.min(Math.max(v, 0), Math.max(relEnd, 0));
+    api.currentTime = abs;
+    setPos(abs);
+  };
+
+  const toggleMute = () => {
+    const api = streamRef.current;
+    if (!api) return;
+    api.muted = !api.muted;
+    setMuted(api.muted);
+  };
+
+  const fmt = (s: number) => {
+    const t = Math.max(0, Math.floor(s));
+    const m = Math.floor(t / 60);
+    return `${String(m).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
+  };
 
   return (
     <div
@@ -159,14 +221,48 @@ export function LivePlayer({
         key={`seg-${segIndex}-${src}`}
         src={src}
         streamRef={streamRef}
-        controls
+        controls={!trimmed}
         autoplay={isLive}
         muted={isLive}
         preload={isLive ? "auto" : "metadata"}
         poster={isLive ? undefined : poster}
         responsive
         onEnded={handleEnded}
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
       />
+      {trimmed && (
+        <div className="absolute inset-x-0 bottom-0 z-10 flex items-center gap-3 bg-gradient-to-t from-black/85 to-transparent px-4 pb-3 pt-8">
+          <button
+            type="button"
+            onClick={() => void togglePlay()}
+            aria-label={playing ? "Pausar" : "Reproduzir"}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition hover:bg-white/25"
+          >
+            {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          </button>
+          <span className="shrink-0 tabular-nums text-[11px] text-white/85">{fmt(relPos)}</span>
+          <input
+            type="range"
+            min={0}
+            max={Math.max(relEnd, 0.1)}
+            step={0.1}
+            value={relPos}
+            onChange={(e) => seekRel(Number(e.target.value))}
+            aria-label="Progresso"
+            className="h-1 w-full cursor-pointer appearance-none rounded-full bg-white/25 accent-primary [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+          />
+          <span className="shrink-0 tabular-nums text-[11px] text-white/85">{fmt(relEnd)}</span>
+          <button
+            type="button"
+            onClick={toggleMute}
+            aria-label={muted ? "Ativar som" : "Silenciar"}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition hover:bg-white/25"
+          >
+            {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+          </button>
+        </div>
+      )}
       {isLive && needsUnmute && (
         <button
           type="button"
@@ -186,3 +282,4 @@ export function LivePlayer({
     </div>
   );
 }
+
