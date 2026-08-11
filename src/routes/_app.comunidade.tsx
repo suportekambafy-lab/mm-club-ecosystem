@@ -957,6 +957,9 @@ function Composer({
               </button>
             </div>
           )}
+          {composerLink && !imageUrl && (
+            <LinkPreview url={composerLink} onRemove={() => setLinkDismissed(composerLink)} />
+          )}
         </div>
       </div>
 
