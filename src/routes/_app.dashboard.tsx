@@ -253,6 +253,49 @@ function DashboardPage() {
   );
 }
 
+function ReplayCard({
+  live,
+}: {
+  live: { id: string; title: string; starts_at: string; cover_url?: string | null; expert_id?: string | null };
+}) {
+  const coverUrl = resolveLiveCoverUrl(live.cover_url ?? null);
+  const dateStr = new Intl.DateTimeFormat("pt-PT", { day: "2-digit", month: "short" }).format(
+    new Date(live.starts_at),
+  );
+  const expert = live.expert_id ? expertsById[live.expert_id] : undefined;
+
+  return (
+    <Link
+      to="/lives/$liveId"
+      params={{ liveId: live.id }}
+      className="group w-[44vw] max-w-[300px] shrink-0 overflow-hidden rounded-3xl border border-border bg-surface-1 transition hover:-translate-y-0.5 hover:border-primary/40 sm:w-[340px]"
+    >
+      <div
+        className="relative aspect-video w-full bg-surface-2"
+        style={
+          coverUrl
+            ? { backgroundImage: `url(${coverUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+            : undefined
+        }
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+        <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white backdrop-blur">
+          <Play className="h-3 w-3" />
+          Replay
+        </span>
+      </div>
+      <div className="p-4">
+        <p className="line-clamp-2 font-display text-sm leading-tight text-foreground">{live.title}</p>
+        <p className="mt-1.5 text-[11px] text-muted-foreground">
+          {dateStr}
+          {expert ? ` · ${expert.name}` : ""}
+        </p>
+      </div>
+    </Link>
+  );
+}
+
+
 function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
   const firstName = name.split(" ")[0];
 
