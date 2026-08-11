@@ -1176,6 +1176,30 @@ function Avatar({
 }
 
 /* ---------------- Post card ---------------- */
+/** Renderiza texto com URLs clicáveis. */
+function PostText({ text }: { text: string }) {
+  const parts = text.split(/(https?:\/\/[^\s<>()"']+)/gi);
+  return (
+    <>
+      {parts.map((part, i) =>
+        /^https?:\/\//i.test(part) ? (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="break-all text-primary underline-offset-2 hover:underline"
+          >
+            {part}
+          </a>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
+
 function PostCard({ post, currentUserId }: { post: Post; currentUserId: string | null }) {
   const qc = useQueryClient();
   const [showComments, setShowComments] = useState(false);
