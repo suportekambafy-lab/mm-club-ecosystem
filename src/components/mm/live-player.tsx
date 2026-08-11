@@ -18,6 +18,8 @@ type Props = {
   /** Replay trim (seconds) applied to the first / last segment. */
   trimStart?: number | null;
   trimEnd?: number | null;
+  /** Chave estável (ex.: id da live) para guardar/retomar a posição do replay. */
+  progressKey?: string | null;
 };
 
 export function LivePlayer({
@@ -29,6 +31,7 @@ export function LivePlayer({
   segments,
   trimStart,
   trimEnd,
+  progressKey,
 }: Props) {
 
   const isLive = !!live;
