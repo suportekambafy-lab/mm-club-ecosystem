@@ -858,6 +858,7 @@ function Composer({
     },
     onSuccess: () => {
       setContent("");
+      setLinkDismissed(null);
       setImageUrl("");
       if (taRef.current) taRef.current.style.height = "auto";
       setExpanded(false);
