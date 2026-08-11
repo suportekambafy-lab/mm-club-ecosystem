@@ -200,6 +200,21 @@ function LiveDetail() {
   const isReplay = live.status === "ended" || live.status === "published";
   const expert = live.expert_id ? expertsById[live.expert_id] : undefined;
 
+  // Duração fiel ao que o membro consegue ver: desconta o corte inicial e final.
+  const displayDurationSeconds = (() => {
+    const total = actualDurationSeconds ?? 0;
+    if (!total || total <= 0) return null;
+    let d = total;
+    if (trimStart && trimStart > 0) d -= trimStart;
+    if (trimEnd && trimEnd > 0) {
+      const segs = replaySegments ?? [];
+      const lastDur = segs.length > 0 ? (segs[segs.length - 1]?.duration ?? null) : total;
+      if (lastDur && lastDur > trimEnd) d -= lastDur - trimEnd;
+    }
+    return d > 0 ? Math.round(d) : null;
+  })();
+
+
   const presenceCount = useLivePresence(isLive ? live.id : null, userId);
 
   const dateStr = new Intl.DateTimeFormat("pt-PT", {
@@ -341,12 +356,12 @@ function LiveDetail() {
               <Lock className="h-3 w-3" />
               {visibilityLabel}
             </span>
-            {isReplay && actualDurationSeconds && actualDurationSeconds > 0 && (
+            {isReplay && displayDurationSeconds && displayDurationSeconds > 0 && (
               <>
                 <span className="opacity-40">•</span>
                 <span className="inline-flex items-center gap-1 tabular-nums">
                   <Clock className="h-3 w-3" />
-                  {formatDuration(actualDurationSeconds)}
+                  {formatDuration(displayDurationSeconds)}
                 </span>
               </>
             )}
@@ -402,10 +417,10 @@ function LiveDetail() {
                 <CalendarDays className="h-3.5 w-3.5" />
                 {dateStr}
               </span>
-              {isReplay && actualDurationSeconds && actualDurationSeconds > 0 && (
+              {isReplay && displayDurationSeconds && displayDurationSeconds > 0 && (
                 <span className="inline-flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5" />
-                  {formatDuration(actualDurationSeconds)}
+                  {formatDuration(displayDurationSeconds)}
                 </span>
               )}
             </div>
