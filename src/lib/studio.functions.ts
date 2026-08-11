@@ -206,19 +206,25 @@ function isBillingError(status: number, body: string): boolean {
 async function callGeminiImageModel(
   prompt: string,
   refs: { bytes: Uint8Array; mime: string }[] = [],
+  opts: { safetySuffix?: boolean } = {},
 ): Promise<string> {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("Fallback de imagem indisponível (LOVABLE_API_KEY não configurada).");
 
+  const suffix =
+    opts.safetySuffix === false
+      ? ""
+      : " Tasteful, professional advertising photography. Non-explicit, commercial catalogue standard suitable for fashion, swimwear, fitness and bodycare brands.";
   const content: Array<Record<string, unknown>> = [
     {
       type: "text",
-      text: `${prompt} Tasteful, professional advertising photography. Non-explicit, commercial catalogue standard suitable for fashion, swimwear, fitness and bodycare brands.`,
+      text: `${prompt}${suffix}`,
     },
   ];
   for (const r of refs.slice(0, 3)) {
     content.push({ type: "image_url", image_url: { url: `data:${r.mime};base64,${bytesToB64(r.bytes)}` } });
   }
+
 
   const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
     method: "POST",
