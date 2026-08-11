@@ -10,6 +10,7 @@ import {
   adminGetLiveIngest,
   adminSendLiveStartEmails,
   adminUpdateLive,
+  adminRegenerateLiveCover,
 } from "@/lib/lives.functions";
 
 import { adminGetGuestLink } from "@/lib/live-guest.functions";
@@ -801,6 +802,7 @@ function LivesSection({
 
 function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void }) {
   const update = useServerFn(adminUpdateLive);
+  const regenCover = useServerFn(adminRegenerateLiveCover);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -813,8 +815,11 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
   const [duration, setDuration] = useState(row.duration_minutes ?? 60);
   const [startsAt, setStartsAt] = useState(() => toLocalInput(row.starts_at));
   const [notify, setNotify] = useState(true);
+  const [askCover, setAskCover] = useState(false);
+  const [speakerUrl, setSpeakerUrl] = useState("");
   const timeChanged =
     Boolean(startsAt) && new Date(startsAt).toISOString() !== new Date(row.starts_at).toISOString();
+  const titleChanged = title.trim() !== row.title.trim();
 
   const [coverUrl, setCoverUrl] = useState(row.cover_url ?? "");
 
@@ -827,9 +832,11 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
     setStartsAt(toLocalInput(row.starts_at));
     setCoverUrl(row.cover_url ?? "");
     setNotify(true);
+    setAskCover(false);
+    setSpeakerUrl("");
   }
 
-  async function handleSave() {
+  async function handleSave(regenerateCover: boolean) {
     setSaving(true);
     try {
       const res = await update({
@@ -852,6 +859,22 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
           : "Live atualizada",
       );
 
+      if (regenerateCover) {
+        toast.loading("A gerar nova capa com o novo título…", { id: `cover-${row.id}` });
+        try {
+          const cov = (await regenCover({
+            data: { id: row.id, speaker_image_url: speakerUrl || undefined },
+          })) as { cover_url?: string };
+          if (cov?.cover_url) setCoverUrl(cov.cover_url);
+          toast.success("Capa atualizada.", { id: `cover-${row.id}` });
+        } catch (err) {
+          toast.error(`Não foi possível gerar a capa: ${(err as Error).message}`, {
+            id: `cover-${row.id}`,
+          });
+        }
+      }
+
+      setAskCover(false);
       setOpen(false);
       onSaved();
     } catch (e) {
@@ -860,6 +883,7 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
       setSaving(false);
     }
   }
+
 
   return (
     <>
@@ -877,7 +901,7 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-6">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-border bg-surface-1 p-5 sm:rounded-2xl">
+          <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-border bg-surface-1 p-5 sm:rounded-2xl">
             <p className="font-display text-base">Editar live</p>
             <div className="mt-4 space-y-3">
               <Field label="Título">
@@ -1001,7 +1025,10 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
               </button>
               <button
                 type="button"
-                onClick={handleSave}
+                onClick={() => {
+                  if (titleChanged) setAskCover(true);
+                  else void handleSave(false);
+                }}
                 disabled={saving || title.trim().length < 3}
                 className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground disabled:opacity-60"
               >
@@ -1009,8 +1036,86 @@ function EditLiveButton({ row, onSaved }: { row: LiveRow; onSaved: () => void })
               </button>
             </div>
           </div>
+
+          {askCover && (
+            <div className="absolute inset-0 z-10 flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-6">
+              <div className="w-full max-w-md rounded-t-2xl border border-border bg-surface-1 p-5 sm:rounded-2xl">
+                <p className="font-display text-base">Atualizar também a capa?</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Mudaste o título desta sessão{row.status === "ended" ? " (replay)" : row.status === "scheduled" ? " agendada" : ""}.
+                  Podemos gerar uma nova capa MM Club com o novo título:{" "}
+                  <strong className="text-foreground">{title.trim()}</strong>
+                </p>
+
+                <div className="mt-3">
+                  <Field label="Foto do palestrante (opcional)">
+                    <div className="flex items-center gap-2">
+                      <label className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary/40">
+                        {uploading ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Upload className="h-3 w-3" />
+                        )}
+                        {speakerUrl ? "Trocar foto" : "Carregar foto"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            setUploading(true);
+                            try {
+                              const { url } = await uploadMedia("course-media", file, "lives-speakers");
+                              setSpeakerUrl(url);
+                            } catch (err) {
+                              toast.error((err as Error).message);
+                            } finally {
+                              setUploading(false);
+                              e.target.value = "";
+                            }
+                          }}
+                        />
+                      </label>
+                      {speakerUrl ? (
+                        <span className="text-xs text-muted-foreground">Foto carregada.</span>
+                      ) : null}
+                    </div>
+                  </Field>
+                </div>
+
+                <div className="mt-5 flex flex-wrap justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAskCover(false)}
+                    className="rounded-full border border-border px-4 py-2 text-xs"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() => void handleSave(false)}
+                    className="rounded-full border border-border px-4 py-2 text-xs hover:border-primary/40 disabled:opacity-60"
+                  >
+                    Manter capa atual
+                  </button>
+                  <button
+                    type="button"
+                    disabled={saving || uploading}
+                    onClick={() => void handleSave(true)}
+                    className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground disabled:opacity-60"
+                  >
+                    {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                    Gerar nova capa
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
+
     </>
   );
 }

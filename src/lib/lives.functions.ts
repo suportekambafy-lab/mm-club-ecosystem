@@ -642,6 +642,43 @@ export const adminUpdateLive = createServerFn({ method: "POST" })
     return { ok: true as const, notified: 0 };
   });
 
+// Gera de novo a capa MM Club a partir do título atual (usado quando o título muda).
+export const adminRegenerateLiveCover = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        speaker_image_url: z
+          .string()
+          .url()
+          .optional()
+          .or(z.literal("").transform(() => undefined)),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
+      .from("lives")
+      .select("id,title,starts_at")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!row) throw new Error("Sessão não encontrada.");
+
+    const { generateAndStoreLiveCover } = await import("@/lib/live-cover.server");
+    const url = await generateAndStoreLiveCover({
+      liveId: row.id as string,
+      title: row.title as string,
+      startsAt: row.starts_at as string,
+      supabaseAdmin,
+      speakerImageUrl: data.speaker_image_url,
+    });
+    await supabaseAdmin.from("lives").update({ cover_url: url }).eq("id", data.id);
+    return { ok: true as const, cover_url: url };
+  });
 
 
 // Replay editor — trim the dark/silent head (and optional tail) of a recording.
