@@ -159,13 +159,15 @@ try {
       || h === 'beta.lovable.dev' || h.indexOf('.beta.lovable.dev') > -1;
     if (blocked) {
       navigator.serviceWorker.getRegistrations().then(function (rs) {
-        rs.forEach(function (r) { r.unregister(); });
+        rs.forEach(function (r) {
+          if (new URL(r.scope).origin === location.origin) r.unregister();
+        });
       }).catch(function () {});
     } else {
       var applyWaiting = function (registration) {
         if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
       };
-      window.addEventListener('load', function () {
+      var updateWorker = function () {
         navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then(function (registration) {
           registration.update && registration.update();
           applyWaiting(registration);
@@ -176,15 +178,12 @@ try {
               if (next.state === 'installed') applyWaiting(registration);
             });
           });
-          var check = function () {
-            if (document.visibilityState !== 'visible') return;
-            registration.update && registration.update();
-          };
-          document.addEventListener('visibilitychange', check);
-          window.addEventListener('online', check);
-          window.addEventListener('pageshow', function (e) { if (e.persisted) check(); });
-          setInterval(check, 900000);
         }).catch(function () {});
+      };
+      updateWorker();
+      window.addEventListener('pageshow', function () { updateWorker(); });
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') updateWorker();
       });
       navigator.serviceWorker.addEventListener('controllerchange', function () {
         if (!window.__mmClubControllerChanged) {
