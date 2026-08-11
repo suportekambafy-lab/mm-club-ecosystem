@@ -1183,6 +1183,7 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
   const [commentCount, setCommentCount] = useState(post.comment_count);
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
+  const postLinkUrl = useMemo(() => extractFirstUrl(post.content), [post.content]);
   const isOwner = currentUserId === post.author_id;
   const { confirm: askConfirm, dialog: confirmDialog } = useConfirm();
   const adminIds = useAdminIds();
