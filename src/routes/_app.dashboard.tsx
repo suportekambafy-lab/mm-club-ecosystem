@@ -197,6 +197,27 @@ function DashboardPage() {
 
       </Rail>
 
+      {replays.length > 0 && (
+        <Rail
+          title="Aulas ao vivo"
+          subtitle="Todas as sessões gravadas, disponíveis quando quiseres."
+          action={
+            <Link
+              to="/lives"
+              className="hidden text-xs font-medium text-primary hover:underline md:inline-flex md:items-center md:gap-1"
+            >
+              Ver tudo <ArrowRight className="h-3 w-3" />
+            </Link>
+          }
+        >
+          {replays.map((l) => (
+            <ReplayCard key={l.id} live={l} />
+          ))}
+        </Rail>
+      )}
+
+
+
       {realFeaturedLive?.status !== "live" && realFeaturedLive && (
         <section>
           <div className="mb-4 flex items-end justify-between px-1">
