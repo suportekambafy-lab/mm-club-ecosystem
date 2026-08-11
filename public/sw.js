@@ -1,4 +1,4 @@
-const VERSION = "mm-club-fresh-runtime-2026-08-08-shell-1";
+const VERSION = "mm-club-fresh-runtime-2026-08-11-smart-1";
 const ASSET_CACHE = `${VERSION}-assets`;
 const MEDIA_CACHE = `${VERSION}-media`;
 
@@ -113,8 +113,24 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Navegação (HTML): sempre rede primeiro, sem cache do navegador. O Safari
+  // guarda documentos de forma agressiva, por isso forçamos no-store e só
+  // usamos cache como rede de emergência offline.
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(new Request(request, { cache: "no-store" }))
+        .then((response) => {
+          if (response && response.ok) {
+            caches.open(ASSET_CACHE).then((cache) => cache.put(request, response.clone()));
+          }
+          return response;
+        })
+        .catch(async () => (await caches.match(request)) || fetch(request)),
+    );
+    return;
+  }
+
   const shouldRevalidate =
-    request.mode === "navigate" ||
     url.pathname === "/manifest.webmanifest" ||
     url.pathname.endsWith(".js") ||
     url.pathname.endsWith(".css") ||
