@@ -35,6 +35,8 @@ import {
 
 
 import { supabase } from "@/integrations/supabase/client";
+import { resolveLiveCoverUrl } from "@/lib/live-cover-url";
+
 
 
 
@@ -60,7 +62,9 @@ function DashboardPage() {
   // Real live from backend — takes priority over static nextLive placeholder.
   type RealLive = Awaited<ReturnType<typeof listLives>>[number];
   const [realFeaturedLive, setRealFeaturedLive] = useState<RealLive | null>(null);
+  const [replays, setReplays] = useState<RealLive[]>([]);
   const [livesLoaded, setLivesLoaded] = useState(false);
+
   const [livesError, setLivesError] = useState(false);
   const [livesReloadKey, setLivesReloadKey] = useState(0);
   const startedAt = useRef(typeof performance !== "undefined" ? performance.now() : 0);
@@ -76,6 +80,14 @@ function DashboardPage() {
             .filter((l) => l.status === "scheduled" && new Date(l.starts_at).getTime() > Date.now() - 3600_000)
             .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0];
           setRealFeaturedLive(active ?? upcoming ?? null);
+          setReplays(
+            list
+              .filter((l) => l.status === "ended" || l.status === "published")
+              .sort(
+                (a, b) => new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime(),
+              ),
+          );
+
           setLivesError(false);
           setLivesLoaded(true);
         })
@@ -185,6 +197,27 @@ function DashboardPage() {
 
       </Rail>
 
+      {replays.length > 0 && (
+        <Rail
+          title="Aulas ao vivo"
+          subtitle="Todas as sessões gravadas, disponíveis quando quiseres."
+          action={
+            <Link
+              to="/lives"
+              className="hidden text-xs font-medium text-primary hover:underline md:inline-flex md:items-center md:gap-1"
+            >
+              Ver tudo <ArrowRight className="h-3 w-3" />
+            </Link>
+          }
+        >
+          {replays.map((l) => (
+            <ReplayCard key={l.id} live={l} />
+          ))}
+        </Rail>
+      )}
+
+
+
       {realFeaturedLive?.status !== "live" && realFeaturedLive && (
         <section>
           <div className="mb-4 flex items-end justify-between px-1">
@@ -219,6 +252,49 @@ function DashboardPage() {
     </div>
   );
 }
+
+function ReplayCard({
+  live,
+}: {
+  live: { id: string; title: string; starts_at: string; cover_url?: string | null; expert_id?: string | null };
+}) {
+  const coverUrl = resolveLiveCoverUrl(live.cover_url ?? null);
+  const dateStr = new Intl.DateTimeFormat("pt-PT", { day: "2-digit", month: "short" }).format(
+    new Date(live.starts_at),
+  );
+  const expert = live.expert_id ? expertsById[live.expert_id] : undefined;
+
+  return (
+    <Link
+      to="/lives/$liveId"
+      params={{ liveId: live.id }}
+      className="group w-[44vw] max-w-[300px] shrink-0 overflow-hidden rounded-3xl border border-border bg-surface-1 transition hover:-translate-y-0.5 hover:border-primary/40 sm:w-[340px]"
+    >
+      <div
+        className="relative aspect-video w-full bg-surface-2"
+        style={
+          coverUrl
+            ? { backgroundImage: `url(${coverUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+            : undefined
+        }
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+        <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white backdrop-blur">
+          <Play className="h-3 w-3" />
+          Replay
+        </span>
+      </div>
+      <div className="p-4">
+        <p className="line-clamp-2 font-display text-sm leading-tight text-foreground">{live.title}</p>
+        <p className="mt-1.5 text-[11px] text-muted-foreground">
+          {dateStr}
+          {expert ? ` · ${expert.name}` : ""}
+        </p>
+      </div>
+    </Link>
+  );
+}
+
 
 function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
   const firstName = name.split(" ")[0];
