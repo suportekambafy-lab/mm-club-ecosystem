@@ -162,10 +162,28 @@ try {
         rs.forEach(function (r) { r.unregister(); });
       }).catch(function () {});
     } else {
+      var applyWaiting = function (registration) {
+        if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      };
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js').then(function (registration) {
+        navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then(function (registration) {
           registration.update && registration.update();
-          if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          applyWaiting(registration);
+          registration.addEventListener('updatefound', function () {
+            var next = registration.installing;
+            if (!next) return;
+            next.addEventListener('statechange', function () {
+              if (next.state === 'installed') applyWaiting(registration);
+            });
+          });
+          var check = function () {
+            if (document.visibilityState !== 'visible') return;
+            registration.update && registration.update();
+          };
+          document.addEventListener('visibilitychange', check);
+          window.addEventListener('online', check);
+          window.addEventListener('pageshow', function (e) { if (e.persisted) check(); });
+          setInterval(check, 900000);
         }).catch(function () {});
       });
       navigator.serviceWorker.addEventListener('controllerchange', function () {
