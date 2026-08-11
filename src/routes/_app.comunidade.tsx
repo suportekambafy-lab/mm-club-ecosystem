@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { notifyCommunityPostByEmail } from "@/lib/community-email.functions";
 import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 import { assertUploadAllowed } from "@/lib/security/uploads";
+import { LinkPreview, extractFirstUrl } from "@/components/mm/link-preview";
 import {
   Heart,
   MessageCircle,
@@ -762,6 +763,9 @@ function Composer({
 }) {
   const qc = useQueryClient();
   const [content, setContent] = useState("");
+  const [linkDismissed, setLinkDismissed] = useState<string | null>(null);
+  const detectedLink = useMemo(() => extractFirstUrl(content), [content]);
+  const composerLink = detectedLink && detectedLink !== linkDismissed ? detectedLink : null;
   const [imageUrl, setImageUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [categoryId, setCategoryId] = useState<string>(
@@ -854,6 +858,7 @@ function Composer({
     },
     onSuccess: () => {
       setContent("");
+      setLinkDismissed(null);
       setImageUrl("");
       if (taRef.current) taRef.current.style.height = "auto";
       setExpanded(false);
@@ -955,6 +960,9 @@ function Composer({
                 <X className="h-3.5 w-3.5" />
               </button>
             </div>
+          )}
+          {composerLink && !imageUrl && (
+            <LinkPreview url={composerLink} onRemove={() => setLinkDismissed(composerLink)} />
           )}
         </div>
       </div>
@@ -1175,6 +1183,30 @@ function Avatar({
 }
 
 /* ---------------- Post card ---------------- */
+/** Renderiza texto com URLs clicáveis. */
+function PostText({ text }: { text: string }) {
+  const parts = text.split(/(https?:\/\/[^\s<>()"']+)/gi);
+  return (
+    <>
+      {parts.map((part, i) =>
+        /^https?:\/\//i.test(part) ? (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="break-all text-primary underline-offset-2 hover:underline"
+          >
+            {part}
+          </a>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
+
 function PostCard({ post, currentUserId }: { post: Post; currentUserId: string | null }) {
   const qc = useQueryClient();
   const [showComments, setShowComments] = useState(false);
@@ -1183,6 +1215,7 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
   const [commentCount, setCommentCount] = useState(post.comment_count);
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
+  const postLinkUrl = useMemo(() => extractFirstUrl(post.content), [post.content]);
   const isOwner = currentUserId === post.author_id;
   const { confirm: askConfirm, dialog: confirmDialog } = useConfirm();
   const adminIds = useAdminIds();
@@ -1384,9 +1417,12 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
           </div>
         </div>
       ) : (
-        <div className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
-          {post.content}
-        </div>
+        <>
+          <div className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+            <PostText text={post.content} />
+          </div>
+          {postLinkUrl && <LinkPreview url={postLinkUrl} />}
+        </>
       )}
 
       {post.image_url && !editing && (
