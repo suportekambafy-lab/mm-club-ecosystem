@@ -35,6 +35,8 @@ import {
 
 
 import { supabase } from "@/integrations/supabase/client";
+import { resolveLiveCoverUrl } from "@/lib/live-cover-url";
+
 
 
 
