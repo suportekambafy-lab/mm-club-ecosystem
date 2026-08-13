@@ -578,10 +578,40 @@ export async function listSubscriptions(filter?: {
   })[];
 
   const userIds = [...new Set(rows.map((r) => r.user_id))];
-  const identities = await loadIdentities(userIds);
+  const [identities, paymentsRes] = await Promise.all([
+    loadIdentities(userIds),
+    userIds.length
+      ? supabaseAdmin
+          .from("billing_payments")
+          .select("user_id, amount_cents, refunded_cents, paid_at, created_at")
+          .in("user_id", userIds)
+          .eq("status", "paid")
+      : Promise.resolve({ data: [] as never[] }),
+  ]);
+
+  const agg = new Map<
+    string,
+    { count: number; cents: number; last: string | null }
+  >();
+  for (const p of (paymentsRes.data ?? []) as {
+    user_id: string;
+    amount_cents: number;
+    refunded_cents: number | null;
+    paid_at: string | null;
+    created_at: string;
+  }[]) {
+    const cur = agg.get(p.user_id) ?? { count: 0, cents: 0, last: null };
+    const at = p.paid_at ?? p.created_at;
+    agg.set(p.user_id, {
+      count: cur.count + 1,
+      cents: cur.cents + p.amount_cents - (p.refunded_cents ?? 0),
+      last: !cur.last || at > cur.last ? at : cur.last,
+    });
+  }
 
   const mapped: AdminSubscriptionRow[] = rows.map((r) => {
     const id = identities.get(r.user_id);
+    const a = agg.get(r.user_id);
     return {
       id: r.id,
       userId: r.user_id,
@@ -597,8 +627,13 @@ export async function listSubscriptions(filter?: {
       currentPeriodEnd: r.current_period_end,
       cancelAtPeriodEnd: Boolean(r.cancel_at_period_end),
       createdAt: r.created_at,
+      chargesCount: a?.count ?? 0,
+      lifetimeCents: a?.cents ?? 0,
+      lastPaymentAt: a?.last ?? null,
     };
   });
+
+
 
   const q = filter?.search?.trim().toLowerCase();
   if (!q) return mapped;
