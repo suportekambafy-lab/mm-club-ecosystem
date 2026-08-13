@@ -675,11 +675,12 @@ export async function collectCustomerDetail(
     supabaseAdmin
       .from("billing_payments")
       .select(
-        "id, gateway, gateway_payment_id, status, amount_cents, refunded_cents, currency, method, failure_reason, paid_at, created_at",
+        "id, gateway, gateway_payment_id, status, amount_cents, refunded_cents, currency, method, failure_reason, paid_at, created_at, subscription_id",
       )
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(100),
+      .limit(300),
+
     supabaseAdmin
       .from("billing_invoices")
       .select(
