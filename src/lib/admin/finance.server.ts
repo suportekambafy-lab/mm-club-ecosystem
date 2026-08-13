@@ -12,7 +12,9 @@ import type {
   AdminSubscriptionRow,
   CatalogProductRow,
   CouponRow,
+  CustomerBilling,
   CustomerDetail,
+
   FinanceOverview,
   FinancePeriod,
   FinanceRange,
