@@ -415,7 +415,14 @@ async function onPaymentPaid(args: {
     }
 
     if (subscriptionId) {
-      await renewPeriod(subscriptionId, userId, price.interval, price.intervalCount);
+      await renewPeriod(
+        subscriptionId,
+        userId,
+        price.interval,
+        price.intervalCount,
+        payment.amountCents,
+        price.amountCents,
+      );
     } else {
       subscriptionId = await activateSubscription({
         userId,
