@@ -174,6 +174,8 @@ export type CustomerDetail = {
   createdAt: string | null;
   balanceCents: number;
   lifetimeCents: number;
+  billing: CustomerBilling;
+
   features: string[];
   credits: number | null;
   subscriptions: AdminSubscriptionRow[];
