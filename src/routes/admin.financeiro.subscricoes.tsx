@@ -172,6 +172,16 @@ function SubscriptionsPage() {
                       /{r.interval}
                     </span>
                   </td>
+                  <td className="px-4 py-3 text-right tabular-nums">
+                    {r.chargesCount ?? 0}
+                    <span className="block text-xs text-muted-foreground">
+                      {r.lastPaymentAt ? day(r.lastPaymentAt) : "—"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-right tabular-nums">
+                    {money(r.lifetimeCents ?? 0, r.currency)}
+                  </td>
+
                   <td className="px-4 py-3 text-muted-foreground">
                     {day(r.currentPeriodEnd)}
                   </td>
