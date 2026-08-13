@@ -581,6 +581,8 @@ async function renewPeriod(
   userId: string,
   interval: string,
   intervalCount: number,
+  paidCents = 0,
+  fullPriceCents = 0,
 ) {
   const { data: sub } = await supabaseAdmin
     .from("billing_subscriptions")
@@ -589,13 +591,17 @@ async function renewPeriod(
     .maybeSingle();
   if (!sub) return;
 
-  const base = sub.current_period_end ? new Date(sub.current_period_end) : new Date();
-  const start = base > new Date() ? base : new Date();
-  const end = periodEnd(start, interval, intervalCount);
-  // While the trial has not expired yet the subscription must stay "trialing"
-  // (a 0.00 mandate/authorisation must never promote it to "active").
+  // A charge for the full plan price IS the end of the trial: the member paid the
+  // real subscription, so the trial must close even if trial_end is hours away.
+  const fullCharge = fullPriceCents > 0 && paidCents >= fullPriceCents;
   const stillInTrial =
-    !!sub.trial_end && new Date(sub.trial_end).getTime() > Date.now();
+    !fullCharge &&
+    !!sub.trial_end &&
+    new Date(sub.trial_end).getTime() > Date.now();
+
+  const base = sub.current_period_end ? new Date(sub.current_period_end) : new Date();
+  const start = !stillInTrial && fullCharge ? new Date() : base > new Date() ? base : new Date();
+  const end = periodEnd(start, interval, intervalCount);
   const nextStatus = stillInTrial ? "trialing" : "active";
   const wasStruggling = sub.status !== "active" && !stillInTrial;
 
@@ -607,8 +613,12 @@ async function renewPeriod(
       current_period_end: stillInTrial
         ? (sub.trial_end as string)
         : end.toISOString(),
+      ...(fullCharge && sub.trial_end
+        ? { trial_end: new Date().toISOString() }
+        : {}),
     })
     .eq("id", subscriptionId);
+
 
 
   if (wasStruggling) {
