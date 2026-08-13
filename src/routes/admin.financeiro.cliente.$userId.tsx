@@ -152,15 +152,118 @@ function CustomerPage() {
           {data.country ? ` · ${data.country}` : ""}
         </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard label="Total pago" value={money(data.lifetimeCents)} tone="accent" />
-          <StatCard label="Saldo em conta" value={money(data.balanceCents)} />
-          <StatCard label="Créditos Studio" value={data.credits ?? 0} />
           <StatCard
-            label="Subscrições"
-            value={data.subscriptions.length}
-            hint={`${data.features.length} funcionalidade(s) ativa(s)`}
+            label="Total faturado (líquido)"
+            value={money(data.billing.netCents)}
+            hint={`${data.billing.chargesCount} cobrança(s) com sucesso`}
+            tone="accent"
+          />
+          <StatCard
+            label="Cobranças"
+            value={data.billing.chargesCount}
+            hint={
+              data.billing.avgTicketCents != null
+                ? `Ticket médio ${money(data.billing.avgTicketCents)}`
+                : "Sem pagamentos"
+            }
+          />
+          <StatCard
+            label="Receita / mês"
+            value={
+              data.billing.avgPerMonthCents != null
+                ? money(data.billing.avgPerMonthCents)
+                : "—"
+            }
+            hint={`${data.billing.monthsAsCustomer} mês(es) como cliente`}
+          />
+          <StatCard
+            label="MRR atual"
+            value={money(data.billing.mrrCents)}
+            hint={
+              data.billing.nextChargeAt
+                ? `Próxima cobrança ${day(data.billing.nextChargeAt)}${
+                    data.billing.nextChargeCents
+                      ? ` · ${money(data.billing.nextChargeCents)}`
+                      : ""
+                  }`
+                : "Sem renovação agendada"
+            }
           />
         </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            label="Reembolsado"
+            value={money(data.billing.refundedCents)}
+            hint={`Bruto ${money(data.billing.grossCents)}`}
+          />
+          <StatCard
+            label="Falhas / chargebacks"
+            value={`${data.billing.failedCount} / ${data.billing.chargebacksCount}`}
+          />
+          <StatCard
+            label="1ª → última cobrança"
+            value={
+              data.billing.firstPaymentAt ? day(data.billing.firstPaymentAt) : "—"
+            }
+            hint={
+              data.billing.lastPaymentAt
+                ? `Última ${day(data.billing.lastPaymentAt)}`
+                : undefined
+            }
+          />
+          <StatCard
+            label="Saldo · créditos"
+            value={`${money(data.balanceCents)} · ${data.credits ?? 0}`}
+            hint={`${data.subscriptions.length} subscrição(ões) · ${data.features.length} feature(s)`}
+          />
+        </div>
+        {data.billing.byMonth.length ? (
+          <div className="mt-5 grid gap-4 lg:grid-cols-2">
+            <div>
+              <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">
+                Faturação por mês
+              </p>
+              <ul className="space-y-1 text-sm">
+                {[...data.billing.byMonth].reverse().map((m) => (
+                  <li
+                    key={m.label}
+                    className="flex items-center justify-between rounded-lg bg-surface-2 px-3 py-1.5"
+                  >
+                    <span className="text-muted-foreground">{m.label}</span>
+                    <span className="tabular-nums">
+                      {money(m.cents)}
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {m.count}×
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">
+                Faturação por plano
+              </p>
+              <ul className="space-y-1 text-sm">
+                {data.billing.byPlan.map((p) => (
+                  <li
+                    key={p.label}
+                    className="flex items-center justify-between rounded-lg bg-surface-2 px-3 py-1.5"
+                  >
+                    <span className="text-muted-foreground">{p.label}</span>
+                    <span className="tabular-nums">
+                      {money(p.cents)}
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {p.count}×
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ) : null}
+
         {data.features.length ? (
           <div className="mt-4 flex flex-wrap gap-1.5">
             {data.features.map((f) => (

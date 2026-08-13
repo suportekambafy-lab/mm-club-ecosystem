@@ -125,18 +125,21 @@ function SubscriptionsPage() {
         </p>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-border">
-          <table className="w-full min-w-[860px] text-sm">
+          <table className="w-full min-w-[1040px] text-sm">
             <thead className="bg-surface-2 text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 text-left">Membro</th>
                 <th className="px-4 py-3 text-left">Plano</th>
                 <th className="px-4 py-3 text-left">Estado</th>
                 <th className="px-4 py-3 text-right">Valor</th>
+                <th className="px-4 py-3 text-right">Cobranças</th>
+                <th className="px-4 py-3 text-right">Total faturado</th>
                 <th className="px-4 py-3 text-left">Renova</th>
                 <th className="px-4 py-3 text-left">Criada</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
+
             <tbody>
               {rows.map((r) => (
                 <tr
@@ -169,6 +172,16 @@ function SubscriptionsPage() {
                       /{r.interval}
                     </span>
                   </td>
+                  <td className="px-4 py-3 text-right tabular-nums">
+                    {r.chargesCount ?? 0}
+                    <span className="block text-xs text-muted-foreground">
+                      {r.lastPaymentAt ? day(r.lastPaymentAt) : "—"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-right tabular-nums">
+                    {money(r.lifetimeCents ?? 0, r.currency)}
+                  </td>
+
                   <td className="px-4 py-3 text-muted-foreground">
                     {day(r.currentPeriodEnd)}
                   </td>

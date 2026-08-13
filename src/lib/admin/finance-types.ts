@@ -100,7 +100,38 @@ export type AdminSubscriptionRow = {
   currentPeriodEnd: string | null;
   cancelAtPeriodEnd: boolean;
   createdAt: string;
+  /** Lifetime billing summary for the member (all subscriptions/purchases). */
+  chargesCount?: number;
+  lifetimeCents?: number;
+  lastPaymentAt?: string | null;
 };
+
+/** Everything needed to answer "quanto já pagou e quantas vezes". */
+export type CustomerBilling = {
+  /** Successful charges (paid). */
+  chargesCount: number;
+  /** Net revenue collected (paid minus refunds). */
+  netCents: number;
+  grossCents: number;
+  refundedCents: number;
+  failedCount: number;
+  chargebacksCount: number;
+  avgTicketCents: number | null;
+  firstPaymentAt: string | null;
+  lastPaymentAt: string | null;
+  /** Months since first payment (min 1) — used for revenue/month. */
+  monthsAsCustomer: number;
+  avgPerMonthCents: number | null;
+  /** Current recurring value normalised to a month. */
+  mrrCents: number;
+  nextChargeAt: string | null;
+  nextChargeCents: number | null;
+  /** Net revenue per month, oldest → newest. */
+  byMonth: MoneyPoint[];
+  /** Net revenue per plan slug. */
+  byPlan: MoneyPoint[];
+};
+
 
 export type AdminPaymentRow = {
   id: string;
@@ -143,6 +174,8 @@ export type CustomerDetail = {
   createdAt: string | null;
   balanceCents: number;
   lifetimeCents: number;
+  billing: CustomerBilling;
+
   features: string[];
   credits: number | null;
   subscriptions: AdminSubscriptionRow[];
