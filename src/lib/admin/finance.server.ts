@@ -773,6 +773,112 @@ export async function collectCustomerDetail(
 
   const ledgerRows = ledgerRes.data ?? [];
 
+  const paidRaw = (paymentsRes.data ?? []).filter((p) => p.status === "paid");
+  const netOf = (p: { amount_cents: number; refunded_cents: number | null }) =>
+    p.amount_cents - (p.refunded_cents ?? 0);
+  const netCents = paidRaw.reduce((s, p) => s + netOf(p), 0);
+  const grossCents = paidRaw.reduce((s, p) => s + p.amount_cents, 0);
+  const refundedCents = paidRaw.reduce((s, p) => s + (p.refunded_cents ?? 0), 0);
+  const stamps = paidRaw
+    .map((p) => p.paid_at ?? p.created_at)
+    .filter(Boolean)
+    .sort();
+  const firstPaymentAt = stamps[0] ?? null;
+  const lastPaymentAt = stamps[stamps.length - 1] ?? null;
+
+  const monthsAsCustomer = firstPaymentAt
+    ? Math.max(
+        1,
+        Math.round(
+          (Date.now() - new Date(firstPaymentAt).getTime()) /
+            (30.44 * 24 * 3600 * 1000),
+        ),
+      )
+    : 1;
+
+  const monthMap = new Map<string, { cents: number; count: number }>();
+  for (const p of paidRaw) {
+    const key = (p.paid_at ?? p.created_at).slice(0, 7);
+    const cur = monthMap.get(key) ?? { cents: 0, count: 0 };
+    monthMap.set(key, { cents: cur.cents + netOf(p), count: cur.count + 1 });
+  }
+
+  const slugBySub = new Map(
+    subRows.map((s) => [s.id, s.price?.slug ?? "—"] as const),
+  );
+  const planMap = new Map<string, { cents: number; count: number }>();
+  for (const p of paidRaw) {
+    const key =
+      (p as { subscription_id?: string | null }).subscription_id
+        ? (slugBySub.get(
+            (p as { subscription_id?: string | null }).subscription_id as string,
+          ) ?? "avulso")
+        : "avulso";
+    const cur = planMap.get(key) ?? { cents: 0, count: 0 };
+    planMap.set(key, { cents: cur.cents + netOf(p), count: cur.count + 1 });
+  }
+
+  const liveSub = subRows.find(
+    (s) =>
+      s.status === "active" ||
+      s.status === "trialing" ||
+      s.status === "past_due" ||
+      s.status === "grace_period",
+  );
+  const perMonth = (amount: number, interval: string) =>
+    interval === "year"
+      ? Math.round(amount / 12)
+      : interval === "week"
+        ? Math.round((amount * 52) / 12)
+        : interval === "day"
+          ? Math.round((amount * 365) / 12)
+          : amount;
+
+  const billing: CustomerBilling = {
+    chargesCount: paidRaw.length,
+    netCents,
+    grossCents,
+    refundedCents,
+    failedCount: (paymentsRes.data ?? []).filter((p) => p.status === "failed")
+      .length,
+    chargebacksCount: (paymentsRes.data ?? []).filter(
+      (p) => p.status === "chargeback",
+    ).length,
+    avgTicketCents: paidRaw.length
+      ? Math.round(netCents / paidRaw.length)
+      : null,
+    firstPaymentAt,
+    lastPaymentAt,
+    monthsAsCustomer,
+    avgPerMonthCents: netCents
+      ? Math.round(netCents / monthsAsCustomer)
+      : null,
+    mrrCents:
+      liveSub && !liveSub.cancel_at_period_end
+        ? perMonth(
+            liveSub.price?.amount_cents ?? 0,
+            liveSub.price?.interval ?? "month",
+          )
+        : 0,
+    nextChargeAt:
+      liveSub && !liveSub.cancel_at_period_end
+        ? (liveSub.trial_end &&
+          new Date(liveSub.trial_end).getTime() > Date.now()
+            ? liveSub.trial_end
+            : liveSub.current_period_end) ?? null
+        : null,
+    nextChargeCents:
+      liveSub && !liveSub.cancel_at_period_end
+        ? (liveSub.price?.amount_cents ?? 0)
+        : null,
+    byMonth: [...monthMap.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([label, v]) => ({ label, cents: v.cents, count: v.count })),
+    byPlan: [...planMap.entries()]
+      .sort((a, b) => b[1].cents - a[1].cents)
+      .map(([label, v]) => ({ label, cents: v.cents, count: v.count })),
+  };
+
   return {
     userId,
     email,
@@ -780,9 +886,9 @@ export async function collectCustomerDetail(
     country: customerRes.data?.tax_country ?? null,
     createdAt: customerRes.data?.created_at ?? profileRes.data?.created_at ?? null,
     balanceCents: ledgerRows[0]?.balance_after ?? 0,
-    lifetimeCents: payments
-      .filter((p) => p.status === "paid")
-      .reduce((s, p) => s + p.amountCents - p.refundedCents, 0),
+    lifetimeCents: netCents,
+    billing,
+
     features: (featuresRes.data ?? []).map(
       (f: { feature_key: string }) => f.feature_key,
     ),
