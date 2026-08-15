@@ -130,6 +130,7 @@ function CustomerRow({
 function RecoveryPage() {
   const load = useServerFn(getRecoveryOverview);
   const force = useServerFn(forceRecoveryAttempt);
+  const notifyFailed = useServerFn(notifyFailedPayments);
   const qc = useQueryClient();
   const [pending, setPending] = useState<string | null>(null);
 
@@ -148,6 +149,15 @@ function RecoveryPage() {
       qc.invalidateQueries({ queryKey: ["admin-recovery"] });
     },
     onError: () => toast.error("Não foi possível iniciar a tentativa."),
+  });
+
+  const notifyMutation = useMutation({
+    mutationFn: (userId?: string) => notifyFailed({ data: { userId } }),
+    onSuccess: (res) =>
+      toast.success(
+        `Aviso enviado a ${res.notified} membro(s) com cobrança falhada.`,
+      ),
+    onError: () => toast.error("Não foi possível enviar os avisos."),
   });
 
   if (isLoading || !data)
