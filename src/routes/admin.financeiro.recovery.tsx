@@ -300,6 +300,22 @@ function RecoveryPage() {
         </Panel>
       </div>
 
+      <div className="flex justify-end">
+        <button
+          type="button"
+          disabled={notifyMutation.isPending}
+          onClick={() => notifyMutation.mutate(undefined)}
+          className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium transition hover:border-primary hover:text-primary disabled:opacity-50"
+        >
+          {notifyMutation.isPending ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <MailWarning className="h-3.5 w-3.5" />
+          )}
+          Avisar cartões recusados
+        </button>
+      </div>
+
       <Panel title="Dívida em aberto">
         {data.customers.length === 0 ? (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
