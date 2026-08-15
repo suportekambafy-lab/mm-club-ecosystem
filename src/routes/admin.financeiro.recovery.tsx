@@ -3,11 +3,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { AlertTriangle, Loader2, Timer, Zap } from "lucide-react";
+import { AlertTriangle, Loader2, MailWarning, Timer, Zap } from "lucide-react";
 import { dt, money, Panel, StatCard } from "@/components/admin/finance-ui";
 import {
   forceRecoveryAttempt,
   getRecoveryOverview,
+  notifyFailedPayments,
 } from "@/lib/admin-finance.functions";
 import type { RecoveryCustomerRow } from "@/lib/admin/recovery-types";
 import { cn } from "@/lib/utils";
@@ -129,6 +130,7 @@ function CustomerRow({
 function RecoveryPage() {
   const load = useServerFn(getRecoveryOverview);
   const force = useServerFn(forceRecoveryAttempt);
+  const notifyFailed = useServerFn(notifyFailedPayments);
   const qc = useQueryClient();
   const [pending, setPending] = useState<string | null>(null);
 
@@ -147,6 +149,15 @@ function RecoveryPage() {
       qc.invalidateQueries({ queryKey: ["admin-recovery"] });
     },
     onError: () => toast.error("Não foi possível iniciar a tentativa."),
+  });
+
+  const notifyMutation = useMutation({
+    mutationFn: (userId?: string) => notifyFailed({ data: { userId } }),
+    onSuccess: (res) =>
+      toast.success(
+        `Aviso enviado a ${res.notified} membro(s) com cobrança falhada.`,
+      ),
+    onError: () => toast.error("Não foi possível enviar os avisos."),
   });
 
   if (isLoading || !data)
@@ -287,6 +298,22 @@ function RecoveryPage() {
             </table>
           )}
         </Panel>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          type="button"
+          disabled={notifyMutation.isPending}
+          onClick={() => notifyMutation.mutate(undefined)}
+          className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium transition hover:border-primary hover:text-primary disabled:opacity-50"
+        >
+          {notifyMutation.isPending ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <MailWarning className="h-3.5 w-3.5" />
+          )}
+          Avisar cartões recusados
+        </button>
       </div>
 
       <Panel title="Dívida em aberto">
