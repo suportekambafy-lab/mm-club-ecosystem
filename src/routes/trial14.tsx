@@ -11,20 +11,20 @@ const PRICE_SLUG = "mm_club_trial14";
 export const Route = createFileRoute("/trial14")({
   head: () => ({
     meta: [
-      { title: "3 dias grátis no MM Club — experimenta sem compromisso" },
+      { title: "14 dias grátis no MM Club — experimenta sem compromisso" },
       {
         name: "description",
         content:
-          "Experimenta o MM Club durante 3 dias grátis: cursos, comunidade, lives e ferramentas. Cancelas quando quiseres antes do fim do trial.",
+          "Experimenta o MM Club durante 14 dias grátis: cursos, comunidade, lives e ferramentas. Cancelas quando quiseres antes do fim do trial.",
       },
       {
         property: "og:title",
-        content: "3 dias grátis no MM Club",
+        content: "14 dias grátis no MM Club",
       },
       {
         property: "og:description",
         content:
-          "3 dias de acesso completo ao MM Club. Depois, apenas 29,90 €/mês — cancelas quando quiseres.",
+          "14 dias de acesso completo ao MM Club. Depois, apenas 29,90 €/mês — cancelas quando quiseres.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -34,13 +34,13 @@ export const Route = createFileRoute("/trial14")({
 });
 
 const BENEFITS = [
-  "Acesso completo ao MM Club durante 3 dias",
+  "Acesso completo ao MM Club durante 14 dias",
   "Todos os cursos, aulas e novos lançamentos",
   "Comunidade privada, lives e ferramentas",
   "Suporte MM Inteligence 24/7",
-  "Apenas 1 € de validação do cartão — os 3 dias continuam grátis",
+  "Apenas 1 € de validação do cartão — os 14 dias continuam grátis",
   "Cancelas quando quiseres antes do fim do trial",
-  "Depois dos 3 dias, apenas 29,90 €/mês",
+  "Depois dos 14 dias, apenas 29,90 €/mês",
 ];
 
 function Trial14Page() {
@@ -136,7 +136,7 @@ function Trial14Page() {
           transition={{ duration: 0.5, delay: 0.05 }}
           className="mt-5 text-center text-4xl font-semibold tracking-tight md:text-5xl"
         >
-          3 dias grátis no MM Club
+          14 dias grátis no MM Club
         </motion.h1>
 
         <motion.p
@@ -145,7 +145,7 @@ function Trial14Page() {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="mt-4 max-w-lg text-center text-base text-muted-foreground md:text-lg"
         >
-          Acesso completo ao ecossistema MM Club durante 3 dias. Depois do
+          Acesso completo ao ecossistema MM Club durante 14 dias. Depois do
           trial, continua por 29,90 €/mês — cancelas quando quiseres.
         </motion.p>
 
@@ -168,18 +168,18 @@ function Trial14Page() {
         >
           <div>
             <p className="text-sm text-muted-foreground">Plano de teste</p>
-            <p className="text-lg font-semibold">MM Club — 3 dias grátis</p>
+            <p className="text-lg font-semibold">MM Club — 14 dias grátis</p>
           </div>
 
           <div className="mt-6 flex items-end gap-2">
             <span className="text-5xl font-semibold tracking-tight">0 €</span>
             <span className="mb-2 text-sm text-muted-foreground">
-              nos primeiros 3 dias
+              nos primeiros 14 dias
             </span>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
             Não cobramos a mensalidade hoje: só validamos o cartão. Depois dos
-            3 dias, 29,90 €/mês — cancelas a qualquer momento antes do fim do
+            14 dias, 29,90 €/mês — cancelas a qualquer momento antes do fim do
             trial.
           </p>
 
@@ -199,7 +199,7 @@ function Trial14Page() {
             disabled={pending}
             className="mt-8 inline-flex w-full items-center justify-center rounded-2xl bg-primary px-6 py-4 text-base font-semibold text-primary-foreground shadow-lg transition hover:opacity-95 disabled:opacity-60"
           >
-            {pending ? "A abrir checkout..." : "Começar 3 dias grátis"}
+            {pending ? "A abrir checkout..." : "Começar 14 dias grátis"}
           </button>
 
           {error && !askEmail ? (
@@ -236,7 +236,7 @@ function Trial14Page() {
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
               {user
-                ? "Vamos validar o cartão e ativar os 3 dias grátis nesta conta."
+                ? "Vamos validar o cartão e ativar os 14 dias grátis nesta conta."
                 : "Criamos a tua conta MM Club automaticamente após a validação do cartão e enviamos-te o acesso para este email."}
             </p>
 
