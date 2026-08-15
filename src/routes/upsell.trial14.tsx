@@ -136,17 +136,17 @@ export const Route = createFileRoute("/upsell/trial14")({
 
   head: () => ({
     meta: [
-      { title: "Oferta exclusiva — 14 dias grátis no MM Club" },
+      { title: "Oferta exclusiva — 3 dias grátis no MM Club" },
       {
         name: "description",
         content:
-          "Acabaste de entrar no Marca Milionária. Ativa agora 14 dias gratuitos no MM Club: workshops, comunidade, lives, IA e ferramentas premium.",
+          "Acabaste de entrar no Marca Milionária. Ativa agora 3 dias gratuitos no MM Club: workshops, comunidade, lives, IA e ferramentas premium.",
       },
-      { property: "og:title", content: "14 dias gratuitos no MM Club" },
+      { property: "og:title", content: "3 dias gratuitos no MM Club" },
       {
         property: "og:description",
         content:
-          "Oferta exclusiva para novos alunos do Marca Milionária: 14 dias de acesso completo ao MM Club.",
+          "Oferta exclusiva para novos alunos do Marca Milionária: 3 dias de acesso completo ao MM Club.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -166,7 +166,7 @@ const INCLUDED = [
 ];
 
 const OFFER = [
-  "14 dias gratuitos",
+  "3 dias gratuitos",
   "Acesso imediato",
   "Cancelas quando quiseres durante o período experimental",
   "Depois apenas 29,90 €/mês caso decidas continuar",
@@ -246,10 +246,10 @@ function UpsellTrial14() {
         disabled={pending}
         className="inline-flex w-full items-center justify-center rounded-2xl bg-primary px-6 py-5 text-base font-semibold text-primary-foreground shadow-[0_20px_50px_-20px_oklch(0.82_0.13_82_/_0.7)] transition hover:opacity-95 disabled:opacity-60 md:text-lg"
       >
-        {pending ? "A abrir…" : "Ativar os meus 14 dias gratuitos"}
+        {pending ? "A abrir…" : "Ativar os meus 3 dias gratuitos"}
       </button>
       <p className="mt-3 text-center text-xs text-muted-foreground">
-        Começa agora mesmo. Sem cobrança durante os 14 dias.
+        Começa agora mesmo. Sem cobrança durante os 3 dias.
       </p>
       {error && !askEmail ? (
         <p className="mt-3 text-center text-sm text-destructive">{error}</p>
@@ -267,7 +267,7 @@ function UpsellTrial14() {
       <main className="relative mx-auto flex max-w-2xl flex-col px-4 pb-20 pt-10 md:pt-16">
         {search.trial === "success" ? (
           <div className="mb-6 rounded-2xl border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-primary">
-            Recebemos a confirmação. Os teus 14 dias estão a ser ativados.
+            Recebemos a confirmação. Os teus 3 dias estão a ser ativados.
           </div>
         ) : null}
 
@@ -336,7 +336,7 @@ function UpsellTrial14() {
 
         <section className="mt-14">
           <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-            Experimenta gratuitamente o MM Club durante 14 dias.
+            Experimenta gratuitamente o MM Club durante 3 dias.
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base">
             Enquanto o Marca Milionária te mostra exatamente o que fazer, o MM
@@ -379,7 +379,7 @@ function UpsellTrial14() {
             <ShieldCheck className="mt-0.5 h-5 w-5 flex-none text-primary" />
             <p className="text-xs leading-relaxed text-muted-foreground">
               <span className="font-semibold text-foreground">Zero risco.</span>{" "}
-              Experimenta durante 14 dias. Se não fizer sentido para ti, cancela
+              Experimenta durante 3 dias. Se não fizer sentido para ti, cancela
               antes do fim do período experimental e não será cobrado qualquer
               valor.
             </p>
@@ -454,7 +454,7 @@ function UpsellTrial14() {
               }
               className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground transition hover:opacity-95 disabled:opacity-60"
             >
-              {pending ? "A abrir pagamento…" : "Ativar os 14 dias gratuitos"}
+              {pending ? "A abrir pagamento…" : "Ativar os 3 dias gratuitos"}
             </button>
             <button
               type="button"
