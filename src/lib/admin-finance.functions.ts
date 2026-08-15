@@ -397,6 +397,20 @@ export const forceRecoveryAttempt = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Avisa os membros com cobrança falhada para atualizarem o método. */
+export const notifyFailedPayments = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ userId: z.string().uuid().optional() }).parse(input ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const { notifyFailedPaymentMembers } = await import(
+      "@/lib/admin/recovery-notify.server"
+    );
+    return notifyFailedPaymentMembers(data.userId);
+  });
+
 /** Revenue Intelligence Engine — profiles, score evolution and explainability. */
 export const getIntelligenceOverview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
