@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { AlertTriangle, Loader2, Timer, Zap } from "lucide-react";
+import { AlertTriangle, Loader2, MailWarning, Timer, Zap } from "lucide-react";
 import { dt, money, Panel, StatCard } from "@/components/admin/finance-ui";
 import {
   forceRecoveryAttempt,
