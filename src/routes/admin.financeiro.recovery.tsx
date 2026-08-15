@@ -8,6 +8,7 @@ import { dt, money, Panel, StatCard } from "@/components/admin/finance-ui";
 import {
   forceRecoveryAttempt,
   getRecoveryOverview,
+  notifyFailedPayments,
 } from "@/lib/admin-finance.functions";
 import type { RecoveryCustomerRow } from "@/lib/admin/recovery-types";
 import { cn } from "@/lib/utils";
