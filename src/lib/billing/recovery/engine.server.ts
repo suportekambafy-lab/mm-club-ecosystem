@@ -21,6 +21,7 @@ import {
   buildSchedule,
   CANCEL_AT_HOURS,
   ESCALATIONS,
+  escalationsFor,
   MAX_RECOVERY_ATTEMPTS,
   scheduledAt,
   type RecoveryPhase,
@@ -356,8 +357,18 @@ export async function startRecovery(input: StartRecoveryInput): Promise<void> {
     );
   }
 
+  // Suspensão = X dias após a recusa: 3 dias em trial, 7 dias em ativo.
+  const { data: subRow } = await supabaseAdmin
+    .from("billing_subscriptions")
+    .select("status, trial_end")
+    .eq("id", input.subscriptionId)
+    .maybeSingle();
+  const wasTrialing =
+    subRow?.status === "trialing" ||
+    (!!subRow?.trial_end && new Date(subRow.trial_end as string).getTime() > failedAt.getTime());
+
   // Phase transitions run on the clock, independently of the attempts.
-  for (const esc of ESCALATIONS) {
+  for (const esc of escalationsFor(wasTrialing)) {
     await enqueue(
       "recovery.escalate",
       {
