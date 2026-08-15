@@ -1,0 +1,1 @@
+update public.catalog_prices set trial_days = 14, display_label = 'MM Club — 14 dias grátis' where slug = 'mm_club_trial14';
