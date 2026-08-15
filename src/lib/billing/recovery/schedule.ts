@@ -24,19 +24,30 @@ const HOUR = 3_600_000;
 
 /** Milestones, in hours from the original failure. */
 export const GRACE_STARTS_AT_HOURS = 24;
-export const SUSPEND_AT_HOURS = 3 * 24; // day 3 — grace livre de 3 dias após falha
+/** Suspensão = X dias após a recusa do pagamento (não é dia fixo do mês). */
+export const SUSPEND_AT_HOURS_TRIAL = 3 * 24; // trial: 3 dias após a falha
+export const SUSPEND_AT_HOURS_ACTIVE = 7 * 24; // ativo: 7 dias após a falha
+/** Default usado apenas para rotular fases quando o estado não é conhecido. */
+export const SUSPEND_AT_HOURS = SUSPEND_AT_HOURS_ACTIVE;
+
+export function suspendAtHoursFor(wasTrialing: boolean): number {
+  return wasTrialing ? SUSPEND_AT_HOURS_TRIAL : SUSPEND_AT_HOURS_ACTIVE;
+}
 export const CANCEL_AT_HOURS = 90 * 24; // day 90
 
-/** 0–24h · days 2–3 (grace) · days 4–90 (pós-suspensão). */
+/** Cobranças e avisos continuam até ao dia 90, mesmo depois da suspensão. */
 const BASE_OFFSETS_HOURS = [
   0, 4, 8, 16, 24,
   2 * 24, 4 * 24, 7 * 24, 10 * 24, 15 * 24,
   21 * 24, 28 * 24, 35 * 24, 45 * 24, 60 * 24, 75 * 24, 90 * 24,
 ];
 
-export function phaseForOffset(offsetHours: number): RecoveryPhase {
+export function phaseForOffset(
+  offsetHours: number,
+  suspendAtHours: number = SUSPEND_AT_HOURS,
+): RecoveryPhase {
   if (offsetHours < GRACE_STARTS_AT_HOURS) return "immediate";
-  if (offsetHours < SUSPEND_AT_HOURS) return "grace";
+  if (offsetHours < suspendAtHours) return "grace";
   return "suspended";
 }
 
@@ -96,3 +107,14 @@ export const ESCALATIONS: { kind: EscalationKind; offsetHours: number }[] = [
   { kind: "suspend", offsetHours: SUSPEND_AT_HOURS },
   { kind: "cancel", offsetHours: CANCEL_AT_HOURS },
 ];
+
+/** Calendário de escalada dependente do estado no momento da falha. */
+export function escalationsFor(
+  wasTrialing: boolean,
+): { kind: EscalationKind; offsetHours: number }[] {
+  return [
+    { kind: "grace_period", offsetHours: GRACE_STARTS_AT_HOURS },
+    { kind: "suspend", offsetHours: suspendAtHoursFor(wasTrialing) },
+    { kind: "cancel", offsetHours: CANCEL_AT_HOURS },
+  ];
+}
