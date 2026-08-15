@@ -24,10 +24,10 @@ const HOUR = 3_600_000;
 
 /** Milestones, in hours from the original failure. */
 export const GRACE_STARTS_AT_HOURS = 24;
-export const SUSPEND_AT_HOURS = 16 * 24; // day 16
+export const SUSPEND_AT_HOURS = 3 * 24; // day 3 — grace livre de 3 dias após falha
 export const CANCEL_AT_HOURS = 90 * 24; // day 90
 
-/** 0–24h · days 2–15 · days 21–90 (see the Recovery Engine spec). */
+/** 0–24h · days 2–3 (grace) · days 4–90 (pós-suspensão). */
 const BASE_OFFSETS_HOURS = [
   0, 4, 8, 16, 24,
   2 * 24, 4 * 24, 7 * 24, 10 * 24, 15 * 24,
