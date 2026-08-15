@@ -20,7 +20,6 @@ import { classifyFailure, type FailureCategory } from "./classify";
 import {
   buildSchedule,
   CANCEL_AT_HOURS,
-  ESCALATIONS,
   escalationsFor,
   MAX_RECOVERY_ATTEMPTS,
   scheduledAt,

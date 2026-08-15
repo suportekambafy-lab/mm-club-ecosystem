@@ -18,8 +18,8 @@ const DAY = 24 * HOUR;
 
 const PHASE_LABEL: Record<string, string> = {
   immediate: "Primeiras 24 horas",
-  grace: "Grace period (dias 2–3)",
-  suspended: "Pós-suspensão (dias 4–90)",
+  grace: "Grace period (3 dias em trial · 7 dias em ativo)",
+  suspended: "Pós-suspensão (até ao dia 90)",
 };
 
 type AttemptRow = {
