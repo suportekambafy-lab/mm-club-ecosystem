@@ -505,39 +505,6 @@ function aspectFromFormat(fmt: string): "16:9" | "9:16" | "1:1" {
   return "9:16";
 }
 
-type OmniStep = {
-  type?: string;
-  content?: Array<{
-    type?: string;
-    uri?: string;
-    data?: string;
-    mime_type?: string;
-    mimeType?: string;
-  }>;
-};
-
-function extractVideoFromInteraction(json: {
-  status?: string;
-  steps?: OmniStep[];
-  output_video?: { uri?: string; data?: string; mime_type?: string };
-}): { uri?: string; data?: string; mime?: string } | null {
-  if (json.output_video?.uri || json.output_video?.data) {
-    return {
-      uri: json.output_video.uri,
-      data: json.output_video.data,
-      mime: json.output_video.mime_type,
-    };
-  }
-  for (const step of json.steps ?? []) {
-    for (const c of step.content ?? []) {
-      if (c.type === "video" || c.mime_type?.startsWith("video") || c.mimeType?.startsWith("video")) {
-        return { uri: c.uri, data: c.data, mime: c.mime_type ?? c.mimeType };
-      }
-    }
-  }
-  return null;
-}
-
 type VideoSegment = {
   index: number;
   duration: number;
