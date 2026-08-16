@@ -990,11 +990,12 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
       const prevDone = next ? segs[next.index - 1]?.status === "ready" : false;
       if (next && prevDone) {
         try {
-          next.interaction_id = await startOmniInteraction(
-            key,
+          next.interaction_id = await startSegmentJob(
             segmentPrompt(basePrompt, next.index, segs.length, next.duration, "sequential"),
             aspect,
+            next.duration,
           );
+
           next.status = "pending";
         } catch (err) {
           next.status = "failed";
