@@ -916,18 +916,18 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
     let failureMsg = "";
     for (const seg of segs) {
       if (seg.status !== "pending") continue;
-      const op = await pollOmni(key, seg.interaction_id);
-      const st = op.status ?? "pending";
-      if (st === "failed" || st === "cancelled" || op.error) {
+      const op = await pollSegment(seg.interaction_id);
+      if (op.status === "failed") {
         seg.status = "failed";
         seg.error = op.error?.message ?? "Falhou.";
         anyFailed = true;
         failureMsg = seg.error;
         continue;
       }
-      if (st !== "completed" && st !== "succeeded") continue;
+      if (op.status !== "completed") continue;
       try {
-        const mat = await materializeSegment(key, supabase as unknown as SupabaseCtx, userId, op);
+        const mat = await materializeSegment(supabase as unknown as SupabaseCtx, userId, seg.interaction_id);
+
         seg.status = "ready";
         seg.storage_path = mat.path;
         seg.url = mat.url;
