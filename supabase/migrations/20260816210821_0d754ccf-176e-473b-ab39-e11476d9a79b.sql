@@ -1,0 +1,1 @@
+select public.mm_studio_grant_credits('e78f7368-de84-4550-aefc-1d5c41192c86'::uuid, 10000, 'admin_manual_grant_2026_08_16_10k');
