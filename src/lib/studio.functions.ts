@@ -475,8 +475,8 @@ export const generateImages = createServerFn({ method: "POST" })
     return { assets: generated, balance: finalBalance, cost: cost - refund };
   });
 
-// ============ VIDEO GENERATION (Gemini Omni Flash) ============
-const OMNI_MODEL = "gemini-omni-flash-preview";
+// ============ VIDEO GENERATION (Lovable AI Gateway — Veo 3.1) ============
+const VIDEO_MODEL_ID = "google/veo-3.1-fast";
 
 const StartVideoSchema = z.object({
   productId: z.string().uuid().nullable().optional(),
@@ -605,8 +605,6 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
   .inputValidator((v: unknown) => StartVideoSchema.parse(v))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const key = process.env.GEMINI_API_KEY;
-    if (!key) throw new Error("GEMINI_API_KEY não configurada.");
 
     const [brandRes, productRes] = await Promise.all([
       supabase.from("mm_studio_brand").select("*").eq("user_id", userId).maybeSingle(),
@@ -811,7 +809,7 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
         credits_used: totalCost,
         metadata: {
           ...meta,
-          model: OMNI_MODEL,
+          model: VIDEO_MODEL_ID,
           consistency_lock: lock ?? null,
           consistency_block: consistency,
           narration_locale: narrationLocale,
@@ -864,8 +862,6 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
   .inputValidator((v: unknown) => z.object({ assetId: z.string().uuid() }).parse(v))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const key = process.env.GEMINI_API_KEY;
-    if (!key) throw new Error("GEMINI_API_KEY não configurada.");
 
     const { data: asset, error } = await supabase
       .from("mm_studio_assets")
