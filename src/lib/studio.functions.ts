@@ -745,10 +745,10 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
     let segArr: VideoSegment[] = [];
     try {
       if (strategy === "sequential") {
-        const firstId = await startOmniInteraction(
-          key,
+        const firstId = await startSegmentJob(
           segmentPrompt(basePrompt, 0, segments.length, segments[0], strategy),
           aspect,
+          segments[0],
           refs,
         );
         segArr = segments.map((secs, i) => ({
@@ -760,9 +760,10 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
       } else {
         const ids = await Promise.all(
           segments.map((secs, i) =>
-            startOmniInteraction(key, segmentPrompt(basePrompt, i, segments.length, secs, strategy), aspect, refs),
+            startSegmentJob(segmentPrompt(basePrompt, i, segments.length, secs, strategy), aspect, secs, refs),
           ),
         );
+
         segArr = segments.map((secs, i) => ({
           index: i,
           duration: secs,
