@@ -835,74 +835,29 @@ export const startVideoGeneration = createServerFn({ method: "POST" })
   });
 
 
-// Downloads the video bytes for a completed Omni interaction and uploads to storage.
+// Descarrega o MP4 de um job concluído e guarda no storage do membro.
 type SupabaseCtx = { storage: { from: (b: string) => { upload: (p: string, buf: Uint8Array, o: { contentType: string; upsert: boolean }) => Promise<{ error: { message: string } | null }>; createSignedUrl: (p: string, s: number) => Promise<{ data: { signedUrl: string } | null; error: { message: string } | null }> } } };
 
 async function materializeSegment(
-  key: string,
   supabase: SupabaseCtx,
   userId: string,
-  op: {
-    status?: string;
-    error?: { message?: string };
-    steps?: OmniStep[];
-    output_video?: { uri?: string; data?: string; mime_type?: string };
-  },
+  jobId: string,
 ): Promise<{ path: string; url: string }> {
-  const video = extractVideoFromInteraction(op);
-  if (!video || (!video.uri && !video.data)) throw new Error("Omni devolveu resposta sem vídeo.");
-  let buf: Uint8Array;
-  const mime = video.mime ?? "video/mp4";
-  if (video.uri) {
-    let dl = await fetch(video.uri, { headers: { "x-goog-api-key": key } });
-    if (!dl.ok && video.uri.includes("/files/")) {
-      const name = video.uri.split("/files/")[1]?.split("?")[0];
-      if (name) {
-        for (let i = 0; i < 20; i++) {
-          const info = await fetch(`https://generativelanguage.googleapis.com/v1beta/files/${name}`, {
-            headers: { "x-goog-api-key": key },
-          });
-          const j = (await info.json().catch(() => ({}))) as { state?: string; uri?: string };
-          if (j.state === "ACTIVE") {
-            dl = await fetch(j.uri ?? video.uri, { headers: { "x-goog-api-key": key } });
-            break;
-          }
-          if (j.state === "FAILED") throw new Error("Ficheiro de vídeo falhou.");
-          await new Promise((r) => setTimeout(r, 1500));
-        }
-      }
-    }
-    if (!dl.ok) throw new Error(`Download Omni falhou (${dl.status}).`);
-    buf = new Uint8Array(await dl.arrayBuffer());
-  } else {
-    const bin = atob(video.data!);
-    buf = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-  }
-  const ext = mime.includes("webm") ? "webm" : "mp4";
-  const path = `${userId}/videos/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  const up = await supabase.storage.from(BUCKET).upload(path, buf, { contentType: mime, upsert: false });
+  const { downloadVideoBytes } = await import("./studio-video.server");
+  const { bytes, mime } = await downloadVideoBytes(jobId);
+  const path = `${userId}/videos/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.mp4`;
+  const up = await supabase.storage.from(BUCKET).upload(path, bytes, { contentType: mime, upsert: false });
   if (up.error) throw new Error(up.error.message);
   const signed = await supabase.storage.from(BUCKET).createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
   if (signed.error || !signed.data) throw new Error(signed.error?.message ?? "URL falhou");
   return { path, url: signed.data.signedUrl };
 }
 
-async function pollOmni(key: string, interactionId: string) {
-  const opRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/interactions/${interactionId}`, {
-    headers: { "x-goog-api-key": key },
-  });
-  if (!opRes.ok) {
-    const t = await opRes.text().catch(() => "");
-    throw new Error(`Poll Omni ${opRes.status}: ${t.slice(0, 200)}`);
-  }
-  return (await opRes.json()) as {
-    status?: string;
-    error?: { message?: string };
-    steps?: OmniStep[];
-    output_video?: { uri?: string; data?: string; mime_type?: string };
-  };
+async function pollSegment(jobId: string) {
+  const { pollVideoJob } = await import("./studio-video.server");
+  return pollVideoJob(jobId);
 }
+
 
 export const pollVideoGeneration = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
