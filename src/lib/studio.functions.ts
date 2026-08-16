@@ -589,43 +589,16 @@ function segmentPrompt(base: string, index: number, total: number, seconds: numb
 }
 
 
-async function startOmniInteraction(
-  key: string,
+async function startSegmentJob(
   prompt: string,
   aspect: "9:16" | "1:1" | "16:9",
+  seconds: number,
   refs: { bytes: Uint8Array; mime: string }[] = [],
 ): Promise<string> {
-  const input = refs.length > 0
-    ? [
-        ...refs.slice(0, 3).map((r) => ({
-          type: "image",
-          data: bytesToB64(r.bytes),
-          mime_type: r.mime,
-        })),
-        { type: "text", text: prompt },
-      ]
-    : prompt;
-
-  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-    body: JSON.stringify({
-      model: OMNI_MODEL,
-      input,
-      response_format: { type: "video", aspect_ratio: aspect, delivery: "uri" },
-      background: true,
-      store: true,
-      stream: false,
-    }),
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`Gemini Omni ${res.status}: ${text.slice(0, 240)}`);
-  }
-  const json = (await res.json()) as { id?: string };
-  if (!json.id) throw new Error("Omni não devolveu id de interação.");
-  return json.id;
+  const { startVideoJob } = await import("./studio-video.server");
+  return startVideoJob({ prompt, aspect, seconds, ref: refs[0] ?? null });
 }
+
 
 export const startVideoGeneration = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
