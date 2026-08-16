@@ -1081,14 +1081,15 @@ export const pollVideoGeneration = createServerFn({ method: "POST" })
             const seg = segs[idx];
             if (!seg) continue;
             try {
-              seg.interaction_id = await startOmniInteraction(
-                key,
+              seg.interaction_id = await startSegmentJob(
                 `${segmentPrompt(basePrompt, idx, segs.length, seg.duration, strategy)} CRITICAL FIX PASS: the previous render was rejected by quality control for: ${report.checks
                   .filter((c) => !c.ok)
                   .map((c) => c.id)
                   .join(", ")}. Fix these issues while keeping everything else identical.`,
                 aspect,
+                seg.duration,
               );
+
               seg.status = "pending";
               seg.retried = true;
               seg.url = undefined;
