@@ -105,21 +105,28 @@ export const VIDEO_FORMATS: { id: VideoFormat; label: string; aspect: "9:16" | "
 
 export const VIDEO_DURATIONS = [8, 10, 15, 30] as const;
 
-// Split target duration into API segments (Omni caps at ~10s per call).
+// Split target duration into API segments (motor de vídeo aceita 4, 6 ou 8s por clipe).
 export function videoSegments(duration: number): number[] {
-  if (duration <= 10) return [duration];
-  if (duration === 15) return [8, 7];
-  if (duration === 30) return [10, 10, 10];
-  // Fallback: chunks of 10s
+  if (duration <= 4) return [4];
+  if (duration <= 6) return [6];
+  if (duration <= 8) return [8];
   const out: number[] = [];
   let left = duration;
   while (left > 0) {
-    const c = Math.min(10, left);
-    out.push(c);
-    left -= c;
+    if (left >= 8 || left > 6) {
+      out.push(8);
+      left -= 8;
+    } else if (left > 4) {
+      out.push(6);
+      left -= 6;
+    } else {
+      out.push(4);
+      left -= 4;
+    }
   }
   return out;
 }
+
 
 export function videoCost(duration: number): number {
   return videoSegments(duration).length * STUDIO_COSTS.video;
