@@ -65,6 +65,7 @@ import { Route as AdminFinanceiroInteligenciaRouteImport } from './routes/admin.
 import { Route as AdminFinanceiroEstadoRouteImport } from './routes/admin.financeiro.estado'
 import { Route as AdminFinanceiroDebitosRouteImport } from './routes/admin.financeiro.debitos'
 import { Route as AdminFinanceiroCupoesRouteImport } from './routes/admin.financeiro.cupoes'
+import { Route as AdminFinanceiroCobrancasRouteImport } from './routes/admin.financeiro.cobrancas'
 import { Route as AdminFinanceiroCatalogoRouteImport } from './routes/admin.financeiro.catalogo'
 import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
 import { Route as AppJadeThreadIdRouteImport } from './routes/_app.jade.$threadId'
@@ -389,6 +390,12 @@ const AdminFinanceiroCupoesRoute = AdminFinanceiroCupoesRouteImport.update({
   path: '/cupoes',
   getParentRoute: () => AdminFinanceiroRoute,
 } as any)
+const AdminFinanceiroCobrancasRoute =
+  AdminFinanceiroCobrancasRouteImport.update({
+    id: '/cobrancas',
+    path: '/cobrancas',
+    getParentRoute: () => AdminFinanceiroRoute,
+  } as any)
 const AdminFinanceiroCatalogoRoute = AdminFinanceiroCatalogoRouteImport.update({
   id: '/catalogo',
   path: '/catalogo',
@@ -681,6 +688,7 @@ export interface FileRoutesByFullPath {
   '/jade/$threadId': typeof AppJadeThreadIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
+  '/admin/financeiro/cobrancas': typeof AdminFinanceiroCobrancasRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
   '/admin/financeiro/debitos': typeof AdminFinanceiroDebitosRoute
   '/admin/financeiro/estado': typeof AdminFinanceiroEstadoRoute
@@ -772,6 +780,7 @@ export interface FileRoutesByTo {
   '/jade/$threadId': typeof AppJadeThreadIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
+  '/admin/financeiro/cobrancas': typeof AdminFinanceiroCobrancasRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
   '/admin/financeiro/debitos': typeof AdminFinanceiroDebitosRoute
   '/admin/financeiro/estado': typeof AdminFinanceiroEstadoRoute
@@ -873,6 +882,7 @@ export interface FileRoutesById {
   '/_app/jade/$threadId': typeof AppJadeThreadIdRoute
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
+  '/admin/financeiro/cobrancas': typeof AdminFinanceiroCobrancasRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
   '/admin/financeiro/debitos': typeof AdminFinanceiroDebitosRoute
   '/admin/financeiro/estado': typeof AdminFinanceiroEstadoRoute
@@ -974,6 +984,7 @@ export interface FileRouteTypes {
     | '/jade/$threadId'
     | '/lives/$liveId'
     | '/admin/financeiro/catalogo'
+    | '/admin/financeiro/cobrancas'
     | '/admin/financeiro/cupoes'
     | '/admin/financeiro/debitos'
     | '/admin/financeiro/estado'
@@ -1065,6 +1076,7 @@ export interface FileRouteTypes {
     | '/jade/$threadId'
     | '/lives/$liveId'
     | '/admin/financeiro/catalogo'
+    | '/admin/financeiro/cobrancas'
     | '/admin/financeiro/cupoes'
     | '/admin/financeiro/debitos'
     | '/admin/financeiro/estado'
@@ -1165,6 +1177,7 @@ export interface FileRouteTypes {
     | '/_app/jade/$threadId'
     | '/_app/lives/$liveId'
     | '/admin/financeiro/catalogo'
+    | '/admin/financeiro/cobrancas'
     | '/admin/financeiro/cupoes'
     | '/admin/financeiro/debitos'
     | '/admin/financeiro/estado'
@@ -1651,6 +1664,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFinanceiroCupoesRouteImport
       parentRoute: typeof AdminFinanceiroRoute
     }
+    '/admin/financeiro/cobrancas': {
+      id: '/admin/financeiro/cobrancas'
+      path: '/cobrancas'
+      fullPath: '/admin/financeiro/cobrancas'
+      preLoaderRoute: typeof AdminFinanceiroCobrancasRouteImport
+      parentRoute: typeof AdminFinanceiroRoute
+    }
     '/admin/financeiro/catalogo': {
       id: '/admin/financeiro/catalogo'
       path: '/catalogo'
@@ -2086,6 +2106,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AdminFinanceiroRouteChildren {
   AdminFinanceiroCatalogoRoute: typeof AdminFinanceiroCatalogoRoute
+  AdminFinanceiroCobrancasRoute: typeof AdminFinanceiroCobrancasRoute
   AdminFinanceiroCupoesRoute: typeof AdminFinanceiroCupoesRoute
   AdminFinanceiroDebitosRoute: typeof AdminFinanceiroDebitosRoute
   AdminFinanceiroEstadoRoute: typeof AdminFinanceiroEstadoRoute
@@ -2099,6 +2120,7 @@ interface AdminFinanceiroRouteChildren {
 
 const AdminFinanceiroRouteChildren: AdminFinanceiroRouteChildren = {
   AdminFinanceiroCatalogoRoute: AdminFinanceiroCatalogoRoute,
+  AdminFinanceiroCobrancasRoute: AdminFinanceiroCobrancasRoute,
   AdminFinanceiroCupoesRoute: AdminFinanceiroCupoesRoute,
   AdminFinanceiroDebitosRoute: AdminFinanceiroDebitosRoute,
   AdminFinanceiroEstadoRoute: AdminFinanceiroEstadoRoute,

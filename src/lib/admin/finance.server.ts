@@ -11,6 +11,8 @@ import type {
   AdminPaymentRow,
   AdminSubscriptionRow,
   CatalogProductRow,
+  ChargeLog,
+  ChargeLogRow,
   CouponRow,
   CustomerBilling,
   CustomerDetail,
@@ -24,6 +26,7 @@ import type {
   SubscriptionStateRow,
   UpcomingChargeRow,
 } from "./finance-types";
+
 
 const DAY = 86_400_000;
 const ACTIVE_LIKE: SubscriptionStatus[] = [
@@ -1418,4 +1421,141 @@ export async function listUpcomingCharges(): Promise<UpcomingChargeRow[]> {
 
   rows.sort((a, b) => a.chargeAt.localeCompare(b.chargeAt));
   return rows;
+}
+
+// ---------------------------------------------------------------------------
+// Registo de cobranças — quem foi debitado, quando e com que resultado
+// ---------------------------------------------------------------------------
+
+/**
+ * Every charge attempt in the period, newest first, with member identity and
+ * plan resolved so admins can read "quem foi debitado" without cross-checks.
+ */
+export async function collectChargeLog(
+  range: FinanceRange = "today",
+): Promise<ChargeLog> {
+  const now = new Date();
+  const { start, end } = resolveRange(range, now);
+
+  const [paymentsRes, pricesRes, productsRes] = await Promise.all([
+    supabaseAdmin
+      .from("billing_payments")
+      .select(
+        "id, user_id, subscription_id, price_id, gateway, gateway_payment_id, status, amount_cents, refunded_cents, currency, method, failure_reason, paid_at, created_at",
+      )
+      .gte("created_at", start.toISOString())
+      .lte("created_at", end.toISOString())
+      .order("created_at", { ascending: false })
+      .limit(2000),
+    supabaseAdmin
+      .from("catalog_prices")
+      .select("id, slug, product_id, amount_cents"),
+    supabaseAdmin.from("catalog_products").select("id, name"),
+  ]);
+  if (paymentsRes.error)
+    throw new Error(`collectChargeLog failed: ${paymentsRes.error.message}`);
+
+  const priceById = new Map(
+    (pricesRes.data ?? []).map((p) => [p.id, p] as const),
+  );
+  const productById = new Map(
+    (productsRes.data ?? []).map((p) => [p.id, p] as const),
+  );
+
+  const raw = (paymentsRes.data ?? []) as {
+    id: string;
+    user_id: string;
+    subscription_id: string | null;
+    price_id: string | null;
+    gateway: string | null;
+    gateway_payment_id: string | null;
+    status: string;
+    amount_cents: number;
+    refunded_cents: number | null;
+    currency: string;
+    method: string | null;
+    failure_reason: string | null;
+    paid_at: string | null;
+    created_at: string;
+  }[];
+
+  const identities = await loadIdentities([
+    ...new Set(raw.map((p) => p.user_id)),
+  ]);
+
+  const rows: ChargeLogRow[] = raw.map((p) => {
+    const price = p.price_id ? priceById.get(p.price_id) : null;
+    const id = identities.get(p.user_id);
+    return {
+      id: p.id,
+      userId: p.user_id,
+      email: id?.email ?? null,
+      name: id?.name ?? null,
+      status: p.status,
+      amountCents: p.amount_cents,
+      refundedCents: p.refunded_cents ?? 0,
+      netCents: p.status === "paid" ? net(p) : 0,
+      currency: p.currency ?? "EUR",
+      method: p.method ?? null,
+      failureReason: p.failure_reason ?? null,
+      gateway: p.gateway ?? "—",
+      gatewayPaymentId: p.gateway_payment_id ?? "",
+      planName: price
+        ? (productById.get(price.product_id)?.name ?? price.slug)
+        : "Avulso",
+      priceSlug: price?.slug ?? "",
+      at: p.paid_at ?? p.created_at,
+      day: tzDay(new Date(p.paid_at ?? p.created_at)),
+      subscriptionId: p.subscription_id ?? null,
+    };
+  });
+
+  rows.sort((a, b) => b.at.localeCompare(a.at));
+
+  const paidRows = rows.filter((r) => r.status === "paid");
+  const failedRows = rows.filter(
+    (r) => r.status === "failed" || r.status === "expired" || r.status === "canceled",
+  );
+  const refundedCents = rows.reduce((s, r) => s + r.refundedCents, 0);
+  const netCents = paidRows.reduce((s, r) => s + r.netCents, 0);
+
+  const dayMap = new Map<string, { cents: number; paid: number; failed: number }>();
+  for (const r of rows) {
+    const cur = dayMap.get(r.day) ?? { cents: 0, paid: 0, failed: 0 };
+    if (r.status === "paid") {
+      cur.cents += r.netCents;
+      cur.paid += 1;
+    } else if (r.status === "failed") {
+      cur.failed += 1;
+    }
+    dayMap.set(r.day, cur);
+  }
+
+  return {
+    generatedAt: now.toISOString(),
+    range,
+    label: RANGE_LABEL[range] ?? "Período",
+    startISO: start.toISOString(),
+    endISO: end.toISOString(),
+    totals: {
+      attempts: rows.length,
+      paidCount: paidRows.length,
+      paidCents: netCents,
+      failedCount: failedRows.length,
+      failedCents: failedRows.reduce((s, r) => s + r.amountCents, 0),
+      refundedCents,
+      pendingCount: rows.filter(
+        (r) => r.status === "pending" || r.status === "authorized",
+      ).length,
+      uniqueMembers: new Set(rows.map((r) => r.userId)).size,
+      successRate:
+        rows.length > 0 ? paidRows.length / rows.length : null,
+      avgTicketCents:
+        paidRows.length > 0 ? Math.round(netCents / paidRows.length) : null,
+    },
+    byDay: [...dayMap.entries()]
+      .map(([day, v]) => ({ day, ...v }))
+      .sort((a, b) => b.day.localeCompare(a.day)),
+    rows,
+  };
 }
