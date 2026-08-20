@@ -11,6 +11,8 @@ import type {
   AdminPaymentRow,
   AdminSubscriptionRow,
   CatalogProductRow,
+  ChargeLog,
+  ChargeLogRow,
   CouponRow,
   CustomerBilling,
   CustomerDetail,
@@ -24,6 +26,7 @@ import type {
   SubscriptionStateRow,
   UpcomingChargeRow,
 } from "./finance-types";
+
 
 const DAY = 86_400_000;
 const ACTIVE_LIKE: SubscriptionStatus[] = [
