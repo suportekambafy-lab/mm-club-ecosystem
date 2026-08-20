@@ -33,14 +33,21 @@ export const SUSPEND_AT_HOURS = SUSPEND_AT_HOURS_ACTIVE;
 export function suspendAtHoursFor(wasTrialing: boolean): number {
   return wasTrialing ? SUSPEND_AT_HOURS_TRIAL : SUSPEND_AT_HOURS_ACTIVE;
 }
-export const CANCEL_AT_HOURS = 90 * 24; // day 90
+/** Cancelamento só 90 dias APÓS a suspensão (suspenso ≠ cancelado). */
+export const CANCEL_AFTER_SUSPENSION_HOURS = 90 * 24;
+export const CANCEL_AT_HOURS = SUSPEND_AT_HOURS_ACTIVE + CANCEL_AFTER_SUSPENSION_HOURS;
 
-/** Cobranças e avisos continuam até ao dia 90, mesmo depois da suspensão. */
+export function cancelAtHoursFor(wasTrialing: boolean): number {
+  return suspendAtHoursFor(wasTrialing) + CANCEL_AFTER_SUSPENSION_HOURS;
+}
+
+/** Cobranças e avisos continuam durante toda a suspensão, até ao cancelamento. */
 const BASE_OFFSETS_HOURS = [
   0, 4, 8, 16, 24,
   2 * 24, 4 * 24, 7 * 24, 10 * 24, 15 * 24,
   21 * 24, 28 * 24, 35 * 24, 45 * 24, 60 * 24, 75 * 24, 90 * 24,
 ];
+
 
 export function phaseForOffset(
   offsetHours: number,
