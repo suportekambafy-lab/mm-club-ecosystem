@@ -1364,8 +1364,9 @@ export async function listUpcomingCharges(): Promise<UpcomingChargeRow[]> {
     .select(
       "id, user_id, status, gateway, gateway_subscription_id, trial_end, current_period_end, cancel_at_period_end, product:catalog_products(name), price:catalog_prices!billing_subscriptions_price_id_fkey(slug, amount_cents, currency, interval, interval_count)",
     )
-    .in("status", ACTIVE_LIKE)
+    .in("status", [...ACTIVE_LIKE, "suspended"])
     .limit(1000);
+
   if (error) throw new Error(`listUpcomingCharges failed: ${error.message}`);
 
   const subs = (data ?? []) as unknown as {
