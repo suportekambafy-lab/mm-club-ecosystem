@@ -37,8 +37,10 @@ export const Route = createFileRoute("/admin/financeiro")({
 
 const TABS: { to: string; label: string; exact?: boolean }[] = [
   { to: "/admin/financeiro", label: "Visão geral", exact: true },
+  { to: "/admin/financeiro/cobrancas", label: "Cobranças do dia" },
   { to: "/admin/financeiro/subscricoes", label: "Subscrições" },
   { to: "/admin/financeiro/estado", label: "Estado & acessos" },
+
   { to: "/admin/financeiro/debitos", label: "Próximos débitos" },
   { to: "/admin/financeiro/recovery", label: "Recovery" },
   { to: "/admin/financeiro/inteligencia", label: "Intelligence" },
