@@ -414,7 +414,7 @@ async function recordAttemptRow(args: {
   method: string | null;
   gatewayPaymentId: string;
 }) {
-  await supabaseAdmin.from("billing_dunning_attempts").upsert(
+  const { error } = await supabaseAdmin.from("billing_dunning_attempts").upsert(
     {
       cycle_key: args.cycleKey,
       subscription_id: args.subscriptionId,
@@ -436,7 +436,13 @@ async function recordAttemptRow(args: {
     },
     { onConflict: "idempotency_key", ignoreDuplicates: true },
   );
+  // Sem esta linha, uma falha aqui deixava o plano de recuperação vazio e
+  // nenhuma tentativa de cobrança chegava a correr (falha silenciosa).
+  if (error) {
+    throw new Error(`recordAttemptRow failed: ${error.message}`);
+  }
 }
+
 
 // ------------------------------------------------------------------ attempts
 
