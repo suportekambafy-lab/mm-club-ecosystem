@@ -307,3 +307,50 @@ export type UpcomingChargeRow = {
   gateway: string | null;
   gatewaySubscriptionId: string | null;
 };
+
+/** One charge attempt, with member and plan already resolved. */
+export type ChargeLogRow = {
+  id: string;
+  userId: string;
+  email: string | null;
+  name: string | null;
+  status: string;
+  amountCents: number;
+  refundedCents: number;
+  /** Net collected (0 unless paid). */
+  netCents: number;
+  currency: string;
+  method: string | null;
+  failureReason: string | null;
+  gateway: string;
+  gatewayPaymentId: string;
+  planName: string;
+  priceSlug: string;
+  /** Paid at, or created at when never paid. */
+  at: string;
+  /** Lisbon calendar day (YYYY-MM-DD) of `at`. */
+  day: string;
+  subscriptionId: string | null;
+};
+
+export type ChargeLog = {
+  generatedAt: string;
+  range: FinanceRange;
+  label: string;
+  startISO: string;
+  endISO: string;
+  totals: {
+    attempts: number;
+    paidCount: number;
+    paidCents: number;
+    failedCount: number;
+    failedCents: number;
+    refundedCents: number;
+    pendingCount: number;
+    uniqueMembers: number;
+    successRate: number | null;
+    avgTicketCents: number | null;
+  };
+  byDay: { day: string; cents: number; paid: number; failed: number }[];
+  rows: ChargeLogRow[];
+};
