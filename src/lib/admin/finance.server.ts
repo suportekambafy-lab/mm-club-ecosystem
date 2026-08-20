@@ -1403,7 +1403,7 @@ export async function listUpcomingCharges(): Promise<UpcomingChargeRow[]> {
       .from("billing_dunning_attempts")
       .select("subscription_id, scheduled_for, status")
       .in("subscription_id", dunningIds)
-      .eq("status", "pending")
+      .eq("status", "scheduled")
       .order("scheduled_for", { ascending: true });
     for (const a of (attempts ?? []) as {
       subscription_id: string;
