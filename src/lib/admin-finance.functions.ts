@@ -10,6 +10,7 @@ import { secured } from "@/lib/security/gate";
 import type {
   AdminSubscriptionRow,
   CatalogProductRow,
+  ChargeLog,
   CouponRow,
   CustomerDetail,
   FinanceOverview,
@@ -445,4 +446,33 @@ export const listUpcomingCharges = createServerFn({ method: "POST" })
       "@/lib/admin/finance.server"
     );
     return run();
+  });
+
+/** Registo de cobranças — quem foi debitado no período, com resultado. */
+export const getChargeLog = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({ range: z.string().max(20).optional() })
+      .default({})
+      .parse(input ?? {}),
+  )
+  .handler(async ({ data, context }): Promise<ChargeLog> => {
+    await assertAdmin(context as never);
+    const { collectChargeLog } = await import("@/lib/admin/finance.server");
+    const allowed = [
+      "today",
+      "yesterday",
+      "7d",
+      "30d",
+      "month",
+      "prev_month",
+      "90d",
+      "year",
+      "all",
+    ];
+    const range = (
+      allowed.includes(data.range ?? "") ? data.range : "today"
+    ) as FinanceRange;
+    return collectChargeLog(range);
   });
