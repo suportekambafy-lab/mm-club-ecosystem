@@ -74,7 +74,7 @@ function ChargesPage() {
 
   const upcoming = useQuery({
     queryKey: ["upcoming-charges-compact"],
-    queryFn: () => fetchUpcoming({ data: {} }),
+    queryFn: () => fetchUpcoming(),
     staleTime: 120_000,
   });
 
