@@ -122,6 +122,7 @@ export function escalationsFor(
   return [
     { kind: "grace_period", offsetHours: GRACE_STARTS_AT_HOURS },
     { kind: "suspend", offsetHours: suspendAtHoursFor(wasTrialing) },
-    { kind: "cancel", offsetHours: CANCEL_AT_HOURS },
+    { kind: "cancel", offsetHours: cancelAtHoursFor(wasTrialing) },
+
   ];
 }
