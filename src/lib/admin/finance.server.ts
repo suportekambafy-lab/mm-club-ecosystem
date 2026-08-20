@@ -1392,11 +1392,37 @@ export async function listUpcomingCharges(): Promise<UpcomingChargeRow[]> {
     ...new Set(subs.map((s) => s.user_id)),
   ]);
 
+  // Para atrasados/suspensos, a próxima cobrança é a tentativa de recuperação
+  // agendada — não o fim do período (que já passou).
+  const nextRetry = new Map<string, string>();
+  const dunningIds = subs
+    .filter((s) => s.status !== "active" && s.status !== "trialing")
+    .map((s) => s.id);
+  if (dunningIds.length > 0) {
+    const { data: attempts } = await supabaseAdmin
+      .from("billing_dunning_attempts")
+      .select("subscription_id, scheduled_for, status")
+      .in("subscription_id", dunningIds)
+      .eq("status", "pending")
+      .order("scheduled_for", { ascending: true });
+    for (const a of (attempts ?? []) as {
+      subscription_id: string;
+      scheduled_for: string | null;
+    }[]) {
+      if (!a.scheduled_for) continue;
+      if (!nextRetry.has(a.subscription_id))
+        nextRetry.set(a.subscription_id, a.scheduled_for);
+    }
+  }
+
   const rows: UpcomingChargeRow[] = [];
   for (const s of subs) {
     const trialing = s.status === "trialing" && s.trial_end;
-    const chargeAt = trialing ? s.trial_end : s.current_period_end;
+    const chargeAt = trialing
+      ? s.trial_end
+      : (nextRetry.get(s.id) ?? s.current_period_end);
     if (!chargeAt) continue;
+
     const interval = s.price?.interval ?? "month";
     if (interval === "one_time" || interval === "lifetime") continue;
     const id = identities.get(s.user_id);
