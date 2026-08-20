@@ -1,0 +1,3 @@
+DROP INDEX IF EXISTS public.billing_dunning_attempts_idempotency_key_uidx;
+ALTER TABLE public.billing_dunning_attempts
+  ADD CONSTRAINT billing_dunning_attempts_idempotency_key_key UNIQUE (idempotency_key);
