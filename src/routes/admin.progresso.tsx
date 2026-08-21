@@ -204,7 +204,7 @@ function ProgressPage() {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin-progress"],
-    queryFn: () => load({ data: {} }),
+    queryFn: () => load(),
     staleTime: 60_000,
   });
 
