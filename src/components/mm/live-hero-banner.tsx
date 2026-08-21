@@ -6,6 +6,7 @@ import { expertsById } from "@/data/experts";
 import { formatDistanceToNow } from "date-fns";
 import { pt } from "date-fns/locale";
 import { resolveLiveCoverUrl } from "@/lib/live-cover-url";
+import { useTicker } from "@/hooks/use-ticker";
 
 type LiveLike = {
   id: string;
