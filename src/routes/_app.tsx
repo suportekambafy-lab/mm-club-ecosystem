@@ -793,9 +793,10 @@ function MobileTabBar({
           <Link
             to="/perfil"
             aria-label="Perfil"
+            preload="intent"
             aria-current={profileActive ? "page" : undefined}
             className={cn(
-              "flex h-12 w-14 items-center justify-center rounded-full transition",
+              "flex h-12 w-12 items-center justify-center rounded-full transition sm:w-14",
               profileActive && (immersive ? "ring-2 ring-white" : "ring-2 ring-primary"),
             )}
           >
