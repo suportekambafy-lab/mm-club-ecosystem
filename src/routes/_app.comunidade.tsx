@@ -204,6 +204,7 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
         like_count: p.likes?.length ?? 0,
         liked_by_me: userId ? p.likes?.some((l: any) => l.user_id === userId) : false,
         comment_count: p.comments?.length ?? 0,
+        views_count: p.views_count ?? 0,
         reactions: (p.reactions ?? []) as Reaction[],
       }));
     },
