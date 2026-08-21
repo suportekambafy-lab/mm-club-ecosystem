@@ -334,6 +334,13 @@ function HostLeaveMenu({
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [ending, setEnding] = useState(false);
+  const anchorRef = useRef<HTMLButtonElement | null>(null);
+
+  const closeMenu = () => {
+    if (ending) return;
+    setOpen(false);
+    setConfirming(false);
+  };
 
   const doLeave = () => {
     setOpen(false);
@@ -373,60 +380,69 @@ function HostLeaveMenu({
   return (
     <div className="relative">
       <Button
+        ref={anchorRef}
         variant="destructive"
         size="sm"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          setConfirming(false);
+          setOpen((v) => !v);
+        }}
+        aria-expanded={open}
+        aria-haspopup="dialog"
         className="ml-1 h-9 rounded-xl bg-red-500 px-3 text-white hover:bg-red-500/90"
       >
         <PhoneOff className="mr-1 h-4 w-4" />
         Sair
       </Button>
-      {open && !confirming && (
-        <div className="absolute bottom-full right-0 mb-2 min-w-[220px] rounded-xl border border-white/10 bg-neutral-900/95 p-1 shadow-2xl backdrop-blur-md">
-          <button
-            type="button"
+      <AnchoredMenu open={open} onClose={closeMenu} anchorRef={anchorRef} align="right" width={280}>
+        {!confirming ? (
+          <div role="dialog" aria-label="Opções para sair da live">
+          <Button
+            variant="ghost"
             onClick={doLeave}
-            className="flex w-full flex-col items-start rounded-lg px-3 py-2 text-left hover:bg-white/10"
+            className="h-auto w-full flex-col items-start gap-0.5 whitespace-normal px-3 py-2 text-left text-white hover:bg-white/10 hover:text-white"
           >
-            <span className="text-sm text-white">Sair da sala</span>
-            <span className="text-[11px] text-white/50">A live continua ativa para os restantes.</span>
-          </button>
-          <button
-            type="button"
+            <span className="text-sm">Sair apenas da sala</span>
+            <span className="text-[11px] font-normal text-white/50">A live continua ativa para os restantes.</span>
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => setConfirming(true)}
-            className="mt-0.5 flex w-full flex-col items-start rounded-lg px-3 py-2 text-left hover:bg-red-500/10"
+            className="mt-0.5 h-auto w-full flex-col items-start gap-0.5 whitespace-normal px-3 py-2 text-left text-red-400 hover:bg-red-500/10 hover:text-red-300"
           >
-            <span className="text-sm text-red-400">Terminar live</span>
-            <span className="text-[11px] text-white/50">Encerra a sala para todos e finaliza a gravação.</span>
-          </button>
-        </div>
-      )}
-      {open && confirming && (
-        <div className="absolute bottom-full right-0 mb-2 w-[280px] rounded-xl border border-white/10 bg-neutral-900/95 p-3 shadow-2xl backdrop-blur-md">
-          <div className="text-sm font-medium text-white">Terminar a live para todos?</div>
-          <p className="mt-1 text-[12px] text-white/60">
+            <span className="text-sm">Terminar live para todos</span>
+            <span className="text-[11px] font-normal text-white/50">Encerra a sala e finaliza a gravação.</span>
+          </Button>
+          </div>
+        ) : (
+        <div role="alertdialog" aria-labelledby="end-live-title" aria-describedby="end-live-description" className="p-2">
+          <div id="end-live-title" className="text-sm font-medium text-white">Terminar a live para todos?</div>
+          <p id="end-live-description" className="mt-1 text-[12px] text-white/60">
             Todos os participantes serão desligados. A gravação é finalizada e o replay ficará disponível assim que estiver pronto.
           </p>
           <div className="mt-3 flex justify-end gap-2">
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setConfirming(false)}
               disabled={ending}
-              className="rounded-lg bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10 disabled:opacity-50"
+              className="bg-white/5 text-white/80 hover:bg-white/10 hover:text-white"
             >
               Cancelar
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
               onClick={doEnd}
               disabled={ending}
-              className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500/90 disabled:opacity-50"
+              className="bg-red-500 text-white hover:bg-red-500/90"
             >
               {ending ? "A terminar…" : "Terminar live"}
-            </button>
+            </Button>
           </div>
         </div>
-      )}
+        )}
+      </AnchoredMenu>
     </div>
   );
 }
