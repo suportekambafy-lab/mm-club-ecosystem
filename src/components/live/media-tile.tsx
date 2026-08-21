@@ -98,7 +98,8 @@ function MediaTileBase({ participant, actions, className, preferScreen, showName
             "block h-full max-h-full w-full max-w-full",
             // Screen shares must never be cropped/zoomed — fit the whole frame.
             isScreen ? "bg-black" : "object-cover",
-            participant.isLocal && videoTrack?.source === "camera" && "scale-x-[-1]",
+            // Self-view is always mirrored (like a mirror), except screen shares.
+            participant.isLocal && !isScreen && "scale-x-[-1]",
           )}
         />
       ) : (
