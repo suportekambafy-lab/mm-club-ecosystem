@@ -25,6 +25,7 @@ import {
   Check,
   Pin,
   PinOff,
+  Eye,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -87,6 +88,7 @@ type Post = {
   like_count: number;
   liked_by_me: boolean;
   comment_count: number;
+  views_count: number;
   reactions: Reaction[];
 };
 type Comment = {
@@ -176,7 +178,7 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
       let q = supabase
         .from("community_posts")
         .select(
-          `id, author_id, category_id, content, image_url, created_at, edited_at, pinned_at,
+          `id, author_id, category_id, content, image_url, created_at, edited_at, pinned_at, views_count,
            author:profiles!community_posts_author_id_fkey (id, display_name, avatar_url, bio),
            category:community_categories (id, slug, name, color, sort_order),
            likes:community_likes (user_id),
@@ -203,6 +205,7 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
         like_count: p.likes?.length ?? 0,
         liked_by_me: userId ? p.likes?.some((l: any) => l.user_id === userId) : false,
         comment_count: p.comments?.length ?? 0,
+        views_count: p.views_count ?? 0,
         reactions: (p.reactions ?? []) as Reaction[],
       }));
     },
@@ -1246,6 +1249,8 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
   const [liked, setLiked] = useState(post.liked_by_me);
   const [likeCount, setLikeCount] = useState(post.like_count);
   const [commentCount, setCommentCount] = useState(post.comment_count);
+  const [viewCount, setViewCount] = useState(post.views_count);
+  const cardRef = useRef<HTMLElement | null>(null);
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
   const postLinkUrl = useMemo(() => extractFirstUrl(post.content), [post.content]);
@@ -1279,8 +1284,33 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
     setLiked(post.liked_by_me);
     setLikeCount(post.like_count);
     setCommentCount(post.comment_count);
+    setViewCount(post.views_count);
     setEditContent(post.content);
-  }, [post.liked_by_me, post.like_count, post.comment_count, post.content]);
+  }, [post.liked_by_me, post.like_count, post.comment_count, post.views_count, post.content]);
+
+  // Conta uma visualização quando a publicação fica visível (uma vez por sessão).
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const storageKey = `mm-post-view-${post.id}`;
+    if (sessionStorage.getItem(storageKey)) return;
+    let done = false;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting || done) continue;
+          done = true;
+          observer.disconnect();
+          sessionStorage.setItem(storageKey, "1");
+          setViewCount((c) => c + 1);
+          void (supabase as any).rpc("community_post_increment_view", { _post_id: post.id });
+        }
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [post.id]);
 
   const toggleLike = async () => {
     if (!currentUserId) {
@@ -1339,6 +1369,7 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
 
   return (
     <article
+      ref={cardRef}
       className={cn(
         "rounded-2xl border bg-surface-1 p-5",
         isPinned ? "border-primary/50 ring-1 ring-primary/20" : "border-border",
@@ -1486,6 +1517,13 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
           <MessageCircle className="h-4 w-4" />
           <span>{commentCount}</span>
         </button>
+        <span
+          className="ml-auto flex items-center gap-1.5 px-2 text-xs text-muted-foreground"
+          title="Visualizações"
+        >
+          <Eye className="h-4 w-4" />
+          <span>{viewCount.toLocaleString("pt-PT")}</span>
+        </span>
       </div>
 
       {showComments && (
