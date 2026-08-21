@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useTicker } from "@/hooks/use-ticker";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Check, Lock } from "lucide-react";
 import { LAUNCH_LABEL, launchCountdown } from "@/lib/launch";
@@ -20,12 +21,8 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
 }
 
 function LaunchCountdown() {
-  const [t, setT] = useState(() => launchCountdown());
-
-  useEffect(() => {
-    const id = window.setInterval(() => setT(launchCountdown()), 1000);
-    return () => window.clearInterval(id);
-  }, []);
+  const now = useTicker(1000);
+  const t = useMemo(() => launchCountdown(new Date(now)), [now]);
 
   if (t.isOpen) {
     return (

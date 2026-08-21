@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { useTicker } from "@/hooks/use-ticker";
 
-function diff(target: number) {
-  const ms = Math.max(0, target - Date.now());
+function diff(target: number, now: number) {
+  const ms = Math.max(0, target - now);
   return {
     done: ms === 0,
     d: Math.floor(ms / 86400000),
@@ -20,13 +21,8 @@ interface Props {
 /** Contador regressivo para lançamentos agendados (cursos, lives). */
 export function ReleaseCountdown({ releaseAt, className }: Props) {
   const target = new Date(releaseAt).getTime();
-  const [t, setT] = useState(() => diff(target));
-
-  useEffect(() => {
-    setT(diff(target));
-    const id = setInterval(() => setT(diff(target)), 1000);
-    return () => clearInterval(id);
-  }, [target]);
+  const now = useTicker(1000);
+  const t = useMemo(() => diff(target, now), [target, now]);
 
   if (!Number.isFinite(target) || t.done) return null;
 

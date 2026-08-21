@@ -13,7 +13,6 @@ import { reportAuthFailure } from "@/lib/security.functions";
 type Search = { redirect?: string };
 
 export const Route = createFileRoute("/auth")({
-  ssr: false,
   validateSearch: (s: Record<string, unknown>): Search => ({
     redirect: typeof s.redirect === "string" ? s.redirect : undefined,
   }),
@@ -29,7 +28,7 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const { redirect } = useSearch({ from: "/auth" });
-  const [joinIntent] = useState(() => readIntendedPlan());
+  const [joinIntent, setJoinIntent] = useState<ReturnType<typeof readIntendedPlan>>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,6 +36,7 @@ function AuthPage() {
   const [activeEmail, setActiveEmail] = useState<string | null>(null);
 
   useEffect(() => {
+    setJoinIntent(readIntendedPlan());
     supabase.auth.getSession().then(({ data }) => {
       setActiveEmail(data.session?.user?.email ?? null);
     });

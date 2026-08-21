@@ -697,8 +697,9 @@ type TabItem = {
 
 const mobileTabs: TabItem[] = [
   { to: "/dashboard", label: "Início", icon: Home, exact: true },
-  { to: "/shorts", label: "Shorts", icon: Clapperboard },
+  { to: "/academia", label: "Academia", icon: GraduationCap },
   { to: "/comunidade", label: "Comunidade", icon: Users },
+  { to: "/shorts", label: "Shorts", icon: Clapperboard },
   { to: "/jade", label: "Inteligente", icon: Star },
 ];
 
@@ -756,9 +757,10 @@ function MobileTabBar({
               <Link
                 to={tab.to}
                 aria-label={tab.label}
+                preload="intent"
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative flex h-12 w-14 items-center justify-center rounded-full transition",
+                  "relative flex h-12 w-12 items-center justify-center rounded-full transition sm:w-14",
                   active
                     ? immersive
                       ? "text-white"
@@ -774,6 +776,15 @@ function MobileTabBar({
                   strokeWidth={active ? 2.4 : 2}
                   fill={active && tab.to === "/shorts" ? "currentColor" : "none"}
                 />
+                {active ? (
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "absolute bottom-1 h-1 w-1 rounded-full",
+                      immersive ? "bg-white" : "bg-primary",
+                    )}
+                  />
+                ) : null}
               </Link>
             </li>
           );
@@ -782,9 +793,10 @@ function MobileTabBar({
           <Link
             to="/perfil"
             aria-label="Perfil"
+            preload="intent"
             aria-current={profileActive ? "page" : undefined}
             className={cn(
-              "flex h-12 w-14 items-center justify-center rounded-full transition",
+              "flex h-12 w-12 items-center justify-center rounded-full transition sm:w-14",
               profileActive && (immersive ? "ring-2 ring-white" : "ring-2 ring-primary"),
             )}
           >
