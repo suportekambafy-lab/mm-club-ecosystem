@@ -76,3 +76,15 @@ export interface ProgressOverview {
   /** Últimos 30 dias, por curso. */
   timelineByCourse: CourseTimeline[];
 }
+
+/** Detalhe de uma aula para o drill-down (aluno + curso). */
+export interface LessonDetailRow {
+  lessonId: string;
+  title: string;
+  index: number;
+  durationSeconds: number;
+  watchedSeconds: number;
+  completed: boolean;
+  percent: number;
+  lastWatchedAt: string | null;
+}

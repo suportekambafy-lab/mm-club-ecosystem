@@ -273,3 +273,53 @@ export async function collectProgressOverview(): Promise<ProgressOverview> {
     courses: courseList,
   };
 }
+
+/** Detalhe aula-a-aula de um aluno num curso (para o drill-down do admin). */
+export async function collectStudentCourseLessons(
+  userId: string,
+  courseId: string,
+): Promise<import("./progress-types").LessonDetailRow[]> {
+  const courses = await loadEffectiveCourses();
+  const course = courses.find((c) => c.id === courseId);
+  const flat = course ? flattenLessons(course) : [];
+
+  const { data, error } = await supabaseAdmin
+    .from("lesson_progress")
+    .select("lesson_id, completed, progress_seconds, last_watched_at")
+    .eq("user_id", userId)
+    .eq("course_id", courseId);
+  if (error) throw new Error(error.message);
+
+  const byLesson = new Map((data ?? []).map((r) => [r.lesson_id, r]));
+
+  const base = flat.length
+    ? flat
+    : (data ?? []).map((r, i) => ({
+        id: r.lesson_id,
+        title: r.lesson_id,
+        index: i + 1,
+        seconds: 0,
+      }));
+
+  return base.map((l) => {
+    const r = byLesson.get(l.id);
+    const total = l.seconds || 0;
+    const watched = r?.progress_seconds ?? 0;
+    return {
+      lessonId: l.id,
+      title: l.title,
+      index: l.index,
+      durationSeconds: total,
+      watchedSeconds: watched,
+      completed: Boolean(r?.completed),
+      percent: r?.completed
+        ? 100
+        : total > 0
+          ? Math.min(99, Math.round((watched / total) * 100))
+          : watched > 0
+            ? 1
+            : 0,
+      lastWatchedAt: r?.last_watched_at ?? null,
+    };
+  });
+}
