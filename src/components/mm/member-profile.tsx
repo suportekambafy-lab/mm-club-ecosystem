@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MemberAvatar } from "@/components/mm/member-avatar";
 import { useAdminIds } from "@/hooks/use-admin-ids";
-import { useCommunityLeaderboard } from "@/hooks/use-community-ranks";
+import { useCommunityLeaderboard, RANK_LIMIT } from "@/hooks/use-community-ranks";
 import { RankBadge } from "@/components/mm/rank-badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -89,7 +89,7 @@ function monthYear(iso: string | null | undefined): string {
 
 function MemberProfileBody({ userId }: { userId: string }) {
   const adminIds = useAdminIds();
-  const board = useCommunityLeaderboard(30, 20);
+  const board = useCommunityLeaderboard(30, RANK_LIMIT);
   const me = (board.data ?? []).find((r) => r.user_id === userId);
 
   const q = useQuery({
@@ -165,7 +165,7 @@ function MemberProfileBody({ userId }: { userId: string }) {
           />
         </div>
         <h2 className="mt-4 text-lg font-semibold text-foreground">{name}</h2>
-        <RankBadge rank={me?.rank} className="mt-2" />
+        <RankBadge rank={me?.rank} userId={userId} name={p?.display_name ?? null} className="mt-2" />
         {verified && (
           <span className="mt-1 rounded-full border border-primary/40 bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
             Equipa MM

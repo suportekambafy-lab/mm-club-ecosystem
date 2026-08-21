@@ -665,7 +665,7 @@ function LatestUpdatesCard({ posts }: { posts: Post[] }) {
                 <p className="truncate text-xs font-medium text-foreground flex items-center gap-1">
                   <MemberNameButton userId={p.author_id}>{p.author?.display_name ?? "Membro"}</MemberNameButton>
                   {adminIds.has(p.author_id) && <VerifiedBadge size={12} />}
-                  <RankBadge rank={ranks.get(p.author_id)} maxRank={3} compact />
+                  <RankBadge rank={ranks.get(p.author_id)} userId={p.author_id} name={p.author?.display_name ?? null} maxRank={3} compact />
                 </p>
                 <p className="line-clamp-2 text-[11px] text-muted-foreground">
                   {p.content}
@@ -1357,7 +1357,7 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
             <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
               <MemberNameButton userId={post.author_id}>{authorName}</MemberNameButton>
               {authorIsAdmin && <VerifiedBadge size={14} />}
-              <RankBadge rank={ranks.get(post.author_id)} compact />
+              <RankBadge rank={ranks.get(post.author_id)} userId={post.author_id} name={authorName} compact />
             </p>
             <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
               <span>{timeAgo(post.created_at)}</span>
@@ -1675,7 +1675,7 @@ function CommentItem({
             <p className="text-xs font-medium text-foreground flex items-center gap-1">
               <MemberNameButton userId={comment.author_id}>{comment.author?.display_name ?? "Membro"}</MemberNameButton>
               {authorIsAdmin && <VerifiedBadge size={12} />}
-              <RankBadge rank={ranks.get(comment.author_id)} maxRank={3} compact />
+              <RankBadge rank={ranks.get(comment.author_id)} userId={comment.author_id} name={comment.author?.display_name ?? null} maxRank={3} compact />
             </p>
             {isOwner && !editing && (
               <div className="flex items-center gap-1">
@@ -1909,7 +1909,7 @@ function ChatRoom({ user }: { user: User }) {
                   <p className="text-[11px] font-medium text-foreground flex items-center gap-1">
                     {mine ? <span>Você</span> : <MemberNameButton userId={m.author_id}>{name}</MemberNameButton>}
                     {adminIds.has(m.author_id) && <VerifiedBadge size={11} />}
-                    <RankBadge rank={ranks.get(m.author_id)} maxRank={3} compact />
+                    <RankBadge rank={ranks.get(m.author_id)} userId={m.author_id} name={name} maxRank={3} compact />
                   </p>
                   <p className="text-[10px] text-muted-foreground">{timeAgo(m.created_at)}</p>
                 </div>
