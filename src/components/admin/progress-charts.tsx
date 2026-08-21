@@ -109,7 +109,7 @@ export function ProgressCharts({
     }));
   }, [data.students, courseId]);
 
-  const scope = courseId === "all" ? "todos os cursos" : (courseBars.find(() => true) ? "curso selecionado" : "curso selecionado");
+  const scope = courseId === "all" ? "todos os cursos" : "curso selecionado";
 
   return (
     <div className="grid gap-3 lg:grid-cols-2">
