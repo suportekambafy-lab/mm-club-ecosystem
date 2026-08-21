@@ -274,6 +274,9 @@ function ProgressPage() {
         />
       </div>
 
+      {/* Gráficos */}
+      {data ? <ProgressCharts data={data} courseId={courseId} /> : null}
+
       {/* Por curso */}
       <div className="rounded-xl bg-admin-panel">
         <p className="px-4 pt-4 text-[13px] font-medium text-admin-fg">Por curso</p>
