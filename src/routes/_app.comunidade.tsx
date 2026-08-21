@@ -25,6 +25,7 @@ import {
   Check,
   Pin,
   PinOff,
+  Eye,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
