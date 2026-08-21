@@ -61,8 +61,17 @@ function SalaRoute() {
   const [liveStatus, setLiveStatus] = useState<string | null>(null);
   const [createdBy, setCreatedBy] = useState<string | null>(null);
   const joinLockRef = useRef(false);
+  const sessionRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** Green room gate — publishers confirm devices before entering. */
   const [ready, setReady] = useState(false);
+
+  const scheduleSessionRefresh = () => {
+    if (sessionRefreshTimerRef.current) clearTimeout(sessionRefreshTimerRef.current);
+    sessionRefreshTimerRef.current = setTimeout(() => {
+      sessionRefreshTimerRef.current = null;
+      setSession(null);
+    }, 150);
+  };
 
   // Resolve current user + live (client-side so auth token is present).
   useEffect(() => {
@@ -152,8 +161,8 @@ function SalaRoute() {
   // If the room went live while we're still in backstage as publisher, move to main.
   useEffect(() => {
     if (liveStatus === "live" && target === "backstage") {
-      setSession(null);
       setTarget("main");
+      scheduleSessionRefresh();
     }
   }, [liveStatus, target]);
 
@@ -208,7 +217,7 @@ function SalaRoute() {
             prevPerms != null &&
             (prevPerms.mic !== perms.mic || prevPerms.cam !== perms.cam || prevPerms.screen !== perms.screen);
           if (promoted || demoted || permsChangedOnStage) {
-            setSession(null);
+            scheduleSessionRefresh();
           }
           if (demoted) setTarget("main");
 
@@ -217,6 +226,10 @@ function SalaRoute() {
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
+      if (sessionRefreshTimerRef.current) {
+        clearTimeout(sessionRefreshTimerRef.current);
+        sessionRefreshTimerRef.current = null;
+      }
     };
   }, [authReady, userId, liveId]);
 
@@ -227,6 +240,13 @@ function SalaRoute() {
     // Route to the lives index — /lives/$liveId auto-redirects interactive
     // lives back into /sala, which would trap the user in a loop.
     navigate({ to: "/lives" });
+  };
+
+  const handleRetryConnection = () => {
+    // Mint a fresh token and mount a fresh media engine. Reusing a Room after
+    // a failed signalling handshake is unreliable, especially in Safari.
+    setError(null);
+    setSession(null);
   };
 
   if (!authReady) {
@@ -299,6 +319,7 @@ function SalaRoute() {
           url={session.url}
           target={target}
           onLeave={handleLeave}
+          onRetry={handleRetryConnection}
         />
       </Suspense>
 

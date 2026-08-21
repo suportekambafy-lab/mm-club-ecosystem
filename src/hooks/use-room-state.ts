@@ -190,6 +190,8 @@ export function useRoomState({
 
   // ---------- engine state (LiveKit) ----------
   const roomRef = useRef<Room | null>(null);
+  const roomRunRef = useRef(0);
+  const pendingDisconnectRef = useRef<Promise<void>>(Promise.resolve());
   const [connState, setConnState] = useState<RoomState["connection"]["state"]>("connecting");
   const [engineTracks, setEngineTracks] = useState<Record<string, MediaTrack[]>>({}); // identity -> tracks
   // identity -> LiveKit display name (fallback for guests without a profile)
@@ -275,8 +277,10 @@ export function useRoomState({
   // ---------- LiveKit engine ----------
   useEffect(() => {
     if (!token || !url) return;
+    const runId = ++roomRunRef.current;
+    let disposed = false;
     const room = new Room(HQ_ROOM_OPTIONS);
-    roomRef.current = room;
+    const isCurrentRun = () => !disposed && roomRunRef.current === runId;
 
     const rebuildParticipantTracks = (p: Participant) => {
       const list: MediaTrack[] = [];
@@ -339,8 +343,17 @@ export function useRoomState({
 
     (async () => {
       try {
+        // A token refresh must never leave two Room instances connected with
+        // the same identity. LiveKit closes one of them with websocket 1006.
+        await pendingDisconnectRef.current;
+        if (!isCurrentRun()) return;
+        roomRef.current = room;
         setConnState("connecting");
         await room.connect(url, token, { autoSubscribe: true });
+        if (!isCurrentRun()) {
+          await room.disconnect();
+          return;
+        }
         setConnState("connected");
         setAudioBlocked(!room.canPlaybackAudio);
         // Snapshot existing remotes
@@ -362,22 +375,27 @@ export function useRoomState({
           const allowsMic = allowsAll || allowedSources.some((s) => Number(s) === Number(Track.Source.Microphone));
           const allowsCam = allowsAll || allowedSources.some((s) => Number(s) === Number(Track.Source.Camera));
           if (canPublish) {
+            if (!isCurrentRun()) return;
             // Honour the device + on/off choices made in the pre-join screen,
             // but only when those devices still exist on this machine.
             if (await knownDevice("videoinput", prefs.cameraId)) {
+              if (!isCurrentRun()) return;
               await room.switchActiveDevice("videoinput", prefs.cameraId!).catch(() => {});
               setActiveVideoIn(prefs.cameraId!);
             }
             if (await knownDevice("audioinput", prefs.micId)) {
+              if (!isCurrentRun()) return;
               await room.switchActiveDevice("audioinput", prefs.micId!).catch(() => {});
               setActiveAudioIn(prefs.micId!);
             }
             if (allowsMic && prefs.micEnabled && !lp.isMicrophoneEnabled) {
+              if (!isCurrentRun()) return;
               await lp.setMicrophoneEnabled(true).catch((e) => {
                 console.warn("[useRoomState] mic auto-enable failed", e);
               });
             }
             if (allowsCam && prefs.camEnabled && !lp.isCameraEnabled) {
+              if (!isCurrentRun()) return;
               const err = await enableCameraResilient(room, prefs.cameraId);
               if (err) toast.error(err);
             }
@@ -389,8 +407,10 @@ export function useRoomState({
           console.warn("[useRoomState] auto-publish skipped", err);
         }
       } catch (err) {
+        if (!isCurrentRun()) return;
         console.error("[useRoomState] connect failed", err);
         setConnState("disconnected");
+        await room.disconnect().catch(() => {});
       }
     })();
 
@@ -400,12 +420,13 @@ export function useRoomState({
     });
 
     return () => {
+      disposed = true;
       unsubStudio();
       handlers.forEach(([evt, fn]) => {
         (room as unknown as AnyOn).off(evt, fn);
       });
-      room.disconnect().catch(() => {});
-      roomRef.current = null;
+      pendingDisconnectRef.current = room.disconnect().catch(() => {});
+      if (roomRef.current === room) roomRef.current = null;
       setEngineTracks({});
     };
   }, [token, url]);
