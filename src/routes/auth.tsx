@@ -16,8 +16,6 @@ export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     redirect: typeof s.redirect === "string" ? s.redirect : undefined,
   }),
-    redirect: typeof s.redirect === "string" ? s.redirect : undefined,
-  }),
   head: () => ({
     meta: [
       { title: "Entrar — MM Club" },
