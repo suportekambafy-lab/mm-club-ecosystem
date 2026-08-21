@@ -976,12 +976,7 @@ function LiveStudio() {
                 autoPlay
                 muted
                 playsInline
-                className={cn(
-                  "h-full w-full object-cover",
-                  // The local camera preview must behave like a real mirror.
-                  // Never mirror a shared screen.
-                  !sharing && "scale-x-[-1]",
-                )}
+                className={`h-full w-full object-cover ${sharing ? "" : "scale-x-[-1]"}`}
               />
 
               {status === "idle" && (
