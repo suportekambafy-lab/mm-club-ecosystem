@@ -976,7 +976,12 @@ function LiveStudio() {
                 autoPlay
                 muted
                 playsInline
-                className="h-full w-full object-cover"
+                className={cn(
+                  "h-full w-full object-cover",
+                  // The local camera preview must behave like a real mirror.
+                  // Never mirror a shared screen.
+                  !sharing && "scale-x-[-1]",
+                )}
               />
 
               {status === "idle" && (
@@ -1016,7 +1021,7 @@ function LiveStudio() {
                     muted
                     playsInline
                     onLoadedMetadata={() => pipRef.current?.play().catch(() => {})}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full scale-x-[-1] object-cover"
                   />
                   <div className="pointer-events-none absolute left-1.5 top-1.5 rounded-full bg-black/70 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-white">
                     Câmara
