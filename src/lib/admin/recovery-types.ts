@@ -44,6 +44,24 @@ export type RecoveryCustomerRow = {
   currency: string;
 };
 
+export type RecoveryRecoveredRow = {
+  userId: string;
+  name: string;
+  subscriptionId: string;
+  cycleKey: string;
+  amountCents: number;
+  currency: string;
+  /** Tentativas que chegaram ao gateway até recuperar. */
+  attempts: number;
+  /** Fase em que a cobrança foi recuperada. */
+  phase: string;
+  method: string | null;
+  hoursToRecover: number | null;
+  firstFailureAt: string;
+  recoveredAt: string | null;
+};
+
+
 export type RecoveryOverview = {
   atRiskCents: number;
   recoveredCents: number;
@@ -63,4 +81,6 @@ export type RecoveryOverview = {
   reasons: RecoveryReasonMetric[];
   methods: RecoveryMethodMetric[];
   customers: RecoveryCustomerRow[];
+  recovered: RecoveryRecoveredRow[];
 };
+
