@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { MemberAvatar } from "@/components/mm/member-avatar";
 import { RankBadge } from "@/components/mm/rank-badge";
-import { useCommunityLeaderboard } from "@/hooks/use-community-ranks";
+import { useCommunityLeaderboard, RANK_LIMIT } from "@/hooks/use-community-ranks";
 import { useMemberProfile } from "@/components/mm/member-profile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -17,7 +17,7 @@ const PERIODS = [
  * Ranking de envolvimento da comunidade. Mostra os membros mais ativos
  * com a respetiva posição (Top 1, Top 2, …) e a pontuação.
  */
-export function CommunityLeaderboard({ limit = 10 }: { limit?: number }) {
+export function CommunityLeaderboard({ limit = RANK_LIMIT }: { limit?: number }) {
   const [days, setDays] = useState<number>(30);
   const q = useCommunityLeaderboard(days, limit);
   const { open } = useMemberProfile();
@@ -52,7 +52,7 @@ export function CommunityLeaderboard({ limit = 10 }: { limit?: number }) {
 
       {q.isLoading ? (
         <div className="space-y-2">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-9 w-full rounded-xl" />
           ))}
         </div>
@@ -78,7 +78,7 @@ export function CommunityLeaderboard({ limit = 10 }: { limit?: number }) {
                     <span className="truncate text-xs font-medium text-foreground">
                       {r.display_name}
                     </span>
-                    <RankBadge rank={r.rank} maxRank={3} compact />
+                    <RankBadge rank={r.rank} userId={r.user_id} name={r.display_name} maxRank={3} compact />
                   </span>
                   <span className="block text-[10px] text-muted-foreground">
                     {r.posts} pub · {r.comments} com · {r.likes_received} gostos

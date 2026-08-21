@@ -14,13 +14,26 @@ export type LeaderboardRow = {
   rank: number;
 };
 
+/** Número máximo de posições premiadas com badge. */
+export const RANK_LIMIT = 5;
+
+/** Pesos usados no cálculo da pontuação de envolvimento. */
+export const SCORE_WEIGHTS = {
+  shorts: 6,
+  posts: 5,
+  comments: 3,
+  likes: 2,
+  reactions: 1,
+} as const;
+
 /**
  * Classificação de envolvimento da comunidade (gamificação).
  * `days` define a janela de contagem; `limit` o número de lugares.
  */
-export function useCommunityLeaderboard(days = 30, limit = 20) {
+export function useCommunityLeaderboard(days = 30, limit = RANK_LIMIT, enabled = true) {
   return useQuery({
     queryKey: ["community", "leaderboard", days, limit],
+    enabled,
     queryFn: async (): Promise<LeaderboardRow[]> => {
       const { data, error } = await supabase.rpc("community_leaderboard", {
         _days: days,
@@ -34,7 +47,7 @@ export function useCommunityLeaderboard(days = 30, limit = 20) {
 }
 
 /** Mapa userId → posição, para desenhar o badge "Top N" junto ao nome. */
-export function useCommunityRanks(days = 30, limit = 20) {
+export function useCommunityRanks(days = 30, limit = RANK_LIMIT) {
   const q = useCommunityLeaderboard(days, limit);
   const map = new Map<string, number>();
   for (const r of q.data ?? []) map.set(r.user_id, r.rank);
