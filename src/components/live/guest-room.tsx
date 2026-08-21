@@ -246,6 +246,12 @@ export function GuestRoom({
     }
   };
 
+  useEffect(() => {
+    if (!onStage && screenOn) setScreenOn(false);
+  }, [onStage, screenOn]);
+
+
+
 
 
   if (connecting) {
