@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { ArrowRight, ImageIcon, Film, Wand2, Package, Palette, FlaskConical, Youtube, Link2 } from "lucide-react";
+import { ArrowRight, ImageIcon, Film, Wand2, Package, Palette, FlaskConical, Youtube, Link2, Sparkles } from "lucide-react";
 import showcase1 from "@/assets/studio-showcase-1.jpg";
 import showcase2 from "@/assets/studio-showcase-2.jpg";
 import showcase3 from "@/assets/studio-showcase-3.jpg";
@@ -30,171 +30,230 @@ const showcase = [
   { src: showcase6, tag: "Café · Editorial", label: "Specialty Coffee" },
 ];
 
+const mmTools = [
+  {
+    to: "/ferramentas/studio",
+    icon: Wand2,
+    kicker: "MM Studio",
+    title: "Criativos com IA",
+    desc: "Imagens e vídeos publicitários com modelos reais — qualidade de agência, sem prompts.",
+    cta: "Abrir MM Studio",
+    tag: "Premium",
+    cover: showcase1,
+  },
+  {
+    to: "/ferramentas/product-lab",
+    icon: FlaskConical,
+    kicker: "MM Product Lab",
+    title: "Mineração de produtos",
+    desc: "Encontra, organiza e valida produtos com Score MM e análise IA.",
+    cta: "Começar a minerar",
+    tag: "Grátis",
+    cover: showcase4,
+  },
+  {
+    to: "/ferramentas/thumbnails",
+    icon: Youtube,
+    kicker: "Thumbnail Builder",
+    title: "Thumbnails que fazem clicar",
+    desc: "Cola o link do YouTube e recebe duas thumbnails 16:9 prontas.",
+    cta: "Criar thumbnail",
+    tag: "Grátis",
+    cover: showcase2,
+  },
+] as const;
+
+const studioModules = [
+  {
+    to: "/ferramentas/studio/imagens",
+    icon: ImageIcon,
+    kicker: "MM Vision",
+    title: "Fotografias publicitárias",
+    desc: "4 variações por geração — modelos, lifestyle, still life, flat lay.",
+  },
+  {
+    to: "/ferramentas/studio/videos",
+    icon: Film,
+    kicker: "MM Motion",
+    title: "Vídeos cinematográficos",
+    desc: "Anúncios verticais e horizontais prontos para Reels, TikTok e Meta Ads.",
+  },
+  {
+    to: "/ferramentas/studio/logotipos",
+    icon: Palette,
+    kicker: "MM Identity",
+    title: "Logotipos e identidade",
+    desc: "Marcas completas a partir do teu Brand DNA.",
+  },
+  {
+    to: "/ferramentas/studio/produtos",
+    icon: Package,
+    kicker: "Biblioteca",
+    title: "Os teus produtos",
+    desc: "Guarda fotos e fichas para reutilizar em cada geração.",
+  },
+] as const;
+
 function FerramentasLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isChild = pathname.replace(/\/$/, "") !== "/ferramentas";
 
   if (isChild) return <Outlet />;
 
-
   return (
-    <div className="space-y-14">
+    <div className="space-y-12">
       {/* HEADER */}
       <section className="space-y-3">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">Ferramentas MM Club</p>
-        <h1 className="font-display text-4xl leading-[1] text-foreground md:text-5xl">Escolhe a tua ferramenta.</h1>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">Central de Ferramentas</p>
+        <h1 className="font-display text-4xl leading-[1] text-foreground md:text-5xl">Ferramentas do MM Club</h1>
         <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
-          Criativos publicitários com IA e validação de produtos — tudo num só lugar.
+          Aqui tens duas coisas: as <strong className="text-foreground">ferramentas do clube</strong> (criar
+          criativos, minerar produtos, fazer thumbnails) e a{" "}
+          <strong className="text-foreground">lista de links</strong> das plataformas que usamos nas aulas.
         </p>
       </section>
 
-      {/* TOOL CHOOSER */}
-      <section className="grid gap-4 md:grid-cols-2">
-        <Link
-          to="/ferramentas/studio"
-          className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-black p-8 transition hover:border-primary/50 min-h-[300px]"
-        >
-          <img
-            loading="lazy"
-            decoding="async"
-            src={showcase1}
-            alt="MM Studio — criativos publicitários com IA"
-            className="absolute inset-0 h-full w-full object-cover object-right opacity-45 transition duration-700 group-hover:opacity-60"
-          />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/20" />
-          <div className="relative flex flex-col gap-4">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20 text-primary ring-1 ring-white/10">
-              <Wand2 className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/70">MM Studio</p>
-              <h2 className="mt-1 font-display text-3xl text-white">O teu estúdio de campanhas</h2>
-              <p className="mt-2 max-w-md text-sm text-white/75">
-                Imagens e vídeos publicitários com IA — modelos reais, qualidade de agência. Sem prompts.
-              </p>
-            </div>
-          </div>
-          <span className="relative mt-6 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition group-hover:opacity-90">
-            Abrir MM Studio <ArrowRight className="h-4 w-4" />
+      {/* SECTION 1 — MM CLUB TOOLS */}
+      <section className="space-y-5">
+        <div className="flex items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-[color:var(--hairline)]">
+            <Sparkles className="h-4 w-4" />
           </span>
-        </Link>
+          <div>
+            <h2 className="font-display text-2xl text-foreground">1 · Ferramentas do MM Club</h2>
+            <p className="text-xs text-muted-foreground">Feitas por nós, dentro da plataforma.</p>
+          </div>
+        </div>
 
-        <Link
-          to="/ferramentas/product-lab"
-          className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-surface-1 p-8 transition hover:border-primary/50 min-h-[300px]"
-        >
-          <div
-            className="pointer-events-none absolute inset-0 opacity-70 transition group-hover:opacity-100"
-            style={{
-              background:
-                "radial-gradient(ellipse 60% 70% at 0% 0%, oklch(0.82 0.13 82 / 0.18), transparent 60%)",
-            }}
-          />
-          <div className="relative flex flex-col gap-4">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-[color:var(--hairline)]">
-              <FlaskConical className="h-5 w-5" />
-            </span>
-            <div>
-              <div className="flex items-center gap-2">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  MM Product Lab
-                </p>
-                <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary">
-                  Grátis
-                </span>
+        <div className="grid gap-4 md:grid-cols-3">
+          {mmTools.map((t) => (
+            <Link
+              key={t.to}
+              to={t.to}
+              className="group relative flex min-h-[260px] flex-col justify-between overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-surface-1 p-6 transition hover:border-primary/50"
+            >
+              <img
+                loading="lazy"
+                decoding="async"
+                src={t.cover}
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 h-full w-full object-cover opacity-[0.18] transition duration-700 group-hover:opacity-30"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-surface-1 via-surface-1/85 to-surface-1/40" />
+              <div className="relative flex flex-col gap-4">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-[color:var(--hairline)]">
+                    <t.icon className="h-5 w-5" />
+                  </span>
+                  <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary">
+                    {t.tag}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                    {t.kicker}
+                  </p>
+                  <h3 className="mt-1 font-display text-2xl leading-tight text-foreground">{t.title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{t.desc}</p>
+                </div>
               </div>
-              <h2 className="mt-1 font-display text-3xl text-foreground">Mineração e validação de produtos</h2>
-              <p className="mt-2 max-w-md text-sm text-muted-foreground">
-                Encontra, organiza e analisa os teus produtos num só lugar, com Score MM e análise IA.
-              </p>
-            </div>
-          </div>
-          <span className="relative mt-6 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition group-hover:opacity-90">
-            Começar a minerar <ArrowRight className="h-4 w-4" />
-          </span>
-        </Link>
+              <span className="relative mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
+                {t.cta} <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
-        <Link
-          to="/ferramentas/thumbnails"
-          className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-surface-1 p-8 transition hover:border-primary/50 min-h-[220px] md:col-span-2"
-        >
-          <div
-            className="pointer-events-none absolute inset-0 opacity-70 transition group-hover:opacity-100"
-            style={{
-              background:
-                "radial-gradient(ellipse 60% 80% at 100% 0%, oklch(0.82 0.13 82 / 0.16), transparent 60%)",
-            }}
-          />
-          <div className="relative flex flex-col gap-4">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-[color:var(--hairline)]">
-              <Youtube className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                Thumbnail Builder
-              </p>
-              <h2 className="mt-1 font-display text-3xl text-foreground">Thumbnails que fazem clicar</h2>
-              <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-                Cola o link do vídeo do YouTube e recebe duas thumbnails 16:9 prontas. O texto é opcional — se
-                não escreveres, a IA escolhe a frase de maior impacto.
-              </p>
-            </div>
-          </div>
-          <span className="relative mt-6 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition group-hover:opacity-90">
-            Criar thumbnail <ArrowRight className="h-4 w-4" />
+      {/* SECTION 2 — LINKS */}
+      <section className="space-y-5">
+        <div className="flex items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/15 text-secondary ring-1 ring-[color:var(--hairline)]">
+            <Link2 className="h-4 w-4" />
           </span>
-        </Link>
+          <div>
+            <h2 className="font-display text-2xl text-foreground">2 · Links úteis</h2>
+            <p className="text-xs text-muted-foreground">As plataformas externas que usamos nas aulas.</p>
+          </div>
+        </div>
 
         <Link
           to="/ferramentas/links"
-          className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-surface-1 p-8 transition hover:border-primary/50 min-h-[220px] md:col-span-2"
+          className="group relative flex flex-col gap-6 overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-surface-1 p-7 transition hover:border-secondary/50 md:flex-row md:items-center md:justify-between md:p-9"
         >
           <div
             className="pointer-events-none absolute inset-0 opacity-70 transition group-hover:opacity-100"
             style={{
               background:
-                "radial-gradient(ellipse 60% 80% at 0% 100%, oklch(0.82 0.13 82 / 0.14), transparent 60%)",
+                "radial-gradient(ellipse 60% 80% at 0% 100%, oklch(0.55 0.22 285 / 0.16), transparent 60%)",
             }}
           />
-          <div className="relative flex flex-col gap-4">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-[color:var(--hairline)]">
-              <Link2 className="h-5 w-5" />
-            </span>
-            <div>
-              <div className="flex items-center gap-2">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  Links úteis
-                </p>
-                <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary">
-                  Grátis
-                </span>
-              </div>
-              <h2 className="mt-1 font-display text-3xl text-foreground">A stack oficial do MM Club</h2>
-              <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-                Todas as ferramentas que usamos nas aulas — Shopify, Lovable, IA, criativos, tráfego e
-                pagamentos — com link direto e ofertas de parceiro.
+          <div className="relative max-w-xl">
+            <div className="flex items-center gap-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                A stack oficial do MM Club
               </p>
+              <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary">
+                Grátis
+              </span>
             </div>
+            <h3 className="mt-1 font-display text-3xl text-foreground">Todos os links num só lugar</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Shopify, Lovable, IA, criativos, tráfego, pagamentos e automação — com link direto, logotipo e
+              ofertas de parceiro.
+            </p>
           </div>
-          <span className="relative mt-6 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition group-hover:opacity-90">
+          <span className="relative inline-flex w-fit shrink-0 items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition group-hover:opacity-90">
             Ver links <ArrowRight className="h-4 w-4" />
           </span>
         </Link>
       </section>
 
-
-
-
-      {/* SHOWCASE GALLERY */}
+      {/* SECTION 3 — INSIDE STUDIO */}
       <section className="space-y-5">
-        <div className="flex items-end justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-[color:var(--hairline)]">
+            <Wand2 className="h-4 w-4" />
+          </span>
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">Gerado por MM Studio</p>
-            <h2 className="mt-2 font-display text-3xl text-foreground md:text-4xl">O que consegues criar hoje.</h2>
-            <p className="mt-2 max-w-2xl text-sm text-muted-foreground md:text-base">
-              Campanhas com pessoas reais a usar o teu produto — beleza, tech, moda, fitness, café. Escolhe o estilo, o formato, e recebe 4 variações prontas para publicar.
-            </p>
+            <h2 className="font-display text-2xl text-foreground">Atalhos dentro do MM Studio</h2>
+            <p className="text-xs text-muted-foreground">Vai direto ao módulo que precisas.</p>
           </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {studioModules.map((m) => (
+            <Link
+              key={m.to}
+              to={m.to}
+              className="group rounded-2xl border border-[color:var(--hairline)] bg-surface-1 p-5 transition hover:border-primary/50"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-[color:var(--hairline)]">
+                <m.icon className="h-4 w-4" />
+              </span>
+              <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                {m.kicker}
+              </p>
+              <p className="mt-1 font-medium text-foreground">{m.title}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{m.desc}</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary">
+                Abrir <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* SHOWCASE */}
+      <section className="space-y-5">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">Gerado por MM Studio</p>
+          <h2 className="mt-2 font-display text-2xl text-foreground md:text-3xl">O que consegues criar hoje.</h2>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            Campanhas com pessoas reais a usar o teu produto. Escolhe o estilo, o formato, e recebe 4 variações
+            prontas para publicar.
+          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
@@ -224,96 +283,11 @@ function FerramentasLayout() {
         </div>
       </section>
 
-      {/* CAPABILITY GRID */}
-      <section className="grid gap-4 md:grid-cols-2">
-        <Link
-          to="/ferramentas/studio/imagens"
-          className="group relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-surface-1 p-8 transition hover:border-primary/50"
-        >
-          <div
-            className="pointer-events-none absolute inset-0 opacity-70 transition group-hover:opacity-100"
-            style={{
-              background:
-                "radial-gradient(ellipse 70% 60% at 100% 0%, oklch(0.82 0.13 82 / 0.22), transparent 60%)",
-            }}
-          />
-          <div className="relative flex flex-col gap-5">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-[color:var(--hairline)]">
-              <ImageIcon className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">MM Vision · Imagens</p>
-              <h3 className="mt-1 font-display text-2xl text-foreground">Fotografias publicitárias</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                4 variações do teu produto por geração — modelos, lifestyle, still life, flat lay. Qualidade de agência criativa.
-              </p>
-            </div>
-            <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
-              Gerar imagens <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-            </span>
-          </div>
-        </Link>
-
-        <Link
-          to="/ferramentas/studio/videos"
-          className="group relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-surface-1 p-8 transition hover:border-secondary/50"
-        >
-          <div
-            className="pointer-events-none absolute inset-0 opacity-70"
-            style={{
-              background:
-                "radial-gradient(ellipse 70% 60% at 100% 0%, oklch(0.55 0.22 285 / 0.18), transparent 60%)",
-            }}
-          />
-          <div className="relative flex flex-col gap-5">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/15 text-secondary ring-1 ring-[color:var(--hairline)]">
-              <Film className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">MM Motion · Vídeos</p>
-              <h3 className="mt-1 font-display text-2xl text-foreground">Vídeos cinematográficos</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Anúncios verticais e horizontais com movimento de câmara e storyboard automáticos — prontos a publicar em Reels, TikTok e Meta Ads.
-              </p>
-            </div>
-            <span className="inline-flex items-center gap-1 text-sm font-medium text-secondary">
-              Gerar vídeos <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-            </span>
-          </div>
-        </Link>
-      </section>
-
-      {/* WORKFLOW */}
-      <section className="rounded-3xl border border-[color:var(--hairline)] bg-surface-1 p-8 md:p-10">
-        <div className="mb-6 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">Fluxo profissional</p>
-            <h2 className="mt-2 font-display text-2xl text-foreground md:text-3xl">Do produto à campanha, em minutos.</h2>
-          </div>
-        </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {[
-            { icon: Palette, n: "01", t: "Brand DNA", d: "Nome, cores, tom, público. Uma vez, para sempre." },
-            { icon: Package, n: "02", t: "Biblioteca de produtos", d: "Foto, categoria, descrição. Reutiliza em cada geração." },
-            { icon: Wand2, n: "03", t: "Geração paralela", d: "4 variações em paralelo. Download, upscale, publica." },
-          ].map((s) => (
-            <div key={s.n} className="relative overflow-hidden rounded-2xl border border-[color:var(--hairline)] bg-background/50 p-6">
-              <s.icon className="h-5 w-5 text-primary" />
-              <p className="mt-4 font-display text-3xl text-primary/70">{s.n}</p>
-              <p className="mt-2 font-medium text-foreground">{s.t}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{s.d}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-
       {/* COMING SOON */}
       <section>
-
         <div className="mb-4 flex items-baseline justify-between">
           <h2 className="font-display text-xl text-foreground">Em breve</h2>
-          <p className="text-xs text-muted-foreground">Roadmap MM Studio</p>
+          <p className="text-xs text-muted-foreground">Roadmap de ferramentas</p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[
@@ -334,3 +308,4 @@ function FerramentasLayout() {
     </div>
   );
 }
+
