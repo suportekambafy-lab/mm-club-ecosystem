@@ -82,8 +82,11 @@ export async function collectRecoveryOverview(): Promise<RecoveryOverview> {
   let closedCycles = 0;
   const durations: number[] = [];
   const byWindow = { h24: 0, d15: 0, d90: 0 };
+  const recoveredRows: Array<
+    Omit<import("./recovery-types").RecoveryRecoveredRow, "name">
+  > = [];
 
-  for (const [, rows] of cycles) {
+  for (const [cycleKey, rows] of cycles) {
     const sorted = [...rows].sort((a, b) => a.attempt_number - b.attempt_number);
     const opened = new Date(
       sorted[0]?.created_at ?? new Date().toISOString(),
@@ -108,6 +111,19 @@ export async function collectRecoveryOverview(): Promise<RecoveryOverview> {
         if (took <= 15 * DAY) byWindow.d15 += win.amount_cents;
         if (took <= 90 * DAY) byWindow.d90 += win.amount_cents;
       }
+      recoveredRows.push({
+        userId: win.user_id,
+        subscriptionId: win.subscription_id,
+        cycleKey,
+        amountCents: win.amount_cents,
+        currency: win.currency,
+        attempts: sorted.filter((r) => REACHED_GATEWAY.includes(r.status)).length,
+        phase: win.phase,
+        method: win.method,
+        hoursToRecover: took !== null ? took / HOUR : null,
+        firstFailureAt: sorted[0].created_at,
+        recoveredAt: win.recovered_at,
+      });
     } else if (stillOpen) {
       atRiskCents += amount;
     } else {
@@ -115,6 +131,7 @@ export async function collectRecoveryOverview(): Promise<RecoveryOverview> {
       lostCents += amount;
     }
   }
+
 
   // ------------------------------------------------------------- by phase
   const phases: RecoveryPhaseMetric[] = (
