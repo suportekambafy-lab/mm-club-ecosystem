@@ -58,7 +58,7 @@ const mmTools = [
     title: "Thumbnails que fazem clicar",
     desc: "Cola o link do YouTube e recebe duas thumbnails 16:9 prontas.",
     cta: "Criar thumbnail",
-    tag: "Grátis",
+    tag: "Créditos",
     cover: showcase2,
   },
 ] as const;
