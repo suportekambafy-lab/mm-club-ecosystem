@@ -151,6 +151,12 @@ function communityCopy(
       body: "O curso que estava agendado acabou de abrir — entra agora",
     };
   }
+  if (kind === "rank") {
+    return {
+      title: "Estás no Top da Comunidade",
+      body: "O teu envolvimento colocou-te entre os 5 mais ativos — vê o teu badge",
+    };
+  }
 
   if (kind === "like") {
     return {
@@ -183,6 +189,7 @@ function communityCopy(
 }
 
 function hrefForNotification(n: NotificationRow): string {
+  if (n.kind === "rank") return "/comunidade";
   if (n.kind === "inactivity") return "/dashboard";
   if (n.kind === "live" && n.live_id) return `/lives/${n.live_id}`;
   if (n.kind === "course_released") {
