@@ -19,7 +19,7 @@ import {
 } from "recharts";
 import type { CourseAggregate, ProgressOverview, StudentProgressRow } from "@/lib/admin/progress-types";
 
-const AXIS = "hsl(var(--muted-foreground))";
+const AXIS = "var(--admin-muted)";
 
 function Panel({
   title,
@@ -41,12 +41,12 @@ function Panel({
 
 const tooltipStyle = {
   contentStyle: {
-    background: "hsl(var(--popover))",
-    border: "1px solid hsl(var(--border))",
+    background: "var(--admin-panel-2)",
+    border: "1px solid var(--admin-border)",
     borderRadius: 12,
     fontSize: 12,
   },
-  labelStyle: { color: "hsl(var(--muted-foreground))" },
+  labelStyle: { color: "var(--admin-muted)" },
 } as const;
 
 function shortDate(date: string) {
@@ -122,18 +122,18 @@ export function ProgressCharts({
             <AreaChart data={timeline} margin={{ top: 4, right: 8, bottom: 0, left: -18 }}>
               <defs>
                 <linearGradient id="mmProgressFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--admin-border)" vertical={false} />
               <XAxis
                 dataKey="label"
                 tick={{ fontSize: 11, fill: AXIS }}
                 interval="preserveStartEnd"
-                stroke="hsl(var(--border))"
+                stroke="var(--admin-border)"
               />
-              <YAxis tick={{ fontSize: 11, fill: AXIS }} stroke="hsl(var(--border))" allowDecimals={false} />
+              <YAxis tick={{ fontSize: 11, fill: AXIS }} stroke="var(--admin-border)" allowDecimals={false} />
               <Tooltip
                 {...tooltipStyle}
                 formatter={(value: number, name: string) => [
@@ -148,7 +148,7 @@ export function ProgressCharts({
               <Area
                 type="monotone"
                 dataKey="lessonsCompleted"
-                stroke="hsl(var(--primary))"
+                stroke="var(--primary)"
                 strokeWidth={2}
                 fill="url(#mmProgressFill)"
               />
@@ -171,19 +171,19 @@ export function ProgressCharts({
             layout="vertical"
             margin={{ top: 4, right: 16, bottom: 0, left: 8 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--admin-border)" horizontal={false} />
             <XAxis
               type="number"
               domain={[0, 100]}
               tick={{ fontSize: 11, fill: AXIS }}
-              stroke="hsl(var(--border))"
+              stroke="var(--admin-border)"
             />
             <YAxis
               type="category"
               dataKey="name"
               width={130}
               tick={{ fontSize: 11, fill: AXIS }}
-              stroke="hsl(var(--border))"
+              stroke="var(--admin-border)"
             />
             <Tooltip
               {...tooltipStyle}
@@ -192,7 +192,7 @@ export function ProgressCharts({
                 courseBars.find((c) => c.name === label)?.fullName ?? label
               }
             />
-            <Bar dataKey="percent" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} barSize={14} />
+            <Bar dataKey="percent" fill="var(--primary)" radius={[0, 6, 6, 0]} barSize={14} />
           </BarChart>
         </ResponsiveContainer>
       </Panel>
@@ -203,15 +203,15 @@ export function ProgressCharts({
       >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={buckets} margin={{ top: 4, right: 8, bottom: 0, left: -18 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-            <XAxis dataKey="name" tick={{ fontSize: 11, fill: AXIS }} stroke="hsl(var(--border))" />
-            <YAxis tick={{ fontSize: 11, fill: AXIS }} stroke="hsl(var(--border))" allowDecimals={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--admin-border)" vertical={false} />
+            <XAxis dataKey="name" tick={{ fontSize: 11, fill: AXIS }} stroke="var(--admin-border)" />
+            <YAxis tick={{ fontSize: 11, fill: AXIS }} stroke="var(--admin-border)" allowDecimals={false} />
             <Tooltip {...tooltipStyle} formatter={(value: number) => [value, "Alunos"]} />
             <Bar dataKey="alunos" radius={[6, 6, 0, 0]} barSize={28}>
               {buckets.map((b) => (
                 <Cell
                   key={b.name}
-                  fill={b.done ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.45)"}
+                  fill={b.done ? "var(--primary)" : "color-mix(in oklab, var(--primary) 45%, transparent)"}
                 />
               ))}
             </Bar>
