@@ -228,6 +228,7 @@ function DeviceMenu({
   const [open, setOpen] = useState(false);
   const [devices, setDevices] = useState<MediaDeviceOption[]>([]);
   const [loading, setLoading] = useState(false);
+  const anchorRef = useRef<HTMLButtonElement | null>(null);
   const active = actions.getActiveDevice?.(kind);
 
   if (!actions.listDevices || !actions.setDevice) return null;
@@ -238,13 +239,13 @@ function DeviceMenu({
     if (!next) return;
     setLoading(true);
     try {
-      setDevices((await actions.listDevices!(kind)) ?? []);
+      const listDevices = actions.listDevices;
+      if (!listDevices) return;
+      setDevices((await listDevices(kind)) ?? []);
     } finally {
       setLoading(false);
     }
   };
-
-  const anchorRef = useRef<HTMLButtonElement | null>(null);
 
   return (
     <div className="relative shrink-0">
@@ -276,7 +277,9 @@ function DeviceMenu({
               onClick={async () => {
                 setOpen(false);
                 try {
-                  await actions.setDevice!(kind, d.deviceId);
+                  const setDevice = actions.setDevice;
+                  if (!setDevice) return;
+                  await setDevice(kind, d.deviceId);
                   toast.success(kind === "videoinput" ? "Câmara alterada" : "Microfone alterado", {
                     description: d.label,
                   });
