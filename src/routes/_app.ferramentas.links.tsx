@@ -108,15 +108,15 @@ function LinksPage() {
                 rel="noreferrer noopener"
                 className="group relative flex gap-3 overflow-hidden rounded-2xl border border-border bg-surface-1 p-4 transition hover:border-primary/50"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[color:var(--hairline)] bg-background">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-background ring-1 ring-border/60">
                   <img
-                    src={mmLinkLogo(l.domain)}
+                    src={mmLinkLogo(l.domain, 64)}
                     alt={`Logotipo ${l.name}`}
                     loading="lazy"
                     decoding="async"
-                    width={32}
-                    height={32}
-                    className="h-7 w-7 object-contain"
+                    width={40}
+                    height={40}
+                    className="h-full w-full object-cover"
                   />
                 </span>
                 <span className="min-w-0 flex-1">
