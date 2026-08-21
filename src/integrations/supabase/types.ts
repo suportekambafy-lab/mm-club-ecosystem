@@ -3856,6 +3856,7 @@ export type Database = {
         Returns: number
       }
       next_invoice_number: { Args: never; Returns: string }
+      notify_community_top_ranks: { Args: { _limit?: number }; Returns: number }
       notify_mentions: {
         Args: {
           _actor: string
