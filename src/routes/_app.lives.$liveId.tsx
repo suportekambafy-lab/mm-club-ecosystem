@@ -62,6 +62,7 @@ function LiveDetail() {
   const [countdown, setCountdown] = useState<string | null>(() => diff(initial.live.starts_at));
   const [elapsed, setElapsed] = useState<number>(0);
   const [materialsOpen, setMaterialsOpen] = useState(false);
+  const tickerNow = useTicker(1000);
 
   // If the host flips the live to interactive mode after the viewer landed on
   // the broadcast route, hop over to the Sala Interativa immediately so every
