@@ -207,7 +207,13 @@ export async function collectRecoveryOverview(): Promise<RecoveryOverview> {
     rows.some((r) => r.status === "scheduled"),
   );
 
-  const userIds = [...new Set(openCycles.map(([, rows]) => rows[0].user_id))];
+  const userIds = [
+    ...new Set([
+      ...openCycles.map(([, rows]) => rows[0].user_id),
+      ...recoveredRows.map((r) => r.userId),
+    ]),
+  ];
+
   const { data: profiles } = userIds.length
     ? await supabaseAdmin
         .from("profiles")
