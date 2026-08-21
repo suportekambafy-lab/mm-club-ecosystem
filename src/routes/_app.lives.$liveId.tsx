@@ -90,23 +90,19 @@ function LiveDetail() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  // Countdown while scheduled
+  // Countdown while scheduled — usa o relógio central da app
   useEffect(() => {
     if (data.live.status !== "scheduled") return;
-    const t = setInterval(() => setCountdown(diff(data.live.starts_at)), 1000);
-    return () => clearInterval(t);
-  }, [data.live.starts_at, data.live.status]);
+    setCountdown(diff(data.live.starts_at));
+  }, [data.live.starts_at, data.live.status, tickerNow]);
 
   // Elapsed time while live — use the server-persisted started_at so the
   // timer stays accurate across host reloads and reconnections.
   useEffect(() => {
     if (data.live.status !== "live") return;
     const startedAt = new Date(data.live.started_at ?? data.live.starts_at).getTime();
-    const tick = () => setElapsed(Math.max(0, Math.floor((Date.now() - startedAt) / 1000)));
-    tick();
-    const t = setInterval(tick, 1000);
-    return () => clearInterval(t);
-  }, [data.live.started_at, data.live.starts_at, data.live.status]);
+    setElapsed(Math.max(0, Math.floor((tickerNow - startedAt) / 1000)));
+  }, [data.live.started_at, data.live.starts_at, data.live.status, tickerNow]);
 
   // Auto-refresh: react to postgres row changes AND to visibility/online
   // transitions so the viewer resumes seamlessly after the host reloads,
