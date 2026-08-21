@@ -110,6 +110,82 @@ function LinksPage() {
   );
 }
 
+function LinkCard({ link }: { link: (typeof mmLinks)[number] }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(link.url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard not available */
+    }
+  };
+
+  return (
+    <a
+      href={link.url}
+      target="_blank"
+      rel="noreferrer noopener"
+      className="group relative flex gap-3 overflow-hidden rounded-2xl border border-border bg-surface-1 p-4 transition hover:border-primary/50"
+    >
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-background ring-1 ring-border/60">
+        <img
+          src={mmLinkLogo(link.domain, 64)}
+          alt={`Logotipo ${link.name}`}
+          loading="lazy"
+          decoding="async"
+          width={40}
+          height={40}
+          className="h-full w-full object-cover"
+        />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-2">
+          <span className="truncate text-sm font-semibold text-foreground">{link.name}</span>
+          {link.affiliate && (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-primary">
+              <BadgePercent className="h-2.5 w-2.5" />
+              Parceiro
+            </span>
+          )}
+        </span>
+        <span className="mt-1 block text-[13px] leading-relaxed text-muted-foreground">
+          {link.description}
+        </span>
+        {link.perk && (
+          <span className="mt-2 block text-[11px] font-medium text-primary">{link.perk}</span>
+        )}
+        <span className="mt-2 block truncate text-[11px] text-muted-foreground/70">
+          {link.domain}
+        </span>
+      </span>
+      <span className="flex shrink-0 items-start gap-1">
+        <button
+          type="button"
+          onClick={handleCopy}
+          title="Copiar link"
+          aria-label={`Copiar link de ${link.name}`}
+          className={cn(
+            "flex h-7 w-7 items-center justify-center rounded-lg border transition",
+            copied
+              ? "border-primary/40 bg-primary/15 text-primary"
+              : "border-border bg-background/60 text-muted-foreground hover:text-foreground hover:border-primary/40",
+          )}
+        >
+          {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+        </button>
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition group-hover:text-primary">
+          <ArrowUpRight className="h-4 w-4" />
+        </span>
+      </span>
+    </a>
+  );
+}
+
 function FilterChip({
   active,
   onClick,
