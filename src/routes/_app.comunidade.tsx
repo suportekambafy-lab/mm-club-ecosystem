@@ -1909,6 +1909,7 @@ function ChatRoom({ user }: { user: User }) {
                   <p className="text-[11px] font-medium text-foreground flex items-center gap-1">
                     {mine ? <span>Você</span> : <MemberNameButton userId={m.author_id}>{name}</MemberNameButton>}
                     {adminIds.has(m.author_id) && <VerifiedBadge size={11} />}
+                    <RankBadge rank={ranks.get(m.author_id)} maxRank={3} compact />
                   </p>
                   <p className="text-[10px] text-muted-foreground">{timeAgo(m.created_at)}</p>
                 </div>
