@@ -30,6 +30,9 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
+import { RankBadge } from "@/components/mm/rank-badge";
+import { CommunityLeaderboard } from "@/components/mm/community-leaderboard";
+import { useCommunityRanks } from "@/hooks/use-community-ranks";
 import { useAdminIds } from "@/hooks/use-admin-ids";
 import { useConfirm } from "@/components/mm/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -560,15 +563,16 @@ function CommunityPageInner() {
           {/* Cards que só aparecem na sidebar direita a partir de 2xl — em telas menores ficam por baixo do feed */}
           {tab === "feed" && (
             <div className="grid gap-4 pt-2 sm:grid-cols-2 xl:grid-cols-3 2xl:hidden">
+              <CommunityLeaderboard />
               <LatestUpdatesCard posts={posts} />
               <QuickLinksCard />
             </div>
           )}
         </section>
 
-        {/* RIGHT SIDEBAR — perfil + últimas atualizações + atalhos */}
+        {/* RIGHT SIDEBAR — ranking + últimas atualizações + atalhos */}
         <aside className="hidden space-y-4 2xl:sticky 2xl:top-24 2xl:block 2xl:max-h-[calc(100vh-7rem)] 2xl:overflow-y-auto 2xl:pr-1 [scrollbar-width:thin]">
-
+          <CommunityLeaderboard />
           <LatestUpdatesCard posts={posts} />
           <QuickLinksCard />
         </aside>
@@ -643,6 +647,7 @@ function CategoryNavItem({
 function LatestUpdatesCard({ posts }: { posts: Post[] }) {
   const latest = posts.slice(0, 5);
   const adminIds = useAdminIds();
+  const ranks = useCommunityRanks();
   return (
     <SidebarCard title="Últimas atualizações">
       {latest.length === 0 ? (
@@ -660,6 +665,7 @@ function LatestUpdatesCard({ posts }: { posts: Post[] }) {
                 <p className="truncate text-xs font-medium text-foreground flex items-center gap-1">
                   <MemberNameButton userId={p.author_id}>{p.author?.display_name ?? "Membro"}</MemberNameButton>
                   {adminIds.has(p.author_id) && <VerifiedBadge size={12} />}
+                  <RankBadge rank={ranks.get(p.author_id)} maxRank={3} compact />
                 </p>
                 <p className="line-clamp-2 text-[11px] text-muted-foreground">
                   {p.content}
@@ -1246,6 +1252,7 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
   const isOwner = currentUserId === post.author_id;
   const { confirm: askConfirm, dialog: confirmDialog } = useConfirm();
   const adminIds = useAdminIds();
+  const ranks = useCommunityRanks();
   const authorIsAdmin = adminIds.has(post.author_id);
   const viewerIsAdmin = currentUserId ? adminIds.has(currentUserId) : false;
   const isPinned = Boolean(post.pinned_at);
@@ -1350,6 +1357,7 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
             <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
               <MemberNameButton userId={post.author_id}>{authorName}</MemberNameButton>
               {authorIsAdmin && <VerifiedBadge size={14} />}
+              <RankBadge rank={ranks.get(post.author_id)} compact />
             </p>
             <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
               <span>{timeAgo(post.created_at)}</span>
@@ -1631,6 +1639,7 @@ function CommentItem({
   const [editContent, setEditContent] = useState(comment.content);
   const isOwner = currentUserId === comment.author_id;
   const adminIds = useAdminIds();
+  const ranks = useCommunityRanks();
   const authorIsAdmin = adminIds.has(comment.author_id);
 
   useEffect(() => {
@@ -1666,6 +1675,7 @@ function CommentItem({
             <p className="text-xs font-medium text-foreground flex items-center gap-1">
               <MemberNameButton userId={comment.author_id}>{comment.author?.display_name ?? "Membro"}</MemberNameButton>
               {authorIsAdmin && <VerifiedBadge size={12} />}
+              <RankBadge rank={ranks.get(comment.author_id)} maxRank={3} compact />
             </p>
             {isOwner && !editing && (
               <div className="flex items-center gap-1">
@@ -1751,6 +1761,7 @@ function ChatRoom({ user }: { user: User }) {
   const [expanded, setExpanded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const adminIds = useAdminIds();
+  const ranks = useCommunityRanks();
 
   // Lock body scroll when expanded
   useEffect(() => {
@@ -1898,6 +1909,7 @@ function ChatRoom({ user }: { user: User }) {
                   <p className="text-[11px] font-medium text-foreground flex items-center gap-1">
                     {mine ? <span>Você</span> : <MemberNameButton userId={m.author_id}>{name}</MemberNameButton>}
                     {adminIds.has(m.author_id) && <VerifiedBadge size={11} />}
+                    <RankBadge rank={ranks.get(m.author_id)} maxRank={3} compact />
                   </p>
                   <p className="text-[10px] text-muted-foreground">{timeAgo(m.created_at)}</p>
                 </div>
