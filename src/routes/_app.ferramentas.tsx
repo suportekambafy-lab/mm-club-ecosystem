@@ -117,7 +117,7 @@ function FerramentasLayout() {
       <section className="space-y-5">
         <div className="flex items-center gap-3">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-[color:var(--hairline)]">
-            <Sparkles className="h-4 w-4" />
+            <LayoutGrid className="h-4 w-4" />
           </span>
           <div>
             <h2 className="font-display text-2xl text-foreground">1 · Ferramentas do MM Club</h2>
