@@ -206,7 +206,62 @@ export async function collectProgressOverview(): Promise<ProgressOverview> {
   }));
   courseList.sort((a, b) => b.students - a.students);
 
+  // ---- Evolução diária (últimos 30 dias) ----
+  const WINDOW_DAYS = 30;
+  const dayKeys: string[] = [];
+  for (let i = WINDOW_DAYS - 1; i >= 0; i -= 1) {
+    dayKeys.push(new Date(now - i * DAY).toISOString().slice(0, 10));
+  }
+  const dayIndex = new Set(dayKeys);
+
+  type Bucket = { users: Set<string>; completed: number; seconds: number };
+  const emptySeries = () => new Map<string, Bucket>();
+  const globalSeries = emptySeries();
+  const perCourseSeries = new Map<string, Map<string, Bucket>>();
+
+  const touch = (series: Map<string, Bucket>, day: string) => {
+    const b = series.get(day) ?? { users: new Set<string>(), completed: 0, seconds: 0 };
+    series.set(day, b);
+    return b;
+  };
+
+  for (const r of rows) {
+    if (!r.last_watched_at) continue;
+    const day = r.last_watched_at.slice(0, 10);
+    if (!dayIndex.has(day)) continue;
+    const g = touch(globalSeries, day);
+    g.users.add(r.user_id);
+    if (r.completed) g.completed += 1;
+    g.seconds += r.progress_seconds ?? 0;
+
+    const cs = perCourseSeries.get(r.course_id) ?? emptySeries();
+    perCourseSeries.set(r.course_id, cs);
+    const c = touch(cs, day);
+    c.users.add(r.user_id);
+    if (r.completed) c.completed += 1;
+    c.seconds += r.progress_seconds ?? 0;
+  }
+
+  const toPoints = (series: Map<string, Bucket>) =>
+    dayKeys.map((date) => {
+      const b = series.get(date);
+      return {
+        date,
+        activeStudents: b?.users.size ?? 0,
+        lessonsCompleted: b?.completed ?? 0,
+        watchedHours: b ? Math.round(((b.seconds ?? 0) / 3600) * 10) / 10 : 0,
+      };
+    });
+
+  const timelineByCourse = courseList.map((c) => ({
+    courseId: c.courseId,
+    courseTitle: c.courseTitle,
+    points: toPoints(perCourseSeries.get(c.courseId) ?? emptySeries()),
+  }));
+
   return {
+    timeline: toPoints(globalSeries),
+    timelineByCourse,
     generatedAt: new Date().toISOString(),
     totalStudents: students.length,
     activeLast7Days: activeSince(7),
