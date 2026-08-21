@@ -54,12 +54,20 @@ function shortDate(date: string) {
   return `${d}/${m}`;
 }
 
+export type BucketRange = { name: string; min: number; max: number };
+
 export function ProgressCharts({
   data,
   courseId,
+  onSelectCourse,
+  onSelectBucket,
+  activeBucket,
 }: {
   data: ProgressOverview;
   courseId: string;
+  onSelectCourse?: (courseId: string) => void;
+  onSelectBucket?: (range: BucketRange | null) => void;
+  activeBucket?: string | null;
 }) {
   const timeline = useMemo(() => {
     const source =
@@ -75,6 +83,7 @@ export function ProgressCharts({
         .sort((a, b) => b.avgPercent - a.avgPercent)
         .slice(0, 12)
         .map((c) => ({
+          courseId: c.courseId,
           name: c.courseTitle.length > 22 ? `${c.courseTitle.slice(0, 21)}…` : c.courseTitle,
           fullName: c.courseTitle,
           percent: c.avgPercent,
@@ -98,6 +107,8 @@ export function ProgressCharts({
     ];
     return ranges.map((r) => ({
       name: r.name,
+      min: r.min,
+      max: r.max,
       alunos: students.filter((s) => {
         const value =
           courseId === "all"
@@ -164,7 +175,10 @@ export function ProgressCharts({
         </Panel>
       </div>
 
-      <Panel title="Conclusão média por curso" hint="Percentagem média de aulas concluídas.">
+      <Panel
+        title="Conclusão média por curso"
+        hint="Percentagem média de aulas concluídas. Clica numa barra para filtrar o curso."
+      >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={courseBars}
@@ -192,14 +206,23 @@ export function ProgressCharts({
                 courseBars.find((c) => c.name === label)?.fullName ?? label
               }
             />
-            <Bar dataKey="percent" fill="var(--primary)" radius={[0, 6, 6, 0]} barSize={14} />
+            <Bar
+              dataKey="percent"
+              fill="var(--primary)"
+              radius={[0, 6, 6, 0]}
+              barSize={14}
+              cursor={onSelectCourse ? "pointer" : undefined}
+              onClick={(entry: { courseId?: string }) => {
+                if (entry?.courseId) onSelectCourse?.(entry.courseId);
+              }}
+            />
           </BarChart>
         </ResponsiveContainer>
       </Panel>
 
       <Panel
         title="Distribuição dos alunos"
-        hint="Quantos alunos estão em cada faixa de conclusão."
+        hint="Quantos alunos estão em cada faixa. Clica numa barra para ver esses alunos."
       >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={buckets} margin={{ top: 4, right: 8, bottom: 0, left: -18 }}>
@@ -207,10 +230,24 @@ export function ProgressCharts({
             <XAxis dataKey="name" tick={{ fontSize: 11, fill: AXIS }} stroke="var(--admin-border)" />
             <YAxis tick={{ fontSize: 11, fill: AXIS }} stroke="var(--admin-border)" allowDecimals={false} />
             <Tooltip {...tooltipStyle} formatter={(value: number) => [value, "Alunos"]} />
-            <Bar dataKey="alunos" radius={[6, 6, 0, 0]} barSize={28}>
+            <Bar
+              dataKey="alunos"
+              radius={[6, 6, 0, 0]}
+              barSize={28}
+              cursor={onSelectBucket ? "pointer" : undefined}
+              onClick={(entry: { name?: string; min?: number; max?: number }) => {
+                if (!onSelectBucket || entry?.name === undefined) return;
+                onSelectBucket(
+                  activeBucket === entry.name
+                    ? null
+                    : { name: entry.name, min: entry.min ?? 0, max: entry.max ?? 100 },
+                );
+              }}
+            >
               {buckets.map((b) => (
                 <Cell
                   key={b.name}
+                  fillOpacity={activeBucket && activeBucket !== b.name ? 0.35 : 1}
                   fill={b.done ? "var(--primary)" : "color-mix(in oklab, var(--primary) 45%, transparent)"}
                 />
               ))}
