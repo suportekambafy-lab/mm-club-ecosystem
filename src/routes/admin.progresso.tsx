@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, GraduationCap, Search } from "lucide-react";
 import { getProgressOverview } from "@/lib/admin-progress.functions";
 import type { StudentProgressRow } from "@/lib/admin/progress-types";
+import { ProgressCharts } from "@/components/admin/progress-charts";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/progresso")({
