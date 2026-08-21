@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useTicker } from "@/hooks/use-ticker";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Check, Lock } from "lucide-react";
 import { LAUNCH_LABEL, launchCountdown } from "@/lib/launch";
