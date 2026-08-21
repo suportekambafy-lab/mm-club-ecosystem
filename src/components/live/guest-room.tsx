@@ -60,6 +60,7 @@ export function GuestRoom({
   const [error, setError] = useState<string | null>(null);
   const [micOn, setMicOn] = useState(prefs.micEnabled && initialOnStage);
   const [camOn, setCamOn] = useState(prefs.camEnabled && initialOnStage);
+  const [screenOn, setScreenOn] = useState(false);
   const [, forceTick] = useState(0);
   const [audioBlocked, setAudioBlocked] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
