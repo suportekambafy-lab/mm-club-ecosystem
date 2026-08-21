@@ -177,7 +177,7 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
       let q = supabase
         .from("community_posts")
         .select(
-          `id, author_id, category_id, content, image_url, created_at, edited_at, pinned_at,
+          `id, author_id, category_id, content, image_url, created_at, edited_at, pinned_at, views_count,
            author:profiles!community_posts_author_id_fkey (id, display_name, avatar_url, bio),
            category:community_categories (id, slug, name, color, sort_order),
            likes:community_likes (user_id),
