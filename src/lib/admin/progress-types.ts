@@ -71,4 +71,8 @@ export interface ProgressOverview {
   catalogLessons: number;
   students: StudentProgressRow[];
   courses: CourseAggregate[];
+  /** Últimos 30 dias, agregado global. */
+  timeline: ProgressTimelinePoint[];
+  /** Últimos 30 dias, por curso. */
+  timelineByCourse: CourseTimeline[];
 }
