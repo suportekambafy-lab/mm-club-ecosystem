@@ -757,9 +757,10 @@ function MobileTabBar({
               <Link
                 to={tab.to}
                 aria-label={tab.label}
+                preload="intent"
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative flex h-12 w-14 items-center justify-center rounded-full transition",
+                  "relative flex h-12 w-12 items-center justify-center rounded-full transition sm:w-14",
                   active
                     ? immersive
                       ? "text-white"
@@ -775,6 +776,15 @@ function MobileTabBar({
                   strokeWidth={active ? 2.4 : 2}
                   fill={active && tab.to === "/shorts" ? "currentColor" : "none"}
                 />
+                {active ? (
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "absolute bottom-1 h-1 w-1 rounded-full",
+                      immersive ? "bg-white" : "bg-primary",
+                    )}
+                  />
+                ) : null}
               </Link>
             </li>
           );
