@@ -144,7 +144,44 @@ function FerramentasLayout() {
             Criar thumbnail <ArrowRight className="h-4 w-4" />
           </span>
         </Link>
+
+        <Link
+          to="/ferramentas/links"
+          className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-surface-1 p-8 transition hover:border-primary/50 min-h-[220px] md:col-span-2"
+        >
+          <div
+            className="pointer-events-none absolute inset-0 opacity-70 transition group-hover:opacity-100"
+            style={{
+              background:
+                "radial-gradient(ellipse 60% 80% at 0% 100%, oklch(0.82 0.13 82 / 0.14), transparent 60%)",
+            }}
+          />
+          <div className="relative flex flex-col gap-4">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-[color:var(--hairline)]">
+              <Link2 className="h-5 w-5" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  Links úteis
+                </p>
+                <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary">
+                  Grátis
+                </span>
+              </div>
+              <h2 className="mt-1 font-display text-3xl text-foreground">A stack oficial do MM Club</h2>
+              <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+                Todas as ferramentas que usamos nas aulas — Shopify, Lovable, IA, criativos, tráfego e
+                pagamentos — com link direto e ofertas de parceiro.
+              </p>
+            </div>
+          </div>
+          <span className="relative mt-6 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition group-hover:opacity-90">
+            Ver links <ArrowRight className="h-4 w-4" />
+          </span>
+        </Link>
       </section>
+
 
 
 
