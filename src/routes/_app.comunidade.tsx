@@ -158,7 +158,7 @@ function useCategories(enabled: boolean) {
   });
 }
 
-const POSTS_PAGE_SIZE = 12;
+const POSTS_PAGE_SIZE = 15;
 
 function usePosts(categoryId: string | null, userId: string | null, enabled: boolean) {
   const qc = useQueryClient();
@@ -496,9 +496,24 @@ function CommunityPageInner() {
                       {activeCategoryName ? ` em ${activeCategoryName}` : ""}.
                     </p>
                     {user && (
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Seja o primeiro a publicar.
-                      </p>
+                      <>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Ainda não há publicações — cria a primeira.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const el = document.querySelector<HTMLTextAreaElement>(
+                              "[data-community-composer-textarea]",
+                            );
+                            el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                            el?.focus();
+                          }}
+                          className="mt-3 inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground transition hover:opacity-90"
+                        >
+                          Criar a primeira publicação
+                        </button>
+                      </>
                     )}
                   </div>
                 )}
@@ -506,6 +521,17 @@ function CommunityPageInner() {
                   <PostCard key={p.id} post={p} currentUserId={user?.id ?? null} />
                 ))}
                 <div ref={loadMoreRef} className="h-1 w-full" aria-hidden />
+                {!postsQ.isLoading && postsQ.hasNextPage && !postsQ.isFetchingNextPage && (
+                  <div className="flex justify-center pt-1">
+                    <button
+                      type="button"
+                      onClick={() => void postsQ.fetchNextPage()}
+                      className="rounded-full border border-border bg-surface-1 px-4 py-2 text-xs font-medium text-foreground transition hover:bg-surface-2"
+                    >
+                      Carregar mais
+                    </button>
+                  </div>
+                )}
                 {postsQ.isFetchingNextPage && (
                   <div className="rounded-2xl border border-border bg-surface-1 p-5">
                     <div className="flex items-center gap-3">
@@ -939,6 +965,7 @@ function Composer({
         <div className="flex-1">
           <textarea
             ref={taRef}
+            data-community-composer-textarea
             value={content}
             onChange={(e) => {
               setContent(e.target.value);
