@@ -32,26 +32,25 @@ export function LiveHeroBanner({ live, className }: { live: LiveLike; className?
   const [countdown, setCountdown] = useState<{ d: number; h: number; m: number; s: number } | null>(null);
   const coverUrl = resolveLiveCoverUrl(live.cover_url);
 
+  const tickerNow = useTicker(1000);
   useEffect(() => {
-    if (isLive || isReplay) return;
-    const tick = () => {
-      const diff = new Date(live.starts_at).getTime() - Date.now();
-      if (diff <= 0) {
-        setCountdown({ d: 0, h: 0, m: 0, s: 0 });
-        return;
-      }
-      const s = Math.floor(diff / 1000);
-      setCountdown({
-        d: Math.floor(s / 86400),
-        h: Math.floor((s % 86400) / 3600),
-        m: Math.floor((s % 3600) / 60),
-        s: s % 60,
-      });
-    };
-    tick();
-    const t = setInterval(tick, 1000);
-    return () => clearInterval(t);
-  }, [live.starts_at, isLive, isReplay]);
+    if (isLive || isReplay) {
+      setCountdown(null);
+      return;
+    }
+    const diff = new Date(live.starts_at).getTime() - tickerNow;
+    if (diff <= 0) {
+      setCountdown({ d: 0, h: 0, m: 0, s: 0 });
+      return;
+    }
+    const s = Math.floor(diff / 1000);
+    setCountdown({
+      d: Math.floor(s / 86400),
+      h: Math.floor((s % 86400) / 3600),
+      m: Math.floor((s % 3600) / 60),
+      s: s % 60,
+    });
+  }, [live.starts_at, isLive, isReplay, tickerNow]);
 
   useEffect(() => {
     if (isLive) return;
