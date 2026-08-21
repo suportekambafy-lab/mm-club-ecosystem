@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowUpRight, Search, Sparkles } from "lucide-react";
+import { ArrowUpRight, Copy, Check, Search, BadgePercent } from "lucide-react";
 import { mmLinkCategories, mmLinkLogo, mmLinks, type MMLinkCategory } from "@/data/mm-links";
 import { cn } from "@/lib/utils";
 
