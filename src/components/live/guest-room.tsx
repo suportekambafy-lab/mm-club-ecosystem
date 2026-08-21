@@ -17,7 +17,8 @@ import {
   type Participant,
   type RemoteTrackPublication,
 } from "livekit-client";
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, Hand, Volume2, MessagesSquare, X } from "lucide-react";
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, Hand, Volume2, MessagesSquare, X, MonitorUp, MonitorOff } from "lucide-react";
+import { toast } from "sonner";
 import { GuestChat } from "@/components/live/guest-chat";
 import { HQ_ROOM_OPTIONS } from "@/lib/livekit-quality";
 import { cn } from "@/lib/utils";
