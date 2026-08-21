@@ -81,4 +81,6 @@ export type RecoveryOverview = {
   reasons: RecoveryReasonMetric[];
   methods: RecoveryMethodMetric[];
   customers: RecoveryCustomerRow[];
+  recovered: RecoveryRecoveredRow[];
 };
+
