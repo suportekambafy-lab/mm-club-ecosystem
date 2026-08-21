@@ -39,6 +39,13 @@ export const Route = createFileRoute("/admin/financeiro/recovery")({
 
 const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
 
+const PHASE_LABEL: Record<string, string> = {
+  immediate: "Primeiras 24 h",
+  grace: "Grace period",
+  suspended: "Pós-suspensão",
+};
+
+
 const CATEGORY_LABEL: Record<string, string> = {
   recoverable: "Recuperável",
   permanent: "Permanente",
