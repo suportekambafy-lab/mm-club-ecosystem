@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/mm/confirm-dialog";
 import { notifyShortPublishedByEmail, notifyShortReplyByEmail } from "@/lib/shorts-email.functions";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const SHORTS_PAGE_SIZE = 6;
 
@@ -240,18 +241,18 @@ function ShortsPage() {
       {shortsQuery.isLoading ? (
         <div className="flex h-[100dvh] items-center justify-center">
           <div className="relative h-[100dvh] w-full max-w-[520px] overflow-hidden">
-            <div className="absolute inset-0 animate-pulse bg-white/[0.06]" />
+            <Skeleton className="absolute inset-0 rounded-none bg-white/[0.06]" />
             <div className="absolute bottom-24 left-4 right-20 space-y-3">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 animate-pulse rounded-full bg-white/15" />
-                <div className="h-3 w-28 animate-pulse rounded bg-white/15" />
+                <Skeleton className="h-10 w-10 rounded-full bg-white/15" />
+                <Skeleton className="h-3 w-28 bg-white/15" />
               </div>
-              <div className="h-3 w-4/5 animate-pulse rounded bg-white/10" />
-              <div className="h-3 w-2/3 animate-pulse rounded bg-white/10" />
+              <Skeleton className="h-3 w-4/5 bg-white/10" />
+              <Skeleton className="h-3 w-2/3 bg-white/10" />
             </div>
             <div className="absolute bottom-28 right-4 space-y-5">
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="h-10 w-10 animate-pulse rounded-full bg-white/15" />
+                <Skeleton key={i} className="h-10 w-10 rounded-full bg-white/15" />
               ))}
             </div>
           </div>
