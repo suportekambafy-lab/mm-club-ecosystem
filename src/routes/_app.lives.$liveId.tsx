@@ -18,6 +18,7 @@ import { getLive } from "@/lib/lives.functions";
 import { LivePlayer } from "@/components/mm/live-player";
 import { LiveChat } from "@/components/mm/live-chat";
 import { useLivePresence } from "@/hooks/use-live-presence";
+import { useTicker } from "@/hooks/use-ticker";
 import { expertsById } from "@/data/experts";
 import { cn } from "@/lib/utils";
 import { resolveLiveCoverUrl } from "@/lib/live-cover-url";
