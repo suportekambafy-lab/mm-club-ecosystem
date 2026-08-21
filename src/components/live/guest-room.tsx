@@ -396,6 +396,17 @@ export function GuestRoom({
               >
                 {camOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
               </button>
+              <button
+                type="button"
+                onClick={toggleScreen}
+                aria-label={screenOn ? "Parar partilha de ecrã" : "Partilhar ecrã"}
+                className={cn(
+                  "grid h-11 w-11 place-items-center rounded-full text-white transition",
+                  screenOn ? "bg-[hsl(45_86%_60%)]/90 text-black hover:bg-[hsl(45_86%_60%)]" : "bg-white/10 hover:bg-white/20",
+                )}
+              >
+                {screenOn ? <MonitorOff className="h-4 w-4" /> : <MonitorUp className="h-4 w-4" />}
+              </button>
             </>
           ) : (
             <button
