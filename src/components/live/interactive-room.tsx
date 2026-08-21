@@ -18,6 +18,7 @@ import { RoomControls } from "./room-controls";
 import { Hand, Radio, X, UserPlus, Users, UserMinus, Volume2, ShieldCheck, ShieldOff } from "lucide-react";
 import { MemberAvatar } from "@/components/mm/member-avatar";
 import { useAdminIds } from "@/hooks/use-admin-ids";
+import { Button } from "@/components/ui/button";
 
 import {
   goLive,
@@ -42,9 +43,10 @@ interface Props {
   url: string;
   target: "backstage" | "main";
   onLeave?: () => void;
+  onRetry?: () => void;
 }
 
-export function InteractiveRoom({ liveId, localUserId, token, url, target, onLeave }: Props) {
+export function InteractiveRoom({ liveId, localUserId, token, url, target, onLeave, onRetry }: Props) {
   // ----- server RPC bindings -----
   const goLiveFn = useServerFn(goLive);
   const endLiveFn = useServerFn(endLive);
@@ -181,9 +183,18 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
       {/* Connection indicator */}
       {state.connection.state !== "connected" && (
         <div className="absolute inset-x-0 top-0 z-30 flex justify-center pt-2">
-          <div className="flex items-center gap-2 rounded-full bg-black/70 px-3 py-1.5 text-xs text-white/80 backdrop-blur-md">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />
-            {state.connection.state === "reconnecting" ? "A reconectar…" : "A conectar…"}
+          <div className="flex items-center gap-2 rounded-full bg-black/80 px-3 py-1.5 text-xs text-white/80 backdrop-blur-md">
+            <span className={state.connection.state === "disconnected" ? "h-1.5 w-1.5 rounded-full bg-red-400" : "h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400"} />
+            {state.connection.state === "reconnecting"
+              ? "A reconectar…"
+              : state.connection.state === "disconnected"
+                ? "Ligação interrompida"
+                : "A conectar…"}
+            {state.connection.state === "disconnected" && onRetry && (
+              <Button type="button" size="sm" variant="ghost" className="h-6 px-2 text-xs text-white hover:bg-white/10 hover:text-white" onClick={onRetry}>
+                Tentar novamente
+              </Button>
+            )}
           </div>
         </div>
       )}

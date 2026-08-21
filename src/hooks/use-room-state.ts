@@ -275,6 +275,7 @@ export function useRoomState({
   // ---------- LiveKit engine ----------
   useEffect(() => {
     if (!token || !url) return;
+    let disposed = false;
     const room = new Room(HQ_ROOM_OPTIONS);
     roomRef.current = room;
 
@@ -341,6 +342,10 @@ export function useRoomState({
       try {
         setConnState("connecting");
         await room.connect(url, token, { autoSubscribe: true });
+        if (disposed) {
+          await room.disconnect();
+          return;
+        }
         setConnState("connected");
         setAudioBlocked(!room.canPlaybackAudio);
         // Snapshot existing remotes
@@ -389,8 +394,10 @@ export function useRoomState({
           console.warn("[useRoomState] auto-publish skipped", err);
         }
       } catch (err) {
+        if (disposed) return;
         console.error("[useRoomState] connect failed", err);
         setConnState("disconnected");
+        await room.disconnect().catch(() => {});
       }
     })();
 
@@ -400,6 +407,7 @@ export function useRoomState({
     });
 
     return () => {
+      disposed = true;
       unsubStudio();
       handlers.forEach(([evt, fn]) => {
         (room as unknown as AnyOn).off(evt, fn);

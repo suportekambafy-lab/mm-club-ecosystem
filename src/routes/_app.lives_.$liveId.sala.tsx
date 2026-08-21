@@ -229,6 +229,13 @@ function SalaRoute() {
     navigate({ to: "/lives" });
   };
 
+  const handleRetryConnection = () => {
+    // Mint a fresh token and mount a fresh media engine. Reusing a Room after
+    // a failed signalling handshake is unreliable, especially in Safari.
+    setError(null);
+    setSession(null);
+  };
+
   if (!authReady) {
     return <FullscreenLoader label="A preparar sessão…" />;
   }
@@ -299,6 +306,7 @@ function SalaRoute() {
           url={session.url}
           target={target}
           onLeave={handleLeave}
+          onRetry={handleRetryConnection}
         />
       </Suspense>
 
