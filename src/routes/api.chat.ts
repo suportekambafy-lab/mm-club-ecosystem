@@ -21,16 +21,23 @@ async function persistMessages(
       .maybeSingle();
     if (!thread || thread.user_id !== userId) return;
 
-    const rows = messages
+    const candidates = messages
       .filter((m) => m.role === "user" || m.role === "assistant")
-      .map((m) => ({
+      .map((m, index) => ({
         thread_id: threadId,
         user_id: userId,
-        client_id: m.id,
+        // Sem id do cliente, gera uma chave estável pela posição na conversa.
+        client_id: m.id && String(m.id).trim() ? String(m.id) : `${m.role}-${index}`,
         role: m.role,
         parts: (m.parts ?? []).filter((p: { type: string }) => p.type === "text"),
       }))
       .filter((r) => r.parts.length > 0);
+
+    // Um upsert não pode tocar a mesma linha duas vezes: dedupe por client_id
+    // (mantém a última versão de cada mensagem).
+    const byClientId = new Map<string, (typeof candidates)[number]>();
+    for (const row of candidates) byClientId.set(row.client_id, row);
+    const rows = [...byClientId.values()];
 
     if (rows.length > 0) {
       const { error: upsertError } = await admin
@@ -38,6 +45,7 @@ async function persistMessages(
         .upsert(rows, { onConflict: "thread_id,client_id" });
       if (upsertError) console.error("[api.chat] upsert messages failed", upsertError);
     }
+
 
 
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
