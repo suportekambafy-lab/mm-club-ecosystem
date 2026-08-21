@@ -26,6 +26,7 @@ import {
   Sun,
   Moon,
   ShieldCheck,
+  GraduationCap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import mmIcon from "@/assets/mm-icon.png.asset.json";
@@ -76,6 +77,7 @@ type AdminTo =
   | "/admin/saude"
   | "/admin/cursos"
   | "/admin/aulas"
+  | "/admin/progresso"
   | "/admin/transcricoes"
   | "/admin/eventos"
   | "/admin/lives"
@@ -109,6 +111,7 @@ const nav: Array<{ label: string; items: NavItem[] }> = [
     items: [
       { to: "/admin/cursos", label: "Cursos", icon: BookOpen },
       { to: "/admin/aulas", label: "Aulas", icon: PlayCircle },
+      { to: "/admin/progresso", label: "Progresso dos alunos", icon: GraduationCap },
       { to: "/admin/transcricoes", label: "Transcrições", icon: Sparkles },
     ],
   },
@@ -134,6 +137,7 @@ const CRUMBS: Record<string, string> = {
   "/admin/comunicacao": "Comunicação",
   "/admin/cursos": "Cursos",
   "/admin/aulas": "Aulas",
+  "/admin/progresso": "Progresso dos alunos",
   "/admin/transcricoes": "Transcrições",
   "/admin/eventos": "Eventos",
   "/admin/lives": "Lives",
