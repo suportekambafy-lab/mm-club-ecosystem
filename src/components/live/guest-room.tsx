@@ -17,7 +17,8 @@ import {
   type Participant,
   type RemoteTrackPublication,
 } from "livekit-client";
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, Hand, Volume2, MessagesSquare, X } from "lucide-react";
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, Hand, Volume2, MessagesSquare, X, MonitorUp, MonitorOff } from "lucide-react";
+import { toast } from "sonner";
 import { GuestChat } from "@/components/live/guest-chat";
 import { HQ_ROOM_OPTIONS } from "@/lib/livekit-quality";
 import { cn } from "@/lib/utils";
@@ -59,6 +60,7 @@ export function GuestRoom({
   const [error, setError] = useState<string | null>(null);
   const [micOn, setMicOn] = useState(prefs.micEnabled && initialOnStage);
   const [camOn, setCamOn] = useState(prefs.camEnabled && initialOnStage);
+  const [screenOn, setScreenOn] = useState(false);
   const [, forceTick] = useState(0);
   const [audioBlocked, setAudioBlocked] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -224,6 +226,33 @@ export function GuestRoom({
     await r.localParticipant.setCameraEnabled(next);
     setCamOn(next);
   };
+  const toggleScreen = async () => {
+    const r = roomRef.current;
+    if (!r) return;
+    const next = !screenOn;
+    try {
+      await r.localParticipant.setScreenShareEnabled(next, { audio: true });
+      setScreenOn(next);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (/permission|denied|NotAllowed/i.test(msg)) {
+        toast.error("Partilha de ecrã cancelada ou bloqueada pelo navegador.");
+      } else if (/insufficient|not allowed to publish/i.test(msg)) {
+        toast.error("O anfitrião ainda não autorizou a tua partilha de ecrã.");
+      } else {
+        toast.error("Não foi possível partilhar o ecrã neste dispositivo.");
+      }
+      setScreenOn(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!onStage && screenOn) setScreenOn(false);
+  }, [onStage, screenOn]);
+
+
+
+
 
   if (connecting) {
     return (
@@ -372,6 +401,17 @@ export function GuestRoom({
                 )}
               >
                 {camOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+              </button>
+              <button
+                type="button"
+                onClick={toggleScreen}
+                aria-label={screenOn ? "Parar partilha de ecrã" : "Partilhar ecrã"}
+                className={cn(
+                  "grid h-11 w-11 place-items-center rounded-full text-white transition",
+                  screenOn ? "bg-[hsl(45_86%_60%)]/90 text-black hover:bg-[hsl(45_86%_60%)]" : "bg-white/10 hover:bg-white/20",
+                )}
+              >
+                {screenOn ? <MonitorOff className="h-4 w-4" /> : <MonitorUp className="h-4 w-4" />}
               </button>
             </>
           ) : (
