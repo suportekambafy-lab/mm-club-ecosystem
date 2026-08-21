@@ -563,15 +563,16 @@ function CommunityPageInner() {
           {/* Cards que só aparecem na sidebar direita a partir de 2xl — em telas menores ficam por baixo do feed */}
           {tab === "feed" && (
             <div className="grid gap-4 pt-2 sm:grid-cols-2 xl:grid-cols-3 2xl:hidden">
+              <CommunityLeaderboard />
               <LatestUpdatesCard posts={posts} />
               <QuickLinksCard />
             </div>
           )}
         </section>
 
-        {/* RIGHT SIDEBAR — perfil + últimas atualizações + atalhos */}
+        {/* RIGHT SIDEBAR — ranking + últimas atualizações + atalhos */}
         <aside className="hidden space-y-4 2xl:sticky 2xl:top-24 2xl:block 2xl:max-h-[calc(100vh-7rem)] 2xl:overflow-y-auto 2xl:pr-1 [scrollbar-width:thin]">
-
+          <CommunityLeaderboard />
           <LatestUpdatesCard posts={posts} />
           <QuickLinksCard />
         </aside>
