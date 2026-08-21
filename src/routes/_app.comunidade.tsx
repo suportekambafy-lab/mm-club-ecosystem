@@ -1248,6 +1248,8 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
   const [liked, setLiked] = useState(post.liked_by_me);
   const [likeCount, setLikeCount] = useState(post.like_count);
   const [commentCount, setCommentCount] = useState(post.comment_count);
+  const [viewCount, setViewCount] = useState(post.views_count);
+  const cardRef = useRef<HTMLElement | null>(null);
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
   const postLinkUrl = useMemo(() => extractFirstUrl(post.content), [post.content]);
