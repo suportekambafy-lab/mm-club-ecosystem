@@ -5,7 +5,18 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { MediaDeviceOption, RoomActions, RoomState } from "@/lib/room-state";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Video, VideoOff, ScreenShare, Hand, PhoneOff, Layout, LogOut, ChevronUp } from "lucide-react";
+import {
+  Mic,
+  MicOff,
+  Video,
+  VideoOff,
+  ScreenShare,
+  Hand,
+  PhoneOff,
+  Layout,
+  LogOut,
+  ChevronUp,
+} from "lucide-react";
 import { StudioPanel } from "./studio-panel";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -30,10 +41,10 @@ export function RoomControls({ state, actions, onLeave }: Props) {
     [state.participants, state.localUserId],
   );
   const [busy, setBusy] = useState<string | null>(null);
-  const isPublisher = local?.onStage || local?.micAllowed || local?.camAllowed || local?.screenAllowed;
+  const isPublisher =
+    local?.onStage || local?.micAllowed || local?.camAllowed || local?.screenAllowed;
   // Screen share never depends on having a camera: anyone on stage can share.
   const canShareScreen = Boolean(local?.screenAllowed || local?.onStage);
-
 
   const run = async (key: string, fn: () => Promise<void>) => {
     setBusy(key);
@@ -53,7 +64,13 @@ export function RoomControls({ state, actions, onLeave }: Props) {
             onClick={() => run("mic", actions.toggleMic)}
             busy={busy === "mic"}
             label={local.micOn ? "Silenciar microfone" : "Ativar microfone"}
-            icon={local.micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4 text-red-400" />}
+            icon={
+              local.micOn ? (
+                <Mic className="h-4 w-4" />
+              ) : (
+                <MicOff className="h-4 w-4 text-red-400" />
+              )
+            }
           />
           <DeviceMenu kind="audioinput" actions={actions} label="Escolher microfone" />
         </div>
@@ -65,13 +82,20 @@ export function RoomControls({ state, actions, onLeave }: Props) {
             onClick={() => run("cam", actions.toggleCam)}
             busy={busy === "cam"}
             label={local.camOn ? "Desligar câmara" : "Ligar câmara"}
-            icon={local.camOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4 text-red-400" />}
+            icon={
+              local.camOn ? (
+                <Video className="h-4 w-4" />
+              ) : (
+                <VideoOff className="h-4 w-4 text-red-400" />
+              )
+            }
           />
           <DeviceMenu kind="videoinput" actions={actions} label="Escolher câmara" />
         </div>
       )}
-      {isPublisher && canShareScreen && (
-        canScreenShare ? (
+      {isPublisher &&
+        canShareScreen &&
+        (canScreenShare ? (
           <IconButton
             active={local?.isScreenSharing}
             onClick={() =>
@@ -81,7 +105,11 @@ export function RoomControls({ state, actions, onLeave }: Props) {
             }
             busy={busy === "screen"}
             label={local?.isScreenSharing ? "Parar partilha" : "Partilhar ecrã"}
-            icon={<ScreenShare className={cn("h-4 w-4", local?.isScreenSharing && "text-emerald-400")} />}
+            icon={
+              <ScreenShare
+                className={cn("h-4 w-4", local?.isScreenSharing && "text-emerald-400")}
+              />
+            }
           />
         ) : (
           <IconButton
@@ -96,8 +124,7 @@ export function RoomControls({ state, actions, onLeave }: Props) {
             label="Partilha de ecrã disponível apenas em computador"
             icon={<ScreenShare className="h-4 w-4 text-white/40" />}
           />
-        )
-      )}
+        ))}
 
       {isPublisher && <StudioPanel />}
 
@@ -124,7 +151,9 @@ export function RoomControls({ state, actions, onLeave }: Props) {
                 /* ignore */
               }
               await actions.leaveStage();
-              toast.success("Saíste do palco", { description: "Continuas na sala como audiência." });
+              toast.success("Saíste do palco", {
+                description: "Continuas na sala como audiência.",
+              });
             })
           }
           disabled={busy === "leaveStage"}
@@ -134,7 +163,6 @@ export function RoomControls({ state, actions, onLeave }: Props) {
           <span className="hidden sm:inline">Sair do palco</span>
         </Button>
       )}
-
 
       {(state.localRole === "host" || state.localRole === "cohost") && (
         <LayoutMenu state={state} actions={actions} />
@@ -200,6 +228,7 @@ function DeviceMenu({
   const [open, setOpen] = useState(false);
   const [devices, setDevices] = useState<MediaDeviceOption[]>([]);
   const [loading, setLoading] = useState(false);
+  const anchorRef = useRef<HTMLButtonElement | null>(null);
   const active = actions.getActiveDevice?.(kind);
 
   if (!actions.listDevices || !actions.setDevice) return null;
@@ -210,13 +239,13 @@ function DeviceMenu({
     if (!next) return;
     setLoading(true);
     try {
-      setDevices((await actions.listDevices!(kind)) ?? []);
+      const listDevices = actions.listDevices;
+      if (!listDevices) return;
+      setDevices((await listDevices(kind)) ?? []);
     } finally {
       setLoading(false);
     }
   };
-
-  const anchorRef = useRef<HTMLButtonElement | null>(null);
 
   return (
     <div className="relative shrink-0">
@@ -235,7 +264,9 @@ function DeviceMenu({
           <div className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-white/40">
             {kind === "videoinput" ? "Câmara" : "Microfone"}
           </div>
-          {loading && <div className="px-3 py-2 text-xs text-white/50">A procurar dispositivos…</div>}
+          {loading && (
+            <div className="px-3 py-2 text-xs text-white/50">A procurar dispositivos…</div>
+          )}
           {!loading && devices.length === 0 && (
             <div className="px-3 py-2 text-xs text-white/50">Nenhum dispositivo encontrado.</div>
           )}
@@ -246,7 +277,9 @@ function DeviceMenu({
               onClick={async () => {
                 setOpen(false);
                 try {
-                  await actions.setDevice!(kind, d.deviceId);
+                  const setDevice = actions.setDevice;
+                  if (!setDevice) return;
+                  await setDevice(kind, d.deviceId);
                   toast.success(kind === "videoinput" ? "Câmara alterada" : "Microfone alterado", {
                     description: d.label,
                   });
@@ -291,7 +324,13 @@ function LayoutMenu({ state, actions }: { state: RoomState; actions: RoomActions
       >
         <Layout className="h-4 w-4" />
       </button>
-      <AnchoredMenu open={open} onClose={() => setOpen(false)} anchorRef={anchorRef} align="right" width={200}>
+      <AnchoredMenu
+        open={open}
+        onClose={() => setOpen(false)}
+        anchorRef={anchorRef}
+        align="right"
+        width={200}
+      >
         <>
           {layouts.map((l) => (
             <button
@@ -334,6 +373,13 @@ function HostLeaveMenu({
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [ending, setEnding] = useState(false);
+  const anchorRef = useRef<HTMLButtonElement | null>(null);
+
+  const closeMenu = () => {
+    if (ending) return;
+    setOpen(false);
+    setConfirming(false);
+  };
 
   const doLeave = () => {
     setOpen(false);
@@ -369,64 +415,84 @@ function HostLeaveMenu({
     }
   };
 
-
   return (
     <div className="relative">
       <Button
+        ref={anchorRef}
         variant="destructive"
         size="sm"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          setConfirming(false);
+          setOpen((v) => !v);
+        }}
+        aria-expanded={open}
+        aria-haspopup="dialog"
         className="ml-1 h-9 rounded-xl bg-red-500 px-3 text-white hover:bg-red-500/90"
       >
         <PhoneOff className="mr-1 h-4 w-4" />
         Sair
       </Button>
-      {open && !confirming && (
-        <div className="absolute bottom-full right-0 mb-2 min-w-[220px] rounded-xl border border-white/10 bg-neutral-900/95 p-1 shadow-2xl backdrop-blur-md">
-          <button
-            type="button"
-            onClick={doLeave}
-            className="flex w-full flex-col items-start rounded-lg px-3 py-2 text-left hover:bg-white/10"
-          >
-            <span className="text-sm text-white">Sair da sala</span>
-            <span className="text-[11px] text-white/50">A live continua ativa para os restantes.</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setConfirming(true)}
-            className="mt-0.5 flex w-full flex-col items-start rounded-lg px-3 py-2 text-left hover:bg-red-500/10"
-          >
-            <span className="text-sm text-red-400">Terminar live</span>
-            <span className="text-[11px] text-white/50">Encerra a sala para todos e finaliza a gravação.</span>
-          </button>
-        </div>
-      )}
-      {open && confirming && (
-        <div className="absolute bottom-full right-0 mb-2 w-[280px] rounded-xl border border-white/10 bg-neutral-900/95 p-3 shadow-2xl backdrop-blur-md">
-          <div className="text-sm font-medium text-white">Terminar a live para todos?</div>
-          <p className="mt-1 text-[12px] text-white/60">
-            Todos os participantes serão desligados. A gravação é finalizada e o replay ficará disponível assim que estiver pronto.
-          </p>
-          <div className="mt-3 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setConfirming(false)}
-              disabled={ending}
-              className="rounded-lg bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10 disabled:opacity-50"
+      <AnchoredMenu open={open} onClose={closeMenu} anchorRef={anchorRef} align="right" width={280}>
+        {!confirming ? (
+          <div role="dialog" aria-label="Opções para sair da live">
+            <Button
+              variant="ghost"
+              onClick={doLeave}
+              className="h-auto w-full flex-col items-start gap-0.5 whitespace-normal px-3 py-2 text-left text-white hover:bg-white/10 hover:text-white"
             >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={doEnd}
-              disabled={ending}
-              className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500/90 disabled:opacity-50"
+              <span className="text-sm">Sair apenas da sala</span>
+              <span className="text-[11px] font-normal text-white/50">
+                A live continua ativa para os restantes.
+              </span>
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setConfirming(true)}
+              className="mt-0.5 h-auto w-full flex-col items-start gap-0.5 whitespace-normal px-3 py-2 text-left text-red-400 hover:bg-red-500/10 hover:text-red-300"
             >
-              {ending ? "A terminar…" : "Terminar live"}
-            </button>
+              <span className="text-sm">Terminar live para todos</span>
+              <span className="text-[11px] font-normal text-white/50">
+                Encerra a sala e finaliza a gravação.
+              </span>
+            </Button>
           </div>
-        </div>
-      )}
+        ) : (
+          <div
+            role="alertdialog"
+            aria-labelledby="end-live-title"
+            aria-describedby="end-live-description"
+            className="p-2"
+          >
+            <div id="end-live-title" className="text-sm font-medium text-white">
+              Terminar a live para todos?
+            </div>
+            <p id="end-live-description" className="mt-1 text-[12px] text-white/60">
+              Todos os participantes serão desligados. A gravação é finalizada e o replay ficará
+              disponível assim que estiver pronto.
+            </p>
+            <div className="mt-3 flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirming(false)}
+                disabled={ending}
+                className="bg-white/5 text-white/80 hover:bg-white/10 hover:text-white"
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={doEnd}
+                disabled={ending}
+                className="bg-red-500 text-white hover:bg-red-500/90"
+              >
+                {ending ? "A terminar…" : "Terminar live"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </AnchoredMenu>
     </div>
   );
 }
@@ -491,12 +557,20 @@ function AnchoredMenu({
   const left =
     align === "right"
       ? Math.min(Math.max(8, rect.right - width), window.innerWidth - width - 8)
-      : Math.min(Math.max(8, rect.left + rect.width / 2 - width / 2), window.innerWidth - width - 8);
+      : Math.min(
+          Math.max(8, rect.left + rect.width / 2 - width / 2),
+          window.innerWidth - width - 8,
+        );
 
   return createPortal(
     <div
       data-anchored-menu
-      style={{ position: "fixed", left, bottom: Math.max(8, window.innerHeight - rect.top + 8), width }}
+      style={{
+        position: "fixed",
+        left,
+        bottom: Math.max(8, window.innerHeight - rect.top + 8),
+        width,
+      }}
       className="z-[100] max-h-[60vh] overflow-y-auto rounded-xl border border-white/10 bg-neutral-900/95 p-1 shadow-2xl backdrop-blur-md"
     >
       {children}
@@ -504,4 +578,3 @@ function AnchoredMenu({
     document.body,
   );
 }
-
