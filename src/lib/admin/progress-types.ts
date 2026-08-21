@@ -47,6 +47,20 @@ export interface CourseAggregate {
   lastActivityAt: string | null;
 }
 
+/** Ponto diário de atividade (global ou de um curso). */
+export interface ProgressTimelinePoint {
+  date: string; // YYYY-MM-DD
+  activeStudents: number;
+  lessonsCompleted: number;
+  watchedHours: number;
+}
+
+export interface CourseTimeline {
+  courseId: string;
+  courseTitle: string;
+  points: ProgressTimelinePoint[];
+}
+
 export interface ProgressOverview {
   generatedAt: string;
   totalStudents: number;
