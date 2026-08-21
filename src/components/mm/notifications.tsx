@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile, BellRing, BellOff, UserRound, GraduationCap } from "lucide-react";
+import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile, BellRing, BellOff, UserRound, GraduationCap, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
@@ -37,6 +37,7 @@ const iconByKind: Record<NotifKind, typeof Bell> = {
   comment_reply: MessageCircle,
   inactivity: Play,
   course_released: GraduationCap,
+  rank: Trophy,
 };
 
 const labelByKind: Record<NotifKind, string> = {
@@ -50,6 +51,7 @@ const labelByKind: Record<NotifKind, string> = {
   comment_reply: "Resposta",
   inactivity: "Retomar",
   course_released: "Novo curso",
+  rank: "Ranking",
 
 };
 
@@ -194,6 +196,7 @@ function communityCopy(
   kind: CommunityNotifKind,
   actorName: string | null,
   isShort: boolean,
+  rankPosition?: number | null,
 ): { title: string; subtitle: string } {
   const who = actorName?.trim() || "Alguém";
   const where = isShort ? "no teu MM Short" : "no teu post";
@@ -213,6 +216,12 @@ function communityCopy(
     return {
       title: "Novo curso disponível",
       subtitle: "O curso agendado acabou de abrir — começa agora",
+    };
+  }
+  if (kind === "rank") {
+    return {
+      title: rankPosition ? `Estás no Top ${rankPosition} da Comunidade` : "Estás no Top da Comunidade",
+      subtitle: "Toca para ver como a tua posição foi calculada",
     };
   }
   if (kind === "like") {
@@ -309,8 +318,14 @@ export function NotificationsBell({ className }: { className?: string }) {
   const merged: Notif[] = useMemo(() => {
     const fromDb: Notif[] = dbItems.map((n) => {
       const isShort = !!n.short_id;
-      const copy = communityCopy(n.kind, n.actor_name, isShort);
-      const href = n.kind === "inactivity"
+      const rankPosition =
+        n.kind === "rank" && n.course_id?.startsWith("top-")
+          ? Number(n.course_id.slice(4)) || null
+          : null;
+      const copy = communityCopy(n.kind, n.actor_name, isShort, rankPosition);
+      const href = n.kind === "rank"
+        ? "/comunidade"
+        : n.kind === "inactivity"
         ? "/dashboard"
         : n.kind === "live" && n.live_id
         ? `/lives/${n.live_id}`
