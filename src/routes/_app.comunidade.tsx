@@ -1369,6 +1369,7 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
 
   return (
     <article
+      ref={cardRef}
       className={cn(
         "rounded-2xl border bg-surface-1 p-5",
         isPinned ? "border-primary/50 ring-1 ring-primary/20" : "border-border",
