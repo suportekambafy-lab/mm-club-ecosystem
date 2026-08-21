@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { ArrowRight, ImageIcon, Film, Wand2, Package, Palette, FlaskConical, Youtube, Link2, Sparkles } from "lucide-react";
+import { ArrowRight, ImageIcon, Film, Wand2, Package, Palette, FlaskConical, Youtube, Link2, LayoutGrid } from "lucide-react";
 import showcase1 from "@/assets/studio-showcase-1.jpg";
 import showcase2 from "@/assets/studio-showcase-2.jpg";
 import showcase3 from "@/assets/studio-showcase-3.jpg";
@@ -117,7 +117,7 @@ function FerramentasLayout() {
       <section className="space-y-5">
         <div className="flex items-center gap-3">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-[color:var(--hairline)]">
-            <Sparkles className="h-4 w-4" />
+            <LayoutGrid className="h-4 w-4" />
           </span>
           <div>
             <h2 className="font-display text-2xl text-foreground">1 · Ferramentas do MM Club</h2>
