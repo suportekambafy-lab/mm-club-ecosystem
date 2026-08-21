@@ -353,8 +353,22 @@ async function onPaymentPaid(args: {
   customerId: string | null;
   subscriptionId: string | null;
 }) {
-  const { payment, userId, priceId, paymentRowId, customerId } = args;
+  const { payment, userId, paymentRowId, customerId } = args;
   let subscriptionId = args.subscriptionId;
+  let priceId = args.priceId;
+
+  // Recovery/retry charges carry no priceId in their metadata. Without it the
+  // renewal below never runs and the member stays suspended after paying, so
+  // fall back to the price stored on the subscription being collected.
+  if (!priceId && subscriptionId) {
+    const { data: subRow } = await supabaseAdmin
+      .from("billing_subscriptions")
+      .select("price_id")
+      .eq("id", subscriptionId)
+      .maybeSingle();
+    priceId = (subRow?.price_id as string | null) ?? null;
+  }
+
 
   const eventId = await emitEvent({
     type: "PaymentSucceeded",
