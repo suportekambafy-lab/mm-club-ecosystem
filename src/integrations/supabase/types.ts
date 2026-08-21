@@ -1416,6 +1416,7 @@ export type Database = {
           pinned_at: string | null
           pinned_by: string | null
           updated_at: string
+          views_count: number
         }
         Insert: {
           author_id: string
@@ -1428,6 +1429,7 @@ export type Database = {
           pinned_at?: string | null
           pinned_by?: string | null
           updated_at?: string
+          views_count?: number
         }
         Update: {
           author_id?: string
@@ -1440,6 +1442,7 @@ export type Database = {
           pinned_at?: string | null
           pinned_by?: string | null
           updated_at?: string
+          views_count?: number
         }
         Relationships: [
           {
@@ -3772,6 +3775,10 @@ export type Database = {
           shorts: number
           user_id: string
         }[]
+      }
+      community_post_increment_view: {
+        Args: { _post_id: string }
+        Returns: undefined
       }
       cron_hook_headers: { Args: never; Returns: Json }
       extract_mention_user_ids: { Args: { _text: string }; Returns: string[] }
