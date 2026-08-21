@@ -71,6 +71,7 @@ import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
 import { Route as AppJadeThreadIdRouteImport } from './routes/_app.jade.$threadId'
 import { Route as AppFerramentasThumbnailsRouteImport } from './routes/_app.ferramentas.thumbnails'
 import { Route as AppFerramentasStudioRouteImport } from './routes/_app.ferramentas.studio'
+import { Route as AppFerramentasLinksRouteImport } from './routes/_app.ferramentas.links'
 import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
 import { Route as AppAcademiaPesquisaRouteImport } from './routes/_app.academia.pesquisa'
 import { Route as AppAcademiaCourseIdRouteImport } from './routes/_app.academia.$courseId'
@@ -422,6 +423,11 @@ const AppFerramentasStudioRoute = AppFerramentasStudioRouteImport.update({
   path: '/studio',
   getParentRoute: () => AppFerramentasRoute,
 } as any)
+const AppFerramentasLinksRoute = AppFerramentasLinksRouteImport.update({
+  id: '/links',
+  path: '/links',
+  getParentRoute: () => AppFerramentasRoute,
+} as any)
 const AppEspecialistasExpertIdRoute =
   AppEspecialistasExpertIdRouteImport.update({
     id: '/especialistas/$expertId',
@@ -683,6 +689,7 @@ export interface FileRoutesByFullPath {
   '/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
   '/academia/pesquisa': typeof AppAcademiaPesquisaRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
+  '/ferramentas/links': typeof AppFerramentasLinksRoute
   '/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
   '/ferramentas/thumbnails': typeof AppFerramentasThumbnailsRoute
   '/jade/$threadId': typeof AppJadeThreadIdRoute
@@ -776,6 +783,7 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutIndexRoute
   '/academia/pesquisa': typeof AppAcademiaPesquisaRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
+  '/ferramentas/links': typeof AppFerramentasLinksRoute
   '/ferramentas/thumbnails': typeof AppFerramentasThumbnailsRoute
   '/jade/$threadId': typeof AppJadeThreadIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
@@ -877,6 +885,7 @@ export interface FileRoutesById {
   '/_app/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
   '/_app/academia/pesquisa': typeof AppAcademiaPesquisaRoute
   '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
+  '/_app/ferramentas/links': typeof AppFerramentasLinksRoute
   '/_app/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
   '/_app/ferramentas/thumbnails': typeof AppFerramentasThumbnailsRoute
   '/_app/jade/$threadId': typeof AppJadeThreadIdRoute
@@ -979,6 +988,7 @@ export interface FileRouteTypes {
     | '/academia/$courseId'
     | '/academia/pesquisa'
     | '/especialistas/$expertId'
+    | '/ferramentas/links'
     | '/ferramentas/studio'
     | '/ferramentas/thumbnails'
     | '/jade/$threadId'
@@ -1072,6 +1082,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/academia/pesquisa'
     | '/especialistas/$expertId'
+    | '/ferramentas/links'
     | '/ferramentas/thumbnails'
     | '/jade/$threadId'
     | '/lives/$liveId'
@@ -1172,6 +1183,7 @@ export interface FileRouteTypes {
     | '/_app/academia/$courseId'
     | '/_app/academia/pesquisa'
     | '/_app/especialistas/$expertId'
+    | '/_app/ferramentas/links'
     | '/_app/ferramentas/studio'
     | '/_app/ferramentas/thumbnails'
     | '/_app/jade/$threadId'
@@ -1706,6 +1718,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFerramentasStudioRouteImport
       parentRoute: typeof AppFerramentasRoute
     }
+    '/_app/ferramentas/links': {
+      id: '/_app/ferramentas/links'
+      path: '/links'
+      fullPath: '/ferramentas/links'
+      preLoaderRoute: typeof AppFerramentasLinksRouteImport
+      parentRoute: typeof AppFerramentasRoute
+    }
     '/_app/especialistas/$expertId': {
       id: '/_app/especialistas/$expertId'
       path: '/especialistas/$expertId'
@@ -2021,6 +2040,7 @@ const AppFerramentasStudioRouteWithChildren =
   AppFerramentasStudioRoute._addFileChildren(AppFerramentasStudioRouteChildren)
 
 interface AppFerramentasRouteChildren {
+  AppFerramentasLinksRoute: typeof AppFerramentasLinksRoute
   AppFerramentasStudioRoute: typeof AppFerramentasStudioRouteWithChildren
   AppFerramentasThumbnailsRoute: typeof AppFerramentasThumbnailsRoute
   AppFerramentasProductLabProductIdRoute: typeof AppFerramentasProductLabProductIdRoute
@@ -2028,6 +2048,7 @@ interface AppFerramentasRouteChildren {
 }
 
 const AppFerramentasRouteChildren: AppFerramentasRouteChildren = {
+  AppFerramentasLinksRoute: AppFerramentasLinksRoute,
   AppFerramentasStudioRoute: AppFerramentasStudioRouteWithChildren,
   AppFerramentasThumbnailsRoute: AppFerramentasThumbnailsRoute,
   AppFerramentasProductLabProductIdRoute:
