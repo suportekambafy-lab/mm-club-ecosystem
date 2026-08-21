@@ -3,9 +3,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, GraduationCap, Search } from "lucide-react";
-import { getProgressOverview } from "@/lib/admin-progress.functions";
+import { getProgressOverview, getStudentCourseLessons } from "@/lib/admin-progress.functions";
 import type { StudentProgressRow } from "@/lib/admin/progress-types";
-import { ProgressCharts } from "@/components/admin/progress-charts";
+import { ProgressCharts, type BucketRange } from "@/components/admin/progress-charts";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/progresso")({
@@ -81,8 +81,69 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
   );
 }
 
-function StudentCard({ student }: { student: StudentProgressRow }) {
-  const [open, setOpen] = useState(false);
+function LessonDetail({ userId, courseId }: { userId: string; courseId: string }) {
+  const load = useServerFn(getStudentCourseLessons);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["admin-progress-lessons", userId, courseId],
+    queryFn: () => load({ data: { userId, courseId } }),
+    staleTime: 60_000,
+  });
+
+  if (isLoading) return <p className="mt-2 text-[12px] text-admin-faint">A carregar aulas…</p>;
+  if (error)
+    return (
+      <p className="mt-2 text-[12px] text-red-400">
+        Não foi possível carregar as aulas: {(error as Error).message}
+      </p>
+    );
+  if (!data || data.length === 0)
+    return <p className="mt-2 text-[12px] text-admin-faint">Sem aulas registadas.</p>;
+
+  return (
+    <ul className="mt-2 space-y-1">
+      {data.map((l) => (
+        <li key={l.lessonId} className="flex items-center gap-2 rounded-lg bg-admin-panel px-2 py-1.5">
+          <span className="w-6 shrink-0 text-right text-[11px] text-admin-faint">{l.index}</span>
+          <span className="min-w-0 flex-1 truncate text-[12px] text-admin-fg">{l.title}</span>
+          <span className="hidden w-28 shrink-0 sm:block">
+            <Bar percent={l.percent} />
+          </span>
+          <span className="w-24 shrink-0 text-right text-[11px] text-admin-muted">
+            {clock(l.watchedSeconds)}
+            {l.durationSeconds > 0 ? ` / ${clock(l.durationSeconds)}` : ""}
+          </span>
+          <span
+            className={cn(
+              "w-20 shrink-0 rounded-full px-2 py-0.5 text-center text-[10px]",
+              l.completed
+                ? "bg-emerald-500/15 text-emerald-400"
+                : l.percent > 0
+                  ? "bg-primary/15 text-primary"
+                  : "bg-admin-panel-2 text-admin-faint",
+            )}
+          >
+            {l.completed ? "Concluída" : l.percent > 0 ? `${l.percent}%` : "Não vista"}
+          </span>
+          <span className="hidden w-20 shrink-0 text-right text-[11px] text-admin-faint md:block">
+            {when(l.lastWatchedAt)}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function StudentCard({
+  student,
+  defaultOpen = false,
+  focusCourseId,
+}: {
+  student: StudentProgressRow;
+  defaultOpen?: boolean;
+  focusCourseId?: string;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const [openCourse, setOpenCourse] = useState<string | null>(focusCourseId ?? null);
   return (
     <div className="rounded-xl bg-admin-panel">
       <button
@@ -153,6 +214,16 @@ function StudentCard({ student }: { student: StudentProgressRow }) {
               <div className="mt-2">
                 <Bar percent={c.percent} />
               </div>
+              <button
+                type="button"
+                onClick={() => setOpenCourse((v) => (v === c.courseId ? null : c.courseId))}
+                className="mt-2 text-[12px] text-primary underline-offset-2 hover:underline"
+              >
+                {openCourse === c.courseId ? "Esconder aulas" : "Ver progresso por aula"}
+              </button>
+              {openCourse === c.courseId ? (
+                <LessonDetail userId={student.userId} courseId={c.courseId} />
+              ) : null}
               <dl className="mt-2 grid gap-x-4 gap-y-1 text-[12px] sm:grid-cols-2">
                 <div className="flex justify-between gap-2">
                   <dt className="text-admin-faint">Aulas concluídas</dt>
@@ -202,6 +273,7 @@ function ProgressPage() {
   const [term, setTerm] = useState("");
   const [courseId, setCourseId] = useState("all");
   const [sort, setSort] = useState<SortKey>("recent");
+  const [bucket, setBucket] = useState<BucketRange | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin-progress"],
@@ -213,6 +285,13 @@ function ProgressPage() {
     const q = term.trim().toLowerCase();
     let list = (data?.students ?? []).filter((s) => {
       if (courseId !== "all" && !s.courses.some((c) => c.courseId === courseId)) return false;
+      if (bucket) {
+        const value =
+          courseId === "all"
+            ? s.overallPercent
+            : (s.courses.find((c) => c.courseId === courseId)?.percent ?? 0);
+        if (value < bucket.min || value > bucket.max) return false;
+      }
       if (!q) return true;
       return (
         s.name.toLowerCase().includes(q) ||
@@ -234,7 +313,7 @@ function ProgressPage() {
       }
     });
     return list;
-  }, [data, term, courseId, sort]);
+  }, [data, term, courseId, sort, bucket]);
 
   return (
     <div className="space-y-5">
@@ -276,7 +355,46 @@ function ProgressPage() {
       </div>
 
       {/* Gráficos */}
-      {data ? <ProgressCharts data={data} courseId={courseId} /> : null}
+      {data ? (
+        <ProgressCharts
+          data={data}
+          courseId={courseId}
+          activeBucket={bucket?.name ?? null}
+          onSelectCourse={(id) => {
+            setCourseId(id);
+            setBucket(null);
+            document.getElementById("mm-alunos")?.scrollIntoView({ behavior: "smooth" });
+          }}
+          onSelectBucket={(range) => {
+            setBucket(range);
+            if (range) document.getElementById("mm-alunos")?.scrollIntoView({ behavior: "smooth" });
+          }}
+        />
+      ) : null}
+
+      {courseId !== "all" || bucket ? (
+        <div className="flex flex-wrap items-center gap-2 text-[12px]">
+          <span className="text-admin-faint">A ver:</span>
+          {courseId !== "all" ? (
+            <button
+              type="button"
+              onClick={() => setCourseId("all")}
+              className="rounded-full bg-primary/15 px-2.5 py-1 text-primary"
+            >
+              {data?.courses.find((c) => c.courseId === courseId)?.courseTitle ?? courseId} ✕
+            </button>
+          ) : null}
+          {bucket ? (
+            <button
+              type="button"
+              onClick={() => setBucket(null)}
+              className="rounded-full bg-primary/15 px-2.5 py-1 text-primary"
+            >
+              Conclusão {bucket.name} ✕
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
       {/* Por curso */}
       <div className="rounded-xl bg-admin-panel">
@@ -295,7 +413,18 @@ function ProgressPage() {
             </thead>
             <tbody>
               {(data?.courses ?? []).map((c) => (
-                <tr key={c.courseId} className="border-t border-admin-border">
+                <tr
+                  key={c.courseId}
+                  onClick={() => {
+                    setCourseId(c.courseId);
+                    setBucket(null);
+                    document.getElementById("mm-alunos")?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className={cn(
+                    "cursor-pointer border-t border-admin-border transition-colors hover:bg-admin-panel-2",
+                    courseId === c.courseId && "bg-admin-panel-2",
+                  )}
+                >
                   <td className="py-2 pr-3 text-admin-fg">{c.courseTitle}</td>
                   <td className="py-2 pr-3 text-admin-muted">{c.students}</td>
                   <td className="py-2 pr-3 text-admin-muted">{c.finishers}</td>
@@ -361,7 +490,7 @@ function ProgressPage() {
       </div>
 
       {/* Alunos */}
-      <div className="space-y-2">
+      <div id="mm-alunos" className="space-y-2">
         {isLoading ? (
           <div className="rounded-xl bg-admin-panel p-6 text-center text-[13px] text-admin-faint">
             A carregar progresso…
@@ -371,7 +500,14 @@ function ProgressPage() {
             Nenhum aluno encontrado.
           </div>
         ) : (
-          students.map((s) => <StudentCard key={s.userId} student={s} />)
+          students.map((s) => (
+            <StudentCard
+              key={s.userId}
+              student={s}
+              defaultOpen={courseId !== "all" || Boolean(bucket)}
+              {...(courseId !== "all" ? { focusCourseId: courseId } : {})}
+            />
+          ))
         )}
       </div>
     </div>
