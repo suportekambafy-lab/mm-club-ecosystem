@@ -435,6 +435,7 @@ function ShortsFeed({
             idx={i}
             short={s}
             active={i === activeIdx}
+            mounted={Math.abs(i - activeIdx) <= 2}
             compact={commentsOpen}
             muted={muted}
             onToggleMute={() => setMuted((m) => !m)}
@@ -462,6 +463,7 @@ function ShortItem({
   idx,
   short,
   active,
+  mounted,
   compact = false,
   muted,
   onToggleMute,
@@ -475,6 +477,7 @@ function ShortItem({
   idx: number;
   short: ShortWithAuthor;
   active: boolean;
+  mounted: boolean;
   compact?: boolean;
   muted: boolean;
   onToggleMute: () => void;
@@ -568,17 +571,25 @@ function ShortItem({
     >
       <div className="relative flex h-full w-full items-center justify-center bg-black">
         <div className={cn("relative h-full w-full", !compact && "sm:aspect-[9/16] sm:h-full sm:w-auto sm:max-w-[min(100%,calc(100dvh*9/16))]") }>
-          <video
-            ref={videoRef}
-            src={short.video_url}
-            poster={short.thumbnail_url ?? undefined}
-            className={cn("h-full w-full", compact ? "object-contain" : "object-cover object-top")}
-            loop
-            muted={muted}
-            playsInline
-            preload="metadata"
-            onClick={handleVideoTap}
-          />
+          {mounted ? (
+            <video
+              ref={videoRef}
+              src={short.video_url}
+              poster={short.thumbnail_url ?? undefined}
+              className={cn("h-full w-full", compact ? "object-contain" : "object-cover object-top")}
+              loop
+              muted={muted}
+              playsInline
+              preload="metadata"
+              onClick={handleVideoTap}
+            />
+          ) : (
+            <div
+              className={cn("h-full w-full bg-black", compact ? "bg-contain bg-center bg-no-repeat" : "bg-cover bg-top")}
+              style={short.thumbnail_url ? { backgroundImage: `url(${short.thumbnail_url})` } : undefined}
+              onClick={handleVideoTap}
+            />
+          )}
           {paused && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div className="rounded-full bg-black/50 p-5 backdrop-blur">

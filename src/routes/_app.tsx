@@ -697,8 +697,9 @@ type TabItem = {
 
 const mobileTabs: TabItem[] = [
   { to: "/dashboard", label: "Início", icon: Home, exact: true },
-  { to: "/shorts", label: "Shorts", icon: Clapperboard },
+  { to: "/academia", label: "Academia", icon: GraduationCap },
   { to: "/comunidade", label: "Comunidade", icon: Users },
+  { to: "/shorts", label: "Shorts", icon: Clapperboard },
   { to: "/jade", label: "Inteligente", icon: Star },
 ];
 
