@@ -20,12 +20,8 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
 }
 
 function LaunchCountdown() {
-  const [t, setT] = useState(() => launchCountdown());
-
-  useEffect(() => {
-    const id = window.setInterval(() => setT(launchCountdown()), 1000);
-    return () => window.clearInterval(id);
-  }, []);
+  const now = useTicker(1000);
+  const t = useMemo(() => launchCountdown(new Date(now)), [now]);
 
   if (t.isOpen) {
     return (
