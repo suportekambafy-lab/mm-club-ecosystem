@@ -273,5 +273,13 @@ export async function collectRecoveryOverview(): Promise<RecoveryOverview> {
     reasons: [...reasonMap.values()].sort((a, b) => b.attempts - a.attempts),
     methods: methods.sort((a, b) => b.attempts - a.attempts),
     customers,
+    recovered: recoveredRows
+      .map((r) => ({ ...r, name: names.get(r.userId) ?? "—" }))
+      .sort(
+        (a, b) =>
+          new Date(b.recoveredAt ?? b.firstFailureAt).getTime() -
+          new Date(a.recoveredAt ?? a.firstFailureAt).getTime(),
+      ),
   };
+
 }
