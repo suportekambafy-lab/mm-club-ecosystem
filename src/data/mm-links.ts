@@ -7,8 +7,7 @@ export type MMLinkCategory =
   | "Criativos & Design"
   | "Tráfego & Analytics"
   | "Pagamentos"
-  | "Email & Automação"
-  | "MM Club";
+  | "Email & Automação";
 
 export interface MMLink {
   id: string;
@@ -25,7 +24,6 @@ export interface MMLink {
 }
 
 export const mmLinkCategories: MMLinkCategory[] = [
-  "MM Club",
   "Lojas & Dropshipping",
   "IA & No-Code",
   "Criativos & Design",
@@ -35,32 +33,6 @@ export const mmLinkCategories: MMLinkCategory[] = [
 ];
 
 export const mmLinks: MMLink[] = [
-  // MM Club
-  {
-    id: "mmclub",
-    name: "MM Club",
-    domain: "mmclub.online",
-    url: "https://www.mmclub.online",
-    category: "MM Club",
-    description: "A tua área de membros — academia, lives, ferramentas e comunidade.",
-  },
-  {
-    id: "mm-studio",
-    name: "MM Studio",
-    domain: "mmclub.online",
-    url: "https://www.mmclub.online/ferramentas/studio",
-    category: "MM Club",
-    description: "Criativos publicitários com IA: imagens, vídeos e logotipos.",
-  },
-  {
-    id: "mm-product-lab",
-    name: "MM Product Lab",
-    domain: "mmclub.online",
-    url: "https://www.mmclub.online/ferramentas/product-lab",
-    category: "MM Club",
-    description: "Mineração e validação de produtos com Score MM.",
-  },
-
   // Lojas & Dropshipping
   {
     id: "shopify",
