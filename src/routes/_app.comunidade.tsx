@@ -1283,8 +1283,33 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
     setLiked(post.liked_by_me);
     setLikeCount(post.like_count);
     setCommentCount(post.comment_count);
+    setViewCount(post.views_count);
     setEditContent(post.content);
-  }, [post.liked_by_me, post.like_count, post.comment_count, post.content]);
+  }, [post.liked_by_me, post.like_count, post.comment_count, post.views_count, post.content]);
+
+  // Conta uma visualização quando a publicação fica visível (uma vez por sessão).
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const storageKey = `mm-post-view-${post.id}`;
+    if (sessionStorage.getItem(storageKey)) return;
+    let done = false;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting || done) continue;
+          done = true;
+          observer.disconnect();
+          sessionStorage.setItem(storageKey, "1");
+          setViewCount((c) => c + 1);
+          void (supabase as any).rpc("community_post_increment_view", { _post_id: post.id });
+        }
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [post.id]);
 
   const toggleLike = async () => {
     if (!currentUserId) {
