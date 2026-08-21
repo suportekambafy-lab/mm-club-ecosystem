@@ -17,7 +17,15 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    optimizeDeps: {
+      // Pre-bundle the router with React so both resolve to the SAME React copy.
+      // Without this the router loads raw from node_modules while React comes from
+      // .vite/deps, giving two React instances and a null hook dispatcher
+      // ("resolveDispatcher().use") inside <Await>.
+      include: ["react", "react-dom", "react-dom/client", "react/jsx-runtime", "@tanstack/react-router"],
+    },
     resolve: {
+
       alias: [
         {
           // pdf-lib depends on tslib@1 (CJS-only), which breaks ESM interop in the
