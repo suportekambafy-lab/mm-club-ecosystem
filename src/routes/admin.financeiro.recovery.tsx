@@ -316,7 +316,72 @@ function RecoveryPage() {
         </button>
       </div>
 
+      <Panel title="Recuperados">
+        {data.recovered.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Ainda não há cobranças recuperadas.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[820px] text-sm">
+              <thead>
+                <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground">
+                  <th className="pb-2 pr-3 font-medium">Membro</th>
+                  <th className="pb-2 pr-3 font-medium">Valor</th>
+                  <th className="pb-2 pr-3 font-medium">Tentativas</th>
+                  <th className="pb-2 pr-3 font-medium">Fase</th>
+                  <th className="pb-2 pr-3 font-medium">Método</th>
+                  <th className="pb-2 pr-3 font-medium">Tempo</th>
+                  <th className="pb-2 font-medium">Recuperado em</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.recovered.map((r) => (
+                  <tr key={r.cycleKey} className="border-t border-border/60">
+                    <td className="py-2 pr-3">
+                      <Link
+                        to="/admin/financeiro/cliente/$userId"
+                        params={{ userId: r.userId }}
+                        className="hover:text-primary"
+                      >
+                        {r.name}
+                      </Link>
+                    </td>
+                    <td className="py-2 pr-3 tabular-nums">
+                      {money(r.amountCents)}
+                    </td>
+                    <td className="py-2 pr-3 tabular-nums">
+                      {r.attempts}{" "}
+                      <span className="text-muted-foreground">
+                        {r.attempts === 1 ? "tentativa" : "tentativas"}
+                      </span>
+                    </td>
+                    <td className="py-2 pr-3 text-muted-foreground">
+                      {PHASE_LABEL[r.phase] ?? r.phase}
+                    </td>
+                    <td className="py-2 pr-3 capitalize text-muted-foreground">
+                      {r.method ?? "—"}
+                    </td>
+                    <td className="py-2 pr-3 tabular-nums text-muted-foreground">
+                      {r.hoursToRecover === null
+                        ? "—"
+                        : r.hoursToRecover < 24
+                          ? `${r.hoursToRecover.toFixed(1)} h`
+                          : `${(r.hoursToRecover / 24).toFixed(1)} d`}
+                    </td>
+                    <td className="py-2 text-muted-foreground">
+                      {r.recoveredAt ? dt(r.recoveredAt) : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Panel>
+
       <Panel title="Dívida em aberto">
+
         {data.customers.length === 0 ? (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <AlertTriangle className="h-4 w-4" /> Nenhuma cobrança em
