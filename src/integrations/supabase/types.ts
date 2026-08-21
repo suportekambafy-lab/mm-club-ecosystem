@@ -3758,6 +3758,21 @@ export type Database = {
         Args: { _live_id: string; _user_id: string }
         Returns: boolean
       }
+      community_leaderboard: {
+        Args: { _days?: number; _limit?: number }
+        Returns: {
+          avatar_url: string
+          comments: number
+          display_name: string
+          likes_received: number
+          posts: number
+          rank: number
+          reactions_received: number
+          score: number
+          shorts: number
+          user_id: string
+        }[]
+      }
       cron_hook_headers: { Args: never; Returns: Json }
       extract_mention_user_ids: { Args: { _text: string }; Returns: string[] }
       has_feature: {
