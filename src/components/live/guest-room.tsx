@@ -226,6 +226,27 @@ export function GuestRoom({
     await r.localParticipant.setCameraEnabled(next);
     setCamOn(next);
   };
+  const toggleScreen = async () => {
+    const r = roomRef.current;
+    if (!r) return;
+    const next = !screenOn;
+    try {
+      await r.localParticipant.setScreenShareEnabled(next, { audio: true });
+      setScreenOn(next);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (/permission|denied|NotAllowed/i.test(msg)) {
+        toast.error("Partilha de ecrã cancelada ou bloqueada pelo navegador.");
+      } else if (/insufficient|not allowed to publish/i.test(msg)) {
+        toast.error("O anfitrião ainda não autorizou a tua partilha de ecrã.");
+      } else {
+        toast.error("Não foi possível partilhar o ecrã neste dispositivo.");
+      }
+      setScreenOn(false);
+    }
+  };
+
+
 
   if (connecting) {
     return (
