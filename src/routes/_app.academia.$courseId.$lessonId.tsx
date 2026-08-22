@@ -845,12 +845,14 @@ function TrackedVideoPlayer({
  */
 function LessonEndOverlay({
   open,
+  autoAdvance = true,
   nextTitle,
   onAdvance,
   advanceLabel,
   onReplay,
 }: {
   open: boolean;
+  autoAdvance?: boolean;
   nextTitle: string | null;
   onAdvance?: () => void;
   advanceLabel?: string;
@@ -868,23 +870,23 @@ function LessonEndOverlay({
       setRemaining(COUNTDOWN);
       return;
     }
-    if (!advanceRef.current) return;
+    if (!advanceRef.current || !autoAdvance) return;
     setRemaining(COUNTDOWN);
     const id = window.setInterval(() => {
       setRemaining((r) => (r <= 1 ? 0 : r - 1));
     }, 1000);
     return () => window.clearInterval(id);
-  }, [open]);
+  }, [open, autoAdvance]);
 
-  // Avanço automático: dispara UMA única vez por aula terminada, para nunca
-  // saltar duas aulas de seguida.
+  // Avanço automático: dispara UMA única vez por aula terminada, e só quando a
+  // aula foi de facto vista — nunca salta 2 ou 3 aulas de seguida.
   useEffect(() => {
-    if (!open || remaining > 0 || firedRef.current) return;
+    if (!open || !autoAdvance || remaining > 0 || firedRef.current) return;
     const advance = advanceRef.current;
     if (!advance) return;
     firedRef.current = true;
     advance();
-  }, [open, remaining]);
+  }, [open, autoAdvance, remaining]);
 
   const handleAdvanceClick = () => {
     if (firedRef.current) return;
@@ -894,7 +896,7 @@ function LessonEndOverlay({
 
   if (!open) return null;
 
-  const progress = onAdvance ? ((COUNTDOWN - remaining) / COUNTDOWN) * 100 : 0;
+  const progress = onAdvance && autoAdvance ? ((COUNTDOWN - remaining) / COUNTDOWN) * 100 : 0;
 
   return (
     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/85 px-5 text-center backdrop-blur-sm">
