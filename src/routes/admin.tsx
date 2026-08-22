@@ -85,7 +85,8 @@ type AdminTo =
   | "/admin/ferramentas"
   | "/admin/comunicacao"
   | "/admin/seguranca"
-  | "/admin/moderacao";
+  | "/admin/moderacao"
+  | "/admin/suporte";
 
 type NavItem = { to: AdminTo; label: string; icon: typeof Home; exact?: boolean };
 
@@ -124,6 +125,7 @@ const nav: Array<{ label: string; items: NavItem[] }> = [
       { to: "/admin/lives", label: "Lives", icon: Radio },
       { to: "/admin/ferramentas", label: "Ferramentas", icon: Wrench },
       { to: "/admin/moderacao", label: "Moderação", icon: Gavel },
+      { to: "/admin/suporte", label: "Mensagens de suporte", icon: Headset },
       { to: "/admin/seguranca", label: "Segurança", icon: ShieldCheck },
     ],
   },
@@ -146,6 +148,7 @@ const CRUMBS: Record<string, string> = {
   "/admin/lives": "Lives",
   "/admin/ferramentas": "Ferramentas",
   "/admin/moderacao": "Moderação",
+  "/admin/suporte": "Mensagens de suporte",
   "/admin/seguranca": "Segurança",
 };
 
