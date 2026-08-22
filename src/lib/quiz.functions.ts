@@ -544,27 +544,59 @@ export const getQuizAnalytics = createServerFn({ method: "POST" })
       .limit(2000);
     if (error) throw error;
 
+    const [{ data: settings }, { data: questions }] = await Promise.all([
+      context.supabase
+        .from("quiz_module_settings" as never)
+        .select("module_id, published, pass_score, question_count")
+        .eq("course_id" as never, data.courseId as never),
+      context.supabase
+        .from("quiz_questions" as never)
+        .select("module_id, active")
+        .eq("course_id" as never, data.courseId as never),
+    ]);
+
+    const settingsByModule = new Map<
+      string,
+      { published: boolean; passScore: number; questionCount: number }
+    >();
+    for (const s of (settings ?? []) as Array<any>) {
+      settingsByModule.set(s.module_id, {
+        published: Boolean(s.published),
+        passScore: Number(s.pass_score ?? 80),
+        questionCount: Number(s.question_count ?? 5),
+      });
+    }
+    const questionsByModule = new Map<string, number>();
+    for (const q of (questions ?? []) as Array<any>) {
+      if (!q.active) continue;
+      questionsByModule.set(q.module_id, (questionsByModule.get(q.module_id) ?? 0) + 1);
+    }
+
     const byModule = new Map<
       string,
       { moduleId: string; attempts: number; passed: number; avgScore: number; members: Set<string> }
     >();
+    const bucketOf = (moduleId: string) =>
+      byModule.get(moduleId) ??
+      byModule
+        .set(moduleId, {
+          moduleId,
+          attempts: 0,
+          passed: 0,
+          avgScore: 0,
+          members: new Set<string>(),
+        })
+        .get(moduleId)!;
+
     for (const a of (attempts ?? []) as Array<any>) {
-      const bucket =
-        byModule.get(a.module_id) ??
-        byModule
-          .set(a.module_id, {
-            moduleId: a.module_id,
-            attempts: 0,
-            passed: 0,
-            avgScore: 0,
-            members: new Set<string>(),
-          })
-          .get(a.module_id)!;
+      const bucket = bucketOf(a.module_id);
       bucket.attempts += 1;
       bucket.avgScore += Number(a.score ?? 0);
       bucket.members.add(a.user_id);
       if (a.passed) bucket.passed += 1;
     }
+    for (const moduleId of settingsByModule.keys()) bucketOf(moduleId);
+    for (const moduleId of questionsByModule.keys()) bucketOf(moduleId);
 
     return Array.from(byModule.values()).map((b) => ({
       moduleId: b.moduleId,
@@ -572,5 +604,9 @@ export const getQuizAnalytics = createServerFn({ method: "POST" })
       passedAttempts: b.passed,
       members: b.members.size,
       avgScore: b.attempts ? Math.round(b.avgScore / b.attempts) : 0,
+      published: settingsByModule.get(b.moduleId)?.published ?? false,
+      passScore: settingsByModule.get(b.moduleId)?.passScore ?? 80,
+      questionCount: settingsByModule.get(b.moduleId)?.questionCount ?? 5,
+      questionsAvailable: questionsByModule.get(b.moduleId) ?? 0,
     }));
   });
