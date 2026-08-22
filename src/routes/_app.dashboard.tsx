@@ -13,6 +13,7 @@ import { CourseCard } from "@/components/mm/course-card";
 import { Rail } from "@/components/mm/rail";
 import { ExpertAvatar } from "@/components/mm/expert-avatar";
 import { LiveHeroBanner } from "@/components/mm/live-hero-banner";
+import { SupportWidget } from "@/components/mm/support-widget";
 import { currentUser as fallbackUser } from "@/data/user";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import {
@@ -249,6 +250,7 @@ function DashboardPage() {
 
       <JadeCTA />
       <CommunityBlock />
+      <SupportWidget userName={sessionUser?.name ?? user?.name ?? ""} />
     </div>
   );
 }
