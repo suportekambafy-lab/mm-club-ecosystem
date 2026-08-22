@@ -1548,6 +1548,42 @@ export type Database = {
         }
         Relationships: []
       }
+      course_certificates: {
+        Row: {
+          code: string
+          course_id: string
+          course_title: string
+          hours: number
+          id: string
+          issued_at: string
+          lessons_total: number
+          member_name: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          course_id: string
+          course_title: string
+          hours?: number
+          id?: string
+          issued_at?: string
+          lessons_total?: number
+          member_name: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          course_id?: string
+          course_title?: string
+          hours?: number
+          id?: string
+          issued_at?: string
+          lessons_total?: number
+          member_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       domain_events: {
         Row: {
           actor_id: string | null
@@ -1788,6 +1824,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      learning_activity: {
+        Row: {
+          day: string
+          lessons_completed: number
+          minutes: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          day: string
+          lessons_completed?: number
+          minutes?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          day?: string
+          lessons_completed?: number
+          minutes?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      lesson_notes: {
+        Row: {
+          body: string
+          course_id: string
+          created_at: string
+          id: string
+          lesson_id: string
+          seconds: number
+          user_id: string
+        }
+        Insert: {
+          body: string
+          course_id: string
+          created_at?: string
+          id?: string
+          lesson_id: string
+          seconds?: number
+          user_id: string
+        }
+        Update: {
+          body?: string
+          course_id?: string
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          seconds?: number
+          user_id?: string
+        }
+        Relationships: []
       }
       lesson_progress: {
         Row: {
@@ -4037,6 +4127,19 @@ export type Database = {
         Returns: boolean
       }
       is_read_only_mode: { Args: never; Returns: boolean }
+      issue_course_certificate: {
+        Args: {
+          _course_id: string
+          _course_title: string
+          _hours: number
+          _lessons_total: number
+        }
+        Returns: {
+          code: string
+          issued_at: string
+          member_name: string
+        }[]
+      }
       match_lesson_chunks: {
         Args: {
           match_count?: number
@@ -4110,6 +4213,17 @@ export type Database = {
           rule: string
         }[]
       }
+      my_learning_streak: {
+        Args: never
+        Returns: {
+          active_days: string[]
+          current_streak: number
+          last_active_day: string
+          longest_streak: number
+          total_minutes: number
+          week_minutes: number
+        }[]
+      }
       next_invoice_number: { Args: never; Returns: string }
       notify_community_top_ranks: { Args: { _limit?: number }; Returns: number }
       notify_mentions: {
@@ -4120,6 +4234,10 @@ export type Database = {
           _post_id: string
           _short_id: string
         }
+        Returns: undefined
+      }
+      record_learning_activity: {
+        Args: { _lessons?: number; _minutes?: number }
         Returns: undefined
       }
       resolve_entitlements: {
@@ -4135,6 +4253,15 @@ export type Database = {
         Returns: number
       }
       security_posture_report: { Args: never; Returns: Json }
+      verify_certificate: {
+        Args: { _code: string }
+        Returns: {
+          course_title: string
+          hours: number
+          issued_at: string
+          member_name: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

@@ -24,6 +24,8 @@ import { lessonThumb } from "@/lib/course-duration";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 import { TranscriptProgress } from "@/components/mm/transcript-progress";
 import { LessonResources } from "@/components/mm/lesson-resources";
+import { LessonNotes } from "@/components/mm/lesson-notes";
+import { pingLearningActivity, recordLessonCompleted } from "@/lib/learning-activity";
 
 
 export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
@@ -72,6 +74,21 @@ function LessonPlayer() {
     courseIdForProgress,
     currentLessonId,
   );
+
+  // Cada gravação de progresso conta como atividade do dia (streak/meta semanal).
+  const trackedSaveProgress = useCallback<SaveLessonProgress>(
+    (seconds, options) => {
+      pingLearningActivity();
+      return saveProgress(seconds, options);
+    },
+    [saveProgress],
+  );
+
+  const toggleCompleted = useCallback(() => {
+    const next = !completed;
+    void setCompleted(next);
+    if (next) recordLessonCompleted();
+  }, [completed, setCompleted]);
 
   // Reset scroll on lesson change
   useEffect(() => {
@@ -147,7 +164,7 @@ function LessonPlayer() {
                 title={current.lesson.title}
                 source={source}
                 startSeconds={deepLinkSeconds ?? row?.progress_seconds ?? 0}
-                saveProgress={saveProgress}
+                saveProgress={trackedSaveProgress}
                 nextTitle={next?.lesson.title ?? null}
                 onAdvance={
                   next
@@ -188,7 +205,7 @@ function LessonPlayer() {
               <div className="flex min-w-0 shrink-0 items-center gap-1 overflow-x-auto pl-1 [scrollbar-width:none] sm:gap-2 [&::-webkit-scrollbar]:hidden">
                 <button
                   type="button"
-                  onClick={() => setCompleted(!completed)}
+                  onClick={toggleCompleted}
                   disabled={saving}
                   aria-label={completed ? "Marcar como não concluída" : "Marcar como concluída"}
                   className={cn(
@@ -247,6 +264,19 @@ function LessonPlayer() {
               description={current.lesson.description}
               links={current.lesson.links}
               materials={current.lesson.materials}
+            />
+
+            <LessonNotes
+              courseId={course.id}
+              lessonId={current.lesson.id}
+              currentSeconds={row?.progress_seconds ?? 0}
+              onSeek={(seconds) =>
+                navigate({
+                  to: "/academia/$courseId/$lessonId",
+                  params: { courseId: course.id, lessonId: current.lesson.id },
+                  search: { t: seconds },
+                })
+              }
             />
           </div>
         </div>

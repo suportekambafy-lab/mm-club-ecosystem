@@ -9,7 +9,8 @@ import { ExpertAvatar } from "@/components/mm/expert-avatar";
 import type { Course, Lesson, Module } from "@/data/types";
 import { useUserProgress } from "@/hooks/use-user-progress";
 import { courseCoverBackground } from "@/lib/course-cover";
-import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb } from "@/lib/course-duration";
+import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb, parseDurationToMinutes } from "@/lib/course-duration";
+import { CourseCertificate } from "@/components/mm/course-certificate";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReleaseCountdown } from "@/components/mm/release-countdown";
@@ -181,6 +182,14 @@ function CourseDetail() {
               </div>
             </div>
           )}
+
+          <CourseCertificate
+            courseId={course.id}
+            courseTitle={course.title}
+            hours={Math.round((parseDurationToMinutes(totalDuration) / 60) * 10) / 10}
+            lessonsTotal={totalLessons}
+            completed={percent >= 100}
+          />
 
         </div>
       </section>
