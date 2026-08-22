@@ -74,10 +74,10 @@ export function SupportWidget({ userName }: { userName?: string }) {
                       <X className="h-5 w-5" />
                     </button>
                   </div>
-                  <p className="mt-6 font-display text-2xl opacity-60">
+                  <p className="mt-4 font-display text-xl opacity-60 sm:mt-6 sm:text-2xl">
                     Olá{firstName ? ` ${firstName}` : ""} 👋
                   </p>
-                  <h2 className="font-display text-2xl">Como podemos ajudar?</h2>
+                  <h2 className="font-display text-xl sm:text-2xl">Como podemos ajudar?</h2>
                 </div>
 
                 <div className="-mt-5 min-h-0 flex-1 space-y-3 overflow-y-auto px-3 pb-3">
@@ -143,7 +143,7 @@ export function SupportWidget({ userName }: { userName?: string }) {
 
       <button
         onClick={() => setOpen((v) => !v)}
-        className="fixed right-4 bottom-4 z-[70] inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background shadow-2xl transition hover:opacity-90 sm:right-5 sm:bottom-5"
+        className="fixed right-3 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-[70] inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background shadow-2xl transition hover:opacity-90 sm:right-5 sm:bottom-5"
       >
         {open ? <X className="h-4 w-4" /> : <Headset className="h-4 w-4" />}
         Suporte
