@@ -70,17 +70,18 @@ export async function replyToCommunityPost(postId: string): Promise<{ replied: b
   if (row.author_id === SUPPORT_BOT_ID) return { replied: false };
 
   const text = (row.content ?? "").trim();
-  if (text.length < 15) return { replied: false };
+  if (text.length < 8) return { replied: false };
 
   const { data: existing } = await admin
     .from("community_comments")
     .select("id, author_id, content")
     .eq("post_id", postId)
-    .limit(20);
+    .limit(30);
 
   const comments = (existing ?? []) as Array<{ author_id: string; content: string }>;
+  // Nunca responde duas vezes ao mesmo post; em conversas já longas fica de fora.
   if (comments.some((c) => c.author_id === SUPPORT_BOT_ID)) return { replied: false };
-  if (comments.length >= 2) return { replied: false };
+  if (comments.length >= 6) return { replied: false };
 
   const { lessonMomentsContext } = await import("./lesson-moments.server");
   const lessonsContext = await lessonMomentsContext(text, key);
