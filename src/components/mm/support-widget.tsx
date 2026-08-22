@@ -123,7 +123,7 @@ export function SupportWidget({ userName }: { userName?: string }) {
                     onClick={() => openChat(query.trim() || undefined)}
                     className="flex w-full items-center gap-3 rounded-2xl border border-border bg-surface-1 p-4 text-left shadow-sm transition hover:border-[color:var(--hairline)]"
                   >
-                    <span className="flex-1">
+                    <span className="min-w-0 flex-1">
                       <span className="block font-display text-base text-foreground">
                         Converse connosco
                       </span>
