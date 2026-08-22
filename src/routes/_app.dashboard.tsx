@@ -249,6 +249,7 @@ function DashboardPage() {
 
       <JadeCTA />
       <CommunityBlock />
+      <SupportWidget userName={sessionUser?.name ?? user?.name ?? ""} />
     </div>
   );
 }
