@@ -332,7 +332,9 @@ export function NotificationsBell({ className }: { className?: string }) {
           ? Number(n.course_id.slice(4)) || null
           : null;
       const copy = communityCopy(n.kind, n.actor_name, isShort, rankPosition);
-      const href = n.kind === "rank"
+      const href = n.kind === "moderation"
+        ? "/comunidade"
+        : n.kind === "rank"
         ? "/comunidade"
         : n.kind === "inactivity"
         ? "/dashboard"
