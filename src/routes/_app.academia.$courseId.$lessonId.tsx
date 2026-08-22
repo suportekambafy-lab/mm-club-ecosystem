@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Circle,
   Loader2,
+  Lock,
 } from "lucide-react";
 import { VideoWatermark } from "@/components/mm/video-watermark";
 import { coursesById } from "@/data/courses";
