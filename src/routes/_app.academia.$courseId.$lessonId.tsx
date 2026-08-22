@@ -95,18 +95,47 @@ function LessonPlayer() {
   const seekRef = useRef<((seconds: number) => void) | null>(null);
 
   // Bloqueio sequencial: se o módulo desta aula está trancado por um teste
-  // não aprovado, volta à página do curso.
+  // não aprovado, volta à página do curso já com o teste em foco.
   const quiz = useCourseQuiz(courseIdForProgress);
-  const { locked: lockedModules } = lockedModuleIds(
+  const { locked: lockedModules, blockedBy } = lockedModuleIds(
     (coursesById[courseId]?.modules ?? []).map((m: Module) => m.id),
     quiz,
   );
   const currentModuleId = data?.current.module.id;
   const moduleLocked = Boolean(currentModuleId && lockedModules.has(currentModuleId));
+  const blockerModuleId = currentModuleId ? blockedBy[currentModuleId] : undefined;
   useEffect(() => {
     if (!moduleLocked) return;
-    void navigate({ to: "/academia/$courseId", params: { courseId }, replace: true });
-  }, [moduleLocked, navigate, courseId]);
+    void navigate({
+      to: "/academia/$courseId",
+      params: { courseId },
+      search: blockerModuleId ? { quiz: blockerModuleId } : {},
+      replace: true,
+    });
+  }, [moduleLocked, navigate, courseId, blockerModuleId]);
+
+  // Última aula do módulo com teste publicado e ainda não aprovado: em vez de
+  // saltar para o módulo seguinte (que está trancado), leva ao teste.
+  const currentModuleState = currentModuleId ? quiz.modules[currentModuleId] : undefined;
+  const nextLesson = data?.next ?? null;
+  const isLastOfModule = Boolean(
+    currentModuleId && (!nextLesson || nextLesson.module.id !== currentModuleId),
+  );
+  const quizPending = Boolean(
+    !quiz.staff &&
+      isLastOfModule &&
+      currentModuleState?.published &&
+      (currentModuleState?.questionsAvailable ?? 0) > 0 &&
+      !currentModuleState?.passed,
+  );
+  const goToModuleQuiz = useCallback(() => {
+    if (!currentModuleId) return;
+    void navigate({
+      to: "/academia/$courseId",
+      params: { courseId },
+      search: { quiz: currentModuleId },
+    });
+  }, [courseId, currentModuleId, navigate]);
 
   // Reset scroll on lesson change
   useEffect(() => {
