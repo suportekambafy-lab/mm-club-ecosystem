@@ -369,18 +369,20 @@ function ModuleAccordion({
   courseId,
   currentLessonId,
   defaultOpen,
+  locked,
 }: {
   module: Module;
   course: Course;
   courseId: string;
   currentLessonId: string;
   defaultOpen: boolean;
+  locked?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const Icon = open ? ChevronUp : ChevronDown;
 
   return (
-    <div className="min-w-0 rounded-2xl bg-surface-2 p-3 sm:p-4">
+    <div className={cn("min-w-0 rounded-2xl bg-surface-2 p-3 sm:p-4", locked && "opacity-60")}>
       <button
         type="button"
         onClick={() => setOpen((s) => !s)}
@@ -388,8 +390,11 @@ function ModuleAccordion({
       >
         <div className="min-w-0 flex-1">
           <p className="truncate text-[15px] leading-snug text-foreground">{module.title}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {module.lessons.length} {module.lessons.length === 1 ? "aula" : "aulas"}
+          <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+            {locked && <Lock className="h-3 w-3 shrink-0" />}
+            {locked
+              ? "Teste do módulo anterior pendente"
+              : `${module.lessons.length} ${module.lessons.length === 1 ? "aula" : "aulas"}`}
           </p>
         </div>
         <Icon className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
@@ -404,6 +409,7 @@ function ModuleAccordion({
               course={course}
               courseId={courseId}
               active={l.id === currentLessonId}
+              locked={locked}
             />
           ))}
         </ul>
