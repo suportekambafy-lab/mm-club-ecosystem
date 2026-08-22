@@ -77,6 +77,18 @@ export function SupportWidget({ userName }: { userName?: string }) {
     setView("chat");
   }
 
+  // Permite abrir o chat de suporte de qualquer lugar da app
+  // (ex.: botão "Contactar suporte" no perfil do MM Suporte na Comunidade).
+  useEffect(() => {
+    const onOpen = () => {
+      setOpen(true);
+      setView("chat");
+    };
+    window.addEventListener("mm-support:open", onOpen);
+    return () => window.removeEventListener("mm-support:open", onOpen);
+  }, []);
+
+
   return (
     <>
       {open && (
