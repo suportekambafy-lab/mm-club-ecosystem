@@ -102,9 +102,10 @@ export const getSupportThreadMessages = createServerFn({ method: "GET" })
     await assertStaff(context);
     const { data: rows, error } = await context.supabase
       .from("support_messages")
-      .select("id, role, content, created_at")
+      .select("id, role, content, created_at, seq")
       .eq("thread_id", data.threadId)
       .order("created_at", { ascending: true })
+      .order("seq", { ascending: true })
       .limit(500);
     if (error) throw error;
     return (rows ?? []) as SupportMessageRow[];

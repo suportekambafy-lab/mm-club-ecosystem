@@ -1,0 +1,2 @@
+ALTER TABLE public.support_messages ADD COLUMN IF NOT EXISTS seq integer NOT NULL DEFAULT 0;
+CREATE INDEX IF NOT EXISTS support_messages_thread_order_idx ON public.support_messages (thread_id, created_at, seq);

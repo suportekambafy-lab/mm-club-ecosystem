@@ -233,7 +233,7 @@ function AdminSuportePage() {
                           : "bg-surface-2 text-foreground",
                       )}
                     >
-                      {m.content}
+                      {m.content.replace(/\[([^\]]+)\]\((\/[^)]*)\)/g, "$1 ($2)")}
                       <span className="mt-1 block text-[10px] text-muted-foreground">
                         {when(m.created_at)}
                       </span>
