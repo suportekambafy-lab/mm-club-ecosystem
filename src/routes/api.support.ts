@@ -1,21 +1,7 @@
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
-
-function textOf(m: UIMessage): string {
-  return (m.parts ?? [])
-    .filter((part: { type: string }) => part.type === "text")
-    .map((part) => (part as { text?: string }).text ?? "")
-    .join("")
-    .trim();
-}
-
-/** Hash estável do conteúdo, usado quando a mensagem não traz id do cliente. */
-function hashContent(text: string): string {
-  let hash = 5381;
-  for (let i = 0; i < text.length; i += 1) hash = ((hash * 33) ^ text.charCodeAt(i)) >>> 0;
-  return hash.toString(36);
-}
+import { buildSupportRows, textOf } from "@/lib/support-messages";
 
 
 
@@ -46,28 +32,7 @@ async function persistSupport(
       threadId = created.id as string;
     }
 
-    const rows = messages
-      .filter((m) => m.role === "user" || m.role === "assistant")
-      .map((m, index) => {
-        const content = textOf(m).replace("[[HUMANO]]", "").trim();
-        // client_id tem de ser estável e único por mensagem: um id baseado no
-        // índice fazia com que a resposta nova sobrescrevesse a anterior
-        // (mantendo o timestamp antigo e trocando a ordem no painel).
-        const fallback = `${m.role}-${hashContent(content)}`;
-        return {
-          thread_id: threadId!,
-          user_id: userId,
-          client_id: m.id && String(m.id).trim() ? String(m.id) : fallback,
-          role: m.role,
-          content,
-          seq: index,
-        };
-      })
-      .filter((r) => r.content.length > 0);
-
-    const byClient = new Map<string, (typeof rows)[number]>();
-    for (const row of rows) byClient.set(row.client_id, row);
-    const unique = [...byClient.values()];
+    const unique = buildSupportRows(threadId!, userId, messages);
 
 
     if (unique.length > 0) {
