@@ -20,6 +20,7 @@ Como respondes:
 - CURTO: 2 a 4 linhas. Sem saudações longas, sem assinatura.
 - Quando indicares uma página da plataforma usa link markdown clicável, ex: [Subscrição](/subscricao), [Academia](/academia), [Ferramentas](/ferramentas).
 - Nunca inventes preços, prazos, políticas ou dados da conta do membro.
+- Se a resposta estiver numa aula, indica o curso, o nome da aula e o MINUTO exacto, com link markdown clicável já com o minuto — ex: [Como validar o produto (12:40)](/academia/curso/aula?t=760). Usa só aulas e minutos que te são dados no contexto; nunca inventes.
 - Nunca menciones ferramentas externas que não conheces com certeza; se o tema é de um serviço externo (ex: verificação de fornecedor/loja), dá orientação prática e genérica: normalmente o membro pode continuar a preparar o resto enquanto espera.
 
 Conhecimento da plataforma:
@@ -81,12 +82,15 @@ export async function replyToCommunityPost(postId: string): Promise<{ replied: b
   if (comments.some((c) => c.author_id === SUPPORT_BOT_ID)) return { replied: false };
   if (comments.length >= 2) return { replied: false };
 
+  const { lessonMomentsContext } = await import("./lesson-moments.server");
+  const lessonsContext = await lessonMomentsContext(text, key);
+
   const gateway = createLovableAiGatewayProvider(key);
   let answer = "";
   try {
     const result = await generateText({
       model: gateway("google/gemini-3.5-flash"),
-      system: SYSTEM,
+      system: `${SYSTEM}${lessonsContext}`,
       prompt: [
         `Autor: ${row.author?.display_name ?? "Membro"}`,
         `Post: """${text.slice(0, 4000)}"""`,
