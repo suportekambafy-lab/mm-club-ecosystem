@@ -1366,6 +1366,10 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
       setEditing(false);
       qc.invalidateQueries({ queryKey: ["community", "posts"] });
       toast.success("Post atualizado.");
+      // Reavaliar pelo agente de moderação: editar não pode servir de atalho.
+      runModeration({ kind: "community_post", id: post.id }, () =>
+        qc.invalidateQueries({ queryKey: ["community", "posts"] }),
+      );
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
