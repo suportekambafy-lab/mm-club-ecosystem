@@ -42,6 +42,7 @@ import { Route as AdminFerramentasRouteImport } from './routes/admin.ferramentas
 import { Route as AdminEventosRouteImport } from './routes/admin.eventos'
 import { Route as AdminCursosRouteImport } from './routes/admin.cursos'
 import { Route as AdminComunicacaoRouteImport } from './routes/admin.comunicacao'
+import { Route as AdminCertificadosRouteImport } from './routes/admin.certificados'
 import { Route as AdminAulasRouteImport } from './routes/admin.aulas'
 import { Route as AppSubscricaoRouteImport } from './routes/_app.subscricao'
 import { Route as AppShortsRouteImport } from './routes/_app.shorts'
@@ -280,6 +281,11 @@ const AdminCursosRoute = AdminCursosRouteImport.update({
 const AdminComunicacaoRoute = AdminComunicacaoRouteImport.update({
   id: '/comunicacao',
   path: '/comunicacao',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCertificadosRoute = AdminCertificadosRouteImport.update({
+  id: '/certificados',
+  path: '/certificados',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAulasRoute = AdminAulasRouteImport.update({
@@ -720,6 +726,7 @@ export interface FileRoutesByFullPath {
   '/shorts': typeof AppShortsRoute
   '/subscricao': typeof AppSubscricaoRoute
   '/admin/aulas': typeof AdminAulasRoute
+  '/admin/certificados': typeof AdminCertificadosRoute
   '/admin/comunicacao': typeof AdminComunicacaoRoute
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
@@ -825,6 +832,7 @@ export interface FileRoutesByTo {
   '/shorts': typeof AppShortsRoute
   '/subscricao': typeof AppSubscricaoRoute
   '/admin/aulas': typeof AdminAulasRoute
+  '/admin/certificados': typeof AdminCertificadosRoute
   '/admin/comunicacao': typeof AdminComunicacaoRoute
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
@@ -932,6 +940,7 @@ export interface FileRoutesById {
   '/_app/shorts': typeof AppShortsRoute
   '/_app/subscricao': typeof AppSubscricaoRoute
   '/admin/aulas': typeof AdminAulasRoute
+  '/admin/certificados': typeof AdminCertificadosRoute
   '/admin/comunicacao': typeof AdminComunicacaoRoute
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
@@ -1043,6 +1052,7 @@ export interface FileRouteTypes {
     | '/shorts'
     | '/subscricao'
     | '/admin/aulas'
+    | '/admin/certificados'
     | '/admin/comunicacao'
     | '/admin/cursos'
     | '/admin/eventos'
@@ -1148,6 +1158,7 @@ export interface FileRouteTypes {
     | '/shorts'
     | '/subscricao'
     | '/admin/aulas'
+    | '/admin/certificados'
     | '/admin/comunicacao'
     | '/admin/cursos'
     | '/admin/eventos'
@@ -1254,6 +1265,7 @@ export interface FileRouteTypes {
     | '/_app/shorts'
     | '/_app/subscricao'
     | '/admin/aulas'
+    | '/admin/certificados'
     | '/admin/comunicacao'
     | '/admin/cursos'
     | '/admin/eventos'
@@ -1615,6 +1627,13 @@ declare module '@tanstack/react-router' {
       path: '/comunicacao'
       fullPath: '/admin/comunicacao'
       preLoaderRoute: typeof AdminComunicacaoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/certificados': {
+      id: '/admin/certificados'
+      path: '/certificados'
+      fullPath: '/admin/certificados'
+      preLoaderRoute: typeof AdminCertificadosRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/aulas': {
@@ -2335,6 +2354,7 @@ const AdminLivesRouteWithChildren = AdminLivesRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminAulasRoute: typeof AdminAulasRoute
+  AdminCertificadosRoute: typeof AdminCertificadosRoute
   AdminComunicacaoRoute: typeof AdminComunicacaoRoute
   AdminCursosRoute: typeof AdminCursosRoute
   AdminEventosRoute: typeof AdminEventosRoute
@@ -2352,6 +2372,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAulasRoute: AdminAulasRoute,
+  AdminCertificadosRoute: AdminCertificadosRoute,
   AdminComunicacaoRoute: AdminComunicacaoRoute,
   AdminCursosRoute: AdminCursosRoute,
   AdminEventosRoute: AdminEventosRoute,

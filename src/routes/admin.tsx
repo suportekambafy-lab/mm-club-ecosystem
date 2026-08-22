@@ -26,6 +26,7 @@ import {
   Sun,
   Moon,
   ShieldCheck,
+  Award,
   GraduationCap,
   Gavel,
   Headset,
@@ -116,6 +117,7 @@ const nav: Array<{ label: string; items: NavItem[] }> = [
       { to: "/admin/cursos", label: "Cursos", icon: BookOpen },
       { to: "/admin/aulas", label: "Aulas", icon: PlayCircle },
       { to: "/admin/progresso", label: "Progresso dos alunos", icon: GraduationCap },
+      { to: "/admin/certificados", label: "Certificados & Sequências", icon: Award },
       { to: "/admin/transcricoes", label: "Transcrições", icon: Sparkles },
     ],
   },
@@ -135,6 +137,7 @@ const nav: Array<{ label: string; items: NavItem[] }> = [
 const CRUMBS: Record<string, string> = {
   "/admin": "Início",
   "/admin/financeiro": "Financeiro",
+  "/admin/certificados": "Certificados & Sequências",
   "/admin/financeiro/receita": "Vendas",
   "/admin/financeiro/subscricoes": "Subscrições",
   "/admin/financeiro/cupoes": "Cupões",
