@@ -706,7 +706,7 @@ function TrackedVideoPlayer({
     };
     const onEnded = (data?: { seconds?: number; duration?: number }) => {
       persist(data?.duration ?? data?.seconds ?? lastSavedRef.current, true, true);
-      setEnded(true);
+      markEnded();
     };
     const onPause = () => {
       player?.getCurrentTime((seconds) => persist(seconds, false, true));
@@ -747,7 +747,7 @@ function TrackedVideoPlayer({
       const seconds = typeof payload?.currentTime === "number" ? payload.currentTime : null;
       if (message === "panda_ended") {
         persist(seconds ?? lastSavedRef.current, true, true);
-        setEnded(true);
+        markEnded();
       }
       else if (message === "panda_pause" && seconds != null) persist(seconds, false, true);
       else if (message === "panda_timeupdate" && seconds != null) persist(seconds);
@@ -797,7 +797,7 @@ function TrackedVideoPlayer({
           onPlay={() => setEnded(false)}
           onEnded={(event) => {
             persist(event.currentTarget.duration || event.currentTarget.currentTime, true, true);
-            setEnded(true);
+            markEnded();
           }}
         />
         <VideoWatermark />
