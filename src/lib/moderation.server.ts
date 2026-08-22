@@ -96,13 +96,15 @@ export async function classifyContent(args: {
   text: string | null;
   imageUrl?: string | null;
 }): Promise<ModerationVerdict> {
+  const base = { severity: "leve" as const, rule: "" };
   const key = process.env.LOVABLE_API_KEY;
-  if (!key) return { action: "allow", category: "indisponível", reason: "Agente sem chave." };
+  if (!key) return { ...base, action: "allow", category: "indisponível", reason: "Agente sem chave." };
 
   const text = (args.text ?? "").trim();
   if (!text && !args.imageUrl) {
-    return { action: "allow", category: "vazio", reason: "Sem conteúdo." };
+    return { ...base, action: "allow", category: "vazio", reason: "Sem conteúdo." };
   }
+
 
   const gateway = createLovableAiGatewayProvider(key);
   const content: Array<Record<string, unknown>> = [
