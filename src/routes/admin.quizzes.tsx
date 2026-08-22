@@ -1,0 +1,374 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import {
+  BrainCircuit,
+  Check,
+  Loader2,
+  RefreshCw,
+  Sparkles,
+  Trash2,
+  Users,
+} from "lucide-react";
+import { SectionHeading } from "@/components/mm/section-heading";
+import { courses } from "@/data/courses";
+import { applyOverrides, loadOverrides } from "@/data/admin-store";
+import type { Course, Module } from "@/data/types";
+import {
+  deleteQuestion,
+  generateModuleQuiz,
+  getQuizAnalytics,
+  listModuleQuestions,
+  saveModuleSettings,
+  updateQuestion,
+} from "@/lib/quiz.functions";
+import { cn } from "@/lib/utils";
+
+export const Route = createFileRoute("/admin/quizzes")({
+  component: AdminQuizzes,
+});
+
+type QuestionRow = Awaited<ReturnType<typeof listModuleQuestions>>[number];
+type Analytics = Awaited<ReturnType<typeof getQuizAnalytics>>;
+
+function AdminQuizzes() {
+  const [ready, setReady] = useState(false);
+  const [courseId, setCourseId] = useState(courses[0]?.id ?? "");
+  const [analytics, setAnalytics] = useState<Analytics>([]);
+
+  const loadAnalytics = useServerFn(getQuizAnalytics);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        applyOverrides(await loadOverrides());
+      } catch {
+        /* usa dados locais */
+      }
+      setReady(true);
+    })();
+  }, []);
+
+  const refreshAnalytics = useCallback(async () => {
+    if (!courseId) return;
+    try {
+      setAnalytics(await loadAnalytics({ data: { courseId } }));
+    } catch {
+      setAnalytics([]);
+    }
+  }, [courseId, loadAnalytics]);
+
+  useEffect(() => {
+    void refreshAnalytics();
+  }, [refreshAnalytics]);
+
+  const course: Course | undefined = courses.find((c) => c.id === courseId);
+
+  return (
+    <div className="space-y-6">
+      <SectionHeading
+        eyebrow="Academia"
+        title="MM Quiz"
+        size="md"
+        description="Testes de fim de módulo gerados a partir das transcrições. Aprovar desbloqueia o módulo seguinte."
+      />
+
+      <div className="flex flex-wrap items-center gap-3">
+        <select
+          value={courseId}
+          onChange={(e) => setCourseId(e.target.value)}
+          className="rounded-full border border-border bg-surface-1 px-4 py-2 text-sm text-foreground"
+        >
+          {courses.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.title}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={() => void refreshAnalytics()}
+          className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-1 px-4 py-2 text-xs font-semibold transition hover:bg-surface-2"
+        >
+          <RefreshCw className="h-3.5 w-3.5" /> Atualizar métricas
+        </button>
+      </div>
+
+      {!ready && (
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" /> A carregar cursos…
+        </p>
+      )}
+
+      {ready && course?.modules?.length ? (
+        <div className="space-y-4">
+          {course.modules.map((m, i) => (
+            <ModuleCard
+              key={m.id}
+              course={course}
+              module={m}
+              index={i}
+              stats={analytics.find((a) => a.moduleId === m.id)}
+              onChanged={refreshAnalytics}
+            />
+          ))}
+        </div>
+      ) : null}
+
+      {ready && !course?.modules?.length && (
+        <p className="text-sm text-muted-foreground">Este curso não tem módulos.</p>
+      )}
+    </div>
+  );
+}
+
+function ModuleCard({
+  course,
+  module: m,
+  index,
+  stats,
+  onChanged,
+}: {
+  course: Course;
+  module: Module;
+  index: number;
+  stats: Analytics[number] | undefined;
+  onChanged: () => void;
+}) {
+  const list = useServerFn(listModuleQuestions);
+  const generate = useServerFn(generateModuleQuiz);
+  const save = useServerFn(saveModuleSettings);
+  const update = useServerFn(updateQuestion);
+  const remove = useServerFn(deleteQuestion);
+
+  const [open, setOpen] = useState(false);
+  const [rows, setRows] = useState<QuestionRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [published, setPublished] = useState(false);
+  const [passScore, setPassScore] = useState(80);
+  const [questionCount, setQuestionCount] = useState(5);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      setRows(await list({ data: { courseId: course.id, moduleId: m.id } }));
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falhou a leitura das perguntas");
+    } finally {
+      setLoading(false);
+    }
+  }, [course.id, list, m.id]);
+
+  useEffect(() => {
+    if (open) void refresh();
+  }, [open, refresh]);
+
+  async function handleGenerate() {
+    setBusy(true);
+    try {
+      const res = (await generate({
+        data: {
+          courseId: course.id,
+          courseTitle: course.title,
+          moduleId: m.id,
+          moduleTitle: m.title,
+          lessons: m.lessons.map((l) => ({ id: l.id, title: l.title })),
+          count: Math.max(questionCount + 3, 8),
+          replace: true,
+        },
+      })) as { created?: number };
+      toast.success(`Geradas ${res?.created ?? 0} perguntas para “${m.title}”.`);
+      await refresh();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falhou a geração");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function persistSettings(patch: {
+    published?: boolean;
+    passScore?: number;
+    questionCount?: number;
+  }) {
+    try {
+      await save({ data: { courseId: course.id, moduleId: m.id, ...patch } });
+      toast.success("Definições guardadas.");
+      onChanged();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falhou a gravação");
+    }
+  }
+
+  const activeCount = rows.filter((r) => r.active).length;
+
+  return (
+    <div className="overflow-hidden rounded-xl bg-surface-1 ring-1 ring-border">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-primary">
+            Módulo {String(index + 1).padStart(2, "0")}
+          </p>
+          <h3 className="truncate font-display text-base text-foreground">{m.title}</h3>
+          <p className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+            <span>{m.lessons.length} aulas</span>
+            {stats && (
+              <>
+                <span className="inline-flex items-center gap-1">
+                  <Users className="h-3 w-3" /> {stats.members} membros
+                </span>
+                <span>
+                  {stats.attempts} tentativas · média {stats.avgScore}%
+                </span>
+              </>
+            )}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleGenerate}
+            disabled={busy}
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition hover:bg-gold-soft disabled:opacity-50"
+          >
+            {busy ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="h-3.5 w-3.5" />
+            )}
+            Gerar por IA
+          </button>
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-2 px-4 py-2 text-xs font-semibold transition hover:bg-surface-3"
+          >
+            <BrainCircuit className="h-3.5 w-3.5" />
+            {open ? "Fechar" : "Perguntas"}
+          </button>
+        </div>
+      </div>
+
+      {open && (
+        <div className="space-y-4 border-t border-border px-4 py-4 sm:px-5">
+          <div className="flex flex-wrap items-center gap-4 text-xs">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={published}
+                onChange={(e) => {
+                  setPublished(e.target.checked);
+                  void persistSettings({ published: e.target.checked });
+                }}
+                className="h-4 w-4 accent-[color:var(--color-primary,#c8a24a)]"
+              />
+              Publicado (bloqueia módulo seguinte)
+            </label>
+            <label className="flex items-center gap-2">
+              Nota mínima
+              <input
+                type="number"
+                min={20}
+                max={100}
+                value={passScore}
+                onChange={(e) => setPassScore(Number(e.target.value))}
+                onBlur={() => void persistSettings({ passScore })}
+                className="w-16 rounded-lg border border-border bg-surface-2 px-2 py-1"
+              />
+              %
+            </label>
+            <label className="flex items-center gap-2">
+              Perguntas por teste
+              <input
+                type="number"
+                min={1}
+                max={20}
+                value={questionCount}
+                onChange={(e) => setQuestionCount(Number(e.target.value))}
+                onBlur={() => void persistSettings({ questionCount })}
+                className="w-16 rounded-lg border border-border bg-surface-2 px-2 py-1"
+              />
+            </label>
+            <span className="text-muted-foreground">
+              {activeCount} perguntas ativas no banco
+            </span>
+          </div>
+
+          {loading && (
+            <p className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> A carregar…
+            </p>
+          )}
+
+          {!loading && !rows.length && (
+            <p className="text-sm text-muted-foreground">
+              Sem perguntas. Usa “Gerar por IA” — precisa das transcrições das aulas.
+            </p>
+          )}
+
+          <ul className="space-y-2">
+            {rows.map((r) => (
+              <li
+                key={r.id}
+                className={cn(
+                  "rounded-xl border border-border bg-surface-2 px-3 py-3 text-xs",
+                  !r.active && "opacity-50",
+                )}
+              >
+                <p className="text-sm text-foreground">{r.prompt}</p>
+                <ul className="mt-2 space-y-1">
+                  {r.options.map((o, i) => (
+                    <li
+                      key={i}
+                      className={cn(
+                        "flex items-center gap-2",
+                        i === r.correct_index ? "text-emerald-500" : "text-muted-foreground",
+                      )}
+                    >
+                      {i === r.correct_index ? (
+                        <Check className="h-3 w-3" />
+                      ) : (
+                        <span className="w-3 text-center">{String.fromCharCode(65 + i)}</span>
+                      )}
+                      {o}
+                    </li>
+                  ))}
+                </ul>
+                {r.explanation && (
+                  <p className="mt-2 text-muted-foreground">{r.explanation}</p>
+                )}
+                <div className="mt-3 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await update({ data: { id: r.id, active: !r.active } });
+                      await refresh();
+                    }}
+                    className="text-primary transition hover:underline"
+                  >
+                    {r.active ? "Desativar" : "Ativar"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await remove({ data: { id: r.id } });
+                      await refresh();
+                    }}
+                    className="inline-flex items-center gap-1 text-red-500 transition hover:underline"
+                  >
+                    <Trash2 className="h-3 w-3" /> Eliminar
+                  </button>
+                  {r.lesson_title && (
+                    <span className="text-muted-foreground">Aula: {r.lesson_title}</span>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -14,6 +14,8 @@ import { CourseCertificate } from "@/components/mm/course-certificate";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReleaseCountdown } from "@/components/mm/release-countdown";
+import { ModuleQuiz } from "@/components/mm/module-quiz";
+import { useCourseQuiz, lockedModuleIds } from "@/hooks/use-course-quiz";
 
 
 
@@ -34,6 +36,11 @@ function CourseDetail() {
   const { progress, loaded } = useUserProgress();
   const { canOpen } = useCourseAccess();
   const p = progress[course.id];
+  const quiz = useCourseQuiz(course.id);
+  const { locked, blockedBy } = lockedModuleIds(
+    (course.modules ?? []).map((m: Module) => m.id),
+    quiz,
+  );
 
   const percent = Math.round((p?.progress ?? 0) * 100);
   const resumeLesson =
@@ -205,7 +212,17 @@ function CourseDetail() {
         <section className="space-y-5">
           <h2 className="font-display text-xl text-foreground">Conteúdo do curso</h2>
           <div className="space-y-3">
-            {course.modules.map((m: Module, mi: number) => (
+            {course.modules.map((m: Module, mi: number) => {
+              const isLocked = locked.has(m.id);
+              const blocker = blockedBy[m.id];
+              const blockerTitle = blocker
+                ? (course.modules?.find((x: Module) => x.id === blocker)?.title ?? "anterior")
+                : null;
+              const completedSet = p?.completedLessons;
+              const moduleDone =
+                m.lessons.length > 0 &&
+                m.lessons.every((l: Lesson) => completedSet?.has(l.id) || l.completed);
+              return (
               <div key={m.id} className="overflow-hidden rounded-xl bg-surface-1 ring-1 ring-border">
                 <div className="border-b border-border px-4 py-4 sm:px-5">
                   <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
@@ -214,6 +231,12 @@ function CourseDetail() {
                     </span>
                     <h3 className="truncate font-display text-base text-foreground">{m.title}</h3>
                   </div>
+                  {isLocked && (
+                    <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Lock className="h-3 w-3" /> Conclui o teste do módulo “{blockerTitle}” para
+                      desbloquear
+                    </p>
+                  )}
                 </div>
                 <ul>
                   {m.lessons.map((l: Lesson, li: number) => (
@@ -222,12 +245,24 @@ function CourseDetail() {
                       lesson={l}
                       course={course}
                       index={li}
+                      locked={isLocked}
                     />
                   ))}
 
                 </ul>
+                {!isLocked && (
+                  <ModuleQuiz
+                    courseId={course.id}
+                    moduleId={m.id}
+                    moduleTitle={m.title}
+                    state={quiz.modules[m.id]}
+                    moduleLessonsCompleted={moduleDone}
+                    onPassed={quiz.refetch}
+                  />
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}
@@ -239,47 +274,79 @@ function CourseLessonRow({
   lesson,
   course,
   index,
+  locked,
 }: {
   lesson: Lesson;
   course: Course;
   index: number;
+  locked?: boolean;
 }) {
   const syncThumb = lessonThumb(lesson, course);
   const { thumb: oembedThumb } = useBunnyThumb(syncThumb ? null : lesson.videoUrl);
   const thumb = syncThumb ?? oembedThumb;
+
+  const inner = (
+    <>
+      <div className="relative h-14 w-24 shrink-0 overflow-hidden rounded-lg bg-black ring-1 ring-border sm:h-16 sm:w-28">
+        {thumb ? (
+          <img src={thumb} alt="" loading="lazy" className="h-full w-full object-cover" />
+        ) : (
+          <div className="absolute inset-0" style={{ background: courseCoverBackground(course) }} />
+        )}
+        <span className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition group-hover:opacity-100">
+          {locked ? (
+            <Lock className="h-4 w-4 text-white" />
+          ) : (
+            <Play className="h-4 w-4 fill-white text-white" />
+          )}
+        </span>
+        {lesson.completed && (
+          <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            <Check className="h-2.5 w-2.5" />
+          </span>
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm text-foreground">
+          {String(index + 1).padStart(2, "0")}. {lesson.title}
+        </p>
+      </div>
+      <span className="shrink-0 text-xs text-muted-foreground">
+        {locked ? <Lock className="h-3.5 w-3.5" /> : lesson.duration}
+      </span>
+    </>
+  );
+
+  const rowClass =
+    "group grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/50 px-4 py-3 transition last:border-b-0 sm:gap-4 sm:px-5";
+
+  if (locked) {
+    return (
+      <li>
+        <div
+          aria-disabled
+          title="Bloqueado até aprovares o teste do módulo anterior"
+          className={`${rowClass} cursor-not-allowed opacity-50`}
+        >
+          {inner}
+        </div>
+      </li>
+    );
+  }
 
   return (
     <li>
       <Link
         to="/academia/$courseId/$lessonId"
         params={{ courseId: course.id, lessonId: lesson.id }}
-        className="group grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/50 px-4 py-3 transition last:border-b-0 hover:bg-surface-2 sm:gap-4 sm:px-5"
+        className={`${rowClass} hover:bg-surface-2`}
       >
-        <div className="relative h-14 w-24 shrink-0 overflow-hidden rounded-lg bg-black ring-1 ring-border sm:h-16 sm:w-28">
-          {thumb ? (
-            <img src={thumb} alt="" loading="lazy" className="h-full w-full object-cover" />
-          ) : (
-            <div className="absolute inset-0" style={{ background: courseCoverBackground(course) }} />
-          )}
-          <span className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition group-hover:opacity-100">
-            <Play className="h-4 w-4 fill-white text-white" />
-          </span>
-          {lesson.completed && (
-            <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
-              <Check className="h-2.5 w-2.5" />
-            </span>
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm text-foreground">
-            {String(index + 1).padStart(2, "0")}. {lesson.title}
-          </p>
-        </div>
-        <span className="shrink-0 text-xs text-muted-foreground">{lesson.duration}</span>
+        {inner}
       </Link>
     </li>
   );
 }
+
 function CourseDetailSkeleton() {
   return (
     <div className="max-w-full space-y-10 overflow-x-clip">
