@@ -4,7 +4,7 @@ import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tansta
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { runModeration } from "@/lib/moderation-client";
-import { RichText } from "@/components/mm/rich-text";
+import { RichText, RichTextInline } from "@/components/mm/rich-text";
 import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 import { assertUploadAllowed } from "@/lib/security/uploads";
 import { SanctionBanner, useActiveSanction } from "@/components/mm/sanction-banner";
@@ -1229,26 +1229,7 @@ function Avatar({
 /* ---------------- Post card ---------------- */
 /** Renderiza texto com URLs clicáveis. */
 function PostText({ text }: { text: string }) {
-  const parts = text.split(/(https?:\/\/[^\s<>()"']+)/gi);
-  return (
-    <>
-      {parts.map((part, i) =>
-        /^https?:\/\//i.test(part) ? (
-          <a
-            key={i}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="break-all text-primary underline-offset-2 hover:underline"
-          >
-            {part}
-          </a>
-        ) : (
-          part
-        ),
-      )}
-    </>
-  );
+  return <RichTextInline text={text} />;
 }
 
 function PostCard({ post, currentUserId }: { post: Post; currentUserId: string | null }) {
@@ -1991,7 +1972,7 @@ function ChatRoom({ user }: { user: User }) {
                       : "bg-surface-2 text-foreground",
                   )}
                 >
-                  <span className="whitespace-pre-wrap">{m.content}</span>
+                  <span className="whitespace-pre-wrap"><RichTextInline text={m.content} /></span>
                   {mine && (
                     <button
                       onClick={() => removeMsg.mutate(m.id)}
