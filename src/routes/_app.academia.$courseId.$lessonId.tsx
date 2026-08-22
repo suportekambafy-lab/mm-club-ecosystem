@@ -193,6 +193,7 @@ function LessonPlayer() {
                   course={course}
                   courseId={course.id}
                   currentLessonId={current.lesson.id}
+                  locked={lockedModules.has(m.id)}
                   defaultOpen={mi < 2 || m.lessons.some((l: Lesson) => l.id === current.lesson.id)}
                 />
               ))}
