@@ -265,6 +265,19 @@ function LessonPlayer() {
               links={current.lesson.links}
               materials={current.lesson.materials}
             />
+
+            <LessonNotes
+              courseId={course.id}
+              lessonId={current.lesson.id}
+              currentSeconds={row?.progress_seconds ?? 0}
+              onSeek={(seconds) =>
+                navigate({
+                  to: "/academia/$courseId/$lessonId",
+                  params: { courseId: course.id, lessonId: current.lesson.id },
+                  search: { t: seconds },
+                })
+              }
+            />
           </div>
         </div>
       </div>
