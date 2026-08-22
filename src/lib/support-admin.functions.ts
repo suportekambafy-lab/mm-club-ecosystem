@@ -41,7 +41,7 @@ export const listSupportThreads = createServerFn({ method: "GET" })
 
     const { data: threads, error } = await context.supabase
       .from("support_threads")
-      .select("id, user_id, last_message_at, message_count, escalated, handled")
+      .select("id, user_id, last_message_at, message_count, escalated, handled, email")
       .order("last_message_at", { ascending: false })
       .limit(200);
     if (error) throw error;
@@ -53,6 +53,7 @@ export const listSupportThreads = createServerFn({ method: "GET" })
       message_count: number;
       escalated: boolean;
       handled: boolean;
+      email: string | null;
     }>;
     if (rows.length === 0) return [];
 
@@ -60,7 +61,7 @@ export const listSupportThreads = createServerFn({ method: "GET" })
     const [{ data: profiles }, { data: lastMessages }] = await Promise.all([
       context.supabase
         .from("profiles")
-        .select("id, display_name, avatar_url, email")
+        .select("id, display_name, avatar_url")
         .in("id", userIds),
       context.supabase
         .from("support_messages")
