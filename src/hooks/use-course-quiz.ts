@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getCourseQuizState, type QuizModuleState } from "@/lib/quiz.functions";
+import { useAccessToken } from "@/hooks/use-access-token";
 
 export type CourseQuizState = {
   staff: boolean;
@@ -15,9 +16,12 @@ export type CourseQuizState = {
  */
 export function useCourseQuiz(courseId: string): CourseQuizState {
   const fetchState = useServerFn(getCourseQuizState);
+  // Só chamar com sessão hidratada: sem token o pedido falha com 500.
+  const { token } = useAccessToken();
   const q = useQuery({
-    queryKey: ["course-quiz-state", courseId],
+    queryKey: ["course-quiz-state", courseId, Boolean(token)],
     queryFn: () => fetchState({ data: { courseId } }),
+    enabled: Boolean(token),
     staleTime: 30_000,
     retry: false,
   });
@@ -28,7 +32,7 @@ export function useCourseQuiz(courseId: string): CourseQuizState {
   return {
     staff: Boolean(q.data?.staff),
     modules,
-    loaded: !q.isLoading,
+    loaded: q.isSuccess,
     refetch: () => void q.refetch(),
   };
 }

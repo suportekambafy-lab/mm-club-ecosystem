@@ -72,12 +72,23 @@ export function useSessionGuard(userId: string | null | undefined) {
 
     const token = currentSessionToken();
 
-    registerDeviceSession({
-      data: { fingerprint: deviceFingerprint(), sessionToken: token },
-    }).catch(() => undefined);
+    // Só chamar as funções protegidas com sessão Supabase válida — sem token o
+    // servidor responde 500 (Unauthorized).
+    const hasSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      return Boolean(data.session?.access_token);
+    };
+
+    void hasSession().then((ok) => {
+      if (!ok || stopped) return;
+      registerDeviceSession({
+        data: { fingerprint: deviceFingerprint(), sessionToken: token },
+      }).catch(() => undefined);
+    });
 
     const tick = async () => {
       if (stopped) return;
+      if (!(await hasSession())) return;
       try {
         const res = await checkSession({ data: { sessionToken: token } });
         if (res?.revoked && !stopped) {
