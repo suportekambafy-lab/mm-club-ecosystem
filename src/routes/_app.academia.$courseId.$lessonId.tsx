@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Circle,
   Loader2,
+  Lock,
 } from "lucide-react";
 import { VideoWatermark } from "@/components/mm/video-watermark";
 import { coursesById } from "@/data/courses";
@@ -95,18 +96,47 @@ function LessonPlayer() {
   const seekRef = useRef<((seconds: number) => void) | null>(null);
 
   // Bloqueio sequencial: se o módulo desta aula está trancado por um teste
-  // não aprovado, volta à página do curso.
+  // não aprovado, volta à página do curso já com o teste em foco.
   const quiz = useCourseQuiz(courseIdForProgress);
-  const { locked: lockedModules } = lockedModuleIds(
+  const { locked: lockedModules, blockedBy } = lockedModuleIds(
     (coursesById[courseId]?.modules ?? []).map((m: Module) => m.id),
     quiz,
   );
   const currentModuleId = data?.current.module.id;
   const moduleLocked = Boolean(currentModuleId && lockedModules.has(currentModuleId));
+  const blockerModuleId = currentModuleId ? blockedBy[currentModuleId] : undefined;
   useEffect(() => {
     if (!moduleLocked) return;
-    void navigate({ to: "/academia/$courseId", params: { courseId }, replace: true });
-  }, [moduleLocked, navigate, courseId]);
+    void navigate({
+      to: "/academia/$courseId",
+      params: { courseId },
+      search: blockerModuleId ? { quiz: blockerModuleId } : {},
+      replace: true,
+    });
+  }, [moduleLocked, navigate, courseId, blockerModuleId]);
+
+  // Última aula do módulo com teste publicado e ainda não aprovado: em vez de
+  // saltar para o módulo seguinte (que está trancado), leva ao teste.
+  const currentModuleState = currentModuleId ? quiz.modules[currentModuleId] : undefined;
+  const nextLesson = data?.next ?? null;
+  const isLastOfModule = Boolean(
+    currentModuleId && (!nextLesson || nextLesson.module.id !== currentModuleId),
+  );
+  const quizPending = Boolean(
+    !quiz.staff &&
+      isLastOfModule &&
+      currentModuleState?.published &&
+      (currentModuleState?.questionsAvailable ?? 0) > 0 &&
+      !currentModuleState?.passed,
+  );
+  const goToModuleQuiz = useCallback(() => {
+    if (!currentModuleId) return;
+    void navigate({
+      to: "/academia/$courseId",
+      params: { courseId },
+      search: { quiz: currentModuleId },
+    });
+  }, [courseId, currentModuleId, navigate]);
 
   // Reset scroll on lesson change
   useEffect(() => {
@@ -122,6 +152,9 @@ function LessonPlayer() {
   }
 
   const { course, current, next } = data;
+  const nextBlocked = Boolean(next && lockedModules.has(next.module.id));
+  // Aula seguinte disponível de facto (não trancada e sem teste pendente).
+  const nextOpen = next && !quizPending && !nextBlocked ? next : null;
 
 
   return (
@@ -161,6 +194,7 @@ function LessonPlayer() {
                   course={course}
                   courseId={course.id}
                   currentLessonId={current.lesson.id}
+                  locked={lockedModules.has(m.id)}
                   defaultOpen={mi < 2 || m.lessons.some((l: Lesson) => l.id === current.lesson.id)}
                 />
               ))}
@@ -184,16 +218,23 @@ function LessonPlayer() {
                 startSeconds={deepLinkSeconds ?? row?.progress_seconds ?? 0}
                 saveProgress={trackedSaveProgress}
                 seekRef={seekRef}
-                nextTitle={next?.lesson.title ?? null}
-                onAdvance={
-                  next
-                    ? () =>
-                        navigate({
-                          to: "/academia/$courseId/$lessonId",
-                          params: { courseId: course.id, lessonId: next.lesson.id },
-                        })
-                    : undefined
+                nextTitle={
+                  quizPending
+                    ? `Teste do módulo · ${current.module.title}`
+                    : (nextOpen?.lesson.title ?? null)
                 }
+                onAdvance={
+                  quizPending
+                    ? goToModuleQuiz
+                    : nextOpen
+                      ? () =>
+                          navigate({
+                            to: "/academia/$courseId/$lessonId",
+                            params: { courseId: course.id, lessonId: nextOpen.lesson.id },
+                          })
+                      : undefined
+                }
+                advanceLabel={quizPending ? "Fazer teste" : undefined}
               />
 
             ) : (
@@ -255,10 +296,21 @@ function LessonPlayer() {
                   <span className="hidden whitespace-nowrap sm:inline">Sala de discussão</span>
                 </Link>
 
-                {next ? (
+                {quizPending ? (
+                  <Link
+                    to="/academia/$courseId"
+                    params={{ courseId: course.id }}
+                    search={{ quiz: current.module.id }}
+                    aria-label="Fazer o teste do módulo"
+                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-primary px-2.5 text-xs font-medium text-primary-foreground transition hover:bg-gold-soft sm:px-4"
+                  >
+                    <span className="hidden whitespace-nowrap sm:inline">Teste do módulo</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                ) : nextOpen ? (
                   <Link
                     to="/academia/$courseId/$lessonId"
-                    params={{ courseId: course.id, lessonId: next.lesson.id }}
+                    params={{ courseId: course.id, lessonId: nextOpen.lesson.id }}
                     aria-label="Próxima aula"
                     className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-primary px-2.5 text-xs font-medium text-primary-foreground transition hover:bg-gold-soft sm:px-4"
                   >
@@ -318,18 +370,20 @@ function ModuleAccordion({
   courseId,
   currentLessonId,
   defaultOpen,
+  locked,
 }: {
   module: Module;
   course: Course;
   courseId: string;
   currentLessonId: string;
   defaultOpen: boolean;
+  locked?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const Icon = open ? ChevronUp : ChevronDown;
 
   return (
-    <div className="min-w-0 rounded-2xl bg-surface-2 p-3 sm:p-4">
+    <div className={cn("min-w-0 rounded-2xl bg-surface-2 p-3 sm:p-4", locked && "opacity-60")}>
       <button
         type="button"
         onClick={() => setOpen((s) => !s)}
@@ -337,8 +391,11 @@ function ModuleAccordion({
       >
         <div className="min-w-0 flex-1">
           <p className="truncate text-[15px] leading-snug text-foreground">{module.title}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {module.lessons.length} {module.lessons.length === 1 ? "aula" : "aulas"}
+          <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+            {locked && <Lock className="h-3 w-3 shrink-0" />}
+            {locked
+              ? "Teste do módulo anterior pendente"
+              : `${module.lessons.length} ${module.lessons.length === 1 ? "aula" : "aulas"}`}
           </p>
         </div>
         <Icon className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
@@ -353,6 +410,7 @@ function ModuleAccordion({
               course={course}
               courseId={courseId}
               active={l.id === currentLessonId}
+              locked={locked}
             />
           ))}
         </ul>
@@ -366,11 +424,13 @@ function LessonRow({
   course,
   courseId,
   active,
+  locked,
 }: {
   lesson: Lesson;
   course: Course;
   courseId: string;
   active: boolean;
+  locked?: boolean;
 }) {
   const syncThumb = lessonThumb(lesson, course);
   const { thumb: oembedThumb } = useBunnyThumb(syncThumb ? null : lesson.videoUrl);
@@ -379,10 +439,13 @@ function LessonRow({
   return (
     <li>
       <Link
-        to="/academia/$courseId/$lessonId"
-        params={{ courseId, lessonId: lesson.id }}
+        to={locked ? "/academia/$courseId" : "/academia/$courseId/$lessonId"}
+        params={locked ? ({ courseId } as never) : ({ courseId, lessonId: lesson.id } as never)}
+        aria-disabled={locked}
+        title={locked ? "Aprova o teste do módulo anterior para desbloquear" : undefined}
         className={cn(
           "flex min-w-0 items-center gap-3 rounded-2xl px-2 py-2 transition sm:px-2.5",
+          locked && "pointer-events-none opacity-70",
           active
             ? "bg-primary text-primary-foreground"
             : "bg-surface-3 text-foreground hover:bg-surface-3/70",
@@ -496,6 +559,7 @@ function TrackedVideoPlayer({
   saveProgress,
   nextTitle,
   onAdvance,
+  advanceLabel,
   seekRef,
 }: {
   lessonId: string;
@@ -505,6 +569,7 @@ function TrackedVideoPlayer({
   saveProgress: SaveLessonProgress;
   nextTitle?: string | null;
   onAdvance?: () => void;
+  advanceLabel?: string;
   seekRef?: React.MutableRefObject<((seconds: number) => void) | null>;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -680,6 +745,7 @@ function TrackedVideoPlayer({
       open={ended}
       nextTitle={nextTitle ?? null}
       onAdvance={onAdvance}
+      advanceLabel={advanceLabel}
       onReplay={handleReplay}
     />
   );
@@ -755,11 +821,13 @@ function LessonEndOverlay({
   open,
   nextTitle,
   onAdvance,
+  advanceLabel,
   onReplay,
 }: {
   open: boolean;
   nextTitle: string | null;
   onAdvance?: () => void;
+  advanceLabel?: string;
   onReplay: () => void;
 }) {
   const COUNTDOWN = 10;
@@ -828,7 +896,9 @@ function LessonEndOverlay({
                 className="absolute inset-y-0 left-0 bg-black/20 transition-[width] duration-1000 ease-linear"
                 style={{ width: `${progress}%` }}
               />
-              <span className="relative">Avançar ({remaining}s)</span>
+              <span className="relative">
+                {advanceLabel ?? "Avançar"} ({remaining}s)
+              </span>
             </button>
           </div>
         </>

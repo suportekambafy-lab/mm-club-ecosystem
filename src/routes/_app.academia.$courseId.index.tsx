@@ -20,6 +20,10 @@ import { useCourseQuiz, lockedModuleIds } from "@/hooks/use-course-quiz";
 
 
 export const Route = createFileRoute("/_app/academia/$courseId/")({
+  validateSearch: (search: Record<string, unknown>): { quiz?: string } => {
+    const quiz = typeof search.quiz === "string" && search.quiz ? search.quiz : undefined;
+    return quiz ? { quiz } : {};
+  },
   loader: ({ params }) => {
     if (!coursesById[params.courseId]) throw notFound();
     return { courseId: params.courseId };
@@ -30,6 +34,7 @@ export const Route = createFileRoute("/_app/academia/$courseId/")({
 
 function CourseDetail() {
   const { courseId } = Route.useLoaderData();
+  const { quiz: focusQuizModuleId } = Route.useSearch();
   useAdminOverridesVersion(); // re-render when admin overrides change
   const course = coursesById[courseId];
   const expert = expertsById[course.expertId];
@@ -257,6 +262,7 @@ function CourseDetail() {
                     moduleTitle={m.title}
                     state={quiz.modules[m.id]}
                     moduleLessonsCompleted={moduleDone}
+                    autoOpen={focusQuizModuleId === m.id}
                     onPassed={quiz.refetch}
                   />
                 )}

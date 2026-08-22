@@ -1,11 +1,11 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import {
   BrainCircuit,
   CheckCircle2,
   Loader2,
-  Lock,
+
   RotateCcw,
   Trophy,
   XCircle,
@@ -26,6 +26,8 @@ type Props = {
   state: QuizModuleState | undefined;
   moduleLessonsCompleted: boolean;
   onPassed: () => void;
+  /** Abre e arranca o teste automaticamente (vindo do fim da última aula). */
+  autoOpen?: boolean;
 };
 
 type Phase = "idle" | "loading" | "running" | "result";
@@ -41,6 +43,7 @@ export function ModuleQuiz({
   state,
   moduleLessonsCompleted,
   onPassed,
+  autoOpen,
 }: Props) {
   const load = useServerFn(getModuleQuiz);
   const submit = useServerFn(submitModuleQuiz);
@@ -102,10 +105,26 @@ export function ModuleQuiz({
     [answers, questions],
   );
 
+  // Vindo do fim da última aula do módulo: destaca e arranca o teste sozinho.
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  const autoRef = useRef(false);
+  useEffect(() => {
+    if (!autoOpen || autoRef.current || !available || passed) return;
+    autoRef.current = true;
+    boxRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    void start();
+  }, [autoOpen, available, passed, start]);
+
   if (!available && !passed) return null;
 
   return (
-    <div className="border-t border-border bg-surface-2/50 px-4 py-4 sm:px-5">
+    <div
+      ref={boxRef}
+      className={cn(
+        "border-t border-border bg-surface-2/50 px-4 py-4 sm:px-5",
+        autoOpen && !passed && "ring-1 ring-primary/50",
+      )}
+    >
       {phase === "idle" && (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 items-start gap-3">
@@ -124,9 +143,9 @@ export function ModuleQuiz({
               <p className="text-xs text-muted-foreground">
                 {passed
                   ? `Melhor nota: ${state?.bestScore ?? 100}%. Podes repetir para revisar.`
-                  : moduleLessonsCompleted
-                    ? `${state?.questionCount ?? 5} perguntas · mínimo ${state?.passScore ?? 80}% para desbloquear o módulo seguinte`
-                    : "Conclui as aulas deste módulo para fazer o teste"}
+                  : `${state?.questionCount ?? 5} perguntas · mínimo ${state?.passScore ?? 80}% para desbloquear o módulo seguinte${
+                      moduleLessonsCompleted ? "" : " · recomendado ver todas as aulas primeiro"
+                    }`}
               </p>
               {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
             </div>
@@ -134,19 +153,14 @@ export function ModuleQuiz({
           <button
             type="button"
             onClick={start}
-            disabled={!moduleLessonsCompleted && !passed}
             className={cn(
-              "inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50",
+              "inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition",
               passed
                 ? "border border-border bg-surface-1 text-foreground hover:bg-surface-3"
                 : "bg-primary text-primary-foreground hover:bg-gold-soft",
             )}
           >
-            {!moduleLessonsCompleted && !passed ? (
-              <Lock className="h-3.5 w-3.5" />
-            ) : (
-              <BrainCircuit className="h-3.5 w-3.5" />
-            )}
+            <BrainCircuit className="h-3.5 w-3.5" />
             {passed ? "Repetir teste" : "Começar teste"}
           </button>
         </div>
