@@ -1503,6 +1503,51 @@ export type Database = {
           },
         ]
       }
+      community_sanctions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          kind: string
+          level: number
+          lifted_at: string | null
+          permanent: boolean
+          reason: string
+          rule: string | null
+          starts_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          kind?: string
+          level?: number
+          lifted_at?: string | null
+          permanent?: boolean
+          reason: string
+          rule?: string | null
+          starts_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          kind?: string
+          level?: number
+          lifted_at?: string | null
+          permanent?: boolean
+          reason?: string
+          rule?: string | null
+          starts_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       domain_events: {
         Row: {
           actor_id: string | null
@@ -2740,6 +2785,7 @@ export type Database = {
           id: string
           kind: string
           reason: string | null
+          sanction_id: string | null
           target_id: string
         }
         Insert: {
@@ -2751,6 +2797,7 @@ export type Database = {
           id?: string
           kind: string
           reason?: string | null
+          sanction_id?: string | null
           target_id: string
         }
         Update: {
@@ -2762,9 +2809,18 @@ export type Database = {
           id?: string
           kind?: string
           reason?: string | null
+          sanction_id?: string | null
           target_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "moderation_actions_sanction_id_fkey"
+            columns: ["sanction_id"]
+            isOneToOne: false
+            referencedRelation: "community_sanctions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_log: {
         Row: {
@@ -3829,6 +3885,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_community_restricted: { Args: { _user_id: string }; Returns: boolean }
       is_live_cohost: {
         Args: { _live_id: string; _user_id: string }
         Returns: boolean
@@ -3897,6 +3954,17 @@ export type Database = {
           _user_id: string
         }
         Returns: number
+      }
+      my_community_sanction: {
+        Args: never
+        Returns: {
+          expires_at: string
+          kind: string
+          level: number
+          permanent: boolean
+          reason: string
+          rule: string
+        }[]
       }
       next_invoice_number: { Args: never; Returns: string }
       notify_community_top_ranks: { Args: { _limit?: number }; Returns: number }

@@ -20,41 +20,75 @@ export type ModerationVerdict = {
   action: "allow" | "remove";
   category: string;
   reason: string;
+  /** "leve" = primeira linha de aviso · "grave" = escalada imediata */
+  severity: "leve" | "grave";
+  /** Regra do Código do Clube infringida. */
+  rule: string;
 };
 
-const RULES = `És o moderador oficial da comunidade privada MM Club (português de Portugal).
-Decides se uma mensagem/publicação deve ser REMOVIDA imediatamente.
+const RULES = `És o moderador oficial da comunidade privada MM Club (português de Portugal) e
+aplicas o CÓDIGO DO CLUBE, que todos os membros aceitaram ao entrar.
+
+CÓDIGO DO CLUBE (regras):
+1. Respeito acima de tudo — sem insultos, discriminação, ameaças ou ataques pessoais.
+2. Sem spam — publicidade não autorizada, mensagens repetidas, links de afiliado sem contexto, autopromoção excessiva.
+3. Não usar o clube para vender aos membros — prospeção agressiva e venda direta não são permitidas.
+4. Conteúdo adequado — nada ilegal, ofensivo, discriminatório, enganoso ou com direitos de autor de terceiros.
+5. Proteger o MM Club — não partilhar credenciais, revender acessos, distribuir cursos ou gravar conteúdo exclusivo.
+6. Respeitar especialistas e membros — discordar é permitido, desrespeitar não.
+7. Publicar com qualidade — categoria correta, conhecimento real, ajudar os outros.
+8. Medidas disciplinares — aviso, remoção, suspensão temporária, suspensão permanente, banimento.
+
+REGRA CRÍTICA DE AMBIENTE: reclamações NÃO são aceites na comunidade porque destroem o ambiente.
+Qualquer reclamação (cobranças, pagamentos, faturas, acesso, reembolso, garantia, devolução de dinheiro,
+chargeback, disputa, "quero cancelar", "não recebi", pedido de suporte ou atendimento humano) deve ser
+REMOVIDA — o caminho correto é o suporte privado, nunca o feed, o chat ou os comentários.
 
 REMOVER (action: "remove") quando o conteúdo:
-- pede reembolso, devolução de dinheiro, cancelamento, "garantia", chargeback ou disputa de pagamento;
-- reclama publicamente de cobranças, pagamentos, faturas ou acesso pago;
-- expõe dados pessoais/contactos (email, telefone, IBAN, morada) próprios ou de outros;
-- pede suporte privado, atendimento humano ou tenta abrir um caso de cliente no feed público;
-- desacredita o curso, a plataforma, a marca ou os formadores (difamação, "é golpe", "não presta");
-- é spam, publicidade, recrutamento, venda de produtos/serviços externos ou divulgação de links de afiliado;
+- é reclamação/pedido de reembolso, cancelamento, garantia, chargeback ou queixa de cobranças e faturas;
+- pede suporte, atendimento humano ou abre um caso de cliente em público;
+- expõe dados pessoais ou contactos (email, telefone, IBAN, morada), próprios ou de outros;
+- desacredita o clube, os cursos, a marca ou os formadores ("é golpe", "não presta", difamação);
+- é spam, publicidade, recrutamento, venda externa ou link de afiliado;
 - contém insultos, assédio, discurso de ódio, ameaças, conteúdo sexual, violento ou ilegal;
-- na imagem/vídeo: nudez, violência, conteúdo gráfico, capturas de ecrã de faturas/recibos/conversas de suporte.
+- partilha/vende acessos, credenciais ou conteúdo exclusivo do clube;
+- na imagem/vídeo: nudez, violência, conteúdo gráfico, capturas de faturas, recibos ou conversas de suporte.
 
-MANTER (action: "allow") dúvidas normais sobre aulas e negócio, partilha de resultados,
-apresentações, feedback construtivo sobre conteúdo (sem pedir dinheiro de volta),
-motivação e conversa entre membros.
+MANTER (action: "allow") dúvidas sobre aulas e negócio, partilha de resultados, apresentações,
+feedback construtivo sobre conteúdo (sem exigir dinheiro de volta), motivação e conversa entre membros.
 
-Responde SEMPRE só com JSON: {"action":"allow"|"remove","category":"<curta>","reason":"<1 frase em português>"}`;
+SEVERIDADE:
+- "grave": difamação da marca, ataques pessoais, discurso de ódio, ameaças, conteúdo sexual/ilegal,
+  venda ou partilha de acessos, spam massivo.
+- "leve": restantes casos (reclamações, dados pessoais, pedidos de suporte, autopromoção).
+
+Responde SEMPRE só com JSON:
+{"action":"allow"|"remove","category":"<curta>","severity":"leve"|"grave","rule":"<regra do código>","reason":"<1 frase clara em português a explicar ao membro>"}`;
 
 function parseVerdict(raw: string): ModerationVerdict {
+  const fallback: ModerationVerdict = {
+    action: "allow",
+    category: "indeterminado",
+    reason: "Sem resposta do agente.",
+    severity: "leve",
+    rule: "",
+  };
   const match = raw.match(/\{[\s\S]*\}/);
-  if (!match) return { action: "allow", category: "indeterminado", reason: "Sem resposta do agente." };
+  if (!match) return fallback;
   try {
     const parsed = JSON.parse(match[0]) as Partial<ModerationVerdict>;
     return {
       action: parsed.action === "remove" ? "remove" : "allow",
       category: String(parsed.category ?? "geral").slice(0, 60),
       reason: String(parsed.reason ?? "").slice(0, 300),
+      severity: parsed.severity === "grave" ? "grave" : "leve",
+      rule: String(parsed.rule ?? "").slice(0, 120),
     };
   } catch {
-    return { action: "allow", category: "indeterminado", reason: "Resposta inválida do agente." };
+    return { ...fallback, reason: "Resposta inválida do agente." };
   }
 }
+
 
 /** Classifica texto (e opcionalmente uma imagem) com o agente de moderação. */
 export async function classifyContent(args: {
@@ -62,13 +96,15 @@ export async function classifyContent(args: {
   text: string | null;
   imageUrl?: string | null;
 }): Promise<ModerationVerdict> {
+  const base = { severity: "leve" as const, rule: "" };
   const key = process.env.LOVABLE_API_KEY;
-  if (!key) return { action: "allow", category: "indisponível", reason: "Agente sem chave." };
+  if (!key) return { ...base, action: "allow", category: "indisponível", reason: "Agente sem chave." };
 
   const text = (args.text ?? "").trim();
   if (!text && !args.imageUrl) {
-    return { action: "allow", category: "vazio", reason: "Sem conteúdo." };
+    return { ...base, action: "allow", category: "vazio", reason: "Sem conteúdo." };
   }
+
 
   const gateway = createLovableAiGatewayProvider(key);
   const content: Array<Record<string, unknown>> = [
@@ -87,7 +123,7 @@ export async function classifyContent(args: {
     return parseVerdict(result.text ?? "");
   } catch (err) {
     console.error("[moderation] classify failed", err);
-    return { action: "allow", category: "erro", reason: "Falha do agente de moderação." };
+    return { ...base, action: "allow", category: "erro", reason: "Falha do agente de moderação." };
   }
 }
 
@@ -145,13 +181,104 @@ const TARGETS: Record<ModerationKind, TargetConfig> = {
 };
 
 /**
- * Analisa um item e remove-o de imediato se violar as regras.
+ * Escada disciplinar do Código do Clube (reincidência nos últimos 180 dias).
+ * 1ª vez  -> aviso (sem bloqueio)
+ * 2ª vez  -> 3 dias sem interagir
+ * 3ª vez  -> 7 dias
+ * 4ª vez  -> 30 dias
+ * 5ª vez+ -> banimento definitivo da comunidade
+ * Infrações graves saltam um degrau.
+ */
+const LADDER: Array<{ kind: "warning" | "mute" | "ban"; days: number | null }> = [
+  { kind: "warning", days: null },
+  { kind: "mute", days: 3 },
+  { kind: "mute", days: 7 },
+  { kind: "mute", days: 30 },
+  { kind: "ban", days: null },
+];
+
+export type SanctionResult = {
+  kind: "warning" | "mute" | "ban";
+  level: number;
+  days: number | null;
+  permanent: boolean;
+} | null;
+
+function sanctionCopy(s: NonNullable<SanctionResult>, reason: string, rule: string) {
+  const regra = rule ? ` Regra: ${rule}.` : "";
+  const suporte =
+    " Se precisas de tratar de pagamentos, faturas ou acessos, fala com o suporte — a comunidade não é o local para reclamações.";
+  if (s.kind === "ban") {
+    return `Foste removido definitivamente da comunidade por incumprimento repetido do Código do Clube. Motivo da última ocorrência: ${reason}${regra}${suporte}`;
+  }
+  if (s.kind === "mute") {
+    return `Ficas ${s.days} dia(s) sem poder publicar, comentar ou reagir na comunidade (${s.level}ª ocorrência). Motivo: ${reason}${regra}${suporte}`;
+  }
+  return `Aviso do Código do Clube: o teu conteúdo foi removido. Motivo: ${reason}${regra} Se repetires, ficas temporariamente sem poder interagir.${suporte}`;
+}
+
+/** Aplica a sanção correspondente ao histórico do membro e notifica-o no sino. */
+async function applySanction(args: {
+  supabaseAdmin: any;
+  userId: string;
+  verdict: ModerationVerdict;
+}): Promise<{ sanctionId: string | null; sanction: SanctionResult }> {
+  const since = new Date(Date.now() - 180 * 86_400_000).toISOString();
+  const { count } = await args.supabaseAdmin
+    .from("moderation_actions")
+    .select("id", { count: "exact", head: true })
+    .eq("author_id", args.userId)
+    .eq("action", "remove")
+    .gte("created_at", since);
+
+  // Ocorrências anteriores + a atual. Grave salta um degrau.
+  const offences = (count ?? 0) + 1 + (args.verdict.severity === "grave" ? 1 : 0);
+  const step = LADDER[Math.min(offences, LADDER.length) - 1]!;
+  const level = Math.min(offences, LADDER.length);
+
+  const sanction: NonNullable<SanctionResult> = {
+    kind: step.kind,
+    level,
+    days: step.days,
+    permanent: step.kind === "ban",
+  };
+
+  const message = sanctionCopy(sanction, args.verdict.reason, args.verdict.rule);
+
+  const { data: inserted } = await args.supabaseAdmin
+    .from("community_sanctions")
+    .insert({
+      user_id: args.userId,
+      level,
+      kind: sanction.kind,
+      reason: message,
+      rule: args.verdict.rule || args.verdict.category,
+      expires_at: sanction.days
+        ? new Date(Date.now() + sanction.days * 86_400_000).toISOString()
+        : null,
+      permanent: sanction.permanent,
+    })
+    .select("id")
+    .maybeSingle();
+
+  await args.supabaseAdmin.from("notifications").insert({
+    user_id: args.userId,
+    kind: "moderation",
+    course_id: `moderacao-${sanction.kind}`,
+  });
+
+  return { sanctionId: (inserted?.id as string | undefined) ?? null, sanction };
+}
+
+/**
+ * Analisa um item e remove-o de imediato se violar as regras, aplicando a
+ * escada disciplinar (aviso → suspensão temporária → banimento).
  * Idempotente: se o item já não existir, devolve `removed: false`.
  */
 export async function moderateTarget(args: {
   kind: ModerationKind;
   id: string;
-}): Promise<{ removed: boolean; category: string; reason: string }> {
+}): Promise<{ removed: boolean; category: string; reason: string; sanction?: SanctionResult }> {
   const cfg = TARGETS[args.kind];
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -173,20 +300,49 @@ export async function moderateTarget(args: {
   const excerpt = String(
     (cfg.textColumn ? (row as any)[cfg.textColumn] : "") ?? "",
   ).slice(0, 500);
+  const authorId = ((row as any)[cfg.authorColumn] as string | null) ?? null;
+
+  let sanctionId: string | null = null;
+  let sanction: SanctionResult = null;
 
   if (verdict.action === "remove") {
     await (supabaseAdmin as any).from(cfg.table).delete().eq(cfg.idColumn, args.id);
+
+    if (authorId) {
+      // Admins e moderadores nunca são sancionados pelo agente.
+      const { data: staff } = await (supabaseAdmin as any)
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", authorId)
+        .in("role", ["admin", "moderator"]);
+      if (!staff || staff.length === 0) {
+        try {
+          const applied = await applySanction({ supabaseAdmin, userId: authorId, verdict });
+          sanctionId = applied.sanctionId;
+          sanction = applied.sanction;
+        } catch (err) {
+          console.error("[moderation] sanction failed", err);
+        }
+      }
+    }
   }
 
   await (supabaseAdmin as any).from("moderation_actions").insert({
     kind: args.kind,
     target_id: args.id,
-    author_id: (row as any)[cfg.authorColumn] ?? null,
+    author_id: authorId,
     action: verdict.action,
     category: verdict.category,
     reason: verdict.reason,
     excerpt,
+    sanction_id: sanctionId,
   });
 
-  return { removed: verdict.action === "remove", category: verdict.category, reason: verdict.reason };
+  return {
+    removed: verdict.action === "remove",
+    category: verdict.category,
+    reason: verdict.reason,
+    sanction,
+  };
 }
+

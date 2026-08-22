@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile, BellRing, BellOff, UserRound, GraduationCap, Trophy } from "lucide-react";
+import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile, BellRing, BellOff, UserRound, GraduationCap, Trophy, Gavel } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
@@ -38,6 +38,7 @@ const iconByKind: Record<NotifKind, typeof Bell> = {
   inactivity: Play,
   course_released: GraduationCap,
   rank: Trophy,
+  moderation: Gavel,
 };
 
 const labelByKind: Record<NotifKind, string> = {
@@ -52,6 +53,7 @@ const labelByKind: Record<NotifKind, string> = {
   inactivity: "Retomar",
   course_released: "Novo curso",
   rank: "Ranking",
+  moderation: "Moderação",
 
 };
 
@@ -218,12 +220,19 @@ function communityCopy(
       subtitle: "O curso agendado acabou de abrir — começa agora",
     };
   }
+  if (kind === "moderation") {
+    return {
+      title: "Aviso do Código do Clube",
+      subtitle: "Toca para ver o motivo e o prazo",
+    };
+  }
   if (kind === "rank") {
     return {
       title: rankPosition ? `Estás no Top ${rankPosition} da Comunidade` : "Estás no Top da Comunidade",
       subtitle: "Toca para ver como a tua posição foi calculada",
     };
   }
+
   if (kind === "like") {
     return {
       title: isShort ? `${who} gostou do teu MM Short` : `${who} gostou do teu post`,
@@ -323,7 +332,9 @@ export function NotificationsBell({ className }: { className?: string }) {
           ? Number(n.course_id.slice(4)) || null
           : null;
       const copy = communityCopy(n.kind, n.actor_name, isShort, rankPosition);
-      const href = n.kind === "rank"
+      const href = n.kind === "moderation"
+        ? "/comunidade"
+        : n.kind === "rank"
         ? "/comunidade"
         : n.kind === "inactivity"
         ? "/dashboard"
