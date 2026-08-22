@@ -274,13 +274,21 @@ function LessonPlayer() {
               courseId={course.id}
               lessonId={current.lesson.id}
               currentSeconds={row?.progress_seconds ?? 0}
-              onSeek={(seconds) =>
-                navigate({
+              onSeek={(seconds) => {
+                if (seekRef.current) {
+                  seekRef.current(seconds);
+                  document
+                    .querySelector("main")
+                    ?.scrollTo?.({ top: 0, behavior: "smooth" });
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  return;
+                }
+                void navigate({
                   to: "/academia/$courseId/$lessonId",
                   params: { courseId: course.id, lessonId: current.lesson.id },
                   search: { t: seconds },
-                })
-              }
+                });
+              }}
             />
           </div>
         </div>
