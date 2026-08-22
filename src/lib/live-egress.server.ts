@@ -66,9 +66,21 @@ function client() {
   return { egress: new EgressClient(env.url, env.apiKey, env.apiSecret), env };
 }
 
-/** Build the full RTMPS ingest URL for a Cloudflare Stream live input. */
+/**
+ * Build the full RTMP ingest URL for a Cloudflare Stream live input.
+ *
+ * IMPORTANT: LiveKit's egress RTMP sink cannot complete the TLS handshake with
+ * Cloudflare's `rtmps://live.cloudflare.com:443` endpoint — the connection is
+ * closed remotely and the push retries forever, so no recording is ever made.
+ * Cloudflare also exposes plain RTMP ingest on port 1935, which works, so we
+ * downgrade the URL for the egress push only (playback/recording is identical).
+ */
 export function buildRtmpTarget(rtmpsUrl: string, streamKey: string): string {
-  const base = rtmpsUrl.replace(/\/+$/, "");
+  let base = rtmpsUrl.replace(/\/+$/, "");
+  if (/^rtmps:\/\//i.test(base)) {
+    base = base.replace(/^rtmps:\/\//i, "rtmp://").replace(/:443(\/|$)/, ":1935$1");
+    if (!/:\d+/.test(base)) base = base.replace(/^rtmp:\/\/([^/]+)/i, "rtmp://$1:1935");
+  }
   return `${base}/${streamKey}`;
 }
 
