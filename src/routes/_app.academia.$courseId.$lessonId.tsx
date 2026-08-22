@@ -473,6 +473,7 @@ function TrackedVideoPlayer({
   saveProgress,
   nextTitle,
   onAdvance,
+  seekRef,
 }: {
   lessonId: string;
   title: string;
@@ -481,6 +482,7 @@ function TrackedVideoPlayer({
   saveProgress: SaveLessonProgress;
   nextTitle?: string | null;
   onAdvance?: () => void;
+  seekRef?: React.MutableRefObject<((seconds: number) => void) | null>;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
