@@ -103,8 +103,9 @@ export function SupportWidget({ userName }: { userName?: string }) {
                       <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
                         <Headset className="h-5 w-5" />
                       </span>
-                      <span className="text-xs font-medium uppercase tracking-widest opacity-70">
+                      <span className="inline-flex items-center gap-1 text-xs font-medium uppercase tracking-widest opacity-70">
                         MM Suporte
+                        <VerifiedBadge size={12} className="opacity-100" />
                       </span>
                     </div>
                     <button
