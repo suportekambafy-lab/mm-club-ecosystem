@@ -158,7 +158,7 @@ export async function moderateTarget(args: {
   const columns = [cfg.idColumn, cfg.authorColumn, cfg.textColumn, cfg.imageColumn]
     .filter(Boolean)
     .join(",");
-  const { data: row } = await (supabaseAdmin.from(cfg.table) as any)
+  const { data: row } = await (supabaseAdmin as any).from(cfg.table)
     .select(columns)
     .eq(cfg.idColumn, args.id)
     .maybeSingle();
@@ -175,10 +175,10 @@ export async function moderateTarget(args: {
   ).slice(0, 500);
 
   if (verdict.action === "remove") {
-    await (supabaseAdmin.from(cfg.table) as any).delete().eq(cfg.idColumn, args.id);
+    await (supabaseAdmin as any).from(cfg.table).delete().eq(cfg.idColumn, args.id);
   }
 
-  await (supabaseAdmin.from("moderation_actions") as any).insert({
+  await (supabaseAdmin as any).from("moderation_actions").insert({
     kind: args.kind,
     target_id: args.id,
     author_id: (row as any)[cfg.authorColumn] ?? null,
