@@ -559,6 +559,7 @@ function TrackedVideoPlayer({
   saveProgress,
   nextTitle,
   onAdvance,
+  advanceLabel,
   seekRef,
 }: {
   lessonId: string;
@@ -568,6 +569,7 @@ function TrackedVideoPlayer({
   saveProgress: SaveLessonProgress;
   nextTitle?: string | null;
   onAdvance?: () => void;
+  advanceLabel?: string;
   seekRef?: React.MutableRefObject<((seconds: number) => void) | null>;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -743,6 +745,7 @@ function TrackedVideoPlayer({
       open={ended}
       nextTitle={nextTitle ?? null}
       onAdvance={onAdvance}
+      advanceLabel={advanceLabel}
       onReplay={handleReplay}
     />
   );
@@ -818,11 +821,13 @@ function LessonEndOverlay({
   open,
   nextTitle,
   onAdvance,
+  advanceLabel,
   onReplay,
 }: {
   open: boolean;
   nextTitle: string | null;
   onAdvance?: () => void;
+  advanceLabel?: string;
   onReplay: () => void;
 }) {
   const COUNTDOWN = 10;
@@ -891,7 +896,9 @@ function LessonEndOverlay({
                 className="absolute inset-y-0 left-0 bg-black/20 transition-[width] duration-1000 ease-linear"
                 style={{ width: `${progress}%` }}
               />
-              <span className="relative">Avançar ({remaining}s)</span>
+              <span className="relative">
+                {advanceLabel ?? "Avançar"} ({remaining}s)
+              </span>
             </button>
           </div>
         </>
