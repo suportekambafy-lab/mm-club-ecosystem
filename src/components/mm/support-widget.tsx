@@ -80,11 +80,11 @@ export function SupportWidget({ userName }: { userName?: string }) {
   return (
     <>
       {open && (
-        <div className="fixed inset-x-0 top-0 bottom-0 z-[70] flex justify-end bg-black/40 backdrop-blur-[2px] sm:inset-x-auto sm:top-auto sm:right-5 sm:bottom-24 sm:bg-transparent sm:backdrop-blur-none">
-          <div className="flex h-full w-full flex-col overflow-hidden rounded-none border-0 bg-background shadow-2xl sm:h-auto sm:max-h-[min(80vh,760px)] sm:w-[440px] sm:rounded-3xl sm:border sm:border-border">
+        <div className="fixed inset-x-0 top-0 bottom-0 z-[70] flex justify-end bg-black/40 backdrop-blur-[2px] sm:inset-y-4 sm:left-auto sm:right-4 sm:bg-transparent sm:backdrop-blur-none lg:inset-y-5 lg:right-5">
+          <div className="flex h-full w-full flex-col overflow-hidden rounded-none border-0 bg-background shadow-2xl sm:w-[min(440px,calc(100vw-2rem))] sm:rounded-2xl sm:border sm:border-border lg:w-[460px]">
             {view === "home" ? (
               <div className="flex min-h-0 flex-1 flex-col">
-                <div className="relative z-10 shrink-0 bg-foreground px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-4 text-background sm:rounded-t-3xl sm:px-5 sm:pt-5 sm:pb-8">
+                <div className="relative z-10 shrink-0 bg-foreground px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-4 text-background sm:rounded-t-2xl sm:px-6 sm:pt-5 sm:pb-5">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
                       <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
@@ -102,13 +102,13 @@ export function SupportWidget({ userName }: { userName?: string }) {
                       <X className="h-5 w-5" />
                     </button>
                   </div>
-                  <p className="mt-4 font-display text-xl opacity-60 sm:mt-6 sm:text-2xl">
+                  <p className="mt-4 font-display text-xl opacity-60 sm:mt-5 sm:text-2xl">
                     Olá{firstName ? ` ${firstName}` : ""} 👋
                   </p>
                   <h2 className="font-display text-xl sm:text-2xl">Como podemos ajudar?</h2>
                 </div>
 
-                <div className="relative z-0 min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-3 sm:-mt-5 sm:pt-0 sm:pb-4">
+                <div className="relative z-0 min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-3 sm:px-4 sm:py-4">
                   {savedMessages.length > 0 && (
                     <button
                       onClick={() => openChat()}
