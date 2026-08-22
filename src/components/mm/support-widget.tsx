@@ -356,7 +356,7 @@ function SupportChat({
         )}
       </div>
 
-      <div className="border-t border-border p-3 sm:p-4">
+      <div className="border-t border-border p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:p-4 sm:pb-4">
         <div className="flex items-end gap-2 rounded-2xl border border-border bg-surface-1 px-3 py-2 sm:px-4 sm:py-3">
           <textarea
             ref={inputRef}
