@@ -148,9 +148,15 @@ function ModuleCard({
   const [rows, setRows] = useState<QuestionRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [published, setPublished] = useState(false);
-  const [passScore, setPassScore] = useState(80);
-  const [questionCount, setQuestionCount] = useState(5);
+  const [published, setPublished] = useState(stats?.published ?? false);
+  const [passScore, setPassScore] = useState(stats?.passScore ?? 80);
+  const [questionCount, setQuestionCount] = useState(stats?.questionCount ?? 5);
+
+  useEffect(() => {
+    setPublished(stats?.published ?? false);
+    setPassScore(stats?.passScore ?? 80);
+    setQuestionCount(stats?.questionCount ?? 5);
+  }, [stats?.published, stats?.passScore, stats?.questionCount]);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -216,7 +222,18 @@ function ModuleCard({
           <h3 className="truncate font-display text-base text-foreground">{m.title}</h3>
           <p className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
             <span>{m.lessons.length} aulas</span>
-            {stats && (
+            <span>{stats?.questionsAvailable ?? 0} perguntas</span>
+            <span
+              className={cn(
+                "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+                published
+                  ? "bg-emerald-500/15 text-emerald-500"
+                  : "bg-amber-500/15 text-amber-500",
+              )}
+            >
+              {published ? "Visível aos membros" : "Rascunho"}
+            </span>
+            {stats && stats.attempts > 0 && (
               <>
                 <span className="inline-flex items-center gap-1">
                   <Users className="h-3 w-3" /> {stats.members} membros
@@ -229,6 +246,29 @@ function ModuleCard({
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={busy || (stats?.questionsAvailable ?? 0) === 0}
+            onClick={async () => {
+              const next = !published;
+              setPublished(next);
+              await persistSettings({ published: next });
+            }}
+            title={
+              (stats?.questionsAvailable ?? 0) === 0
+                ? "Gera perguntas antes de publicar"
+                : undefined
+            }
+            className={cn(
+              "inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition disabled:opacity-50",
+              published
+                ? "border border-emerald-500/40 bg-emerald-500/10 text-emerald-500"
+                : "border border-border bg-surface-2 hover:bg-surface-3",
+            )}
+          >
+            <Check className="h-3.5 w-3.5" /> {published ? "Publicado" : "Publicar teste"}
+          </button>
+
           <button
             type="button"
             onClick={handleGenerate}
