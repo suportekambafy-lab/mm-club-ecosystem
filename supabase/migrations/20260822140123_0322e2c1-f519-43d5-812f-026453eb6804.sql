@@ -1,0 +1,1 @@
+update public.profiles set avatar_url = '27d0a73c-39a7-4a4c-a49b-4ed78c1bc411/avatar-mm-suporte.png' where id = '27d0a73c-39a7-4a4c-a49b-4ed78c1bc411';
