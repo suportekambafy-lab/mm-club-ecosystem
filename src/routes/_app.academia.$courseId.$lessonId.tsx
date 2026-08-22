@@ -700,7 +700,11 @@ function TrackedVideoPlayer({
       if (!force && Math.abs(delta) < 5) return;
       lastSavedRef.current = safeSeconds;
       // Ao concluir, guardamos posição 0 para a aula reabrir do início.
-      void saveProgress(completed ? 0 : safeSeconds, { completed, silent: true });
+      // Nunca enviamos `completed: false` — numa revisão isso desmarcaria a conclusão.
+      void saveProgress(completed ? 0 : safeSeconds, {
+        ...(completed ? { completed: true } : {}),
+        silent: true,
+      });
       if (completed) lastSavedRef.current = 0;
     },
     [saveProgress],
