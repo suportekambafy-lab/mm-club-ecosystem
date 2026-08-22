@@ -43,6 +43,7 @@ export function ModuleQuiz({
   state,
   moduleLessonsCompleted,
   onPassed,
+  autoOpen,
 }: Props) {
   const load = useServerFn(getModuleQuiz);
   const submit = useServerFn(submitModuleQuiz);
