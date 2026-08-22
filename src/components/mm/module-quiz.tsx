@@ -26,6 +26,8 @@ type Props = {
   state: QuizModuleState | undefined;
   moduleLessonsCompleted: boolean;
   onPassed: () => void;
+  /** Abre e arranca o teste automaticamente (vindo do fim da última aula). */
+  autoOpen?: boolean;
 };
 
 type Phase = "idle" | "loading" | "running" | "result";
