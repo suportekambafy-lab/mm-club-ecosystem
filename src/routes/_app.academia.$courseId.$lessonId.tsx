@@ -151,6 +151,9 @@ function LessonPlayer() {
   }
 
   const { course, current, next } = data;
+  const nextBlocked = Boolean(next && lockedModules.has(next.module.id));
+  // Aula seguinte disponível de facto (não trancada e sem teste pendente).
+  const nextOpen = next && !quizPending && !nextBlocked ? next : null;
 
 
   return (
