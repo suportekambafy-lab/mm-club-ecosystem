@@ -4,6 +4,9 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import ReactMarkdown from "react-markdown";
 import { useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getMySupportConversation } from "@/lib/support-my.functions";
 import { cn } from "@/lib/utils";
 import { authHeaders } from "@/lib/auth-headers";
 import { SUPPORT_TOPICS, whatsappLink } from "@/lib/support-config";
@@ -43,6 +46,24 @@ export function SupportWidget({ userName }: { userName?: string }) {
   }, [query]);
 
   const [pending, setPending] = useState<string | null>(null);
+
+  const historyFn = useServerFn(getMySupportConversation);
+  const history = useQuery({
+    queryKey: ["support", "my-conversation"],
+    queryFn: () => historyFn(),
+    enabled: open,
+    staleTime: 30_000,
+  });
+  const savedMessages: UIMessage[] = useMemo(
+    () =>
+      (history.data ?? []).map((m) => ({
+        id: m.id,
+        role: m.role,
+        parts: [{ type: "text" as const, text: m.content }],
+      })),
+    [history.data],
+  );
+  const lastSaved = (history.data ?? []).at(-1)?.content ?? null;
 
   function openChat(prompt?: string) {
     setPending(prompt ?? null);
@@ -111,6 +132,23 @@ export function SupportWidget({ userName }: { userName?: string }) {
                     </ul>
                   </div>
 
+                  {savedMessages.length > 0 && (
+                    <button
+                      onClick={() => openChat()}
+                      className="flex w-full items-center gap-3 rounded-2xl border border-primary/40 bg-primary/10 p-4 text-left transition hover:bg-primary/15"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-display text-base text-foreground">
+                          Continuar conversa
+                        </span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {lastSaved}
+                        </span>
+                      </span>
+                      <ChevronRight className="h-5 w-5 shrink-0 text-primary" />
+                    </button>
+                  )}
+
                   <button
                     onClick={() => openChat(query.trim() || undefined)}
                     className="flex w-full items-center gap-3 rounded-2xl border border-border bg-surface-1 p-4 text-left shadow-sm transition hover:border-[color:var(--hairline)]"
@@ -131,6 +169,7 @@ export function SupportWidget({ userName }: { userName?: string }) {
               </div>
             ) : (
               <SupportChat
+                savedMessages={savedMessages}
                 initialPrompt={pending}
                 onConsumePrompt={() => setPending(null)}
                 onBack={() => setView("home")}
@@ -153,11 +192,13 @@ export function SupportWidget({ userName }: { userName?: string }) {
 }
 
 function SupportChat({
+  savedMessages,
   initialPrompt,
   onConsumePrompt,
   onBack,
   onClose,
 }: {
+  savedMessages: UIMessage[];
   initialPrompt: string | null;
   onConsumePrompt: () => void;
   onBack: () => void;
@@ -172,7 +213,11 @@ function SupportChat({
     () => new DefaultChatTransport({ api: "/api/support", headers: () => authHeaders() }),
     [],
   );
-  const { messages, sendMessage, status, error } = useChat({ id: "mm-suporte", transport });
+  const { messages, sendMessage, status, error } = useChat({
+    id: "mm-suporte",
+    messages: savedMessages,
+    transport,
+  });
   const isBusy = status === "submitted" || status === "streaming";
 
   const sent = useRef(false);
