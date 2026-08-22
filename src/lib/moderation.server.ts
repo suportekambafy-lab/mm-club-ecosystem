@@ -46,6 +46,8 @@ REMOVIDA — o caminho correto é o suporte privado, nunca o feed, o chat ou os 
 
 REMOVER (action: "remove") quando o conteúdo:
 - é reclamação/pedido de reembolso, cancelamento, garantia, chargeback ou queixa de cobranças e faturas;
+- reclama da plataforma, do curso ou do serviço em tom de queixa: "faltam aulas", "os vídeos pulam",
+  "não consigo ver as aulas", "está tudo confuso", "isto não funciona", "onde está o suporte humanizado";
 - pede suporte, atendimento humano ou abre um caso de cliente em público;
 - expõe dados pessoais ou contactos (email, telefone, IBAN, morada), próprios ou de outros;
 - desacredita o clube, os cursos, a marca ou os formadores ("é golpe", "não presta", difamação);
@@ -54,8 +56,11 @@ REMOVER (action: "remove") quando o conteúdo:
 - partilha/vende acessos, credenciais ou conteúdo exclusivo do clube;
 - na imagem/vídeo: nudez, violência, conteúdo gráfico, capturas de faturas, recibos ou conversas de suporte.
 
-MANTER (action: "allow") dúvidas sobre aulas e negócio, partilha de resultados, apresentações,
-feedback construtivo sobre conteúdo (sem exigir dinheiro de volta), motivação e conversa entre membros.
+MANTER (action: "allow") dúvidas genuínas sobre o conteúdo das aulas e do negócio (como fazer X, onde
+encontrar Y numa ferramenta), partilha de resultados, apresentações, motivação e conversa entre membros.
+Distinção decisiva: perguntar "como faço isto?" é dúvida (manter); dizer que o produto/serviço está
+mal, incompleto, avariado ou exigir suporte é reclamação (remover).
+
 
 SEVERIDADE:
 - "grave": difamação da marca, ataques pessoais, discurso de ódio, ameaças, conteúdo sexual/ilegal,
