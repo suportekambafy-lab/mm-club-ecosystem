@@ -63,7 +63,14 @@ export function SupportWidget({ userName }: { userName?: string }) {
       })),
     [history.data],
   );
-  const lastSaved = (history.data ?? []).at(-1)?.content ?? null;
+  const lastSavedRaw = (history.data ?? []).at(-1)?.content ?? null;
+  const lastSaved = lastSavedRaw
+    ? lastSavedRaw
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+        .replace(/[*_`#>]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+    : null;
 
   function openChat(prompt?: string) {
     setPending(prompt ?? null);
@@ -77,7 +84,7 @@ export function SupportWidget({ userName }: { userName?: string }) {
           <div className="flex h-full w-full flex-col overflow-hidden rounded-none border-0 bg-background shadow-2xl sm:h-auto sm:max-h-[min(80vh,760px)] sm:w-[440px] sm:rounded-3xl sm:border sm:border-border">
             {view === "home" ? (
               <div className="flex min-h-0 flex-1 flex-col">
-                <div className="relative z-10 shrink-0 bg-foreground px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-7 text-background sm:rounded-t-3xl sm:px-5 sm:pt-5 sm:pb-8">
+                <div className="relative z-10 shrink-0 bg-foreground px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-4 text-background sm:rounded-t-3xl sm:px-5 sm:pt-5 sm:pb-8">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
                       <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
@@ -101,7 +108,7 @@ export function SupportWidget({ userName }: { userName?: string }) {
                   <h2 className="font-display text-xl sm:text-2xl">Como podemos ajudar?</h2>
                 </div>
 
-                <div className="relative z-0 -mt-3 min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-2 sm:-mt-5 sm:pt-0 sm:pb-4">
+                <div className="relative z-0 min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-3 sm:-mt-5 sm:pt-0 sm:pb-4">
                   {savedMessages.length > 0 && (
                     <button
                       onClick={() => openChat()}
