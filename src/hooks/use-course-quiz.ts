@@ -32,7 +32,7 @@ export function useCourseQuiz(courseId: string): CourseQuizState {
   return {
     staff: Boolean(q.data?.staff),
     modules,
-    loaded: !q.isLoading,
+    loaded: q.isSuccess,
     refetch: () => void q.refetch(),
   };
 }
