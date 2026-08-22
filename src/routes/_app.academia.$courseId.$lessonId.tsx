@@ -496,6 +496,7 @@ type PlayerJsPlayer = {
   play?: () => void;
   setCurrentTime: (seconds: number) => void;
   getCurrentTime: (callback: (seconds: number) => void) => void;
+  getDuration?: (callback: (seconds: number) => void) => void;
 };
 
 type PlayerJsConstructor = new (element: HTMLIFrameElement) => PlayerJsPlayer;
@@ -726,7 +727,24 @@ function TrackedVideoPlayer({
         playerRef.current = player;
         player.on("ready", () => {
           if (cancelled) return;
-          if (startRef.current > 3) player?.setCurrentTime(startRef.current);
+          const startAt = startRef.current;
+          if (startAt > 3) {
+            // Só retoma se não estiver nos últimos 20s do vídeo — evita abrir a
+            // aula no fim e disparar imediatamente o avanço automático.
+            if (player?.getDuration) {
+              player.getDuration((duration) => {
+                if (cancelled) return;
+                if (duration && startAt >= duration - 20) {
+                  startRef.current = 0;
+                  lastSavedRef.current = 0;
+                  return;
+                }
+                player?.setCurrentTime(startAt);
+              });
+            } else {
+              player?.setCurrentTime(startAt);
+            }
+          }
           player?.on("timeupdate", onTimeUpdate);
           player?.on("seeked", onSeeked);
           player?.on("pause", onPause);
