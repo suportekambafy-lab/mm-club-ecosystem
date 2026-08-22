@@ -925,7 +925,8 @@ function LessonEndOverlay({
                 style={{ width: `${progress}%` }}
               />
               <span className="relative">
-                {advanceLabel ?? "Avançar"} ({remaining}s)
+                {advanceLabel ?? "Avançar"}
+                {autoAdvance ? ` (${remaining}s)` : ""}
               </span>
             </button>
           </div>
