@@ -218,12 +218,19 @@ function communityCopy(
       subtitle: "O curso agendado acabou de abrir — começa agora",
     };
   }
+  if (kind === "moderation") {
+    return {
+      title: "Aviso do Código do Clube",
+      subtitle: "Toca para ver o motivo e o prazo",
+    };
+  }
   if (kind === "rank") {
     return {
       title: rankPosition ? `Estás no Top ${rankPosition} da Comunidade` : "Estás no Top da Comunidade",
       subtitle: "Toca para ver como a tua posição foi calculada",
     };
   }
+
   if (kind === "like") {
     return {
       title: isShort ? `${who} gostou do teu MM Short` : `${who} gostou do teu post`,
