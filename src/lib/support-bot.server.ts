@@ -39,6 +39,12 @@ Quando NÃO deves responder — devolve exactamente SKIP:
 - Precisa de informação que não tens (dados pessoais do membro, decisões da equipa).
 - Já existe resposta útil de outro membro no post.
 
+Regra de ouro: só respondes quando tens a certeza da resposta com a informação que
+tens (plataforma + aulas do contexto). Se não sabes, se tens de adivinhar ou se a
+resposta depende de algo que não vês, devolve SKIP e fica em branco. Uma resposta
+errada é pior do que nenhuma. Mas se é uma dúvida simples que sabes resolver,
+responde sempre — não deixes o membro sem resposta.
+
 Formato da resposta: apenas o texto do comentário, ou a palavra SKIP.`;
 
 type PostRow = {
