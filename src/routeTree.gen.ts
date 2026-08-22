@@ -54,6 +54,7 @@ import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppComunidadeRouteImport } from './routes/_app.comunidade'
 import { Route as AppComunicacoesRouteImport } from './routes/_app.comunicacoes'
 import { Route as AppCodigoRouteImport } from './routes/_app.codigo'
+import { Route as AppCertificadosRouteImport } from './routes/_app.certificados'
 import { Route as AppBemVindoRouteImport } from './routes/_app.bem-vindo'
 import { Route as AppAcademiaRouteImport } from './routes/_app.academia'
 import { Route as AdminLivesIndexRouteImport } from './routes/admin.lives.index'
@@ -339,6 +340,11 @@ const AppComunicacoesRoute = AppComunicacoesRouteImport.update({
 const AppCodigoRoute = AppCodigoRouteImport.update({
   id: '/codigo',
   path: '/codigo',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCertificadosRoute = AppCertificadosRouteImport.update({
+  id: '/certificados',
+  path: '/certificados',
   getParentRoute: () => AppRoute,
 } as any)
 const AppBemVindoRoute = AppBemVindoRouteImport.update({
@@ -701,6 +707,7 @@ export interface FileRoutesByFullPath {
   '/vip': typeof VipRoute
   '/academia': typeof AppAcademiaRouteWithChildren
   '/bem-vindo': typeof AppBemVindoRoute
+  '/certificados': typeof AppCertificadosRoute
   '/codigo': typeof AppCodigoRoute
   '/comunicacoes': typeof AppComunicacoesRoute
   '/comunidade': typeof AppComunidadeRoute
@@ -807,6 +814,7 @@ export interface FileRoutesByTo {
   '/trial14': typeof Trial14Route
   '/vip': typeof VipRoute
   '/bem-vindo': typeof AppBemVindoRoute
+  '/certificados': typeof AppCertificadosRoute
   '/codigo': typeof AppCodigoRoute
   '/comunicacoes': typeof AppComunicacoesRoute
   '/comunidade': typeof AppComunidadeRoute
@@ -911,6 +919,7 @@ export interface FileRoutesById {
   '/vip': typeof VipRoute
   '/_app/academia': typeof AppAcademiaRouteWithChildren
   '/_app/bem-vindo': typeof AppBemVindoRoute
+  '/_app/certificados': typeof AppCertificadosRoute
   '/_app/codigo': typeof AppCodigoRoute
   '/_app/comunicacoes': typeof AppComunicacoesRoute
   '/_app/comunidade': typeof AppComunidadeRoute
@@ -1021,6 +1030,7 @@ export interface FileRouteTypes {
     | '/vip'
     | '/academia'
     | '/bem-vindo'
+    | '/certificados'
     | '/codigo'
     | '/comunicacoes'
     | '/comunidade'
@@ -1127,6 +1137,7 @@ export interface FileRouteTypes {
     | '/trial14'
     | '/vip'
     | '/bem-vindo'
+    | '/certificados'
     | '/codigo'
     | '/comunicacoes'
     | '/comunidade'
@@ -1230,6 +1241,7 @@ export interface FileRouteTypes {
     | '/vip'
     | '/_app/academia'
     | '/_app/bem-vindo'
+    | '/_app/certificados'
     | '/_app/codigo'
     | '/_app/comunicacoes'
     | '/_app/comunidade'
@@ -1687,6 +1699,13 @@ declare module '@tanstack/react-router' {
       path: '/codigo'
       fullPath: '/codigo'
       preLoaderRoute: typeof AppCodigoRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/certificados': {
+      id: '/_app/certificados'
+      path: '/certificados'
+      fullPath: '/certificados'
+      preLoaderRoute: typeof AppCertificadosRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/bem-vindo': {
@@ -2229,6 +2248,7 @@ const AppLivesRouteWithChildren = AppLivesRoute._addFileChildren(
 interface AppRouteChildren {
   AppAcademiaRoute: typeof AppAcademiaRouteWithChildren
   AppBemVindoRoute: typeof AppBemVindoRoute
+  AppCertificadosRoute: typeof AppCertificadosRoute
   AppCodigoRoute: typeof AppCodigoRoute
   AppComunicacoesRoute: typeof AppComunicacoesRoute
   AppComunidadeRoute: typeof AppComunidadeRoute
@@ -2247,6 +2267,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAcademiaRoute: AppAcademiaRouteWithChildren,
   AppBemVindoRoute: AppBemVindoRoute,
+  AppCertificadosRoute: AppCertificadosRoute,
   AppCodigoRoute: AppCodigoRoute,
   AppComunicacoesRoute: AppComunicacoesRoute,
   AppComunidadeRoute: AppComunidadeRoute,
