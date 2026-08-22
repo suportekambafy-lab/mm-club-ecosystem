@@ -10,6 +10,13 @@ function textOf(m: UIMessage): string {
     .trim();
 }
 
+/** Hash estável do conteúdo, usado quando a mensagem não traz id do cliente. */
+function hashContent(text: string): string {
+  let hash = 5381;
+  for (let i = 0; i < text.length; i += 1) hash = ((hash * 33) ^ text.charCodeAt(i)) >>> 0;
+  return hash.toString(36);
+
+
 /** Guarda a conversa de suporte do membro (uma thread por membro). */
 async function persistSupport(
   userId: string,
