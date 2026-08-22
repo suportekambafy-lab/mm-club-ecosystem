@@ -20,6 +20,7 @@ import {
   type QuizResultItem,
 } from "@/lib/quiz.functions";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { setQuizModalOpen } from "@/lib/quiz-visibility";
 import { cn } from "@/lib/utils";
 
 type Props = {
