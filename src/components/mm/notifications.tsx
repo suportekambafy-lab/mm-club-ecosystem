@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile, BellRing, BellOff, UserRound, GraduationCap, Trophy } from "lucide-react";
+import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile, BellRing, BellOff, UserRound, GraduationCap, Trophy, Gavel } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
@@ -38,6 +38,7 @@ const iconByKind: Record<NotifKind, typeof Bell> = {
   inactivity: Play,
   course_released: GraduationCap,
   rank: Trophy,
+  moderation: Gavel,
 };
 
 const labelByKind: Record<NotifKind, string> = {
@@ -52,6 +53,7 @@ const labelByKind: Record<NotifKind, string> = {
   inactivity: "Retomar",
   course_released: "Novo curso",
   rank: "Ranking",
+  moderation: "Moderação",
 
 };
 
