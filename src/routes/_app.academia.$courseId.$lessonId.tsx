@@ -24,6 +24,8 @@ import { lessonThumb } from "@/lib/course-duration";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 import { TranscriptProgress } from "@/components/mm/transcript-progress";
 import { LessonResources } from "@/components/mm/lesson-resources";
+import { LessonNotes } from "@/components/mm/lesson-notes";
+import { pingLearningActivity, recordLessonCompleted } from "@/lib/learning-activity";
 
 
 export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
