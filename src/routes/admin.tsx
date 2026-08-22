@@ -27,6 +27,7 @@ import {
   Moon,
   ShieldCheck,
   GraduationCap,
+  Gavel,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import mmIcon from "@/assets/mm-icon.png.asset.json";
@@ -83,7 +84,8 @@ type AdminTo =
   | "/admin/lives"
   | "/admin/ferramentas"
   | "/admin/comunicacao"
-  | "/admin/seguranca";
+  | "/admin/seguranca"
+  | "/admin/moderacao";
 
 type NavItem = { to: AdminTo; label: string; icon: typeof Home; exact?: boolean };
 
@@ -121,6 +123,7 @@ const nav: Array<{ label: string; items: NavItem[] }> = [
       { to: "/admin/eventos", label: "Eventos", icon: CalendarDays },
       { to: "/admin/lives", label: "Lives", icon: Radio },
       { to: "/admin/ferramentas", label: "Ferramentas", icon: Wrench },
+      { to: "/admin/moderacao", label: "Moderação", icon: Gavel },
       { to: "/admin/seguranca", label: "Segurança", icon: ShieldCheck },
     ],
   },
@@ -142,6 +145,7 @@ const CRUMBS: Record<string, string> = {
   "/admin/eventos": "Eventos",
   "/admin/lives": "Lives",
   "/admin/ferramentas": "Ferramentas",
+  "/admin/moderacao": "Moderação",
   "/admin/seguranca": "Segurança",
 };
 

@@ -334,7 +334,9 @@ export async function moderateTarget(args: {
     action: verdict.action,
     category: verdict.category,
     reason: verdict.reason,
+    severity: verdict.severity,
     excerpt,
+    image_url: cfg.imageColumn ? ((row as any)[cfg.imageColumn] as string | null) : null,
     sanction_id: sanctionId,
   });
 

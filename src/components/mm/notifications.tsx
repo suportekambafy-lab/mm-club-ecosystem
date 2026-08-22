@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile, BellRing, BellOff, UserRound, GraduationCap, Trophy, Gavel } from "lucide-react";
+import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile, BellRing, BellOff, UserRound, GraduationCap, Trophy, Gavel, ShieldQuestion } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
@@ -39,6 +39,7 @@ const iconByKind: Record<NotifKind, typeof Bell> = {
   course_released: GraduationCap,
   rank: Trophy,
   moderation: Gavel,
+  appeal: ShieldQuestion,
 };
 
 const labelByKind: Record<NotifKind, string> = {
@@ -54,6 +55,7 @@ const labelByKind: Record<NotifKind, string> = {
   course_released: "Novo curso",
   rank: "Ranking",
   moderation: "Moderação",
+  appeal: "Recurso",
 
 };
 
@@ -220,6 +222,12 @@ function communityCopy(
       subtitle: "O curso agendado acabou de abrir — começa agora",
     };
   }
+  if (kind === "appeal") {
+    return {
+      title: "Decisão do teu recurso",
+      subtitle: "A equipa analisou a contestação — toca para ver",
+    };
+  }
   if (kind === "moderation") {
     return {
       title: "Aviso do Código do Clube",
@@ -332,7 +340,9 @@ export function NotificationsBell({ className }: { className?: string }) {
           ? Number(n.course_id.slice(4)) || null
           : null;
       const copy = communityCopy(n.kind, n.actor_name, isShort, rankPosition);
-      const href = n.kind === "moderation"
+      const href = n.kind === "appeal"
+        ? "/comunidade"
+        : n.kind === "moderation"
         ? "/comunidade"
         : n.kind === "rank"
         ? "/comunidade"
