@@ -82,6 +82,7 @@ type AdminTo =
   | "/admin/aulas"
   | "/admin/progresso"
   | "/admin/transcricoes"
+  | "/admin/quizzes"
   | "/admin/certificados"
   | "/admin/eventos"
   | "/admin/lives"
@@ -119,6 +120,7 @@ const nav: Array<{ label: string; items: NavItem[] }> = [
       { to: "/admin/aulas", label: "Aulas", icon: PlayCircle },
       { to: "/admin/progresso", label: "Progresso dos alunos", icon: GraduationCap },
       { to: "/admin/certificados", label: "Certificados & Sequências", icon: Award },
+      { to: "/admin/quizzes", label: "MM Quiz", icon: GraduationCap },
       { to: "/admin/transcricoes", label: "Transcrições", icon: Sparkles },
     ],
   },
@@ -149,6 +151,7 @@ const CRUMBS: Record<string, string> = {
   "/admin/aulas": "Aulas",
   "/admin/progresso": "Progresso dos alunos",
   "/admin/transcricoes": "Transcrições",
+  "/admin/quizzes": "MM Quiz",
   "/admin/eventos": "Eventos",
   "/admin/lives": "Lives",
   "/admin/ferramentas": "Ferramentas",

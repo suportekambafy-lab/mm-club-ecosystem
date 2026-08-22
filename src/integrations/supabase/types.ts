@@ -3637,6 +3637,123 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_attempts: {
+        Row: {
+          answers: Json
+          course_id: string
+          created_at: string
+          id: string
+          module_id: string
+          passed: boolean
+          score: number
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          course_id: string
+          created_at?: string
+          id?: string
+          module_id: string
+          passed?: boolean
+          score: number
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          course_id?: string
+          created_at?: string
+          id?: string
+          module_id?: string
+          passed?: boolean
+          score?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      quiz_module_settings: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          module_id: string
+          pass_score: number
+          published: boolean
+          question_count: number
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          module_id: string
+          pass_score?: number
+          published?: boolean
+          question_count?: number
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          module_id?: string
+          pass_score?: number
+          published?: boolean
+          question_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      quiz_questions: {
+        Row: {
+          active: boolean
+          correct_index: number
+          course_id: string
+          created_at: string
+          explanation: string | null
+          id: string
+          lesson_id: string | null
+          lesson_title: string | null
+          module_id: string
+          options: Json
+          position: number
+          prompt: string
+          start_seconds: number | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          correct_index: number
+          course_id: string
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          lesson_id?: string | null
+          lesson_title?: string | null
+          module_id: string
+          options: Json
+          position?: number
+          prompt: string
+          start_seconds?: number | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          correct_index?: number
+          course_id?: string
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          lesson_id?: string | null
+          lesson_title?: string | null
+          module_id?: string
+          options?: Json
+          position?: number
+          prompt?: string
+          start_seconds?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       security_alerts: {
         Row: {
           category: string

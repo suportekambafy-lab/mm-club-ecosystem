@@ -34,6 +34,7 @@ import { Route as AdminTranscricoesRouteImport } from './routes/admin.transcrico
 import { Route as AdminSuporteRouteImport } from './routes/admin.suporte'
 import { Route as AdminSegurancaRouteImport } from './routes/admin.seguranca'
 import { Route as AdminSaudeRouteImport } from './routes/admin.saude'
+import { Route as AdminQuizzesRouteImport } from './routes/admin.quizzes'
 import { Route as AdminProgressoRouteImport } from './routes/admin.progresso'
 import { Route as AdminModeracaoRouteImport } from './routes/admin.moderacao'
 import { Route as AdminLivesRouteImport } from './routes/admin.lives'
@@ -241,6 +242,11 @@ const AdminSegurancaRoute = AdminSegurancaRouteImport.update({
 const AdminSaudeRoute = AdminSaudeRouteImport.update({
   id: '/saude',
   path: '/saude',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminQuizzesRoute = AdminQuizzesRouteImport.update({
+  id: '/quizzes',
+  path: '/quizzes',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminProgressoRoute = AdminProgressoRouteImport.update({
@@ -735,6 +741,7 @@ export interface FileRoutesByFullPath {
   '/admin/lives': typeof AdminLivesRouteWithChildren
   '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/progresso': typeof AdminProgressoRoute
+  '/admin/quizzes': typeof AdminQuizzesRoute
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/seguranca': typeof AdminSegurancaRoute
   '/admin/suporte': typeof AdminSuporteRoute
@@ -839,6 +846,7 @@ export interface FileRoutesByTo {
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/progresso': typeof AdminProgressoRoute
+  '/admin/quizzes': typeof AdminQuizzesRoute
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/seguranca': typeof AdminSegurancaRoute
   '/admin/suporte': typeof AdminSuporteRoute
@@ -949,6 +957,7 @@ export interface FileRoutesById {
   '/admin/lives': typeof AdminLivesRouteWithChildren
   '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/progresso': typeof AdminProgressoRoute
+  '/admin/quizzes': typeof AdminQuizzesRoute
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/seguranca': typeof AdminSegurancaRoute
   '/admin/suporte': typeof AdminSuporteRoute
@@ -1061,6 +1070,7 @@ export interface FileRouteTypes {
     | '/admin/lives'
     | '/admin/moderacao'
     | '/admin/progresso'
+    | '/admin/quizzes'
     | '/admin/saude'
     | '/admin/seguranca'
     | '/admin/suporte'
@@ -1165,6 +1175,7 @@ export interface FileRouteTypes {
     | '/admin/ferramentas'
     | '/admin/moderacao'
     | '/admin/progresso'
+    | '/admin/quizzes'
     | '/admin/saude'
     | '/admin/seguranca'
     | '/admin/suporte'
@@ -1274,6 +1285,7 @@ export interface FileRouteTypes {
     | '/admin/lives'
     | '/admin/moderacao'
     | '/admin/progresso'
+    | '/admin/quizzes'
     | '/admin/saude'
     | '/admin/seguranca'
     | '/admin/suporte'
@@ -1571,6 +1583,13 @@ declare module '@tanstack/react-router' {
       path: '/saude'
       fullPath: '/admin/saude'
       preLoaderRoute: typeof AdminSaudeRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/quizzes': {
+      id: '/admin/quizzes'
+      path: '/quizzes'
+      fullPath: '/admin/quizzes'
+      preLoaderRoute: typeof AdminQuizzesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/progresso': {
@@ -2363,6 +2382,7 @@ interface AdminRouteChildren {
   AdminLivesRoute: typeof AdminLivesRouteWithChildren
   AdminModeracaoRoute: typeof AdminModeracaoRoute
   AdminProgressoRoute: typeof AdminProgressoRoute
+  AdminQuizzesRoute: typeof AdminQuizzesRoute
   AdminSaudeRoute: typeof AdminSaudeRoute
   AdminSegurancaRoute: typeof AdminSegurancaRoute
   AdminSuporteRoute: typeof AdminSuporteRoute
@@ -2381,6 +2401,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminLivesRoute: AdminLivesRouteWithChildren,
   AdminModeracaoRoute: AdminModeracaoRoute,
   AdminProgressoRoute: AdminProgressoRoute,
+  AdminQuizzesRoute: AdminQuizzesRoute,
   AdminSaudeRoute: AdminSaudeRoute,
   AdminSegurancaRoute: AdminSegurancaRoute,
   AdminSuporteRoute: AdminSuporteRoute,

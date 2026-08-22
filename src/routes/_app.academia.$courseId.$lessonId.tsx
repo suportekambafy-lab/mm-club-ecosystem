@@ -26,6 +26,7 @@ import { TranscriptProgress } from "@/components/mm/transcript-progress";
 import { LessonResources } from "@/components/mm/lesson-resources";
 import { LessonNotes } from "@/components/mm/lesson-notes";
 import { pingLearningActivity, recordLessonCompleted } from "@/lib/learning-activity";
+import { useCourseQuiz, lockedModuleIds } from "@/hooks/use-course-quiz";
 
 
 export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
@@ -92,6 +93,20 @@ function LessonPlayer() {
 
   // Controlo directo do player (usado pelas notas para voltar ao minuto).
   const seekRef = useRef<((seconds: number) => void) | null>(null);
+
+  // Bloqueio sequencial: se o módulo desta aula está trancado por um teste
+  // não aprovado, volta à página do curso.
+  const quiz = useCourseQuiz(courseIdForProgress);
+  const { locked: lockedModules } = lockedModuleIds(
+    (coursesById[courseId]?.modules ?? []).map((m: Module) => m.id),
+    quiz,
+  );
+  const currentModuleId = data?.current.module.id;
+  const moduleLocked = Boolean(currentModuleId && lockedModules.has(currentModuleId));
+  useEffect(() => {
+    if (!moduleLocked) return;
+    void navigate({ to: "/academia/$courseId", params: { courseId }, replace: true });
+  }, [moduleLocked, navigate, courseId]);
 
   // Reset scroll on lesson change
   useEffect(() => {
