@@ -102,36 +102,6 @@ export function SupportWidget({ userName }: { userName?: string }) {
                 </div>
 
                 <div className="-mt-5 min-h-0 flex-1 space-y-3 overflow-y-auto px-3 pb-3">
-                  <div className="rounded-2xl border border-border bg-surface-1 p-3 shadow-sm">
-                    <div className="flex items-center gap-2 rounded-xl bg-surface-2 px-3 py-2">
-                      <input
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Procure ajuda"
-                        className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
-                      />
-                      <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    </div>
-                    <ul className="mt-1 divide-y divide-border">
-                      {topics.map((t) => (
-                        <li key={t.id}>
-                          <button
-                            onClick={() => openChat(t.prompt)}
-                            className="flex w-full items-center gap-3 px-1 py-3 text-left transition hover:text-primary"
-                          >
-                            <span className="flex-1 text-sm text-foreground">{t.title}</span>
-                            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                          </button>
-                        </li>
-                      ))}
-                      {topics.length === 0 && (
-                        <li className="px-1 py-3 text-sm text-muted-foreground">
-                          Nada encontrado. Fala connosco abaixo.
-                        </li>
-                      )}
-                    </ul>
-                  </div>
-
                   {savedMessages.length > 0 && (
                     <button
                       onClick={() => openChat()}
@@ -165,6 +135,36 @@ export function SupportWidget({ userName }: { userName?: string }) {
                       <Send className="h-4 w-4" />
                     </span>
                   </button>
+
+                  <div className="rounded-2xl border border-border bg-surface-1 p-3 shadow-sm">
+                    <div className="flex items-center gap-2 rounded-xl bg-surface-2 px-3 py-2">
+                      <input
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Procure ajuda"
+                        className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                      />
+                      <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    </div>
+                    <ul className="mt-1 divide-y divide-border">
+                      {topics.map((t) => (
+                        <li key={t.id}>
+                          <button
+                            onClick={() => openChat(t.prompt)}
+                            className="flex w-full items-center gap-3 px-1 py-3 text-left transition hover:text-primary"
+                          >
+                            <span className="flex-1 text-sm text-foreground">{t.title}</span>
+                            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          </button>
+                        </li>
+                      ))}
+                      {topics.length === 0 && (
+                        <li className="px-1 py-3 text-sm text-muted-foreground">
+                          Nada encontrado. Fala connosco abaixo.
+                        </li>
+                      )}
+                    </ul>
+                  </div>
                 </div>
               </div>
             ) : (
