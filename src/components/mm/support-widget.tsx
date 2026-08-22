@@ -111,7 +111,7 @@ export function SupportWidget({ userName }: { userName?: string }) {
                         <span className="block font-display text-base text-foreground">
                           Continuar conversa
                         </span>
-                        <span className="block truncate text-xs text-muted-foreground">
+                        <span className="line-clamp-2 text-xs text-muted-foreground">
                           {lastSaved}
                         </span>
                       </span>
