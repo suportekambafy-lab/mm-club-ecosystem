@@ -37,7 +37,7 @@ export function MemberProfileProvider({ children }: { children: React.ReactNode 
         <Drawer open={Boolean(userId)} onOpenChange={(o) => !o && close()}>
           <DrawerContent className="border-border bg-surface-1 px-0 pb-6">
             <div className="max-h-[80vh] overflow-y-auto px-5 pt-1">
-              {userId && <MemberProfileBody userId={userId} />}
+              {userId && <MemberProfileBody userId={userId} onClose={close} />}
             </div>
           </DrawerContent>
         </Drawer>
@@ -45,7 +45,7 @@ export function MemberProfileProvider({ children }: { children: React.ReactNode 
         <Dialog open={Boolean(userId)} onOpenChange={(o) => !o && close()}>
           <DialogContent className="max-w-md overflow-hidden border-border bg-surface-1 p-0">
             <div className="px-7 pb-7 pt-8">
-              {userId && <MemberProfileBody userId={userId} />}
+              {userId && <MemberProfileBody userId={userId} onClose={close} />}
             </div>
           </DialogContent>
         </Dialog>
@@ -89,7 +89,7 @@ function monthYear(iso: string | null | undefined): string {
   );
 }
 
-function MemberProfileBody({ userId }: { userId: string }) {
+function MemberProfileBody({ userId, onClose }: { userId: string; onClose?: () => void }) {
   const adminIds = useAdminIds();
   const board = useCommunityLeaderboard(30, RANK_LIMIT);
   const me = (board.data ?? []).find((r) => r.user_id === userId);
@@ -198,7 +198,10 @@ function MemberProfileBody({ userId }: { userId: string }) {
         <Button
           type="button"
           className="mt-3 w-full gap-2"
-          onClick={() => window.dispatchEvent(new Event("mm-support:open"))}
+          onClick={() => {
+            onClose?.();
+            window.dispatchEvent(new Event("mm-support:open"));
+          }}
         >
           <Headphones className="h-4 w-4" />
           Contactar suporte
