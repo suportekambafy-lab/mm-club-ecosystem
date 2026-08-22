@@ -372,13 +372,36 @@ function TemplatePreview() {
 
       <div className="overflow-hidden rounded-xl bg-admin-panel p-2">
         {url ? (
-          <iframe title="Modelo do certificado" src={url} className="h-[560px] w-full rounded-lg bg-black" />
+          <object data={url} type="application/pdf" className="h-[560px] w-full rounded-lg bg-black">
+            <div className="flex h-[560px] flex-col items-center justify-center gap-3 text-[13px] text-admin-muted">
+              <span>O teu navegador bloqueia PDFs dentro da pré-visualização.</span>
+              <a
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-9 items-center rounded-lg bg-admin-fg px-3 text-[13px] font-medium text-admin-bg"
+              >
+                Abrir modelo em nova aba
+              </a>
+            </div>
+          </object>
         ) : (
           <div className="flex h-[560px] items-center justify-center text-[13px] text-admin-muted">
             {busy ? "A gerar modelo…" : "Sem pré-visualização"}
           </div>
         )}
       </div>
+      {url && (
+        <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex h-9 items-center rounded-lg bg-admin-panel-2 px-3 text-[13px] text-admin-fg"
+        >
+          Abrir em nova aba
+        </a>
+      )}
+
       {url && (
         <a
           href={url}
