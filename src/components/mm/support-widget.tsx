@@ -39,7 +39,7 @@ export function SupportWidget({ userName }: { userName?: string }) {
     <>
       {open && (
         <div className="fixed inset-x-3 bottom-20 z-[70] flex justify-end sm:inset-x-auto sm:right-5 sm:bottom-24">
-          <div className="flex max-h-[min(78vh,640px)] w-full flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-2xl sm:w-[380px]">
+          <div className="flex max-h-[min(88vh,820px)] w-full flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-2xl sm:w-[440px]">
             {view === "home" ? (
               <div className="flex min-h-0 flex-1 flex-col">
                 <div className="bg-foreground px-5 pt-5 pb-8 text-background">
@@ -207,7 +207,7 @@ function SupportChat({
         </button>
       </header>
 
-      <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
+      <div ref={scrollRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
         {messages.length === 0 && !isBusy && (
           <p className="py-6 text-center text-sm text-muted-foreground">
             Diz-nos o que se passa. Se não conseguirmos resolver, passamos para a equipa no WhatsApp.
@@ -264,8 +264,8 @@ function SupportChat({
         )}
       </div>
 
-      <div className="border-t border-border p-3">
-        <div className="flex items-end gap-2 rounded-2xl border border-border bg-surface-1 px-3 py-2">
+      <div className="border-t border-border p-4">
+        <div className="flex items-end gap-2 rounded-2xl border border-border bg-surface-1 px-4 py-3">
           <textarea
             ref={inputRef}
             value={input}
@@ -278,13 +278,13 @@ function SupportChat({
             }}
             rows={1}
             placeholder="Escreve a tua mensagem…"
-            className="max-h-28 min-h-6 flex-1 resize-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+            className="max-h-32 min-h-7 flex-1 resize-none bg-transparent text-[15px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground"
           />
           <button
             onClick={() => send(input)}
             disabled={!input.trim() || isBusy}
             aria-label="Enviar"
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition disabled:opacity-40"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition disabled:opacity-40"
           >
             <ArrowUp className="h-4 w-4" />
           </button>
