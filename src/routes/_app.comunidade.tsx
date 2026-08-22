@@ -4,7 +4,7 @@ import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tansta
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { runModeration } from "@/lib/moderation-client";
-import { requestSupportBotReply } from "@/lib/support-bot.functions";
+import { RichText } from "@/components/mm/rich-text";
 import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 import { assertUploadAllowed } from "@/lib/security/uploads";
 import { SanctionBanner, useActiveSanction } from "@/components/mm/sanction-banner";
@@ -895,12 +895,8 @@ function Composer({
         runModeration({ kind: "community_post", id: row.id }, () =>
           qc.invalidateQueries({ queryKey: ["community", "posts"] }),
         );
-        // MM Suporte avalia e responde às dúvidas simples (fire-and-forget).
-        requestSupportBotReply({ data: { postId: row.id } })
-          .then((res) => {
-            if (res?.replied) qc.invalidateQueries({ queryKey: ["community", "posts"] });
-          })
-          .catch(() => {});
+        // MM Suporte responde mais tarde (sweep a cada 3 min), nunca no instante
+        // da publicação — evita a sensação de resposta automática imediata.
       }
     },
     onSuccess: () => {
@@ -1791,7 +1787,10 @@ function CommentItem({
               </div>
             </div>
           ) : (
-            <p className="mt-0.5 whitespace-pre-wrap text-sm text-foreground">{comment.content}</p>
+            <RichText
+              text={comment.content}
+              className="mt-0.5 whitespace-pre-wrap text-sm text-foreground"
+            />
           )}
         </div>
         <div className="mt-1 flex items-center gap-2 pl-3">
