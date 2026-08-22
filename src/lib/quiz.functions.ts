@@ -259,6 +259,32 @@ export const submitModuleQuiz = createServerFn({ method: "POST" })
     return { score, passed, passScore, correct, total: results.length, results };
   });
 
+/** Verifica uma única resposta (feedback imediato, com animação no cliente). */
+export const checkQuizAnswer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { questionId: string; choice: number }) => ({
+    questionId: String(data?.questionId ?? ""),
+    choice: Number(data?.choice),
+  }))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("quiz_questions" as never)
+      .select("id, correct_index, explanation, lesson_id, lesson_title, start_seconds")
+      .eq("id" as never, data.questionId as never)
+      .maybeSingle();
+    const r = (row ?? null) as any;
+    if (!r) throw new Error("Pergunta não encontrada");
+    return {
+      correctIndex: Number(r.correct_index),
+      correct: Number(r.correct_index) === data.choice,
+      explanation: (r.explanation ?? null) as string | null,
+      lessonId: (r.lesson_id ?? null) as string | null,
+      lessonTitle: (r.lesson_title ?? null) as string | null,
+      startSeconds: r.start_seconds === null ? null : Number(r.start_seconds),
+    };
+  });
+
 // ---------------- Staff ----------------
 
 export const listModuleQuestions = createServerFn({ method: "POST" })
