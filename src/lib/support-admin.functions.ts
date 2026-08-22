@@ -88,7 +88,7 @@ export const listSupportThreads = createServerFn({ method: "GET" })
         ...r,
         display_name: (p?.display_name as string | null) ?? null,
         avatar_url: (p?.avatar_url as string | null) ?? null,
-        email: (p?.email as string | null) ?? null,
+        email: r.email ?? null,
         last_message: lastByThread.get(r.id) ?? null,
       };
     });
