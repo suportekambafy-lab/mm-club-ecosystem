@@ -47,6 +47,7 @@ function messageText(m: UIMessage): string {
 
 export function SupportWidget({ userName }: { userName?: string }) {
   const [open, setOpen] = useState(false);
+  const quizActive = useSyncExternalStore(subscribe, getQuizModalOpen);
   const [view, setView] = useState<"home" | "chat">("home");
   const [query, setQuery] = useState("");
   const firstName = (userName ?? "").trim().split(" ")[0];
