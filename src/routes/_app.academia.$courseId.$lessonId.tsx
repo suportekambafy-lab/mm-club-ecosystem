@@ -681,9 +681,14 @@ function TrackedVideoPlayer({
   const persist = useCallback(
     (seconds: number, completed = false, force = false) => {
       const safeSeconds = Math.max(0, Math.floor(seconds));
-      if (!force && Math.abs(safeSeconds - lastSavedRef.current) < 5) return;
+      const delta = safeSeconds - lastSavedRef.current;
+      // Avanço normal (não salto) conta como tempo visto.
+      if (delta > 0 && delta < 60) watchedRef.current += delta;
+      if (!force && Math.abs(delta) < 5) return;
       lastSavedRef.current = safeSeconds;
-      void saveProgress(safeSeconds, { completed, silent: true });
+      // Ao concluir, guardamos posição 0 para a aula reabrir do início.
+      void saveProgress(completed ? 0 : safeSeconds, { completed, silent: true });
+      if (completed) lastSavedRef.current = 0;
     },
     [saveProgress],
   );
