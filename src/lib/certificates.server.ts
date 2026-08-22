@@ -15,7 +15,7 @@ export async function renderCertificatePdf(cert: {
   const page = pdf.addPage([842, 595]);
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-  const signatureFont = await pdf.embedFont(StandardFonts.TimesRomanItalic);
+  
 
   const gold = rgb(0.788, 0.663, 0.38);
   const ink = rgb(0.98, 0.98, 0.99);
@@ -75,7 +75,15 @@ export async function renderCertificatePdf(cert: {
   const hoursStr = hours > 0 ? `${hours.toFixed(hours % 1 === 0 ? 0 : 1)}h de formação` : "Formação completa";
   center(`${hoursStr}  ·  Emitido a ${dateStr}`, 276, 11, regular, muted);
 
-  page.drawText("Victor Muabi", { x: 140, y: 188, size: 22, font: signatureFont, color: ink });
+  try {
+    const { SIGNATURE_PNG_BASE64 } = await import("./signature-asset");
+    const sig = await pdf.embedPng(SIGNATURE_PNG_BASE64);
+    const sigHeight = 58;
+    const sigWidth = (sig.width / sig.height) * sigHeight;
+    page.drawImage(sig, { x: 120, y: 182, width: Math.min(sigWidth, 220), height: sigHeight });
+  } catch {
+    /* sem assinatura gráfica */
+  }
   page.drawLine({ start: { x: 120, y: 176 }, end: { x: 340, y: 176 }, color: gold, thickness: 0.8 });
   page.drawText("CEO MM Club", { x: 120, y: 158, size: 10, font: regular, color: muted });
 
