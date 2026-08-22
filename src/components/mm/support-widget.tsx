@@ -3,11 +3,25 @@ import { ArrowUp, ChevronRight, Headset, Search, Send, X } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import ReactMarkdown from "react-markdown";
+import { useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { authHeaders } from "@/lib/auth-headers";
 import { SUPPORT_TOPICS, whatsappLink } from "@/lib/support-config";
 
 const HUMAN_MARKER = "[[HUMANO]]";
+
+/**
+ * Transforma caminhos internos escritos em texto simples ou em `code`
+ * (ex: /subscricao) em links markdown clicáveis.
+ */
+function linkifyRoutes(text: string): string {
+  return text
+    .replace(/`(\/[a-z0-9\-/]{2,})`/gi, "[$1]($1)")
+    .replace(
+      /(^|\s)(\/[a-z0-9\-]+(?:\/[a-z0-9\-]+)*)(?=[\s.,;:!?]|$)/gi,
+      (_match, pre: string, path: string) => `${pre}[${path}](${path})`,
+    );
+}
 
 function messageText(m: UIMessage): string {
   return (m.parts ?? [])
@@ -150,6 +164,7 @@ function SupportChat({
   onClose: () => void;
 }) {
   const [input, setInput] = useState("");
+  const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -233,7 +248,35 @@ function SupportChat({
                   text
                 ) : (
                   <div className="prose prose-sm max-w-none dark:prose-invert [&_p]:my-1">
-                    <ReactMarkdown>{text}</ReactMarkdown>
+                    <ReactMarkdown
+                      components={{
+                        a: ({ href, children }) => {
+                          const to = typeof href === "string" ? href : "";
+                          if (to.startsWith("/")) {
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  onClose();
+                                  void navigate({ to: to as never });
+                                }}
+                                className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 font-medium text-primary no-underline transition hover:bg-primary/25"
+                              >
+                                {children}
+                                <ChevronRight className="h-3 w-3" />
+                              </button>
+                            );
+                          }
+                          return (
+                            <a href={to} target="_blank" rel="noreferrer">
+                              {children}
+                            </a>
+                          );
+                        },
+                      }}
+                    >
+                      {linkifyRoutes(text)}
+                    </ReactMarkdown>
                   </div>
                 )}
               </div>

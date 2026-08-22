@@ -1,0 +1,1 @@
+ALTER TABLE public.support_threads ADD COLUMN email text;

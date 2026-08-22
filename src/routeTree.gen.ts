@@ -30,6 +30,7 @@ import { Route as ApiTranscribeRouteImport } from './routes/api.transcribe'
 import { Route as ApiSupportRouteImport } from './routes/api.support'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AdminTranscricoesRouteImport } from './routes/admin.transcricoes'
+import { Route as AdminSuporteRouteImport } from './routes/admin.suporte'
 import { Route as AdminSegurancaRouteImport } from './routes/admin.seguranca'
 import { Route as AdminSaudeRouteImport } from './routes/admin.saude'
 import { Route as AdminProgressoRouteImport } from './routes/admin.progresso'
@@ -216,6 +217,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
 const AdminTranscricoesRoute = AdminTranscricoesRouteImport.update({
   id: '/transcricoes',
   path: '/transcricoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSuporteRoute = AdminSuporteRouteImport.update({
+  id: '/suporte',
+  path: '/suporte',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSegurancaRoute = AdminSegurancaRouteImport.update({
@@ -704,6 +710,7 @@ export interface FileRoutesByFullPath {
   '/admin/progresso': typeof AdminProgressoRoute
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/seguranca': typeof AdminSegurancaRoute
+  '/admin/suporte': typeof AdminSuporteRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
   '/api/support': typeof ApiSupportRoute
@@ -803,6 +810,7 @@ export interface FileRoutesByTo {
   '/admin/progresso': typeof AdminProgressoRoute
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/seguranca': typeof AdminSegurancaRoute
+  '/admin/suporte': typeof AdminSuporteRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
   '/api/support': typeof ApiSupportRoute
@@ -908,6 +916,7 @@ export interface FileRoutesById {
   '/admin/progresso': typeof AdminProgressoRoute
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/seguranca': typeof AdminSegurancaRoute
+  '/admin/suporte': typeof AdminSuporteRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
   '/api/support': typeof ApiSupportRoute
@@ -1015,6 +1024,7 @@ export interface FileRouteTypes {
     | '/admin/progresso'
     | '/admin/saude'
     | '/admin/seguranca'
+    | '/admin/suporte'
     | '/admin/transcricoes'
     | '/api/chat'
     | '/api/support'
@@ -1114,6 +1124,7 @@ export interface FileRouteTypes {
     | '/admin/progresso'
     | '/admin/saude'
     | '/admin/seguranca'
+    | '/admin/suporte'
     | '/admin/transcricoes'
     | '/api/chat'
     | '/api/support'
@@ -1218,6 +1229,7 @@ export interface FileRouteTypes {
     | '/admin/progresso'
     | '/admin/saude'
     | '/admin/seguranca'
+    | '/admin/suporte'
     | '/admin/transcricoes'
     | '/api/chat'
     | '/api/support'
@@ -1480,6 +1492,13 @@ declare module '@tanstack/react-router' {
       path: '/transcricoes'
       fullPath: '/admin/transcricoes'
       preLoaderRoute: typeof AdminTranscricoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/suporte': {
+      id: '/admin/suporte'
+      path: '/suporte'
+      fullPath: '/admin/suporte'
+      preLoaderRoute: typeof AdminSuporteRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/seguranca': {
@@ -2264,6 +2283,7 @@ interface AdminRouteChildren {
   AdminProgressoRoute: typeof AdminProgressoRoute
   AdminSaudeRoute: typeof AdminSaudeRoute
   AdminSegurancaRoute: typeof AdminSegurancaRoute
+  AdminSuporteRoute: typeof AdminSuporteRoute
   AdminTranscricoesRoute: typeof AdminTranscricoesRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -2280,6 +2300,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminProgressoRoute: AdminProgressoRoute,
   AdminSaudeRoute: AdminSaudeRoute,
   AdminSegurancaRoute: AdminSegurancaRoute,
+  AdminSuporteRoute: AdminSuporteRoute,
   AdminTranscricoesRoute: AdminTranscricoesRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
