@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, Check, Clock, Lock, Play } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, Clock, Lock, Play } from "lucide-react";
 import { coursesById, formatCourseRelease } from "@/data/courses";
 import { useCourseAccess } from "@/hooks/use-course-release";
 import "@/data/admin-store";
@@ -16,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ReleaseCountdown } from "@/components/mm/release-countdown";
 import { ModuleQuiz } from "@/components/mm/module-quiz";
 import { useCourseQuiz, lockedModuleIds } from "@/hooks/use-course-quiz";
+import type { QuizModuleState } from "@/lib/quiz.functions";
 
 
 
@@ -53,6 +55,10 @@ function CourseDetail() {
     course.modules?.[0]?.lessons?.[0] ??
     null;
   const firstLesson = resumeLesson;
+  const resumeLessonModuleId =
+    resumeLesson
+      ? (course.modules?.find((m) => m.lessons.some((l) => l.id === resumeLesson.id))?.id ?? null)
+      : null;
   const totalDuration = computeCourseDuration(course);
   const totalLessons = computeLessonsCount(course);
   const heroSyncThumb = lessonThumb(firstLesson, course);
@@ -217,60 +223,118 @@ function CourseDetail() {
         <section className="space-y-5">
           <h2 className="font-display text-xl text-foreground">Conteúdo do curso</h2>
           <div className="space-y-3">
-            {course.modules.map((m: Module, mi: number) => {
-              const isLocked = locked.has(m.id);
-              const blocker = blockedBy[m.id];
-              const blockerTitle = blocker
-                ? (course.modules?.find((x: Module) => x.id === blocker)?.title ?? "anterior")
-                : null;
-              const completedSet = p?.completedLessons;
-              const moduleDone =
-                m.lessons.length > 0 &&
-                m.lessons.every((l: Lesson) => completedSet?.has(l.id) || l.completed);
-              return (
-              <div key={m.id} className="overflow-hidden rounded-xl bg-surface-1 ring-1 ring-border">
-                <div className="border-b border-border px-4 py-4 sm:px-5">
-                  <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
-                    <span className="text-[11px] font-medium uppercase tracking-wider text-primary">
-                      Módulo {String(mi + 1).padStart(2, "0")}
-                    </span>
-                    <h3 className="truncate font-display text-base text-foreground">{m.title}</h3>
-                  </div>
-                  {isLocked && (
-                    <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Lock className="h-3 w-3" /> Conclui o teste do módulo “{blockerTitle}” para
-                      desbloquear
-                    </p>
-                  )}
-                </div>
-                <ul>
-                  {m.lessons.map((l: Lesson, li: number) => (
-                    <CourseLessonRow
-                      key={l.id}
-                      lesson={l}
-                      course={course}
-                      index={li}
-                      locked={isLocked}
-                    />
-                  ))}
-
-                </ul>
-                {!isLocked && (
-                  <ModuleQuiz
-                    courseId={course.id}
-                    moduleId={m.id}
-                    moduleTitle={m.title}
-                    state={quiz.modules[m.id]}
-                    moduleLessonsCompleted={moduleDone}
-                    autoOpen={focusQuizModuleId === m.id}
-                    onPassed={quiz.refetch}
-                  />
-                )}
-              </div>
-              );
-            })}
+            {course.modules.map((m: Module, mi: number) => (
+              <ModuleAccordion
+                key={m.id}
+                module={m}
+                index={mi}
+                course={course}
+                locked={locked.has(m.id)}
+                blocker={blockedBy[m.id] ?? null}
+                quizState={quiz.modules[m.id]}
+                completedLessons={p?.completedLessons}
+                defaultOpen={focusQuizModuleId === m.id || resumeLessonModuleId === m.id || mi === 0}
+                autoOpenQuiz={focusQuizModuleId === m.id}
+                onQuizPassed={quiz.refetch}
+              />
+            ))}
           </div>
         </section>
+      )}
+    </div>
+  );
+}
+
+function ModuleAccordion({
+  module,
+  index,
+  course,
+  locked,
+  blocker,
+  quizState,
+  completedLessons,
+  defaultOpen,
+  autoOpenQuiz,
+  onQuizPassed,
+}: {
+  module: Module;
+  index: number;
+  course: Course;
+  locked: boolean;
+  blocker: string | null;
+  quizState: QuizModuleState | undefined;
+  completedLessons: Set<string> | undefined;
+  defaultOpen: boolean;
+  autoOpenQuiz: boolean;
+  onQuizPassed: () => void;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const blockerTitle = blocker
+    ? (course.modules?.find((x: Module) => x.id === blocker)?.title ?? "anterior")
+    : null;
+  const completedCount =
+    module.lessons.length > 0
+      ? module.lessons.filter((l: Lesson) => completedLessons?.has(l.id) || l.completed).length
+      : 0;
+  const moduleDone =
+    module.lessons.length > 0 &&
+    module.lessons.every((l: Lesson) => completedLessons?.has(l.id) || l.completed);
+
+  return (
+    <div className="overflow-hidden rounded-xl bg-surface-1 ring-1 ring-border">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-3 border-b border-border px-4 py-4 text-left transition hover:bg-surface-2/50 sm:px-5"
+        aria-expanded={open}
+      >
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ${open ? "" : "-rotate-90"}`}
+        />
+        <div className="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-primary">
+            Módulo {String(index + 1).padStart(2, "0")}
+          </span>
+          <h3 className="truncate font-display text-base text-foreground">{module.title}</h3>
+        </div>
+        <span className="shrink-0 text-xs text-muted-foreground">
+          {completedCount}/{module.lessons.length}
+        </span>
+        {locked && <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+      </button>
+
+      {locked && (
+        <p className="px-4 py-2 text-xs text-muted-foreground sm:px-5">
+          <Lock className="mr-1.5 inline h-3 w-3" /> Conclui o teste do módulo “{blockerTitle}” para
+          desbloquear
+        </p>
+      )}
+
+      {open && (
+        <>
+          <ul>
+            {module.lessons.map((l: Lesson, li: number) => (
+              <CourseLessonRow
+                key={l.id}
+                lesson={l}
+                course={course}
+                index={li}
+                locked={locked}
+              />
+            ))}
+          </ul>
+          {!locked && (
+            <ModuleQuiz
+              courseId={course.id}
+              moduleId={module.id}
+              moduleTitle={module.title}
+              state={quizState}
+              moduleLessonsCompleted={moduleDone}
+              autoOpen={autoOpenQuiz}
+              onPassed={onQuizPassed}
+            />
+          )}
+        </>
       )}
     </div>
   );
