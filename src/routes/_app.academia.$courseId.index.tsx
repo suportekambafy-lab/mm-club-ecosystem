@@ -182,6 +182,14 @@ function CourseDetail() {
             </div>
           )}
 
+          <CourseCertificate
+            courseId={course.id}
+            courseTitle={course.title}
+            hours={Math.round((parseDurationToMinutes(totalDuration) / 60) * 10) / 10}
+            lessonsTotal={totalLessons}
+            completed={percent >= 100}
+          />
+
         </div>
       </section>
 
