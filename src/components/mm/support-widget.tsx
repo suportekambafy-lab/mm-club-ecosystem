@@ -1,5 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUp, ChevronRight, Headset, Search, Send, X } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowUp,
+  Check,
+  ChevronRight,
+  Headset,
+  Loader2,
+  RotateCcw,
+  Search,
+  Send,
+  X,
+} from "lucide-react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import ReactMarkdown from "react-markdown";
@@ -238,7 +249,7 @@ function SupportChat({
     () => new DefaultChatTransport({ api: "/api/support", headers: () => authHeaders() }),
     [],
   );
-  const { messages, sendMessage, status, error } = useChat({
+  const { messages, sendMessage, status, error, regenerate } = useChat({
     id: "mm-suporte",
     messages: savedMessages,
     transport,
@@ -263,7 +274,16 @@ function SupportChat({
 
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
   const needsHuman = lastAssistant ? messageText(lastAssistant).includes(HUMAN_MARKER) : false;
-  const lastUserText = [...messages].reverse().find((m) => m.role === "user");
+  const lastUserMessage = [...messages].reverse().find((m) => m.role === "user");
+  const lastUserText = lastUserMessage;
+  /** Estado de entrega da última mensagem enviada pelo utilizador. */
+  const deliveryState: "sending" | "sent" | "failed" | null = !lastUserMessage
+    ? null
+    : error
+      ? "failed"
+      : status === "submitted" || status === "streaming"
+        ? "sending"
+        : "sent";
 
   function send(text: string) {
     const trimmed = text.trim();
@@ -318,7 +338,31 @@ function SupportChat({
                 )}
               >
                 {m.role === "user" ? (
-                  text
+                  <>
+                    {text}
+                    {m.id === lastUserMessage?.id && deliveryState && (
+                      <span className="mt-1 flex items-center justify-end gap-1 text-[11px] opacity-80">
+                        {deliveryState === "sending" && (
+                          <>
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            A enviar…
+                          </>
+                        )}
+                        {deliveryState === "sent" && (
+                          <>
+                            <Check className="h-3 w-3" />
+                            Enviado
+                          </>
+                        )}
+                        {deliveryState === "failed" && (
+                          <>
+                            <AlertCircle className="h-3 w-3" />
+                            Falhou
+                          </>
+                        )}
+                      </span>
+                    )}
+                  </>
                 ) : (
                   <div className="prose prose-sm max-w-none dark:prose-invert [&_p]:my-1">
                     <ReactMarkdown
@@ -360,9 +404,17 @@ function SupportChat({
           <p className="text-sm text-muted-foreground">A escrever…</p>
         )}
         {error && (
-          <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            Não foi possível contactar o suporte. Tenta novamente ou fala connosco no WhatsApp.
-          </p>
+          <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <p>Não foi possível contactar o suporte. A tua mensagem não foi entregue.</p>
+            <button
+              type="button"
+              onClick={() => void regenerate()}
+              className="inline-flex items-center gap-1.5 rounded-full border border-destructive/40 px-3 py-1.5 text-xs font-medium transition hover:bg-destructive/15"
+            >
+              <RotateCcw className="h-3 w-3" />
+              Tentar novamente
+            </button>
+          </div>
         )}
         {(needsHuman || error) && (
           <a
