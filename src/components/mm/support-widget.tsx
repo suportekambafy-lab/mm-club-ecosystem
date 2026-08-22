@@ -84,7 +84,7 @@ export function SupportWidget({ userName }: { userName?: string }) {
           <div className="flex h-full w-full flex-col overflow-hidden rounded-none border-0 bg-background shadow-2xl sm:h-auto sm:max-h-[min(80vh,760px)] sm:w-[440px] sm:rounded-3xl sm:border sm:border-border">
             {view === "home" ? (
               <div className="flex min-h-0 flex-1 flex-col">
-                <div className="relative z-10 shrink-0 bg-foreground px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-7 text-background sm:rounded-t-3xl sm:px-5 sm:pt-5 sm:pb-8">
+                <div className="relative z-10 shrink-0 bg-foreground px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-4 text-background sm:rounded-t-3xl sm:px-5 sm:pt-5 sm:pb-8">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
                       <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
