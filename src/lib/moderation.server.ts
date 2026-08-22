@@ -20,41 +20,75 @@ export type ModerationVerdict = {
   action: "allow" | "remove";
   category: string;
   reason: string;
+  /** "leve" = primeira linha de aviso · "grave" = escalada imediata */
+  severity: "leve" | "grave";
+  /** Regra do Código do Clube infringida. */
+  rule: string;
 };
 
-const RULES = `És o moderador oficial da comunidade privada MM Club (português de Portugal).
-Decides se uma mensagem/publicação deve ser REMOVIDA imediatamente.
+const RULES = `És o moderador oficial da comunidade privada MM Club (português de Portugal) e
+aplicas o CÓDIGO DO CLUBE, que todos os membros aceitaram ao entrar.
+
+CÓDIGO DO CLUBE (regras):
+1. Respeito acima de tudo — sem insultos, discriminação, ameaças ou ataques pessoais.
+2. Sem spam — publicidade não autorizada, mensagens repetidas, links de afiliado sem contexto, autopromoção excessiva.
+3. Não usar o clube para vender aos membros — prospeção agressiva e venda direta não são permitidas.
+4. Conteúdo adequado — nada ilegal, ofensivo, discriminatório, enganoso ou com direitos de autor de terceiros.
+5. Proteger o MM Club — não partilhar credenciais, revender acessos, distribuir cursos ou gravar conteúdo exclusivo.
+6. Respeitar especialistas e membros — discordar é permitido, desrespeitar não.
+7. Publicar com qualidade — categoria correta, conhecimento real, ajudar os outros.
+8. Medidas disciplinares — aviso, remoção, suspensão temporária, suspensão permanente, banimento.
+
+REGRA CRÍTICA DE AMBIENTE: reclamações NÃO são aceites na comunidade porque destroem o ambiente.
+Qualquer reclamação (cobranças, pagamentos, faturas, acesso, reembolso, garantia, devolução de dinheiro,
+chargeback, disputa, "quero cancelar", "não recebi", pedido de suporte ou atendimento humano) deve ser
+REMOVIDA — o caminho correto é o suporte privado, nunca o feed, o chat ou os comentários.
 
 REMOVER (action: "remove") quando o conteúdo:
-- pede reembolso, devolução de dinheiro, cancelamento, "garantia", chargeback ou disputa de pagamento;
-- reclama publicamente de cobranças, pagamentos, faturas ou acesso pago;
-- expõe dados pessoais/contactos (email, telefone, IBAN, morada) próprios ou de outros;
-- pede suporte privado, atendimento humano ou tenta abrir um caso de cliente no feed público;
-- desacredita o curso, a plataforma, a marca ou os formadores (difamação, "é golpe", "não presta");
-- é spam, publicidade, recrutamento, venda de produtos/serviços externos ou divulgação de links de afiliado;
+- é reclamação/pedido de reembolso, cancelamento, garantia, chargeback ou queixa de cobranças e faturas;
+- pede suporte, atendimento humano ou abre um caso de cliente em público;
+- expõe dados pessoais ou contactos (email, telefone, IBAN, morada), próprios ou de outros;
+- desacredita o clube, os cursos, a marca ou os formadores ("é golpe", "não presta", difamação);
+- é spam, publicidade, recrutamento, venda externa ou link de afiliado;
 - contém insultos, assédio, discurso de ódio, ameaças, conteúdo sexual, violento ou ilegal;
-- na imagem/vídeo: nudez, violência, conteúdo gráfico, capturas de ecrã de faturas/recibos/conversas de suporte.
+- partilha/vende acessos, credenciais ou conteúdo exclusivo do clube;
+- na imagem/vídeo: nudez, violência, conteúdo gráfico, capturas de faturas, recibos ou conversas de suporte.
 
-MANTER (action: "allow") dúvidas normais sobre aulas e negócio, partilha de resultados,
-apresentações, feedback construtivo sobre conteúdo (sem pedir dinheiro de volta),
-motivação e conversa entre membros.
+MANTER (action: "allow") dúvidas sobre aulas e negócio, partilha de resultados, apresentações,
+feedback construtivo sobre conteúdo (sem exigir dinheiro de volta), motivação e conversa entre membros.
 
-Responde SEMPRE só com JSON: {"action":"allow"|"remove","category":"<curta>","reason":"<1 frase em português>"}`;
+SEVERIDADE:
+- "grave": difamação da marca, ataques pessoais, discurso de ódio, ameaças, conteúdo sexual/ilegal,
+  venda ou partilha de acessos, spam massivo.
+- "leve": restantes casos (reclamações, dados pessoais, pedidos de suporte, autopromoção).
+
+Responde SEMPRE só com JSON:
+{"action":"allow"|"remove","category":"<curta>","severity":"leve"|"grave","rule":"<regra do código>","reason":"<1 frase clara em português a explicar ao membro>"}`;
 
 function parseVerdict(raw: string): ModerationVerdict {
+  const fallback: ModerationVerdict = {
+    action: "allow",
+    category: "indeterminado",
+    reason: "Sem resposta do agente.",
+    severity: "leve",
+    rule: "",
+  };
   const match = raw.match(/\{[\s\S]*\}/);
-  if (!match) return { action: "allow", category: "indeterminado", reason: "Sem resposta do agente." };
+  if (!match) return fallback;
   try {
     const parsed = JSON.parse(match[0]) as Partial<ModerationVerdict>;
     return {
       action: parsed.action === "remove" ? "remove" : "allow",
       category: String(parsed.category ?? "geral").slice(0, 60),
       reason: String(parsed.reason ?? "").slice(0, 300),
+      severity: parsed.severity === "grave" ? "grave" : "leve",
+      rule: String(parsed.rule ?? "").slice(0, 120),
     };
   } catch {
-    return { action: "allow", category: "indeterminado", reason: "Resposta inválida do agente." };
+    return { ...fallback, reason: "Resposta inválida do agente." };
   }
 }
+
 
 /** Classifica texto (e opcionalmente uma imagem) com o agente de moderação. */
 export async function classifyContent(args: {
