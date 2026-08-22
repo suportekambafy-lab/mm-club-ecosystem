@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ReleaseCountdown } from "@/components/mm/release-countdown";
 import { ModuleQuiz } from "@/components/mm/module-quiz";
 import { useCourseQuiz, lockedModuleIds } from "@/hooks/use-course-quiz";
+import type { QuizModuleState } from "@/lib/quiz.functions";
 
 
 
