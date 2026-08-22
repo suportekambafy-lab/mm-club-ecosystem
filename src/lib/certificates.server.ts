@@ -15,7 +15,7 @@ export async function renderCertificatePdf(cert: {
   const page = pdf.addPage([842, 595]);
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-  const signatureFont = await pdf.embedFont(StandardFonts.TimesRomanItalic);
+  
 
   const gold = rgb(0.788, 0.663, 0.38);
   const ink = rgb(0.98, 0.98, 0.99);
