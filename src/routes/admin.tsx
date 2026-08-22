@@ -82,6 +82,7 @@ type AdminTo =
   | "/admin/aulas"
   | "/admin/progresso"
   | "/admin/transcricoes"
+  | "/admin/certificados"
   | "/admin/eventos"
   | "/admin/lives"
   | "/admin/ferramentas"
