@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { notifyCommunityPostByEmail } from "@/lib/community-email.functions";
 import { runModeration } from "@/lib/moderation-client";
 import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 import { assertUploadAllowed } from "@/lib/security/uploads";
@@ -890,13 +889,10 @@ function Composer({
         .select("id")
         .single();
       if (error) throw error;
-      // Aviso por email aos membros que não desativaram nas permissões.
+      // O agente valida primeiro; só depois é que o email é enviado (server-side).
       if (row?.id) {
         runModeration({ kind: "community_post", id: row.id }, () =>
           qc.invalidateQueries({ queryKey: ["community", "posts"] }),
-        );
-        notifyCommunityPostByEmail({ data: { postId: row.id } }).catch((e) =>
-          console.error("[community] email announce failed", e),
         );
       }
     },

@@ -317,3 +317,228 @@ export const decideAppeal = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+/* ---------------- Staff: sanções manuais ---------------- */
+
+export type MemberSanctionRow = {
+  user_id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  sanction: {
+    id: string;
+    kind: string;
+    level: number;
+    permanent: boolean;
+    reason: string;
+    expires_at: string | null;
+    created_at: string;
+  } | null;
+};
+
+/** Procura membros por nome para aplicar sanções manuais. */
+export const searchMembersForModeration = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ search: z.string().trim().max(120).default("") }).parse(i ?? {}))
+  .handler(async ({ data, context }): Promise<MemberSanctionRow[]> => {
+    await assertStaff(context);
+
+    let q = context.supabase.from("profiles").select("id, display_name, avatar_url").limit(20);
+    if (data.search) q = q.ilike("display_name", `%${data.search}%`);
+    else q = q.order("created_at", { ascending: false });
+    const { data: profiles, error } = await q;
+    if (error) throw error;
+
+    const ids = (profiles ?? []).map((p: any) => p.id as string);
+    const sanctions = ids.length
+      ? (
+          await context.supabase
+            .from("community_sanctions")
+            .select("id, user_id, kind, level, permanent, reason, expires_at, created_at, lifted_at")
+            .in("user_id", ids)
+            .is("lifted_at", null)
+            .order("created_at", { ascending: false })
+        ).data ?? []
+      : [];
+
+    const active = new Map<string, any>();
+    for (const s of sanctions as any[]) {
+      const live = s.permanent || !s.expires_at || new Date(s.expires_at).getTime() > Date.now();
+      if (live && !active.has(s.user_id)) active.set(s.user_id, s);
+    }
+
+    return (profiles ?? []).map((p: any) => {
+      const s = active.get(p.id);
+      return {
+        user_id: p.id,
+        display_name: p.display_name ?? null,
+        avatar_url: p.avatar_url ?? null,
+        sanction: s
+          ? {
+              id: s.id,
+              kind: s.kind,
+              level: s.level,
+              permanent: s.permanent,
+              reason: s.reason,
+              expires_at: s.expires_at,
+              created_at: s.created_at,
+            }
+          : null,
+      };
+    });
+  });
+
+/** Sanções ativas (silenciados e banidos) para vista rápida no painel. */
+export const listActiveSanctions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<MemberSanctionRow[]> => {
+    await assertStaff(context);
+
+    const { data: rows, error } = await context.supabase
+      .from("community_sanctions")
+      .select("id, user_id, kind, level, permanent, reason, expires_at, created_at")
+      .is("lifted_at", null)
+      .in("kind", ["mute", "ban"])
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) throw error;
+
+    const live = (rows ?? []).filter(
+      (s: any) => s.permanent || !s.expires_at || new Date(s.expires_at).getTime() > Date.now(),
+    );
+    const ids = [...new Set(live.map((s: any) => s.user_id as string))];
+    const profiles = ids.length
+      ? (await context.supabase.from("profiles").select("id, display_name, avatar_url").in("id", ids)).data ?? []
+      : [];
+    const byId = new Map((profiles as any[]).map((p) => [p.id, p]));
+
+    const seen = new Set<string>();
+    const out: MemberSanctionRow[] = [];
+    for (const s of live as any[]) {
+      if (seen.has(s.user_id)) continue;
+      seen.add(s.user_id);
+      const p = byId.get(s.user_id);
+      out.push({
+        user_id: s.user_id,
+        display_name: p?.display_name ?? null,
+        avatar_url: p?.avatar_url ?? null,
+        sanction: {
+          id: s.id,
+          kind: s.kind,
+          level: s.level,
+          permanent: s.permanent,
+          reason: s.reason,
+          expires_at: s.expires_at,
+          created_at: s.created_at,
+        },
+      });
+    }
+    return out;
+  });
+
+const ManualSanctionInput = z.object({
+  userId: z.string().uuid(),
+  kind: z.enum(["warning", "mute", "ban"]),
+  days: z.number().int().min(1).max(365).nullable().default(null),
+  reason: z.string().trim().min(5).max(600),
+});
+
+/**
+ * Sanção manual do staff (aviso, silenciamento por N dias ou banimento
+ * definitivo). Silenciados não publicam, comentam nem reagem, e as suas
+ * publicações nunca geram notificações nem emails.
+ */
+export const applyManualSanction = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => ManualSanctionInput.parse(i))
+  .handler(async ({ data, context }) => {
+    await assertStaff(context);
+
+    // Staff nunca é sancionado.
+    const [{ data: tgtAdmin }, { data: tgtMod }] = await Promise.all([
+      context.supabase.rpc("has_role", { _user_id: data.userId, _role: "admin" }),
+      context.supabase.rpc("has_role", { _user_id: data.userId, _role: "moderator" }),
+    ]);
+    if (tgtAdmin || tgtMod) throw new Error("Admins e moderadores não podem ser sancionados.");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { count } = await supabaseAdmin
+      .from("community_sanctions")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", data.userId);
+    const level = Math.min((count ?? 0) + 1, 5);
+
+    const permanent = data.kind === "ban";
+    const days = data.kind === "mute" ? (data.days ?? 7) : null;
+    const label =
+      data.kind === "ban"
+        ? "Foste removido definitivamente da comunidade pela equipa MM Club."
+        : data.kind === "mute"
+          ? `Ficas ${days} dia(s) sem poder publicar, comentar ou reagir na comunidade.`
+          : "Aviso da equipa MM Club sobre o Código do Clube.";
+
+    const { data: inserted, error } = await supabaseAdmin
+      .from("community_sanctions")
+      .insert({
+        user_id: data.userId,
+        level,
+        kind: data.kind,
+        reason: `${label} Motivo: ${data.reason}`,
+        rule: "decisão manual da equipa",
+        expires_at: days ? new Date(Date.now() + days * 86_400_000).toISOString() : null,
+        permanent,
+      })
+      .select("id")
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+
+    await supabaseAdmin.from("moderation_actions").insert({
+      kind: "community_post",
+      target_id: (inserted?.id as string) ?? data.userId,
+      author_id: data.userId,
+      action: "remove",
+      category: "manual",
+      severity: data.kind === "ban" ? "grave" : "moderada",
+      reason: `Sanção manual (${data.kind}): ${data.reason}`,
+      excerpt: null,
+      sanction_id: (inserted?.id as string) ?? null,
+    });
+
+    await supabaseAdmin.from("notifications").insert({
+      user_id: data.userId,
+      kind: "moderation",
+      course_id: `moderacao-${data.kind}`,
+    });
+
+    return { ok: true, sanctionId: (inserted?.id as string) ?? null };
+  });
+
+/** Levanta uma sanção ativa (readmite o membro). */
+export const liftSanction = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ sanctionId: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertStaff(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: row } = await supabaseAdmin
+      .from("community_sanctions")
+      .select("id, user_id")
+      .eq("id", data.sanctionId)
+      .maybeSingle();
+    if (!row) throw new Error("Sanção não encontrada.");
+
+    await supabaseAdmin
+      .from("community_sanctions")
+      .update({ lifted_at: new Date().toISOString() })
+      .eq("id", data.sanctionId)
+      .is("lifted_at", null);
+
+    await supabaseAdmin.from("notifications").insert({
+      user_id: row.user_id as string,
+      kind: "appeal",
+      course_id: "recurso-aceite",
+    });
+
+    return { ok: true };
+  });
