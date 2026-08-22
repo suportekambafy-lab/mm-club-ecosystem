@@ -75,6 +75,21 @@ function LessonPlayer() {
     currentLessonId,
   );
 
+  // Cada gravação de progresso conta como atividade do dia (streak/meta semanal).
+  const trackedSaveProgress = useCallback<SaveLessonProgress>(
+    (seconds, options) => {
+      pingLearningActivity();
+      return saveProgress(seconds, options);
+    },
+    [saveProgress],
+  );
+
+  const toggleCompleted = useCallback(() => {
+    const next = !completed;
+    void setCompleted(next);
+    if (next) recordLessonCompleted();
+  }, [completed, setCompleted]);
+
   // Reset scroll on lesson change
   useEffect(() => {
     window.scrollTo({ top: 0 });
