@@ -218,58 +218,21 @@ function CourseDetail() {
         <section className="space-y-5">
           <h2 className="font-display text-xl text-foreground">Conteúdo do curso</h2>
           <div className="space-y-3">
-            {course.modules.map((m: Module, mi: number) => {
-              const isLocked = locked.has(m.id);
-              const blocker = blockedBy[m.id];
-              const blockerTitle = blocker
-                ? (course.modules?.find((x: Module) => x.id === blocker)?.title ?? "anterior")
-                : null;
-              const completedSet = p?.completedLessons;
-              const moduleDone =
-                m.lessons.length > 0 &&
-                m.lessons.every((l: Lesson) => completedSet?.has(l.id) || l.completed);
-              return (
-              <div key={m.id} className="overflow-hidden rounded-xl bg-surface-1 ring-1 ring-border">
-                <div className="border-b border-border px-4 py-4 sm:px-5">
-                  <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
-                    <span className="text-[11px] font-medium uppercase tracking-wider text-primary">
-                      Módulo {String(mi + 1).padStart(2, "0")}
-                    </span>
-                    <h3 className="truncate font-display text-base text-foreground">{m.title}</h3>
-                  </div>
-                  {isLocked && (
-                    <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Lock className="h-3 w-3" /> Conclui o teste do módulo “{blockerTitle}” para
-                      desbloquear
-                    </p>
-                  )}
-                </div>
-                <ul>
-                  {m.lessons.map((l: Lesson, li: number) => (
-                    <CourseLessonRow
-                      key={l.id}
-                      lesson={l}
-                      course={course}
-                      index={li}
-                      locked={isLocked}
-                    />
-                  ))}
-
-                </ul>
-                {!isLocked && (
-                  <ModuleQuiz
-                    courseId={course.id}
-                    moduleId={m.id}
-                    moduleTitle={m.title}
-                    state={quiz.modules[m.id]}
-                    moduleLessonsCompleted={moduleDone}
-                    autoOpen={focusQuizModuleId === m.id}
-                    onPassed={quiz.refetch}
-                  />
-                )}
-              </div>
-              );
-            })}
+            {course.modules.map((m: Module, mi: number) => (
+              <ModuleAccordion
+                key={m.id}
+                module={m}
+                index={mi}
+                course={course}
+                locked={locked.has(m.id)}
+                blocker={blockedBy[m.id] ?? null}
+                quizState={quiz.modules[m.id]}
+                completedLessons={p?.completedLessons}
+                defaultOpen={focusQuizModuleId === m.id || resumeLessonModuleId === m.id || mi === 0}
+                autoOpenQuiz={focusQuizModuleId === m.id}
+                onQuizPassed={quiz.refetch}
+              />
+            ))}
           </div>
         </section>
       )}
