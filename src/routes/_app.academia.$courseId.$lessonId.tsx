@@ -215,7 +215,12 @@ function LessonPlayer() {
                 lessonId={current.lesson.id}
                 title={current.lesson.title}
                 source={source}
-                startSeconds={deepLinkSeconds ?? row?.progress_seconds ?? 0}
+                startSeconds={
+                  // Aula já concluída recomeça do início: guardar a posição final
+                  // fazia o vídeo abrir nos últimos segundos e disparar logo o
+                  // "fim de aula" (o que saltava 2–3 aulas de seguida).
+                  deepLinkSeconds ?? (completed ? 0 : (row?.progress_seconds ?? 0))
+                }
                 saveProgress={trackedSaveProgress}
                 seekRef={seekRef}
                 nextTitle={
@@ -491,6 +496,7 @@ type PlayerJsPlayer = {
   play?: () => void;
   setCurrentTime: (seconds: number) => void;
   getCurrentTime: (callback: (seconds: number) => void) => void;
+  getDuration?: (callback: (seconds: number) => void) => void;
 };
 
 type PlayerJsConstructor = new (element: HTMLIFrameElement) => PlayerJsPlayer;
@@ -583,20 +589,35 @@ function TrackedVideoPlayer({
   // updates the row → startSeconds prop changes → seek effect re-fires → video
   // jumps back and appears to loop.
   const startRef = useRef(startSeconds);
+  // Tempo realmente visto nesta sessão desta aula. Só com visualização real é
+  // que o avanço automático dispara — evita cascatas de 2–3 aulas quando o
+  // vídeo abre perto do fim ou o player emite "ended" logo ao carregar.
+  const watchedRef = useRef(0);
+  const [canAutoAdvance, setCanAutoAdvance] = useState(false);
   const currentLessonIdRef = useRef(lessonId);
   if (currentLessonIdRef.current !== lessonId) {
     currentLessonIdRef.current = lessonId;
     startRef.current = startSeconds;
     initialSeekDoneRef.current = false;
     lastSavedRef.current = Math.max(0, Math.floor(startSeconds));
+    watchedRef.current = 0;
   }
 
   useEffect(() => {
     setEnded(false);
+    setCanAutoAdvance(false);
+    watchedRef.current = 0;
   }, [lessonId]);
+
+  const markEnded = useCallback(() => {
+    setCanAutoAdvance(watchedRef.current >= 20);
+    setEnded(true);
+  }, []);
 
   const handleReplay = useCallback(() => {
     setEnded(false);
+    setCanAutoAdvance(false);
+    watchedRef.current = 0;
     startRef.current = 0;
     lastSavedRef.current = 0;
     if (source.kind === "file") {
@@ -651,7 +672,14 @@ function TrackedVideoPlayer({
     if (source.kind !== "file" || !video || initialSeekDoneRef.current || startAt <= 3) return;
     const seek = () => {
       initialSeekDoneRef.current = true;
-      video.currentTime = Math.min(startAt, video.duration || startAt);
+      const duration = video.duration || 0;
+      // Nunca retomar nos últimos 20s: senão a aula "abre no fim".
+      if (duration && startAt >= duration - 20) {
+        startRef.current = 0;
+        lastSavedRef.current = 0;
+        return;
+      }
+      video.currentTime = Math.min(startAt, duration || startAt);
     };
     if (video.readyState >= 1) seek();
     else video.addEventListener("loadedmetadata", seek, { once: true });
@@ -661,9 +689,14 @@ function TrackedVideoPlayer({
   const persist = useCallback(
     (seconds: number, completed = false, force = false) => {
       const safeSeconds = Math.max(0, Math.floor(seconds));
-      if (!force && Math.abs(safeSeconds - lastSavedRef.current) < 5) return;
+      const delta = safeSeconds - lastSavedRef.current;
+      // Avanço normal (não salto) conta como tempo visto.
+      if (delta > 0 && delta < 60) watchedRef.current += delta;
+      if (!force && Math.abs(delta) < 5) return;
       lastSavedRef.current = safeSeconds;
-      void saveProgress(safeSeconds, { completed, silent: true });
+      // Ao concluir, guardamos posição 0 para a aula reabrir do início.
+      void saveProgress(completed ? 0 : safeSeconds, { completed, silent: true });
+      if (completed) lastSavedRef.current = 0;
     },
     [saveProgress],
   );
@@ -681,7 +714,7 @@ function TrackedVideoPlayer({
     };
     const onEnded = (data?: { seconds?: number; duration?: number }) => {
       persist(data?.duration ?? data?.seconds ?? lastSavedRef.current, true, true);
-      setEnded(true);
+      markEnded();
     };
     const onPause = () => {
       player?.getCurrentTime((seconds) => persist(seconds, false, true));
@@ -694,7 +727,24 @@ function TrackedVideoPlayer({
         playerRef.current = player;
         player.on("ready", () => {
           if (cancelled) return;
-          if (startRef.current > 3) player?.setCurrentTime(startRef.current);
+          const startAt = startRef.current;
+          if (startAt > 3) {
+            // Só retoma se não estiver nos últimos 20s do vídeo — evita abrir a
+            // aula no fim e disparar imediatamente o avanço automático.
+            if (player?.getDuration) {
+              player.getDuration((duration) => {
+                if (cancelled) return;
+                if (duration && startAt >= duration - 20) {
+                  startRef.current = 0;
+                  lastSavedRef.current = 0;
+                  return;
+                }
+                player?.setCurrentTime(startAt);
+              });
+            } else {
+              player?.setCurrentTime(startAt);
+            }
+          }
           player?.on("timeupdate", onTimeUpdate);
           player?.on("seeked", onSeeked);
           player?.on("pause", onPause);
@@ -722,7 +772,7 @@ function TrackedVideoPlayer({
       const seconds = typeof payload?.currentTime === "number" ? payload.currentTime : null;
       if (message === "panda_ended") {
         persist(seconds ?? lastSavedRef.current, true, true);
-        setEnded(true);
+        markEnded();
       }
       else if (message === "panda_pause" && seconds != null) persist(seconds, false, true);
       else if (message === "panda_timeupdate" && seconds != null) persist(seconds);
@@ -743,6 +793,7 @@ function TrackedVideoPlayer({
   const endOverlay = (
     <LessonEndOverlay
       open={ended}
+      autoAdvance={canAutoAdvance}
       nextTitle={nextTitle ?? null}
       onAdvance={onAdvance}
       advanceLabel={advanceLabel}
@@ -765,14 +816,20 @@ function TrackedVideoPlayer({
             const startAt = startRef.current;
             if (initialSeekDoneRef.current || startAt <= 3) return;
             initialSeekDoneRef.current = true;
-            event.currentTarget.currentTime = Math.min(startAt, event.currentTarget.duration || startAt);
+            const duration = event.currentTarget.duration || 0;
+            if (duration && startAt >= duration - 20) {
+              startRef.current = 0;
+              lastSavedRef.current = 0;
+              return;
+            }
+            event.currentTarget.currentTime = Math.min(startAt, duration || startAt);
           }}
           onTimeUpdate={(event) => persist(event.currentTarget.currentTime)}
           onPause={(event) => persist(event.currentTarget.currentTime, false, true)}
           onPlay={() => setEnded(false)}
           onEnded={(event) => {
             persist(event.currentTarget.duration || event.currentTarget.currentTime, true, true);
-            setEnded(true);
+            markEnded();
           }}
         />
         <VideoWatermark />
@@ -819,12 +876,14 @@ function TrackedVideoPlayer({
  */
 function LessonEndOverlay({
   open,
+  autoAdvance = true,
   nextTitle,
   onAdvance,
   advanceLabel,
   onReplay,
 }: {
   open: boolean;
+  autoAdvance?: boolean;
   nextTitle: string | null;
   onAdvance?: () => void;
   advanceLabel?: string;
@@ -842,23 +901,23 @@ function LessonEndOverlay({
       setRemaining(COUNTDOWN);
       return;
     }
-    if (!advanceRef.current) return;
+    if (!advanceRef.current || !autoAdvance) return;
     setRemaining(COUNTDOWN);
     const id = window.setInterval(() => {
       setRemaining((r) => (r <= 1 ? 0 : r - 1));
     }, 1000);
     return () => window.clearInterval(id);
-  }, [open]);
+  }, [open, autoAdvance]);
 
-  // Avanço automático: dispara UMA única vez por aula terminada, para nunca
-  // saltar duas aulas de seguida.
+  // Avanço automático: dispara UMA única vez por aula terminada, e só quando a
+  // aula foi de facto vista — nunca salta 2 ou 3 aulas de seguida.
   useEffect(() => {
-    if (!open || remaining > 0 || firedRef.current) return;
+    if (!open || !autoAdvance || remaining > 0 || firedRef.current) return;
     const advance = advanceRef.current;
     if (!advance) return;
     firedRef.current = true;
     advance();
-  }, [open, remaining]);
+  }, [open, autoAdvance, remaining]);
 
   const handleAdvanceClick = () => {
     if (firedRef.current) return;
@@ -868,7 +927,7 @@ function LessonEndOverlay({
 
   if (!open) return null;
 
-  const progress = onAdvance ? ((COUNTDOWN - remaining) / COUNTDOWN) * 100 : 0;
+  const progress = onAdvance && autoAdvance ? ((COUNTDOWN - remaining) / COUNTDOWN) * 100 : 0;
 
   return (
     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/85 px-5 text-center backdrop-blur-sm">
@@ -897,7 +956,8 @@ function LessonEndOverlay({
                 style={{ width: `${progress}%` }}
               />
               <span className="relative">
-                {advanceLabel ?? "Avançar"} ({remaining}s)
+                {advanceLabel ?? "Avançar"}
+                {autoAdvance ? ` (${remaining}s)` : ""}
               </span>
             </button>
           </div>
