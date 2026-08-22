@@ -223,8 +223,6 @@ function communityCopy(
     };
   }
   if (kind === "appeal") {
-    const accepted = rankPosition === null && true;
-    void accepted;
     return {
       title: "Decisão do teu recurso",
       subtitle: "A equipa analisou a contestação — toca para ver",
