@@ -207,7 +207,7 @@ function SupportChat({
         </button>
       </header>
 
-      <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
+      <div ref={scrollRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
         {messages.length === 0 && !isBusy && (
           <p className="py-6 text-center text-sm text-muted-foreground">
             Diz-nos o que se passa. Se não conseguirmos resolver, passamos para a equipa no WhatsApp.
