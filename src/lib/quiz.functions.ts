@@ -359,6 +359,48 @@ export const updateQuestion = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Embaralha as opções das perguntas de um módulo (mantendo a resposta certa). */
+export const shuffleModuleOptions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { courseId: string; moduleId: string }) => ({
+    courseId: String(data?.courseId ?? ""),
+    moduleId: String(data?.moduleId ?? ""),
+  }))
+  .handler(async ({ data, context }) => {
+    await assertStaff(context.supabase, context.userId);
+    const { data: rows, error } = await context.supabase
+      .from("quiz_questions" as never)
+      .select("id, options, correct_index")
+      .eq("course_id" as never, data.courseId as never)
+      .eq("module_id" as never, data.moduleId as never);
+    if (error) throw error;
+
+    let updated = 0;
+    for (const row of (rows ?? []) as Array<{
+      id: string;
+      options: unknown;
+      correct_index: number;
+    }>) {
+      const options = Array.isArray(row.options) ? (row.options as string[]) : [];
+      if (options.length < 2) continue;
+      const pairs = options.map((text, idx) => ({ text, correct: idx === row.correct_index }));
+      for (let j = pairs.length - 1; j > 0; j -= 1) {
+        const k = Math.floor(Math.random() * (j + 1));
+        [pairs[j], pairs[k]] = [pairs[k]!, pairs[j]!];
+      }
+      const nextCorrect = pairs.findIndex((p) => p.correct);
+      await context.supabase
+        .from("quiz_questions" as never)
+        .update({
+          options: pairs.map((p) => p.text),
+          correct_index: nextCorrect < 0 ? row.correct_index : nextCorrect,
+        } as never)
+        .eq("id" as never, row.id as never);
+      updated += 1;
+    }
+    return { updated };
+  });
+
 export const deleteQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { id: string }) => ({ id: String(data?.id ?? "") }))
