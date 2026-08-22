@@ -39,20 +39,22 @@ export async function renderCertificatePdf(cert: {
   // Logotipo oficial MM Club no topo (fallback para wordmark em texto)
   let logoDrawn = false;
   try {
-    const logo = await import("@/assets/mm-logo.png.asset.json");
-    const url = `https://mmclub.online${(logo as { url?: string; default?: { url: string } }).default?.url ?? (logo as { url: string }).url}`;
+    const icon = await import("@/assets/mm-icon.png.asset.json");
+    const pointer = icon as unknown as { url?: string; default?: { url: string } };
+    const url = `https://mmclub.online${pointer.default?.url ?? pointer.url}`;
     const res = await fetch(url);
     if (res.ok) {
       const png = await pdf.embedPng(new Uint8Array(await res.arrayBuffer()));
-      const height = 54;
+      const height = 58;
       const width = (png.width / png.height) * height;
-      page.drawImage(png, { x: (842 - width) / 2, y: 478, width, height });
+      page.drawImage(png, { x: (842 - width) / 2, y: 476, width, height });
       logoDrawn = true;
     }
   } catch {
     /* fallback abaixo */
   }
-  if (!logoDrawn) center("MM CLUB", 500, 12, bold, gold);
+  if (!logoDrawn) center("MM CLUB", 496, 12, bold, gold);
+
 
   center("CERTIFICADO DE CONCLUSÃO", 452, 10, regular, muted);
 
