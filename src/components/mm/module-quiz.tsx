@@ -20,6 +20,7 @@ import {
   type QuizResultItem,
 } from "@/lib/quiz.functions";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { setQuizModalOpen } from "@/lib/quiz-visibility";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -101,6 +102,11 @@ export function ModuleQuiz({
   const check = useServerFn(checkQuizAnswer);
 
   const [phase, setPhase] = useState<Phase>("idle");
+  const quizModalOpen = phase !== "idle";
+  useEffect(() => {
+    setQuizModalOpen(quizModalOpen);
+    return () => setQuizModalOpen(false);
+  }, [quizModalOpen]);
   const [questions, setQuestions] = useState<MemberQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [feedback, setFeedback] = useState<Record<string, Feedback>>({});

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   AlertCircle,
   ArrowUp,
@@ -21,6 +21,7 @@ import { getMySupportConversation } from "@/lib/support-my.functions";
 import { cn } from "@/lib/utils";
 import { authHeaders } from "@/lib/auth-headers";
 import { SUPPORT_TOPICS, whatsappLink } from "@/lib/support-config";
+import { subscribe, getQuizModalOpen } from "@/lib/quiz-visibility";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
 
 const HUMAN_MARKER = "[[HUMANO]]";
@@ -47,6 +48,7 @@ function messageText(m: UIMessage): string {
 
 export function SupportWidget({ userName }: { userName?: string }) {
   const [open, setOpen] = useState(false);
+  const quizActive = useSyncExternalStore(subscribe, getQuizModalOpen);
   const [view, setView] = useState<"home" | "chat">("home");
   const [query, setQuery] = useState("");
   const firstName = (userName ?? "").trim().split(" ")[0];
@@ -218,6 +220,7 @@ export function SupportWidget({ userName }: { userName?: string }) {
         className={cn(
           "fixed right-3 bottom-20 z-[70] inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background shadow-2xl transition hover:opacity-90 sm:right-5 sm:bottom-5 [@media(display-mode:standalone)]:bottom-[calc(env(safe-area-inset-bottom)+5.25rem)]",
           open && "pointer-events-none opacity-0",
+          quizActive && "pointer-events-none opacity-0",
         )}
       >
         {open ? <X className="h-4 w-4" /> : <Headset className="h-4 w-4" />}
