@@ -26,6 +26,7 @@ import { Route as UpsellTrial14RouteImport } from './routes/upsell.trial14'
 import { Route as EgressCompositeRouteImport } from './routes/egress.composite'
 import { Route as ConvidadoLiveIdRouteImport } from './routes/convidado.$liveId'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as CertificadoCodeRouteImport } from './routes/certificado.$code'
 import { Route as ApiTranscribeRouteImport } from './routes/api.transcribe'
 import { Route as ApiSupportRouteImport } from './routes/api.support'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
@@ -198,6 +199,11 @@ const ConvidadoLiveIdRoute = ConvidadoLiveIdRouteImport.update({
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
   path: '/checkout/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CertificadoCodeRoute = CertificadoCodeRouteImport.update({
+  id: '/certificado/$code',
+  path: '/certificado/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTranscribeRoute = ApiTranscribeRouteImport.update({
@@ -722,6 +728,7 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/api/support': typeof ApiSupportRoute
   '/api/transcribe': typeof ApiTranscribeRoute
+  '/certificado/$code': typeof CertificadoCodeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/convidado/$liveId': typeof ConvidadoLiveIdRoute
   '/egress/composite': typeof EgressCompositeRoute
@@ -823,6 +830,7 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/api/support': typeof ApiSupportRoute
   '/api/transcribe': typeof ApiTranscribeRoute
+  '/certificado/$code': typeof CertificadoCodeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/convidado/$liveId': typeof ConvidadoLiveIdRoute
   '/egress/composite': typeof EgressCompositeRoute
@@ -930,6 +938,7 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/api/support': typeof ApiSupportRoute
   '/api/transcribe': typeof ApiTranscribeRoute
+  '/certificado/$code': typeof CertificadoCodeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/convidado/$liveId': typeof ConvidadoLiveIdRoute
   '/egress/composite': typeof EgressCompositeRoute
@@ -1039,6 +1048,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/support'
     | '/api/transcribe'
+    | '/certificado/$code'
     | '/checkout/return'
     | '/convidado/$liveId'
     | '/egress/composite'
@@ -1140,6 +1150,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/support'
     | '/api/transcribe'
+    | '/certificado/$code'
     | '/checkout/return'
     | '/convidado/$liveId'
     | '/egress/composite'
@@ -1246,6 +1257,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/support'
     | '/api/transcribe'
+    | '/certificado/$code'
     | '/checkout/return'
     | '/convidado/$liveId'
     | '/egress/composite'
@@ -1329,6 +1341,7 @@ export interface RootRouteChildren {
   ApiChatRoute: typeof ApiChatRoute
   ApiSupportRoute: typeof ApiSupportRoute
   ApiTranscribeRoute: typeof ApiTranscribeRoute
+  CertificadoCodeRoute: typeof CertificadoCodeRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ConvidadoLiveIdRoute: typeof ConvidadoLiveIdRoute
   EgressCompositeRoute: typeof EgressCompositeRoute
@@ -1478,6 +1491,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout/return'
       fullPath: '/checkout/return'
       preLoaderRoute: typeof CheckoutReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/certificado/$code': {
+      id: '/certificado/$code'
+      path: '/certificado/$code'
+      fullPath: '/certificado/$code'
+      preLoaderRoute: typeof CertificadoCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/transcribe': {
@@ -2343,6 +2363,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatRoute: ApiChatRoute,
   ApiSupportRoute: ApiSupportRoute,
   ApiTranscribeRoute: ApiTranscribeRoute,
+  CertificadoCodeRoute: CertificadoCodeRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ConvidadoLiveIdRoute: ConvidadoLiveIdRoute,
   EgressCompositeRoute: EgressCompositeRoute,
