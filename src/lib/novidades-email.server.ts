@@ -145,7 +145,7 @@ ${imgBlock("hero")}
 <tr><td style="padding:16px 40px 8px;">${groups}</td></tr>
 <tr><td style="padding:6px 40px 26px;">
 <div style="background:#161616;border:1px solid #262626;border-radius:12px;padding:18px 20px;">
-<div style="font-size:14px;font-weight:600;color:#ffffff;margin:0 0 6px;">📄 Guia das novidades em PDF</div>
+<div style="font-size:14px;font-weight:600;color:#ffffff;margin:0 0 6px;"><span style="color:#c9a961;">PDF</span> &nbsp;Guia das novidades em anexo</div>
 <div style="font-size:13px;color:#b5b5b5;line-height:1.6;">Vai em anexo neste email — guarda ou imprime para consultar quando quiseres.</div>
 </div>
 </td></tr>
