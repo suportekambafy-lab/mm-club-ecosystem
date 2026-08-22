@@ -17,8 +17,9 @@ const HUMAN_MARKER = "[[HUMANO]]";
 function linkifyRoutes(text: string): string {
   return text
     .replace(/`(\/[a-z0-9\-/]{2,})`/gi, "[$1]($1)")
-    .replace(/(^|[\s(])(\/[a-z0-9\-]+(?:\/[a-z0-9\-]+)*)(?=[\s.,;:)!?]|$)/gi, (m, pre, path) =>
-      `${pre}[${path}](${path})`,
+    .replace(
+      /(^|\s)(\/[a-z0-9\-]+(?:\/[a-z0-9\-]+)*)(?=[\s.,;:!?]|$)/gi,
+      (_match, pre: string, path: string) => `${pre}[${path}](${path})`,
     );
 }
 
