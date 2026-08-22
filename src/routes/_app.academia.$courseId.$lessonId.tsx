@@ -798,7 +798,13 @@ function TrackedVideoPlayer({
             const startAt = startRef.current;
             if (initialSeekDoneRef.current || startAt <= 3) return;
             initialSeekDoneRef.current = true;
-            event.currentTarget.currentTime = Math.min(startAt, event.currentTarget.duration || startAt);
+            const duration = event.currentTarget.duration || 0;
+            if (duration && startAt >= duration - 20) {
+              startRef.current = 0;
+              lastSavedRef.current = 0;
+              return;
+            }
+            event.currentTarget.currentTime = Math.min(startAt, duration || startAt);
           }}
           onTimeUpdate={(event) => persist(event.currentTarget.currentTime)}
           onPause={(event) => persist(event.currentTarget.currentTime, false, true)}
