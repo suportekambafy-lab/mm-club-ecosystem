@@ -54,6 +54,10 @@ function CourseDetail() {
     course.modules?.[0]?.lessons?.[0] ??
     null;
   const firstLesson = resumeLesson;
+  const resumeLessonModuleId =
+    resumeLesson
+      ? (course.modules?.find((m) => m.lessons.some((l) => l.id === resumeLesson.id))?.id ?? null)
+      : null;
   const totalDuration = computeCourseDuration(course);
   const totalLessons = computeLessonsCount(course);
   const heroSyncThumb = lessonThumb(firstLesson, course);
