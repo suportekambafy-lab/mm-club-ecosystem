@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, Check, Clock, Lock, Play } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, Clock, Lock, Play } from "lucide-react";
 import { coursesById, formatCourseRelease } from "@/data/courses";
 import { useCourseAccess } from "@/hooks/use-course-release";
 import "@/data/admin-store";
