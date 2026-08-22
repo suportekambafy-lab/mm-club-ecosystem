@@ -26,6 +26,7 @@ import {
   UserRound,
   ShieldCheck,
   Clapperboard,
+  Award,
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import type { User } from "@supabase/supabase-js";
