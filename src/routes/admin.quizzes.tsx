@@ -148,9 +148,15 @@ function ModuleCard({
   const [rows, setRows] = useState<QuestionRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [published, setPublished] = useState(false);
-  const [passScore, setPassScore] = useState(80);
-  const [questionCount, setQuestionCount] = useState(5);
+  const [published, setPublished] = useState(stats?.published ?? false);
+  const [passScore, setPassScore] = useState(stats?.passScore ?? 80);
+  const [questionCount, setQuestionCount] = useState(stats?.questionCount ?? 5);
+
+  useEffect(() => {
+    setPublished(stats?.published ?? false);
+    setPassScore(stats?.passScore ?? 80);
+    setQuestionCount(stats?.questionCount ?? 5);
+  }, [stats?.published, stats?.passScore, stats?.questionCount]);
 
   const refresh = useCallback(async () => {
     setLoading(true);
