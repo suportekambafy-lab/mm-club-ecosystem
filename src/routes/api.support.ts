@@ -120,10 +120,14 @@ export const Route = createFileRoute("/api/support")({
         const key = process.env.LOVABLE_API_KEY;
         if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
 
+        const lastUser = [...(messages as UIMessage[])].reverse().find((m) => m.role === "user");
+        const { lessonMomentsContext } = await import("@/lib/lesson-moments.server");
+        const lessonsContext = lastUser ? await lessonMomentsContext(textOf(lastUser), key) : "";
+
         const gateway = createLovableAiGatewayProvider(key);
         const result = streamText({
           model: gateway("google/gemini-3.5-flash"),
-          system: `${SYSTEM}\n\nContexto: o membro está autenticado (email ${auth.user.email ?? "desconhecido"}).`,
+          system: `${SYSTEM}\n\nContexto: o membro está autenticado (email ${auth.user.email ?? "desconhecido"}).${lessonsContext}`,
           messages: await convertToModelMessages(messages as UIMessage[]),
         });
 
