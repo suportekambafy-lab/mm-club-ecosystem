@@ -894,6 +894,12 @@ function Composer({
         runModeration({ kind: "community_post", id: row.id }, () =>
           qc.invalidateQueries({ queryKey: ["community", "posts"] }),
         );
+        // MM Suporte avalia e responde às dúvidas simples (fire-and-forget).
+        requestSupportBotReply({ data: { postId: row.id } })
+          .then((res) => {
+            if (res?.replied) qc.invalidateQueries({ queryKey: ["community", "posts"] });
+          })
+          .catch(() => {});
       }
     },
     onSuccess: () => {
