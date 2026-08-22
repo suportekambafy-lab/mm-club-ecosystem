@@ -40,6 +40,12 @@ export async function sendCommunityPostEmails(postId: string) {
     return { sent: 0, skipped: 0 };
   }
 
+  // Membros silenciados/banidos nunca geram anúncios por email.
+  const { data: sanctioned } = await supabaseAdmin.rpc("is_community_restricted", {
+    _user_id: post.author_id,
+  });
+  if (sanctioned) return { sent: 0, skipped: 0 };
+
   const [{ data: author }, { data: category }] = await Promise.all([
     supabaseAdmin.from("profiles").select("display_name").eq("id", post.author_id).maybeSingle(),
     post.category_id
