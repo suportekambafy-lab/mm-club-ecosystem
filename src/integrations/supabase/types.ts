@@ -3913,6 +3913,7 @@ export type Database = {
           created_at: string
           id: string
           role: string
+          seq: number
           thread_id: string
           user_id: string
         }
@@ -3922,6 +3923,7 @@ export type Database = {
           created_at?: string
           id?: string
           role: string
+          seq?: number
           thread_id: string
           user_id: string
         }
@@ -3931,6 +3933,7 @@ export type Database = {
           created_at?: string
           id?: string
           role?: string
+          seq?: number
           thread_id?: string
           user_id?: string
         }
