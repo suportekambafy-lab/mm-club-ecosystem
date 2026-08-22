@@ -262,7 +262,7 @@ function ModuleAccordion({
   course: Course;
   locked: boolean;
   blocker: string | null;
-  quizState: unknown;
+  quizState: QuizModuleState | undefined;
   completedLessons: Set<string> | undefined;
   defaultOpen: boolean;
   autoOpenQuiz: boolean;
