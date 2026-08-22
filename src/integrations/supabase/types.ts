@@ -2783,9 +2783,14 @@ export type Database = {
           created_at: string
           excerpt: string | null
           id: string
+          image_url: string | null
           kind: string
           reason: string | null
+          reverted_at: string | null
+          reverted_by: string | null
+          review_note: string | null
           sanction_id: string | null
+          severity: string | null
           target_id: string
         }
         Insert: {
@@ -2795,9 +2800,14 @@ export type Database = {
           created_at?: string
           excerpt?: string | null
           id?: string
+          image_url?: string | null
           kind: string
           reason?: string | null
+          reverted_at?: string | null
+          reverted_by?: string | null
+          review_note?: string | null
           sanction_id?: string | null
+          severity?: string | null
           target_id: string
         }
         Update: {
@@ -2807,14 +2817,69 @@ export type Database = {
           created_at?: string
           excerpt?: string | null
           id?: string
+          image_url?: string | null
           kind?: string
           reason?: string | null
+          reverted_at?: string | null
+          reverted_by?: string | null
+          review_note?: string | null
           sanction_id?: string | null
+          severity?: string | null
           target_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "moderation_actions_sanction_id_fkey"
+            columns: ["sanction_id"]
+            isOneToOne: false
+            referencedRelation: "community_sanctions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      moderation_appeals: {
+        Row: {
+          attachment_url: string | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          id: string
+          message: string
+          sanction_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attachment_url?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          id?: string
+          message: string
+          sanction_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attachment_url?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          id?: string
+          message?: string
+          sanction_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moderation_appeals_sanction_id_fkey"
             columns: ["sanction_id"]
             isOneToOne: false
             referencedRelation: "community_sanctions"
