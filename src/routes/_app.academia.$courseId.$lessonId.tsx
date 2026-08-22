@@ -205,7 +205,7 @@ function LessonPlayer() {
               <div className="flex min-w-0 shrink-0 items-center gap-1 overflow-x-auto pl-1 [scrollbar-width:none] sm:gap-2 [&::-webkit-scrollbar]:hidden">
                 <button
                   type="button"
-                  onClick={() => setCompleted(!completed)}
+                  onClick={toggleCompleted}
                   disabled={saving}
                   aria-label={completed ? "Marcar como não concluída" : "Marcar como concluída"}
                   className={cn(
