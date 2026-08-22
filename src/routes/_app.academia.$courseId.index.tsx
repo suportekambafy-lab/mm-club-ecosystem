@@ -244,6 +244,101 @@ function CourseDetail() {
   );
 }
 
+function ModuleAccordion({
+  module,
+  index,
+  course,
+  locked,
+  blocker,
+  quizState,
+  completedLessons,
+  defaultOpen,
+  autoOpenQuiz,
+  onQuizPassed,
+}: {
+  module: Module;
+  index: number;
+  course: Course;
+  locked: boolean;
+  blocker: string | null;
+  quizState: unknown;
+  completedLessons: Set<string> | undefined;
+  defaultOpen: boolean;
+  autoOpenQuiz: boolean;
+  onQuizPassed: () => void;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const blockerTitle = blocker
+    ? (course.modules?.find((x: Module) => x.id === blocker)?.title ?? "anterior")
+    : null;
+  const completedCount =
+    module.lessons.length > 0
+      ? module.lessons.filter((l: Lesson) => completedLessons?.has(l.id) || l.completed).length
+      : 0;
+  const moduleDone =
+    module.lessons.length > 0 &&
+    module.lessons.every((l: Lesson) => completedLessons?.has(l.id) || l.completed);
+
+  return (
+    <div className="overflow-hidden rounded-xl bg-surface-1 ring-1 ring-border">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-3 border-b border-border px-4 py-4 text-left transition hover:bg-surface-2/50 sm:px-5"
+        aria-expanded={open}
+      >
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ${open ? "" : "-rotate-90"}`}
+        />
+        <div className="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-primary">
+            Módulo {String(index + 1).padStart(2, "0")}
+          </span>
+          <h3 className="truncate font-display text-base text-foreground">{module.title}</h3>
+        </div>
+        <span className="shrink-0 text-xs text-muted-foreground">
+          {completedCount}/{module.lessons.length}
+        </span>
+        {locked && <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+      </button>
+
+      {locked && (
+        <p className="px-4 py-2 text-xs text-muted-foreground sm:px-5">
+          <Lock className="mr-1.5 inline h-3 w-3" /> Conclui o teste do módulo “{blockerTitle}” para
+          desbloquear
+        </p>
+      )}
+
+      {open && (
+        <>
+          <ul>
+            {module.lessons.map((l: Lesson, li: number) => (
+              <CourseLessonRow
+                key={l.id}
+                lesson={l}
+                course={course}
+                index={li}
+                locked={locked}
+              />
+            ))}
+          </ul>
+          {!locked && (
+            <ModuleQuiz
+              courseId={course.id}
+              moduleId={module.id}
+              moduleTitle={module.title}
+              state={quizState}
+              moduleLessonsCompleted={moduleDone}
+              autoOpen={autoOpenQuiz}
+              onPassed={onQuizPassed}
+            />
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 function CourseLessonRow({
   lesson,
   course,
