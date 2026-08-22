@@ -168,6 +168,7 @@ function LessonPlayer() {
                 source={source}
                 startSeconds={deepLinkSeconds ?? row?.progress_seconds ?? 0}
                 saveProgress={trackedSaveProgress}
+                seekRef={seekRef}
                 nextTitle={next?.lesson.title ?? null}
                 onAdvance={
                   next
