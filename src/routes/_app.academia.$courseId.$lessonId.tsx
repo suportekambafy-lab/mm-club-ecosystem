@@ -78,8 +78,13 @@ function LessonPlayer() {
   );
 
   // Cada gravação de progresso conta como atividade do dia (streak/meta semanal).
+  // Numa revisão (aula já concluída) o vídeo pode recomeçar do início, mas nada
+  // é regravado: a conclusão mantém-se e as horas/progresso não voltam a contar.
+  const completedRef = useRef(completed);
+  completedRef.current = completed;
   const trackedSaveProgress = useCallback<SaveLessonProgress>(
     (seconds, options) => {
+      if (completedRef.current && options?.completed !== false) return Promise.resolve(null);
       pingLearningActivity();
       return saveProgress(seconds, options);
     },
