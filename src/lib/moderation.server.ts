@@ -181,13 +181,104 @@ const TARGETS: Record<ModerationKind, TargetConfig> = {
 };
 
 /**
- * Analisa um item e remove-o de imediato se violar as regras.
+ * Escada disciplinar do Código do Clube (reincidência nos últimos 180 dias).
+ * 1ª vez  -> aviso (sem bloqueio)
+ * 2ª vez  -> 3 dias sem interagir
+ * 3ª vez  -> 7 dias
+ * 4ª vez  -> 30 dias
+ * 5ª vez+ -> banimento definitivo da comunidade
+ * Infrações graves saltam um degrau.
+ */
+const LADDER: Array<{ kind: "warning" | "mute" | "ban"; days: number | null }> = [
+  { kind: "warning", days: null },
+  { kind: "mute", days: 3 },
+  { kind: "mute", days: 7 },
+  { kind: "mute", days: 30 },
+  { kind: "ban", days: null },
+];
+
+export type SanctionResult = {
+  kind: "warning" | "mute" | "ban";
+  level: number;
+  days: number | null;
+  permanent: boolean;
+} | null;
+
+function sanctionCopy(s: NonNullable<SanctionResult>, reason: string, rule: string) {
+  const regra = rule ? ` Regra: ${rule}.` : "";
+  const suporte =
+    " Se precisas de tratar de pagamentos, faturas ou acessos, fala com o suporte — a comunidade não é o local para reclamações.";
+  if (s.kind === "ban") {
+    return `Foste removido definitivamente da comunidade por incumprimento repetido do Código do Clube. Motivo da última ocorrência: ${reason}${regra}${suporte}`;
+  }
+  if (s.kind === "mute") {
+    return `Ficas ${s.days} dia(s) sem poder publicar, comentar ou reagir na comunidade (${s.level}ª ocorrência). Motivo: ${reason}${regra}${suporte}`;
+  }
+  return `Aviso do Código do Clube: o teu conteúdo foi removido. Motivo: ${reason}${regra} Se repetires, ficas temporariamente sem poder interagir.${suporte}`;
+}
+
+/** Aplica a sanção correspondente ao histórico do membro e notifica-o no sino. */
+async function applySanction(args: {
+  supabaseAdmin: any;
+  userId: string;
+  verdict: ModerationVerdict;
+}): Promise<{ sanctionId: string | null; sanction: SanctionResult }> {
+  const since = new Date(Date.now() - 180 * 86_400_000).toISOString();
+  const { count } = await args.supabaseAdmin
+    .from("moderation_actions")
+    .select("id", { count: "exact", head: true })
+    .eq("author_id", args.userId)
+    .eq("action", "remove")
+    .gte("created_at", since);
+
+  // Ocorrências anteriores + a atual. Grave salta um degrau.
+  const offences = (count ?? 0) + 1 + (args.verdict.severity === "grave" ? 1 : 0);
+  const step = LADDER[Math.min(offences, LADDER.length) - 1]!;
+  const level = Math.min(offences, LADDER.length);
+
+  const sanction: NonNullable<SanctionResult> = {
+    kind: step.kind,
+    level,
+    days: step.days,
+    permanent: step.kind === "ban",
+  };
+
+  const message = sanctionCopy(sanction, args.verdict.reason, args.verdict.rule);
+
+  const { data: inserted } = await args.supabaseAdmin
+    .from("community_sanctions")
+    .insert({
+      user_id: args.userId,
+      level,
+      kind: sanction.kind,
+      reason: message,
+      rule: args.verdict.rule || args.verdict.category,
+      expires_at: sanction.days
+        ? new Date(Date.now() + sanction.days * 86_400_000).toISOString()
+        : null,
+      permanent: sanction.permanent,
+    })
+    .select("id")
+    .maybeSingle();
+
+  await args.supabaseAdmin.from("notifications").insert({
+    user_id: args.userId,
+    kind: "moderation",
+    course_id: `moderacao-${sanction.kind}`,
+  });
+
+  return { sanctionId: (inserted?.id as string | undefined) ?? null, sanction };
+}
+
+/**
+ * Analisa um item e remove-o de imediato se violar as regras, aplicando a
+ * escada disciplinar (aviso → suspensão temporária → banimento).
  * Idempotente: se o item já não existir, devolve `removed: false`.
  */
 export async function moderateTarget(args: {
   kind: ModerationKind;
   id: string;
-}): Promise<{ removed: boolean; category: string; reason: string }> {
+}): Promise<{ removed: boolean; category: string; reason: string; sanction?: SanctionResult }> {
   const cfg = TARGETS[args.kind];
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -209,20 +300,49 @@ export async function moderateTarget(args: {
   const excerpt = String(
     (cfg.textColumn ? (row as any)[cfg.textColumn] : "") ?? "",
   ).slice(0, 500);
+  const authorId = ((row as any)[cfg.authorColumn] as string | null) ?? null;
+
+  let sanctionId: string | null = null;
+  let sanction: SanctionResult = null;
 
   if (verdict.action === "remove") {
     await (supabaseAdmin as any).from(cfg.table).delete().eq(cfg.idColumn, args.id);
+
+    if (authorId) {
+      // Admins e moderadores nunca são sancionados pelo agente.
+      const { data: staff } = await (supabaseAdmin as any)
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", authorId)
+        .in("role", ["admin", "moderator"]);
+      if (!staff || staff.length === 0) {
+        try {
+          const applied = await applySanction({ supabaseAdmin, userId: authorId, verdict });
+          sanctionId = applied.sanctionId;
+          sanction = applied.sanction;
+        } catch (err) {
+          console.error("[moderation] sanction failed", err);
+        }
+      }
+    }
   }
 
   await (supabaseAdmin as any).from("moderation_actions").insert({
     kind: args.kind,
     target_id: args.id,
-    author_id: (row as any)[cfg.authorColumn] ?? null,
+    author_id: authorId,
     action: verdict.action,
     category: verdict.category,
     reason: verdict.reason,
     excerpt,
+    sanction_id: sanctionId,
   });
 
-  return { removed: verdict.action === "remove", category: verdict.category, reason: verdict.reason };
+  return {
+    removed: verdict.action === "remove",
+    category: verdict.category,
+    reason: verdict.reason,
+    sanction,
+  };
 }
+
