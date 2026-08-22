@@ -37,6 +37,7 @@ import {
   type MemberSanctionRow,
 } from "@/lib/moderation-review.functions";
 import { cn } from "@/lib/utils";
+import { MemberAvatar } from "@/components/mm/member-avatar";
 
 export const Route = createFileRoute("/admin/moderacao")({
   ssr: false,
