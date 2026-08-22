@@ -27,6 +27,7 @@ import {
   Moon,
   ShieldCheck,
   GraduationCap,
+  Gavel,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import mmIcon from "@/assets/mm-icon.png.asset.json";
