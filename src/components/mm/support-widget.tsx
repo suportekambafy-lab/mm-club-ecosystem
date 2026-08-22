@@ -52,11 +52,11 @@ export function SupportWidget({ userName }: { userName?: string }) {
   return (
     <>
       {open && (
-        <div className="fixed inset-x-3 bottom-20 z-[70] flex justify-end sm:inset-x-auto sm:right-5 sm:bottom-24">
-          <div className="flex max-h-[min(88vh,820px)] w-full flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-2xl sm:w-[440px]">
+        <div className="fixed inset-x-2 top-3 bottom-[calc(8.5rem+env(safe-area-inset-bottom))] z-[70] flex justify-end sm:inset-x-auto sm:top-auto sm:right-5 sm:bottom-24">
+          <div className="flex h-full w-full flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-2xl sm:h-auto sm:max-h-[min(80vh,760px)] sm:w-[440px]">
             {view === "home" ? (
               <div className="flex min-h-0 flex-1 flex-col">
-                <div className="bg-foreground px-5 pt-5 pb-8 text-background">
+                <div className="bg-foreground px-4 pt-4 pb-7 text-background sm:px-5 sm:pt-5 sm:pb-8">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
                       <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
