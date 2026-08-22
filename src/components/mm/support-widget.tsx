@@ -10,6 +10,7 @@ import { getMySupportConversation } from "@/lib/support-my.functions";
 import { cn } from "@/lib/utils";
 import { authHeaders } from "@/lib/auth-headers";
 import { SUPPORT_TOPICS, whatsappLink } from "@/lib/support-config";
+import { VerifiedBadge } from "@/components/mm/verified-badge";
 
 const HUMAN_MARKER = "[[HUMANO]]";
 
