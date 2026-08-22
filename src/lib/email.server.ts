@@ -42,7 +42,7 @@ export async function sendEmail(opts: SendOpts): Promise<{
   id?: string | null;
   error?: string;
 }> {
-  const { to, subject, html, userId, kind, ref, replyTo } = opts;
+  const { to, subject, html, userId, kind, ref, replyTo, attachments } = opts;
 
   // Dedupe: same (user_id, kind, ref) is only ever sent once.
   if (userId && ref) {
@@ -73,6 +73,7 @@ export async function sendEmail(opts: SendOpts): Promise<{
     html,
   };
   if (replyTo) payload.reply_to = replyTo;
+  if (attachments?.length) payload.attachments = attachments;
 
   const res = await fetch(`${GATEWAY_URL}/emails`, {
     method: "POST",
