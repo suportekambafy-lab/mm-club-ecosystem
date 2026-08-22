@@ -768,6 +768,7 @@ function TrackedVideoPlayer({
   const endOverlay = (
     <LessonEndOverlay
       open={ended}
+      autoAdvance={canAutoAdvance}
       nextTitle={nextTitle ?? null}
       onAdvance={onAdvance}
       advanceLabel={advanceLabel}
