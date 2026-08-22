@@ -22,7 +22,7 @@ export function RichText({ text, className }: { text: string; className?: string
       nodes.push(
         <Link
           key={key}
-          to={href}
+          to={href as never}
           className="font-medium text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
         >
           {label}

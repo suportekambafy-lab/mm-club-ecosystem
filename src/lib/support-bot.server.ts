@@ -50,6 +50,7 @@ Formato da resposta: apenas o texto do comentário, ou a palavra SKIP.`;
 type PostRow = {
   id: string;
   content: string | null;
+  created_at?: string | null;
   author_id: string;
   author?: { display_name: string | null } | null;
 };
@@ -67,13 +68,18 @@ export async function replyToCommunityPost(postId: string): Promise<{ replied: b
 
   const { data: post } = await admin
     .from("community_posts")
-    .select("id, content, author_id, author:profiles!community_posts_author_id_fkey (display_name)")
+    .select("id, content, created_at, author_id, author:profiles!community_posts_author_id_fkey (display_name)")
     .eq("id", postId)
     .maybeSingle();
 
   const row = post as PostRow | null;
   if (!row) return { replied: false };
   if (row.author_id === SUPPORT_BOT_ID) return { replied: false };
+
+  // Nunca responde no instante da publicação: espera pelo menos 2 minutos para
+  // a resposta não parecer automática.
+  const createdAt = row.created_at ? new Date(row.created_at).getTime() : 0;
+  if (createdAt && Date.now() - createdAt < 2 * 60 * 1000) return { replied: false };
 
   const text = (row.content ?? "").trim();
   if (text.length < 8) return { replied: false };
