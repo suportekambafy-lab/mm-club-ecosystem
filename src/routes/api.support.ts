@@ -2,6 +2,77 @@ import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 
+function textOf(m: UIMessage): string {
+  return (m.parts ?? [])
+    .filter((part: { type: string }) => part.type === "text")
+    .map((part) => (part as { text?: string }).text ?? "")
+    .join("")
+    .trim();
+}
+
+/** Guarda a conversa de suporte do membro (uma thread por membro). */
+async function persistSupport(
+  userId: string,
+  email: string | null,
+  messages: UIMessage[],
+): Promise<void> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as unknown as { from: (t: string) => any };
+
+    const { data: existing } = await admin
+      .from("support_threads")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    let threadId = existing?.id as string | undefined;
+    if (!threadId) {
+      const { data: created, error } = await admin
+        .from("support_threads")
+        .insert({ user_id: userId, email })
+        .select("id")
+        .single();
+      if (error || !created) return;
+      threadId = created.id as string;
+    }
+
+    const rows = messages
+      .filter((m) => m.role === "user" || m.role === "assistant")
+      .map((m, index) => ({
+        thread_id: threadId!,
+        user_id: userId,
+        client_id: m.id && String(m.id).trim() ? String(m.id) : `${m.role}-${index}`,
+        role: m.role,
+        content: textOf(m).replace("[[HUMANO]]", "").trim(),
+      }))
+      .filter((r) => r.content.length > 0);
+
+    const byClient = new Map<string, (typeof rows)[number]>();
+    for (const row of rows) byClient.set(row.client_id, row);
+    const unique = [...byClient.values()];
+
+    if (unique.length > 0) {
+      await admin
+        .from("support_messages")
+        .upsert(unique, { onConflict: "thread_id,client_id" });
+    }
+
+    const escalated = messages.some((m) => m.role === "assistant" && textOf(m).includes("[[HUMANO]]"));
+    await admin
+      .from("support_threads")
+      .update({
+        last_message_at: new Date().toISOString(),
+        message_count: unique.length,
+        email,
+        ...(escalated ? { escalated: true, handled: false } : {}),
+      })
+      .eq("id", threadId);
+  } catch (err) {
+    console.error("[api.support] persistSupport failed", err);
+  }
+}
+
 type SupportRequestBody = { messages?: unknown };
 
 const SYSTEM = `És o MM Suporte, o assistente de suporte oficial do MM Club (Marca Milionária).
@@ -9,6 +80,7 @@ const SYSTEM = `És o MM Suporte, o assistente de suporte oficial do MM Club (Ma
 Como falas:
 - Português europeu (Portugal), tom humano, calmo e directo. Trata por "tu".
 - Respostas CURTAS: 2 a 5 linhas. Passos numerados só quando são mesmo passos.
+- Quando indicares uma página da plataforma, escreve SEMPRE um link markdown clicável com o caminho interno, por exemplo [Subscrição](/subscricao), [Academia](/academia) ou [Perfil](/perfil). Nunca escreves o caminho em texto simples nem em bloco de código — o membro não entende rotas, tem de conseguir clicar e ir directo.
 - Nunca inventes preços, prazos, políticas, links ou dados da conta do membro.
 
 O que sabes sobre a plataforma (usa isto para ajudar):
@@ -57,6 +129,13 @@ export const Route = createFileRoute("/api/support")({
 
         return result.toUIMessageStreamResponse({
           originalMessages: messages as UIMessage[],
+          onFinish: async ({ messages: finalMessages }) => {
+            await persistSupport(
+              auth.user.id,
+              auth.user.email ?? null,
+              finalMessages as UIMessage[],
+            );
+          },
         });
       },
     },
