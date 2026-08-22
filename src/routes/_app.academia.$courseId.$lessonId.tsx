@@ -217,16 +217,23 @@ function LessonPlayer() {
                 startSeconds={deepLinkSeconds ?? row?.progress_seconds ?? 0}
                 saveProgress={trackedSaveProgress}
                 seekRef={seekRef}
-                nextTitle={next?.lesson.title ?? null}
-                onAdvance={
-                  next
-                    ? () =>
-                        navigate({
-                          to: "/academia/$courseId/$lessonId",
-                          params: { courseId: course.id, lessonId: next.lesson.id },
-                        })
-                    : undefined
+                nextTitle={
+                  quizPending
+                    ? `Teste do módulo · ${current.module.title}`
+                    : (nextOpen?.lesson.title ?? null)
                 }
+                onAdvance={
+                  quizPending
+                    ? goToModuleQuiz
+                    : nextOpen
+                      ? () =>
+                          navigate({
+                            to: "/academia/$courseId/$lessonId",
+                            params: { courseId: course.id, lessonId: nextOpen.lesson.id },
+                          })
+                      : undefined
+                }
+                advanceLabel={quizPending ? "Fazer teste" : undefined}
               />
 
             ) : (
