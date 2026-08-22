@@ -101,7 +101,7 @@ export function SupportWidget({ userName }: { userName?: string }) {
                   <h2 className="font-display text-xl sm:text-2xl">Como podemos ajudar?</h2>
                 </div>
 
-                <div className="-mt-5 min-h-0 flex-1 space-y-3 overflow-y-auto px-3 pb-3">
+                <div className="relative z-0 -mt-5 min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 pb-4">
                   {savedMessages.length > 0 && (
                     <button
                       onClick={() => openChat()}
