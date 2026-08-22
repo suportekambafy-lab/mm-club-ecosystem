@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { InlineAlert } from "@/components/mm/inline-alert";
+import { StreakCard } from "@/components/mm/streak-card";
 import { trackLoadTime } from "@/lib/ux-analytics";
 
 import { createFileRoute, Link } from "@tanstack/react-router";
