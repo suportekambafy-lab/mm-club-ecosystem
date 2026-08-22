@@ -310,61 +310,7 @@ function ModuleCard({
 
           <ul className="space-y-2">
             {rows.map((r) => (
-              <li
-                key={r.id}
-                className={cn(
-                  "rounded-xl border border-border bg-surface-2 px-3 py-3 text-xs",
-                  !r.active && "opacity-50",
-                )}
-              >
-                <p className="text-sm text-foreground">{r.prompt}</p>
-                <ul className="mt-2 space-y-1">
-                  {r.options.map((o, i) => (
-                    <li
-                      key={i}
-                      className={cn(
-                        "flex items-center gap-2",
-                        i === r.correct_index ? "text-emerald-500" : "text-muted-foreground",
-                      )}
-                    >
-                      {i === r.correct_index ? (
-                        <Check className="h-3 w-3" />
-                      ) : (
-                        <span className="w-3 text-center">{String.fromCharCode(65 + i)}</span>
-                      )}
-                      {o}
-                    </li>
-                  ))}
-                </ul>
-                {r.explanation && (
-                  <p className="mt-2 text-muted-foreground">{r.explanation}</p>
-                )}
-                <div className="mt-3 flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      await update({ data: { id: r.id, active: !r.active } });
-                      await refresh();
-                    }}
-                    className="text-primary transition hover:underline"
-                  >
-                    {r.active ? "Desativar" : "Ativar"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      await remove({ data: { id: r.id } });
-                      await refresh();
-                    }}
-                    className="inline-flex items-center gap-1 text-red-500 transition hover:underline"
-                  >
-                    <Trash2 className="h-3 w-3" /> Eliminar
-                  </button>
-                  {r.lesson_title && (
-                    <span className="text-muted-foreground">Aula: {r.lesson_title}</span>
-                  )}
-                </div>
-              </li>
+              <QuestionEditor key={r.id} row={r} onRefresh={refresh} />
             ))}
           </ul>
         </div>
