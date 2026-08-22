@@ -90,6 +90,9 @@ function LessonPlayer() {
     if (next) recordLessonCompleted();
   }, [completed, setCompleted]);
 
+  // Controlo directo do player (usado pelas notas para voltar ao minuto).
+  const seekRef = useRef<((seconds: number) => void) | null>(null);
+
   // Reset scroll on lesson change
   useEffect(() => {
     window.scrollTo({ top: 0 });
