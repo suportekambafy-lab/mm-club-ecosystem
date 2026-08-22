@@ -52,11 +52,11 @@ export function SupportWidget({ userName }: { userName?: string }) {
   return (
     <>
       {open && (
-        <div className="fixed inset-x-3 bottom-20 z-[70] flex justify-end sm:inset-x-auto sm:right-5 sm:bottom-24">
-          <div className="flex max-h-[min(88vh,820px)] w-full flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-2xl sm:w-[440px]">
+        <div className="fixed inset-x-2 top-3 bottom-[calc(8.5rem+env(safe-area-inset-bottom))] z-[70] flex justify-end sm:inset-x-auto sm:top-auto sm:right-5 sm:bottom-24">
+          <div className="flex h-full w-full flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-2xl sm:h-auto sm:max-h-[min(80vh,760px)] sm:w-[440px]">
             {view === "home" ? (
               <div className="flex min-h-0 flex-1 flex-col">
-                <div className="bg-foreground px-5 pt-5 pb-8 text-background">
+                <div className="bg-foreground px-4 pt-4 pb-7 text-background sm:px-5 sm:pt-5 sm:pb-8">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
                       <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
@@ -74,10 +74,10 @@ export function SupportWidget({ userName }: { userName?: string }) {
                       <X className="h-5 w-5" />
                     </button>
                   </div>
-                  <p className="mt-6 font-display text-2xl opacity-60">
+                  <p className="mt-4 font-display text-xl opacity-60 sm:mt-6 sm:text-2xl">
                     Olá{firstName ? ` ${firstName}` : ""} 👋
                   </p>
-                  <h2 className="font-display text-2xl">Como podemos ajudar?</h2>
+                  <h2 className="font-display text-xl sm:text-2xl">Como podemos ajudar?</h2>
                 </div>
 
                 <div className="-mt-5 min-h-0 flex-1 space-y-3 overflow-y-auto px-3 pb-3">
@@ -143,7 +143,7 @@ export function SupportWidget({ userName }: { userName?: string }) {
 
       <button
         onClick={() => setOpen((v) => !v)}
-        className="fixed right-4 bottom-4 z-[70] inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background shadow-2xl transition hover:opacity-90 sm:right-5 sm:bottom-5"
+        className="fixed right-3 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-[70] inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background shadow-2xl transition hover:opacity-90 sm:right-5 sm:bottom-5"
       >
         {open ? <X className="h-4 w-4" /> : <Headset className="h-4 w-4" />}
         Suporte
@@ -222,7 +222,7 @@ function SupportChat({
         </button>
       </header>
 
-      <div ref={scrollRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
+      <div ref={scrollRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-4 sm:px-5 sm:py-5">
         {messages.length === 0 && !isBusy && (
           <p className="py-6 text-center text-sm text-muted-foreground">
             Diz-nos o que se passa. Se não conseguirmos resolver, passamos para a equipa no WhatsApp.
@@ -238,7 +238,7 @@ function SupportChat({
             >
               <div
                 className={cn(
-                  "max-w-[85%] text-sm leading-relaxed",
+                  "max-w-[88%] text-sm leading-relaxed sm:max-w-[85%]",
                   m.role === "user"
                     ? "rounded-2xl bg-primary px-3 py-2 text-primary-foreground"
                     : "text-foreground",
@@ -307,8 +307,8 @@ function SupportChat({
         )}
       </div>
 
-      <div className="border-t border-border p-4">
-        <div className="flex items-end gap-2 rounded-2xl border border-border bg-surface-1 px-4 py-3">
+      <div className="border-t border-border p-3 sm:p-4">
+        <div className="flex items-end gap-2 rounded-2xl border border-border bg-surface-1 px-3 py-2 sm:px-4 sm:py-3">
           <textarea
             ref={inputRef}
             value={input}
