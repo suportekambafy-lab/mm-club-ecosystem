@@ -123,7 +123,7 @@ export async function classifyContent(args: {
     return parseVerdict(result.text ?? "");
   } catch (err) {
     console.error("[moderation] classify failed", err);
-    return { action: "allow", category: "erro", reason: "Falha do agente de moderação." };
+    return { ...base, action: "allow", category: "erro", reason: "Falha do agente de moderação." };
   }
 }
 
