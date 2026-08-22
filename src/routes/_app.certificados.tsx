@@ -7,6 +7,7 @@ import { useUserProgress } from "@/hooks/use-user-progress";
 import { computeCourseDuration, computeLessonsCount, parseDurationToMinutes } from "@/lib/course-duration";
 import { supabase } from "@/integrations/supabase/client";
 import { getCertificatePdf } from "@/lib/certificates.functions";
+import { sendCertificateEmail } from "@/lib/certificate-email.functions";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Course } from "@/data/types";
 
@@ -188,7 +189,10 @@ function CourseCertRow({
       });
       if (error) throw error;
       const row = Array.isArray(data) ? data[0] : null;
-      if (row) onIssued({ ...row, course_id: course.id });
+      if (row) {
+        onIssued({ ...row, course_id: course.id });
+        void sendCertificateEmail({ data: { code: row.code } }).catch(() => {});
+      }
     } catch (error) {
       console.warn("Falha ao emitir certificado", error);
     } finally {
