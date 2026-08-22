@@ -276,14 +276,38 @@ function SupportChat({
   const needsHuman = lastAssistant ? messageText(lastAssistant).includes(HUMAN_MARKER) : false;
   const lastUserMessage = [...messages].reverse().find((m) => m.role === "user");
   const lastUserText = lastUserMessage;
+  const lastIsUser = messages.length > 0 && messages[messages.length - 1]?.role === "user";
+
+  /**
+   * Re-tentativa idempotente: se a última pergunta ficou sem resposta (falha
+   * transitória do gateway ou aba fechada a meio), pedimos a resposta de novo.
+   * `regenerate()` reenvia o mesmo histórico e o servidor grava com ids estáveis,
+   * portanto nada é duplicado. Máximo 2 tentativas automáticas por pergunta.
+   */
+  const retries = useRef<Record<string, number>>({});
+  useEffect(() => {
+    if (isBusy || !lastIsUser || !lastUserMessage) return;
+    const id = lastUserMessage.id;
+    const count = retries.current[id] ?? 0;
+    if (count >= 2) return;
+    retries.current[id] = count + 1;
+    const delay = error ? 1500 * 2 ** count : 400;
+    const timer = setTimeout(() => void regenerate(), delay);
+    return () => clearTimeout(timer);
+  }, [isBusy, lastIsUser, lastUserMessage, error, regenerate]);
+
+  const autoRetrying =
+    !isBusy && lastIsUser && (retries.current[lastUserMessage?.id ?? ""] ?? 0) < 2;
+
   /** Estado de entrega da última mensagem enviada pelo utilizador. */
   const deliveryState: "sending" | "sent" | "failed" | null = !lastUserMessage
     ? null
-    : error
+    : error && !autoRetrying
       ? "failed"
-      : status === "submitted" || status === "streaming"
+      : status === "submitted" || status === "streaming" || autoRetrying
         ? "sending"
         : "sent";
+
 
   function send(text: string) {
     const trimmed = text.trim();

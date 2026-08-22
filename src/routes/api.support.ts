@@ -108,11 +108,20 @@ export const Route = createFileRoute("/api/support")({
         const { lessonMomentsContext } = await import("@/lib/lesson-moments.server");
         const lessonsContext = lastUser ? await lessonMomentsContext(textOf(lastUser), key) : "";
 
+        // Guarda logo a pergunta: se o modelo falhar, a mensagem do membro não
+        // se perde e a re-tentativa é idempotente (client_id estável).
+        await persistSupport(auth.user.id, auth.user.email ?? null, messages as UIMessage[]);
+
         const gateway = createLovableAiGatewayProvider(key);
         const result = streamText({
           model: gateway("google/gemini-3.5-flash"),
           system: `${SYSTEM}\n\nContexto: o membro está autenticado (email ${auth.user.email ?? "desconhecido"}).${lessonsContext}`,
           messages: await convertToModelMessages(messages as UIMessage[]),
+          // Falhas transitórias do gateway (429/5xx) são re-tentadas com backoff.
+          maxRetries: 3,
+          onError: (err) => {
+            console.error("[api.support] streamText failed", err);
+          },
         });
 
         return result.toUIMessageStreamResponse({
