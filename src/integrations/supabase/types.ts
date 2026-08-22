@@ -2730,6 +2730,42 @@ export type Database = {
         }
         Relationships: []
       }
+      moderation_actions: {
+        Row: {
+          action: string
+          author_id: string | null
+          category: string | null
+          created_at: string
+          excerpt: string | null
+          id: string
+          kind: string
+          reason: string | null
+          target_id: string
+        }
+        Insert: {
+          action: string
+          author_id?: string | null
+          category?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          kind: string
+          reason?: string | null
+          target_id: string
+        }
+        Update: {
+          action?: string
+          author_id?: string | null
+          category?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          kind?: string
+          reason?: string | null
+          target_id?: string
+        }
+        Relationships: []
+      }
       notification_log: {
         Row: {
           category: string

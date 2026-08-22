@@ -4,6 +4,7 @@ import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tansta
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyCommunityPostByEmail } from "@/lib/community-email.functions";
+import { runModeration } from "@/lib/moderation-client";
 import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 import { assertUploadAllowed } from "@/lib/security/uploads";
 import { LinkPreview, extractFirstUrl } from "@/components/mm/link-preview";
@@ -886,6 +887,9 @@ function Composer({
       if (error) throw error;
       // Aviso por email aos membros que não desativaram nas permissões.
       if (row?.id) {
+        runModeration({ kind: "community_post", id: row.id }, () =>
+          qc.invalidateQueries({ queryKey: ["community", "posts"] }),
+        );
         notifyCommunityPostByEmail({ data: { postId: row.id } }).catch((e) =>
           console.error("[community] email announce failed", e),
         );
@@ -1578,12 +1582,21 @@ function CommentsSection({
   const add = useMutation({
     mutationFn: async () => {
       if (!currentUserId) throw new Error("Entre para comentar.");
-      const { error } = await supabase.from("community_comments").insert({
-        post_id: postId,
-        author_id: currentUserId,
-        content: text.trim(),
-      });
+      const { data: created, error } = await supabase
+        .from("community_comments")
+        .insert({
+          post_id: postId,
+          author_id: currentUserId,
+          content: text.trim(),
+        })
+        .select("id")
+        .single();
       if (error) throw error;
+      if (created?.id) {
+        runModeration({ kind: "community_comment", id: created.id }, () =>
+          qc.invalidateQueries({ queryKey: ["community", "comments", postId] }),
+        );
+      }
     },
     onSuccess: () => {
       setText("");
@@ -1860,11 +1873,16 @@ function ChatRoom({ user }: { user: User }) {
       const trimmed = text.trim();
       if (!trimmed) return;
       if (trimmed.length > 1000) throw new Error("Mensagem demasiado longa (máx. 1000).");
-      const { error } = await supabase.from("community_chat_messages").insert({
-        author_id: user.id,
-        content: trimmed,
-      });
+      const { data: created, error } = await supabase
+        .from("community_chat_messages")
+        .insert({
+          author_id: user.id,
+          content: trimmed,
+        })
+        .select("id")
+        .single();
       if (error) throw error;
+      if (created?.id) runModeration({ kind: "community_chat", id: created.id });
     },
     onSuccess: () => setText(""),
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao enviar"),

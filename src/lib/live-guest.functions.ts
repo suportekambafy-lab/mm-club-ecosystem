@@ -398,6 +398,19 @@ export const sendGuestChatMessage = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
+    // Agente de moderação também para convidados.
+    const { moderateTarget } = await import("./moderation.server");
+    const verdict = await moderateTarget({ kind: "live_chat", id: row.id as string });
+    if (verdict.removed) {
+      throw new Error(
+        verdict.reason
+          ? `Mensagem bloqueada pela moderação MM Club: ${verdict.reason}`
+          : "Mensagem bloqueada pela moderação MM Club.",
+      );
+    }
+
+
+
     return {
       id: row.id as string,
       body: row.body as string,

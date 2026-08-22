@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/mm/confirm-dialog";
 import { notifyShortPublishedByEmail, notifyShortReplyByEmail } from "@/lib/shorts-email.functions";
+import { runModeration } from "@/lib/moderation-client";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const SHORTS_PAGE_SIZE = 6;
@@ -113,6 +114,7 @@ function ShortsPage() {
 
         // Email fan-out happens server-side and only for admin authors.
         if (inserted?.id) {
+          runModeration({ kind: "short", id: inserted.id });
           notifyShortPublishedByEmail({ data: { shortId: inserted.id } }).catch(() => {});
         }
 
@@ -1046,6 +1048,11 @@ function CommentsDrawer({
         .single();
       if (error) throw error;
 
+      if (newComment?.id) {
+        runModeration({ kind: "short_comment", id: newComment.id }, () =>
+          qc.invalidateQueries({ queryKey: ["mm-short-comments", short.id] }),
+        );
+      }
       if (parentId && newComment?.id) {
         notifyShortReplyByEmail({ data: { commentId: newComment.id } }).catch(() => {});
       }
