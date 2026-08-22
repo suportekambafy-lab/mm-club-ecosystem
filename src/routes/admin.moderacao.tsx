@@ -255,16 +255,11 @@ function ActionCard({
       </div>
 
       <div className="mt-3 flex items-start gap-3">
-        {row.author_avatar ? (
-          <img
-            src={row.author_avatar}
-            alt={row.author_name ?? "Membro"}
-            className="h-9 w-9 rounded-full object-cover"
-            loading="lazy"
-          />
-        ) : (
-          <div className="h-9 w-9 rounded-full bg-muted" />
-        )}
+        <MemberAvatar
+          name={row.author_name ?? "Membro"}
+          avatarUrl={row.author_avatar}
+          size={36}
+        />
         <div className="min-w-0 flex-1 space-y-2">
           <p className="text-sm font-medium">{row.author_name ?? "Membro removido"}</p>
           {row.excerpt ? (
