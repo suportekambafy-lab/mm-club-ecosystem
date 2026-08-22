@@ -254,8 +254,22 @@ export const sendChatMessage = createServerFn({ method: "POST" })
       .select("id,live_id,user_id,body,created_at,pinned_at,pinned_by,guest_id,guest_name")
       .single();
     if (error) throw new Error(error.message);
+    // Agente de moderação: remove imediatamente pedidos de reembolso, dados
+    // pessoais, spam ou ataques à marca antes de ficarem visíveis no direto.
+    if (row?.id) {
+      const { moderateTarget } = await import("./moderation.server");
+      const verdict = await moderateTarget({ kind: "live_chat", id: row.id });
+      if (verdict.removed) {
+        throw new Error(
+          verdict.reason
+            ? `Mensagem bloqueada pela moderação MM Club: ${verdict.reason}`
+            : "Mensagem bloqueada pela moderação MM Club.",
+        );
+      }
+    }
     return row;
   });
+
 
 export const setChatMessagePinned = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
