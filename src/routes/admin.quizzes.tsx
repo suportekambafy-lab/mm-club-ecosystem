@@ -142,8 +142,7 @@ function ModuleCard({
   const list = useServerFn(listModuleQuestions);
   const generate = useServerFn(generateModuleQuiz);
   const save = useServerFn(saveModuleSettings);
-  const update = useServerFn(updateQuestion);
-  const remove = useServerFn(deleteQuestion);
+  const shuffleOptions = useServerFn(shuffleModuleOptions);
 
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<QuestionRow[]>([]);
