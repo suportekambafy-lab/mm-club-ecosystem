@@ -74,7 +74,7 @@ export function SupportWidget({ userName }: { userName?: string }) {
     <>
       {open && (
         <div className="fixed inset-x-0 top-0 bottom-0 z-[70] flex justify-end bg-black/40 backdrop-blur-[2px] sm:inset-x-auto sm:top-auto sm:right-5 sm:bottom-24 sm:bg-transparent sm:backdrop-blur-none">
-          <div className="flex h-full w-full flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-2xl sm:h-auto sm:max-h-[min(80vh,760px)] sm:w-[440px]">
+          <div className="flex h-full w-full flex-col overflow-hidden rounded-none border-0 bg-background shadow-2xl sm:h-auto sm:max-h-[min(80vh,760px)] sm:w-[440px] sm:rounded-3xl sm:border sm:border-border">
             {view === "home" ? (
               <div className="flex min-h-0 flex-1 flex-col">
                 <div className="relative z-10 shrink-0 rounded-t-3xl bg-foreground px-4 pt-4 pb-7 text-background sm:px-5 sm:pt-5 sm:pb-8">
