@@ -264,8 +264,8 @@ function SupportChat({
         )}
       </div>
 
-      <div className="border-t border-border p-3">
-        <div className="flex items-end gap-2 rounded-2xl border border-border bg-surface-1 px-3 py-2">
+      <div className="border-t border-border p-4">
+        <div className="flex items-end gap-2 rounded-2xl border border-border bg-surface-1 px-4 py-3">
           <textarea
             ref={inputRef}
             value={input}
@@ -278,7 +278,7 @@ function SupportChat({
             }}
             rows={1}
             placeholder="Escreve a tua mensagem…"
-            className="max-h-28 min-h-6 flex-1 resize-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+            className="max-h-32 min-h-7 flex-1 resize-none bg-transparent text-[15px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground"
           />
           <button
             onClick={() => send(input)}
