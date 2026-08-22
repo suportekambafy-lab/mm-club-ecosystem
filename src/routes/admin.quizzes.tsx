@@ -6,7 +6,9 @@ import {
   BrainCircuit,
   Check,
   Loader2,
+  Pencil,
   RefreshCw,
+  Shuffle,
   Sparkles,
   Trash2,
   Users,
@@ -21,6 +23,7 @@ import {
   getQuizAnalytics,
   listModuleQuestions,
   saveModuleSettings,
+  shuffleModuleOptions,
   updateQuestion,
 } from "@/lib/quiz.functions";
 import { cn } from "@/lib/utils";
