@@ -31,6 +31,9 @@ type SendOpts = {
   kind: EmailKind;
   ref?: string | null; // idempotency key
   replyTo?: string;
+  /** Anexos Resend; usa content_id para imagens inline (cid:...). */
+  attachments?: { filename: string; content: string; content_type?: string; content_id?: string }[];
+
 };
 
 export async function sendEmail(opts: SendOpts): Promise<{
