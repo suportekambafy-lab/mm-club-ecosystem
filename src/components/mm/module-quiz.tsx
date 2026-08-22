@@ -105,10 +105,26 @@ export function ModuleQuiz({
     [answers, questions],
   );
 
+  // Vindo do fim da última aula do módulo: destaca e arranca o teste sozinho.
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  const autoRef = useRef(false);
+  useEffect(() => {
+    if (!autoOpen || autoRef.current || !available || passed) return;
+    autoRef.current = true;
+    boxRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    void start();
+  }, [autoOpen, available, passed, start]);
+
   if (!available && !passed) return null;
 
   return (
-    <div className="border-t border-border bg-surface-2/50 px-4 py-4 sm:px-5">
+    <div
+      ref={boxRef}
+      className={cn(
+        "border-t border-border bg-surface-2/50 px-4 py-4 sm:px-5",
+        autoOpen && !passed && "ring-1 ring-primary/50",
+      )}
+    >
       {phase === "idle" && (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 items-start gap-3">
