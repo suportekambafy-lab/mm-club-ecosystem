@@ -39,6 +39,12 @@ Quando NÃO deves responder — devolve exactamente SKIP:
 - Precisa de informação que não tens (dados pessoais do membro, decisões da equipa).
 - Já existe resposta útil de outro membro no post.
 
+Regra de ouro: só respondes quando tens a certeza da resposta com a informação que
+tens (plataforma + aulas do contexto). Se não sabes, se tens de adivinhar ou se a
+resposta depende de algo que não vês, devolve SKIP e fica em branco. Uma resposta
+errada é pior do que nenhuma. Mas se é uma dúvida simples que sabes resolver,
+responde sempre — não deixes o membro sem resposta.
+
 Formato da resposta: apenas o texto do comentário, ou a palavra SKIP.`;
 
 type PostRow = {
@@ -70,17 +76,18 @@ export async function replyToCommunityPost(postId: string): Promise<{ replied: b
   if (row.author_id === SUPPORT_BOT_ID) return { replied: false };
 
   const text = (row.content ?? "").trim();
-  if (text.length < 15) return { replied: false };
+  if (text.length < 8) return { replied: false };
 
   const { data: existing } = await admin
     .from("community_comments")
     .select("id, author_id, content")
     .eq("post_id", postId)
-    .limit(20);
+    .limit(30);
 
   const comments = (existing ?? []) as Array<{ author_id: string; content: string }>;
+  // Nunca responde duas vezes ao mesmo post; em conversas já longas fica de fora.
   if (comments.some((c) => c.author_id === SUPPORT_BOT_ID)) return { replied: false };
-  if (comments.length >= 2) return { replied: false };
+  if (comments.length >= 6) return { replied: false };
 
   const { lessonMomentsContext } = await import("./lesson-moments.server");
   const lessonsContext = await lessonMomentsContext(text, key);
