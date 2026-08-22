@@ -52,7 +52,7 @@ export function SupportWidget({ userName }: { userName?: string }) {
     queryKey: ["support", "my-conversation"],
     queryFn: () => historyFn(),
     enabled: open,
-    staleTime: 30_000,
+    staleTime: 0,
   });
   const savedMessages: UIMessage[] = useMemo(
     () =>
@@ -169,6 +169,7 @@ export function SupportWidget({ userName }: { userName?: string }) {
               </div>
             ) : (
               <SupportChat
+                key={`suporte-${savedMessages.length}`}
                 savedMessages={savedMessages}
                 initialPrompt={pending}
                 onConsumePrompt={() => setPending(null)}
