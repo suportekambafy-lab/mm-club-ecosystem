@@ -142,6 +142,8 @@ function DashboardPage() {
         )
       )}
 
+      {/* Sequência de aprendizagem e meta semanal */}
+      <StreakCard />
 
       {/* Continuar a construir */}
       {featured && <ContinueHero course={featured} />}
