@@ -295,10 +295,21 @@ function LessonPlayer() {
                   <span className="hidden whitespace-nowrap sm:inline">Sala de discussão</span>
                 </Link>
 
-                {next ? (
+                {quizPending ? (
+                  <Link
+                    to="/academia/$courseId"
+                    params={{ courseId: course.id }}
+                    search={{ quiz: current.module.id }}
+                    aria-label="Fazer o teste do módulo"
+                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-primary px-2.5 text-xs font-medium text-primary-foreground transition hover:bg-gold-soft sm:px-4"
+                  >
+                    <span className="hidden whitespace-nowrap sm:inline">Teste do módulo</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                ) : nextOpen ? (
                   <Link
                     to="/academia/$courseId/$lessonId"
-                    params={{ courseId: course.id, lessonId: next.lesson.id }}
+                    params={{ courseId: course.id, lessonId: nextOpen.lesson.id }}
                     aria-label="Próxima aula"
                     className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-primary px-2.5 text-xs font-medium text-primary-foreground transition hover:bg-gold-soft sm:px-4"
                   >
