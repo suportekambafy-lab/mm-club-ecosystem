@@ -588,20 +588,35 @@ function TrackedVideoPlayer({
   // updates the row → startSeconds prop changes → seek effect re-fires → video
   // jumps back and appears to loop.
   const startRef = useRef(startSeconds);
+  // Tempo realmente visto nesta sessão desta aula. Só com visualização real é
+  // que o avanço automático dispara — evita cascatas de 2–3 aulas quando o
+  // vídeo abre perto do fim ou o player emite "ended" logo ao carregar.
+  const watchedRef = useRef(0);
+  const [canAutoAdvance, setCanAutoAdvance] = useState(false);
   const currentLessonIdRef = useRef(lessonId);
   if (currentLessonIdRef.current !== lessonId) {
     currentLessonIdRef.current = lessonId;
     startRef.current = startSeconds;
     initialSeekDoneRef.current = false;
     lastSavedRef.current = Math.max(0, Math.floor(startSeconds));
+    watchedRef.current = 0;
   }
 
   useEffect(() => {
     setEnded(false);
+    setCanAutoAdvance(false);
+    watchedRef.current = 0;
   }, [lessonId]);
+
+  const markEnded = useCallback(() => {
+    setCanAutoAdvance(watchedRef.current >= 20);
+    setEnded(true);
+  }, []);
 
   const handleReplay = useCallback(() => {
     setEnded(false);
+    setCanAutoAdvance(false);
+    watchedRef.current = 0;
     startRef.current = 0;
     lastSavedRef.current = 0;
     if (source.kind === "file") {
