@@ -3854,6 +3854,7 @@ export type Database = {
       support_threads: {
         Row: {
           created_at: string
+          email: string | null
           escalated: boolean
           handled: boolean
           id: string
@@ -3864,6 +3865,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          email?: string | null
           escalated?: boolean
           handled?: boolean
           id?: string
@@ -3874,6 +3876,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          email?: string | null
           escalated?: boolean
           handled?: boolean
           id?: string
