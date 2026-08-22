@@ -147,7 +147,12 @@ function DashboardPage() {
       <StreakCard />
 
       {/* Continuar a construir */}
-      {featured && <ContinueHero course={featured} />}
+      {featured && (
+        <ContinueHero
+          course={featured}
+          resumeLessonId={progress[featured.id]?.lastLessonId ?? null}
+        />
+      )}
 
 
       {/* Rails na ordem editorial */}
@@ -345,11 +350,19 @@ function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
 
 
 
-function ContinueHero({ course }: { course: import("@/data/types").Course }) {
+function ContinueHero({
+  course,
+  resumeLessonId,
+}: {
+  course: import("@/data/types").Course;
+  resumeLessonId?: string | null;
+}) {
 
   const expert = expertsById[course.expertId];
-  const firstLesson = course.modules?.[0]?.lessons?.[0];
-  const firstLessonId = firstLesson?.id;
+  const allLessonIds = (course.modules ?? []).flatMap((m) => m.lessons.map((l) => l.id));
+  const firstLessonId =
+    (resumeLessonId && allLessonIds.includes(resumeLessonId) ? resumeLessonId : null) ??
+    allLessonIds[0];
   const linkProps = firstLessonId
     ? {
         to: "/academia/$courseId/$lessonId" as const,
