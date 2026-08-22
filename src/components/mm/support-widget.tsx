@@ -184,7 +184,7 @@ export function SupportWidget({ userName }: { userName?: string }) {
       <button
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "fixed right-3 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-[70] inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background shadow-2xl transition hover:opacity-90 sm:right-5 sm:bottom-5",
+          "fixed right-3 bottom-20 z-[70] inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background shadow-2xl transition hover:opacity-90 sm:right-5 sm:bottom-5 [@media(display-mode:standalone)]:bottom-[calc(env(safe-area-inset-bottom)+5.25rem)]",
           open && "pointer-events-none opacity-0",
         )}
       >
