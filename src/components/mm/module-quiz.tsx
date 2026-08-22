@@ -5,7 +5,7 @@ import {
   BrainCircuit,
   CheckCircle2,
   Loader2,
-  Lock,
+
   RotateCcw,
   Trophy,
   XCircle,
