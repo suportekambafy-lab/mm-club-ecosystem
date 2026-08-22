@@ -254,7 +254,7 @@ function SupportChat({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="flex items-center gap-3 border-b border-border bg-foreground px-4 py-3 text-background">
+      <header className="flex items-center gap-3 border-b border-border bg-foreground px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 text-background">
         <button
           onClick={onBack}
           className="text-xs opacity-70 transition hover:opacity-100"
