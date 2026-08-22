@@ -16,6 +16,11 @@ import {
   Paperclip,
   Check,
   X,
+  MicOff,
+  Ban,
+  AlertTriangle,
+  Undo2,
+  Users,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { pt } from "date-fns/locale";
@@ -24,7 +29,12 @@ import {
   listModerationActions,
   revertModerationAction,
   decideAppeal,
+  searchMembersForModeration,
+  listActiveSanctions,
+  applyManualSanction,
+  liftSanction,
   type ModerationActionRow,
+  type MemberSanctionRow,
 } from "@/lib/moderation-review.functions";
 import { cn } from "@/lib/utils";
 
@@ -129,6 +139,8 @@ function ModerationPage() {
           {pendingAppeals > 0 ? ` ${pendingAppeals} recurso(s) à espera de decisão.` : ""}
         </p>
       </header>
+
+      <MemberSanctionsPanel />
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex flex-wrap gap-1.5">
