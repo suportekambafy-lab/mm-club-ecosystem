@@ -7,6 +7,7 @@ import { notifyCommunityPostByEmail } from "@/lib/community-email.functions";
 import { runModeration } from "@/lib/moderation-client";
 import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 import { assertUploadAllowed } from "@/lib/security/uploads";
+import { SanctionBanner, useActiveSanction } from "@/components/mm/sanction-banner";
 import { LinkPreview, extractFirstUrl } from "@/components/mm/link-preview";
 import {
   Heart,
@@ -296,6 +297,8 @@ function CommunityPageInner() {
     return () => observer.disconnect();
   }, [postsQ.hasNextPage, postsQ.isFetchingNextPage, postsQ.fetchNextPage, posts.length]);
   const myProfileQ = useMyProfile(user?.id ?? null);
+  const sanctionQ = useActiveSanction();
+  const sanction = sanctionQ.data ?? null;
   const onlineMembers = useCommunityPresence(
     user
       ? {
@@ -459,6 +462,8 @@ function CommunityPageInner() {
                 <div className="h-14 rounded-2xl border border-border bg-surface-1" />
               ) : user === null ? (
                 <SignInGate />
+              ) : sanction ? (
+                <SanctionBanner sanction={sanction} />
               ) : (
                 <Composer
                   user={user}
