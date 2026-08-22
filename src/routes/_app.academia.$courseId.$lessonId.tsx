@@ -529,6 +529,33 @@ function TrackedVideoPlayer({
     setEmbedKey((k) => k + 1);
   }, [source.kind]);
 
+  // Permite que as notas saltem para o minuto guardado sem recarregar a aula.
+  useEffect(() => {
+    if (!seekRef) return;
+    seekRef.current = (seconds: number) => {
+      const target = Math.max(0, Math.floor(seconds));
+      setEnded(false);
+      lastSavedRef.current = target;
+      if (source.kind === "file") {
+        const video = videoRef.current;
+        if (video) {
+          video.currentTime = target;
+          void video.play().catch(() => {});
+        }
+        return;
+      }
+      const player = playerRef.current;
+      if (player) {
+        player.setCurrentTime(target);
+        player.play?.();
+      }
+    };
+    return () => {
+      seekRef.current = null;
+    };
+  }, [seekRef, source.kind]);
+
+
 
   useEffect(() => {
     const video = videoRef.current;
