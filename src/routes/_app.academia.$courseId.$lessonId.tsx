@@ -671,7 +671,14 @@ function TrackedVideoPlayer({
     if (source.kind !== "file" || !video || initialSeekDoneRef.current || startAt <= 3) return;
     const seek = () => {
       initialSeekDoneRef.current = true;
-      video.currentTime = Math.min(startAt, video.duration || startAt);
+      const duration = video.duration || 0;
+      // Nunca retomar nos últimos 20s: senão a aula "abre no fim".
+      if (duration && startAt >= duration - 20) {
+        startRef.current = 0;
+        lastSavedRef.current = 0;
+        return;
+      }
+      video.currentTime = Math.min(startAt, duration || startAt);
     };
     if (video.readyState >= 1) seek();
     else video.addEventListener("loadedmetadata", seek, { once: true });
