@@ -6,6 +6,7 @@ import { ChevronDown, GraduationCap, Search } from "lucide-react";
 import { getProgressOverview, getStudentCourseLessons } from "@/lib/admin-progress.functions";
 import type { StudentProgressRow } from "@/lib/admin/progress-types";
 import { ProgressCharts, type BucketRange } from "@/components/admin/progress-charts";
+import { MemberAvatar } from "@/components/mm/member-avatar";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/progresso")({
