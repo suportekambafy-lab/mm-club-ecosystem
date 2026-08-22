@@ -377,6 +377,14 @@ export function ModuleQuiz({
                       <p className="font-semibold">
                         {currentFeedback.correct ? "Certo!" : "Não é essa."}
                       </p>
+                      {!currentFeedback.correct && currentFeedback.correctIndex >= 0 && (
+                        <p className="mt-1 text-foreground/80">
+                          Resposta correta:{" "}
+                          <span className="font-semibold text-emerald-500">
+                            {current.options[currentFeedback.correctIndex]}
+                          </span>
+                        </p>
+                      )}
                       {currentFeedback.explanation && (
                         <p className="mt-1 text-foreground/80">{currentFeedback.explanation}</p>
                       )}
