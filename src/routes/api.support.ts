@@ -82,6 +82,7 @@ Como falas:
 - Respostas CURTAS: 2 a 5 linhas. Passos numerados só quando são mesmo passos.
 - Quando indicares uma página da plataforma, escreve SEMPRE um link markdown clicável com o caminho interno, por exemplo [Subscrição](/subscricao), [Academia](/academia) ou [Perfil](/perfil). Nunca escreves o caminho em texto simples nem em bloco de código — o membro não entende rotas, tem de conseguir clicar e ir directo.
 - Nunca inventes preços, prazos, políticas, links ou dados da conta do membro.
+- Tens acesso às transcrições das aulas. Quando a dúvida é de conteúdo, diz o curso, o nome da aula e o MINUTO exacto, com link clicável já no minuto — ex: [Como validar o produto (12:40)](/academia/curso/aula?t=760). Usa apenas as aulas e minutos do contexto fornecido; se não vier nada, não inventes.
 
 O que sabes sobre a plataforma (usa isto para ajudar):
 - Academia (/academia): cursos e aulas em vídeo, progresso automático, marcar aula como concluída, retomar de onde parou, pesquisa de aulas (/academia/pesquisa).
@@ -120,10 +121,14 @@ export const Route = createFileRoute("/api/support")({
         const key = process.env.LOVABLE_API_KEY;
         if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
 
+        const lastUser = [...(messages as UIMessage[])].reverse().find((m) => m.role === "user");
+        const { lessonMomentsContext } = await import("@/lib/lesson-moments.server");
+        const lessonsContext = lastUser ? await lessonMomentsContext(textOf(lastUser), key) : "";
+
         const gateway = createLovableAiGatewayProvider(key);
         const result = streamText({
           model: gateway("google/gemini-3.5-flash"),
-          system: `${SYSTEM}\n\nContexto: o membro está autenticado (email ${auth.user.email ?? "desconhecido"}).`,
+          system: `${SYSTEM}\n\nContexto: o membro está autenticado (email ${auth.user.email ?? "desconhecido"}).${lessonsContext}`,
           messages: await convertToModelMessages(messages as UIMessage[]),
         });
 

@@ -384,6 +384,35 @@ async function transcribeFromUrl(url: string, apiKey: string): Promise<string> {
   return transcribeChunk(new Uint8Array(await blob.arrayBuffer()), `lesson.${ext}`, contentType || "video/mp4", apiKey);
 }
 
+
+/**
+ * Minuto aproximado de cada bloco da transcrição.
+ *
+ * As transcrições são texto corrido (sem timestamps do modelo), por isso
+ * estimamos a posição temporal pelo número de caracteres já falados —
+ * ~15 caracteres por segundo em português falado. Dá um minuto próximo o
+ * suficiente para o membro saltar directamente para a parte certa da aula.
+ */
+const CHARS_PER_SECOND = 15;
+
+export function estimateChunkTimings(
+  chunks: string[],
+  durationSeconds?: number | null,
+): Array<{ start: number; end: number }> {
+  const totalChars = chunks.reduce((a, c) => a + c.length, 0) || 1;
+  const totalSeconds =
+    durationSeconds && durationSeconds > 0 ? durationSeconds : totalChars / CHARS_PER_SECOND;
+  const out: Array<{ start: number; end: number }> = [];
+  let offset = 0;
+  for (const c of chunks) {
+    const start = (offset / totalChars) * totalSeconds;
+    offset += c.length;
+    const end = (offset / totalChars) * totalSeconds;
+    out.push({ start: Math.floor(start), end: Math.ceil(end) });
+  }
+  return out;
+}
+
 // -------- server functions --------
 
 const IngestInput = z.object({
@@ -429,6 +458,7 @@ export const ingestLessonTranscript = createServerFn({ method: "POST" })
     // Chunk + embed
     const chunks = chunkText(data.transcript);
     if (!chunks.length) throw new Error("Transcrição demasiado curta");
+    const timings = estimateChunkTimings(chunks);
     const embeddings = await embedBatch(chunks, apiKey);
 
     // Replace chunks for this transcript
@@ -441,6 +471,8 @@ export const ingestLessonTranscript = createServerFn({ method: "POST" })
       lesson_title: data.lessonTitle ?? null,
       chunk_index: i,
       content,
+      start_seconds: timings[i]?.start ?? null,
+      end_seconds: timings[i]?.end ?? null,
       embedding: embeddings[i] as unknown as string,
     }));
     // Insert in pages of 200 to stay well under any row/size limit
@@ -660,6 +692,7 @@ async function ingestTranscriptRaw(params: {
 
   const chunks = chunkText(params.transcript);
   if (!chunks.length) throw new Error("Transcrição demasiado curta");
+  const timings = estimateChunkTimings(chunks);
   const embeddings = await embedBatch(chunks, apiKey);
 
   await supabaseAdmin.from("lesson_transcript_chunks").delete().eq("transcript_id", row.id);
@@ -671,6 +704,8 @@ async function ingestTranscriptRaw(params: {
     lesson_title: params.lessonTitle ?? null,
     chunk_index: i,
     content,
+    start_seconds: timings[i]?.start ?? null,
+    end_seconds: timings[i]?.end ?? null,
     embedding: embeddings[i] as unknown as string,
   }));
   for (let i = 0; i < rows.length; i += 200) {
