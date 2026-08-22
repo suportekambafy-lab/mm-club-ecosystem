@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Award, Download, Loader2, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getCertificatePdf } from "@/lib/certificates.functions";
+import { sendCertificateEmail } from "@/lib/certificate-email.functions";
 import { cn } from "@/lib/utils";
 
 type Certificate = { code: string; issued_at: string; member_name: string };
@@ -64,7 +65,10 @@ export function CourseCertificate({
       });
       if (error) throw error;
       const row = Array.isArray(data) ? data[0] : null;
-      if (row) setCert(row);
+      if (row) {
+        setCert(row);
+        void sendCertificateEmail({ data: { code: row.code } }).catch(() => {});
+      }
     } catch (error) {
       console.warn("Falha ao emitir certificado", error);
     } finally {
