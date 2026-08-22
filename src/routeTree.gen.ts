@@ -87,6 +87,7 @@ import { Route as ApiPublicHooksWeeklySummaryRouteImport } from './routes/api/pu
 import { Route as ApiPublicHooksWaitlistBroadcastRouteImport } from './routes/api/public/hooks/waitlist-broadcast'
 import { Route as ApiPublicHooksUpcomingCoursesRouteImport } from './routes/api/public/hooks/upcoming-courses'
 import { Route as ApiPublicHooksPushNotificationsRouteImport } from './routes/api/public/hooks/push-notifications'
+import { Route as ApiPublicHooksModerationSweepRouteImport } from './routes/api/public/hooks/moderation-sweep'
 import { Route as ApiPublicHooksLivesRecordingCheckRouteImport } from './routes/api/public/hooks/lives-recording-check'
 import { Route as ApiPublicHooksLivesAnnounceCatchupRouteImport } from './routes/api/public/hooks/lives-announce-catchup'
 import { Route as ApiPublicHooksLiveTestEmailRouteImport } from './routes/api/public/hooks/live-test-email'
@@ -514,6 +515,12 @@ const ApiPublicHooksPushNotificationsRoute =
     path: '/api/public/hooks/push-notifications',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksModerationSweepRoute =
+  ApiPublicHooksModerationSweepRouteImport.update({
+    id: '/api/public/hooks/moderation-sweep',
+    path: '/api/public/hooks/moderation-sweep',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksLivesRecordingCheckRoute =
   ApiPublicHooksLivesRecordingCheckRouteImport.update({
     id: '/api/public/hooks/lives-recording-check',
@@ -739,6 +746,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
+  '/api/public/hooks/moderation-sweep': typeof ApiPublicHooksModerationSweepRoute
   '/api/public/hooks/push-notifications': typeof ApiPublicHooksPushNotificationsRoute
   '/api/public/hooks/upcoming-courses': typeof ApiPublicHooksUpcomingCoursesRoute
   '/api/public/hooks/waitlist-broadcast': typeof ApiPublicHooksWaitlistBroadcastRoute
@@ -833,6 +841,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
+  '/api/public/hooks/moderation-sweep': typeof ApiPublicHooksModerationSweepRoute
   '/api/public/hooks/push-notifications': typeof ApiPublicHooksPushNotificationsRoute
   '/api/public/hooks/upcoming-courses': typeof ApiPublicHooksUpcomingCoursesRoute
   '/api/public/hooks/waitlist-broadcast': typeof ApiPublicHooksWaitlistBroadcastRoute
@@ -937,6 +946,7 @@ export interface FileRoutesById {
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
+  '/api/public/hooks/moderation-sweep': typeof ApiPublicHooksModerationSweepRoute
   '/api/public/hooks/push-notifications': typeof ApiPublicHooksPushNotificationsRoute
   '/api/public/hooks/upcoming-courses': typeof ApiPublicHooksUpcomingCoursesRoute
   '/api/public/hooks/waitlist-broadcast': typeof ApiPublicHooksWaitlistBroadcastRoute
@@ -1041,6 +1051,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
+    | '/api/public/hooks/moderation-sweep'
     | '/api/public/hooks/push-notifications'
     | '/api/public/hooks/upcoming-courses'
     | '/api/public/hooks/waitlist-broadcast'
@@ -1135,6 +1146,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
+    | '/api/public/hooks/moderation-sweep'
     | '/api/public/hooks/push-notifications'
     | '/api/public/hooks/upcoming-courses'
     | '/api/public/hooks/waitlist-broadcast'
@@ -1238,6 +1250,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-recording-check'
+    | '/api/public/hooks/moderation-sweep'
     | '/api/public/hooks/push-notifications'
     | '/api/public/hooks/upcoming-courses'
     | '/api/public/hooks/waitlist-broadcast'
@@ -1283,6 +1296,7 @@ export interface RootRouteChildren {
   ApiPublicHooksLiveTestEmailRoute: typeof ApiPublicHooksLiveTestEmailRoute
   ApiPublicHooksLivesAnnounceCatchupRoute: typeof ApiPublicHooksLivesAnnounceCatchupRoute
   ApiPublicHooksLivesRecordingCheckRoute: typeof ApiPublicHooksLivesRecordingCheckRoute
+  ApiPublicHooksModerationSweepRoute: typeof ApiPublicHooksModerationSweepRoute
   ApiPublicHooksPushNotificationsRoute: typeof ApiPublicHooksPushNotificationsRoute
   ApiPublicHooksUpcomingCoursesRoute: typeof ApiPublicHooksUpcomingCoursesRoute
   ApiPublicHooksWaitlistBroadcastRoute: typeof ApiPublicHooksWaitlistBroadcastRoute
@@ -1842,6 +1856,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksPushNotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/moderation-sweep': {
+      id: '/api/public/hooks/moderation-sweep'
+      path: '/api/public/hooks/moderation-sweep'
+      fullPath: '/api/public/hooks/moderation-sweep'
+      preLoaderRoute: typeof ApiPublicHooksModerationSweepRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/lives-recording-check': {
       id: '/api/public/hooks/lives-recording-check'
       path: '/api/public/hooks/lives-recording-check'
@@ -2257,6 +2278,7 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPublicHooksLivesAnnounceCatchupRoute,
   ApiPublicHooksLivesRecordingCheckRoute:
     ApiPublicHooksLivesRecordingCheckRoute,
+  ApiPublicHooksModerationSweepRoute: ApiPublicHooksModerationSweepRoute,
   ApiPublicHooksPushNotificationsRoute: ApiPublicHooksPushNotificationsRoute,
   ApiPublicHooksUpcomingCoursesRoute: ApiPublicHooksUpcomingCoursesRoute,
   ApiPublicHooksWaitlistBroadcastRoute: ApiPublicHooksWaitlistBroadcastRoute,
