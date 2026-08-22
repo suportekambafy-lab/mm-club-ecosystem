@@ -282,7 +282,10 @@ function SupportChat({
           Voltar
         </button>
         <div className="min-w-0 flex-1 text-center">
-          <p className="font-display text-sm">MM Suporte</p>
+          <p className="font-display text-sm inline-flex items-center justify-center gap-1">
+            MM Suporte
+            <VerifiedBadge size={13} className="align-[-2px]" />
+          </p>
           <p className="text-[11px] opacity-60">Chat individual e privado</p>
         </div>
         <button onClick={onClose} aria-label="Fechar" className="opacity-70 hover:opacity-100">
