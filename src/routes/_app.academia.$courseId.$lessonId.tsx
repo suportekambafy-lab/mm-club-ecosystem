@@ -215,7 +215,12 @@ function LessonPlayer() {
                 lessonId={current.lesson.id}
                 title={current.lesson.title}
                 source={source}
-                startSeconds={deepLinkSeconds ?? row?.progress_seconds ?? 0}
+                startSeconds={
+                  // Aula já concluída recomeça do início: guardar a posição final
+                  // fazia o vídeo abrir nos últimos segundos e disparar logo o
+                  // "fim de aula" (o que saltava 2–3 aulas de seguida).
+                  deepLinkSeconds ?? (completed ? 0 : (row?.progress_seconds ?? 0))
+                }
                 saveProgress={trackedSaveProgress}
                 seekRef={seekRef}
                 nextTitle={
