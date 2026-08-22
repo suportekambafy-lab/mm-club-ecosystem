@@ -4023,7 +4023,9 @@ export type Database = {
       my_community_sanction: {
         Args: never
         Returns: {
+          appeal_status: string
           expires_at: string
+          id: string
           kind: string
           level: number
           permanent: boolean
