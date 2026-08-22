@@ -37,6 +37,7 @@ import {
   type MemberSanctionRow,
 } from "@/lib/moderation-review.functions";
 import { cn } from "@/lib/utils";
+import { MemberAvatar } from "@/components/mm/member-avatar";
 
 export const Route = createFileRoute("/admin/moderacao")({
   ssr: false,
@@ -255,16 +256,11 @@ function ActionCard({
       </div>
 
       <div className="mt-3 flex items-start gap-3">
-        {row.author_avatar ? (
-          <img
-            src={row.author_avatar}
-            alt={row.author_name ?? "Membro"}
-            className="h-9 w-9 rounded-full object-cover"
-            loading="lazy"
-          />
-        ) : (
-          <div className="h-9 w-9 rounded-full bg-muted" />
-        )}
+        <MemberAvatar
+          name={row.author_name ?? "Membro"}
+          avatarUrl={row.author_avatar}
+          size={36}
+        />
         <div className="min-w-0 flex-1 space-y-2">
           <p className="text-sm font-medium">{row.author_name ?? "Membro removido"}</p>
           {row.excerpt ? (
@@ -483,11 +479,11 @@ function MemberSanctionsPanel() {
                     : "border-border hover:bg-muted/60",
                 )}
               >
-                {m.avatar_url ? (
-                  <img src={m.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" loading="lazy" />
-                ) : (
-                  <div className="h-8 w-8 rounded-full bg-muted" />
-                )}
+                <MemberAvatar
+                  name={m.display_name ?? "Membro"}
+                  avatarUrl={m.avatar_url}
+                  size={32}
+                />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium">{m.display_name ?? "Membro"}</span>
                   <span className="block text-xs text-muted-foreground">{sanctionSummary(m)}</span>

@@ -6,6 +6,7 @@ import { ChevronDown, GraduationCap, Search } from "lucide-react";
 import { getProgressOverview, getStudentCourseLessons } from "@/lib/admin-progress.functions";
 import type { StudentProgressRow } from "@/lib/admin/progress-types";
 import { ProgressCharts, type BucketRange } from "@/components/admin/progress-charts";
+import { MemberAvatar } from "@/components/mm/member-avatar";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/progresso")({
@@ -151,19 +152,7 @@ function StudentCard({
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center gap-3 p-3 text-left"
       >
-        {student.avatarUrl ? (
-          <img
-            loading="lazy"
-            decoding="async"
-            src={student.avatarUrl}
-            alt={student.name}
-            className="h-9 w-9 rounded-full object-cover"
-          />
-        ) : (
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-admin-panel-2 text-[13px] text-admin-muted">
-            {student.name.slice(0, 1).toUpperCase()}
-          </span>
-        )}
+        <MemberAvatar name={student.name} avatarUrl={student.avatarUrl} size={36} />
 
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-medium text-admin-fg">{student.name}</p>
