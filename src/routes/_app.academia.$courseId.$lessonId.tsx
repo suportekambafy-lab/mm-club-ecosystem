@@ -423,11 +423,13 @@ function LessonRow({
   course,
   courseId,
   active,
+  locked,
 }: {
   lesson: Lesson;
   course: Course;
   courseId: string;
   active: boolean;
+  locked?: boolean;
 }) {
   const syncThumb = lessonThumb(lesson, course);
   const { thumb: oembedThumb } = useBunnyThumb(syncThumb ? null : lesson.videoUrl);
@@ -436,10 +438,13 @@ function LessonRow({
   return (
     <li>
       <Link
-        to="/academia/$courseId/$lessonId"
-        params={{ courseId, lessonId: lesson.id }}
+        to={locked ? "/academia/$courseId" : "/academia/$courseId/$lessonId"}
+        params={locked ? ({ courseId } as never) : ({ courseId, lessonId: lesson.id } as never)}
+        aria-disabled={locked}
+        title={locked ? "Aprova o teste do módulo anterior para desbloquear" : undefined}
         className={cn(
           "flex min-w-0 items-center gap-3 rounded-2xl px-2 py-2 transition sm:px-2.5",
+          locked && "pointer-events-none opacity-70",
           active
             ? "bg-primary text-primary-foreground"
             : "bg-surface-3 text-foreground hover:bg-surface-3/70",
