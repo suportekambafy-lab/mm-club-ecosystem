@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   AlertCircle,
   ArrowUp,
@@ -21,6 +21,7 @@ import { getMySupportConversation } from "@/lib/support-my.functions";
 import { cn } from "@/lib/utils";
 import { authHeaders } from "@/lib/auth-headers";
 import { SUPPORT_TOPICS, whatsappLink } from "@/lib/support-config";
+import { subscribe, getQuizModalOpen } from "@/lib/quiz-visibility";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
 
 const HUMAN_MARKER = "[[HUMANO]]";
