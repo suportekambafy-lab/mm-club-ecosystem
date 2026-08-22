@@ -89,6 +89,7 @@ import { Route as ApiPublicPaymentsGatewayWebhookRouteImport } from './routes/ap
 import { Route as ApiPublicHooksWeeklySummaryRouteImport } from './routes/api/public/hooks/weekly-summary'
 import { Route as ApiPublicHooksWaitlistBroadcastRouteImport } from './routes/api/public/hooks/waitlist-broadcast'
 import { Route as ApiPublicHooksUpcomingCoursesRouteImport } from './routes/api/public/hooks/upcoming-courses'
+import { Route as ApiPublicHooksSupportBotSweepRouteImport } from './routes/api/public/hooks/support-bot-sweep'
 import { Route as ApiPublicHooksPushNotificationsRouteImport } from './routes/api/public/hooks/push-notifications'
 import { Route as ApiPublicHooksModerationSweepRouteImport } from './routes/api/public/hooks/moderation-sweep'
 import { Route as ApiPublicHooksLivesRecordingCheckRouteImport } from './routes/api/public/hooks/lives-recording-check'
@@ -527,6 +528,12 @@ const ApiPublicHooksUpcomingCoursesRoute =
     path: '/api/public/hooks/upcoming-courses',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksSupportBotSweepRoute =
+  ApiPublicHooksSupportBotSweepRouteImport.update({
+    id: '/api/public/hooks/support-bot-sweep',
+    path: '/api/public/hooks/support-bot-sweep',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksPushNotificationsRoute =
   ApiPublicHooksPushNotificationsRouteImport.update({
     id: '/api/public/hooks/push-notifications',
@@ -769,6 +776,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/moderation-sweep': typeof ApiPublicHooksModerationSweepRoute
   '/api/public/hooks/push-notifications': typeof ApiPublicHooksPushNotificationsRoute
+  '/api/public/hooks/support-bot-sweep': typeof ApiPublicHooksSupportBotSweepRoute
   '/api/public/hooks/upcoming-courses': typeof ApiPublicHooksUpcomingCoursesRoute
   '/api/public/hooks/waitlist-broadcast': typeof ApiPublicHooksWaitlistBroadcastRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
@@ -867,6 +875,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/moderation-sweep': typeof ApiPublicHooksModerationSweepRoute
   '/api/public/hooks/push-notifications': typeof ApiPublicHooksPushNotificationsRoute
+  '/api/public/hooks/support-bot-sweep': typeof ApiPublicHooksSupportBotSweepRoute
   '/api/public/hooks/upcoming-courses': typeof ApiPublicHooksUpcomingCoursesRoute
   '/api/public/hooks/waitlist-broadcast': typeof ApiPublicHooksWaitlistBroadcastRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
@@ -975,6 +984,7 @@ export interface FileRoutesById {
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/moderation-sweep': typeof ApiPublicHooksModerationSweepRoute
   '/api/public/hooks/push-notifications': typeof ApiPublicHooksPushNotificationsRoute
+  '/api/public/hooks/support-bot-sweep': typeof ApiPublicHooksSupportBotSweepRoute
   '/api/public/hooks/upcoming-courses': typeof ApiPublicHooksUpcomingCoursesRoute
   '/api/public/hooks/waitlist-broadcast': typeof ApiPublicHooksWaitlistBroadcastRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
@@ -1083,6 +1093,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/moderation-sweep'
     | '/api/public/hooks/push-notifications'
+    | '/api/public/hooks/support-bot-sweep'
     | '/api/public/hooks/upcoming-courses'
     | '/api/public/hooks/waitlist-broadcast'
     | '/api/public/hooks/weekly-summary'
@@ -1181,6 +1192,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/moderation-sweep'
     | '/api/public/hooks/push-notifications'
+    | '/api/public/hooks/support-bot-sweep'
     | '/api/public/hooks/upcoming-courses'
     | '/api/public/hooks/waitlist-broadcast'
     | '/api/public/hooks/weekly-summary'
@@ -1288,6 +1300,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/moderation-sweep'
     | '/api/public/hooks/push-notifications'
+    | '/api/public/hooks/support-bot-sweep'
     | '/api/public/hooks/upcoming-courses'
     | '/api/public/hooks/waitlist-broadcast'
     | '/api/public/hooks/weekly-summary'
@@ -1335,6 +1348,7 @@ export interface RootRouteChildren {
   ApiPublicHooksLivesRecordingCheckRoute: typeof ApiPublicHooksLivesRecordingCheckRoute
   ApiPublicHooksModerationSweepRoute: typeof ApiPublicHooksModerationSweepRoute
   ApiPublicHooksPushNotificationsRoute: typeof ApiPublicHooksPushNotificationsRoute
+  ApiPublicHooksSupportBotSweepRoute: typeof ApiPublicHooksSupportBotSweepRoute
   ApiPublicHooksUpcomingCoursesRoute: typeof ApiPublicHooksUpcomingCoursesRoute
   ApiPublicHooksWaitlistBroadcastRoute: typeof ApiPublicHooksWaitlistBroadcastRoute
   ApiPublicHooksWeeklySummaryRoute: typeof ApiPublicHooksWeeklySummaryRoute
@@ -1907,6 +1921,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksUpcomingCoursesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/support-bot-sweep': {
+      id: '/api/public/hooks/support-bot-sweep'
+      path: '/api/public/hooks/support-bot-sweep'
+      fullPath: '/api/public/hooks/support-bot-sweep'
+      preLoaderRoute: typeof ApiPublicHooksSupportBotSweepRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/push-notifications': {
       id: '/api/public/hooks/push-notifications'
       path: '/api/public/hooks/push-notifications'
@@ -2343,6 +2364,7 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPublicHooksLivesRecordingCheckRoute,
   ApiPublicHooksModerationSweepRoute: ApiPublicHooksModerationSweepRoute,
   ApiPublicHooksPushNotificationsRoute: ApiPublicHooksPushNotificationsRoute,
+  ApiPublicHooksSupportBotSweepRoute: ApiPublicHooksSupportBotSweepRoute,
   ApiPublicHooksUpcomingCoursesRoute: ApiPublicHooksUpcomingCoursesRoute,
   ApiPublicHooksWaitlistBroadcastRoute: ApiPublicHooksWaitlistBroadcastRoute,
   ApiPublicHooksWeeklySummaryRoute: ApiPublicHooksWeeklySummaryRoute,

@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { SUPPORT_BOT_ID } from "@/lib/support-bot";
 
 /**
- * Returns the set of user ids that have the `admin` role.
+ * Returns the set of user ids shown as verified (admins + o agente MM Suporte).
  * RLS: non-admin users only see their own row (if admin), admins see all.
  */
 export function useAdminIds() {
@@ -13,10 +14,12 @@ export function useAdminIds() {
         .from("user_roles")
         .select("user_id")
         .eq("role", "admin");
-      if (error) return new Set<string>();
-      return new Set<string>((data ?? []).map((r) => r.user_id));
+      const ids = new Set<string>(error ? [] : (data ?? []).map((r) => r.user_id));
+      ids.add(SUPPORT_BOT_ID);
+      return ids;
     },
     staleTime: 5 * 60_000,
   });
-  return q.data ?? new Set<string>();
+  return q.data ?? new Set<string>([SUPPORT_BOT_ID]);
 }
+

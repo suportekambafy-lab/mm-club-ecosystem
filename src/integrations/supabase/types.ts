@@ -3463,6 +3463,7 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          is_bot: boolean
           last_seen_at: string | null
           onboarding_completed_at: string | null
           onboarding_objective: string | null
@@ -3477,6 +3478,7 @@ export type Database = {
           created_at?: string
           display_name: string
           id: string
+          is_bot?: boolean
           last_seen_at?: string | null
           onboarding_completed_at?: string | null
           onboarding_objective?: string | null
@@ -3491,6 +3493,7 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          is_bot?: boolean
           last_seen_at?: string | null
           onboarding_completed_at?: string | null
           onboarding_objective?: string | null

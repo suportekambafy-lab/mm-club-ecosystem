@@ -4,6 +4,7 @@ import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tansta
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { runModeration } from "@/lib/moderation-client";
+import { requestSupportBotReply } from "@/lib/support-bot.functions";
 import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 import { assertUploadAllowed } from "@/lib/security/uploads";
 import { SanctionBanner, useActiveSanction } from "@/components/mm/sanction-banner";
@@ -894,6 +895,12 @@ function Composer({
         runModeration({ kind: "community_post", id: row.id }, () =>
           qc.invalidateQueries({ queryKey: ["community", "posts"] }),
         );
+        // MM Suporte avalia e responde às dúvidas simples (fire-and-forget).
+        requestSupportBotReply({ data: { postId: row.id } })
+          .then((res) => {
+            if (res?.replied) qc.invalidateQueries({ queryKey: ["community", "posts"] });
+          })
+          .catch(() => {});
       }
     },
     onSuccess: () => {
