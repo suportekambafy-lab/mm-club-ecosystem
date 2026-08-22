@@ -18,13 +18,13 @@ export const Route = createFileRoute("/api/public/hooks/support-bot-sweep")({
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const { replyToCommunityPost } = await import("@/lib/support-bot.server");
 
-          const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+          const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
           const { data: rows } = await (supabaseAdmin as any)
             .from("community_posts")
             .select("id")
             .gte("created_at", since)
             .order("created_at", { ascending: false })
-            .limit(30);
+            .limit(100);
 
           let replied = 0;
           for (const row of rows ?? []) {
