@@ -90,6 +90,9 @@ function LessonPlayer() {
     if (next) recordLessonCompleted();
   }, [completed, setCompleted]);
 
+  // Controlo directo do player (usado pelas notas para voltar ao minuto).
+  const seekRef = useRef<((seconds: number) => void) | null>(null);
+
   // Reset scroll on lesson change
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -165,6 +168,7 @@ function LessonPlayer() {
                 source={source}
                 startSeconds={deepLinkSeconds ?? row?.progress_seconds ?? 0}
                 saveProgress={trackedSaveProgress}
+                seekRef={seekRef}
                 nextTitle={next?.lesson.title ?? null}
                 onAdvance={
                   next
@@ -270,13 +274,21 @@ function LessonPlayer() {
               courseId={course.id}
               lessonId={current.lesson.id}
               currentSeconds={row?.progress_seconds ?? 0}
-              onSeek={(seconds) =>
-                navigate({
+              onSeek={(seconds) => {
+                if (seekRef.current) {
+                  seekRef.current(seconds);
+                  document
+                    .querySelector("main")
+                    ?.scrollTo?.({ top: 0, behavior: "smooth" });
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  return;
+                }
+                void navigate({
                   to: "/academia/$courseId/$lessonId",
                   params: { courseId: course.id, lessonId: current.lesson.id },
                   search: { t: seconds },
-                })
-              }
+                });
+              }}
             />
           </div>
         </div>
@@ -469,6 +481,7 @@ function TrackedVideoPlayer({
   saveProgress,
   nextTitle,
   onAdvance,
+  seekRef,
 }: {
   lessonId: string;
   title: string;
@@ -477,6 +490,7 @@ function TrackedVideoPlayer({
   saveProgress: SaveLessonProgress;
   nextTitle?: string | null;
   onAdvance?: () => void;
+  seekRef?: React.MutableRefObject<((seconds: number) => void) | null>;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -522,6 +536,33 @@ function TrackedVideoPlayer({
     // Sem controlo remoto (ex.: Panda sem player.js) — recarrega o embed do início.
     setEmbedKey((k) => k + 1);
   }, [source.kind]);
+
+  // Permite que as notas saltem para o minuto guardado sem recarregar a aula.
+  useEffect(() => {
+    if (!seekRef) return;
+    seekRef.current = (seconds: number) => {
+      const target = Math.max(0, Math.floor(seconds));
+      setEnded(false);
+      lastSavedRef.current = target;
+      if (source.kind === "file") {
+        const video = videoRef.current;
+        if (video) {
+          video.currentTime = target;
+          void video.play().catch(() => {});
+        }
+        return;
+      }
+      const player = playerRef.current;
+      if (player) {
+        player.setCurrentTime(target);
+        player.play?.();
+      }
+    };
+    return () => {
+      seekRef.current = null;
+    };
+  }, [seekRef, source.kind]);
+
 
 
   useEffect(() => {
