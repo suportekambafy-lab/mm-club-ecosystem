@@ -261,7 +261,6 @@ export function ModuleQuiz({
         }}
       >
         <DialogContent
-          showCloseButton
           className="max-h-[88vh] overflow-y-auto border-border bg-surface-1 p-0 sm:max-w-lg"
         >
           <div className="border-b border-border bg-surface-2/60 px-5 py-4">
