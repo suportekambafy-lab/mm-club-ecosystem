@@ -1714,6 +1714,9 @@ function CommentItem({
     onSuccess: () => {
       setEditing(false);
       qc.invalidateQueries({ queryKey: ["community", "comments", postId] });
+      runModeration({ kind: "community_comment", id: comment.id }, () =>
+        qc.invalidateQueries({ queryKey: ["community", "comments", postId] }),
+      );
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
