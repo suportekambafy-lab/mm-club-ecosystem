@@ -63,7 +63,14 @@ export function SupportWidget({ userName }: { userName?: string }) {
       })),
     [history.data],
   );
-  const lastSaved = (history.data ?? []).at(-1)?.content ?? null;
+  const lastSavedRaw = (history.data ?? []).at(-1)?.content ?? null;
+  const lastSaved = lastSavedRaw
+    ? lastSavedRaw
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+        .replace(/[*_`#>]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+    : null;
 
   function openChat(prompt?: string) {
     setPending(prompt ?? null);
