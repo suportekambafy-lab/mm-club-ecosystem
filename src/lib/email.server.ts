@@ -20,7 +20,8 @@ export type EmailKind =
   | "course_released"
   | "community_post"
   | "short_published"
-  | "short_reply";
+  | "short_reply"
+  | "product_update";
 
 type SendOpts = {
   to: string;
