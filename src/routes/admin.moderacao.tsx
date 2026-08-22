@@ -479,11 +479,11 @@ function MemberSanctionsPanel() {
                     : "border-border hover:bg-muted/60",
                 )}
               >
-                {m.avatar_url ? (
-                  <img src={m.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" loading="lazy" />
-                ) : (
-                  <div className="h-8 w-8 rounded-full bg-muted" />
-                )}
+                <MemberAvatar
+                  name={m.display_name ?? "Membro"}
+                  avatarUrl={m.avatar_url}
+                  size={32}
+                />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium">{m.display_name ?? "Membro"}</span>
                   <span className="block text-xs text-muted-foreground">{sanctionSummary(m)}</span>
