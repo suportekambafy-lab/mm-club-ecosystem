@@ -447,19 +447,30 @@ export const generateModuleQuiz = createServerFn({ method: "POST" })
         .eq("module_id" as never, data.moduleId as never);
     }
 
-    const rows = questions.map((q, i) => ({
-      course_id: data.courseId,
-      module_id: data.moduleId,
-      prompt: q.prompt,
-      options: q.options,
-      correct_index: q.correct_index,
-      explanation: q.explanation,
-      lesson_id: q.lesson_id,
-      lesson_title: q.lesson_title,
-      start_seconds: q.start_seconds,
-      position: i,
-      active: true,
-    }));
+    const rows = questions.map((q, i) => {
+      // Embaralha as opções para a resposta certa não cair sempre na letra A.
+      const pairs = q.options.map((text, idx) => ({ text, correct: idx === q.correct_index }));
+      for (let j = pairs.length - 1; j > 0; j -= 1) {
+        const k = Math.floor(Math.random() * (j + 1));
+        [pairs[j], pairs[k]] = [pairs[k]!, pairs[j]!];
+      }
+      return {
+        course_id: data.courseId,
+        module_id: data.moduleId,
+        prompt: q.prompt,
+        options: pairs.map((p) => p.text),
+        correct_index: Math.max(
+          0,
+          pairs.findIndex((p) => p.correct),
+        ),
+        explanation: q.explanation,
+        lesson_id: q.lesson_id,
+        lesson_title: q.lesson_title,
+        start_seconds: q.start_seconds,
+        position: i,
+        active: true,
+      };
+    });
     const { error: insertError } = await supabaseAdmin
       .from("quiz_questions" as never)
       .insert(rows as never);
