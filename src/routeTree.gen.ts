@@ -27,6 +27,7 @@ import { Route as EgressCompositeRouteImport } from './routes/egress.composite'
 import { Route as ConvidadoLiveIdRouteImport } from './routes/convidado.$liveId'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiTranscribeRouteImport } from './routes/api.transcribe'
+import { Route as ApiSupportRouteImport } from './routes/api.support'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AdminTranscricoesRouteImport } from './routes/admin.transcricoes'
 import { Route as AdminSegurancaRouteImport } from './routes/admin.seguranca'
@@ -200,6 +201,11 @@ const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
 const ApiTranscribeRoute = ApiTranscribeRouteImport.update({
   id: '/api/transcribe',
   path: '/api/transcribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSupportRoute = ApiSupportRouteImport.update({
+  id: '/api/support',
+  path: '/api/support',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -700,6 +706,7 @@ export interface FileRoutesByFullPath {
   '/admin/seguranca': typeof AdminSegurancaRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/support': typeof ApiSupportRoute
   '/api/transcribe': typeof ApiTranscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/convidado/$liveId': typeof ConvidadoLiveIdRoute
@@ -798,6 +805,7 @@ export interface FileRoutesByTo {
   '/admin/seguranca': typeof AdminSegurancaRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/support': typeof ApiSupportRoute
   '/api/transcribe': typeof ApiTranscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/convidado/$liveId': typeof ConvidadoLiveIdRoute
@@ -902,6 +910,7 @@ export interface FileRoutesById {
   '/admin/seguranca': typeof AdminSegurancaRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/support': typeof ApiSupportRoute
   '/api/transcribe': typeof ApiTranscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/convidado/$liveId': typeof ConvidadoLiveIdRoute
@@ -1008,6 +1017,7 @@ export interface FileRouteTypes {
     | '/admin/seguranca'
     | '/admin/transcricoes'
     | '/api/chat'
+    | '/api/support'
     | '/api/transcribe'
     | '/checkout/return'
     | '/convidado/$liveId'
@@ -1106,6 +1116,7 @@ export interface FileRouteTypes {
     | '/admin/seguranca'
     | '/admin/transcricoes'
     | '/api/chat'
+    | '/api/support'
     | '/api/transcribe'
     | '/checkout/return'
     | '/convidado/$liveId'
@@ -1209,6 +1220,7 @@ export interface FileRouteTypes {
     | '/admin/seguranca'
     | '/admin/transcricoes'
     | '/api/chat'
+    | '/api/support'
     | '/api/transcribe'
     | '/checkout/return'
     | '/convidado/$liveId'
@@ -1290,6 +1302,7 @@ export interface RootRouteChildren {
   Trial14Route: typeof Trial14Route
   VipRoute: typeof VipRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiSupportRoute: typeof ApiSupportRoute
   ApiTranscribeRoute: typeof ApiTranscribeRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ConvidadoLiveIdRoute: typeof ConvidadoLiveIdRoute
@@ -1446,6 +1459,13 @@ declare module '@tanstack/react-router' {
       path: '/api/transcribe'
       fullPath: '/api/transcribe'
       preLoaderRoute: typeof ApiTranscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/support': {
+      id: '/api/support'
+      path: '/api/support'
+      fullPath: '/api/support'
+      preLoaderRoute: typeof ApiSupportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -2279,6 +2299,7 @@ const rootRouteChildren: RootRouteChildren = {
   Trial14Route: Trial14Route,
   VipRoute: VipRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiSupportRoute: ApiSupportRoute,
   ApiTranscribeRoute: ApiTranscribeRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ConvidadoLiveIdRoute: ConvidadoLiveIdRoute,
