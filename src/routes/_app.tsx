@@ -1,4 +1,5 @@
 import { createFileRoute, Link, Outlet, redirect, useRouter, useRouterState } from "@tanstack/react-router";
+import { SupportWidget } from "@/components/mm/support-widget";
 import { useEffect, useState } from "react";
 import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
 
@@ -675,6 +676,9 @@ function AppLayout() {
           {authUser ? <Outlet /> : <div className="min-h-[60vh]" />}
         </main>
       </div>
+
+      {/* MM Suporte — disponível em toda a área de membros */}
+      <SupportWidget userName={displayName} />
 
       {/* Mobile Bottom Tab Bar */}
       <MobileTabBar
