@@ -10,7 +10,9 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { CalendarDays, MessageSquare, Newspaper } from "lucide-react";
+import { CalendarDays, Headphones, MessageSquare, Newspaper } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { isSupportBot } from "@/lib/support-bot";
 
 type Ctx = { open: (userId: string) => void };
 
@@ -149,7 +151,13 @@ function MemberProfileBody({ userId }: { userId: string }) {
   }
 
   const name = p.display_name ?? "Membro";
-  const verified = adminIds.has(p.id);
+  const isBot = isSupportBot(p.id);
+  const verified = isBot || adminIds.has(p.id);
+  const bio = p.bio?.trim()
+    ? p.bio
+    : isBot
+      ? "Sou o agente oficial de suporte do MM Club. Respondo a dúvidas sobre a plataforma, cursos, aulas, pagamentos e subscrições — 24 horas por dia, aqui na comunidade ou no chat de suporte."
+      : "Este membro ainda não escreveu uma biografia.";
 
   return (
     <div>
@@ -168,7 +176,7 @@ function MemberProfileBody({ userId }: { userId: string }) {
         <RankBadge rank={me?.rank} userId={userId} name={p?.display_name ?? null} className="mt-2" />
         {verified && (
           <span className="mt-1 rounded-full border border-primary/40 bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-            Equipa MM
+            {isBot ? "Suporte oficial" : "Equipa MM"}
           </span>
         )}
         <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -182,9 +190,20 @@ function MemberProfileBody({ userId }: { userId: string }) {
           Biografia
         </p>
         <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
-          {p.bio?.trim() ? p.bio : "Este membro ainda não escreveu uma biografia."}
+          {bio}
         </p>
       </div>
+
+      {isBot && (
+        <Button
+          type="button"
+          className="mt-3 w-full gap-2"
+          onClick={() => window.dispatchEvent(new Event("mm-support:open"))}
+        >
+          <Headphones className="h-4 w-4" />
+          Contactar suporte
+        </Button>
+      )}
 
       <div className="mt-3 grid grid-cols-2 gap-3">
         <Stat icon={<Newspaper className="h-4 w-4" />} label="Publicações" value={q.data?.postCount ?? 0} />
