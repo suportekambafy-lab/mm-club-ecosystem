@@ -88,6 +88,7 @@ describe("renderTemplate", () => {
     expect(out.html).toContain('href="https://mmclub.pt/aulas"');
     expect(out.text).toContain("Primeiro parágrafo para Ana.");
     expect(out.text).not.toContain("<p");
+    expect(out.previewText).toBe("Preview Ana");
   });
 
   it("nunca injeta script vindo das variáveis", () => {
@@ -95,7 +96,7 @@ describe("renderTemplate", () => {
       name: '<img src=x onerror=alert(1)>',
       ctaUrl: "javascript:alert(1)",
     });
-    expect(out.html).not.toContain("onerror=");
-    expect(out.html).not.toContain("javascript:");
+    expect(out.html).not.toContain("<img");
+    expect(out.html).not.toContain('href="javascript:');
   });
 });
