@@ -824,7 +824,7 @@ function TrackedVideoPlayer({
       player?.off?.("pause", onPause);
       player?.off?.("ended", onEnded);
     };
-  }, [persist, source.embedUrl, source.kind, lessonId]);
+  }, [persist, source.embedUrl, source.kind, lessonId, embedKey]);
 
   const endOverlay = (
     <LessonEndOverlay
