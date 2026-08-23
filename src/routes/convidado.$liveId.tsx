@@ -187,11 +187,15 @@ function GuestEntry() {
   }
 
   if (info.isError) {
+    // Nunca mostramos erros técnicos (ex.: validação) ao convidado.
+    const raw = info.error instanceof Error ? info.error.message : "";
+    const friendly =
+      raw && !raw.trim().startsWith("[") && !raw.trim().startsWith("{") && raw.length < 160
+        ? raw
+        : "Link de convidado inválido ou expirado. Pede um novo link ao anfitrião.";
     return (
       <Shell>
-        <p className="text-sm text-white/70">
-          {info.error instanceof Error ? info.error.message : "Link de convidado inválido."}
-        </p>
+        <p className="text-sm text-white/70">{friendly}</p>
       </Shell>
     );
   }
