@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { NotebookPen, Trash2, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAccessToken } from "@/hooks/use-access-token";
 import { cn } from "@/lib/utils";
 
 type Note = {
@@ -42,13 +43,10 @@ export function LessonNotes({
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
+  const { token, ready } = useAccessToken();
+
   const load = useCallback(async () => {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) {
-      setLoaded(true);
-      return;
-    }
-    const { data } = await (supabase as unknown as {
+    const { data, error } = await (supabase as unknown as {
       from: (t: string) => any;
     })
       .from("lesson_notes")
@@ -56,6 +54,10 @@ export function LessonNotes({
       .eq("course_id", courseId)
       .eq("lesson_id", lessonId)
       .order("seconds", { ascending: true });
+    if (error) {
+      console.warn("Falha ao carregar notas", error);
+      return;
+    }
     setNotes((data as Note[]) ?? []);
     setLoaded(true);
   }, [courseId, lessonId]);
@@ -63,8 +65,16 @@ export function LessonNotes({
   useEffect(() => {
     setNotes([]);
     setLoaded(false);
+    // Só ler depois de a sessão estar hidratada: sem isto o pedido sai sem
+    // token, o RLS devolve 0 linhas e as notas parecem ter desaparecido.
+    if (!ready) return;
+    if (!token) {
+      setLoaded(true);
+      return;
+    }
     void load();
-  }, [load]);
+  }, [load, ready, token]);
+
 
   const add = async () => {
     const text = body.trim();

@@ -556,18 +556,20 @@ function trackedEmbedUrl(url: string, lessonId: string, startSeconds = 0) {
 }
 
 
-/** Retoma o Panda no segundo guardado (parâmetro `t` suportado pelo player). */
+/** Retoma o Panda no segundo guardado e arranca automaticamente (como no Bunny). */
 function pandaStartUrl(source: ReturnType<typeof parseVideoUrl>, startSeconds: number) {
   const url = source.embedUrl!;
-  if (source.kind !== "panda" || startSeconds <= 3) return url;
+  if (source.kind !== "panda") return url;
   try {
     const u = new URL(url);
-    u.searchParams.set("t", String(Math.floor(startSeconds)));
+    if (startSeconds > 3) u.searchParams.set("t", String(Math.floor(startSeconds)));
+    u.searchParams.set("autoplay", "true");
     return u.toString();
   } catch {
     return url;
   }
 }
+
 
 function TrackedVideoPlayer({
   lessonId,
