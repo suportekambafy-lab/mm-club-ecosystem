@@ -63,6 +63,7 @@ import { Route as AdminLivesIndexRouteImport } from './routes/admin.lives.index'
 import { Route as AdminFinanceiroIndexRouteImport } from './routes/admin.financeiro.index'
 import { Route as AppLivesIndexRouteImport } from './routes/_app.lives.index'
 import { Route as AppJadeIndexRouteImport } from './routes/_app.jade.index'
+import { Route as AppAjudaIndexRouteImport } from './routes/_app.ajuda.index'
 import { Route as AppAcademiaIndexRouteImport } from './routes/_app.academia.index'
 import { Route as ApiRealtimeSessionRouteImport } from './routes/api.realtime.session'
 import { Route as ApiKnowledgeSearchRouteImport } from './routes/api.knowledge.search'
@@ -81,6 +82,7 @@ import { Route as AppFerramentasThumbnailsRouteImport } from './routes/_app.ferr
 import { Route as AppFerramentasStudioRouteImport } from './routes/_app.ferramentas.studio'
 import { Route as AppFerramentasLinksRouteImport } from './routes/_app.ferramentas.links'
 import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
+import { Route as AppAjudaSlugRouteImport } from './routes/_app.ajuda.$slug'
 import { Route as AppAcademiaPesquisaRouteImport } from './routes/_app.academia.pesquisa'
 import { Route as AppAcademiaCourseIdRouteImport } from './routes/_app.academia.$courseId'
 import { Route as AppFerramentasStudioIndexRouteImport } from './routes/_app.ferramentas.studio.index'
@@ -390,6 +392,11 @@ const AppJadeIndexRoute = AppJadeIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppJadeRoute,
 } as any)
+const AppAjudaIndexRoute = AppAjudaIndexRouteImport.update({
+  id: '/ajuda/',
+  path: '/ajuda/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAcademiaIndexRoute = AppAcademiaIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -485,6 +492,11 @@ const AppEspecialistasExpertIdRoute =
     path: '/especialistas/$expertId',
     getParentRoute: () => AppRoute,
   } as any)
+const AppAjudaSlugRoute = AppAjudaSlugRouteImport.update({
+  id: '/ajuda/$slug',
+  path: '/ajuda/$slug',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAcademiaPesquisaRoute = AppAcademiaPesquisaRouteImport.update({
   id: '/pesquisa',
   path: '/pesquisa',
@@ -765,6 +777,7 @@ export interface FileRoutesByFullPath {
   '/checkout/': typeof CheckoutIndexRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
   '/academia/pesquisa': typeof AppAcademiaPesquisaRoute
+  '/ajuda/$slug': typeof AppAjudaSlugRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/ferramentas/links': typeof AppFerramentasLinksRoute
   '/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
@@ -783,6 +796,7 @@ export interface FileRoutesByFullPath {
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia/': typeof AppAcademiaIndexRoute
+  '/ajuda/': typeof AppAjudaIndexRoute
   '/jade/': typeof AppJadeIndexRoute
   '/lives/': typeof AppLivesIndexRoute
   '/admin/financeiro/': typeof AdminFinanceiroIndexRoute
@@ -870,6 +884,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/checkout': typeof CheckoutIndexRoute
   '/academia/pesquisa': typeof AppAcademiaPesquisaRoute
+  '/ajuda/$slug': typeof AppAjudaSlugRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/ferramentas/links': typeof AppFerramentasLinksRoute
   '/ferramentas/thumbnails': typeof AppFerramentasThumbnailsRoute
@@ -887,6 +902,7 @@ export interface FileRoutesByTo {
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia': typeof AppAcademiaIndexRoute
+  '/ajuda': typeof AppAjudaIndexRoute
   '/jade': typeof AppJadeIndexRoute
   '/lives': typeof AppLivesIndexRoute
   '/admin/financeiro': typeof AdminFinanceiroIndexRoute
@@ -983,6 +999,7 @@ export interface FileRoutesById {
   '/checkout/': typeof CheckoutIndexRoute
   '/_app/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
   '/_app/academia/pesquisa': typeof AppAcademiaPesquisaRoute
+  '/_app/ajuda/$slug': typeof AppAjudaSlugRoute
   '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/_app/ferramentas/links': typeof AppFerramentasLinksRoute
   '/_app/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
@@ -1001,6 +1018,7 @@ export interface FileRoutesById {
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/_app/academia/': typeof AppAcademiaIndexRoute
+  '/_app/ajuda/': typeof AppAjudaIndexRoute
   '/_app/jade/': typeof AppJadeIndexRoute
   '/_app/lives/': typeof AppLivesIndexRoute
   '/admin/financeiro/': typeof AdminFinanceiroIndexRoute
@@ -1097,6 +1115,7 @@ export interface FileRouteTypes {
     | '/checkout/'
     | '/academia/$courseId'
     | '/academia/pesquisa'
+    | '/ajuda/$slug'
     | '/especialistas/$expertId'
     | '/ferramentas/links'
     | '/ferramentas/studio'
@@ -1115,6 +1134,7 @@ export interface FileRouteTypes {
     | '/api/knowledge/search'
     | '/api/realtime/session'
     | '/academia/'
+    | '/ajuda/'
     | '/jade/'
     | '/lives/'
     | '/admin/financeiro/'
@@ -1202,6 +1222,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/checkout'
     | '/academia/pesquisa'
+    | '/ajuda/$slug'
     | '/especialistas/$expertId'
     | '/ferramentas/links'
     | '/ferramentas/thumbnails'
@@ -1219,6 +1240,7 @@ export interface FileRouteTypes {
     | '/api/knowledge/search'
     | '/api/realtime/session'
     | '/academia'
+    | '/ajuda'
     | '/jade'
     | '/lives'
     | '/admin/financeiro'
@@ -1314,6 +1336,7 @@ export interface FileRouteTypes {
     | '/checkout/'
     | '/_app/academia/$courseId'
     | '/_app/academia/pesquisa'
+    | '/_app/ajuda/$slug'
     | '/_app/especialistas/$expertId'
     | '/_app/ferramentas/links'
     | '/_app/ferramentas/studio'
@@ -1332,6 +1355,7 @@ export interface FileRouteTypes {
     | '/api/knowledge/search'
     | '/api/realtime/session'
     | '/_app/academia/'
+    | '/_app/ajuda/'
     | '/_app/jade/'
     | '/_app/lives/'
     | '/admin/financeiro/'
@@ -1802,6 +1826,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppJadeIndexRouteImport
       parentRoute: typeof AppJadeRoute
     }
+    '/_app/ajuda/': {
+      id: '/_app/ajuda/'
+      path: '/ajuda'
+      fullPath: '/ajuda/'
+      preLoaderRoute: typeof AppAjudaIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/academia/': {
       id: '/_app/academia/'
       path: '/'
@@ -1926,6 +1957,13 @@ declare module '@tanstack/react-router' {
       path: '/especialistas/$expertId'
       fullPath: '/especialistas/$expertId'
       preLoaderRoute: typeof AppEspecialistasExpertIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/ajuda/$slug': {
+      id: '/_app/ajuda/$slug'
+      path: '/ajuda/$slug'
+      fullPath: '/ajuda/$slug'
+      preLoaderRoute: typeof AppAjudaSlugRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/academia/pesquisa': {
@@ -2319,7 +2357,9 @@ interface AppRouteChildren {
   AppPerfilRoute: typeof AppPerfilRoute
   AppShortsRoute: typeof AppShortsRoute
   AppSubscricaoRoute: typeof AppSubscricaoRoute
+  AppAjudaSlugRoute: typeof AppAjudaSlugRoute
   AppEspecialistasExpertIdRoute: typeof AppEspecialistasExpertIdRoute
+  AppAjudaIndexRoute: typeof AppAjudaIndexRoute
   AppLivesLiveIdSalaRoute: typeof AppLivesLiveIdSalaRoute
 }
 
@@ -2338,7 +2378,9 @@ const AppRouteChildren: AppRouteChildren = {
   AppPerfilRoute: AppPerfilRoute,
   AppShortsRoute: AppShortsRoute,
   AppSubscricaoRoute: AppSubscricaoRoute,
+  AppAjudaSlugRoute: AppAjudaSlugRoute,
   AppEspecialistasExpertIdRoute: AppEspecialistasExpertIdRoute,
+  AppAjudaIndexRoute: AppAjudaIndexRoute,
   AppLivesLiveIdSalaRoute: AppLivesLiveIdSalaRoute,
 }
 

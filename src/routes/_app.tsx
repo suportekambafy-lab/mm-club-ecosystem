@@ -27,6 +27,7 @@ import {
   ShieldCheck,
   Clapperboard,
   Award,
+  LifeBuoy,
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import type { User } from "@supabase/supabase-js";
@@ -121,7 +122,7 @@ export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
 
-type NavTo = "/dashboard" | "/academia" | "/certificados" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/shorts" | "/eventos" | "/perfil" | "/codigo";
+type NavTo = "/dashboard" | "/academia" | "/certificados" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/shorts" | "/eventos" | "/perfil" | "/codigo" | "/ajuda";
 type NavItem = {
   to: NavTo;
   label: string;
@@ -142,6 +143,7 @@ const navItems: NavItem[] = [
   { to: "/eventos", label: "Eventos", icon: CalendarDays, soon: true },
   { to: "/certificados", label: "Certificados", icon: Award },
   { to: "/codigo", label: "Código do Clube", icon: ShieldCheck },
+  { to: "/ajuda", label: "Centro de Ajuda", icon: LifeBuoy },
 ];
 
 const flatNav = navItems;
