@@ -511,6 +511,17 @@ export function GuestRoom({
         </div>
       )}
 
+      {reconnecting && (
+        <div className="absolute inset-x-0 top-3 z-30 flex justify-center px-3">
+          <div className="inline-flex items-center gap-2 rounded-full bg-black/80 px-3.5 py-1.5 text-[11px] text-amber-200 ring-1 ring-amber-400/30 backdrop-blur-md">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            A restabelecer ligação…
+          </div>
+        </div>
+      )}
+
+
+
 
 
       </div>
