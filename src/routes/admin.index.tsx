@@ -107,6 +107,17 @@ function AdminDashboard() {
   );
   const prevLabel = `${MONTHS[prevDate.getUTCMonth()]} ${prevDate.getUTCFullYear()}`;
 
+  const months = data?.revenueByMonth ?? [];
+  const yearOf = (label: string) => label.slice(0, 4);
+  const thisYear = String(now.getUTCFullYear());
+  const lastYear = String(now.getUTCFullYear() - 1);
+  const yearCents = months
+    .filter((m) => yearOf(m.label) === thisYear)
+    .reduce((s, m) => s + m.cents, 0);
+  const prevYearCents = months
+    .filter((m) => yearOf(m.label) === lastYear)
+    .reduce((s, m) => s + m.cents, 0);
+
   const chartData =
     range === "mes"
       ? (data?.dailySeries ?? []).map((d) => ({
@@ -114,17 +125,19 @@ function AdminDashboard() {
           atual: d.cents / 100,
           anterior: d.prevCents / 100,
         }))
-      : (data?.revenueByMonth ?? []).map((m) => ({
+      : months.map((m) => ({
           label: m.label,
           atual: m.cents / 100,
           anterior: 0,
         }));
 
-  const delta =
-    data && data.revenue.prevMonthCents > 0
-      ? (data.revenue.monthCents - data.revenue.prevMonthCents) /
-        data.revenue.prevMonthCents
-      : null;
+  const headlineCents =
+    range === "mes" ? (data?.revenue.monthCents ?? 0) : yearCents;
+  const baseCents =
+    range === "mes" ? (data?.revenue.prevMonthCents ?? 0) : prevYearCents;
+  const delta = data && baseCents > 0 ? (headlineCents - baseCents) / baseCents : null;
+  const seriesLabel = range === "mes" ? monthLabel : thisYear;
+
 
   return (
     <div className="space-y-3 pt-1">
