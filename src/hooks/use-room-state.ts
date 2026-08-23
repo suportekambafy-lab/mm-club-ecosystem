@@ -588,13 +588,29 @@ export function useRoomState({
   const toggleMic = useCallback(async () => {
     const lp: LocalParticipant | undefined = roomRef.current?.localParticipant;
     if (!lp) return;
-    try {
-      await lp.setMicrophoneEnabled(!lp.isMicrophoneEnabled);
-    } catch (err) {
-      console.error("[useRoomState] toggleMic failed", err);
-      toast.error("Não foi possível ligar o microfone. Verifica as permissões do browser.");
+    const next = !lp.isMicrophoneEnabled;
+    // Desligar é sempre seguro; ligar pode falhar se o dispositivo mudou ou está
+    // ocupado — tentamos com o mic escolhido e depois com o predefinido.
+    const attempts = next
+      ? [activeAudioIn ? { deviceId: activeAudioIn } : undefined, undefined]
+      : [undefined];
+    let lastErr: unknown = null;
+    for (const opts of attempts) {
+      try {
+        await lp.setMicrophoneEnabled(next, opts);
+        if (lp.isMicrophoneEnabled === next) return;
+      } catch (err) {
+        lastErr = err;
+      }
     }
-  }, []);
+    console.error("[useRoomState] toggleMic failed", lastErr);
+    const msg = lastErr instanceof Error ? `${lastErr.name}: ${lastErr.message}` : "";
+    toast.error(
+      /NotReadableError|TrackStartError/i.test(msg)
+        ? "O microfone está a ser usado por outra aplicação. Fecha-a e tenta de novo."
+        : "Não foi possível ligar o microfone. Verifica as permissões do browser.",
+    );
+  }, [activeAudioIn]);
   const toggleCam = useCallback(async () => {
     const room = roomRef.current;
     const lp = room?.localParticipant;
@@ -603,9 +619,16 @@ export function useRoomState({
       await lp.setCameraEnabled(false).catch((e) => console.warn("[useRoomState] camera off failed", e));
       return;
     }
-    const err = await enableCameraResilient(room, activeVideoIn ?? undefined);
+    let err = await enableCameraResilient(room, activeVideoIn ?? undefined);
+    if (err) {
+      // A câmara costuma demorar a ser libertada pelo sistema depois de a
+      // desligarmos — uma segunda tentativa evita o refresh da página.
+      await new Promise((r) => setTimeout(r, 700));
+      err = await enableCameraResilient(room, undefined);
+    }
     if (err) toast.error(err);
   }, [activeVideoIn]);
+
   const startScreenShare = useCallback(async () => {
     const lp = roomRef.current?.localParticipant;
     if (!lp) return;
