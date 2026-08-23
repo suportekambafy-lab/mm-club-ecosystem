@@ -50,12 +50,15 @@ export function StreakCard({ className }: { className?: string }) {
   const goalPct = Math.min(100, Math.round((weekMinutes / WEEKLY_GOAL_MINUTES) * 100));
 
   return (
+    <>
+    <StreakCelebration open={celebrate} streak={current} onClose={() => setCelebrate(false)} />
     <section
       className={cn(
         "rounded-3xl border border-border bg-surface-1 p-4 sm:p-5",
         className,
       )}
     >
+
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <span
