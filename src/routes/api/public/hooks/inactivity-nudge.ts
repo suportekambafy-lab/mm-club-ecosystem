@@ -87,28 +87,35 @@ export const Route = createFileRoute("/api/public/hooks/inactivity-nudge")({
           const p = prog as { course_id: string; lesson_id: string } | null;
           const titles = p ? lessonTitles(p.course_id, p.lesson_id) : null;
 
-          // 21+ dias sem entrar → mensagem forte ("lembras-te do que te fez entrar?").
-          const strong = days >= 21;
-          const args = {
+          // Patamar atingido (o mais alto que se aplica): 5 → 14 → 30 → 60 → 90.
+          const stage = STAGES.find((s) => days >= s);
+          if (!stage) {
+            skipped++;
+            continue;
+          }
+
+          const tpl = emailTemplates.absenceLadder({
             name: user.name,
             days,
+            stage,
             courseTitle: titles?.courseTitle ?? null,
             lessonTitle: titles?.lessonTitle ?? null,
             courseId: titles ? p!.course_id : null,
             lessonId: titles ? p!.lesson_id : null,
-          };
-          const tpl = strong
-            ? emailTemplates.wakeUpCall(args)
-            : emailTemplates.inactivityNudge(args);
+          });
 
+          // Idempotência: um email por patamar por ciclo de ausência
+          // (o ciclo muda quando o membro volta e volta a faltar).
+          const cycle = row.last_seen_at.slice(0, 10);
           const result = await sendEmail({
             to: user.email,
             subject: tpl.subject,
             html: tpl.html,
             userId,
-            kind: strong ? "wakeup_call" : "inactivity_nudge",
-            ref: weekRef,
+            kind: "absence_ladder",
+            ref: `d${stage}:${cycle}`,
           });
+
 
 
           if (result.sent) sent++;
