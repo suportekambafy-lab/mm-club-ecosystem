@@ -21,6 +21,7 @@ import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, Hand, Volume2, Message
 import { toast } from "sonner";
 import { GuestChat } from "@/components/live/guest-chat";
 import { HQ_ROOM_OPTIONS } from "@/lib/livekit-quality";
+import { cameraErrorMessage } from "@/lib/live-media";
 import { cn } from "@/lib/utils";
 import { guestSync, guestLeave } from "@/lib/live-guest.functions";
 import type { MediaPrefs } from "@/lib/media-prefs";
