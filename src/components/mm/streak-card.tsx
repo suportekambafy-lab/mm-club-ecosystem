@@ -127,5 +127,6 @@ export function StreakCard({ className }: { className?: string }) {
         </div>
       </div>
     </section>
+    </>
   );
 }
