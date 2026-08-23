@@ -61,9 +61,12 @@ export function GuestRoom({
   const [micOn, setMicOn] = useState(prefs.micEnabled && initialOnStage);
   const [camOn, setCamOn] = useState(prefs.camEnabled && initialOnStage);
   const [screenOn, setScreenOn] = useState(false);
-  const [, forceTick] = useState(0);
+  const [tick, forceTick] = useState(0);
+  const [reconnectNonce, setReconnectNonce] = useState(0);
+  const [reconnecting, setReconnecting] = useState(false);
   const [audioBlocked, setAudioBlocked] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+
 
   const unlockAudio = useCallback(async () => {
     const r = roomRef.current;
