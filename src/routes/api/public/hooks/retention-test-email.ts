@@ -44,7 +44,7 @@ export const Route = createFileRoute("/api/public/hooks/retention-test-email")({
             ref: `test-${stamp}`,
           });
         }
-        if (mode === "wakeup" || mode === "both") {
+        if (mode === "wakeup") {
           const tpl = emailTemplates.wakeUpCall({ ...ctx, days: 23 });
           out.wakeup = await sendEmail({
             to,
@@ -53,6 +53,25 @@ export const Route = createFileRoute("/api/public/hooks/retention-test-email")({
             kind: "wakeup_call",
             ref: `test-${stamp}`,
           });
+        }
+        // Escada de ausência: 5, 14, 30, 60, 90 dias.
+        if (mode === "ladder" || mode === "both") {
+          const stages = [5, 14, 30, 60, 90] as const;
+          const only = Number(url.searchParams.get("stage") ?? 0);
+          const results: Record<string, unknown> = {};
+          for (const stage of stages) {
+            if (only && only !== stage) continue;
+            const tpl = emailTemplates.absenceLadder({ ...ctx, stage, days: stage + 1 });
+            results[`d${stage}`] = await sendEmail({
+              to,
+              subject: tpl.subject,
+              html: tpl.html,
+              kind: "absence_ladder",
+              ref: `test-${stamp}-${stage}`,
+            });
+            await new Promise((r) => setTimeout(r, 900));
+          }
+          out.ladder = results;
         }
 
         return Response.json({ ok: true, to, ...out });
