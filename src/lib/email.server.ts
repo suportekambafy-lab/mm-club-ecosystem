@@ -16,6 +16,8 @@ export type EmailKind =
   | "live_started"
   | "replay_ready"
   | "inactivity_nudge"
+  | "streak_guard"
+  | "wakeup_call"
   | "upcoming_courses"
   | "course_released"
   | "community_post"
@@ -417,6 +419,101 @@ export const emailTemplates = {
       ),
     };
   },
+
+  /**
+   * Guardião da ofensiva — enviado no fim do dia a quem tem sequência viva
+   * e ainda não estudou hoje. Curto, positivo, uma única decisão.
+   */
+  streakGuard(opts: {
+    name: string;
+    streak: number;
+    longest: number;
+    courseTitle?: string | null;
+    lessonTitle?: string | null;
+    courseId?: string | null;
+    lessonId?: string | null;
+  }) {
+    const safe = escapeHtml(opts.name.split(" ")[0] ?? opts.name);
+    const hasLesson = Boolean(opts.courseId && opts.lessonId && opts.lessonTitle);
+    const lesson = escapeHtml(opts.lessonTitle ?? "");
+    const course = escapeHtml(opts.courseTitle ?? "");
+    const href = hasLesson
+      ? `${APP_URL}/academia/${opts.courseId}/${opts.lessonId}`
+      : `${APP_URL}/academia`;
+    const record = opts.streak >= opts.longest && opts.streak > 1;
+    return {
+      subject: `🔥 ${opts.streak} dias seguidos — não perças isso hoje, ${safe}`,
+      html: layout(
+        `A tua ofensiva de ${opts.streak} dias termina à meia-noite. 10 minutos resolvem.`,
+        `<div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">MM Club · Ofensiva</div>
+         <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 22px;background:#0a0a0a;border:1px solid #2a2116;border-radius:14px;">
+           <tr>
+             <td style="padding:20px 26px;text-align:center;">
+               <div style="font-size:38px;line-height:1;">🔥</div>
+               <div style="font-size:40px;color:#c9a961;font-weight:700;line-height:1.1;margin-top:6px;">${opts.streak}</div>
+               <div style="font-size:12px;color:#8a8a8a;letter-spacing:0.16em;text-transform:uppercase;margin-top:6px;">dias seguidos</div>
+             </td>
+           </tr>
+         </table>
+         <h1 style="font-size:26px;color:#ffffff;margin:0 0 12px;font-weight:600;line-height:1.28;">Ainda não estudaste hoje, ${safe}.</h1>
+         <p style="font-size:16px;line-height:1.65;color:#d4d4d4;margin:0 0 18px;">${
+           record
+             ? `Estás no teu melhor recorde de sempre. Seria pena deixá-lo cair por causa de uma noite.`
+             : `A tua sequência de ${opts.streak} dias termina à meia-noite. O teu recorde é ${opts.longest} dias.`
+         }</p>
+         ${
+           hasLesson
+             ? `<p style="font-size:15px;line-height:1.7;color:#a3a3a3;margin:0 0 26px;">Continua em <strong style="color:#c9a961;">${lesson}</strong>${course ? ` · ${course}` : ""}. Dez minutos contam como dia feito.</p>`
+             : `<p style="font-size:15px;line-height:1.7;color:#a3a3a3;margin:0 0 26px;">Abre uma aula qualquer. Dez minutos contam como dia feito.</p>`
+         }
+         <p style="margin:0 0 8px;">${btn(hasLesson ? "Manter a ofensiva →" : "Estudar 10 minutos →", href)}</p>`,
+      ),
+    };
+  },
+
+  /**
+   * Chamada de atenção — ausências longas. Direto, pessoal, sem culpa:
+   * lembra a razão pela qual a pessoa entrou e devolve o próximo passo.
+   */
+  wakeUpCall(opts: {
+    name: string;
+    days: number;
+    courseTitle?: string | null;
+    lessonTitle?: string | null;
+    courseId?: string | null;
+    lessonId?: string | null;
+  }) {
+    const safe = escapeHtml(opts.name.split(" ")[0] ?? opts.name);
+    const hasLesson = Boolean(opts.courseId && opts.lessonId && opts.lessonTitle);
+    const lesson = escapeHtml(opts.lessonTitle ?? "");
+    const course = escapeHtml(opts.courseTitle ?? "");
+    const href = hasLesson
+      ? `${APP_URL}/academia/${opts.courseId}/${opts.lessonId}`
+      : `${APP_URL}/academia`;
+    return {
+      subject: `${safe}, lembras-te do que te fez entrar?`,
+      html: layout(
+        `Há ${opts.days} dias que não apareces. A razão que te trouxe aqui não desapareceu.`,
+        `<div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:10px;">MM Club · Mensagem direta</div>
+         <h1 style="font-size:29px;color:#ffffff;margin:0 0 18px;font-weight:600;line-height:1.22;">Lembras-te do que te fez entrar, ${safe}?</h1>
+         <p style="font-size:17px;line-height:1.7;color:#e5e5e5;margin:0 0 18px;">Não foi um vídeo. Não foi um certificado. Foi a ideia de deixares de pedir autorização para viver da tua própria capacidade.</p>
+         <div style="background:#0a0a0a;border-left:3px solid #c9a961;padding:20px 24px;margin:0 0 22px;border-radius:8px;">
+           <p style="font-size:16px;line-height:1.7;color:#d4d4d4;margin:0;">Passaram <strong style="color:#c9a961;">${opts.days} dias</strong>. Nada de mal aconteceu — só que também nada de bom avançou. Essa é a parte que ninguém te diz: o tempo não te castiga, apenas continua.</p>
+         </div>
+         <p style="font-size:16px;line-height:1.7;color:#d4d4d4;margin:0 0 18px;">Ninguém constrói liberdade num dia de motivação. Constrói-se em dias comuns, cansados, em que a pessoa aparece mesmo assim. Hoje é um desses dias — e ainda estás a tempo de o usar.</p>
+         ${
+           hasLesson
+             ? `<p style="font-size:15px;line-height:1.7;color:#a3a3a3;margin:0 0 8px;">Não voltas do zero. Ficaste em <strong style="color:#c9a961;">${lesson}</strong>${course ? ` · ${course}` : ""}.</p>`
+             : `<p style="font-size:15px;line-height:1.7;color:#a3a3a3;margin:0 0 8px;">Não precisas de plano. Precisas de 15 minutos e de uma aula.</p>`
+         }
+         <p style="font-size:15px;line-height:1.7;color:#a3a3a3;margin:0 0 28px;">Quinze minutos hoje. Se depois disso quiseres parar, paras — mas para por escolha, não por hábito.</p>
+         <p style="margin:0 0 20px;">${btn(hasLesson ? "Retomar agora →" : "Voltar ao trabalho →", href)}</p>
+         <p style="font-size:14px;line-height:1.7;color:#6b6b6b;margin:0;">— Victor Muabi, MM Club</p>`,
+      ),
+    };
+  },
+
+
 
   upcomingCourses(
     name: string,
