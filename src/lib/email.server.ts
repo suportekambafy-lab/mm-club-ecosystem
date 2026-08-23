@@ -515,6 +515,185 @@ export const emailTemplates = {
     };
   },
 
+  /**
+   * Escada de ausência — 5, 14, 30, 60 e 90 dias sem entrar.
+   * Cada patamar é mais forte que o anterior; o de 90 dias fecha o ciclo
+   * ("ok, tu escolheste isto") sem fechar a porta.
+   */
+  absenceLadder(opts: {
+    name: string;
+    days: number;
+    stage: 5 | 14 | 30 | 60 | 90;
+    courseTitle?: string | null;
+    lessonTitle?: string | null;
+    courseId?: string | null;
+    lessonId?: string | null;
+  }) {
+    const safe = escapeHtml(opts.name.split(" ")[0] ?? opts.name);
+    const hasLesson = Boolean(opts.courseId && opts.lessonId && opts.lessonTitle);
+    const lesson = escapeHtml(opts.lessonTitle ?? "");
+    const course = escapeHtml(opts.courseTitle ?? "");
+    const href = hasLesson
+      ? `${APP_URL}/academia/${opts.courseId}/${opts.lessonId}`
+      : `${APP_URL}/academia`;
+    const d = opts.days;
+
+    const eyebrow = (t: string) =>
+      `<div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:10px;">MM Club · ${t}</div>`;
+    const h1 = (t: string) =>
+      `<h1 style="font-size:28px;color:#ffffff;margin:0 0 16px;font-weight:700;line-height:1.22;">${t}</h1>`;
+    const p = (t: string, color = "#d4d4d4", size = 16) =>
+      `<p style="font-size:${size}px;line-height:1.75;color:${color};margin:0 0 18px;">${t}</p>`;
+    const quote = (t: string) =>
+      `<div style="background:#0a0a0a;border-left:3px solid #c9a961;padding:22px 26px;margin:0 0 24px;border-radius:8px;">${t}</div>`;
+    const counter = (label: string) =>
+      `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 22px;background:#0a0a0a;border:1px solid #2a2116;border-radius:14px;">
+         <tr><td style="padding:20px 30px;text-align:center;">
+           <div style="font-size:42px;color:#c9a961;font-weight:700;line-height:1.05;">${d}</div>
+           <div style="font-size:12px;color:#8a8a8a;letter-spacing:0.16em;text-transform:uppercase;margin-top:6px;">${label}</div>
+         </td></tr>
+       </table>`;
+    const resume = hasLesson
+      ? p(
+          `Ficaste em <strong style="color:#c9a961;">${lesson}</strong>${course ? ` · ${course}` : ""}. Não voltas do zero — voltas de onde paraste.`,
+          "#a3a3a3",
+          15,
+        )
+      : p("Não precisas de plano perfeito. Precisas de 15 minutos e uma aula.", "#a3a3a3", 15);
+    const sign = (line: string) =>
+      `<p style="font-size:14px;line-height:1.7;color:#6b6b6b;margin:0;">${line}<br>— Victor Muabi, MM Club</p>`;
+
+    if (opts.stage === 5) {
+      return {
+        subject: `${safe}, 5 dias fora. Ainda é fácil voltar.`,
+        html: layout(
+          `Cinco dias sem estudar. Hoje resolve-se em 10 minutos.`,
+          eyebrow("Ritmo") +
+            counter("dias sem entrar") +
+            h1(`Cinco dias, ${safe}.`) +
+            p(
+              `Não é grave — mas é assim que começa. Primeiro é uma semana ocupada, depois é um mês, e a seguir já não te lembras do que vieste buscar aqui.`,
+            ) +
+            p(
+              `O ritmo é a única coisa que separa quem termina de quem desiste. E o ritmo recupera-se hoje, não amanhã.`,
+            ) +
+            resume +
+            `<p style="margin:0 0 20px;">${btn("Estudar 10 minutos →", href)}</p>` +
+            sign("Vai lá. Dez minutos."),
+        ),
+      };
+    }
+
+    if (opts.stage === 14) {
+      return {
+        subject: `${safe}, duas semanas. Isto já não é falta de tempo.`,
+        html: layout(
+          `14 dias fora. Já não é agenda — é prioridade.`,
+          eyebrow("Sem rodeios") +
+            counter("dias sem entrar") +
+            h1(`Duas semanas, ${safe}.`) +
+            p(
+              `Vou ser directo: catorze dias já não são falta de tempo. Encontraste tempo para tudo o resto. Isto simplesmente deixou de estar na lista.`,
+            ) +
+            quote(
+              p(
+                `E o problema não é o MM Club. O problema é que a versão de ti que se inscreveu aqui queria algo — e essa versão está a ser ignorada há duas semanas.`,
+                "#d4d4d4",
+                17,
+              ).replace("margin:0 0 18px", "margin:0"),
+            ) +
+            p(
+              `Continuas a pagar por isto. Continuas a ter acesso a tudo. A única coisa que falta é aparecer.`,
+            ) +
+            resume +
+            `<p style="margin:0 0 20px;">${btn("Retomar agora →", href)}</p>` +
+            sign("Estou à espera de te ver dentro."),
+        ),
+      };
+    }
+
+    if (opts.stage === 30) {
+      return {
+        subject: `${safe}, um mês inteiro. E o que mudou na tua vida?`,
+        html: layout(
+          `30 dias. Nada mudou — e é isso que devia incomodar-te.`,
+          eyebrow("Um mês") +
+            counter("dias sem entrar") +
+            h1(`Um mês, ${safe}. Vamos olhar para isto de frente.`) +
+            p(
+              `Trinta dias passaram. Pergunta honesta: o que mudou na tua vida neste mês? Se a resposta for "nada", já tens a informação mais importante do ano.`,
+            ) +
+            quote(
+              `<p style="font-size:17px;line-height:1.75;color:#d4d4d4;margin:0 0 12px;">Ninguém acorda um dia e desiste. Desiste-se assim: um dia de cada vez, sempre com uma boa desculpa.</p>
+               <p style="font-size:17px;line-height:1.75;color:#d4d4d4;margin:0;"><strong style="color:#c9a961;">Um mês de boas desculpas é um mês perdido.</strong></p>`,
+            ) +
+            p(
+              `Não te escrevo para te fazer sentir mal. Escrevo porque já vi isto acontecer a demasiada gente boa — pessoas com mais talento do que disciplina, que ficaram exactamente onde estavam.`,
+            ) +
+            p(`Tu ainda tens a porta aberta. Hoje. Usa-a.`) +
+            resume +
+            `<p style="margin:0 0 20px;">${btn("Voltar ao trabalho →", href)}</p>` +
+            sign("Ainda dá tempo de virar este mês."),
+        ),
+      };
+    }
+
+    if (opts.stage === 60) {
+      return {
+        subject: `${safe}, 60 dias. Isto já é uma escolha.`,
+        html: layout(
+          `Dois meses fora. Não é distração — é uma decisão silenciosa.`,
+          eyebrow("Dois meses") +
+            counter("dias sem entrar") +
+            h1(`Dois meses, ${safe}. Já não posso chamar isto distração.`) +
+            p(
+              `Sessenta dias é tempo suficiente para mudar de vida. Havia gente que entrou contigo e que hoje já está a fazer coisas que tu ainda dizes que vais fazer.`,
+            ) +
+            quote(
+              `<p style="font-size:17px;line-height:1.75;color:#d4d4d4;margin:0 0 12px;">A diferença entre essas pessoas e ti não é inteligência. Não é sorte. Não é dinheiro.</p>
+               <p style="font-size:17px;line-height:1.75;color:#d4d4d4;margin:0;"><strong style="color:#c9a961;">É que elas apareceram e tu não.</strong></p>`,
+            ) +
+            p(
+              `Cada dia que não entras estás a votar numa versão tua: a que fica igual. E o voto está a ganhar por sessenta a zero.`,
+            ) +
+            p(
+              `Não te vou pedir motivação. Motivação não vem antes — vem depois de começares. Precisas de uma aula. Uma só.`,
+            ) +
+            resume +
+            `<p style="margin:0 0 20px;">${btn("Uma aula. Agora. →", href)}</p>` +
+            sign("Ainda acredito que voltas."),
+        ),
+      };
+    }
+
+    return {
+      subject: `${safe}, 90 dias. Ok — tu escolheste isto.`,
+      html: layout(
+        `Três meses. Esta é a última vez que te escrevo assim.`,
+        eyebrow("Última carta") +
+          counter("dias sem entrar") +
+          h1(`Ok, ${safe}. Tu escolheste isto.`) +
+          p(
+            `Noventa dias. Três meses. Não te vou perguntar outra vez se está tudo bem, nem inventar que foi falta de tempo. A esta altura já é claro: <strong style="color:#c9a961;">tu decidiste não aparecer</strong>. Todos os dias. Noventa vezes.`,
+            "#e5e5e5",
+            17,
+          ) +
+          quote(
+            `<p style="font-size:17px;line-height:1.75;color:#d4d4d4;margin:0 0 12px;">E está bem. É a tua vida, é a tua escolha, e eu respeito-a. Mas alguém tinha de te dizer em voz alta o que aconteceu aqui: tu tinhas tudo em mãos — aulas, comunidade, ferramentas, acesso directo — e escolheste ficar exactamente onde estavas.</p>
+             <p style="font-size:17px;line-height:1.75;color:#d4d4d4;margin:0;">Daqui a um ano, isto não vai doer por causa do que perdeste. Vai doer por causa de quem podias ter sido.</p>`,
+          ) +
+          p(
+            `Não é castigo. Não é chantagem. É a verdade sem embalagem: ninguém vem salvar-te disto. Nem eu, nem o clube, nem o próximo curso que compras. Só tu.`,
+          ) +
+          p(
+            `A porta continua aberta — não porque mereças ou não, mas porque eu prefiro deixá-la aberta. Se um dia decidires que a tua vida vale 15 minutos por dia, sabes exactamente onde estamos.`,
+          ) +
+          resume +
+          `<p style="margin:0 0 20px;">${btn("Mudar isto hoje →", href)}</p>` +
+          sign("A escolha sempre foi tua. Espero que mudes de ideias."),
+      ),
+    };
+  },
 
 
   upcomingCourses(
