@@ -205,6 +205,10 @@ export function useRoomState({
   const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null);
   const [audioBlocked, setAudioBlocked] = useState(false);
 
+  /** Bump to force a full LiveKit reconnect (recreate the Room). */
+  const [reconnectNonce, setReconnectNonce] = useState(0);
+  /** Re-hydrate Postgres state on demand (reconnect, tab focus, polling). */
+  const hydrateRef = useRef<() => void>(() => {});
 
   // ---------- initial fetch + realtime for live + participants ----------
   useEffect(() => {
@@ -237,6 +241,7 @@ export function useRoomState({
         setProfiles(map);
       }
     }
+    hydrateRef.current = () => void hydrate();
     hydrate();
 
     const suffix = Math.random().toString(36).slice(2, 8);
@@ -268,11 +273,31 @@ export function useRoomState({
       )
       .subscribe();
 
+    // Rede/aba instáveis fazem o Realtime perder eventos. Em vez de obrigar a
+    // fazer refresh, voltamos a ler o estado autoritativo periodicamente e
+    // sempre que a aba volta ao primeiro plano ou a rede regressa.
+    const poll = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+      void hydrate();
+    }, 20_000);
+    const onFocus = () => void hydrate();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void hydrate();
+    };
+    window.addEventListener("online", onFocus);
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+
     return () => {
       mounted = false;
+      clearInterval(poll);
+      window.removeEventListener("online", onFocus);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
       supabase.removeChannel(ch);
     };
   }, [liveId]);
+
 
   // ---------- LiveKit engine ----------
   useEffect(() => {
