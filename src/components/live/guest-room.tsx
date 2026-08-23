@@ -38,6 +38,43 @@ interface Props {
   onLeave: () => void;
 }
 
+/**
+ * Liga a câmara do convidado com tentativas progressivas: dispositivo escolhido,
+ * 720p, 360p e por fim as predefinições. Devolve uma mensagem legível em caso
+ * de falha (permissão, câmara ocupada, sem câmara).
+ */
+async function enableGuestCamera(room: Room, deviceId?: string): Promise<string | null> {
+  const lp = room.localParticipant;
+  const attempts: Array<Record<string, unknown> | undefined> = [
+    deviceId ? { deviceId } : undefined,
+    { resolution: { width: 1280, height: 720 } },
+    { resolution: { width: 640, height: 360 } },
+    undefined,
+  ];
+  let lastErr: unknown = null;
+  for (const opts of attempts) {
+    try {
+      await lp.setCameraEnabled(true, opts as never);
+      if (lp.isCameraEnabled) return null;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  const msg = lastErr instanceof Error ? `${lastErr.name}: ${lastErr.message}` : String(lastErr ?? "");
+  if (/NotAllowedError|Permission/i.test(msg)) {
+    return "Permissão de câmara bloqueada. Autoriza no ícone da barra de endereço e tenta de novo.";
+  }
+  if (/NotReadableError|TrackStartError|could not start/i.test(msg)) {
+    return "A câmara está a ser usada por outra aplicação. Fecha-a e tenta de novo.";
+  }
+  if (/NotFoundError|DevicesNotFound|OverconstrainedError/i.test(msg)) {
+    return "Não encontrámos nenhuma câmara disponível neste dispositivo.";
+  }
+  return "Não foi possível ligar a câmara. Tenta de novo.";
+}
+
+
+
 export function GuestRoom({
   token,
   url,
@@ -52,6 +89,9 @@ export function GuestRoom({
   const sync = useServerFn(guestSync);
   const leaveFn = useServerFn(guestLeave);
   const roomRef = useRef<Room | null>(null);
+  /** True quando é o próprio convidado a sair (não tentamos reconectar). */
+  const leavingRef = useRef(false);
+
   const [room, setRoom] = useState<Room | null>(null);
   const [activeToken, setActiveToken] = useState(token);
   const [onStage, setOnStage] = useState(initialOnStage);
@@ -61,9 +101,12 @@ export function GuestRoom({
   const [micOn, setMicOn] = useState(prefs.micEnabled && initialOnStage);
   const [camOn, setCamOn] = useState(prefs.camEnabled && initialOnStage);
   const [screenOn, setScreenOn] = useState(false);
-  const [, forceTick] = useState(0);
+  const [tick, forceTick] = useState(0);
+  const [reconnectNonce, setReconnectNonce] = useState(0);
+  const [reconnecting, setReconnecting] = useState(false);
   const [audioBlocked, setAudioBlocked] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+
 
   const unlockAudio = useCallback(async () => {
     const r = roomRef.current;
@@ -142,6 +185,23 @@ export function GuestRoom({
     roomRef.current = r;
 
     const rerender = () => forceTick((n) => n + 1);
+    // Depois de reconectar, o servidor pode não voltar a enviar as pistas — sem
+    // isto o convidado ficava sem ver/ouvir até fazer refresh.
+    const resubscribeAll = () => {
+      r.remoteParticipants.forEach((p) => {
+        p.trackPublications.forEach((pub) => {
+          try {
+            (pub as RemoteTrackPublication).setSubscribed?.(true);
+          } catch {
+            /* já subscrito */
+          }
+        });
+      });
+      void r.startAudio().catch(() => {});
+      setAudioBlocked(!r.canPlaybackAudio);
+      rerender();
+    };
+
     r.on(RoomEvent.ParticipantConnected, rerender)
       .on(RoomEvent.ParticipantDisconnected, rerender)
       .on(RoomEvent.TrackSubscribed, rerender)
@@ -152,9 +212,27 @@ export function GuestRoom({
       .on(RoomEvent.LocalTrackUnpublished, rerender)
       .on(RoomEvent.ActiveSpeakersChanged, rerender)
       .on(RoomEvent.ConnectionStateChanged, rerender)
+      .on(RoomEvent.Reconnecting, () => {
+        setReconnecting(true);
+        rerender();
+      })
+      .on(RoomEvent.Reconnected, () => {
+        setReconnecting(false);
+        resubscribeAll();
+      })
+      .on(RoomEvent.SignalConnected, resubscribeAll)
       .on(RoomEvent.AudioPlaybackStatusChanged, () => setAudioBlocked(!r.canPlaybackAudio))
       .on(RoomEvent.Disconnected, () => {
-        if (!cancelled) onLeave();
+        if (cancelled) return;
+        if (leavingRef.current) {
+          onLeave();
+          return;
+        }
+        // Queda inesperada: voltamos a ligar sozinhos, sem refresh manual.
+        setReconnecting(true);
+        window.setTimeout(() => {
+          if (!cancelled && !leavingRef.current) setReconnectNonce((n) => n + 1);
+        }, 1200);
       });
 
     (async () => {
@@ -162,13 +240,15 @@ export function GuestRoom({
         setConnecting(true);
         await r.connect(url, activeToken);
         if (cancelled) return;
+        setReconnecting(false);
         if (onStageRef.current) {
           if (prefs.micEnabled)
-            await r.localParticipant.setMicrophoneEnabled(true, prefs.micId ? { deviceId: prefs.micId } : undefined);
-          if (prefs.camEnabled)
-            await r.localParticipant.setCameraEnabled(true, prefs.cameraId ? { deviceId: prefs.cameraId } : undefined);
-          setMicOn(prefs.micEnabled);
-          setCamOn(prefs.camEnabled);
+            await r.localParticipant
+              .setMicrophoneEnabled(true, prefs.micId ? { deviceId: prefs.micId } : undefined)
+              .catch(() => r.localParticipant.setMicrophoneEnabled(true).catch(() => {}));
+          if (prefs.camEnabled) await enableGuestCamera(r, prefs.cameraId);
+          setMicOn(r.localParticipant.isMicrophoneEnabled);
+          setCamOn(r.localParticipant.isCameraEnabled);
         } else {
           setMicOn(false);
           setCamOn(false);
@@ -182,6 +262,7 @@ export function GuestRoom({
             /* precisa de gesto */
           }
           setAudioBlocked(!r.canPlaybackAudio);
+          resubscribeAll();
         }
       } catch (e) {
         if (cancelled) return;
@@ -196,8 +277,29 @@ export function GuestRoom({
       roomRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeToken, url]);
+  }, [activeToken, url, reconnectNonce]);
 
+  // Reconexão proativa quando a rede volta ou a app regressa ao primeiro plano.
+  useEffect(() => {
+    const check = () => {
+      const r = roomRef.current;
+      if (!r || leavingRef.current) return;
+      if (r.state === "disconnected") setReconnectNonce((n) => n + 1);
+      else {
+        void r.startAudio().catch(() => {});
+        setAudioBlocked(!r.canPlaybackAudio);
+      }
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") check();
+    };
+    window.addEventListener("online", check);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("online", check);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
 
   const participants: Participant[] = useMemo(() => {
     if (!room) return [];
@@ -209,42 +311,94 @@ export function GuestRoom({
       seen.add(p.identity);
       return true;
     });
+    // `tick` força o recálculo a cada evento do LiveKit (entradas, pistas, mute).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [room, forceTick]);
+  }, [room, tick]);
+
+  // O estado dos botões segue sempre o estado real do LiveKit — nunca fica
+  // dessincronizado quando uma tentativa de ligar a câmara falha.
+  useEffect(() => {
+    const lp = roomRef.current?.localParticipant;
+    if (!lp) return;
+    setMicOn(lp.isMicrophoneEnabled);
+    setCamOn(lp.isCameraEnabled);
+    setScreenOn(lp.isScreenShareEnabled);
+  }, [tick]);
 
   const toggleMic = async () => {
     const r = roomRef.current;
     if (!r) return;
-    const next = !micOn;
-    await r.localParticipant.setMicrophoneEnabled(next);
-    setMicOn(next);
+    const lp = r.localParticipant;
+    const next = !lp.isMicrophoneEnabled;
+    try {
+      await lp.setMicrophoneEnabled(next);
+    } catch {
+      try {
+        await lp.setMicrophoneEnabled(next, undefined);
+      } catch {
+        toast.error("Não foi possível ligar o microfone. Verifica as permissões do navegador.");
+      }
+    }
+    setMicOn(lp.isMicrophoneEnabled);
   };
   const toggleCam = async () => {
     const r = roomRef.current;
     if (!r) return;
-    const next = !camOn;
-    await r.localParticipant.setCameraEnabled(next);
-    setCamOn(next);
+    const lp = r.localParticipant;
+    if (lp.isCameraEnabled) {
+      await lp.setCameraEnabled(false).catch(() => {});
+      setCamOn(lp.isCameraEnabled);
+      return;
+    }
+    const err = await enableGuestCamera(r, prefs.cameraId);
+    if (err) toast.error(err);
+    setCamOn(lp.isCameraEnabled);
   };
   const toggleScreen = async () => {
     const r = roomRef.current;
     if (!r) return;
-    const next = !screenOn;
-    try {
-      await r.localParticipant.setScreenShareEnabled(next, { audio: true });
-      setScreenOn(next);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (/permission|denied|NotAllowed/i.test(msg)) {
+    const lp = r.localParticipant;
+    if (lp.isScreenShareEnabled) {
+      await lp.setScreenShareEnabled(false).catch(() => {});
+      setScreenOn(lp.isScreenShareEnabled);
+      return;
+    }
+    const attempt = async () => {
+      try {
+        await lp.setScreenShareEnabled(true, { audio: true });
+        return null;
+      } catch (err) {
+        // Alguns browsers falham quando pedimos áudio do ecrã: tenta só vídeo.
+        try {
+          await lp.setScreenShareEnabled(true, { audio: false });
+          return null;
+        } catch {
+          return err;
+        }
+      }
+    };
+    let err = await attempt();
+    const msg = err instanceof Error ? err.message : String(err ?? "");
+    if (err && /insufficient|not allowed to publish|permission denied by server/i.test(msg)) {
+      // O token pode estar desatualizado (acabámos de subir ao palco): pede um
+      // novo ao servidor e tenta outra vez sem obrigar a refresh.
+      await poll();
+      await new Promise((res) => setTimeout(res, 600));
+      err = await attempt();
+    }
+    if (err) {
+      const m = err instanceof Error ? err.message : String(err);
+      if (/NotAllowedError|cancel|Permission denied by system/i.test(m)) {
         toast.error("Partilha de ecrã cancelada ou bloqueada pelo navegador.");
-      } else if (/insufficient|not allowed to publish/i.test(msg)) {
+      } else if (/insufficient|not allowed to publish/i.test(m)) {
         toast.error("O anfitrião ainda não autorizou a tua partilha de ecrã.");
       } else {
         toast.error("Não foi possível partilhar o ecrã neste dispositivo.");
       }
-      setScreenOn(false);
     }
+    setScreenOn(lp.isScreenShareEnabled);
   };
+
 
   useEffect(() => {
     if (!onStage && screenOn) setScreenOn(false);
@@ -254,7 +408,9 @@ export function GuestRoom({
 
 
 
-  if (connecting) {
+  // Durante uma reconexão mantemos a sala visível (só o aviso no topo muda).
+  if (connecting && !room) {
+
     return (
       <div className="grid h-full w-full place-items-center bg-black text-white/70">
         <div className="flex items-center gap-2 text-sm">
@@ -357,6 +513,17 @@ export function GuestRoom({
         </div>
       )}
 
+      {reconnecting && (
+        <div className="absolute inset-x-0 top-3 z-30 flex justify-center px-3">
+          <div className="inline-flex items-center gap-2 rounded-full bg-black/80 px-3.5 py-1.5 text-[11px] text-amber-200 ring-1 ring-amber-400/30 backdrop-blur-md">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            A restabelecer ligação…
+          </div>
+        </div>
+      )}
+
+
+
 
 
       </div>
@@ -444,10 +611,12 @@ export function GuestRoom({
           <button
             type="button"
             onClick={() => {
+              leavingRef.current = true;
               roomRef.current?.disconnect().catch(() => {});
               markLeft();
               onLeave();
             }}
+
             aria-label="Sair da sala"
             className="grid h-11 w-11 place-items-center rounded-full bg-red-500 text-white hover:bg-red-400"
           >

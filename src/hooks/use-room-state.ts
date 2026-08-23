@@ -205,6 +205,10 @@ export function useRoomState({
   const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null);
   const [audioBlocked, setAudioBlocked] = useState(false);
 
+  /** Bump to force a full LiveKit reconnect (recreate the Room). */
+  const [reconnectNonce, setReconnectNonce] = useState(0);
+  /** Re-hydrate Postgres state on demand (reconnect, tab focus, polling). */
+  const hydrateRef = useRef<() => void>(() => {});
 
   // ---------- initial fetch + realtime for live + participants ----------
   useEffect(() => {
@@ -237,6 +241,7 @@ export function useRoomState({
         setProfiles(map);
       }
     }
+    hydrateRef.current = () => void hydrate();
     hydrate();
 
     const suffix = Math.random().toString(36).slice(2, 8);
@@ -268,11 +273,31 @@ export function useRoomState({
       )
       .subscribe();
 
+    // Rede/aba instáveis fazem o Realtime perder eventos. Em vez de obrigar a
+    // fazer refresh, voltamos a ler o estado autoritativo periodicamente e
+    // sempre que a aba volta ao primeiro plano ou a rede regressa.
+    const poll = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+      void hydrate();
+    }, 20_000);
+    const onFocus = () => void hydrate();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void hydrate();
+    };
+    window.addEventListener("online", onFocus);
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+
     return () => {
       mounted = false;
+      clearInterval(poll);
+      window.removeEventListener("online", onFocus);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
       supabase.removeChannel(ch);
     };
   }, [liveId]);
+
 
   // ---------- LiveKit engine ----------
   useEffect(() => {
@@ -339,6 +364,60 @@ export function useRoomState({
     on(RoomEvent.AudioPlaybackStatusChanged, () => {
       setAudioBlocked(!room.canPlaybackAudio);
     });
+
+    /**
+     * Após uma reconexão o servidor pode ter deixado subscrições em suspenso —
+     * é a causa clássica de "não ouço/não vejo, tenho de fazer refresh".
+     * Forçamos a subscrição de tudo e voltamos a ler o estado do Postgres.
+     */
+    const resubscribeAll = () => {
+      room.remoteParticipants.forEach((p) => {
+        p.trackPublications.forEach((pub) => {
+          try {
+            (pub as RemoteTrackPublication).setSubscribed(true);
+          } catch {
+            /* já subscrito */
+          }
+        });
+        rebuildParticipantTracks(p);
+      });
+      rebuildParticipantTracks(room.localParticipant);
+      setAudioBlocked(!room.canPlaybackAudio);
+      void room.startAudio().catch(() => {});
+    };
+
+    on(RoomEvent.Reconnected, () => {
+      resubscribeAll();
+      hydrateRef.current();
+      void syncStudioProcessors(room);
+    });
+    on(RoomEvent.SignalConnected, () => resubscribeAll());
+    on(RoomEvent.TrackSubscriptionFailed, (_sid: string, p: Participant) => {
+      // Uma subscrição falhada deixa o participante mudo/preto. Tentamos de novo.
+      window.setTimeout(() => {
+        try {
+          (p as Participant).trackPublications.forEach((pub) => {
+            (pub as RemoteTrackPublication).setSubscribed?.(true);
+          });
+        } catch {
+          /* noop */
+        }
+        rebuildParticipantTracks(p);
+      }, 1500);
+    });
+    on(RoomEvent.Disconnected, (reason?: unknown) => {
+      setConnState("disconnected");
+      // Se não fomos nós a sair, voltamos a ligar automaticamente (o utilizador
+      // nunca deve precisar de recarregar a página).
+      const clientInitiated = Number(reason) === 1 /* CLIENT_INITIATED */;
+      if (!clientInitiated && isCurrentRun()) {
+        window.setTimeout(() => {
+          if (isCurrentRun()) setReconnectNonce((n) => n + 1);
+        }, 1200);
+      }
+    });
+
+
 
 
     (async () => {
@@ -429,7 +508,9 @@ export function useRoomState({
       if (roomRef.current === room) roomRef.current = null;
       setEngineTracks({});
     };
-  }, [token, url]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, url, reconnectNonce]);
+
 
   // ---------- projection to abstract RoomState ----------
   const mapped: RoomParticipant[] = useMemo(() => {
@@ -507,13 +588,29 @@ export function useRoomState({
   const toggleMic = useCallback(async () => {
     const lp: LocalParticipant | undefined = roomRef.current?.localParticipant;
     if (!lp) return;
-    try {
-      await lp.setMicrophoneEnabled(!lp.isMicrophoneEnabled);
-    } catch (err) {
-      console.error("[useRoomState] toggleMic failed", err);
-      toast.error("Não foi possível ligar o microfone. Verifica as permissões do browser.");
+    const next = !lp.isMicrophoneEnabled;
+    // Desligar é sempre seguro; ligar pode falhar se o dispositivo mudou ou está
+    // ocupado — tentamos com o mic escolhido e depois com o predefinido.
+    const attempts = next
+      ? [activeAudioIn ? { deviceId: activeAudioIn } : undefined, undefined]
+      : [undefined];
+    let lastErr: unknown = null;
+    for (const opts of attempts) {
+      try {
+        await lp.setMicrophoneEnabled(next, opts);
+        if (lp.isMicrophoneEnabled === next) return;
+      } catch (err) {
+        lastErr = err;
+      }
     }
-  }, []);
+    console.error("[useRoomState] toggleMic failed", lastErr);
+    const msg = lastErr instanceof Error ? `${lastErr.name}: ${lastErr.message}` : "";
+    toast.error(
+      /NotReadableError|TrackStartError/i.test(msg)
+        ? "O microfone está a ser usado por outra aplicação. Fecha-a e tenta de novo."
+        : "Não foi possível ligar o microfone. Verifica as permissões do browser.",
+    );
+  }, [activeAudioIn]);
   const toggleCam = useCallback(async () => {
     const room = roomRef.current;
     const lp = room?.localParticipant;
@@ -522,9 +619,16 @@ export function useRoomState({
       await lp.setCameraEnabled(false).catch((e) => console.warn("[useRoomState] camera off failed", e));
       return;
     }
-    const err = await enableCameraResilient(room, activeVideoIn ?? undefined);
+    let err = await enableCameraResilient(room, activeVideoIn ?? undefined);
+    if (err) {
+      // A câmara costuma demorar a ser libertada pelo sistema depois de a
+      // desligarmos — uma segunda tentativa evita o refresh da página.
+      await new Promise((r) => setTimeout(r, 700));
+      err = await enableCameraResilient(room, undefined);
+    }
     if (err) toast.error(err);
   }, [activeVideoIn]);
+
   const startScreenShare = useCallback(async () => {
     const lp = roomRef.current?.localParticipant;
     if (!lp) return;
