@@ -183,7 +183,7 @@ function AdminDashboard() {
               ) : (
                 <>
                   <p className="text-[30px] font-semibold leading-none tracking-[-0.02em]">
-                    {money(data.revenue.monthCents)}
+                    {money(headlineCents)}
                   </p>
                   {delta != null && (
                     <span
@@ -259,7 +259,7 @@ function AdminDashboard() {
                 <Line
                   type="linear"
                   dataKey="atual"
-                  name={monthLabel}
+                  name={seriesLabel}
                   stroke="var(--admin-accent)"
                   strokeWidth={2}
                   dot={false}
@@ -282,7 +282,7 @@ function AdminDashboard() {
         <div className="mt-4 flex items-center gap-5 text-xs text-admin-faint">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-admin-accent" />
-            {monthLabel}
+            {seriesLabel}
           </span>
           {range === "mes" && (
             <span className="inline-flex items-center gap-1.5">
