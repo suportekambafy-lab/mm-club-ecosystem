@@ -408,7 +408,9 @@ export function GuestRoom({
 
 
 
-  if (connecting) {
+  // Durante uma reconexão mantemos a sala visível (só o aviso no topo muda).
+  if (connecting && !room) {
+
     return (
       <div className="grid h-full w-full place-items-center bg-black text-white/70">
         <div className="flex items-center gap-2 text-sm">
