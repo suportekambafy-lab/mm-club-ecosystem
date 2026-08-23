@@ -653,8 +653,12 @@ function TrackedVideoPlayer({
       if (source.kind === "file") {
         const video = videoRef.current;
         if (video) {
-          video.currentTime = target;
-          void video.play().catch(() => {});
+          const apply = () => {
+            video.currentTime = target;
+            void video.play().catch(() => {});
+          };
+          if (video.readyState >= 1) apply();
+          else video.addEventListener("loadedmetadata", apply, { once: true });
         }
         return;
       }
@@ -662,12 +666,28 @@ function TrackedVideoPlayer({
       if (player) {
         player.setCurrentTime(target);
         player.play?.();
+        // Alguns embeds ignoram o setCurrentTime se ainda não estiverem prontos;
+        // confirmamos e, se não mexeu, recarregamos o embed já no minuto certo.
+        window.setTimeout(() => {
+          player.getCurrentTime?.((now) => {
+            if (Math.abs((now ?? 0) - target) < 3) return;
+            startRef.current = target;
+            initialSeekDoneRef.current = false;
+            setEmbedKey((k) => k + 1);
+          });
+        }, 900);
+        return;
       }
+      // Sem controlo remoto: recarrega o embed a começar no minuto da nota.
+      startRef.current = target;
+      initialSeekDoneRef.current = false;
+      setEmbedKey((k) => k + 1);
     };
     return () => {
       seekRef.current = null;
     };
   }, [seekRef, source.kind]);
+
 
 
 
