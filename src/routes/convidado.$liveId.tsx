@@ -22,6 +22,13 @@ import type { MediaPrefs } from "@/lib/media-prefs";
 
 type Search = { c?: string };
 
+/** Converte erros técnicos (validação, JSON) numa mensagem legível. */
+function guestErrorMessage(e: unknown, fallback: string) {
+  const raw = e instanceof Error ? e.message.trim() : "";
+  if (!raw || raw.startsWith("[") || raw.startsWith("{") || raw.length > 160) return fallback;
+  return raw;
+}
+
 export const Route = createFileRoute("/convidado/$liveId")({
   validateSearch: (search: Record<string, unknown>): Search => ({
     c: typeof search.c === "string" ? search.c : undefined,
@@ -116,7 +123,7 @@ function GuestEntry() {
       setPrefs(mediaPrefs);
       setStep("room");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Não foi possível entrar na sessão.");
+      setError(guestErrorMessage(e, "Não foi possível entrar na sessão. Verifica o link e tenta de novo."));
       setStep("name");
     } finally {
       setEntering(false);
@@ -188,11 +195,10 @@ function GuestEntry() {
 
   if (info.isError) {
     // Nunca mostramos erros técnicos (ex.: validação) ao convidado.
-    const raw = info.error instanceof Error ? info.error.message : "";
-    const friendly =
-      raw && !raw.trim().startsWith("[") && !raw.trim().startsWith("{") && raw.length < 160
-        ? raw
-        : "Link de convidado inválido ou expirado. Pede um novo link ao anfitrião.";
+    const friendly = guestErrorMessage(
+      info.error,
+      "Link de convidado inválido ou expirado. Pede um novo link ao anfitrião.",
+    );
     return (
       <Shell>
         <p className="text-sm text-white/70">{friendly}</p>
