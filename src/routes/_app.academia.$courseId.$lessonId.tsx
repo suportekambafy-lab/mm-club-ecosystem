@@ -539,15 +539,22 @@ function loadPlayerJs() {
   return playerJsPromise;
 }
 
-function trackedEmbedUrl(url: string, lessonId: string) {
+function trackedEmbedUrl(url: string, lessonId: string, startSeconds = 0) {
   try {
     const u = new URL(url);
-    u.searchParams.set("t", lessonId);
+    // `t` no Bunny é o segundo de início; só o usamos quando há posição a retomar.
+    if (startSeconds > 3) {
+      u.searchParams.set("t", String(Math.floor(startSeconds)));
+      u.searchParams.set("autoplay", "true");
+    } else {
+      u.searchParams.set("t", lessonId);
+    }
     return u.toString();
   } catch {
     return url;
   }
 }
+
 
 /** Retoma o Panda no segundo guardado (parâmetro `t` suportado pelo player). */
 function pandaStartUrl(source: ReturnType<typeof parseVideoUrl>, startSeconds: number) {
