@@ -21,6 +21,17 @@ export function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
+/**
+ * Sanitiza um URL antes de o colocar num href: só http(s) e caminhos
+ * relativos passam; aspas e `<` são escapados para não quebrar o atributo.
+ */
+export function safeUrl(raw: string): string {
+  const url = raw.trim();
+  const isSafe = /^https?:\/\//i.test(url) || url.startsWith("/") || url.startsWith("#");
+  if (!isSafe) return APP_URL;
+  return url.replace(/&/g, "&amp;").replace(/"/g, "%22").replace(/</g, "%3C");
+}
+
 /** Replaces {{var}} tokens. Values are escaped unless the key is a URL. */
 export function interpolate(
   input: string,
@@ -30,9 +41,10 @@ export function interpolate(
     const value = vars[key];
     if (value === undefined || value === null || value === "") return "";
     const raw = String(value);
-    return key.toLowerCase().endsWith("url") ? raw : escapeHtml(raw);
+    return key.toLowerCase().endsWith("url") ? safeUrl(raw) : escapeHtml(raw);
   });
 }
+
 
 function layout(opts: {
   previewText: string;
@@ -64,7 +76,7 @@ function layout(opts: {
   return `<!doctype html>
 <html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MM Club</title></head>
 <body style="margin:0;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#e5e5e5;">
-<div style="display:none;overflow:hidden;height:0;max-height:0;opacity:0;">${escapeHtml(opts.previewText)}</div>
+<div style="display:none;overflow:hidden;height:0;max-height:0;opacity:0;">${opts.previewText}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 16px;">
 <tr><td align="center">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#111111;border:1px solid #1f1f1f;border-radius:16px;overflow:hidden;">
