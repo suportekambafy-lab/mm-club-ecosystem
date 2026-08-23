@@ -1,9 +1,11 @@
-// Anti-churn — membros sem entrar há 14+ dias recebem email + push.
+// Anti-churn — escada de ausência: 5, 14, 30, 60 e 90 dias sem entrar.
+// Cada patamar envia uma mensagem mais forte, uma única vez por membro/patamar.
 // Chamado por pg_cron (diário). Requer o CRON_SECRET no header `x-cron-secret`.
 import { createFileRoute } from "@tanstack/react-router";
 import { courses } from "@/data/courses";
 
-const INACTIVE_DAYS = 14;
+const STAGES = [90, 60, 30, 14, 5] as const;
+const INACTIVE_DAYS = 5;
 const MAX_BATCH = 200;
 
 function lessonTitles(courseId: string, lessonId: string) {
