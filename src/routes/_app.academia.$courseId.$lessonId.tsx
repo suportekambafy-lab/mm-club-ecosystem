@@ -539,15 +539,22 @@ function loadPlayerJs() {
   return playerJsPromise;
 }
 
-function trackedEmbedUrl(url: string, lessonId: string) {
+function trackedEmbedUrl(url: string, lessonId: string, startSeconds = 0) {
   try {
     const u = new URL(url);
-    u.searchParams.set("t", lessonId);
+    // `t` no Bunny é o segundo de início; só o usamos quando há posição a retomar.
+    if (startSeconds > 3) {
+      u.searchParams.set("t", String(Math.floor(startSeconds)));
+      u.searchParams.set("autoplay", "true");
+    } else {
+      u.searchParams.set("t", lessonId);
+    }
     return u.toString();
   } catch {
     return url;
   }
 }
+
 
 /** Retoma o Panda no segundo guardado (parâmetro `t` suportado pelo player). */
 function pandaStartUrl(source: ReturnType<typeof parseVideoUrl>, startSeconds: number) {
@@ -653,8 +660,12 @@ function TrackedVideoPlayer({
       if (source.kind === "file") {
         const video = videoRef.current;
         if (video) {
-          video.currentTime = target;
-          void video.play().catch(() => {});
+          const apply = () => {
+            video.currentTime = target;
+            void video.play().catch(() => {});
+          };
+          if (video.readyState >= 1) apply();
+          else video.addEventListener("loadedmetadata", apply, { once: true });
         }
         return;
       }
@@ -662,12 +673,28 @@ function TrackedVideoPlayer({
       if (player) {
         player.setCurrentTime(target);
         player.play?.();
+        // Alguns embeds ignoram o setCurrentTime se ainda não estiverem prontos;
+        // confirmamos e, se não mexeu, recarregamos o embed já no minuto certo.
+        window.setTimeout(() => {
+          player.getCurrentTime?.((now) => {
+            if (Math.abs((now ?? 0) - target) < 3) return;
+            startRef.current = target;
+            initialSeekDoneRef.current = false;
+            setEmbedKey((k) => k + 1);
+          });
+        }, 900);
+        return;
       }
+      // Sem controlo remoto: recarrega o embed a começar no minuto da nota.
+      startRef.current = target;
+      initialSeekDoneRef.current = false;
+      setEmbedKey((k) => k + 1);
     };
     return () => {
       seekRef.current = null;
     };
   }, [seekRef, source.kind]);
+
 
 
 
@@ -797,7 +824,7 @@ function TrackedVideoPlayer({
       player?.off?.("pause", onPause);
       player?.off?.("ended", onEnded);
     };
-  }, [persist, source.embedUrl, source.kind, lessonId]);
+  }, [persist, source.embedUrl, source.kind, lessonId, embedKey]);
 
   const endOverlay = (
     <LessonEndOverlay
@@ -853,7 +880,11 @@ function TrackedVideoPlayer({
         <iframe
           key={`${lessonId}-${embedKey}`}
           ref={iframeRef}
-          src={source.kind === "bunny" ? trackedEmbedUrl(source.embedUrl, lessonId) : pandaStartUrl(source, startRef.current)}
+          src={
+            source.kind === "bunny"
+              ? trackedEmbedUrl(source.embedUrl, lessonId, embedKey > 0 ? startRef.current : 0)
+              : pandaStartUrl(source, startRef.current)
+          }
           title={title}
           className="absolute inset-0 h-full w-full"
           loading="lazy"
