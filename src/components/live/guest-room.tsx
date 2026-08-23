@@ -598,10 +598,12 @@ export function GuestRoom({
           <button
             type="button"
             onClick={() => {
+              leavingRef.current = true;
               roomRef.current?.disconnect().catch(() => {});
               markLeft();
               onLeave();
             }}
+
             aria-label="Sair da sala"
             className="grid h-11 w-11 place-items-center rounded-full bg-red-500 text-white hover:bg-red-400"
           >
