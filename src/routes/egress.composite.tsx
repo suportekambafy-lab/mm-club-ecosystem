@@ -13,6 +13,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import mmIcon from "@/assets/mm-icon.png.asset.json";
+import { participantInitials, sortStageTiles, tilesSignature } from "@/lib/live-media";
 
 export const Route = createFileRoute("/egress/composite")({
   component: EgressComposite,
@@ -43,14 +44,6 @@ type Tile = {
   } | null;
 };
 
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? "")
-    .join("");
-}
 
 
 function EgressComposite() {
@@ -134,21 +127,19 @@ function EgressComposite() {
           });
         }
 
-        // Ordem estável: partilha de ecrã, depois hosts, depois alfabética.
-        // (Quem fala não altera a ordem — senão a grelha salta e o vídeo pisca.)
-        next.sort((a, b) => {
-          const score = (t: Tile) => (t.isScreen ? 8 : 0) + (t.isHost ? 4 : 0);
-          const diff = score(b) - score(a);
-          if (diff !== 0) return diff;
-          return a.id.localeCompare(b.id);
-        });
+        // Ordem estável (partilha de ecrã → hosts → alfabética) e assinatura
+        // para evitar re-renders inúteis: ver src/lib/live-media.ts.
+        const ordered = sortStageTiles(next);
         setTiles((prev) => {
-          // Evita re-render (e o consequente flicker) quando nada mudou.
           const sig = (list: Tile[]) =>
-            list
-              .map((t) => `${t.id}|${t.name}|${t.track?.sid ?? t.track?.mediaStreamTrack?.id ?? "-"}`)
-              .join(";");
-          return sig(prev) === sig(next) ? prev : next;
+            tilesSignature(
+              list.map((t) => ({
+                id: t.id,
+                name: t.name,
+                trackId: t.track?.sid ?? t.track?.mediaStreamTrack?.id ?? null,
+              })),
+            );
+          return sig(prev) === sig(ordered) ? prev : ordered;
         });
       };
 
@@ -348,7 +339,7 @@ function TileView({ tile, large }: { tile: Tile; large?: boolean }) {
               background: "linear-gradient(135deg,#f5d67b,#c9a227)",
             }}
           >
-            {initials(tile.name)}
+            {participantInitials(tile.name)}
           </div>
         </div>
       )}
