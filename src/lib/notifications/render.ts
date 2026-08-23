@@ -21,6 +21,17 @@ export function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
+/**
+ * Sanitiza um URL antes de o colocar num href: só http(s) e caminhos
+ * relativos passam; aspas e `<` são escapados para não quebrar o atributo.
+ */
+export function safeUrl(raw: string): string {
+  const url = raw.trim();
+  const isSafe = /^https?:\/\//i.test(url) || url.startsWith("/") || url.startsWith("#");
+  if (!isSafe) return APP_URL;
+  return url.replace(/&/g, "&amp;").replace(/"/g, "%22").replace(/</g, "%3C");
+}
+
 /** Replaces {{var}} tokens. Values are escaped unless the key is a URL. */
 export function interpolate(
   input: string,
@@ -30,9 +41,10 @@ export function interpolate(
     const value = vars[key];
     if (value === undefined || value === null || value === "") return "";
     const raw = String(value);
-    return key.toLowerCase().endsWith("url") ? raw : escapeHtml(raw);
+    return key.toLowerCase().endsWith("url") ? safeUrl(raw) : escapeHtml(raw);
   });
 }
+
 
 function layout(opts: {
   previewText: string;
