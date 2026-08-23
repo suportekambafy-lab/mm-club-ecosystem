@@ -21,6 +21,7 @@ import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, Hand, Volume2, Message
 import { toast } from "sonner";
 import { GuestChat } from "@/components/live/guest-chat";
 import { HQ_ROOM_OPTIONS } from "@/lib/livekit-quality";
+import { cameraErrorMessage } from "@/lib/live-media";
 import { cn } from "@/lib/utils";
 import { guestSync, guestLeave } from "@/lib/live-guest.functions";
 import type { MediaPrefs } from "@/lib/media-prefs";
@@ -60,17 +61,8 @@ async function enableGuestCamera(room: Room, deviceId?: string): Promise<string 
       lastErr = err;
     }
   }
-  const msg = lastErr instanceof Error ? `${lastErr.name}: ${lastErr.message}` : String(lastErr ?? "");
-  if (/NotAllowedError|Permission/i.test(msg)) {
-    return "Permissão de câmara bloqueada. Autoriza no ícone da barra de endereço e tenta de novo.";
-  }
-  if (/NotReadableError|TrackStartError|could not start/i.test(msg)) {
-    return "A câmara está a ser usada por outra aplicação. Fecha-a e tenta de novo.";
-  }
-  if (/NotFoundError|DevicesNotFound|OverconstrainedError/i.test(msg)) {
-    return "Não encontrámos nenhuma câmara disponível neste dispositivo.";
-  }
-  return "Não foi possível ligar a câmara. Tenta de novo.";
+  return cameraErrorMessage(lastErr);
+
 }
 
 
