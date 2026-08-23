@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { NotebookPen, Trash2, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAccessToken } from "@/hooks/use-access-token";
 import { cn } from "@/lib/utils";
 
 type Note = {
