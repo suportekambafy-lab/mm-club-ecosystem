@@ -880,7 +880,11 @@ function TrackedVideoPlayer({
         <iframe
           key={`${lessonId}-${embedKey}`}
           ref={iframeRef}
-          src={source.kind === "bunny" ? trackedEmbedUrl(source.embedUrl, lessonId) : pandaStartUrl(source, startRef.current)}
+          src={
+            source.kind === "bunny"
+              ? trackedEmbedUrl(source.embedUrl, lessonId, embedKey > 0 ? startRef.current : 0)
+              : pandaStartUrl(source, startRef.current)
+          }
           title={title}
           className="absolute inset-0 h-full w-full"
           loading="lazy"
