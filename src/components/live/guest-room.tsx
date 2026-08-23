@@ -38,6 +38,43 @@ interface Props {
   onLeave: () => void;
 }
 
+/**
+ * Liga a câmara do convidado com tentativas progressivas: dispositivo escolhido,
+ * 720p, 360p e por fim as predefinições. Devolve uma mensagem legível em caso
+ * de falha (permissão, câmara ocupada, sem câmara).
+ */
+async function enableGuestCamera(room: Room, deviceId?: string): Promise<string | null> {
+  const lp = room.localParticipant;
+  const attempts: Array<Record<string, unknown> | undefined> = [
+    deviceId ? { deviceId } : undefined,
+    { resolution: { width: 1280, height: 720 } },
+    { resolution: { width: 640, height: 360 } },
+    undefined,
+  ];
+  let lastErr: unknown = null;
+  for (const opts of attempts) {
+    try {
+      await lp.setCameraEnabled(true, opts as never);
+      if (lp.isCameraEnabled) return null;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  const msg = lastErr instanceof Error ? `${lastErr.name}: ${lastErr.message}` : String(lastErr ?? "");
+  if (/NotAllowedError|Permission/i.test(msg)) {
+    return "Permissão de câmara bloqueada. Autoriza no ícone da barra de endereço e tenta de novo.";
+  }
+  if (/NotReadableError|TrackStartError|could not start/i.test(msg)) {
+    return "A câmara está a ser usada por outra aplicação. Fecha-a e tenta de novo.";
+  }
+  if (/NotFoundError|DevicesNotFound|OverconstrainedError/i.test(msg)) {
+    return "Não encontrámos nenhuma câmara disponível neste dispositivo.";
+  }
+  return "Não foi possível ligar a câmara. Tenta de novo.";
+}
+
+
+
 export function GuestRoom({
   token,
   url,
