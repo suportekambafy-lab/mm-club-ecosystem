@@ -508,7 +508,9 @@ export function useRoomState({
       if (roomRef.current === room) roomRef.current = null;
       setEngineTracks({});
     };
-  }, [token, url]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, url, reconnectNonce]);
+
 
   // ---------- projection to abstract RoomState ----------
   const mapped: RoomParticipant[] = useMemo(() => {
