@@ -1,5 +1,11 @@
+import { useEffect, useState } from "react";
 import { Flame, Target, Trophy } from "lucide-react";
 import { useLearningStreak } from "@/hooks/use-learning-streak";
+import {
+  StreakCelebration,
+  markStreakCelebrated,
+  shouldCelebrateStreak,
+} from "@/components/mm/streak-celebration";
 import { WEEKLY_GOAL_MINUTES } from "@/lib/learning-activity";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +23,18 @@ function lastSevenDays(): string[] {
 
 export function StreakCard({ className }: { className?: string }) {
   const { streak, loaded } = useLearningStreak();
+  const current = streak?.current_streak ?? 0;
+  const [celebrate, setCelebrate] = useState(false);
+
+  // Popup de parabéns a partir do 2.º dia seguido, uma vez por nova contagem.
+  // Se a pessoa faltar e a sequência recomeçar, volta a celebrar desde o 2.º dia.
+  useEffect(() => {
+    if (!loaded) return;
+    if (!shouldCelebrateStreak(current)) return;
+    markStreakCelebrated(current);
+    const t = window.setTimeout(() => setCelebrate(true), 600);
+    return () => window.clearTimeout(t);
+  }, [loaded, current]);
 
   if (!loaded) {
     return (
@@ -24,6 +42,7 @@ export function StreakCard({ className }: { className?: string }) {
     );
   }
   if (!streak) return null;
+
 
   const days = lastSevenDays();
   const active = new Set(streak.active_days ?? []);
