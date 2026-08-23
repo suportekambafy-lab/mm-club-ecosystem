@@ -63,6 +63,7 @@ import { Route as AdminLivesIndexRouteImport } from './routes/admin.lives.index'
 import { Route as AdminFinanceiroIndexRouteImport } from './routes/admin.financeiro.index'
 import { Route as AppLivesIndexRouteImport } from './routes/_app.lives.index'
 import { Route as AppJadeIndexRouteImport } from './routes/_app.jade.index'
+import { Route as AppAjudaIndexRouteImport } from './routes/_app.ajuda.index'
 import { Route as AppAcademiaIndexRouteImport } from './routes/_app.academia.index'
 import { Route as ApiRealtimeSessionRouteImport } from './routes/api.realtime.session'
 import { Route as ApiKnowledgeSearchRouteImport } from './routes/api.knowledge.search'
@@ -389,6 +390,11 @@ const AppJadeIndexRoute = AppJadeIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppJadeRoute,
+} as any)
+const AppAjudaIndexRoute = AppAjudaIndexRouteImport.update({
+  id: '/ajuda/',
+  path: '/ajuda/',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppAcademiaIndexRoute = AppAcademiaIndexRouteImport.update({
   id: '/',
@@ -783,6 +789,7 @@ export interface FileRoutesByFullPath {
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia/': typeof AppAcademiaIndexRoute
+  '/ajuda/': typeof AppAjudaIndexRoute
   '/jade/': typeof AppJadeIndexRoute
   '/lives/': typeof AppLivesIndexRoute
   '/admin/financeiro/': typeof AdminFinanceiroIndexRoute
@@ -887,6 +894,7 @@ export interface FileRoutesByTo {
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia': typeof AppAcademiaIndexRoute
+  '/ajuda': typeof AppAjudaIndexRoute
   '/jade': typeof AppJadeIndexRoute
   '/lives': typeof AppLivesIndexRoute
   '/admin/financeiro': typeof AdminFinanceiroIndexRoute
@@ -1001,6 +1009,7 @@ export interface FileRoutesById {
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/_app/academia/': typeof AppAcademiaIndexRoute
+  '/_app/ajuda/': typeof AppAjudaIndexRoute
   '/_app/jade/': typeof AppJadeIndexRoute
   '/_app/lives/': typeof AppLivesIndexRoute
   '/admin/financeiro/': typeof AdminFinanceiroIndexRoute
@@ -1115,6 +1124,7 @@ export interface FileRouteTypes {
     | '/api/knowledge/search'
     | '/api/realtime/session'
     | '/academia/'
+    | '/ajuda/'
     | '/jade/'
     | '/lives/'
     | '/admin/financeiro/'
@@ -1219,6 +1229,7 @@ export interface FileRouteTypes {
     | '/api/knowledge/search'
     | '/api/realtime/session'
     | '/academia'
+    | '/ajuda'
     | '/jade'
     | '/lives'
     | '/admin/financeiro'
@@ -1332,6 +1343,7 @@ export interface FileRouteTypes {
     | '/api/knowledge/search'
     | '/api/realtime/session'
     | '/_app/academia/'
+    | '/_app/ajuda/'
     | '/_app/jade/'
     | '/_app/lives/'
     | '/admin/financeiro/'
@@ -1801,6 +1813,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/jade/'
       preLoaderRoute: typeof AppJadeIndexRouteImport
       parentRoute: typeof AppJadeRoute
+    }
+    '/_app/ajuda/': {
+      id: '/_app/ajuda/'
+      path: '/ajuda'
+      fullPath: '/ajuda/'
+      preLoaderRoute: typeof AppAjudaIndexRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/academia/': {
       id: '/_app/academia/'
@@ -2320,6 +2339,7 @@ interface AppRouteChildren {
   AppShortsRoute: typeof AppShortsRoute
   AppSubscricaoRoute: typeof AppSubscricaoRoute
   AppEspecialistasExpertIdRoute: typeof AppEspecialistasExpertIdRoute
+  AppAjudaIndexRoute: typeof AppAjudaIndexRoute
   AppLivesLiveIdSalaRoute: typeof AppLivesLiveIdSalaRoute
 }
 
@@ -2339,6 +2359,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppShortsRoute: AppShortsRoute,
   AppSubscricaoRoute: AppSubscricaoRoute,
   AppEspecialistasExpertIdRoute: AppEspecialistasExpertIdRoute,
+  AppAjudaIndexRoute: AppAjudaIndexRoute,
   AppLivesLiveIdSalaRoute: AppLivesLiveIdSalaRoute,
 }
 
