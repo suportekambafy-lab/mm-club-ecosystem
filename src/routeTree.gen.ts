@@ -82,6 +82,7 @@ import { Route as AppFerramentasThumbnailsRouteImport } from './routes/_app.ferr
 import { Route as AppFerramentasStudioRouteImport } from './routes/_app.ferramentas.studio'
 import { Route as AppFerramentasLinksRouteImport } from './routes/_app.ferramentas.links'
 import { Route as AppEspecialistasExpertIdRouteImport } from './routes/_app.especialistas.$expertId'
+import { Route as AppAjudaSlugRouteImport } from './routes/_app.ajuda.$slug'
 import { Route as AppAcademiaPesquisaRouteImport } from './routes/_app.academia.pesquisa'
 import { Route as AppAcademiaCourseIdRouteImport } from './routes/_app.academia.$courseId'
 import { Route as AppFerramentasStudioIndexRouteImport } from './routes/_app.ferramentas.studio.index'
@@ -491,6 +492,11 @@ const AppEspecialistasExpertIdRoute =
     path: '/especialistas/$expertId',
     getParentRoute: () => AppRoute,
   } as any)
+const AppAjudaSlugRoute = AppAjudaSlugRouteImport.update({
+  id: '/ajuda/$slug',
+  path: '/ajuda/$slug',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAcademiaPesquisaRoute = AppAcademiaPesquisaRouteImport.update({
   id: '/pesquisa',
   path: '/pesquisa',
@@ -771,6 +777,7 @@ export interface FileRoutesByFullPath {
   '/checkout/': typeof CheckoutIndexRoute
   '/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
   '/academia/pesquisa': typeof AppAcademiaPesquisaRoute
+  '/ajuda/$slug': typeof AppAjudaSlugRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/ferramentas/links': typeof AppFerramentasLinksRoute
   '/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
@@ -877,6 +884,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/checkout': typeof CheckoutIndexRoute
   '/academia/pesquisa': typeof AppAcademiaPesquisaRoute
+  '/ajuda/$slug': typeof AppAjudaSlugRoute
   '/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/ferramentas/links': typeof AppFerramentasLinksRoute
   '/ferramentas/thumbnails': typeof AppFerramentasThumbnailsRoute
@@ -991,6 +999,7 @@ export interface FileRoutesById {
   '/checkout/': typeof CheckoutIndexRoute
   '/_app/academia/$courseId': typeof AppAcademiaCourseIdRouteWithChildren
   '/_app/academia/pesquisa': typeof AppAcademiaPesquisaRoute
+  '/_app/ajuda/$slug': typeof AppAjudaSlugRoute
   '/_app/especialistas/$expertId': typeof AppEspecialistasExpertIdRoute
   '/_app/ferramentas/links': typeof AppFerramentasLinksRoute
   '/_app/ferramentas/studio': typeof AppFerramentasStudioRouteWithChildren
@@ -1106,6 +1115,7 @@ export interface FileRouteTypes {
     | '/checkout/'
     | '/academia/$courseId'
     | '/academia/pesquisa'
+    | '/ajuda/$slug'
     | '/especialistas/$expertId'
     | '/ferramentas/links'
     | '/ferramentas/studio'
@@ -1212,6 +1222,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/checkout'
     | '/academia/pesquisa'
+    | '/ajuda/$slug'
     | '/especialistas/$expertId'
     | '/ferramentas/links'
     | '/ferramentas/thumbnails'
@@ -1325,6 +1336,7 @@ export interface FileRouteTypes {
     | '/checkout/'
     | '/_app/academia/$courseId'
     | '/_app/academia/pesquisa'
+    | '/_app/ajuda/$slug'
     | '/_app/especialistas/$expertId'
     | '/_app/ferramentas/links'
     | '/_app/ferramentas/studio'
@@ -1947,6 +1959,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEspecialistasExpertIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/ajuda/$slug': {
+      id: '/_app/ajuda/$slug'
+      path: '/ajuda/$slug'
+      fullPath: '/ajuda/$slug'
+      preLoaderRoute: typeof AppAjudaSlugRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/academia/pesquisa': {
       id: '/_app/academia/pesquisa'
       path: '/pesquisa'
@@ -2338,6 +2357,7 @@ interface AppRouteChildren {
   AppPerfilRoute: typeof AppPerfilRoute
   AppShortsRoute: typeof AppShortsRoute
   AppSubscricaoRoute: typeof AppSubscricaoRoute
+  AppAjudaSlugRoute: typeof AppAjudaSlugRoute
   AppEspecialistasExpertIdRoute: typeof AppEspecialistasExpertIdRoute
   AppAjudaIndexRoute: typeof AppAjudaIndexRoute
   AppLivesLiveIdSalaRoute: typeof AppLivesLiveIdSalaRoute
@@ -2358,6 +2378,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPerfilRoute: AppPerfilRoute,
   AppShortsRoute: AppShortsRoute,
   AppSubscricaoRoute: AppSubscricaoRoute,
+  AppAjudaSlugRoute: AppAjudaSlugRoute,
   AppEspecialistasExpertIdRoute: AppEspecialistasExpertIdRoute,
   AppAjudaIndexRoute: AppAjudaIndexRoute,
   AppLivesLiveIdSalaRoute: AppLivesLiveIdSalaRoute,
