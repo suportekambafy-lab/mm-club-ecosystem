@@ -16,6 +16,8 @@ export type EmailKind =
   | "live_started"
   | "replay_ready"
   | "inactivity_nudge"
+  | "streak_guard"
+  | "wakeup_call"
   | "upcoming_courses"
   | "course_released"
   | "community_post"
