@@ -18,6 +18,7 @@ export type EmailKind =
   | "inactivity_nudge"
   | "streak_guard"
   | "wakeup_call"
+  | "absence_ladder"
   | "upcoming_courses"
   | "course_released"
   | "community_post"
