@@ -52,6 +52,9 @@ export function GuestRoom({
   const sync = useServerFn(guestSync);
   const leaveFn = useServerFn(guestLeave);
   const roomRef = useRef<Room | null>(null);
+  /** True quando é o próprio convidado a sair (não tentamos reconectar). */
+  const leavingRef = useRef(false);
+
   const [room, setRoom] = useState<Room | null>(null);
   const [activeToken, setActiveToken] = useState(token);
   const [onStage, setOnStage] = useState(initialOnStage);
