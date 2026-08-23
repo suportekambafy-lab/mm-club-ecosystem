@@ -491,24 +491,26 @@ export const emailTemplates = {
       ? `${APP_URL}/academia/${opts.courseId}/${opts.lessonId}`
       : `${APP_URL}/academia`;
     return {
-      subject: `${safe}, lembras-te do que te fez entrar?`,
+      subject: `${safe}, já passaram ${opts.days} dias. Eu vou ser honesto contigo.`,
       html: layout(
-        `Há ${opts.days} dias que não apareces. A razão que te trouxe aqui não desapareceu.`,
-        `<div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:10px;">MM Club · Mensagem direta</div>
-         <h1 style="font-size:29px;color:#ffffff;margin:0 0 18px;font-weight:600;line-height:1.22;">Lembras-te do que te fez entrar, ${safe}?</h1>
-         <p style="font-size:17px;line-height:1.7;color:#e5e5e5;margin:0 0 18px;">Não foi um vídeo. Não foi um certificado. Foi a ideia de deixares de pedir autorização para viver da tua própria capacidade.</p>
-         <div style="background:#0a0a0a;border-left:3px solid #c9a961;padding:20px 24px;margin:0 0 22px;border-radius:8px;">
-           <p style="font-size:16px;line-height:1.7;color:#d4d4d4;margin:0;">Passaram <strong style="color:#c9a961;">${opts.days} dias</strong>. Nada de mal aconteceu — só que também nada de bom avançou. Essa é a parte que ninguém te diz: o tempo não te castiga, apenas continua.</p>
+        `Há ${opts.days} dias que não apareces. A liberdade que vieste buscar continua à espera.`,
+        `<div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:10px;">MM Club · Sem filtros</div>
+         <h1 style="font-size:28px;color:#ffffff;margin:0 0 16px;font-weight:700;line-height:1.2;">${safe}, vamos falar a sério.</h1>
+         <p style="font-size:17px;line-height:1.7;color:#e5e5e5;margin:0 0 20px;">Há ${opts.days} dias que não entras. Não te vou enfeitar a verdade: a vida não te castigou por isso. Simplesmente não aconteceu <em style="color:#c9a961;font-style:normal;">nada</em>. E é exatamente esse o problema.</p>
+         <div style="background:#0a0a0a;border-left:3px solid #c9a961;padding:22px 26px;margin:0 0 24px;border-radius:8px;">
+           <p style="font-size:17px;line-height:1.75;color:#d4d4d4;margin:0 0 12px;">Lembras-te da razão pela qual entraste? Não foi por um curso. Foi por quereres deixar de depender de alguém para viver. Foi por quereres acordar e saber que o teu dia te pertence.</p>
+           <p style="font-size:17px;line-height:1.75;color:#d4d4d4;margin:0;">Essa razão não desapareceu. <strong style="color:#c9a961;">Tu é que te ausentaste dela.</strong></p>
          </div>
-         <p style="font-size:16px;line-height:1.7;color:#d4d4d4;margin:0 0 18px;">Ninguém constrói liberdade num dia de motivação. Constrói-se em dias comuns, cansados, em que a pessoa aparece mesmo assim. Hoje é um desses dias — e ainda estás a tempo de o usar.</p>
+         <p style="font-size:16px;line-height:1.75;color:#d4d4d4;margin:0 0 18px;">Cada dia que não apareces é uma decisão. Não é o universo a trabalhar contra ti — é o hábito a ganhar a partida. E o hábito é silencioso: hoje faltas, amanhã também parece fácil, e daqui a um mês nem te lembras por que começaste.</p>
+         <p style="font-size:16px;line-height:1.75;color:#d4d4d4;margin:0 0 22px;">A boa notícia? O clube não te fechou a porta. As aulas continuam lá. A comunidade continua a crescer. A tua conta continua aberta. Tudo o que investiste continua à tua espera — só tens de <strong style="color:#c9a961;">decidir aparecer</strong>.</p>
          ${
            hasLesson
-             ? `<p style="font-size:15px;line-height:1.7;color:#a3a3a3;margin:0 0 8px;">Não voltas do zero. Ficaste em <strong style="color:#c9a961;">${lesson}</strong>${course ? ` · ${course}` : ""}.</p>`
-             : `<p style="font-size:15px;line-height:1.7;color:#a3a3a3;margin:0 0 8px;">Não precisas de plano. Precisas de 15 minutos e de uma aula.</p>`
+             ? `<p style="font-size:15px;line-height:1.7;color:#a3a3a3;margin:0 0 10px;">Ficaste em <strong style="color:#c9a961;">${lesson}</strong>${course ? ` · ${course}` : ""}. Não voltas do zero — voltas de onde paraste.</p>`
+             : `<p style="font-size:15px;line-height:1.7;color:#a3a3a3;margin:0 0 10px;">Não precisas de plano perfeito. Precisas de 15 minutos e uma aula.</p>`
          }
-         <p style="font-size:15px;line-height:1.7;color:#a3a3a3;margin:0 0 28px;">Quinze minutos hoje. Se depois disso quiseres parar, paras — mas para por escolha, não por hábito.</p>
-         <p style="margin:0 0 20px;">${btn(hasLesson ? "Retomar agora →" : "Voltar ao trabalho →", href)}</p>
-         <p style="font-size:14px;line-height:1.7;color:#6b6b6b;margin:0;">— Victor Muabi, MM Club</p>`,
+         <p style="font-size:15px;line-height:1.7;color:#a3a3a3;margin:0 0 26px;">Quinze minutos hoje. Depois, se quiseres parar, paras — mas para por escolha tua, não porque o hábito decidiu por ti.</p>
+         <p style="margin:0 0 20px;">${btn(hasLesson ? "Voltar agora →" : "Retomar o meu lugar →", href)}</p>
+         <p style="font-size:14px;line-height:1.7;color:#6b6b6b;margin:0;">Acredito em ti, mesmo quando tu não.<br>— Victor Muabi, MM Club</p>`,
       ),
     };
   },
