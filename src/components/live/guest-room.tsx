@@ -60,17 +60,8 @@ async function enableGuestCamera(room: Room, deviceId?: string): Promise<string 
       lastErr = err;
     }
   }
-  const msg = lastErr instanceof Error ? `${lastErr.name}: ${lastErr.message}` : String(lastErr ?? "");
-  if (/NotAllowedError|Permission/i.test(msg)) {
-    return "Permissão de câmara bloqueada. Autoriza no ícone da barra de endereço e tenta de novo.";
-  }
-  if (/NotReadableError|TrackStartError|could not start/i.test(msg)) {
-    return "A câmara está a ser usada por outra aplicação. Fecha-a e tenta de novo.";
-  }
-  if (/NotFoundError|DevicesNotFound|OverconstrainedError/i.test(msg)) {
-    return "Não encontrámos nenhuma câmara disponível neste dispositivo.";
-  }
-  return "Não foi possível ligar a câmara. Tenta de novo.";
+  return cameraErrorMessage(lastErr);
+
 }
 
 
