@@ -365,6 +365,60 @@ export function useRoomState({
       setAudioBlocked(!room.canPlaybackAudio);
     });
 
+    /**
+     * Após uma reconexão o servidor pode ter deixado subscrições em suspenso —
+     * é a causa clássica de "não ouço/não vejo, tenho de fazer refresh".
+     * Forçamos a subscrição de tudo e voltamos a ler o estado do Postgres.
+     */
+    const resubscribeAll = () => {
+      room.remoteParticipants.forEach((p) => {
+        p.trackPublications.forEach((pub) => {
+          try {
+            (pub as RemoteTrackPublication).setSubscribed(true);
+          } catch {
+            /* já subscrito */
+          }
+        });
+        rebuildParticipantTracks(p);
+      });
+      rebuildParticipantTracks(room.localParticipant);
+      setAudioBlocked(!room.canPlaybackAudio);
+      void room.startAudio().catch(() => {});
+    };
+
+    on(RoomEvent.Reconnected, () => {
+      resubscribeAll();
+      hydrateRef.current();
+      void syncStudioProcessors(room);
+    });
+    on(RoomEvent.SignalConnected, () => resubscribeAll());
+    on(RoomEvent.TrackSubscriptionFailed, (_sid: string, p: Participant) => {
+      // Uma subscrição falhada deixa o participante mudo/preto. Tentamos de novo.
+      window.setTimeout(() => {
+        try {
+          (p as Participant).trackPublications.forEach((pub) => {
+            (pub as RemoteTrackPublication).setSubscribed?.(true);
+          });
+        } catch {
+          /* noop */
+        }
+        rebuildParticipantTracks(p);
+      }, 1500);
+    });
+    on(RoomEvent.Disconnected, (reason?: unknown) => {
+      setConnState("disconnected");
+      // Se não fomos nós a sair, voltamos a ligar automaticamente (o utilizador
+      // nunca deve precisar de recarregar a página).
+      const clientInitiated = Number(reason) === 1 /* CLIENT_INITIATED */;
+      if (!clientInitiated && isCurrentRun()) {
+        window.setTimeout(() => {
+          if (isCurrentRun()) setReconnectNonce((n) => n + 1);
+        }, 1200);
+      }
+    });
+
+
+
 
     (async () => {
       try {
