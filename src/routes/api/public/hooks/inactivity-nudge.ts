@@ -46,13 +46,6 @@ export const Route = createFileRoute("/api/public/hooks/inactivity-nudge")({
           return Response.json({ ok: false, error: error.message }, { status: 500 });
         }
 
-        // Idempotência: um nudge por membro por semana ISO.
-        const now = new Date();
-        const weekRef = `${now.getUTCFullYear()}-W${String(
-          Math.ceil(
-            ((now.getTime() - Date.UTC(now.getUTCFullYear(), 0, 1)) / 86_400_000 + 1) / 7,
-          ),
-        ).padStart(2, "0")}`;
 
         let sent = 0;
         let skipped = 0;
