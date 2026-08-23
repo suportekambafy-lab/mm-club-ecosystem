@@ -59,6 +59,10 @@ function GuestEntry() {
     queryFn: () => fetchInfo({ data: { liveId, code: c as string } }),
     refetchInterval: 10_000,
     staleTime: 0,
+    // Link inválido/expirado é definitivo: mostramos a mensagem já, sem
+    // deixar o convidado num spinner infinito.
+    retry: 1,
+
   });
 
   const [name, setName] = useState("");
