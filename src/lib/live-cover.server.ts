@@ -17,33 +17,45 @@ type SupabaseAdminLike = {
   };
 };
 
+async function toDataUrl(url: string, label: string): Promise<string> {
+  const imgRes = await fetch(url);
+  if (!imgRes.ok) throw new Error(`Falha ao carregar ${label} (${imgRes.status}).`);
+  const buf = new Uint8Array(await imgRes.arrayBuffer());
+  const mime = imgRes.headers.get("content-type")?.split(";")[0] || "image/jpeg";
+  return `data:${mime};base64,${Buffer.from(buf).toString("base64")}`;
+}
+
 export async function generateAndStoreLiveCover({
   liveId,
   title,
   startsAt,
   supabaseAdmin,
   speakerImageUrl,
+  guestImageUrl,
+  pathPrefix,
 }: {
   liveId: string;
   title: string;
   startsAt: string;
   supabaseAdmin: SupabaseAdminLike;
   speakerImageUrl?: string;
+  guestImageUrl?: string;
+  pathPrefix?: string;
 }): Promise<string> {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada para gerar capas.");
 
-  const prompt = buildLiveCoverPrompt(title, startsAt, Boolean(speakerImageUrl));
+  const people = [speakerImageUrl, guestImageUrl].filter(Boolean) as string[];
+  const prompt = buildLiveCoverPrompt(title, startsAt, people.length);
 
   let b64: string | undefined;
 
-  if (speakerImageUrl) {
-    // Fetch speaker image and inline it as data URL for reliable multimodal input.
-    const imgRes = await fetch(speakerImageUrl);
-    if (!imgRes.ok) throw new Error(`Falha ao carregar foto do palestrante (${imgRes.status}).`);
-    const buf = new Uint8Array(await imgRes.arrayBuffer());
-    const mime = imgRes.headers.get("content-type")?.split(";")[0] || "image/jpeg";
-    const dataUrl = `data:${mime};base64,${Buffer.from(buf).toString("base64")}`;
+  if (people.length > 0) {
+    // Fetch reference photos and inline them as data URLs for reliable multimodal input.
+    const dataUrls: string[] = [];
+    for (const [i, u] of people.entries()) {
+      dataUrls.push(await toDataUrl(u, i === 0 && speakerImageUrl ? "foto do palestrante" : "foto do convidado"));
+    }
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
       method: "POST",
@@ -55,7 +67,7 @@ export async function generateAndStoreLiveCover({
             role: "user",
             content: [
               { type: "text", text: prompt },
-              { type: "image_url", image_url: { url: dataUrl } },
+              ...dataUrls.map((url) => ({ type: "image_url" as const, image_url: { url } })),
             ],
           },
         ],
@@ -64,7 +76,7 @@ export async function generateAndStoreLiveCover({
     });
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new Error(`Falha ao gerar capa com palestrante (${res.status}): ${text.slice(0, 220)}`);
+      throw new Error(`Falha ao gerar capa com pessoas (${res.status}): ${text.slice(0, 220)}`);
     }
     const json = (await res.json()) as { data?: Array<{ b64_json?: string }> };
     b64 = json.data?.[0]?.b64_json;
@@ -91,7 +103,7 @@ export async function generateAndStoreLiveCover({
   if (!b64) throw new Error("A IA não devolveu imagem para a capa.");
 
   const bytes = Uint8Array.from(Buffer.from(b64, "base64"));
-  const path = `lives-covers/${liveId}/ai-cover-${Date.now()}.png`;
+  const path = `${pathPrefix ?? "lives-covers"}/${liveId}/ai-cover-${Date.now()}.png`;
   const upload = await supabaseAdmin.storage.from(LIVE_COVER_BUCKET).upload(path, bytes, {
     contentType: "image/png",
     cacheControl: "31536000",
@@ -104,7 +116,7 @@ export async function generateAndStoreLiveCover({
   return signed.data.signedUrl;
 }
 
-function buildLiveCoverPrompt(_title: string, _startsAt: string, withSpeaker: boolean): string {
+function buildLiveCoverPrompt(_title: string, _startsAt: string, peopleCount: number): string {
   const base = [
     "Ultra-premium cinematic 16:9 background image for a livestream cover in the MM Club luxury digital entrepreneurs brand.",
     "Visual direction: deep matte black stage, warm golden spotlights, soft golden bokeh, subtle floating gold dust particles, elegant Apple TV / MasterClass energy, dramatic depth, refined contrast, editorial fashion-photography quality.",
@@ -115,12 +127,19 @@ function buildLiveCoverPrompt(_title: string, _startsAt: string, withSpeaker: bo
     "Do not invent fake product covers, fake screenshots, or clutter.",
   ];
 
-  if (withSpeaker) {
+  if (peopleCount === 1) {
     base.splice(
       1,
       0,
       "Use the person in the provided reference photo as the main subject. Keep their face, hairstyle, ethnicity, skin tone and identity 100% recognizable — do not invent a different person, do not stylize into illustration.",
       "Frame the subject as a full head-and-shoulders cinematic portrait, fully inside the image with clear margin on all sides — never crop the head, hair, hands or shoulders. Position the subject slightly right of center so the left third stays as dark cinematic negative space for app UI. Dramatic golden rim light on the silhouette, blurred golden bokeh stage background, MasterClass-style keynote framing.",
+    );
+  } else if (peopleCount >= 2) {
+    base.splice(
+      1,
+      0,
+      "Use BOTH people from the two provided reference photos in the same image: the first photo is the host/speaker, the second photo is the guest. Keep each face, hairstyle, ethnicity, skin tone and identity 100% recognizable — do not merge them into one person, do not invent extra people, do not stylize into illustration.",
+      "Compose them side by side as a two-person cinematic keynote portrait (head-and-shoulders), both fully inside the frame with clear margin on all sides — never crop heads, hair or shoulders. Place the pair slightly right of center so the left third stays as dark cinematic negative space for app UI. Matching golden rim light on both silhouettes, consistent lighting and scale between the two, blurred golden bokeh stage background, MasterClass-style duo interview framing.",
     );
   }
 
