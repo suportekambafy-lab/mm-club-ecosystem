@@ -19,20 +19,41 @@ function lastSevenDays(): string[] {
   return out;
 }
 
+/** Contas em modo de teste: a ofensiva aparece sempre que entram. */
+const ALWAYS_CELEBRATE_EMAILS = ["victormuabi20@gmail.com"];
+
 export function StreakCard({ className }: { className?: string }) {
   const { streak, loaded } = useLearningStreak();
   const current = streak?.current_streak ?? 0;
   const [celebrate, setCelebrate] = useState(false);
+  const [alwaysCelebrate, setAlwaysCelebrate] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void supabase.auth.getUser().then(({ data }) => {
+      const email = data.user?.email?.toLowerCase() ?? "";
+      if (!cancelled) setAlwaysCelebrate(ALWAYS_CELEBRATE_EMAILS.includes(email));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Popup de parabéns a partir do 2.º dia seguido, uma vez por nova contagem.
   // Se a pessoa faltar e a sequência recomeçar, volta a celebrar desde o 2.º dia.
+  // Em modo de teste (conta admin ou ?ofensiva=1) mostra sempre.
   useEffect(() => {
     if (!loaded) return;
-    if (!shouldCelebrateStreak(current)) return;
-    markStreakCelebrated(current);
+    const forced =
+      alwaysCelebrate ||
+      (typeof window !== "undefined" &&
+        new URLSearchParams(window.location.search).has("ofensiva"));
+    if (!forced && !shouldCelebrateStreak(current)) return;
+    if (!forced) markStreakCelebrated(current);
     const t = window.setTimeout(() => setCelebrate(true), 600);
     return () => window.clearTimeout(t);
-  }, [loaded, current]);
+  }, [loaded, current, alwaysCelebrate]);
+
 
   if (!loaded) {
     return (
