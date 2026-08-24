@@ -68,6 +68,47 @@ function AdminQuizzes() {
 
   const course: Course | undefined = courses.find((c) => c.id === courseId);
 
+  // Geração em lote: cobre de uma vez todos os módulos ainda sem perguntas.
+  const generateOne = useServerFn(generateModuleQuiz);
+  const [bulk, setBulk] = useState({ running: false, done: 0, total: 0 });
+  const missingModules = (course?.modules ?? []).filter(
+    (m) => (analytics.find((a) => a.moduleId === m.id)?.questionsAvailable ?? 0) === 0,
+  );
+
+  async function generateMissing() {
+    if (!course || missingModules.length === 0) {
+      toast.info("Não há módulos sem perguntas neste curso.");
+      return;
+    }
+    setBulk({ running: true, done: 0, total: missingModules.length });
+    let created = 0;
+    let failed = 0;
+    for (const [i, m] of missingModules.entries()) {
+      try {
+        const res = (await generateOne({
+          data: {
+            courseId: course.id,
+            courseTitle: course.title,
+            moduleId: m.id,
+            moduleTitle: m.title,
+            lessons: m.lessons.map((l) => ({ id: l.id, title: l.title })),
+            count: 8,
+            replace: true,
+          },
+        })) as { created?: number };
+        created += res?.created ?? 0;
+      } catch {
+        failed += 1;
+      }
+      setBulk({ running: true, done: i + 1, total: missingModules.length });
+    }
+    setBulk({ running: false, done: 0, total: 0 });
+    await refreshAnalytics();
+    toast.success(
+      `Geradas ${created} perguntas${failed ? ` · ${failed} módulo(s) sem transcrição suficiente` : ""}.`,
+    );
+  }
+
   return (
     <div className="space-y-6">
       <SectionHeading
