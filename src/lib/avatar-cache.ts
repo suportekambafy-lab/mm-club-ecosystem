@@ -65,8 +65,17 @@ export function resolveAvatarUrl(path: string | null | undefined): Promise<strin
   if (existing) return existing;
 
   const task = (async () => {
-    const { data } = await supabase.storage.from("avatars").createSignedUrl(path, 3600);
-    const url = data?.signedUrl ?? null;
+    let url: string | null = null;
+    // duas tentativas: um erro de rede pontual deixava o avatar como "?"
+    for (let attempt = 0; attempt < 2 && !url; attempt += 1) {
+      try {
+        const { data } = await supabase.storage.from("avatars").createSignedUrl(path, 3600);
+        url = data?.signedUrl ?? null;
+      } catch {
+        url = null;
+      }
+      if (!url && attempt === 0) await new Promise((r) => setTimeout(r, 400));
+    }
     if (url) {
       store()[path] = { url, exp: Date.now() + TTL_MS };
       persist();
@@ -76,6 +85,9 @@ export function resolveAvatarUrl(path: string | null | undefined): Promise<strin
         img.decoding = "async";
         img.src = url;
       }
+    } else if (memory && memory[path] && memory[path].exp <= Date.now()) {
+      delete memory[path];
+      persist();
     }
     inflight.delete(path);
     return url ?? entry?.url ?? null;
@@ -84,3 +96,4 @@ export function resolveAvatarUrl(path: string | null | undefined): Promise<strin
   inflight.set(path, task);
   return task;
 }
+
