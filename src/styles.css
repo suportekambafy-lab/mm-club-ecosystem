@@ -359,7 +359,7 @@
 @utility section-stack {
   display: flex;
   flex-direction: column;
-  gap: clamp(2rem, 1.2rem + 2.4vw, 3.5rem);
+  gap: clamp(1.25rem, 0.8rem + 1.5vw, 2.25rem);
 }
 
 /* Cartão premium: raio, hairline, sombra e hover unificados. */

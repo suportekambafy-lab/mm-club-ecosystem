@@ -114,7 +114,7 @@ function AcademiaPage() {
 
 
       {continuing.length > 0 && (
-        <section className="space-y-5">
+        <section className="space-y-4">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 px-1">
             <div>
               <p className="type-eyebrow text-primary">
@@ -133,7 +133,7 @@ function AcademiaPage() {
         </section>
       )}
 
-      <section className="space-y-5">
+      <section className="space-y-4">
         <div className="grid grid-cols-1 gap-4 px-1 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
           <div>
             <p className="type-eyebrow text-primary">
@@ -288,79 +288,86 @@ function FeaturedHero({
   return (
     <Link
       {...linkProps}
-      className="group relative -mx-3 block overflow-hidden sm:-mx-4 md:-mx-8"
+      className="group surface-card relative flex flex-col overflow-hidden md:flex-row md:items-stretch"
     >
+      {/* Cover — compact left panel on desktop, short banner on mobile */}
       <div
-        className="relative aspect-[16/10] w-full md:aspect-[21/9]"
+        className="relative aspect-[16/9] w-full shrink-0 overflow-hidden md:h-auto md:w-[44%] lg:w-[40%]"
         style={{ background: heroBackground }}
       >
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-background/10 to-transparent" />
-
-
-        <div className="absolute inset-0 flex items-end">
-          <div className="w-full px-6 pb-8 md:px-14 md:pb-14 lg:max-w-3xl">
-            <p className="font-display text-[10px] uppercase tracking-[0.32em] text-primary md:text-xs">
-              {started ? "Continua a assistir" : "Destaque"}
-            </p>
-            <h1 className="mt-3 font-display text-3xl leading-[1.02] tracking-tight text-foreground md:text-5xl lg:text-6xl">
-              {course.title}
-            </h1>
-            {resumeLesson ? (
-              <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">
-                Aula: <span className="text-foreground">{resumeLesson.title}</span>
-              </p>
-            ) : course.tagline ? (
-              <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">
-                {course.tagline}
-              </p>
-            ) : null}
-
-            <div className="mt-6 flex flex-wrap items-center gap-4">
-              <span className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/25 transition group-hover:bg-gold-soft">
-                <Play className="h-4 w-4 fill-current" />
-                {started ? "Continuar" : "Começar agora"}
-              </span>
-              {expert && (
-                <div className="flex items-center gap-2.5">
-                  <div
-                    className="h-9 w-9 shrink-0 rounded-full ring-1 ring-hairline"
-                    style={
-                      expert.logo
-                        ? {
-                            backgroundImage: `url(${expert.logo})`,
-                            backgroundSize: "cover",
-                            backgroundPosition: "center",
-                          }
-                        : { background: expert.photo }
-                    }
-                  />
-                  <div className="text-xs">
-                    <p className="font-medium text-foreground">{expert.name}</p>
-                    <p className="text-muted-foreground">{expert.role}</p>
-                  </div>
-                </div>
-              )}
-              {lessonDurationLabel && (
-                <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Clock className="h-3.5 w-3.5" />
-                  {lessonDurationLabel}
-                </span>
-              )}
-            </div>
-
-            {started && (
-              <div className="mt-5 max-w-md">
-                <div className="h-1 overflow-hidden rounded-full bg-surface-3/50">
-                  <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${lessonPercent}%` }} />
-                </div>
-                <p className="mt-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
-                  {lessonPercent}% desta aula
-                </p>
-              </div>
-            )}
-          </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent md:bg-gradient-to-r md:from-transparent md:to-background/30" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 transition group-hover:scale-110 group-hover:bg-gold-soft">
+            <Play className="h-5 w-5 fill-current" />
+          </span>
         </div>
+        {started && (
+          <div className="absolute inset-x-0 bottom-0 px-4 pb-3">
+            <div className="h-1 overflow-hidden rounded-full bg-white/25">
+              <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${lessonPercent}%` }} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Text — right panel */}
+      <div className="flex flex-1 flex-col justify-center gap-3 px-5 py-5 md:gap-4 md:px-8 md:py-7">
+        <div>
+          <p className="font-display text-[10px] uppercase tracking-[0.3em] text-primary">
+            {started ? "Continua a assistir" : "Destaque"}
+          </p>
+          <h1 className="mt-2 font-display text-2xl leading-[1.05] tracking-tight text-foreground md:text-4xl">
+            {course.title}
+          </h1>
+          {resumeLesson ? (
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Aula: <span className="text-foreground">{resumeLesson.title}</span>
+            </p>
+          ) : course.tagline ? (
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              {course.tagline}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4">
+          <span className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/25 transition group-hover:bg-gold-soft">
+            <Play className="h-4 w-4 fill-current" />
+            {started ? "Continuar" : "Começar agora"}
+          </span>
+          {expert && (
+            <div className="flex items-center gap-2.5">
+              <div
+                className="h-9 w-9 shrink-0 rounded-full ring-1 ring-hairline"
+                style={
+                  expert.logo
+                    ? {
+                        backgroundImage: `url(${expert.logo})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }
+                    : { background: expert.photo }
+                }
+              />
+              <div className="text-xs">
+                <p className="font-medium text-foreground">{expert.name}</p>
+                <p className="text-muted-foreground">{expert.role}</p>
+              </div>
+            </div>
+          )}
+          {lessonDurationLabel && (
+            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock className="h-3.5 w-3.5" />
+              {lessonDurationLabel}
+            </span>
+          )}
+        </div>
+
+        {started && (
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            {lessonPercent}% desta aula
+          </p>
+        )}
       </div>
     </Link>
   );
