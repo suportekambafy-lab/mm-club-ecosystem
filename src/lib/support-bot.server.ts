@@ -137,3 +137,97 @@ export async function replyToCommunityPost(postId: string): Promise<{ replied: b
   }
   return { replied: true };
 }
+
+type ChatRow = {
+  id: string;
+  content: string | null;
+  created_at: string;
+  author_id: string;
+  author?: { display_name: string | null } | null;
+};
+
+/**
+ * MM Suporte no chat ao vivo da comunidade.
+ *
+ * Responde à mensagem indicada com uma nova mensagem no chat (o chat não tem
+ * comentários). Só responde se ainda não existir mensagem do agente depois
+ * dessa, para nunca duplicar nem "falar sozinho".
+ */
+export async function replyToCommunityChatMessage(
+  messageId: string,
+): Promise<{ replied: boolean }> {
+  const key = process.env.LOVABLE_API_KEY;
+  if (!key) return { replied: false };
+
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const admin = supabaseAdmin as unknown as { from: (t: string) => any };
+
+  const { data } = await admin
+    .from("community_chat_messages")
+    .select(
+      "id, content, created_at, author_id, author:profiles!community_chat_messages_author_id_fkey (display_name)",
+    )
+    .eq("id", messageId)
+    .maybeSingle();
+
+  const row = data as ChatRow | null;
+  if (!row) return { replied: false };
+  if (row.author_id === SUPPORT_BOT_ID) return { replied: false };
+
+  const createdAt = new Date(row.created_at).getTime();
+  if (Date.now() - createdAt < 2 * 60 * 1000) return { replied: false };
+
+  const text = (row.content ?? "").trim();
+  if (text.length < 8) return { replied: false };
+
+  // Contexto: mensagens seguintes. Se já houver resposta do agente ou da
+  // equipa depois desta mensagem, fica de fora.
+  const { data: after } = await admin
+    .from("community_chat_messages")
+    .select("author_id, content")
+    .gt("created_at", row.created_at)
+    .order("created_at", { ascending: true })
+    .limit(20);
+
+  const later = (after ?? []) as Array<{ author_id: string; content: string }>;
+  if (later.some((m) => m.author_id === SUPPORT_BOT_ID)) return { replied: false };
+  if (later.length >= 6) return { replied: false };
+
+  const { lessonMomentsContext } = await import("./lesson-moments.server");
+  const lessonsContext = await lessonMomentsContext(text, key);
+
+  const gateway = createLovableAiGatewayProvider(key);
+  let answer = "";
+  try {
+    const result = await generateText({
+      model: gateway("google/gemini-3.5-flash"),
+      system: `${SYSTEM}${lessonsContext}`,
+      prompt: [
+        "Estás a responder no chat ao vivo do grupo (mensagens curtas, conversa em tempo real).",
+        `Autor: ${row.author?.display_name ?? "Membro"}`,
+        `Mensagem: """${text.slice(0, 2000)}"""`,
+        later.length > 0
+          ? `Mensagens seguintes: ${later.map((m) => m.content).join(" | ").slice(0, 800)}`
+          : "Ainda ninguém respondeu.",
+      ].join("\n\n"),
+    });
+    answer = (result.text ?? "").trim();
+  } catch (e) {
+    console.error("[support-bot] chat gateway failed", e);
+    return { replied: false };
+  }
+
+  if (!answer || /^skip$/i.test(answer) || answer.toUpperCase().startsWith("SKIP")) {
+    return { replied: false };
+  }
+  if (answer.length > 700) answer = `${answer.slice(0, 680).trim()}…`;
+
+  const { error } = await admin
+    .from("community_chat_messages")
+    .insert({ author_id: SUPPORT_BOT_ID, content: answer });
+  if (error) {
+    console.error("[support-bot] chat insert failed", error);
+    return { replied: false };
+  }
+  return { replied: true };
+}
