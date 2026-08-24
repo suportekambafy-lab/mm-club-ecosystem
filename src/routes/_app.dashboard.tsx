@@ -121,7 +121,8 @@ function DashboardPage() {
   if (!ready) return <DashboardSkeleton />;
 
   return (
-    <div className="space-y-16">
+    <div className="section-stack">
+
       {/* Cinematic hero — full bleed, autoplay muted loop, editorial overlay */}
       <CinematicHero name={sessionUser?.name ?? ""} loading={userLoading && !sessionUser} />
 
