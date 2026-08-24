@@ -75,7 +75,7 @@ function render(ctx: AudioContext) {
 
   // --- Barramento principal + reverberação de sala grande ---
   const master = ctx.createGain();
-  master.gain.value = 0.42;
+  master.gain.value = 0.6;
   master.connect(ctx.destination);
 
   // Impulso sintetizado: cauda ~2.6s com decaimento exponencial (hall).
