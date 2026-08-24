@@ -40,6 +40,9 @@ import { useAdminIds } from "@/hooks/use-admin-ids";
 import { useConfirm } from "@/components/mm/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { setQuizModalOpen as setOverlayOpen } from "@/lib/quiz-visibility";
+
 import { CommunitySpotlight } from "@/components/mm/community-spotlight";
 import { useCommunityPresence } from "@/lib/community-presence";
 import {
