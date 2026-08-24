@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { InlineAlert } from "@/components/mm/inline-alert";
+import { NextStepCard } from "@/components/mm/next-step-card";
 import { StreakCard } from "@/components/mm/streak-card";
 import { trackLoadTime } from "@/lib/ux-analytics";
 
