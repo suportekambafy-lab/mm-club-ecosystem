@@ -146,12 +146,21 @@ export function CourseCard({ course, className, variant = "default", resumeLesso
               <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-primary">
                 {formatCourseRelease(course)}
               </span>
+            ) : course.progress >= 1 ? (
+              <span className="rounded-full border border-hairline px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.18em] text-primary">
+                Concluído
+              </span>
             ) : course.progress > 0 ? (
               <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-primary">
-                {Math.round(course.progress * 100)}%
+                {Math.round(course.progress * 100)}% · a meio
               </span>
-            ) : null}
+            ) : (
+              <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                Novo
+              </span>
+            )}
           </div>
+
         </div>
       </Link>
     </motion.div>
