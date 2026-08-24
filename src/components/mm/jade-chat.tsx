@@ -424,10 +424,13 @@ function Bubble({
 function TypingIndicator() {
   return (
     <div className="flex justify-start">
-      <div className="flex items-center gap-1 rounded-2xl bg-surface-1 px-4 py-3 ring-1 ring-border">
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:150ms]" />
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:300ms]" />
+      <div className="flex items-center gap-2 rounded-2xl bg-surface-1 px-4 py-3 ring-1 ring-border">
+        <span className="type-body text-muted-foreground animate-fade-in [animation-duration:1.2s] [animation-iteration-count:infinite] [animation-direction:alternate]">
+          A pensar
+        </span>
+        <span className="animate-fade-in text-muted-foreground [animation-duration:1.2s] [animation-delay:200ms] [animation-iteration-count:infinite] [animation-direction:alternate]">
+          …
+        </span>
       </div>
     </div>
   );
