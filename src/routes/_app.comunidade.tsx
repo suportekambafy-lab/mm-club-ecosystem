@@ -2103,12 +2103,7 @@ function PostViewersDialog({ postId, onClose }: { postId: string; onClose: () =>
           )}
           {data?.map((v) => (
             <div key={v.user_id} className="flex items-center gap-3 rounded-xl px-1 py-1.5">
-              <img
-                src={cachedAvatarUrl(resolveAvatarUrl(v.avatar_url, v.display_name ?? "Membro"))}
-                alt={v.display_name ?? "Membro"}
-                className="h-8 w-8 shrink-0 rounded-full object-cover"
-                loading="lazy"
-              />
+              <Avatar name={v.display_name ?? "Membro"} url={v.avatar_url} size={32} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{v.display_name ?? "Membro"}</p>
               </div>
