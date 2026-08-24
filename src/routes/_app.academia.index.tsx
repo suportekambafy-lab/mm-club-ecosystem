@@ -299,7 +299,7 @@ function FeaturedHero({
 
 
         <div className="absolute inset-0 flex items-end">
-          <div className="w-full px-6 pb-8 md:px-14 md:pb-14 lg:max-w-3xl">
+          <div className="w-full px-6 pb-6 md:px-12 md:pb-10 lg:max-w-3xl">
             <p className="font-display text-[10px] uppercase tracking-[0.32em] text-primary md:text-xs">
               {started ? "Continua a assistir" : "Destaque"}
             </p>
