@@ -59,15 +59,16 @@ export function NextStepCard({ className }: { className?: string }) {
         </Link>
 
 
-        <div className="space-y-4 p-5 md:p-6">
-          <div className="space-y-1.5">
-            <p className="inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.24em] text-primary">
+        <div className="space-y-4 p-5 md:p-7">
+          <div className="space-y-2">
+            <p className="type-eyebrow inline-flex items-center gap-1.5 text-primary">
               <Target className="h-3 w-3" />
               {label}
             </p>
-            <h2 className="font-display text-xl leading-tight text-foreground md:text-2xl">
+            <h2 className="type-section text-foreground">
               {step.lesson.title}
             </h2>
+
             <p className="text-xs text-muted-foreground">
               {step.course.title} · {step.module.title} · {step.minutes} min
             </p>
