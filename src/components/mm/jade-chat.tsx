@@ -383,10 +383,10 @@ function Bubble({
   const raw = messageText(message);
   const { text, options } = isUser ? { text: raw, options: [] as string[] } : splitOptions(raw);
   return (
-    <div className={cn("group flex flex-col gap-2", isUser ? "items-end" : "items-start")}>
+    <div className={cn("group flex w-full min-w-0 flex-col gap-2", isUser ? "items-end" : "items-start")}>
       <div
         className={cn(
-          "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
+          "min-w-0 max-w-[85%] overflow-hidden rounded-2xl px-4 py-3 text-sm leading-relaxed [overflow-wrap:anywhere]",
           isUser
             ? "whitespace-pre-wrap bg-primary text-primary-foreground"
             : "bg-surface-1 text-foreground ring-1 ring-border",
@@ -395,11 +395,12 @@ function Bubble({
         {isUser ? (
           text
         ) : (
-          <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-headings:font-display prose-headings:text-foreground prose-strong:text-primary prose-a:text-primary">
+          <div className="prose prose-sm dark:prose-invert min-w-0 max-w-none break-words prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-headings:font-display prose-headings:text-foreground prose-strong:text-primary prose-a:break-all prose-a:text-primary prose-pre:overflow-x-auto prose-pre:whitespace-pre-wrap prose-code:break-words prose-table:block prose-table:w-full prose-table:overflow-x-auto prose-img:max-w-full">
             <ReactMarkdown>{text || "…"}</ReactMarkdown>
           </div>
         )}
       </div>
+
       {!isUser && !streaming && text && <CopyButton text={text} />}
       {!isUser && options.length > 0 && (
         <div className="flex max-w-[95%] flex-wrap gap-2">
