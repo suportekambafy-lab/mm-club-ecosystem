@@ -16,7 +16,9 @@ export const Route = createFileRoute("/api/public/hooks/support-bot-sweep")({
 
         try {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-          const { replyToCommunityPost } = await import("@/lib/support-bot.server");
+          const { replyToCommunityPost, replyToCommunityChatMessage } = await import(
+            "@/lib/support-bot.server"
+          );
 
           const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
           const { data: rows } = await (supabaseAdmin as any)
@@ -32,7 +34,27 @@ export const Route = createFileRoute("/api/public/hooks/support-bot-sweep")({
             if (res.replied) replied += 1;
           }
 
-          return Response.json({ ok: true, checked: (rows ?? []).length, replied });
+          // Chat ao vivo do grupo: responde à última mensagem sem resposta.
+          const { data: chatRows } = await (supabaseAdmin as any)
+            .from("community_chat_messages")
+            .select("id")
+            .gte("created_at", since)
+            .order("created_at", { ascending: false })
+            .limit(30);
+
+          let chatReplied = 0;
+          for (const row of chatRows ?? []) {
+            const res = await replyToCommunityChatMessage(row.id as string);
+            if (res.replied) chatReplied += 1;
+          }
+
+          return Response.json({
+            ok: true,
+            checked: (rows ?? []).length,
+            replied,
+            chatChecked: (chatRows ?? []).length,
+            chatReplied,
+          });
         } catch (e: any) {
           console.error("[support-bot-sweep] fatal", e);
           return Response.json({ error: e?.message ?? "error" }, { status: 500 });
