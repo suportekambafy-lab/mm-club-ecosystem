@@ -26,8 +26,6 @@ import {
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { expertsById } from "@/data/experts";
 import { courses } from "@/data/courses";
-import { computeCourseDuration } from "@/lib/course-duration";
-import { courseCoverImage } from "@/lib/course-cover";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 import {
   CinematicHeroSkeleton,
