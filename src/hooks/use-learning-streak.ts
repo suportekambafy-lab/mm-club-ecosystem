@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { markDailyVisit } from "@/lib/learning-activity";
 
 export type LearningStreak = {
   current_streak: number;
