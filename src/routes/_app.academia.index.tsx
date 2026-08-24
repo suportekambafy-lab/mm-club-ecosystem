@@ -291,7 +291,7 @@ function FeaturedHero({
       className="group relative -mx-3 block overflow-hidden sm:-mx-4 md:-mx-8"
     >
       <div
-        className="relative aspect-[16/10] w-full md:aspect-[21/9]"
+        className="relative aspect-[16/9] w-full md:aspect-[5/2]"
         style={{ background: heroBackground }}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
