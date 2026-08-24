@@ -27,7 +27,9 @@ export function NextStepCard({ className }: { className?: string }) {
 
   if (!loaded || !step) return null;
 
-  const thumb = lessonThumb(step.lesson, step.course);
+  // Sem miniatura da aula, mostramos a capa do curso (nunca um bloco vazio).
+  const thumb = lessonThumb(step.lesson, step.course) || courseCoverImage(step.course);
+  const coverFallback = !thumb ? courseCoverBackground(step.course) : undefined;
   const firstTime = step.kind === "start";
 
   const label =
