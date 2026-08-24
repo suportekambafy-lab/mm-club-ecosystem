@@ -39,6 +39,7 @@ import { useCommunityRanks } from "@/hooks/use-community-ranks";
 import { useAdminIds } from "@/hooks/use-admin-ids";
 import { useConfirm } from "@/components/mm/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CommunitySpotlight } from "@/components/mm/community-spotlight";
 import { useCommunityPresence } from "@/lib/community-presence";
 import {
@@ -1239,7 +1240,9 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
   const [likeCount, setLikeCount] = useState(post.like_count);
   const [commentCount, setCommentCount] = useState(post.comment_count);
   const [viewCount, setViewCount] = useState(post.views_count);
+  const [showViewers, setShowViewers] = useState(false);
   const cardRef = useRef<HTMLElement | null>(null);
+
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
   const postLinkUrl = useMemo(() => extractFirstUrl(post.content), [post.content]);
@@ -1277,29 +1280,58 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
     setEditContent(post.content);
   }, [post.liked_by_me, post.like_count, post.comment_count, post.views_count, post.content]);
 
-  // Conta uma visualização quando a publicação fica visível (uma vez por sessão).
+  // Regista a visualização (única por membro) quando a publicação fica visível.
   useEffect(() => {
+    if (!currentUserId) return;
     const el = cardRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-    const storageKey = `mm-post-view-${post.id}`;
+    const storageKey = `mm-post-view-${post.id}-${currentUserId}`;
     if (sessionStorage.getItem(storageKey)) return;
+
     let done = false;
+    const record = () => {
+      if (done) return;
+      done = true;
+      sessionStorage.setItem(storageKey, "1");
+      void (supabase as any)
+        .rpc("community_post_record_view", { _post_id: post.id })
+        .then(({ data, error }: { data: number | null; error: unknown }) => {
+          if (error) {
+            sessionStorage.removeItem(storageKey);
+            return;
+          }
+          if (typeof data === "number") setViewCount(data);
+        });
+    };
+
+    if (!el || typeof IntersectionObserver === "undefined") {
+      record();
+      return;
+    }
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (!entry.isIntersecting || done) continue;
-          done = true;
+          if (!entry.isIntersecting) continue;
           observer.disconnect();
-          sessionStorage.setItem(storageKey, "1");
-          setViewCount((c) => c + 1);
-          void (supabase as any).rpc("community_post_increment_view", { _post_id: post.id });
+          record();
         }
       },
-      { threshold: 0.5 },
+      { threshold: 0.2 },
     );
     observer.observe(el);
-    return () => observer.disconnect();
-  }, [post.id]);
+    // Fallback: se o observer não disparar (layout/animações), regista após 3s visível.
+    const fallback = window.setTimeout(() => {
+      const r = el.getBoundingClientRect();
+      if (r.top < window.innerHeight && r.bottom > 0) {
+        observer.disconnect();
+        record();
+      }
+    }, 3000);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(fallback);
+    };
+  }, [post.id, currentUserId]);
+
 
   const toggleLike = async () => {
     if (!currentUserId) {
@@ -1511,14 +1543,21 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
           <MessageCircle className="h-4 w-4" />
           <span>{commentCount}</span>
         </button>
-        <span
-          className="ml-auto flex items-center gap-1.5 px-2 text-xs text-muted-foreground"
-          title="Visualizações"
+        <button
+          type="button"
+          onClick={() => setShowViewers(true)}
+          className="ml-auto flex items-center gap-1.5 rounded-full px-2 py-1.5 text-xs text-muted-foreground transition hover:text-foreground"
+          title="Ver quem visualizou"
         >
           <Eye className="h-4 w-4" />
           <span>{viewCount.toLocaleString("pt-PT")}</span>
-        </span>
+        </button>
       </div>
+
+      {showViewers && (
+        <PostViewersDialog postId={post.id} onClose={() => setShowViewers(false)} />
+      )}
+
 
       {showComments && (
         <CommentsSection
@@ -2021,4 +2060,63 @@ function ChatRoom({ user }: { user: User }) {
     </>
   );
 
+}
+
+/** Modal com a lista de membros que visualizaram a publicação. */
+function PostViewersDialog({ postId, onClose }: { postId: string; onClose: () => void }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["community", "post-viewers", postId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("community_post_viewers", {
+        _post_id: postId,
+        _limit: 200,
+      });
+      if (error) throw error;
+      return (data ?? []) as {
+        user_id: string;
+        display_name: string | null;
+        avatar_url: string | null;
+        viewed_at: string;
+      }[];
+    },
+  });
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <Eye className="h-4 w-4" /> Visualizações
+            {data ? <span className="text-muted-foreground">({data.length})</span> : null}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
+          {isLoading && (
+            <div className="flex justify-center py-6">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          )}
+          {!isLoading && (data?.length ?? 0) === 0 && (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              Ainda ninguém visualizou esta publicação.
+            </p>
+          )}
+          {data?.map((v) => (
+            <div key={v.user_id} className="flex items-center gap-3 rounded-xl px-1 py-1.5">
+              <Avatar name={v.display_name ?? "Membro"} url={v.avatar_url} size={32} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{v.display_name ?? "Membro"}</p>
+              </div>
+              <span className="shrink-0 text-[11px] text-muted-foreground">
+                {new Date(v.viewed_at).toLocaleDateString("pt-PT", {
+                  day: "2-digit",
+                  month: "2-digit",
+                })}
+              </span>
+            </div>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }
