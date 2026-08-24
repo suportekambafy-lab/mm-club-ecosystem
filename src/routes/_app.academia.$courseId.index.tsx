@@ -206,6 +206,7 @@ function CourseDetail() {
             courseTitle={course.title}
             hours={Math.round((parseDurationToMinutes(totalDuration) / 60) * 10) / 10}
             lessonsTotal={totalLessons}
+            lessonsDone={p?.completedLessons?.size ?? 0}
             completed={percent >= 100}
           />
 
