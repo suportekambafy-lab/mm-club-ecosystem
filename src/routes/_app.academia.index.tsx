@@ -133,7 +133,7 @@ function AcademiaPage() {
         </section>
       )}
 
-      <section className="space-y-5">
+      <section className="space-y-4">
         <div className="grid grid-cols-1 gap-4 px-1 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
           <div>
             <p className="type-eyebrow text-primary">
