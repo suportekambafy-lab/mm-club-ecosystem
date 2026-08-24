@@ -11,6 +11,7 @@ import {
   adminSendLiveStartEmails,
   adminUpdateLive,
   adminRegenerateLiveCover,
+  adminPreviewLiveCover,
 } from "@/lib/lives.functions";
 
 import { adminGetGuestLink } from "@/lib/live-guest.functions";
@@ -95,8 +96,14 @@ function AdminLives() {
   const [uploading, setUploading] = useState(false);
   const [speakerUrl, setSpeakerUrl] = useState("");
   const [uploadingSpeaker, setUploadingSpeaker] = useState(false);
+  const [guestPhotoUrl, setGuestPhotoUrl] = useState("");
+  const [uploadingGuestPhoto, setUploadingGuestPhoto] = useState(false);
+  const [previewCover, setPreviewCover] = useState<string | null>(null);
+  const [previewing, setPreviewing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const speakerFileRef = useRef<HTMLInputElement>(null);
+  const guestPhotoRef = useRef<HTMLInputElement>(null);
+  const previewCoverFn = useServerFn(adminPreviewLiveCover);
 
   const refresh = async () => {
     setLoading(true);
@@ -141,6 +148,44 @@ function AdminLives() {
     }
   }
 
+  async function handleGuestPhotoUpload(file: File) {
+    setError(null);
+    setUploadingGuestPhoto(true);
+    try {
+      const { url } = await uploadMedia("course-media", file, "lives-speakers");
+      setGuestPhotoUrl(url);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setUploadingGuestPhoto(false);
+    }
+  }
+
+  async function handlePreviewCover() {
+    setError(null);
+    if (title.trim().length < 3) {
+      setError("Adiciona um título antes de pré-visualizar a capa.");
+      return;
+    }
+    setPreviewing(true);
+    setPreviewCover(null);
+    try {
+      const r = await previewCoverFn({
+        data: {
+          title: title.trim(),
+          starts_at: schedule && startsAt ? new Date(startsAt).toISOString() : undefined,
+          speaker_image_url: speakerUrl || undefined,
+          guest_image_url: guestPhotoUrl || undefined,
+        },
+      });
+      setPreviewCover(r.cover_url);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setPreviewing(false);
+    }
+  }
+
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
@@ -162,6 +207,7 @@ function AdminLives() {
         visibility,
         cover_url: coverUrl || undefined,
         speaker_image_url: speakerUrl || undefined,
+        guest_image_url: guestPhotoUrl || undefined,
       };
       const res = await create({ data: payload });
       setIngest({ id: res.id, url: res.rtmps.url, key: res.rtmps.streamKey });
@@ -173,8 +219,11 @@ function AdminLives() {
       setDuration(60);
       setCoverUrl("");
       setSpeakerUrl("");
+      setGuestPhotoUrl("");
+      setPreviewCover(null);
       if (fileRef.current) fileRef.current.value = "";
       if (speakerFileRef.current) speakerFileRef.current.value = "";
+      if (guestPhotoRef.current) guestPhotoRef.current.value = "";
       await refresh();
     } catch (err) {
       setError((err as Error).message);
@@ -573,6 +622,110 @@ function AdminLives() {
               )}
             </div>
           </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs uppercase tracking-widest text-muted-foreground">
+            Foto do convidado (opcional)
+          </label>
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface-2 p-3">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-surface-1">
+              {guestPhotoUrl ? (
+                <img loading="lazy" decoding="async" src={guestPhotoUrl} alt="Convidado" className="h-full w-full object-cover" />
+              ) : (
+                <Sparkles className="h-4 w-4 text-primary" />
+              )}
+            </div>
+            <div className="min-w-0 flex-1 text-xs text-muted-foreground">
+              {guestPhotoUrl ? (
+                <p className="truncate">Foto do convidado carregada. A capa vai juntar palestrante + convidado.</p>
+              ) : (
+                <p>Envia também a foto do convidado para a IA criar a capa com os dois lado a lado.</p>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                ref={guestPhotoRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleGuestPhotoUpload(f);
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => guestPhotoRef.current?.click()}
+                disabled={uploadingGuestPhoto}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-1 px-3 py-1.5 text-xs hover:border-primary/40 disabled:opacity-60"
+              >
+                {uploadingGuestPhoto ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                {guestPhotoUrl ? "Trocar" : "Carregar foto"}
+              </button>
+              {guestPhotoUrl && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGuestPhotoUrl("");
+                    if (guestPhotoRef.current) guestPhotoRef.current.value = "";
+                  }}
+                  className="text-[11px] text-muted-foreground underline"
+                >
+                  Remover
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs text-muted-foreground">
+              Gera a capa com IA e vê o resultado antes de publicar o agendamento.
+            </p>
+            <button
+              type="button"
+              onClick={handlePreviewCover}
+              disabled={previewing}
+              className="inline-flex items-center gap-1.5 rounded-full border border-primary/50 bg-surface-1 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 disabled:opacity-60"
+            >
+              {previewing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+              {previewing ? "A gerar pré-visualização…" : "Pré-visualizar capa"}
+            </button>
+          </div>
+          {previewCover && (
+            <div className="space-y-2">
+              <img
+                src={previewCover}
+                alt="Pré-visualização da capa"
+                className="w-full max-w-xl rounded-xl border border-border object-cover"
+              />
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCoverUrl(previewCover);
+                    toast.success("Capa aprovada. Vai ser usada no agendamento.");
+                  }}
+                  className="rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"
+                >
+                  Usar esta capa
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePreviewCover}
+                  disabled={previewing}
+                  className="text-[11px] text-muted-foreground underline disabled:opacity-60"
+                >
+                  Gerar outra
+                </button>
+                {coverUrl === previewCover && (
+                  <span className="text-[11px] text-emerald-400">Capa aprovada ✓</span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-1.5">

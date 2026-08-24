@@ -320,6 +320,11 @@ export const adminCreateLive = createServerFn({ method: "POST" })
           .url()
           .optional()
           .or(z.literal("").transform(() => undefined)),
+        guest_image_url: z
+          .string()
+          .url()
+          .optional()
+          .or(z.literal("").transform(() => undefined)),
         // Test sessions stay hidden from members and never trigger emails/notifications.
         is_test: z.boolean().optional(),
       })
@@ -372,6 +377,7 @@ export const adminCreateLive = createServerFn({ method: "POST" })
             startsAt,
             supabaseAdmin,
             speakerImageUrl: data.speaker_image_url,
+            guestImageUrl: data.guest_image_url,
           });
         } catch (e) {
           console.error("[lives] AI cover generation failed, using fallback", e);
@@ -668,6 +674,11 @@ export const adminRegenerateLiveCover = createServerFn({ method: "POST" })
           .url()
           .optional()
           .or(z.literal("").transform(() => undefined)),
+        guest_image_url: z
+          .string()
+          .url()
+          .optional()
+          .or(z.literal("").transform(() => undefined)),
       })
       .parse(i),
   )
@@ -689,8 +700,46 @@ export const adminRegenerateLiveCover = createServerFn({ method: "POST" })
       startsAt: row.starts_at as string,
       supabaseAdmin,
       speakerImageUrl: data.speaker_image_url,
+      guestImageUrl: data.guest_image_url,
     });
     await supabaseAdmin.from("lives").update({ cover_url: url }).eq("id", data.id);
+    return { ok: true as const, cover_url: url };
+  });
+
+// Pré-visualização: gera a capa com IA sem criar/alterar nenhuma live.
+export const adminPreviewLiveCover = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) =>
+    z
+      .object({
+        title: z.string().min(3).max(180),
+        starts_at: z.string().optional(),
+        speaker_image_url: z
+          .string()
+          .url()
+          .optional()
+          .or(z.literal("").transform(() => undefined)),
+        guest_image_url: z
+          .string()
+          .url()
+          .optional()
+          .or(z.literal("").transform(() => undefined)),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { generateAndStoreLiveCover } = await import("@/lib/live-cover.server");
+    const url = await generateAndStoreLiveCover({
+      liveId: `preview-${Date.now()}`,
+      title: data.title,
+      startsAt: data.starts_at ?? new Date().toISOString(),
+      supabaseAdmin,
+      speakerImageUrl: data.speaker_image_url,
+      guestImageUrl: data.guest_image_url,
+      pathPrefix: "lives-covers/previews",
+    });
     return { ok: true as const, cover_url: url };
   });
 
