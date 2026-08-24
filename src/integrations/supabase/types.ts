@@ -1404,6 +1404,39 @@ export type Database = {
           },
         ]
       }
+      community_post_views: {
+        Row: {
+          post_id: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          post_id: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          post_id?: string
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_post_views_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_post_views_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_posts: {
         Row: {
           author_id: string
@@ -4223,6 +4256,19 @@ export type Database = {
       community_post_increment_view: {
         Args: { _post_id: string }
         Returns: undefined
+      }
+      community_post_record_view: {
+        Args: { _post_id: string }
+        Returns: number
+      }
+      community_post_viewers: {
+        Args: { _limit?: number; _post_id: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          user_id: string
+          viewed_at: string
+        }[]
       }
       cron_hook_headers: { Args: never; Returns: Json }
       extract_mention_user_ids: { Args: { _text: string }; Returns: string[] }
