@@ -48,7 +48,7 @@ function AcademiaPage() {
   const liveCourses = useMemo(() => allCourses.filter((c) => canOpen(c)), [canOpen]);
   const upcomingCourses = useMemo(() => allCourses.filter((c) => !canOpen(c)), [canOpen]);
 
-  const { continuing, enrolled, featured } = useMemo(() => {
+  const { continuing, enrolled } = useMemo(() => {
     const enrolled = liveCourses.map((c) => ({
       ...c,
       progress: progress[c.id]?.progress ?? 0,
@@ -60,7 +60,7 @@ function AcademiaPage() {
         const tb = progress[b.id]?.lastWatchedAt ?? "";
         return tb.localeCompare(ta);
       });
-    return { continuing, enrolled, featured: continuing[0] ?? enrolled[0] };
+    return { continuing, enrolled };
   }, [progress, liveCourses]);
 
   // Pesquisa e filtro do catálogo (local, sem pedidos ao servidor).
