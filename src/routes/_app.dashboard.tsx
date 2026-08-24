@@ -143,6 +143,9 @@ function DashboardPage() {
         )
       )}
 
+      {/* Trilho guiado: a aula exata a ver a seguir */}
+      <NextStepCard />
+
       {/* Sequência de aprendizagem e meta semanal */}
       <StreakCard />
 
