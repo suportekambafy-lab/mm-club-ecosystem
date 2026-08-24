@@ -68,6 +68,47 @@ function AdminQuizzes() {
 
   const course: Course | undefined = courses.find((c) => c.id === courseId);
 
+  // Geração em lote: cobre de uma vez todos os módulos ainda sem perguntas.
+  const generateOne = useServerFn(generateModuleQuiz);
+  const [bulk, setBulk] = useState({ running: false, done: 0, total: 0 });
+  const missingModules = (course?.modules ?? []).filter(
+    (m) => (analytics.find((a) => a.moduleId === m.id)?.questionsAvailable ?? 0) === 0,
+  );
+
+  async function generateMissing() {
+    if (!course || missingModules.length === 0) {
+      toast.info("Não há módulos sem perguntas neste curso.");
+      return;
+    }
+    setBulk({ running: true, done: 0, total: missingModules.length });
+    let created = 0;
+    let failed = 0;
+    for (const [i, m] of missingModules.entries()) {
+      try {
+        const res = (await generateOne({
+          data: {
+            courseId: course.id,
+            courseTitle: course.title,
+            moduleId: m.id,
+            moduleTitle: m.title,
+            lessons: m.lessons.map((l) => ({ id: l.id, title: l.title })),
+            count: 8,
+            replace: true,
+          },
+        })) as { created?: number };
+        created += res?.created ?? 0;
+      } catch {
+        failed += 1;
+      }
+      setBulk({ running: true, done: i + 1, total: missingModules.length });
+    }
+    setBulk({ running: false, done: 0, total: 0 });
+    await refreshAnalytics();
+    toast.success(
+      `Geradas ${created} perguntas${failed ? ` · ${failed} módulo(s) sem transcrição suficiente` : ""}.`,
+    );
+  }
+
   return (
     <div className="space-y-6">
       <SectionHeading
@@ -96,7 +137,30 @@ function AdminQuizzes() {
         >
           <RefreshCw className="h-3.5 w-3.5" /> Atualizar métricas
         </button>
+        <button
+          type="button"
+          disabled={bulk.running || !course?.modules?.length}
+          onClick={() => void generateMissing()}
+          className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+        >
+          {bulk.running ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Sparkles className="h-3.5 w-3.5" />
+          )}
+          {bulk.running
+            ? `A gerar ${bulk.done}/${bulk.total}…`
+            : "Gerar testes em falta (curso)"}
+        </button>
       </div>
+
+      {ready && course?.modules?.length ? (
+        <p className="text-xs text-muted-foreground">
+          {missingModules.length === 0
+            ? "Todos os módulos deste curso já têm perguntas."
+            : `${missingModules.length} módulo(s) sem perguntas. A geração usa as transcrições das aulas; publica cada teste depois de rever.`}
+        </p>
+      ) : null}
 
       {!ready && (
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
