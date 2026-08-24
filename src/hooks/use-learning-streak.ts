@@ -21,6 +21,8 @@ export function useLearningStreak() {
       setLoaded(true);
       return;
     }
+    // Entrar na app já conta como dia ativo (1x por dia).
+    await markDailyVisit();
     try {
       const { data, error } = await (supabase as unknown as {
         rpc: (fn: string) => Promise<{ data: LearningStreak[] | null; error: unknown }>;
