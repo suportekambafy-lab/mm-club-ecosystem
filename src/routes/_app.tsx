@@ -1,7 +1,12 @@
 import { createFileRoute, Link, Outlet, redirect, useRouter, useRouterState } from "@tanstack/react-router";
 import { SupportWidget } from "@/components/mm/support-widget";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
+import {
+  subscribe as subscribeOverlay,
+  getQuizModalOpen as getOverlayOpen,
+} from "@/lib/quiz-visibility";
+
 
 import {
   LayoutDashboard,
@@ -724,6 +729,11 @@ function MobileTabBar({
   onOpenMore: () => void;
   immersive?: boolean;
 }) {
+  const overlayActive = useSyncExternalStore(
+    subscribeOverlay,
+    getOverlayOpen,
+    () => false,
+  );
   // Hide on lesson pages for a distraction-free view
   if (/^\/academia\/[^/]+\/[^/]+/.test(pathname)) return null;
   // Hide inside live rooms (immersive full-screen stage + controls)
@@ -741,14 +751,16 @@ function MobileTabBar({
       aria-label="Navegação principal"
       data-mobile-tabbar
       className={cn(
-        "fixed inset-x-0 z-40 flex justify-center px-3 lg:hidden",
+        "fixed inset-x-0 z-40 flex justify-center px-3 lg:hidden transition-opacity",
         // Flush to the very bottom in-browser (no empty band); only PWA
         // standalone keeps the home-indicator inset.
         "bottom-2 [@media(display-mode:standalone)]:bottom-[calc(env(safe-area-inset-bottom)+0.25rem)]",
+        overlayActive && "pointer-events-none opacity-0",
       )}
 
 
     >
+
       <ul
         className={cn(
           "flex items-center gap-1 rounded-full px-3 py-2 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 ring-1 transition-colors",

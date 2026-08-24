@@ -40,6 +40,9 @@ import { useAdminIds } from "@/hooks/use-admin-ids";
 import { useConfirm } from "@/components/mm/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { setQuizModalOpen as setOverlayOpen } from "@/lib/quiz-visibility";
+
 import { CommunitySpotlight } from "@/components/mm/community-spotlight";
 import { useCommunityPresence } from "@/lib/community-presence";
 import {
@@ -2062,8 +2065,9 @@ function ChatRoom({ user }: { user: User }) {
 
 }
 
-/** Modal com a lista de membros que visualizaram a publicação. */
+/** Drawer (de baixo para cima) com a lista de membros que visualizaram a publicação. */
 function PostViewersDialog({ postId, onClose }: { postId: string; onClose: () => void }) {
+  const adminIds = useAdminIds();
   const { data, isLoading } = useQuery({
     queryKey: ["community", "post-viewers", postId],
     queryFn: async () => {
@@ -2081,16 +2085,22 @@ function PostViewersDialog({ postId, onClose }: { postId: string; onClose: () =>
     },
   });
 
+  // Esconde a tabbar e o widget de suporte enquanto o drawer está aberto.
+  useEffect(() => {
+    setOverlayOpen(true);
+    return () => setOverlayOpen(false);
+  }, []);
+
   return (
-    <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-base">
+    <Drawer open onOpenChange={(o) => !o && onClose()}>
+      <DrawerContent className="z-[60]">
+        <DrawerHeader className="pb-2 text-left">
+          <DrawerTitle className="flex items-center gap-2 text-base">
             <Eye className="h-4 w-4" /> Visualizações
             {data ? <span className="text-muted-foreground">({data.length})</span> : null}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
+          </DrawerTitle>
+        </DrawerHeader>
+        <div className="max-h-[65vh] space-y-1 overflow-y-auto px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
           {isLoading && (
             <div className="flex justify-center py-6">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -2105,7 +2115,10 @@ function PostViewersDialog({ postId, onClose }: { postId: string; onClose: () =>
             <div key={v.user_id} className="flex items-center gap-3 rounded-xl px-1 py-1.5">
               <Avatar name={v.display_name ?? "Membro"} url={v.avatar_url} size={32} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{v.display_name ?? "Membro"}</p>
+                <p className="flex items-center gap-1 truncate text-sm font-medium">
+                  <span className="truncate">{v.display_name ?? "Membro"}</span>
+                  {adminIds.has(v.user_id) && <VerifiedBadge size={13} />}
+                </p>
               </div>
               <span className="shrink-0 text-[11px] text-muted-foreground">
                 {new Date(v.viewed_at).toLocaleDateString("pt-PT", {
@@ -2116,7 +2129,8 @@ function PostViewersDialog({ postId, onClose }: { postId: string; onClose: () =>
             </div>
           ))}
         </div>
-      </DialogContent>
-    </Dialog>
+      </DrawerContent>
+    </Drawer>
   );
 }
+
