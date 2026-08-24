@@ -113,7 +113,19 @@ export function CourseCertificate({
     await navigator.clipboard?.writeText(url).catch(() => {});
   }, [cert, courseTitle]);
 
-  if (!checked || (!completed && !cert)) return null;
+  const done = Math.min(lessonsDone ?? 0, lessonsTotal);
+  const remaining = Math.max(lessonsTotal - done, 0);
+  const percent = lessonsTotal > 0 ? Math.round((done / lessonsTotal) * 100) : 0;
+  // Antes de concluir mostramos o objetivo (o certificado deixa de ser invisível).
+  const pending = !completed && !cert;
+
+  // Curso concluído: emite automaticamente, sem obrigar a clicar.
+  useEffect(() => {
+    if (checked && completed && !cert && !busy) void issue();
+  }, [checked, completed, cert, busy, issue]);
+
+  if (!checked) return null;
+  if (pending && done === 0) return null;
 
   return (
     <section
@@ -128,13 +140,34 @@ export function CourseCertificate({
         </span>
         <div className="min-w-0 flex-1">
           <h3 className="font-display text-base text-foreground">
-            {cert ? "Certificado de conclusão" : "Curso concluído — emite o teu certificado"}
+            {cert
+              ? "Certificado de conclusão"
+              : pending
+                ? "O teu certificado está a caminho"
+                : "Curso concluído — emite o teu certificado"}
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">
             {cert
               ? `Código ${cert.code} · verificável em /certificado/${cert.code}`
-              : "Certificado oficial MM Club, com código público de verificação."}
+              : pending
+                ? `Faltam ${remaining} ${remaining === 1 ? "aula" : "aulas"} para receberes o certificado oficial MM Club.`
+                : "Certificado oficial MM Club, com código público de verificação."}
           </p>
+
+          {pending && (
+            <div className="mt-3">
+              <div className="h-1.5 overflow-hidden rounded-full bg-surface-3">
+                <div
+                  className="h-full rounded-full bg-primary transition-[width] duration-500"
+                  style={{ width: `${percent}%` }}
+                />
+              </div>
+              <p className="mt-1.5 text-[11px] text-muted-foreground">
+                {done} de {lessonsTotal} aulas · {percent}%
+              </p>
+            </div>
+          )}
+
 
           <div className="mt-3 flex flex-wrap gap-2">
             {!cert ? (
