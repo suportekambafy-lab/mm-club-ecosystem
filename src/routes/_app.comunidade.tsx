@@ -1279,29 +1279,58 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
     setEditContent(post.content);
   }, [post.liked_by_me, post.like_count, post.comment_count, post.views_count, post.content]);
 
-  // Conta uma visualização quando a publicação fica visível (uma vez por sessão).
+  // Regista a visualização (única por membro) quando a publicação fica visível.
   useEffect(() => {
+    if (!currentUserId) return;
     const el = cardRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-    const storageKey = `mm-post-view-${post.id}`;
+    const storageKey = `mm-post-view-${post.id}-${currentUserId}`;
     if (sessionStorage.getItem(storageKey)) return;
+
     let done = false;
+    const record = () => {
+      if (done) return;
+      done = true;
+      sessionStorage.setItem(storageKey, "1");
+      void (supabase as any)
+        .rpc("community_post_record_view", { _post_id: post.id })
+        .then(({ data, error }: { data: number | null; error: unknown }) => {
+          if (error) {
+            sessionStorage.removeItem(storageKey);
+            return;
+          }
+          if (typeof data === "number") setViewCount(data);
+        });
+    };
+
+    if (!el || typeof IntersectionObserver === "undefined") {
+      record();
+      return;
+    }
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (!entry.isIntersecting || done) continue;
-          done = true;
+          if (!entry.isIntersecting) continue;
           observer.disconnect();
-          sessionStorage.setItem(storageKey, "1");
-          setViewCount((c) => c + 1);
-          void (supabase as any).rpc("community_post_increment_view", { _post_id: post.id });
+          record();
         }
       },
-      { threshold: 0.5 },
+      { threshold: 0.2 },
     );
     observer.observe(el);
-    return () => observer.disconnect();
-  }, [post.id]);
+    // Fallback: se o observer não disparar (layout/animações), regista após 3s visível.
+    const fallback = window.setTimeout(() => {
+      const r = el.getBoundingClientRect();
+      if (r.top < window.innerHeight && r.bottom > 0) {
+        observer.disconnect();
+        record();
+      }
+    }, 3000);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(fallback);
+    };
+  }, [post.id, currentUserId]);
+
 
   const toggleLike = async () => {
     if (!currentUserId) {
