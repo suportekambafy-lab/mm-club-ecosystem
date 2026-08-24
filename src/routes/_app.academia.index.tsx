@@ -110,9 +110,6 @@ function AcademiaPage() {
     <div className="section-stack max-w-full overflow-x-clip">
       <NextStepCard />
 
-      {featured && <FeaturedHero course={featured} progress={progress} />}
-
-
       {continuing.length > 0 && (
         <section className="space-y-4">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 px-1">
