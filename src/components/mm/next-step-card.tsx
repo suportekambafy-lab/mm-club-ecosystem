@@ -111,14 +111,15 @@ export function NextStepCard({ className }: { className?: string }) {
             <Link
               to="/academia/$courseId/$lessonId"
               params={{ courseId: step.course.id, lessonId: step.lesson.id }}
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+              className="tap-target inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
             >
               <Play className="h-4 w-4" />
               {firstTime ? "Começar agora" : "Continuar"}
             </Link>
             <Link
               to="/certificados"
-              className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2.5 text-xs font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+              className="tap-target inline-flex items-center gap-2 rounded-full border border-border px-4 py-2.5 text-xs font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+
             >
               <Award className="h-3.5 w-3.5 text-primary" />
               {step.certificateRemaining === 0
