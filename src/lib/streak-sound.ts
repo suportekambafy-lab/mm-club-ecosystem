@@ -6,27 +6,76 @@
  * de reverberação (convolver com impulso sintetizado) que fecha o momento.
  * Tudo sintetizado com WebAudio — sem ficheiros externos.
  */
-export function playStreakSound() {
-  if (typeof window === "undefined") return;
+let sharedCtx: AudioContext | null = null;
+
+function getCtx(): AudioContext | null {
+  if (typeof window === "undefined") return null;
   const Ctx =
     window.AudioContext ??
     (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!Ctx) return;
+  if (!Ctx) return null;
+  if (!sharedCtx || sharedCtx.state === "closed") {
+    try {
+      sharedCtx = new Ctx();
+    } catch {
+      return null;
+    }
+  }
+  return sharedCtx;
+}
 
-  let ctx: AudioContext;
-  try {
-    ctx = new Ctx();
-  } catch {
+/** Desbloqueia o áudio no primeiro gesto do utilizador (política de autoplay). */
+export function unlockStreakAudio() {
+  const ctx = getCtx();
+  if (ctx && ctx.state === "suspended") void ctx.resume().catch(() => {});
+}
+
+if (typeof window !== "undefined") {
+  const unlock = () => unlockStreakAudio();
+  ["pointerdown", "touchstart", "keydown", "click"].forEach((evt) =>
+    window.addEventListener(evt, unlock, { passive: true }),
+  );
+}
+
+export function playStreakSound() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  if (ctx.state === "suspended") {
+    void ctx.resume().then(
+      () => {
+        if (ctx.state === "running") render(ctx);
+        else waitForGesture(ctx);
+      },
+      () => waitForGesture(ctx),
+    );
     return;
   }
-  void ctx.resume?.();
+  render(ctx);
+}
 
+function waitForGesture(ctx: AudioContext) {
+  let done = false;
+  const handler = () => {
+    if (done) return;
+    done = true;
+    ["pointerdown", "touchstart", "keydown", "click"].forEach((evt) =>
+      window.removeEventListener(evt, handler),
+    );
+    void ctx.resume().then(() => render(ctx)).catch(() => {});
+  };
+  ["pointerdown", "touchstart", "keydown", "click"].forEach((evt) =>
+    window.addEventListener(evt, handler, { passive: true }),
+  );
+  window.setTimeout(handler, 8000);
+}
+
+function render(ctx: AudioContext) {
   const now = ctx.currentTime;
   const sr = ctx.sampleRate;
 
   // --- Barramento principal + reverberação de sala grande ---
   const master = ctx.createGain();
-  master.gain.value = 0.42;
+  master.gain.value = 0.6;
   master.connect(ctx.destination);
 
   // Impulso sintetizado: cauda ~2.6s com decaimento exponencial (hall).
@@ -50,10 +99,10 @@ export function playStreakSound() {
     node.connect(reverb);
   };
 
-  const hit = now + 2.0;
+  const hit = now + 1.1;
 
   // --- 1) Riser: ruído rosa filtrado a abrir lentamente ---
-  const noiseLen = Math.floor(sr * 2.2);
+  const noiseLen = Math.floor(sr * 1.3);
   const nbuf = ctx.createBuffer(1, noiseLen, sr);
   const nd = nbuf.getChannelData(0);
   let last = 0;
@@ -130,5 +179,4 @@ export function playStreakSound() {
     osc.stop(t + 2.8);
   });
 
-  window.setTimeout(() => void ctx.close?.(), 6000);
 }
