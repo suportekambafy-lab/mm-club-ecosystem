@@ -107,7 +107,10 @@ function AcademiaPage() {
 
   return (
     <div className="max-w-full space-y-16 overflow-x-clip">
+      <NextStepCard />
+
       {featured && <FeaturedHero course={featured} progress={progress} />}
+
 
       {continuing.length > 0 && (
         <section className="space-y-5">
