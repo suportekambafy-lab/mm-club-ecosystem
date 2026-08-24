@@ -107,7 +107,7 @@ function AcademiaPage() {
 
 
   return (
-    <div className="max-w-full space-y-16 overflow-x-clip">
+    <div className="section-stack max-w-full overflow-x-clip">
       <NextStepCard />
 
       {featured && <FeaturedHero course={featured} progress={progress} />}
@@ -117,10 +117,10 @@ function AcademiaPage() {
         <section className="space-y-5">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 px-1">
             <div>
-              <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-primary">
+              <p className="type-eyebrow text-primary">
                 A tua jornada
               </p>
-              <h2 className="mt-1.5 font-display text-2xl leading-tight text-foreground md:text-3xl">
+              <h2 className="type-section mt-1.5 text-foreground">
                 Continua onde ficaste.
               </h2>
             </div>
@@ -136,10 +136,10 @@ function AcademiaPage() {
       <section className="space-y-5">
         <div className="grid grid-cols-1 gap-4 px-1 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-primary">
+            <p className="type-eyebrow text-primary">
               Academia MM
             </p>
-            <h2 className="mt-1.5 font-display text-2xl leading-tight text-foreground md:text-3xl">
+            <h2 className="type-section mt-1.5 text-foreground">
               O catálogo completo.
             </h2>
             <p className="mt-1.5 max-w-lg text-sm text-muted-foreground">
@@ -439,7 +439,7 @@ function PosterCard({
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-5">
-        <h3 className="font-display text-lg leading-tight tracking-tight text-foreground line-clamp-2">
+        <h3 className="type-card text-foreground line-clamp-2">
           {course.title}
         </h3>
         {percent > 0 && resumeLesson ? (
@@ -502,7 +502,7 @@ function ComingSoonCard({ course }: { course: Course }) {
 
 function AcademiaSkeleton() {
   return (
-    <div className="max-w-full space-y-16 overflow-x-clip">
+    <div className="section-stack max-w-full overflow-x-clip">
       <RailSkeleton cards={3} cardClassName="w-[300px] shrink-0" />
       <section className="space-y-5">
         <div className="space-y-2.5 px-1">

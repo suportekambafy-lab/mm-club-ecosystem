@@ -6,6 +6,7 @@ import { useCourseAccess } from "@/hooks/use-course-release";
 import { useUserProgress } from "@/hooks/use-user-progress";
 import { computeNextStep } from "@/lib/next-step";
 import { lessonThumb } from "@/lib/course-duration";
+import { courseCoverBackground, courseCoverImage } from "@/lib/course-cover";
 import { cn } from "@/lib/utils";
 
 /**
@@ -28,8 +29,10 @@ export function NextStepCard({ className }: { className?: string }) {
   if (!loaded || !step) return null;
 
   // Sem miniatura da aula, mostramos a capa do curso (nunca um bloco vazio).
-  const thumb = lessonThumb(step.lesson, step.course) || step.course.cover;
-
+  const thumb = lessonThumb(step.lesson, step.course) || courseCoverImage(step.course);
+  const coverBackground = thumb
+    ? `url(${thumb}) center/cover no-repeat, #000`
+    : courseCoverBackground(step.course);
   const firstTime = step.kind === "start";
 
   const label =
@@ -40,39 +43,32 @@ export function NextStepCard({ className }: { className?: string }) {
         : "O teu próximo passo";
 
   return (
-    <section
-      className={cn(
-        "overflow-hidden rounded-3xl border border-border bg-surface-1",
-        className,
-      )}
-    >
-      <div className="grid gap-0 md:grid-cols-[minmax(0,220px)_minmax(0,1fr)]">
+    <section className={cn("surface-card", className)}>
+      <div className="grid gap-0 md:grid-cols-[minmax(0,260px)_minmax(0,1fr)]">
         <Link
           to="/academia/$courseId/$lessonId"
           params={{ courseId: step.course.id, lessonId: step.lesson.id }}
           aria-label={`Ver aula ${step.lesson.title}`}
-          className="relative block aspect-video w-full bg-surface-2 md:aspect-auto md:h-full"
-          style={
-            thumb
-              ? { backgroundImage: `url(${thumb})`, backgroundSize: "cover", backgroundPosition: "center" }
-              : undefined
-          }
+          className="group relative block aspect-video w-full bg-surface-2 md:aspect-auto md:h-full"
+          style={{ background: coverBackground }}
         >
-          <span className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-          <span className="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
+          <span className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+          <span className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform duration-300 group-hover:scale-105">
             <Play className="ml-0.5 h-5 w-5" />
           </span>
         </Link>
 
-        <div className="space-y-4 p-5 md:p-6">
-          <div className="space-y-1.5">
-            <p className="inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.24em] text-primary">
+
+        <div className="space-y-4 p-5 md:p-7">
+          <div className="space-y-2">
+            <p className="type-eyebrow inline-flex items-center gap-1.5 text-primary">
               <Target className="h-3 w-3" />
               {label}
             </p>
-            <h2 className="font-display text-xl leading-tight text-foreground md:text-2xl">
+            <h2 className="type-section text-foreground">
               {step.lesson.title}
             </h2>
+
             <p className="text-xs text-muted-foreground">
               {step.course.title} · {step.module.title} · {step.minutes} min
             </p>
@@ -115,14 +111,15 @@ export function NextStepCard({ className }: { className?: string }) {
             <Link
               to="/academia/$courseId/$lessonId"
               params={{ courseId: step.course.id, lessonId: step.lesson.id }}
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+              className="tap-target inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
             >
               <Play className="h-4 w-4" />
               {firstTime ? "Começar agora" : "Continuar"}
             </Link>
             <Link
               to="/certificados"
-              className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2.5 text-xs font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+              className="tap-target inline-flex items-center gap-2 rounded-full border border-border px-4 py-2.5 text-xs font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+
             >
               <Award className="h-3.5 w-3.5 text-primary" />
               {step.certificateRemaining === 0

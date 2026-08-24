@@ -1364,9 +1364,10 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
     <article
       ref={cardRef}
       className={cn(
-        "rounded-2xl border bg-surface-1 p-5",
-        isPinned ? "border-primary/50 ring-1 ring-primary/20" : "border-border",
+        "surface-card p-5",
+        isPinned && "ring-1 ring-primary/25",
       )}
+
     >
       {isPinned && (
         <div className="mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">

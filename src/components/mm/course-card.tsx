@@ -128,7 +128,7 @@ export function CourseCard({ course, className, variant = "default", resumeLesso
         {/* Body */}
         <div className="flex flex-1 flex-col gap-3 p-4">
           <div className="min-h-[52px]">
-            <h3 className="font-display text-base leading-tight tracking-tight text-foreground line-clamp-2">
+            <h3 className="type-card text-foreground line-clamp-2">
               {course.title}
             </h3>
             {expert && (
@@ -139,18 +139,28 @@ export function CourseCard({ course, className, variant = "default", resumeLesso
             )}
           </div>
 
+
           <div className="flex items-center justify-between gap-2 pt-1">
             {expert && <ExpertAvatar expert={expert} size="sm" asLink={false} />}
             {isSoon ? (
               <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-primary">
                 {formatCourseRelease(course)}
               </span>
+            ) : course.progress >= 1 ? (
+              <span className="rounded-full border border-hairline px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.18em] text-primary">
+                Concluído
+              </span>
             ) : course.progress > 0 ? (
               <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-primary">
-                {Math.round(course.progress * 100)}%
+                {Math.round(course.progress * 100)}% · a meio
               </span>
-            ) : null}
+            ) : (
+              <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                Novo
+              </span>
+            )}
           </div>
+
         </div>
       </Link>
     </motion.div>
