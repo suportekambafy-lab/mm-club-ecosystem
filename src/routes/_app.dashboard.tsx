@@ -58,7 +58,6 @@ function DashboardPage() {
   const user = sessionUser ?? fallbackUser;
   const { progress, loaded: progressLoaded } = useUserProgress();
   const cont = continueFromProgress(progress);
-  const featured = cont[0];
   const recommended = recommendedFromProgress(progress);
 
   // Real live from backend — takes priority over static nextLive placeholder.
