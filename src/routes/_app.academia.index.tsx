@@ -12,6 +12,7 @@ import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 import { courseCoverBackground } from "@/lib/course-cover";
 import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb, parseDurationToMinutes, formatMinutes } from "@/lib/course-duration";
 import { CardGridSkeleton, RailSkeleton } from "@/components/mm/skeletons";
+import { NextStepCard } from "@/components/mm/next-step-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { trackUx } from "@/lib/ux-analytics";
 
