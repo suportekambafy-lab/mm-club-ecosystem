@@ -42,3 +42,27 @@ export function recordLessonCompleted(): void {
 }
 
 export const WEEKLY_GOAL_MINUTES = 90;
+
+/** Dia atual no fuso de Lisboa (igual ao usado no servidor). */
+export function lisbonDay(date: Date = new Date()): string {
+  return date.toLocaleDateString("en-CA", { timeZone: "Europe/Lisbon" });
+}
+
+const VISIT_KEY = "mm:learning-visit";
+
+/**
+ * Entrar na app conta como dia ativo da ofensiva (estilo Duolingo):
+ * registamos 1 minuto uma única vez por dia (fuso de Lisboa).
+ */
+export async function markDailyVisit(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  const day = lisbonDay();
+  try {
+    if (window.localStorage.getItem(VISIT_KEY) === day) return false;
+    window.localStorage.setItem(VISIT_KEY, day);
+  } catch {
+    /* ignore */
+  }
+  await recordMinutes(1);
+  return true;
+}

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { markDailyVisit } from "@/lib/learning-activity";
 
 export type LearningStreak = {
   current_streak: number;
@@ -21,6 +22,8 @@ export function useLearningStreak() {
       setLoaded(true);
       return;
     }
+    // Entrar na app já conta como dia ativo (1x por dia).
+    await markDailyVisit();
     try {
       const { data, error } = await (supabase as unknown as {
         rpc: (fn: string) => Promise<{ data: LearningStreak[] | null; error: unknown }>;

@@ -6,7 +6,7 @@ import {
   markStreakCelebrated,
   shouldCelebrateStreak,
 } from "@/components/mm/streak-celebration";
-import { WEEKLY_GOAL_MINUTES } from "@/lib/learning-activity";
+import { WEEKLY_GOAL_MINUTES, lisbonDay } from "@/lib/learning-activity";
 import { cn } from "@/lib/utils";
 
 const DAY_LABELS = ["D", "S", "T", "Q", "Q", "S", "S"];
@@ -14,9 +14,7 @@ const DAY_LABELS = ["D", "S", "T", "Q", "Q", "S", "S"];
 function lastSevenDays(): string[] {
   const out: string[] = [];
   for (let i = 6; i >= 0; i -= 1) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    out.push(d.toISOString().slice(0, 10));
+    out.push(lisbonDay(new Date(Date.now() - i * 86_400_000)));
   }
   return out;
 }
