@@ -26,7 +26,7 @@ import {
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { expertsById } from "@/data/experts";
 import { courses } from "@/data/courses";
-import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
+
 import {
   CinematicHeroSkeleton,
   RailSkeleton,
