@@ -1511,14 +1511,21 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
           <MessageCircle className="h-4 w-4" />
           <span>{commentCount}</span>
         </button>
-        <span
-          className="ml-auto flex items-center gap-1.5 px-2 text-xs text-muted-foreground"
-          title="Visualizações"
+        <button
+          type="button"
+          onClick={() => setShowViewers(true)}
+          className="ml-auto flex items-center gap-1.5 rounded-full px-2 py-1.5 text-xs text-muted-foreground transition hover:text-foreground"
+          title="Ver quem visualizou"
         >
           <Eye className="h-4 w-4" />
           <span>{viewCount.toLocaleString("pt-PT")}</span>
-        </span>
+        </button>
       </div>
+
+      {showViewers && (
+        <PostViewersDialog postId={post.id} onClose={() => setShowViewers(false)} />
+      )}
+
 
       {showComments && (
         <CommentsSection
