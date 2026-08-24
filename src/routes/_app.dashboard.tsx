@@ -151,15 +151,6 @@ function DashboardPage() {
       {/* Sequência de aprendizagem e meta semanal */}
       <StreakCard />
 
-      {/* Continuar a construir */}
-      {featured && (
-        <ContinueHero
-          course={featured}
-          resumeLessonId={progress[featured.id]?.lastLessonId ?? null}
-        />
-      )}
-
-
       {/* Rails na ordem editorial */}
       {cont.length > 0 && (
         <Rail
