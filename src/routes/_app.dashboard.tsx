@@ -13,7 +13,7 @@ import {
 import dashboardHero from "@/assets/dashboard-hero.jpg";
 import { CourseCard } from "@/components/mm/course-card";
 import { Rail } from "@/components/mm/rail";
-import { ExpertAvatar } from "@/components/mm/expert-avatar";
+
 import { LiveHeroBanner } from "@/components/mm/live-hero-banner";
 import { currentUser as fallbackUser } from "@/data/user";
 import { useCurrentUser } from "@/hooks/use-current-user";
@@ -26,9 +26,7 @@ import {
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { expertsById } from "@/data/experts";
 import { courses } from "@/data/courses";
-import { computeCourseDuration } from "@/lib/course-duration";
-import { courseCoverImage } from "@/lib/course-cover";
-import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
+
 import {
   CinematicHeroSkeleton,
   RailSkeleton,
@@ -58,7 +56,6 @@ function DashboardPage() {
   const user = sessionUser ?? fallbackUser;
   const { progress, loaded: progressLoaded } = useUserProgress();
   const cont = continueFromProgress(progress);
-  const featured = cont[0];
   const recommended = recommendedFromProgress(progress);
 
   // Real live from backend — takes priority over static nextLive placeholder.
@@ -150,15 +147,6 @@ function DashboardPage() {
 
       {/* Sequência de aprendizagem e meta semanal */}
       <StreakCard />
-
-      {/* Continuar a construir */}
-      {featured && (
-        <ContinueHero
-          course={featured}
-          resumeLessonId={progress[featured.id]?.lastLessonId ?? null}
-        />
-      )}
-
 
       {/* Rails na ordem editorial */}
       {cont.length > 0 && (
@@ -355,89 +343,6 @@ function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
 
 
 
-function ContinueHero({
-  course,
-  resumeLessonId,
-}: {
-  course: import("@/data/types").Course;
-  resumeLessonId?: string | null;
-}) {
-
-  const expert = expertsById[course.expertId];
-  const allLessonIds = (course.modules ?? []).flatMap((m) => m.lessons.map((l) => l.id));
-  const firstLessonId =
-    (resumeLessonId && allLessonIds.includes(resumeLessonId) ? resumeLessonId : null) ??
-    allLessonIds[0];
-  const linkProps = firstLessonId
-    ? {
-        to: "/academia/$courseId/$lessonId" as const,
-        params: { courseId: course.id, lessonId: firstLessonId },
-      }
-    : {
-        to: "/academia/$courseId" as const,
-        params: { courseId: course.id },
-      };
-  const coverImage = courseCoverImage(course);
-  return (
-    <Link
-      {...linkProps}
-      className="group relative flex flex-col overflow-hidden rounded-2xl ring-1 ring-border transition hover:ring-[color:var(--hairline)] md:flex-row"
-    >
-      <div
-        className="relative aspect-[16/9] overflow-hidden md:aspect-auto md:h-[280px] md:w-[55%]"
-        style={coverImage ? undefined : { background: course.cover }}
-      >
-        {coverImage && (
-          <img
-            loading="lazy"
-            decoding="async"
-            src={coverImage}
-            alt={course.title}
-            className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-black/10 to-transparent" />
-      </div>
-      <div className="flex flex-1 flex-col justify-between gap-6 bg-surface-1 p-6 md:p-8">
-        <div>
-          <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-primary">
-            Continuar
-          </p>
-          <h2 className="mt-3 font-display text-2xl leading-tight text-foreground md:text-3xl">
-            {course.title}
-          </h2>
-          <p className="mt-2 max-w-md text-sm text-muted-foreground">
-            {course.tagline}
-          </p>
-          {expert && (
-            <div className="mt-4">
-              <ExpertAvatar expert={expert} showName showRole asLink={false} />
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span>{Math.round(course.progress * 100)}% concluído</span>
-            <span>·</span>
-            <span>{computeCourseDuration(course)}</span>
-          </div>
-          <div className="h-1 w-full overflow-hidden rounded-full bg-surface-3">
-            <div
-              className="h-full rounded-full bg-primary"
-              style={{ width: `${Math.round(course.progress * 100)}%` }}
-            />
-          </div>
-          <div className="pt-2">
-            <span className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition group-hover:bg-gold-soft">
-              <Play className="h-3.5 w-3.5 fill-current" /> Continuar
-            </span>
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-}
 
 function JadeCTA() {
   return (
