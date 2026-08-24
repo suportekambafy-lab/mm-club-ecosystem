@@ -107,7 +107,7 @@ function AcademiaPage() {
 
 
   return (
-    <div className="max-w-full space-y-16 overflow-x-clip">
+    <div className="section-stack max-w-full overflow-x-clip">
       <NextStepCard />
 
       {featured && <FeaturedHero course={featured} progress={progress} />}
@@ -502,7 +502,7 @@ function ComingSoonCard({ course }: { course: Course }) {
 
 function AcademiaSkeleton() {
   return (
-    <div className="max-w-full space-y-16 overflow-x-clip">
+    <div className="section-stack max-w-full overflow-x-clip">
       <RailSkeleton cards={3} cardClassName="w-[300px] shrink-0" />
       <section className="space-y-5">
         <div className="space-y-2.5 px-1">
