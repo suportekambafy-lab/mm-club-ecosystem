@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { Flame } from "lucide-react";
+import { playStreakSound } from "@/lib/streak-sound";
 
 const STORAGE_KEY = "mm:streak-celebrated";
 
@@ -88,6 +89,15 @@ export function StreakCelebration({
       })),
     [open],
   );
+
+  useEffect(() => {
+    if (!open) return;
+    try {
+      playStreakSound();
+    } catch {
+      /* som é opcional */
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
