@@ -1,7 +1,12 @@
 import { createFileRoute, Link, Outlet, redirect, useRouter, useRouterState } from "@tanstack/react-router";
 import { SupportWidget } from "@/components/mm/support-widget";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
+import {
+  subscribe as subscribeOverlay,
+  getQuizModalOpen as getOverlayOpen,
+} from "@/lib/quiz-visibility";
+
 
 import {
   LayoutDashboard,
