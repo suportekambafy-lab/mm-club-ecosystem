@@ -96,7 +96,30 @@ function AdminQuizzes() {
         >
           <RefreshCw className="h-3.5 w-3.5" /> Atualizar métricas
         </button>
+        <button
+          type="button"
+          disabled={bulk.running || !course?.modules?.length}
+          onClick={() => void generateMissing()}
+          className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+        >
+          {bulk.running ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Sparkles className="h-3.5 w-3.5" />
+          )}
+          {bulk.running
+            ? `A gerar ${bulk.done}/${bulk.total}…`
+            : "Gerar testes em falta (curso)"}
+        </button>
       </div>
+
+      {ready && course?.modules?.length ? (
+        <p className="text-xs text-muted-foreground">
+          {missingModules.length === 0
+            ? "Todos os módulos deste curso já têm perguntas."
+            : `${missingModules.length} módulo(s) sem perguntas. A geração usa as transcrições das aulas; publica cada teste depois de rever.`}
+        </p>
+      ) : null}
 
       {!ready && (
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
