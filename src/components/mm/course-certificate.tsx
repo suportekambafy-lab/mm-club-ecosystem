@@ -17,6 +17,7 @@ export function CourseCertificate({
   hours,
   lessonsTotal,
   completed,
+  lessonsDone,
   className,
 }: {
   courseId: string;
@@ -24,6 +25,8 @@ export function CourseCertificate({
   hours: number;
   lessonsTotal: number;
   completed: boolean;
+  /** Aulas já concluídas — mostra o quanto falta para o certificado. */
+  lessonsDone?: number;
   className?: string;
 }) {
   const [cert, setCert] = useState<Certificate | null>(null);
