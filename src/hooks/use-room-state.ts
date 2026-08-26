@@ -342,6 +342,7 @@ export function useRoomState({
           source: trackSource(t.source),
           muted: pub.isMuted,
           engineRef: t,
+          streamId: t.mediaStreamTrack?.id,
         });
       });
       setEngineTracks((prev) => ({ ...prev, [p.identity]: list }));
