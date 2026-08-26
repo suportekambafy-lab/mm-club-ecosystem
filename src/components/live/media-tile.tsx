@@ -51,7 +51,9 @@ function MediaTileBase({ participant, actions, className, preferScreen, showName
     return () => {
       actions.detachTrack(videoTrack.id, el);
     };
-  }, [videoTrack?.id, actions]);
+    // streamId muda quando a câmara é reiniciada com o mesmo trackSid — sem
+    // isto o elemento ficava preto depois de desligar/ligar a câmara.
+  }, [videoTrack?.id, videoTrack?.streamId, actions]);
 
   useEffect(() => {
     const el = audioRef.current;

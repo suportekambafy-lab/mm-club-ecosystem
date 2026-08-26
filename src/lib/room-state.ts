@@ -35,6 +35,12 @@ export interface MediaTrack {
    * inspects this directly.
    */
   engineRef: unknown;
+  /**
+   * Id da MediaStreamTrack nativa. Muda quando a câmara é reiniciada (desligar/
+   * ligar, troca de dispositivo) mantendo o mesmo trackSid — a UI usa-o para
+   * saber que precisa de voltar a ligar o vídeo ao elemento.
+   */
+  streamId?: string;
 }
 
 /** A single participant as seen by the UI. */
