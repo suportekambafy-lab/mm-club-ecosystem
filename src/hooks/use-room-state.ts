@@ -674,6 +674,14 @@ export function useRoomState({
     if (!room || !lp) return;
     if (cameraTrackIsLive(lp)) {
       cameraWantedRef.current = false;
+      // Desligar com setCameraEnabled(false) deixa a publicação viva mas com a
+      // pista nativa terminada — ao voltar a ligar o vídeo ficava preto. Aqui
+      // despublicamos por completo para que a nova ligação crie uma pista nova.
+      const pub = lp.getTrackPublication(Track.Source.Camera);
+      const track = pub?.track;
+      if (track) {
+        await lp.unpublishTrack(track, true).catch((e) => console.warn("[useRoomState] camera unpublish failed", e));
+      }
       await lp.setCameraEnabled(false).catch((e) => console.warn("[useRoomState] camera off failed", e));
       const prefs = readMediaPrefs();
       writeMediaPrefs({ ...prefs, camEnabled: false });
