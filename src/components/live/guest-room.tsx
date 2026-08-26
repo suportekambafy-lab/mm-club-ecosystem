@@ -15,6 +15,7 @@ import {
   RoomEvent,
   Track,
   type Participant,
+  type LocalParticipant,
   type RemoteTrackPublication,
 } from "livekit-client";
 import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, Hand, Volume2, MessagesSquare, X, MonitorUp, MonitorOff } from "lucide-react";
@@ -39,6 +40,19 @@ interface Props {
   onLeave: () => void;
 }
 
+function guestCameraTrackIsLive(participant: LocalParticipant): boolean {
+  const publication = participant.getTrackPublication(Track.Source.Camera);
+  const mediaTrack = publication?.track?.mediaStreamTrack;
+  return Boolean(
+    participant.isCameraEnabled &&
+      publication &&
+      !publication.isMuted &&
+      mediaTrack &&
+      mediaTrack.readyState === "live" &&
+      mediaTrack.enabled,
+  );
+}
+
 /**
  * Liga a câmara do convidado com tentativas progressivas: dispositivo escolhido,
  * 720p, 360p e por fim as predefinições. Devolve uma mensagem legível em caso
@@ -53,10 +67,15 @@ async function enableGuestCamera(room: Room, deviceId?: string): Promise<string 
     undefined,
   ];
   let lastErr: unknown = null;
+  const stalePublication = lp.getTrackPublication(Track.Source.Camera);
+  const staleTrack = stalePublication?.track;
+  if (staleTrack && staleTrack.mediaStreamTrack.readyState === "ended") {
+    await lp.unpublishTrack(staleTrack, true).catch(() => {});
+  }
   for (const opts of attempts) {
     try {
       await lp.setCameraEnabled(true, opts as never);
-      if (lp.isCameraEnabled) return null;
+      if (guestCameraTrackIsLive(lp)) return null;
     } catch (err) {
       lastErr = err;
     }
@@ -98,6 +117,8 @@ export function GuestRoom({
   const [reconnecting, setReconnecting] = useState(false);
   const [audioBlocked, setAudioBlocked] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const cameraWantedRef = useRef(prefs.camEnabled && initialOnStage);
+  const cameraRecoveryRef = useRef<Promise<void> | null>(null);
 
 
   const unlockAudio = useCallback(async () => {
@@ -194,6 +215,19 @@ export function GuestRoom({
       rerender();
     };
 
+    const recoverCamera = async () => {
+      if (cancelled || !onStageRef.current || !cameraWantedRef.current || cameraRecoveryRef.current) return;
+      if (guestCameraTrackIsLive(r.localParticipant)) return;
+      const recovery = (async () => {
+        await enableGuestCamera(r, prefs.cameraId);
+        if (!cancelled) rerender();
+      })().finally(() => {
+        cameraRecoveryRef.current = null;
+      });
+      cameraRecoveryRef.current = recovery;
+      await recovery;
+    };
+
     r.on(RoomEvent.ParticipantConnected, rerender)
       .on(RoomEvent.ParticipantDisconnected, rerender)
       .on(RoomEvent.TrackSubscribed, rerender)
@@ -211,8 +245,10 @@ export function GuestRoom({
       .on(RoomEvent.Reconnected, () => {
         setReconnecting(false);
         resubscribeAll();
+        void recoverCamera();
       })
       .on(RoomEvent.SignalConnected, resubscribeAll)
+      .on(RoomEvent.MediaDevicesChanged, () => void recoverCamera())
       .on(RoomEvent.AudioPlaybackStatusChanged, () => setAudioBlocked(!r.canPlaybackAudio))
       .on(RoomEvent.Disconnected, () => {
         if (cancelled) return;
@@ -239,6 +275,7 @@ export function GuestRoom({
               .setMicrophoneEnabled(true, prefs.micId ? { deviceId: prefs.micId } : undefined)
               .catch(() => r.localParticipant.setMicrophoneEnabled(true).catch(() => {}));
           if (prefs.camEnabled) await enableGuestCamera(r, prefs.cameraId);
+          cameraWantedRef.current = prefs.camEnabled;
           setMicOn(r.localParticipant.isMicrophoneEnabled);
           setCamOn(r.localParticipant.isCameraEnabled);
         } else {
@@ -263,8 +300,16 @@ export function GuestRoom({
       }
     })();
 
+    const cameraWatch = window.setInterval(() => void recoverCamera(), 4_000);
+    const recoverWhenVisible = () => {
+      if (document.visibilityState === "visible") void recoverCamera();
+    };
+    document.addEventListener("visibilitychange", recoverWhenVisible);
+
     return () => {
       cancelled = true;
+      window.clearInterval(cameraWatch);
+      document.removeEventListener("visibilitychange", recoverWhenVisible);
       r.disconnect().catch(() => {});
       roomRef.current = null;
     };
@@ -313,7 +358,7 @@ export function GuestRoom({
     const lp = roomRef.current?.localParticipant;
     if (!lp) return;
     setMicOn(lp.isMicrophoneEnabled);
-    setCamOn(lp.isCameraEnabled);
+    setCamOn(guestCameraTrackIsLive(lp));
     setScreenOn(lp.isScreenShareEnabled);
   }, [tick]);
 
@@ -337,14 +382,19 @@ export function GuestRoom({
     const r = roomRef.current;
     if (!r) return;
     const lp = r.localParticipant;
-    if (lp.isCameraEnabled) {
+    if (guestCameraTrackIsLive(lp)) {
+      cameraWantedRef.current = false;
       await lp.setCameraEnabled(false).catch(() => {});
-      setCamOn(lp.isCameraEnabled);
+      setCamOn(guestCameraTrackIsLive(lp));
       return;
     }
+    cameraWantedRef.current = true;
     const err = await enableGuestCamera(r, prefs.cameraId);
-    if (err) toast.error(err);
-    setCamOn(lp.isCameraEnabled);
+    if (err) {
+      cameraWantedRef.current = false;
+      toast.error(err);
+    }
+    setCamOn(guestCameraTrackIsLive(lp));
   };
   const toggleScreen = async () => {
     const r = roomRef.current;
