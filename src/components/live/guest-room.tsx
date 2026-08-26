@@ -708,13 +708,17 @@ function GuestTile({
     const el = videoRef.current;
     const track = videoPub?.track;
     if (!el || !track) return;
+    // Limpar o srcObject antigo evita ficar com um stream parado (imagem preta)
+    // depois de desligar/ligar a câmara ou trocar de dispositivo.
+    try { el.srcObject = null; } catch { /* noop */ }
     track.attach(el);
     el.muted = true;
     el.play().catch(() => {});
     return () => {
       track.detach(el);
     };
-  }, [videoPub?.trackSid, videoPub?.track]);
+    // mediaStreamTrack.id muda quando a pista é reiniciada com o mesmo trackSid.
+  }, [videoPub?.trackSid, videoPub?.track, videoPub?.track?.mediaStreamTrack?.id]);
 
   useEffect(() => {
     const el = audioRef.current;
