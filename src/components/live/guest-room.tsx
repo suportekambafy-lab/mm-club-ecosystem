@@ -384,12 +384,22 @@ export function GuestRoom({
     const lp = r.localParticipant;
     if (guestCameraTrackIsLive(lp)) {
       cameraWantedRef.current = false;
+      // Despublicar (e parar) evita ficar com uma publicação cuja pista nativa
+      // terminou — era isso que deixava a imagem preta ao voltar a ligar.
+      const pub = lp.getTrackPublication(Track.Source.Camera);
+      if (pub?.track) await lp.unpublishTrack(pub.track, true).catch(() => {});
       await lp.setCameraEnabled(false).catch(() => {});
       setCamOn(guestCameraTrackIsLive(lp));
       return;
     }
     cameraWantedRef.current = true;
-    const err = await enableGuestCamera(r, prefs.cameraId);
+    let err = await enableGuestCamera(r, prefs.cameraId);
+    if (err) {
+      // O sistema pode demorar a libertar a câmara — segunda tentativa sem
+      // restrições de dispositivo antes de mostrar erro.
+      await new Promise((res) => setTimeout(res, 700));
+      err = await enableGuestCamera(r, undefined);
+    }
     if (err) {
       cameraWantedRef.current = false;
       toast.error(err);
