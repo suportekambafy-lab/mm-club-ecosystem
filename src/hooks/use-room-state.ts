@@ -12,7 +12,7 @@
  * they are re-hydrated from Postgres.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { readMediaPrefs } from "@/lib/media-prefs";
+import { readMediaPrefs, writeMediaPrefs } from "@/lib/media-prefs";
 import { toast } from "sonner";
 import {
   Room,
@@ -67,6 +67,19 @@ async function knownDevice(kind: MediaDeviceKind, id?: string) {
   }
 }
 
+function cameraTrackIsLive(participant: LocalParticipant): boolean {
+  const publication = participant.getTrackPublication(Track.Source.Camera);
+  const mediaTrack = publication?.track?.mediaStreamTrack;
+  return Boolean(
+    participant.isCameraEnabled &&
+      publication &&
+      !publication.isMuted &&
+      mediaTrack &&
+      mediaTrack.readyState === "live" &&
+      mediaTrack.enabled,
+  );
+}
+
 /**
  * Enable the camera with progressive fallbacks.
  *
@@ -85,10 +98,19 @@ async function enableCameraResilient(room: Room, deviceId?: string): Promise<str
     undefined,
   ];
   let lastErr: unknown = null;
+
+  // An unplugged external camera can leave an enabled publication whose native
+  // track has ended. Reusing it succeeds but leaves a black image, so discard it.
+  const stalePublication = lp.getTrackPublication(Track.Source.Camera);
+  const staleTrack = stalePublication?.track;
+  if (staleTrack && staleTrack.mediaStreamTrack.readyState === "ended") {
+    await lp.unpublishTrack(staleTrack, true).catch(() => {});
+  }
+
   for (const opts of attempts) {
     try {
       await lp.setCameraEnabled(true, opts);
-      if (lp.isCameraEnabled) return null;
+      if (cameraTrackIsLive(lp)) return null;
     } catch (err) {
       lastErr = err;
       console.warn("[useRoomState] camera attempt failed", opts, err);
@@ -204,6 +226,8 @@ export function useRoomState({
   const [activeAudioIn, setActiveAudioIn] = useState<string | undefined>(undefined);
   const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null);
   const [audioBlocked, setAudioBlocked] = useState(false);
+  const cameraWantedRef = useRef(readMediaPrefs().camEnabled);
+  const cameraRecoveryRef = useRef<Promise<void> | null>(null);
 
   /** Bump to force a full LiveKit reconnect (recreate the Room). */
   const [reconnectNonce, setReconnectNonce] = useState(0);
@@ -323,7 +347,10 @@ export function useRoomState({
       setEngineTracks((prev) => ({ ...prev, [p.identity]: list }));
       if (p.name) setEngineNames((prev) => (prev[p.identity] === p.name ? prev : { ...prev, [p.identity]: p.name! }));
       setMicOn((prev) => ({ ...prev, [p.identity]: !p.isMicrophoneEnabled ? false : true }));
-      setCamOn((prev) => ({ ...prev, [p.identity]: p.isCameraEnabled }));
+      setCamOn((prev) => ({
+        ...prev,
+        [p.identity]: p.isLocal ? cameraTrackIsLive(room.localParticipant) : p.isCameraEnabled,
+      }));
       setScreenOn((prev) => ({ ...prev, [p.identity]: p.isScreenShareEnabled }));
     };
 
@@ -386,12 +413,30 @@ export function useRoomState({
       void room.startAudio().catch(() => {});
     };
 
+    const recoverLocalCamera = async () => {
+      if (!isCurrentRun() || !cameraWantedRef.current || cameraRecoveryRef.current) return;
+      if (cameraTrackIsLive(room.localParticipant)) return;
+      const recovery = (async () => {
+        const preferred = activeVideoIn ?? readMediaPrefs().cameraId;
+        const err = await enableCameraResilient(room, preferred);
+        if (!isCurrentRun()) return;
+        rebuildParticipantTracks(room.localParticipant);
+        if (!err) void syncStudioProcessors(room);
+      })().finally(() => {
+        cameraRecoveryRef.current = null;
+      });
+      cameraRecoveryRef.current = recovery;
+      await recovery;
+    };
+
     on(RoomEvent.Reconnected, () => {
       resubscribeAll();
       hydrateRef.current();
       void syncStudioProcessors(room);
+      void recoverLocalCamera();
     });
     on(RoomEvent.SignalConnected, () => resubscribeAll());
+    on(RoomEvent.MediaDevicesChanged, () => void recoverLocalCamera());
     on(RoomEvent.TrackSubscriptionFailed, (_sid: string, p: Participant) => {
       // Uma subscrição falhada deixa o participante mudo/preto. Tentamos de novo.
       window.setTimeout(() => {
@@ -478,6 +523,7 @@ export function useRoomState({
               const err = await enableCameraResilient(room, prefs.cameraId);
               if (err) toast.error(err);
             }
+            cameraWantedRef.current = prefs.camEnabled;
             rebuildParticipantTracks(lp);
             void syncStudioProcessors(room);
           }
@@ -498,9 +544,19 @@ export function useRoomState({
       void syncStudioProcessors(room);
     });
 
+    // USB capture cards and external webcams can silently end while the room
+    // remains connected. Reacquire capture so a page reload is never required.
+    const cameraWatch = window.setInterval(() => void recoverLocalCamera(), 4_000);
+    const recoverWhenVisible = () => {
+      if (document.visibilityState === "visible") void recoverLocalCamera();
+    };
+    document.addEventListener("visibilitychange", recoverWhenVisible);
+
     return () => {
       disposed = true;
       unsubStudio();
+      window.clearInterval(cameraWatch);
+      document.removeEventListener("visibilitychange", recoverWhenVisible);
       handlers.forEach(([evt, fn]) => {
         (room as unknown as AnyOn).off(evt, fn);
       });
@@ -615,10 +671,14 @@ export function useRoomState({
     const room = roomRef.current;
     const lp = room?.localParticipant;
     if (!room || !lp) return;
-    if (lp.isCameraEnabled) {
+    if (cameraTrackIsLive(lp)) {
+      cameraWantedRef.current = false;
       await lp.setCameraEnabled(false).catch((e) => console.warn("[useRoomState] camera off failed", e));
+      const prefs = readMediaPrefs();
+      writeMediaPrefs({ ...prefs, camEnabled: false });
       return;
     }
+    cameraWantedRef.current = true;
     let err = await enableCameraResilient(room, activeVideoIn ?? undefined);
     if (err) {
       // A câmara costuma demorar a ser libertada pelo sistema depois de a
@@ -626,7 +686,13 @@ export function useRoomState({
       await new Promise((r) => setTimeout(r, 700));
       err = await enableCameraResilient(room, undefined);
     }
-    if (err) toast.error(err);
+    if (err) {
+      cameraWantedRef.current = false;
+      toast.error(err);
+    } else {
+      const prefs = readMediaPrefs();
+      writeMediaPrefs({ ...prefs, camEnabled: true, cameraId: activeVideoIn ?? prefs.cameraId });
+    }
   }, [activeVideoIn]);
 
   const startScreenShare = useCallback(async () => {
@@ -680,9 +746,21 @@ export function useRoomState({
     const room = roomRef.current;
     if (!room) return;
     try {
-      await room.switchActiveDevice(kind, deviceId, true);
-      if (kind === "videoinput") setActiveVideoIn(deviceId);
-      else setActiveAudioIn(deviceId);
+      if (kind === "videoinput" && !cameraTrackIsLive(room.localParticipant)) {
+        cameraWantedRef.current = true;
+        const error = await enableCameraResilient(room, deviceId);
+        if (error) throw new Error(error);
+      } else {
+        await room.switchActiveDevice(kind, deviceId, true);
+      }
+      const prefs = readMediaPrefs();
+      if (kind === "videoinput") {
+        setActiveVideoIn(deviceId);
+        writeMediaPrefs({ ...prefs, cameraId: deviceId, camEnabled: true });
+      } else {
+        setActiveAudioIn(deviceId);
+        writeMediaPrefs({ ...prefs, micId: deviceId });
+      }
     } catch (err) {
       console.error("[useRoomState] setDevice failed", err);
       toast.error(
@@ -690,6 +768,7 @@ export function useRoomState({
           ? "Essa câmara não está disponível (pode estar em uso noutra aplicação)."
           : "Esse microfone não está disponível.",
       );
+      throw err;
     }
   }, []);
 
