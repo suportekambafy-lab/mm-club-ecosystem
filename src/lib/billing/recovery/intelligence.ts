@@ -356,7 +356,17 @@ export function adaptSchedule(
   const out: ScheduleStep[] = [];
   let previous = -1;
 
-  for (const step of steps.slice(0, strategy.maxAttempts)) {
+  // Menos tentativas nunca significa sair da recuperação mais cedo: em vez de
+  // cortar a cauda do calendário, escolhemos marcos espaçados que continuam a
+  // terminar no fim da janela (dia 90).
+  const selected =
+    steps.length > strategy.maxAttempts && strategy.maxAttempts > 1
+      ? Array.from({ length: strategy.maxAttempts }, (_, i) =>
+          steps[Math.round((i * (steps.length - 1)) / (strategy.maxAttempts - 1))],
+        )
+      : steps.slice(0, strategy.maxAttempts);
+
+  for (const step of selected) {
     let offset = step.offsetHours === 0 ? 0 : step.offsetHours * strategy.spacing;
 
     // Only shift retries that already sit outside the first day: the first
@@ -366,7 +376,8 @@ export function adaptSchedule(
     }
     offset = Math.min(offset, windowHours);
     if (offset <= previous) offset = previous + 1;
-    if (offset > windowHours) break;
+    if (offset > windowHours) offset = windowHours;
+
     previous = offset;
 
     out.push({

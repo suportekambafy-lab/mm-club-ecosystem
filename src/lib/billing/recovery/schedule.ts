@@ -74,6 +74,27 @@ function stepLimit(category: FailureCategory, score: number): number {
   return Math.min(MAX_RECOVERY_ATTEMPTS, byCategory, byScore);
 }
 
+/**
+ * Escolhe `limit` marcos do calendário base garantindo que a recuperação
+ * cobre SEMPRE toda a janela de 90 dias: o primeiro marco é imediato e o
+ * último é o dia 90. Perfis fracos ficam com menos tentativas, mas nunca
+ * deixam de estar em recuperação antes do fim da janela.
+ */
+export function spreadOffsets(limit: number): number[] {
+  const all = BASE_OFFSETS_HOURS;
+  if (limit <= 0) return [];
+  if (limit >= all.length) return [...all];
+  if (limit === 1) return [all[all.length - 1]];
+
+  const picked: number[] = [];
+  for (let i = 0; i < limit; i += 1) {
+    const idx = Math.round((i * (all.length - 1)) / (limit - 1));
+    const value = all[idx];
+    if (!picked.includes(value)) picked.push(value);
+  }
+  return picked;
+}
+
 export function buildSchedule(input: {
   category: FailureCategory;
   score: number;
@@ -82,8 +103,10 @@ export function buildSchedule(input: {
   if (limit <= 0) return [];
 
   const mult = spacingMultiplier(input.score);
-  return BASE_OFFSETS_HOURS.slice(0, limit).map((base, i) => {
-    const offsetHours = i === 0 ? 0 : Math.round(base * mult);
+  const window = BASE_OFFSETS_HOURS[BASE_OFFSETS_HOURS.length - 1];
+  return spreadOffsets(limit).map((base, i) => {
+    const offsetHours =
+      i === 0 ? 0 : Math.min(window, Math.round(base * mult));
     return {
       attemptNumber: i + 1,
       offsetHours,
@@ -91,6 +114,7 @@ export function buildSchedule(input: {
     };
   });
 }
+
 
 /** ±15% jitter. `rng` is injectable so tests are deterministic. */
 export function jitterHours(offsetHours: number, rng: () => number = Math.random): number {
