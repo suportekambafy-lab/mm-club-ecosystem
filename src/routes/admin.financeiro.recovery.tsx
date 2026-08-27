@@ -9,6 +9,7 @@ import {
   forceRecoveryAttempt,
   getRecoveryOverview,
   notifyFailedPayments,
+  reopenStalledRecovery,
 } from "@/lib/admin-finance.functions";
 import type { RecoveryCustomerRow } from "@/lib/admin/recovery-types";
 import { cn } from "@/lib/utils";
@@ -138,6 +139,7 @@ function RecoveryPage() {
   const load = useServerFn(getRecoveryOverview);
   const force = useServerFn(forceRecoveryAttempt);
   const notifyFailed = useServerFn(notifyFailedPayments);
+  const reopen = useServerFn(reopenStalledRecovery);
   const qc = useQueryClient();
   const [pending, setPending] = useState<string | null>(null);
 
@@ -167,6 +169,19 @@ function RecoveryPage() {
     onError: () => toast.error("Não foi possível enviar os avisos."),
   });
 
+  const reopenMutation = useMutation({
+    mutationFn: () => reopen({ data: undefined }),
+    onSuccess: (res) => {
+      toast.success(
+        res.cycles > 0
+          ? `${res.cycles} ciclo(s) reabertos — ${res.attempts} tentativa(s) reagendadas até ao dia 90.`
+          : "Todas as dívidas dentro dos 90 dias já estão em recuperação.",
+      );
+      qc.invalidateQueries({ queryKey: ["admin-recovery"] });
+    },
+    onError: () => toast.error("Não foi possível reabrir as recuperações."),
+  });
+
   if (isLoading || !data)
     return (
       <div className="flex items-center gap-2 p-8 text-sm text-muted-foreground">
@@ -177,6 +192,21 @@ function RecoveryPage() {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={() => reopenMutation.mutate()}
+          disabled={reopenMutation.isPending}
+          className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-xs font-medium transition hover:bg-surface-2 disabled:opacity-50"
+        >
+          {reopenMutation.isPending ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Timer className="h-3.5 w-3.5" />
+          )}
+          Reabrir recuperações paradas
+        </button>
+      </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Em risco agora"
