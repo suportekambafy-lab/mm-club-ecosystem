@@ -994,3 +994,104 @@ async function isUserBlockedByPending(userId: string): Promise<boolean> {
 }
 
 export const RECOVERY_WINDOW_DAYS = CANCEL_AT_HOURS / 24;
+
+// ------------------------------------------------- reopen stalled recoveries
+
+/**
+ * Regra do clube: uma dívida só sai da recuperação quando é paga, quando a
+ * subscrição é cancelada, ou quando passam 90 dias desde a falha. Ciclos que
+ * ficaram sem tentativas agendadas (por estratégias antigas mais curtas) são
+ * reabertos aqui: as tentativas descartadas voltam a ser agendadas, espaçadas
+ * até ao fim da janela.
+ */
+export async function reopenStalledRecoveries(): Promise<{
+  cycles: number;
+  attempts: number;
+}> {
+  const windowStart = new Date(Date.now() - CANCEL_AT_HOURS * HOUR);
+
+  const { data: rows } = await supabaseAdmin
+    .from("billing_dunning_attempts")
+    .select(
+      "id, cycle_key, subscription_id, user_id, attempt_number, status, created_at, phase",
+    )
+    .gte("created_at", windowStart.toISOString())
+    .order("attempt_number");
+
+  const cycles = new Map<string, NonNullable<typeof rows>>();
+  for (const r of rows ?? []) {
+    const key = r.cycle_key as string;
+    if (!key) continue;
+    const list = cycles.get(key) ?? [];
+    list.push(r);
+    cycles.set(key, list);
+  }
+
+  let touchedCycles = 0;
+  let touchedAttempts = 0;
+
+  for (const [cycleKey, list] of cycles) {
+    if (list.some((r) => ["succeeded", "cancelled", "scheduled"].includes(r.status)))
+      continue;
+
+    const revivable = list
+      .filter((r) => r.status === "skipped")
+      .sort((a, b) => (a.attempt_number as number) - (b.attempt_number as number));
+    if (revivable.length === 0) continue;
+
+    const subscriptionId = list[0].subscription_id as string;
+    const userId = list[0].user_id as string;
+
+    const { data: sub } = await supabaseAdmin
+      .from("billing_subscriptions")
+      .select("id, status")
+      .eq("id", subscriptionId)
+      .maybeSingle();
+    if (!sub || ["active", "trialing", "cancelled", "expired"].includes(sub.status))
+      continue;
+
+    const failedAt = new Date(list[0].created_at as string).getTime();
+    const deadline = failedAt + CANCEL_AT_HOURS * HOUR;
+    const from = Date.now() + 5 * 60_000;
+    if (deadline <= from) continue; // janela de 90 dias esgotada
+
+    const slots = revivable.length;
+    const span = deadline - from;
+
+    for (let i = 0; i < slots; i += 1) {
+      const when = new Date(
+        from + (slots === 1 ? span : (span * i) / (slots - 1)),
+      );
+      const row = revivable[i];
+      const { data: updated } = await supabaseAdmin
+        .from("billing_dunning_attempts")
+        .update({
+          status: "scheduled",
+          error: null,
+          scheduled_for: when.toISOString(),
+        })
+        .eq("id", row.id)
+        .eq("status", "skipped")
+        .select("id")
+        .maybeSingle();
+      if (!updated) continue;
+
+      await enqueue(
+        "recovery.attempt",
+        {
+          cycleKey,
+          subscriptionId,
+          userId,
+          attemptNumber: row.attempt_number as number,
+        },
+        when,
+      );
+      touchedAttempts += 1;
+    }
+
+    touchedCycles += 1;
+  }
+
+  return { cycles: touchedCycles, attempts: touchedAttempts };
+}
+
