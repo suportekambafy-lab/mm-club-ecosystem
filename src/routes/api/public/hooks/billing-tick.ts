@@ -28,6 +28,15 @@ export const Route = createFileRoute("/api/public/hooks/billing-tick")({
 
           const requeued = await requeueStaleJobs(10);
 
+          // Nenhuma dívida sai da recuperação antes dos 90 dias: ciclos sem
+          // tentativas agendadas voltam para o calendário.
+          const { reopenStalledRecoveries } = await import(
+            "@/lib/billing/recovery/engine.server"
+          );
+          await reopenStalledRecoveries();
+
+
+
           // Drain in batches so a backlog clears within a single tick.
           let processed = 0;
           let failed = 0;
