@@ -381,6 +381,17 @@ export const getRecoveryOverview = createServerFn({ method: "POST" })
     return collectRecoveryOverview();
   });
 
+/** Reabre ciclos que ficaram sem tentativas agendadas dentro dos 90 dias. */
+export const reopenStalledRecovery = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context as never);
+    const { reopenStalledRecoveries } = await import(
+      "@/lib/billing/recovery/engine.server"
+    );
+    return reopenStalledRecoveries();
+  });
+
 /** Pulls the next scheduled attempt for a member forward to "now". */
 export const forceRecoveryAttempt = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
