@@ -287,13 +287,13 @@ export async function moderateTarget(args: {
   const cfg = TARGETS[args.kind];
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  const columns = [cfg.idColumn, cfg.authorColumn, cfg.textColumn, cfg.imageColumn]
-    .filter(Boolean)
-    .join(",");
+  // Lemos a linha completa: se a decisão for revertida, o conteúdo é reposto
+  // exatamente como estava (ver `restoreModeratedContent`).
   const { data: row } = await (supabaseAdmin as any).from(cfg.table)
-    .select(columns)
+    .select("*")
     .eq(cfg.idColumn, args.id)
     .maybeSingle();
+
   if (!row) return { removed: false, category: "inexistente", reason: "Conteúdo já removido." };
 
   const verdict = await classifyContent({
