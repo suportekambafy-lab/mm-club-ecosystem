@@ -2909,11 +2909,13 @@ export type Database = {
           image_url: string | null
           kind: string
           reason: string | null
+          restored_at: string | null
           reverted_at: string | null
           reverted_by: string | null
           review_note: string | null
           sanction_id: string | null
           severity: string | null
+          snapshot: Json | null
           target_id: string
         }
         Insert: {
@@ -2926,11 +2928,13 @@ export type Database = {
           image_url?: string | null
           kind: string
           reason?: string | null
+          restored_at?: string | null
           reverted_at?: string | null
           reverted_by?: string | null
           review_note?: string | null
           sanction_id?: string | null
           severity?: string | null
+          snapshot?: Json | null
           target_id: string
         }
         Update: {
@@ -2943,11 +2947,13 @@ export type Database = {
           image_url?: string | null
           kind?: string
           reason?: string | null
+          restored_at?: string | null
           reverted_at?: string | null
           reverted_by?: string | null
           review_note?: string | null
           sanction_id?: string | null
           severity?: string | null
+          snapshot?: Json | null
           target_id?: string
         }
         Relationships: [
