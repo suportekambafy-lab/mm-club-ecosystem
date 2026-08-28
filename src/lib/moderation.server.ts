@@ -287,13 +287,13 @@ export async function moderateTarget(args: {
   const cfg = TARGETS[args.kind];
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  const columns = [cfg.idColumn, cfg.authorColumn, cfg.textColumn, cfg.imageColumn]
-    .filter(Boolean)
-    .join(",");
+  // Lemos a linha completa: se a decisão for revertida, o conteúdo é reposto
+  // exatamente como estava (ver `restoreModeratedContent`).
   const { data: row } = await (supabaseAdmin as any).from(cfg.table)
-    .select(columns)
+    .select("*")
     .eq(cfg.idColumn, args.id)
     .maybeSingle();
+
   if (!row) return { removed: false, category: "inexistente", reason: "Conteúdo já removido." };
 
   const verdict = await classifyContent({
@@ -343,6 +343,7 @@ export async function moderateTarget(args: {
     excerpt,
     image_url: cfg.imageColumn ? ((row as any)[cfg.imageColumn] as string | null) : null,
     sanction_id: sanctionId,
+    snapshot: verdict.action === "remove" ? row : null,
   });
 
   return {
@@ -352,4 +353,67 @@ export async function moderateTarget(args: {
     sanction,
   };
 }
+
+/**
+ * Repõe conteúdo removido pelo agente quando a decisão é revertida (recurso
+ * aceite ou reversão manual do staff). Usa a cópia integral guardada em
+ * `moderation_actions.snapshot`; se essa cópia não existir (ações antigas),
+ * reconstrói o essencial a partir do excerto.
+ */
+export async function restoreModeratedContent(actionId: string): Promise<{
+  restored: boolean;
+  reason?: string;
+}> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const admin = supabaseAdmin as any;
+
+  const { data: action } = await admin
+    .from("moderation_actions")
+    .select("id, kind, target_id, author_id, action, excerpt, image_url, snapshot, restored_at")
+    .eq("id", actionId)
+    .maybeSingle();
+  if (!action) return { restored: false, reason: "Ação não encontrada." };
+  if (action.action !== "remove") return { restored: false, reason: "Nada foi removido." };
+  if (action.restored_at) return { restored: false, reason: "Já reposto." };
+
+  const cfg = TARGETS[action.kind as ModerationKind];
+  if (!cfg) return { restored: false, reason: "Tipo desconhecido." };
+
+  // Já existe (por exemplo, o membro republicou)? Marcamos como reposto.
+  const { data: existing } = await admin
+    .from(cfg.table)
+    .select(cfg.idColumn)
+    .eq(cfg.idColumn, action.target_id)
+    .maybeSingle();
+
+  if (!existing) {
+    let payload: Record<string, unknown> | null = action.snapshot ?? null;
+
+    if (!payload) {
+      if (!action.author_id || !cfg.textColumn || !action.excerpt) {
+        return { restored: false, reason: "Sem cópia do conteúdo original." };
+      }
+      payload = {
+        [cfg.idColumn]: action.target_id,
+        [cfg.authorColumn]: action.author_id,
+        [cfg.textColumn]: action.excerpt,
+      };
+      if (cfg.imageColumn && action.image_url) payload[cfg.imageColumn] = action.image_url;
+    }
+
+    const { error } = await admin.from(cfg.table).insert(payload);
+    if (error) {
+      console.error("[moderation] restore failed", error);
+      return { restored: false, reason: error.message };
+    }
+  }
+
+  await admin
+    .from("moderation_actions")
+    .update({ restored_at: new Date().toISOString() })
+    .eq("id", actionId);
+
+  return { restored: true };
+}
+
 

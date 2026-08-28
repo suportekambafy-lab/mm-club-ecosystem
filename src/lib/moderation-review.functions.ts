@@ -220,7 +220,7 @@ const RevertInput = z.object({
 
 /**
  * Reverte a decisão do agente: levanta a sanção associada, marca a ação como
- * revertida e avisa o membro. O conteúdo removido não é restaurado.
+ * revertida, repõe o conteúdo removido no ar e avisa o membro.
  */
 export const revertModerationAction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -252,6 +252,9 @@ export const revertModerationAction = createServerFn({ method: "POST" })
         .is("lifted_at", null);
     }
 
+    const { restoreModeratedContent } = await import("./moderation.server");
+    const restore = await restoreModeratedContent(data.actionId);
+
     if (action.author_id) {
       await context.supabase.from("notifications").insert({
         user_id: action.author_id,
@@ -260,8 +263,9 @@ export const revertModerationAction = createServerFn({ method: "POST" })
       });
     }
 
-    return { ok: true };
+    return { ok: true, restored: restore.restored, restoreReason: restore.reason ?? null };
   });
+
 
 const DecideInput = z.object({
   appealId: z.string().uuid(),
@@ -299,15 +303,23 @@ export const decideAppeal = createServerFn({ method: "POST" })
         .update({ lifted_at: new Date().toISOString() })
         .eq("id", appeal.sanction_id)
         .is("lifted_at", null);
-      await context.supabase
+      const { data: reverted } = await context.supabase
         .from("moderation_actions")
         .update({
           reverted_at: new Date().toISOString(),
           reverted_by: context.userId,
           review_note: data.note || "Recurso aceite.",
         })
-        .eq("sanction_id", appeal.sanction_id);
+        .eq("sanction_id", appeal.sanction_id)
+        .select("id");
+
+      // Recurso aceite repõe o conteúdo removido no ar.
+      const { restoreModeratedContent } = await import("./moderation.server");
+      for (const row of reverted ?? []) {
+        await restoreModeratedContent(row.id as string);
+      }
     }
+
 
     await context.supabase.from("notifications").insert({
       user_id: appeal.user_id,
