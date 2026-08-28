@@ -220,7 +220,7 @@ const RevertInput = z.object({
 
 /**
  * Reverte a decisão do agente: levanta a sanção associada, marca a ação como
- * revertida e avisa o membro. O conteúdo removido não é restaurado.
+ * revertida, repõe o conteúdo removido no ar e avisa o membro.
  */
 export const revertModerationAction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -252,6 +252,9 @@ export const revertModerationAction = createServerFn({ method: "POST" })
         .is("lifted_at", null);
     }
 
+    const { restoreModeratedContent } = await import("./moderation.server");
+    const restore = await restoreModeratedContent(data.actionId);
+
     if (action.author_id) {
       await context.supabase.from("notifications").insert({
         user_id: action.author_id,
@@ -260,8 +263,9 @@ export const revertModerationAction = createServerFn({ method: "POST" })
       });
     }
 
-    return { ok: true };
+    return { ok: true, restored: restore.restored, restoreReason: restore.reason ?? null };
   });
+
 
 const DecideInput = z.object({
   appealId: z.string().uuid(),
