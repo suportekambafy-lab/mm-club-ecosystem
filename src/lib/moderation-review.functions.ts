@@ -303,15 +303,23 @@ export const decideAppeal = createServerFn({ method: "POST" })
         .update({ lifted_at: new Date().toISOString() })
         .eq("id", appeal.sanction_id)
         .is("lifted_at", null);
-      await context.supabase
+      const { data: reverted } = await context.supabase
         .from("moderation_actions")
         .update({
           reverted_at: new Date().toISOString(),
           reverted_by: context.userId,
           review_note: data.note || "Recurso aceite.",
         })
-        .eq("sanction_id", appeal.sanction_id);
+        .eq("sanction_id", appeal.sanction_id)
+        .select("id");
+
+      // Recurso aceite repõe o conteúdo removido no ar.
+      const { restoreModeratedContent } = await import("./moderation.server");
+      for (const row of reverted ?? []) {
+        await restoreModeratedContent(row.id as string);
+      }
     }
+
 
     await context.supabase.from("notifications").insert({
       user_id: appeal.user_id,
