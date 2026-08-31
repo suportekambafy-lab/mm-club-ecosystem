@@ -67,17 +67,26 @@ function client() {
 }
 
 /**
- * Build the full RTMP ingest URL for a Cloudflare Stream live input.
+ * Build the full ingest URL for a Cloudflare Stream live input.
  *
- * IMPORTANT: LiveKit's egress RTMP sink cannot complete the TLS handshake with
- * Cloudflare's `rtmps://live.cloudflare.com:443` endpoint — the connection is
- * closed remotely and the push retries forever, so no recording is ever made.
- * Cloudflare also exposes plain RTMP ingest on port 1935, which works, so we
- * downgrade the URL for the egress push only (playback/recording is identical).
+ * HISTORY: an earlier attempt downgraded RTMPS/443 to plain RTMP/1935. That is
+ * what silently killed the 31 Aug recording — every push died with
+ * "connection closed remotely" / "stream wedged", and Cloudflare never saw the
+ * input connect. RTMPS is the endpoint that actually works (it recorded the
+ * 7 and 10 Aug lives), so RTMPS is the default again and plain RTMP is only a
+ * secondary attempt if RTMPS refuses to start.
  */
-export function buildRtmpTarget(rtmpsUrl: string, streamKey: string): string {
+export function buildRtmpTarget(
+  rtmpsUrl: string,
+  streamKey: string,
+  variant: "rtmps" | "rtmp" = "rtmps",
+): string {
   let base = rtmpsUrl.replace(/\/+$/, "");
-  if (/^rtmps:\/\//i.test(base)) {
+  if (variant === "rtmps") {
+    if (/^rtmp:\/\//i.test(base)) {
+      base = base.replace(/^rtmp:\/\//i, "rtmps://").replace(/:1935(\/|$)/, ":443$1");
+    }
+  } else if (/^rtmps:\/\//i.test(base)) {
     base = base.replace(/^rtmps:\/\//i, "rtmp://").replace(/:443(\/|$)/, ":1935$1");
     if (!/:\d+/.test(base)) base = base.replace(/^rtmp:\/\/([^/]+)/i, "rtmp://$1:1935");
   }
