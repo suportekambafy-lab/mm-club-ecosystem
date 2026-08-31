@@ -67,17 +67,26 @@ function client() {
 }
 
 /**
- * Build the full RTMP ingest URL for a Cloudflare Stream live input.
+ * Build the full ingest URL for a Cloudflare Stream live input.
  *
- * IMPORTANT: LiveKit's egress RTMP sink cannot complete the TLS handshake with
- * Cloudflare's `rtmps://live.cloudflare.com:443` endpoint — the connection is
- * closed remotely and the push retries forever, so no recording is ever made.
- * Cloudflare also exposes plain RTMP ingest on port 1935, which works, so we
- * downgrade the URL for the egress push only (playback/recording is identical).
+ * HISTORY: an earlier attempt downgraded RTMPS/443 to plain RTMP/1935. That is
+ * what silently killed the 31 Aug recording — every push died with
+ * "connection closed remotely" / "stream wedged", and Cloudflare never saw the
+ * input connect. RTMPS is the endpoint that actually works (it recorded the
+ * 7 and 10 Aug lives), so RTMPS is the default again and plain RTMP is only a
+ * secondary attempt if RTMPS refuses to start.
  */
-export function buildRtmpTarget(rtmpsUrl: string, streamKey: string): string {
+export function buildRtmpTarget(
+  rtmpsUrl: string,
+  streamKey: string,
+  variant: "rtmps" | "rtmp" = "rtmps",
+): string {
   let base = rtmpsUrl.replace(/\/+$/, "");
-  if (/^rtmps:\/\//i.test(base)) {
+  if (variant === "rtmps") {
+    if (/^rtmp:\/\//i.test(base)) {
+      base = base.replace(/^rtmp:\/\//i, "rtmps://").replace(/:1935(\/|$)/, ":443$1");
+    }
+  } else if (/^rtmps:\/\//i.test(base)) {
     base = base.replace(/^rtmps:\/\//i, "rtmp://").replace(/:443(\/|$)/, ":1935$1");
     if (!/:\d+/.test(base)) base = base.replace(/^rtmp:\/\/([^/]+)/i, "rtmp://$1:1935");
   }
@@ -126,28 +135,44 @@ export async function startLiveRecording(args: {
   roomName: string;
   rtmpsUrl?: string | null;
   streamKey?: string | null;
+  /** Which ingest flavour to try first (guard retries alternate). */
+  variant?: "rtmps" | "rtmp";
 }): Promise<StartRecordingResult> {
   try {
     const { egress, env } = client();
 
-    // 1) Preferred: push the composed room into Cloudflare Stream over RTMPS.
+    // 1) Preferred: push the composed room into Cloudflare Stream over RTMPS,
+    //    falling back to plain RTMP only if RTMPS refuses to start.
     if (args.rtmpsUrl && args.streamKey) {
-      const stream = new StreamOutput({
-        protocol: StreamProtocol.RTMP,
-        urls: [buildRtmpTarget(args.rtmpsUrl, args.streamKey)],
-      });
+      const variants: Array<"rtmps" | "rtmp"> =
+        args.variant === "rtmp" ? ["rtmp", "rtmps"] : ["rtmps", "rtmp"];
+      let lastError: string | null = null;
 
-      const info = await egress.startRoomCompositeEgress(
-        args.roomName,
-        { stream },
-        compositeOptions(),
-      );
-      return {
-        egressId: info.egressId ?? null,
-        target: "cloudflare",
-        filepath: null,
-        error: null,
-      };
+      for (const variant of variants) {
+        try {
+          const stream = new StreamOutput({
+            protocol: StreamProtocol.RTMP,
+            urls: [buildRtmpTarget(args.rtmpsUrl, args.streamKey, variant)],
+          });
+          const info = await egress.startRoomCompositeEgress(
+            args.roomName,
+            { stream },
+            compositeOptions(),
+          );
+          return {
+            egressId: info.egressId ?? null,
+            target: "cloudflare",
+            filepath: null,
+            error: null,
+          };
+        } catch (err) {
+          lastError = err instanceof Error ? err.message : String(err);
+          console.warn(`[live-egress] ${variant} start failed`, lastError);
+        }
+      }
+      if (!env.s3) {
+        return { egressId: null, target: null, filepath: null, error: lastError ?? "start_failed" };
+      }
     }
 
     // 2) Fallback: MP4 into the configured S3/R2 bucket.
@@ -265,6 +290,20 @@ export async function stopAllRoomEgress(roomName: string): Promise<boolean> {
   } catch (err) {
     console.warn("[live-egress] stopAllRoomEgress failed", err);
     return false;
+  }
+}
+
+/**
+ * How many egress attempts for this room have already failed. Used to alternate
+ * the ingest flavour (RTMPS ↔ RTMP) instead of retrying a broken one forever.
+ */
+export async function countRoomEgressFailures(roomName: string): Promise<number> {
+  try {
+    const { egress } = client();
+    const list = await egress.listEgress({ roomName });
+    return list.filter((e) => e.status === EgressStatus.EGRESS_FAILED).length;
+  } catch {
+    return 0;
   }
 }
 

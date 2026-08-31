@@ -74,6 +74,23 @@ export const Route = createFileRoute("/api/public/hooks/lives-egress-guard")({
             }
           }
 
+          // Lives no ar sem gravação ativa → reiniciar (alterna RTMPS/RTMP).
+          const { data: onAir } = await supabaseAdmin
+            .from("lives")
+            .select("id,mode,started_at")
+            .eq("status", "live");
+
+          for (const row of onAir ?? []) {
+            const hasActive = active.some((e) => {
+              const p = e.roomName ? parseRoomName(e.roomName) : null;
+              return p?.liveId === row.id;
+            });
+            if (hasActive) continue;
+            const { ensureLiveRecording } = await import("@/lib/live-recording.server");
+            const res = await ensureLiveRecording(row.id);
+            actions.push({ liveId: row.id, restartedRecording: res.ok, reason: res.reason });
+          }
+
           // Lives penduradas em "live" há demasiado tempo (browser fechado).
           const cutoff = new Date(now - maxMs).toISOString();
           const { data: hanging } = await supabaseAdmin
