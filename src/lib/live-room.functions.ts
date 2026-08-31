@@ -292,9 +292,21 @@ export const endLive = createServerFn({ method: "POST" })
     try {
       const { livekitRoomName } = await import("./livekit.server");
       const { stopLiveRecording, stopAllRoomEgress } = await import("./live-egress.server");
-      if (liveRow?.recording_egress_id) await stopLiveRecording(liveRow.recording_egress_id);
-      // Belt and braces: stop any other active egress bound to this room.
-      await stopAllRoomEgress(livekitRoomName(data.liveId, "main"));
+      let stopped = true;
+      if (liveRow?.recording_egress_id) {
+        stopped = await stopLiveRecording(liveRow.recording_egress_id);
+      }
+      // Belt and braces: stop any other active egress bound to either room.
+      const mainClear = await stopAllRoomEgress(livekitRoomName(data.liveId, "main"));
+      const backstageClear = await stopAllRoomEgress(livekitRoomName(data.liveId, "backstage"));
+      if (!stopped || !mainClear || !backstageClear) {
+        console.error("[endLive] egress may still be active", {
+          liveId: data.liveId,
+          stopped,
+          mainClear,
+          backstageClear,
+        });
+      }
       await supabaseAdmin
         .from("lives")
         .update({ recording_stopped_at: new Date().toISOString() })
@@ -302,6 +314,7 @@ export const endLive = createServerFn({ method: "POST" })
     } catch (err) {
       console.warn("[endLive] recording stop failed", err);
     }
+
 
     // Desliga todos da sala LiveKit — sem isto, quem ficou com a página aberta
     // continua ligado ao vídeo mesmo depois de a live terminar.

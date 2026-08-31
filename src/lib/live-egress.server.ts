@@ -190,13 +190,37 @@ export async function startLiveRecording(args: {
   }
 }
 
-export async function stopLiveRecording(egressId: string): Promise<void> {
-  try {
-    const { egress } = client();
-    await egress.stopEgress(egressId);
-  } catch (err) {
-    console.warn("[live-egress] stop failed", err);
+/**
+ * Stop an egress and VERIFY it actually stopped.
+ *
+ * This used to be fire-and-forget with a swallowed error, which is how a live
+ * ended up with an 11-hour "recording": the stop call failed, the RTMP push
+ * kept feeding Cloudflare all night and the recorded file was unusable.
+ */
+export async function stopLiveRecording(egressId: string): Promise<boolean> {
+  const { egress } = client();
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      await egress.stopEgress(egressId);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      // Already finished → nothing to stop.
+      if (/not found|already|complete|ended/i.test(message)) return true;
+      console.warn(`[live-egress] stop attempt ${attempt + 1} failed`, message);
+    }
+    try {
+      const list = await egress.listEgress({ egressId });
+      const still = list.some(
+        (e) => e.status === EgressStatus.EGRESS_ACTIVE || e.status === EgressStatus.EGRESS_STARTING,
+      );
+      if (!still) return true;
+    } catch {
+      /* verification failed — retry the stop */
+    }
+    await new Promise((r) => setTimeout(r, 1200));
   }
+  console.error("[live-egress] egress still active after retries", egressId);
+  return false;
 }
 
 /** Diagnostics: current status of a given egress (or of the room's egresses). */
@@ -217,21 +241,48 @@ export async function getRecordingStatus(args: { egressId?: string; roomName?: s
 
 /**
  * Ensure a stale/aborted egress isn't left running for a room (e.g. a previous
- * session that crashed). Stops anything still active.
+ * session that crashed). Stops anything still active and verifies it.
  */
-export async function stopAllRoomEgress(roomName: string): Promise<void> {
+export async function stopAllRoomEgress(roomName: string): Promise<boolean> {
   try {
     const { egress } = client();
-    const list = await egress.listEgress({ roomName, active: true });
-    for (const e of list) {
-      if (!e.egressId) continue;
-      try {
-        await egress.stopEgress(e.egressId);
-      } catch {
-        /* ignore */
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const list = await egress.listEgress({ roomName, active: true });
+      if (list.length === 0) return true;
+      for (const e of list) {
+        if (!e.egressId) continue;
+        try {
+          await egress.stopEgress(e.egressId);
+        } catch (err) {
+          console.warn("[live-egress] stopAllRoomEgress stop failed", e.egressId, err);
+        }
       }
+      await new Promise((r) => setTimeout(r, 1200));
     }
+    const left = await egress.listEgress({ roomName, active: true });
+    if (left.length) console.error("[live-egress] room still has active egress", roomName);
+    return left.length === 0;
   } catch (err) {
     console.warn("[live-egress] stopAllRoomEgress failed", err);
+    return false;
   }
 }
+
+/** All egresses currently active/starting across the LiveKit project. */
+export async function listActiveEgress() {
+  const { egress } = client();
+  const list = await egress.listEgress({ active: true });
+  return list.map((e) => ({
+    egressId: e.egressId ?? null,
+    roomName: e.roomName ?? null,
+    status: EgressStatus[e.status] ?? String(e.status),
+    startedAtMs: e.startedAt ? Math.round(Number(e.startedAt) / 1e6) : null,
+  }));
+}
+
+/** `mmclub_main_<uuid>` → { target, liveId } */
+export function parseRoomName(roomName: string): { target: string; liveId: string } | null {
+  const m = /^mmclub_(main|backstage)_(.+)$/.exec(roomName);
+  return m ? { target: m[1]!, liveId: m[2]! } : null;
+}
+

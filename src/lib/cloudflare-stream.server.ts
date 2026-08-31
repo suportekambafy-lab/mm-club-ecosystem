@@ -50,10 +50,24 @@ export async function createLiveInput(meta: { title: string }): Promise<CfLiveIn
     method: "POST",
     body: JSON.stringify({
       meta: { name: meta.title },
-      recording: { mode: "automatic", requireSignedURLs: true },
+      // timeoutSeconds: finalize the recording quickly after the RTMP push
+      // disconnects, so a reconnect starts a new file instead of stretching
+      // one recording over hours of dead air.
+      recording: { mode: "automatic", requireSignedURLs: true, timeoutSeconds: 30 },
     }),
   });
 }
+
+/** Force-close any recording still open on a live input (idempotent). */
+export async function disableLiveInputRecording(uid: string): Promise<void> {
+  await cfFetch(`/stream/live_inputs/${uid}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      recording: { mode: "automatic", requireSignedURLs: true, timeoutSeconds: 30 },
+    }),
+  });
+}
+
 
 export async function deleteLiveInput(uid: string): Promise<void> {
   await cfFetch(`/stream/live_inputs/${uid}`, { method: "DELETE" });
