@@ -139,24 +139,38 @@ export async function startLiveRecording(args: {
   try {
     const { egress, env } = client();
 
-    // 1) Preferred: push the composed room into Cloudflare Stream over RTMPS.
+    // 1) Preferred: push the composed room into Cloudflare Stream over RTMPS,
+    //    falling back to plain RTMP only if RTMPS refuses to start.
     if (args.rtmpsUrl && args.streamKey) {
-      const stream = new StreamOutput({
-        protocol: StreamProtocol.RTMP,
-        urls: [buildRtmpTarget(args.rtmpsUrl, args.streamKey)],
-      });
+      const variants: Array<"rtmps" | "rtmp"> =
+        args.variant === "rtmp" ? ["rtmp", "rtmps"] : ["rtmps", "rtmp"];
+      let lastError: string | null = null;
 
-      const info = await egress.startRoomCompositeEgress(
-        args.roomName,
-        { stream },
-        compositeOptions(),
-      );
-      return {
-        egressId: info.egressId ?? null,
-        target: "cloudflare",
-        filepath: null,
-        error: null,
-      };
+      for (const variant of variants) {
+        try {
+          const stream = new StreamOutput({
+            protocol: StreamProtocol.RTMP,
+            urls: [buildRtmpTarget(args.rtmpsUrl, args.streamKey, variant)],
+          });
+          const info = await egress.startRoomCompositeEgress(
+            args.roomName,
+            { stream },
+            compositeOptions(),
+          );
+          return {
+            egressId: info.egressId ?? null,
+            target: "cloudflare",
+            filepath: null,
+            error: null,
+          };
+        } catch (err) {
+          lastError = err instanceof Error ? err.message : String(err);
+          console.warn(`[live-egress] ${variant} start failed`, lastError);
+        }
+      }
+      if (!env.s3) {
+        return { egressId: null, target: null, filepath: null, error: lastError ?? "start_failed" };
+      }
     }
 
     // 2) Fallback: MP4 into the configured S3/R2 bucket.
