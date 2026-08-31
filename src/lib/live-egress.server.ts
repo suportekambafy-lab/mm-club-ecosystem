@@ -135,6 +135,8 @@ export async function startLiveRecording(args: {
   roomName: string;
   rtmpsUrl?: string | null;
   streamKey?: string | null;
+  /** Which ingest flavour to try first (guard retries alternate). */
+  variant?: "rtmps" | "rtmp";
 }): Promise<StartRecordingResult> {
   try {
     const { egress, env } = client();
