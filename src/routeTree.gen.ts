@@ -102,6 +102,7 @@ import { Route as ApiPublicHooksPushNotificationsRouteImport } from './routes/ap
 import { Route as ApiPublicHooksNovidadesEmailRouteImport } from './routes/api/public/hooks/novidades-email'
 import { Route as ApiPublicHooksModerationSweepRouteImport } from './routes/api/public/hooks/moderation-sweep'
 import { Route as ApiPublicHooksLivesRecordingCheckRouteImport } from './routes/api/public/hooks/lives-recording-check'
+import { Route as ApiPublicHooksLivesEgressGuardRouteImport } from './routes/api/public/hooks/lives-egress-guard'
 import { Route as ApiPublicHooksLivesAnnounceCatchupRouteImport } from './routes/api/public/hooks/lives-announce-catchup'
 import { Route as ApiPublicHooksLiveTestEmailRouteImport } from './routes/api/public/hooks/live-test-email'
 import { Route as ApiPublicHooksInactivityNudgeRouteImport } from './routes/api/public/hooks/inactivity-nudge'
@@ -609,6 +610,12 @@ const ApiPublicHooksLivesRecordingCheckRoute =
     path: '/api/public/hooks/lives-recording-check',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksLivesEgressGuardRoute =
+  ApiPublicHooksLivesEgressGuardRouteImport.update({
+    id: '/api/public/hooks/lives-egress-guard',
+    path: '/api/public/hooks/lives-egress-guard',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksLivesAnnounceCatchupRoute =
   ApiPublicHooksLivesAnnounceCatchupRouteImport.update({
     id: '/api/public/hooks/lives-announce-catchup',
@@ -836,6 +843,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/inactivity-nudge': typeof ApiPublicHooksInactivityNudgeRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
+  '/api/public/hooks/lives-egress-guard': typeof ApiPublicHooksLivesEgressGuardRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/moderation-sweep': typeof ApiPublicHooksModerationSweepRoute
   '/api/public/hooks/novidades-email': typeof ApiPublicHooksNovidadesEmailRoute
@@ -944,6 +952,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/inactivity-nudge': typeof ApiPublicHooksInactivityNudgeRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
+  '/api/public/hooks/lives-egress-guard': typeof ApiPublicHooksLivesEgressGuardRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/moderation-sweep': typeof ApiPublicHooksModerationSweepRoute
   '/api/public/hooks/novidades-email': typeof ApiPublicHooksNovidadesEmailRoute
@@ -1062,6 +1071,7 @@ export interface FileRoutesById {
   '/api/public/hooks/inactivity-nudge': typeof ApiPublicHooksInactivityNudgeRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
+  '/api/public/hooks/lives-egress-guard': typeof ApiPublicHooksLivesEgressGuardRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
   '/api/public/hooks/moderation-sweep': typeof ApiPublicHooksModerationSweepRoute
   '/api/public/hooks/novidades-email': typeof ApiPublicHooksNovidadesEmailRoute
@@ -1180,6 +1190,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/inactivity-nudge'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
+    | '/api/public/hooks/lives-egress-guard'
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/moderation-sweep'
     | '/api/public/hooks/novidades-email'
@@ -1288,6 +1299,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/inactivity-nudge'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
+    | '/api/public/hooks/lives-egress-guard'
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/moderation-sweep'
     | '/api/public/hooks/novidades-email'
@@ -1405,6 +1417,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/inactivity-nudge'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
+    | '/api/public/hooks/lives-egress-guard'
     | '/api/public/hooks/lives-recording-check'
     | '/api/public/hooks/moderation-sweep'
     | '/api/public/hooks/novidades-email'
@@ -1457,6 +1470,7 @@ export interface RootRouteChildren {
   ApiPublicHooksInactivityNudgeRoute: typeof ApiPublicHooksInactivityNudgeRoute
   ApiPublicHooksLiveTestEmailRoute: typeof ApiPublicHooksLiveTestEmailRoute
   ApiPublicHooksLivesAnnounceCatchupRoute: typeof ApiPublicHooksLivesAnnounceCatchupRoute
+  ApiPublicHooksLivesEgressGuardRoute: typeof ApiPublicHooksLivesEgressGuardRoute
   ApiPublicHooksLivesRecordingCheckRoute: typeof ApiPublicHooksLivesRecordingCheckRoute
   ApiPublicHooksModerationSweepRoute: typeof ApiPublicHooksModerationSweepRoute
   ApiPublicHooksNovidadesEmailRoute: typeof ApiPublicHooksNovidadesEmailRoute
@@ -2127,6 +2141,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksLivesRecordingCheckRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/lives-egress-guard': {
+      id: '/api/public/hooks/lives-egress-guard'
+      path: '/api/public/hooks/lives-egress-guard'
+      fullPath: '/api/public/hooks/lives-egress-guard'
+      preLoaderRoute: typeof ApiPublicHooksLivesEgressGuardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/lives-announce-catchup': {
       id: '/api/public/hooks/lives-announce-catchup'
       path: '/api/public/hooks/lives-announce-catchup'
@@ -2549,6 +2570,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksLiveTestEmailRoute: ApiPublicHooksLiveTestEmailRoute,
   ApiPublicHooksLivesAnnounceCatchupRoute:
     ApiPublicHooksLivesAnnounceCatchupRoute,
+  ApiPublicHooksLivesEgressGuardRoute: ApiPublicHooksLivesEgressGuardRoute,
   ApiPublicHooksLivesRecordingCheckRoute:
     ApiPublicHooksLivesRecordingCheckRoute,
   ApiPublicHooksModerationSweepRoute: ApiPublicHooksModerationSweepRoute,
