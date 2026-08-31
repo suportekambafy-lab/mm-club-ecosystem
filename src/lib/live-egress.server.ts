@@ -293,6 +293,20 @@ export async function stopAllRoomEgress(roomName: string): Promise<boolean> {
   }
 }
 
+/**
+ * How many egress attempts for this room have already failed. Used to alternate
+ * the ingest flavour (RTMPS ↔ RTMP) instead of retrying a broken one forever.
+ */
+export async function countRoomEgressFailures(roomName: string): Promise<number> {
+  try {
+    const { egress } = client();
+    const list = await egress.listEgress({ roomName });
+    return list.filter((e) => e.status === EgressStatus.EGRESS_FAILED).length;
+  } catch {
+    return 0;
+  }
+}
+
 /** All egresses currently active/starting across the LiveKit project. */
 export async function listActiveEgress() {
   const { egress } = client();
