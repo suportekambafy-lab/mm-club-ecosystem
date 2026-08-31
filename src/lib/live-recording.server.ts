@@ -72,7 +72,13 @@ export async function ensureLiveRecording(liveId: string): Promise<{
       }
     }
 
-    const result = await startLiveRecording({ liveId, roomName, rtmpsUrl, streamKey });
+    // Alternate the ingest flavour when previous attempts for this room failed
+    // (a wedged/refused push otherwise repeats forever and nothing is recorded).
+    const { countRoomEgressFailures } = await import("./live-egress.server");
+    const failures = await countRoomEgressFailures(roomName);
+    const variant: "rtmps" | "rtmp" = failures > 0 && failures % 2 === 1 ? "rtmp" : "rtmps";
+
+    const result = await startLiveRecording({ liveId, roomName, rtmpsUrl, streamKey, variant });
     if (result.egressId) {
       await supabaseAdmin
         .from("lives")
