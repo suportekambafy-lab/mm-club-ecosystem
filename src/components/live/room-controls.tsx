@@ -190,7 +190,99 @@ export function RoomControls({ state, actions, onLeave }: Props) {
   );
 }
 
+/**
+ * Host/cohost recording control. The server starts recording automatically on
+ * "Ir ao ar"; this button shows the real egress state (polled) and lets the
+ * host retomar/parar a gravação manualmente.
+ */
+function RecordButton({ liveId, isLive }: { liveId: string; isLive: boolean }) {
+  const statusFn = useServerFn(getRecordingState);
+  const startFn = useServerFn(startRecordingNow);
+  const stopFn = useServerFn(stopRecordingNow);
+  const [recording, setRecording] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const refresh = useCallback(async () => {
+    try {
+      const r = await statusFn({ data: { liveId } });
+      setRecording(Boolean(r?.recording));
+      setStarting(Boolean(r?.starting));
+    } catch {
+      /* ignore */
+    }
+  }, [statusFn, liveId]);
+
+  useEffect(() => {
+    if (!isLive) return;
+    void refresh();
+    const id = window.setInterval(() => void refresh(), 15000);
+    return () => window.clearInterval(id);
+  }, [isLive, refresh]);
+
+  if (!isLive) return null;
+
+  const toggle = async () => {
+    setBusy(true);
+    try {
+      if (recording) {
+        const r = await stopFn({ data: { liveId } });
+        if (r?.ok) {
+          setRecording(false);
+          toast.success("Gravação parada", {
+            description: "O replay será preparado com o que já foi gravado.",
+          });
+        } else {
+          toast.error("Não foi possível parar a gravação");
+        }
+      } else {
+        const r = await startFn({ data: { liveId } });
+        if (r?.ok) {
+          setRecording(true);
+          toast.success("A gravar", { description: "A sessão está a ser gravada para replay." });
+        } else {
+          toast.error("Não foi possível iniciar a gravação", {
+            description: "Tenta novamente em alguns segundos.",
+          });
+        }
+      }
+    } catch {
+      toast.error("Erro no controlo da gravação");
+    } finally {
+      setBusy(false);
+      void refresh();
+    }
+  };
+
+  return (
+    <Button
+      size="sm"
+      variant="secondary"
+      onClick={() => void toggle()}
+      disabled={busy}
+      title={recording ? "Parar gravação" : "Gravar a sessão"}
+      aria-label={recording ? "Parar gravação" : "Gravar a sessão"}
+      className={cn(
+        "h-9 shrink-0 rounded-xl border px-3 text-xs",
+        recording
+          ? "border-red-500/40 bg-red-500/15 text-red-300 hover:bg-red-500/25"
+          : "border-white/10 bg-white/5 text-white/85 hover:bg-white/10",
+      )}
+    >
+      {recording ? (
+        <span className="mr-1.5 h-2 w-2 shrink-0 animate-pulse rounded-full bg-red-400" />
+      ) : (
+        <Circle className="mr-1.5 h-4 w-4" />
+      )}
+      <span className="hidden sm:inline">
+        {busy ? "…" : recording ? (starting ? "A iniciar…" : "A gravar") : "Gravar"}
+      </span>
+    </Button>
+  );
+}
+
 function IconButton({
+
   active,
   onClick,
   busy,
