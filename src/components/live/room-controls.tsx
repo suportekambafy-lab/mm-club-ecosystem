@@ -1,8 +1,9 @@
 /**
  * Floating controls bar (Meet-style). Pure UI reading abstract state.
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useServerFn } from "@tanstack/react-start";
 import type { MediaDeviceOption, RoomActions, RoomState } from "@/lib/room-state";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,10 +17,13 @@ import {
   Layout,
   LogOut,
   ChevronUp,
+  Circle,
 } from "lucide-react";
+import { getRecordingState, startRecordingNow, stopRecordingNow } from "@/lib/live-room.functions";
 import { StudioPanel } from "./studio-panel";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+
 
 // getDisplayMedia is not implemented on mobile browsers (iOS Safari,
 // Chrome Android, etc.). Detect once so we can show a helpful hint
