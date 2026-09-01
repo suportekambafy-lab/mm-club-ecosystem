@@ -165,8 +165,13 @@ export function RoomControls({ state, actions, onLeave }: Props) {
       )}
 
       {(state.localRole === "host" || state.localRole === "cohost") && (
+        <RecordButton liveId={state.liveId} isLive={state.status === "live"} />
+      )}
+
+      {(state.localRole === "host" || state.localRole === "cohost") && (
         <LayoutMenu state={state} actions={actions} />
       )}
+
 
       {state.localRole === "host" ? (
         <HostLeaveMenu state={state} actions={actions} onLeave={onLeave} />
