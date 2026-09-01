@@ -679,3 +679,77 @@ export const getRoomState = createServerFn({ method: "GET" })
 
     return { live, participants: participants ?? [] };
   });
+
+// -------------------------------------------------------------------------
+// Gravação manual (host/cohost): estado, iniciar e parar.
+// A gravação continua a arrancar automaticamente ao ir ao ar; este controlo
+// serve para o host confirmar visualmente que está a gravar e para retomar
+// a gravação se o egress tiver falhado.
+// -------------------------------------------------------------------------
+export const getRecordingState = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => liveIdOnly.parse(i))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await requireHostOrCohost(supabase, data.liveId, userId);
+    const { livekitRoomName } = await import("./livekit.server");
+    const { getRecordingStatus } = await import("./live-egress.server");
+    try {
+      const list = await getRecordingStatus({ roomName: livekitRoomName(data.liveId, "main") });
+      const active = list.find(
+        (e) => e.status === "EGRESS_ACTIVE" || e.status === "EGRESS_STARTING",
+      );
+      return {
+        recording: Boolean(active),
+        starting: active?.status === "EGRESS_STARTING",
+        egressId: active?.egressId ?? null,
+        startedAt: active?.startedAt ?? null,
+      };
+    } catch {
+      return { recording: false, starting: false, egressId: null, startedAt: null };
+    }
+  });
+
+export const startRecordingNow = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => liveIdOnly.parse(i))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await requireHostOrCohost(supabase, data.liveId, userId);
+    const { ensureLiveRecording } = await import("./live-recording.server");
+    let result = await ensureLiveRecording(data.liveId);
+    for (let attempt = 0; attempt < 2 && !result.ok; attempt++) {
+      await new Promise((r) => setTimeout(r, 1500));
+      result = await ensureLiveRecording(data.liveId);
+    }
+    await logEvent(supabase, {
+      liveId: data.liveId,
+      actorId: userId,
+      kind: "recording_start",
+      payload: { ok: result.ok, reason: result.reason },
+    });
+    return result;
+  });
+
+export const stopRecordingNow = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => liveIdOnly.parse(i))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await requireHostOrCohost(supabase, data.liveId, userId);
+    const { livekitRoomName } = await import("./livekit.server");
+    const { stopAllRoomEgress } = await import("./live-egress.server");
+    const cleared = await stopAllRoomEgress(livekitRoomName(data.liveId, "main"));
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
+      .from("lives")
+      .update({ recording_stopped_at: new Date().toISOString(), recording_egress_id: null })
+      .eq("id", data.liveId);
+    await logEvent(supabase, {
+      liveId: data.liveId,
+      actorId: userId,
+      kind: "recording_stop",
+      payload: { cleared },
+    });
+    return { ok: cleared };
+  });
