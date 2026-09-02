@@ -205,6 +205,21 @@ function PlansPage() {
           </p>
         ) : null}
 
+        {isError || (!isLoading && prices.length === 0) ? (
+          <div className="mx-auto mt-14 max-w-md rounded-3xl bg-surface-1 p-7 text-center ring-1 ring-border">
+            <p className="text-sm text-muted-foreground">
+              Não conseguimos carregar os planos neste momento.
+            </p>
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground"
+            >
+              Tentar novamente
+            </button>
+          </div>
+        ) : null}
+
         <section className="mx-auto mt-14 grid max-w-5xl gap-6 md:mt-20 md:grid-cols-3">
           {isLoading
             ? [0, 1, 2].map((i) => (
@@ -214,6 +229,7 @@ function PlansPage() {
                 />
               ))
             : prices.map((price, i) => {
+
                 const isYearly = price.interval === "year";
                 const isRecommended = recommended
                   ? recommended === price.slug
