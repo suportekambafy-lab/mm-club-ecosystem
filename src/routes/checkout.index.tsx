@@ -69,11 +69,18 @@ function PlansPage() {
   const [guestEmail, setGuestEmail] = useState("");
   const [guestName, setGuestName] = useState("");
 
-  const { data: catalog, isLoading } = useQuery({
+  const {
+    data: catalog,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["catalog", "subscription"],
     queryFn: () => getCatalog({ data: { kinds: ["subscription"] } }),
     staleTime: 5 * 60_000,
+    retry: 3,
   });
+
 
   const product = catalog?.[0] ?? null;
   // Planos com trial (ex.: oferta VIP de 3 meses) só existem em /vip.
