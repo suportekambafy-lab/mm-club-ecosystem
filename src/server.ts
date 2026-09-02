@@ -76,7 +76,10 @@ function withFreshnessHeaders(request: Request, response: Response): Response {
   headers.set("Pragma", "no-cache");
   headers.set("Expires", "0");
   if (url.pathname === "/sw.js") headers.set("Service-Worker-Allowed", "/");
-  if (isCheckoutFlow) headers.set("Clear-Site-Data", '"cache"');
+  // NUNCA enviar Clear-Site-Data no fluxo de checkout: o browser limpa a cache
+  // a meio do carregamento e aborta os chunks de JS (net::ERR_ABORTED), o que
+  // deixava a página de planos em branco / sem hidratar (botões sem reação).
+
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
