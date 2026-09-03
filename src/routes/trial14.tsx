@@ -76,7 +76,7 @@ function Trial14Page() {
 
     setPending(true);
     setError(null);
-    rememberIntendedPlan(PRICE_SLUG, "vip");
+    rememberIntendedPlan(PRICE_SLUG, "vip", "/trial14");
     try {
       if (!user) {
         const res = await startGuestCheckout({
