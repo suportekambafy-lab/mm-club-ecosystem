@@ -4,7 +4,7 @@ import { AlertCircle, CheckCircle2, Loader2, Mail, RotateCcw } from "lucide-reac
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getGuestCheckoutStatus } from "@/lib/billing.functions";
-import { rememberIntendedPlan } from "@/lib/intended-plan";
+import { intendedOfferPath, rememberIntendedPlan } from "@/lib/intended-plan";
 import { trackMeta } from "@/lib/meta/pixel";
 
 export const Route = createFileRoute("/checkout/return")({
@@ -47,6 +47,11 @@ function CheckoutReturn() {
   const planName = data && "planName" in data ? data.planName : null;
   const isTrial = Boolean(data && "isTrial" in data && data.isTrial);
   const accountCreated = Boolean(data && "accountCreated" in data && data.accountCreated);
+
+  // A oferta exata que falhou (ex.: /trial14 vs /vip) — nunca trocamos de oferta.
+  const retryPath = intendedOfferPath(
+    priceSlug ? { slug: priceSlug, from: isTrial ? "vip" : "checkout", at: Date.now() } : null,
+  );
 
   // Guarda o plano tentado para que qualquer caminho (login, /checkout, /vip)
   // retome exatamente a mesma escolha em vez de mostrar a parede de planos.
@@ -108,13 +113,13 @@ function CheckoutReturn() {
           ) : null}
 
           <div className="mt-8 flex flex-col items-center gap-3">
-            {isTrial ? (
+            {isTrial && retryPath ? (
               <Link
-                to="/vip"
+                to={retryPath as never}
                 className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground"
               >
                 <RotateCcw className="h-4 w-4" />
-                Tentar novamente o acesso VIP
+                Tentar novamente {planName ?? "a oferta"}
               </Link>
             ) : (
               <Link
