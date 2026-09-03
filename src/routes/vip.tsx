@@ -72,7 +72,7 @@ function VipPage() {
 
     setPending(true);
     setError(null);
-    rememberIntendedPlan("mm_club_vip_trial", "vip");
+    rememberIntendedPlan("mm_club_vip_trial", "vip", "/vip");
     try {
       if (!user) {
         const res = await startGuestCheckout({

@@ -206,7 +206,7 @@ function UpsellTrial14() {
 
     setPending(true);
     setError(null);
-    rememberIntendedPlan(PRICE_SLUG, "vip");
+    rememberIntendedPlan(PRICE_SLUG, "vip", "/upsell/trial14");
     try {
       if (!user) {
         const res = await startGuestCheckout({

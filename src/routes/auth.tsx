@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { AlertCircle, ArrowRight, ArrowLeft, Mail, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { clearIntendedPlan, readIntendedPlan } from "@/lib/intended-plan";
+import { clearIntendedPlan, intendedOfferPath, readIntendedPlan } from "@/lib/intended-plan";
 import { MMLogo } from "@/components/mm/logo";
 import { toast } from "sonner";
 import authCover from "@/assets/auth-cover.jpg";
@@ -104,9 +104,10 @@ function AuthPage() {
         if (subs && subs.length > 0) {
           clearIntendedPlan();
         } else {
+          const offerPath = intendedOfferPath(intended);
           navigate(
-            intended.from === "vip"
-              ? { to: "/vip" }
+            offerPath
+              ? ({ to: offerPath } as never)
               : { to: "/checkout", search: { plan: intended.slug } },
           );
           return;
