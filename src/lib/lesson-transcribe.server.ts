@@ -15,9 +15,11 @@ const TRANSCRIBE_MODEL = "openai/gpt-4o-mini-transcribe";
 
 const MAX_PART_BYTES = 18 * 1024 * 1024;
 /** Parts processed per tick (each ~18MB of audio+video segments). */
-export const MAX_PARTS_PER_TICK = 4;
-const PART_CONCURRENCY = 4;
-const SEGMENT_CONCURRENCY = 6;
+export const MAX_PARTS_PER_TICK = 6;
+const PART_CONCURRENCY = 2;
+const SEGMENT_CONCURRENCY = 8;
+/** Stop starting new parts after this, so the tick always returns saved progress. */
+const TICK_BUDGET_MS = 70_000;
 
 function concatBytes(parts: Uint8Array[]): Uint8Array {
   const total = parts.reduce((a, b) => a + b.byteLength, 0);
