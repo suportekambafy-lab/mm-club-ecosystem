@@ -14,6 +14,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { dropLocalSession, ensureLiveSession } from "@/lib/session-health";
+import { reportSessionDiagnostic } from "@/lib/security.functions";
 
 export const Route = createFileRoute("/_app/codigo")({
   component: CodigoDoClube,
