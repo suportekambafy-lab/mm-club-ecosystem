@@ -102,23 +102,62 @@ export const Route = createFileRoute("/_app")({
       club_code_accepted_at?: string | null;
       onboarding_completed_at?: string | null;
     };
-    let profile: ProfileGate | null = null;
-    let profileRead = false;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const { data: prof, error } = await supabase
-        .from("profiles")
-        .select("club_code_accepted_at, onboarding_completed_at")
-        .eq("id", userId)
-        .maybeSingle();
-      if (!error) {
-        profile = prof as ProfileGate | null;
-        profileRead = true;
-        break;
+    const readProfile = async () => {
+      let profile: ProfileGate | null = null;
+      let profileRead = false;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const { data: prof, error } = await supabase
+          .from("profiles")
+          .select("club_code_accepted_at, onboarding_completed_at")
+          .eq("id", userId)
+          .maybeSingle();
+        if (!error) {
+          profile = prof as ProfileGate | null;
+          profileRead = true;
+          break;
+        }
+        await new Promise((r) => setTimeout(r, 250 * (attempt + 1)));
       }
-      await new Promise((r) => setTimeout(r, 250 * (attempt + 1)));
+      return { profile, profileRead };
+    };
+
+    let { profile, profileRead } = await readProfile();
+
+    // Todos os membros têm perfil. Se a leitura "correu bem" mas não veio
+    // linha nenhuma, o pedido saiu sem sessão válida (token expirado no
+    // dispositivo, refresh falhado…). Validamos a sessão com o servidor,
+    // tentamos repará-la e só depois voltamos a ler.
+    if (profileRead && !profile) {
+      const health = await ensureLiveSession();
+      if (!health.ok) {
+        void reportSessionDiagnostic({
+          data: {
+            where: "app.gate",
+            reason: health.reason,
+            userId,
+            skewSeconds: health.skewSeconds,
+            hadSession: true,
+            profileRead,
+            profileFound: false,
+            online: typeof navigator !== "undefined" ? navigator.onLine : undefined,
+            standalone:
+              typeof window !== "undefined"
+                ? window.matchMedia?.("(display-mode: standalone)").matches
+                : undefined,
+          },
+        }).catch(() => {});
+        await dropLocalSession();
+        throw redirect({
+          to: "/auth",
+          search: { redirect: location.pathname } as never,
+          replace: true,
+        });
+      }
+      ({ profile, profileRead } = await readProfile());
     }
 
-    const codeAccepted = !profileRead || Boolean(profile?.club_code_accepted_at);
+    // Só bloqueamos quando lemos mesmo o perfil e ele diz que falta aceitar.
+    const codeAccepted = !profileRead || !profile || Boolean(profile.club_code_accepted_at);
     if (!codeAccepted && location.pathname !== "/codigo") {
       throw redirect({ to: "/codigo", replace: true });
     }
