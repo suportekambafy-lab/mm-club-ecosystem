@@ -20,6 +20,7 @@ export type EmailKind =
   | "wakeup_call"
   | "absence_ladder"
   | "upcoming_courses"
+  | "legacy_teaser"
   | "course_released"
   | "community_post"
   | "short_published"
@@ -744,6 +745,52 @@ export const emailTemplates = {
          ${cards}
          <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:18px 0 26px;">Podes vê-los já na Academia, com contador para a data de lançamento.</p>
          <p style="margin:0 0 8px;">${btn("Ver na Academia →", `${APP_URL}/academia`)}</p>`,
+      ),
+    };
+  },
+
+  legacyTeaser(
+    name: string,
+    course: { courseId: string; title: string; release: string; cover?: string | null },
+  ) {
+    const safe = escapeHtml(name);
+    const cover = course.cover
+      ? course.cover.startsWith("http")
+        ? course.cover
+        : `${APP_URL}${course.cover}`
+      : null;
+    const hero = cover
+      ? `<div style="margin:0 -40px 24px;"><img src="${cover}" alt="${escapeHtml(course.title)}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;text-decoration:none;"></div>`
+      : "";
+    const paragraphs = [
+      "Foram dias e noites de trabalho para finalmente trazer o Marca Milionária Legacy. \u{1F525}",
+      "E agora, você vai poder colocar as mãos nele em primeira mão. O contador já está ativo. Tic. Tac. \u{23F3}",
+      "O Legacy é muito mais do que um simples curso. É um passo a passo estruturado, validado e testado por vários dos meus alunos, com resultados reais. É o tipo de conhecimento e acompanhamento que, muitas vezes, é vendido em mentorias que custam 5 mil, 10 mil euros ou até mais.",
+      "Eu coloquei dentro do Legacy aquilo que considero essencial para quem realmente quer sair do lugar e construir resultados.",
+      "Mas existe uma coisa que eu não consigo fazer por você: executar.",
+      "O que vou precisar de você? Empenho. Disciplina. Consistência.",
+      "Eu entrego o caminho. O resultado final depende de você.",
+      "O contador já começou. Tic. Tac. \u{23F3}",
+    ]
+      .map(
+        (t) =>
+          `<p style="font-size:16px;line-height:1.7;color:#d4d4d4;margin:0 0 16px;">${escapeHtml(t)}</p>`,
+      )
+      .join("");
+    return {
+      subject: "Em breve: Marca Milionária Legacy \u{23F3}",
+      html: layout(
+        "O Marca Milionária Legacy está a chegar. O contador já está ativo.",
+        `${hero}
+         <div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">Academia · Em breve</div>
+         <h1 style="font-size:28px;color:#ffffff;margin:0 0 18px;font-weight:600;line-height:1.25;">${escapeHtml(course.title)}</h1>
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 22px;">Olá ${safe},</p>
+         ${paragraphs}
+         <div style="background:#161616;border:1px solid #232323;border-radius:12px;padding:16px 18px;margin:6px 0 26px;">
+           <div style="font-size:11px;color:#c9a961;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">Lançamento</div>
+           <div style="font-size:18px;color:#ffffff;font-weight:600;">${escapeHtml(course.release)}</div>
+         </div>
+         <p style="margin:0 0 8px;">${btn("Ver o contador →", `${APP_URL}/academia/${course.courseId}`)}</p>`,
       ),
     };
   },
