@@ -367,21 +367,33 @@ function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
               </div>
             ) : (
               <div className="animate-fade-in">
-                <p className="font-display text-[10px] uppercase tracking-[0.32em] text-primary md:text-xs">
-                  Novo curso
+                <p className="inline-flex items-center gap-2 font-display text-[10px] uppercase tracking-[0.32em] text-primary md:text-xs">
+                  {legacy.released ? (
+                    <>
+                      <span className="relative inline-flex h-1.5 w-1.5">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+                      </span>
+                      Já disponível
+                    </>
+                  ) : (
+                    "Novo curso"
+                  )}
                 </p>
                 <h1 className="mt-3 font-display text-3xl leading-[1.02] tracking-tight text-foreground md:text-6xl lg:text-7xl">
                   Marca Milionária <span className="text-primary">Legacy</span>
                 </h1>
                 <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-lg">
-                  Estreia 4 de setembro · 20:30 (Lisboa).
+                  {legacy.released
+                    ? "Já podes começar. Todas as aulas abertas para membros."
+                    : `${legacy.headline} (Lisboa).`}
                 </p>
                 <Link
                   to="/academia/$courseId"
                   params={{ courseId: "marca-milionaria-legacy" }}
                   className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
                 >
-                  Ver contador <ArrowRight className="h-4 w-4" />
+                  {legacy.cta} <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
             )}
