@@ -417,3 +417,85 @@ export async function restoreModeratedContent(actionId: string): Promise<{
 }
 
 
+
+/**
+ * Avaliação PRÉVIA: analisa o texto antes de ele ser gravado/publicado.
+ * Nada chega ao chat se o agente reprovar — a mensagem é apenas registada em
+ * `moderation_actions` para auditoria. Convidados com infração grave ficam
+ * automaticamente banidos da sala.
+ */
+export async function moderateBeforePost(args: {
+  kind: ModerationKind;
+  text: string;
+  authorId?: string | null;
+  liveId?: string | null;
+  guestId?: string | null;
+  guestName?: string | null;
+}): Promise<{ blocked: boolean; reason: string; category: string; severity: "leve" | "grave" }> {
+  const verdict = await classifyContent({ kind: args.kind, text: args.text });
+  if (verdict.action !== "remove") {
+    return { blocked: false, reason: "", category: verdict.category, severity: verdict.severity };
+  }
+
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const authorId = args.authorId ?? null;
+  let sanctionId: string | null = null;
+
+  if (authorId) {
+    const { data: staff } = await (supabaseAdmin as any)
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", authorId)
+      .in("role", ["admin", "moderator"]);
+    if (!staff || staff.length === 0) {
+      try {
+        const applied = await applySanction({ supabaseAdmin, userId: authorId, verdict });
+        sanctionId = applied.sanctionId;
+      } catch (err) {
+        console.error("[moderation] pre-sanction failed", err);
+      }
+    } else {
+      // Staff nunca é bloqueado nem sancionado.
+      return { blocked: false, reason: "", category: verdict.category, severity: verdict.severity };
+    }
+  }
+
+  // Convidado sem conta: infração grave tira-lhe o acesso à sala de imediato.
+  if (!authorId && args.liveId && args.guestId && verdict.severity === "grave") {
+    try {
+      await (supabaseAdmin as any)
+        .from("live_participants")
+        .update({ banned: true, on_stage: false, left_at: new Date().toISOString() })
+        .eq("live_id", args.liveId)
+        .eq("user_id", args.guestId);
+    } catch (err) {
+      console.error("[moderation] guest ban failed", err);
+    }
+  }
+
+  await (supabaseAdmin as any).from("moderation_actions").insert({
+    kind: args.kind,
+    target_id: crypto.randomUUID(),
+    author_id: authorId,
+    action: "remove",
+    category: verdict.category,
+    reason: verdict.reason,
+    severity: verdict.severity,
+    excerpt: args.text.slice(0, 500),
+    sanction_id: sanctionId,
+    snapshot: {
+      pre_moderated: true,
+      body: args.text,
+      live_id: args.liveId ?? null,
+      guest_id: args.guestId ?? null,
+      guest_name: args.guestName ?? null,
+    },
+  });
+
+  return {
+    blocked: true,
+    reason: verdict.reason,
+    category: verdict.category,
+    severity: verdict.severity,
+  };
+}
