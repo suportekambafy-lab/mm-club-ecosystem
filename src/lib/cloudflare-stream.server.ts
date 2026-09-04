@@ -174,3 +174,21 @@ function tryParseJson(value: string): unknown {
     return null;
   }
 }
+
+/**
+ * Espaço de armazenamento usado na conta Cloudflare Stream.
+ * Quando o limite é excedido, o Cloudflare recusa QUALQUER ingest novo — foi
+ * essa a causa silenciosa de lives que "correram" sem ficar gravadas.
+ */
+export async function getStorageUsage(): Promise<{
+  usedMinutes: number;
+  limitMinutes: number;
+  full: boolean;
+}> {
+  const r = await cfFetch<{ totalStorageMinutes: number; totalStorageMinutesLimit: number }>(
+    "/stream/storage-usage",
+  );
+  const usedMinutes = Number(r.totalStorageMinutes ?? 0);
+  const limitMinutes = Number(r.totalStorageMinutesLimit ?? 0);
+  return { usedMinutes, limitMinutes, full: limitMinutes > 0 && usedMinutes >= limitMinutes };
+}

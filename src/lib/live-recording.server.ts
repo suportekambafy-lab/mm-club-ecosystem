@@ -29,6 +29,20 @@ export async function ensureLiveRecording(liveId: string): Promise<{
 
     const roomName = livekitRoomName(liveId, "main");
 
+    // Cloudflare recusa qualquer ingest quando o armazenamento está cheio —
+    // a live correria "gravada" e o ficheiro nunca apareceria.
+    try {
+      const { getStorageUsage } = await import("@/lib/cloudflare-stream.server");
+      const usage = await getStorageUsage();
+      if (usage.full) {
+        console.error(
+          `[live-recording] Cloudflare Stream storage cheio (${usage.usedMinutes}/${usage.limitMinutes} min) — a gravação vai falhar.`,
+        );
+      }
+    } catch {
+      /* diagnóstico apenas */
+    }
+
     // Already recording?
     try {
       const active = await getRecordingStatus({ roomName });
