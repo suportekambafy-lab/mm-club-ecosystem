@@ -100,7 +100,12 @@ export const getLive = createServerFn({ method: "GET" })
     // "a processar" instead of wrongly claiming the live wasn't recorded.
     let pendingRecording = false;
 
-    if (isReplay && live.cf_live_input_id) {
+    // Gravação externa (feita fora da plataforma) — tem prioridade e dispensa
+    // qualquer consulta ao Cloudflare Stream.
+    const externalRecordingUrl =
+      (live as { external_recording_url?: string | null }).external_recording_url?.trim() || null;
+
+    if (isReplay && live.cf_live_input_id && !externalRecordingUrl) {
       try {
         const { listVideosForLiveInput, signPlaybackToken } = await import("@/lib/cloudflare-stream.server");
         const videos = await listVideosForLiveInput(live.cf_live_input_id);
