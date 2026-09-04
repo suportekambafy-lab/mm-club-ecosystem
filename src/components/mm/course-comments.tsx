@@ -92,7 +92,12 @@ export function CourseComments({
     const text = body.trim().slice(0, 1200);
     const { error } = await supabase
       .from("course_comments")
-      .insert({ course_id: courseId, user_id: user.id, body: text });
+      .insert({
+        course_id: courseId,
+        lesson_id: lessonId ?? null,
+        user_id: user.id,
+        body: text,
+      });
     setSending(false);
     if (error) {
       toast.error("Não foi possível publicar o comentário.");
