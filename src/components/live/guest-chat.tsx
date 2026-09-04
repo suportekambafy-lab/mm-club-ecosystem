@@ -53,7 +53,10 @@ export function GuestChat({ liveId, code, guestId, displayName }: Props) {
 
   useEffect(() => {
     void refresh();
-    const id = setInterval(() => void refresh(), 4000);
+    const id = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+      void refresh();
+    }, 6000);
     return () => clearInterval(id);
   }, [refresh]);
 
