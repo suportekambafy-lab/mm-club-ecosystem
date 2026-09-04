@@ -77,7 +77,7 @@ export function CourseComments({
   useEffect(() => {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseId]);
+  }, [courseId, lessonId]);
 
   const count = rows?.length ?? 0;
 
