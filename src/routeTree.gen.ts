@@ -98,6 +98,7 @@ import { Route as ApiPublicHooksUpcomingCoursesRouteImport } from './routes/api/
 import { Route as ApiPublicHooksSupportBotSweepRouteImport } from './routes/api/public/hooks/support-bot-sweep'
 import { Route as ApiPublicHooksStreakGuardRouteImport } from './routes/api/public/hooks/streak-guard'
 import { Route as ApiPublicHooksRetentionTestEmailRouteImport } from './routes/api/public/hooks/retention-test-email'
+import { Route as ApiPublicHooksRecordingSelftestRouteImport } from './routes/api/public/hooks/recording-selftest'
 import { Route as ApiPublicHooksPushNotificationsRouteImport } from './routes/api/public/hooks/push-notifications'
 import { Route as ApiPublicHooksNovidadesEmailRouteImport } from './routes/api/public/hooks/novidades-email'
 import { Route as ApiPublicHooksModerationSweepRouteImport } from './routes/api/public/hooks/moderation-sweep'
@@ -587,6 +588,12 @@ const ApiPublicHooksRetentionTestEmailRoute =
     path: '/api/public/hooks/retention-test-email',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksRecordingSelftestRoute =
+  ApiPublicHooksRecordingSelftestRouteImport.update({
+    id: '/api/public/hooks/recording-selftest',
+    path: '/api/public/hooks/recording-selftest',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksPushNotificationsRoute =
   ApiPublicHooksPushNotificationsRouteImport.update({
     id: '/api/public/hooks/push-notifications',
@@ -856,6 +863,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/moderation-sweep': typeof ApiPublicHooksModerationSweepRoute
   '/api/public/hooks/novidades-email': typeof ApiPublicHooksNovidadesEmailRoute
   '/api/public/hooks/push-notifications': typeof ApiPublicHooksPushNotificationsRoute
+  '/api/public/hooks/recording-selftest': typeof ApiPublicHooksRecordingSelftestRoute
   '/api/public/hooks/retention-test-email': typeof ApiPublicHooksRetentionTestEmailRoute
   '/api/public/hooks/streak-guard': typeof ApiPublicHooksStreakGuardRoute
   '/api/public/hooks/support-bot-sweep': typeof ApiPublicHooksSupportBotSweepRoute
@@ -966,6 +974,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/moderation-sweep': typeof ApiPublicHooksModerationSweepRoute
   '/api/public/hooks/novidades-email': typeof ApiPublicHooksNovidadesEmailRoute
   '/api/public/hooks/push-notifications': typeof ApiPublicHooksPushNotificationsRoute
+  '/api/public/hooks/recording-selftest': typeof ApiPublicHooksRecordingSelftestRoute
   '/api/public/hooks/retention-test-email': typeof ApiPublicHooksRetentionTestEmailRoute
   '/api/public/hooks/streak-guard': typeof ApiPublicHooksStreakGuardRoute
   '/api/public/hooks/support-bot-sweep': typeof ApiPublicHooksSupportBotSweepRoute
@@ -1086,6 +1095,7 @@ export interface FileRoutesById {
   '/api/public/hooks/moderation-sweep': typeof ApiPublicHooksModerationSweepRoute
   '/api/public/hooks/novidades-email': typeof ApiPublicHooksNovidadesEmailRoute
   '/api/public/hooks/push-notifications': typeof ApiPublicHooksPushNotificationsRoute
+  '/api/public/hooks/recording-selftest': typeof ApiPublicHooksRecordingSelftestRoute
   '/api/public/hooks/retention-test-email': typeof ApiPublicHooksRetentionTestEmailRoute
   '/api/public/hooks/streak-guard': typeof ApiPublicHooksStreakGuardRoute
   '/api/public/hooks/support-bot-sweep': typeof ApiPublicHooksSupportBotSweepRoute
@@ -1206,6 +1216,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/moderation-sweep'
     | '/api/public/hooks/novidades-email'
     | '/api/public/hooks/push-notifications'
+    | '/api/public/hooks/recording-selftest'
     | '/api/public/hooks/retention-test-email'
     | '/api/public/hooks/streak-guard'
     | '/api/public/hooks/support-bot-sweep'
@@ -1316,6 +1327,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/moderation-sweep'
     | '/api/public/hooks/novidades-email'
     | '/api/public/hooks/push-notifications'
+    | '/api/public/hooks/recording-selftest'
     | '/api/public/hooks/retention-test-email'
     | '/api/public/hooks/streak-guard'
     | '/api/public/hooks/support-bot-sweep'
@@ -1435,6 +1447,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/moderation-sweep'
     | '/api/public/hooks/novidades-email'
     | '/api/public/hooks/push-notifications'
+    | '/api/public/hooks/recording-selftest'
     | '/api/public/hooks/retention-test-email'
     | '/api/public/hooks/streak-guard'
     | '/api/public/hooks/support-bot-sweep'
@@ -1489,6 +1502,7 @@ export interface RootRouteChildren {
   ApiPublicHooksModerationSweepRoute: typeof ApiPublicHooksModerationSweepRoute
   ApiPublicHooksNovidadesEmailRoute: typeof ApiPublicHooksNovidadesEmailRoute
   ApiPublicHooksPushNotificationsRoute: typeof ApiPublicHooksPushNotificationsRoute
+  ApiPublicHooksRecordingSelftestRoute: typeof ApiPublicHooksRecordingSelftestRoute
   ApiPublicHooksRetentionTestEmailRoute: typeof ApiPublicHooksRetentionTestEmailRoute
   ApiPublicHooksStreakGuardRoute: typeof ApiPublicHooksStreakGuardRoute
   ApiPublicHooksSupportBotSweepRoute: typeof ApiPublicHooksSupportBotSweepRoute
@@ -2127,6 +2141,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksRetentionTestEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/recording-selftest': {
+      id: '/api/public/hooks/recording-selftest'
+      path: '/api/public/hooks/recording-selftest'
+      fullPath: '/api/public/hooks/recording-selftest'
+      preLoaderRoute: typeof ApiPublicHooksRecordingSelftestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/push-notifications': {
       id: '/api/public/hooks/push-notifications'
       path: '/api/public/hooks/push-notifications'
@@ -2598,6 +2619,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksModerationSweepRoute: ApiPublicHooksModerationSweepRoute,
   ApiPublicHooksNovidadesEmailRoute: ApiPublicHooksNovidadesEmailRoute,
   ApiPublicHooksPushNotificationsRoute: ApiPublicHooksPushNotificationsRoute,
+  ApiPublicHooksRecordingSelftestRoute: ApiPublicHooksRecordingSelftestRoute,
   ApiPublicHooksRetentionTestEmailRoute: ApiPublicHooksRetentionTestEmailRoute,
   ApiPublicHooksStreakGuardRoute: ApiPublicHooksStreakGuardRoute,
   ApiPublicHooksSupportBotSweepRoute: ApiPublicHooksSupportBotSweepRoute,
