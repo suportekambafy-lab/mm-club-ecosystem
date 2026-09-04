@@ -100,9 +100,11 @@ function CourseDetail() {
 
           </div>
         </div>
+        <CourseComments courseId={course.id} />
       </div>
     );
   }
+
 
   return (
     <div className="max-w-full space-y-10 overflow-x-clip">
