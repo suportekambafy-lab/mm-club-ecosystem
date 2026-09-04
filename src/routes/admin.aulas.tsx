@@ -89,8 +89,16 @@ function ModuleCoverEditor({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
         <div
           className="h-20 w-full shrink-0 rounded-lg border border-border bg-surface-2 bg-cover bg-center sm:w-32"
-          style={m.cover ? { background: m.cover, backgroundSize: "cover" } : undefined}
+          style={
+            m.cover
+              ? {
+                  background: isImage ? `url("${baseUrl}") center/cover no-repeat` : m.cover,
+                  backgroundSize: "cover",
+                }
+              : undefined
+          }
         />
+
         <div className="min-w-0 flex-1 space-y-2">
           <MediaField
             label="Capa do módulo"
