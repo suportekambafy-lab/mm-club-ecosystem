@@ -231,7 +231,7 @@ function Hero() {
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
             </span>
             <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
-              Novo · Temporada 2026
+              Novo · Marca Milionária Legacy · 4 set, 20:30
             </span>
           </div>
 
