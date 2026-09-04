@@ -307,6 +307,60 @@ export const reportAuthFailure = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * Diagnóstico de sessão vindo do browser (sem tokens, sem credenciais):
+ * regista porque é que o acesso falhou para conseguirmos perceber casos
+ * de "sessão expirou" logo após o login.
+ */
+export const reportSessionDiagnostic = createServerFn({ method: "POST" })
+  .middleware([
+    ...secured({
+      name: "security.reportSessionDiagnostic",
+      auth: false,
+      limit: { bucket: "session-diag", max: 60, windowSeconds: 3600, scope: "ip" },
+    }),
+  ])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        where: z.string().max(60),
+        reason: z.string().max(300),
+        userId: z.string().uuid().optional(),
+        skewSeconds: z.number().int().nullable().optional(),
+        hadSession: z.boolean().optional(),
+        profileRead: z.boolean().optional(),
+        profileFound: z.boolean().optional(),
+        online: z.boolean().optional(),
+        standalone: z.boolean().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { recordSecurityEvent } = await import("@/lib/security/runtime.server");
+    await recordSecurityEvent({
+      kind: "session_diagnostic",
+      severity: "warn",
+      userId: data.userId ?? null,
+      ip: context.security.ip,
+      userAgent: context.security.userAgent,
+      route: data.where,
+      outcome: "blocked",
+      reason: data.reason.slice(0, 200),
+      metadata: {
+        skewSeconds: data.skewSeconds ?? null,
+        hadSession: data.hadSession ?? null,
+        profileRead: data.profileRead ?? null,
+        profileFound: data.profileFound ?? null,
+        online: data.online ?? null,
+        standalone: data.standalone ?? null,
+        clientTime: new Date().toISOString(),
+      },
+    });
+    return { ok: true };
+  });
+
+
+
 /* ------------------------------------------------------------------ */
 /* Read Only Mode                                                      */
 /* ------------------------------------------------------------------ */
