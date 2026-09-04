@@ -233,25 +233,8 @@ function Hero() {
                   mmclub.pt / apresentação
                 </span>
               </div>
-              <div
-                className="relative h-full w-full bg-cover bg-center"
-                style={{ backgroundImage: `url(${cover.url})` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/20" />
-                {/* Botão de reprodução temporariamente oculto */}
+              <HeroSlides />
 
-                <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.24em] text-white/70">
-                      Apresentação MM Club
-                    </p>
-                    <p className="font-display text-lg text-white">2 min · assiste antes de aderir</p>
-                  </div>
-                  <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-medium text-white backdrop-blur">
-                    HD
-                  </span>
-                </div>
-              </div>
             </div>
 
             {/* floating chip */}
