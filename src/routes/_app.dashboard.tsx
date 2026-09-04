@@ -37,6 +37,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { resolveLiveCoverUrl } from "@/lib/live-cover-url";
+import { useLegacyLaunch } from "@/hooks/use-legacy-launch";
 
 
 
@@ -300,7 +301,9 @@ function ReplayCard({
 
 function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
   const firstName = name.split(" ")[0];
-  const [slide, setSlide] = useState(0);
+  const legacy = useLegacyLaunch();
+  // O anúncio do Legacy abre primeiro; o boas-vindas entra a seguir.
+  const [slide, setSlide] = useState(1);
 
   useEffect(() => {
     const id = window.setInterval(() => setSlide((s) => (s === 0 ? 1 : 0)), 7000);

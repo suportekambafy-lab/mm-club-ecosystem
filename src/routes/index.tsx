@@ -23,6 +23,7 @@ import lessonL3 from "@/assets/lesson-l3.jpg";
 import lessonL4 from "@/assets/lesson-l4.jpg";
 import lessonL5 from "@/assets/lesson-l5.jpg";
 import lessonL6 from "@/assets/lesson-l6.jpg";
+import { useLegacyLaunch } from "@/hooks/use-legacy-launch";
 import avatar1 from "@/assets/avatar-1.jpg";
 import avatar2 from "@/assets/avatar-2.jpg";
 import avatar3 from "@/assets/avatar-3.jpg";
