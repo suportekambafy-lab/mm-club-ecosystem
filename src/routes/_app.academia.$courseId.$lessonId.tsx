@@ -210,7 +210,7 @@ function LessonPlayer() {
           </aside>
 
           {/* Main content: video + title/cta */}
-          <div className="order-1 flex min-h-0 min-w-0 flex-col gap-3 sm:gap-4 md:gap-6 lg:order-2 lg:overflow-y-auto lg:pr-1">
+          <div className="order-1 flex min-w-0 flex-col gap-3 sm:gap-4 md:gap-6 lg:order-2">
             {/* Video player */}
             {!source ? (
               <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
