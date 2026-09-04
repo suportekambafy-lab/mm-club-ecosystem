@@ -245,7 +245,10 @@ function CourseDetail() {
           </div>
         </section>
       )}
+
+      <CourseComments courseId={course.id} />
     </div>
+
   );
 }
 
