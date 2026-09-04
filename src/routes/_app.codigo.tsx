@@ -130,17 +130,25 @@ function CodigoDoClube() {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("club_code_accepted_at")
-        .eq("id", u.user.id)
-        .maybeSingle();
-      const at = (data as { club_code_accepted_at?: string | null } | null)
-        ?.club_code_accepted_at;
-      if (at) {
-        setAlreadyAccepted(at);
-        setAccepted(true);
-        setChecked(true);
+      // Tentamos algumas vezes: uma falha de rede não pode fazer parecer
+      // que o membro nunca aceitou o Código.
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("club_code_accepted_at")
+          .eq("id", u.user.id)
+          .maybeSingle();
+        if (!error) {
+          const at = (data as { club_code_accepted_at?: string | null } | null)
+            ?.club_code_accepted_at;
+          if (at) {
+            setAlreadyAccepted(at);
+            setAccepted(true);
+            setChecked(true);
+          }
+          return;
+        }
+        await new Promise((r) => setTimeout(r, 250 * (attempt + 1)));
       }
     })();
   }, []);
@@ -151,19 +159,57 @@ function CodigoDoClube() {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) {
       setSaving(false);
+      toast.error("A tua sessão expirou. Entra outra vez.");
+      router.navigate({ to: "/auth", replace: true });
       return;
     }
-    const { error } = await supabase
+    const now = new Date().toISOString();
+    const { data: updated, error } = await supabase
       .from("profiles")
-      .update({ club_code_accepted_at: new Date().toISOString() })
-      .eq("id", u.user.id);
-    setSaving(false);
+      .update({ club_code_accepted_at: now })
+      .eq("id", u.user.id)
+      .select("id");
+
     if (error) {
+      setSaving(false);
       toast.error("Não foi possível guardar. Tenta novamente.");
       return;
     }
+
+    // Perfil ainda não existia: criamos agora para não ficar bloqueado.
+    if (!updated || updated.length === 0) {
+      const displayName =
+        (u.user.user_metadata?.display_name as string | undefined) ??
+        u.user.email?.split("@")[0] ??
+        "Membro MM";
+      const { error: insertError } = await supabase
+        .from("profiles")
+        .insert({ id: u.user.id, display_name: displayName, club_code_accepted_at: now });
+      if (insertError) {
+        setSaving(false);
+        toast.error("Não foi possível guardar. Tenta novamente.");
+        return;
+      }
+    }
+
+    // Confirmamos que ficou realmente gravado antes de avançar.
+    const { data: check } = await supabase
+      .from("profiles")
+      .select("club_code_accepted_at")
+      .eq("id", u.user.id)
+      .maybeSingle();
+    const saved = (check as { club_code_accepted_at?: string | null } | null)
+      ?.club_code_accepted_at;
+    setSaving(false);
+    if (!saved) {
+      toast.error("Não foi possível guardar. Tenta novamente.");
+      return;
+    }
+
     setAccepted(true);
+    setAlreadyAccepted(saved);
     toast.success("Bem-vindo ao MM Club.");
+    await router.invalidate();
     router.navigate({ to: "/dashboard", replace: true });
   };
 
