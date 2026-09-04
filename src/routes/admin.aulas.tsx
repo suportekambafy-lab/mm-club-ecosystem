@@ -34,6 +34,7 @@ import {
 } from "@/lib/video-duration";
 import { cn } from "@/lib/utils";
 import { notifyNewLesson } from "@/lib/broadcasts.functions";
+import { adminGenerateCourseCover } from "@/lib/course-cover.functions";
 
 
 export const Route = createFileRoute("/admin/aulas")({
@@ -44,8 +45,88 @@ function cloneModules(mods: Module[] | undefined): Module[] {
   return (mods ?? []).map((m) => ({
     id: m.id,
     title: m.title,
+    cover: m.cover,
     lessons: m.lessons.map((l) => ({ ...l })),
   }));
+}
+
+/** Capa do módulo: upload/URL + geração no design MM Club (usa a capa atual como base para a IA editar). */
+function ModuleCoverEditor({
+  courseId,
+  module: m,
+  onChange,
+}: {
+  courseId: string;
+  module: Module;
+  onChange: (cover: string) => void;
+}) {
+  const generate = useServerFn(adminGenerateCourseCover);
+  const [busy, setBusy] = useState(false);
+  const baseUrl = /url\((.*?)\)/.exec(m.cover ?? "")?.[1]?.replace(/["']/g, "") ?? m.cover ?? "";
+  const isImage = /^https?:\/\//.test(baseUrl);
+
+  const run = async (useBase: boolean) => {
+    setBusy(true);
+    try {
+      const res = await generate({
+        data: {
+          courseId: `${courseId}--modulo-${m.id}`,
+          title: m.title || "Módulo",
+          authorImageUrl: useBase && isImage ? baseUrl : undefined,
+        },
+      });
+      onChange(res.css);
+      toast.success("Capa do módulo gerada.");
+    } catch (e) {
+      toast.error((e as Error).message ?? "Falha ao gerar capa.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-border bg-background p-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+        <div
+          className="h-20 w-full shrink-0 rounded-lg border border-border bg-surface-2 bg-cover bg-center sm:w-32"
+          style={m.cover ? { background: m.cover, backgroundSize: "cover" } : undefined}
+        />
+        <div className="min-w-0 flex-1 space-y-2">
+          <MediaField
+            label="Capa do módulo"
+            bucket="course-media"
+            keyPrefix={`courses/${courseId}/modules/${m.id}/cover`}
+            accept="image/*"
+            value={m.cover ?? ""}
+            onChange={onChange}
+            placeholder="URL da imagem, gradient CSS, ou usa Upload"
+            helper="Podes carregar uma imagem e pedir à IA para a editar no design MM Club."
+          />
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void run(false)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-[11px] font-semibold text-primary transition hover:bg-primary/20 disabled:opacity-50"
+            >
+              <RefreshCw className={cn("h-3 w-3", busy && "animate-spin")} />
+              Gerar capa com IA
+            </button>
+            <button
+              type="button"
+              disabled={busy || !isImage}
+              onClick={() => void run(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-2 px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground disabled:opacity-50"
+              title={isImage ? undefined : "Adiciona primeiro uma imagem"}
+            >
+              <RefreshCw className={cn("h-3 w-3", busy && "animate-spin")} />
+              IA edita esta capa
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function AdminAulas() {

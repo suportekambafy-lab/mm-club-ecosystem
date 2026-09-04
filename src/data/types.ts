@@ -54,6 +54,8 @@ export interface Lesson {
 export interface Module {
   id: string;
   title: string;
+  /** Capa do módulo: URL de imagem ou valor CSS de background. */
+  cover?: string;
   lessons: Lesson[];
 }
 
