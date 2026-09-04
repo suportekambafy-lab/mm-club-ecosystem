@@ -48,6 +48,8 @@ import { cn } from "@/lib/utils";
 import "@/data/admin-store";
 import { endLocalSession, useSessionGuard } from "@/lib/security/session-guard";
 import { pingLastSeen } from "@/lib/last-seen";
+import { dropLocalSession, ensureLiveSession } from "@/lib/session-health";
+import { reportSessionDiagnostic } from "@/lib/security.functions";
 
 
 
