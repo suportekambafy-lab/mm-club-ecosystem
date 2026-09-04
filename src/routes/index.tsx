@@ -16,6 +16,7 @@ import {
 import { MMLogo } from "@/components/mm/logo";
 import { BigTypeHero } from "@/components/mm/big-type-hero";
 import cover from "@/assets/marca-milionaria-cover.png.asset.json";
+import legacyCover from "@/assets/marca-milionaria-legacy-hero.jpg.asset.json";
 import lessonL1 from "@/assets/lesson-l1.jpg";
 import lessonL2 from "@/assets/lesson-l2.jpg";
 import lessonL3 from "@/assets/lesson-l3.jpg";
