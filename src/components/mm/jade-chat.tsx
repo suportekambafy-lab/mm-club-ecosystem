@@ -320,7 +320,10 @@ export function JadeChat({
 }
 
 function messageText(m: UIMessage): string {
-  return m.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
+  const parts = Array.isArray(m?.parts) ? m.parts : [];
+  return parts
+    .map((p) => (p && p.type === "text" && typeof p.text === "string" ? p.text : ""))
+    .join("");
 }
 
 const OPTION_RE = /\[\[([^\]\n]{1,80})\]\]/g;
