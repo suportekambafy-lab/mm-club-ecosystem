@@ -256,25 +256,29 @@ export const sendChatMessage = createServerFn({ method: "POST" })
       .parse(i),
   )
   .handler(async ({ data, context }) => {
+    // Avaliação PRÉVIA: a mensagem só é gravada depois de aprovada, por isso
+    // nada ofensivo chega a aparecer no direto.
+    const { moderateBeforePost } = await import("./moderation.server");
+    const check = await moderateBeforePost({
+      kind: "live_chat",
+      text: data.body,
+      authorId: context.userId,
+      liveId: data.liveId,
+    });
+    if (check.blocked) {
+      throw new Error(
+        check.reason
+          ? `Mensagem bloqueada pela moderação MM Club: ${check.reason}`
+          : "Mensagem bloqueada pela moderação MM Club.",
+      );
+    }
+
     const { error, data: row } = await context.supabase
       .from("live_chat_messages")
       .insert({ live_id: data.liveId, body: data.body, user_id: context.userId })
       .select("id,live_id,user_id,body,created_at,pinned_at,pinned_by,guest_id,guest_name")
       .single();
     if (error) throw new Error(error.message);
-    // Agente de moderação: remove imediatamente pedidos de reembolso, dados
-    // pessoais, spam ou ataques à marca antes de ficarem visíveis no direto.
-    if (row?.id) {
-      const { moderateTarget } = await import("./moderation.server");
-      const verdict = await moderateTarget({ kind: "live_chat", id: row.id });
-      if (verdict.removed) {
-        throw new Error(
-          verdict.reason
-            ? `Mensagem bloqueada pela moderação MM Club: ${verdict.reason}`
-            : "Mensagem bloqueada pela moderação MM Club.",
-        );
-      }
-    }
     return row;
   });
 

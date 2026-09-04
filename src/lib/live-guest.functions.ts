@@ -386,6 +386,23 @@ export const sendGuestChatMessage = createServerFn({ method: "POST" })
     if (!me) throw new Error("Já não estás nesta sessão.");
     if (me.banned) throw new Error("Já não tens acesso a esta sessão.");
 
+    // Avaliação PRÉVIA do agente: nada é gravado antes de ser aprovado.
+    const { moderateBeforePost } = await import("./moderation.server");
+    const check = await moderateBeforePost({
+      kind: "live_chat",
+      text: data.body,
+      liveId: data.liveId,
+      guestId: data.guestId,
+      guestName: data.displayName,
+    });
+    if (check.blocked) {
+      throw new Error(
+        check.reason
+          ? `Mensagem bloqueada pela moderação MM Club: ${check.reason}`
+          : "Mensagem bloqueada pela moderação MM Club.",
+      );
+    }
+
     const { data: row, error } = await supabaseAdmin
       .from("live_chat_messages")
       .insert({
@@ -398,16 +415,7 @@ export const sendGuestChatMessage = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    // Agente de moderação também para convidados.
-    const { moderateTarget } = await import("./moderation.server");
-    const verdict = await moderateTarget({ kind: "live_chat", id: row.id as string });
-    if (verdict.removed) {
-      throw new Error(
-        verdict.reason
-          ? `Mensagem bloqueada pela moderação MM Club: ${verdict.reason}`
-          : "Mensagem bloqueada pela moderação MM Club.",
-      );
-    }
+
 
 
 
