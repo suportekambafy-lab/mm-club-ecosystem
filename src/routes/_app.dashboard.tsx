@@ -11,6 +11,7 @@ import {
   Users,
 } from "lucide-react";
 import dashboardHero from "@/assets/dashboard-hero.jpg";
+import legacyHero from "@/assets/marca-milionaria-legacy-hero.jpg.asset.json";
 import { CourseCard } from "@/components/mm/course-card";
 import { Rail } from "@/components/mm/rail";
 
