@@ -262,8 +262,17 @@ function LiveDetail() {
     </div>
   );
 
+  const externalRecordingUrl =
+    (data as { externalRecordingUrl?: string | null }).externalRecordingUrl ?? null;
+
   const playerSlot = (mobile?: boolean) =>
-    (isLive || isReplay) && videoUid ? (
+    isReplay && externalRecordingUrl ? (
+      <ExternalReplayPlayer
+        url={externalRecordingUrl}
+        poster={live.cover_url ?? undefined}
+        className={mobile ? "aspect-video w-full max-w-full rounded-none shadow-none ring-0" : undefined}
+      />
+    ) : (isLive || isReplay) && videoUid ? (
       <LivePlayer
         key={`gen-${live.stream_generation ?? 0}`}
         videoUid={videoUid}
