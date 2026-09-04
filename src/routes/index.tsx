@@ -23,6 +23,7 @@ import lessonL3 from "@/assets/lesson-l3.jpg";
 import lessonL4 from "@/assets/lesson-l4.jpg";
 import lessonL5 from "@/assets/lesson-l5.jpg";
 import lessonL6 from "@/assets/lesson-l6.jpg";
+import { useLegacyLaunch } from "@/hooks/use-legacy-launch";
 import avatar1 from "@/assets/avatar-1.jpg";
 import avatar2 from "@/assets/avatar-2.jpg";
 import avatar3 from "@/assets/avatar-3.jpg";
@@ -139,22 +140,22 @@ function Nav({ scrolled }: { scrolled: boolean }) {
 
 /* ---------- HERO ---------- */
 
-const heroSlides = [
-  {
-    image: legacyCover.url,
-    eyebrow: "Novo curso · Marca Milionária Legacy",
-    title: "Estreia 4 de setembro · 20:30",
-    badge: "Legacy",
-  },
-  {
-    image: cover.url,
-    eyebrow: "Apresentação MM Club",
-    title: "2 min · assiste antes de aderir",
-    badge: "HD",
-  },
-];
-
 function HeroSlides() {
+  const legacy = useLegacyLaunch();
+  const heroSlides = [
+    {
+      image: legacyCover.url,
+      eyebrow: legacy.eyebrow,
+      title: legacy.headline,
+      badge: legacy.badge,
+    },
+    {
+      image: cover.url,
+      eyebrow: "Apresentação MM Club",
+      title: "2 min · assiste antes de aderir",
+      badge: "HD",
+    },
+  ];
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -163,7 +164,7 @@ function HeroSlides() {
       6000,
     );
     return () => window.clearInterval(id);
-  }, []);
+  }, [heroSlides.length]);
 
   return (
     <div className="relative h-full w-full overflow-hidden">
