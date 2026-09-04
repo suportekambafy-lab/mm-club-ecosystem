@@ -15,6 +15,7 @@ import { CourseCertificate } from "@/components/mm/course-certificate";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReleaseCountdown } from "@/components/mm/release-countdown";
+import { CourseComments } from "@/components/mm/course-comments";
 import { ModuleQuiz } from "@/components/mm/module-quiz";
 import { useCourseQuiz, lockedModuleIds } from "@/hooks/use-course-quiz";
 import type { QuizModuleState } from "@/lib/quiz.functions";
