@@ -56,9 +56,7 @@ import { reportSessionDiagnostic } from "@/lib/security.functions";
 export const Route = createFileRoute("/_app")({
   ssr: false,
   beforeLoad: async ({ location }) => {
-    console.log("[gate] start");
     const { data } = await supabase.auth.getSession();
-    console.log("[gate] session", Boolean(data.session));
 
     if (!data.session) {
       throw redirect({
@@ -75,7 +73,6 @@ export const Route = createFileRoute("/_app")({
       _user_id: userId,
       _role: "admin",
     });
-    console.log("[gate] isAdmin", isAdmin);
 
     if (!isAdmin) {
       // Access is decided by Entitlements, never by a payment status.
@@ -127,7 +124,6 @@ export const Route = createFileRoute("/_app")({
     };
 
     let { profile, profileRead } = await readProfile();
-    console.log("[gate] profile", profileRead, Boolean(profile));
 
     // Todos os membros têm perfil. Se a leitura "correu bem" mas não veio
     // linha nenhuma, o pedido saiu sem sessão válida (token expirado no
