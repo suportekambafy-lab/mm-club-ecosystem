@@ -164,15 +164,32 @@ function CodigoDoClube() {
       return;
     }
     const now = new Date().toISOString();
-    // upsert garante que grava mesmo se o perfil ainda não existir.
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from("profiles")
-      .upsert({ id: u.user.id, club_code_accepted_at: now }, { onConflict: "id" });
+      .update({ club_code_accepted_at: now })
+      .eq("id", u.user.id)
+      .select("id");
 
     if (error) {
       setSaving(false);
       toast.error("Não foi possível guardar. Tenta novamente.");
       return;
+    }
+
+    // Perfil ainda não existia: criamos agora para não ficar bloqueado.
+    if (!updated || updated.length === 0) {
+      const displayName =
+        (u.user.user_metadata?.display_name as string | undefined) ??
+        u.user.email?.split("@")[0] ??
+        "Membro MM";
+      const { error: insertError } = await supabase
+        .from("profiles")
+        .insert({ id: u.user.id, display_name: displayName, club_code_accepted_at: now });
+      if (insertError) {
+        setSaving(false);
+        toast.error("Não foi possível guardar. Tenta novamente.");
+        return;
+      }
     }
 
     // Confirmamos que ficou realmente gravado antes de avançar.
