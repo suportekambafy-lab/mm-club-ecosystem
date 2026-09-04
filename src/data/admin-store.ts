@@ -150,11 +150,11 @@ function snapshot() {
 
 function deepCloneModules(mods: Module[]): Module[] {
   return mods.map((m) => ({
-    id: m.id,
-    title: m.title,
+    ...m,
     lessons: m.lessons.map((l) => ({ ...l })),
   }));
 }
+
 
 function countLessons(mods: Module[]) {
   return mods.reduce((s, m) => s + m.lessons.length, 0);
