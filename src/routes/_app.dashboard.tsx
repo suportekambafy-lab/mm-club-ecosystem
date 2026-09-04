@@ -124,8 +124,6 @@ function DashboardPage() {
       {/* Cinematic hero — full bleed, autoplay muted loop, editorial overlay */}
       <CinematicHero name={sessionUser?.name ?? ""} loading={userLoading && !sessionUser} />
 
-      <LegacyBanner />
-
       {/* Live activa ou próxima em destaque (com contador) */}
       {!livesLoaded ? null : livesError ? (
         <InlineAlert
