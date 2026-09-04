@@ -814,7 +814,7 @@ export async function runAutoTranscribeTick(): Promise<{
   const ERROR_COOLDOWN_MS = 5 * 60 * 1000;
   const now = Date.now();
   const skip = new Set<string>();
-  const STALE_LOCK_MS = 8 * 60 * 1000;
+  const STALE_LOCK_MS = 3 * 60 * 1000;
   const PARTIAL_COOLDOWN_MS = 60 * 1000;
   for (const r of (existing ?? []) as any[]) {
     const key = `${r.course_id}::${r.lesson_id}`;

@@ -15,9 +15,11 @@ const TRANSCRIBE_MODEL = "openai/gpt-4o-mini-transcribe";
 
 const MAX_PART_BYTES = 18 * 1024 * 1024;
 /** Parts processed per tick (each ~18MB of audio+video segments). */
-export const MAX_PARTS_PER_TICK = 4;
-const PART_CONCURRENCY = 4;
-const SEGMENT_CONCURRENCY = 6;
+export const MAX_PARTS_PER_TICK = 6;
+const PART_CONCURRENCY = 2;
+const SEGMENT_CONCURRENCY = 8;
+/** Stop starting new parts after this, so the tick always returns saved progress. */
+const TICK_BUDGET_MS = 70_000;
 
 function concatBytes(parts: Uint8Array[]): Uint8Array {
   const total = parts.reduce((a, b) => a + b.byteLength, 0);
@@ -178,9 +180,9 @@ export async function buildHlsPlan(playlistUrl: string): Promise<HlsPlan> {
   const avgDur = durations.length
     ? durations.reduce((a, b) => a + b, 0) / durations.length
     : 6;
-  // ~10 min of media per part keeps each upload comfortably under the 25MB cap
-  // for typical low-bitrate variants.
-  const segmentsPerPart = Math.max(1, Math.min(200, Math.round(600 / Math.max(1, avgDur))));
+  // ~5 min of media per part: smaller uploads transcribe far faster and each
+  // finished part is saved, so progress never restarts from zero.
+  const segmentsPerPart = Math.max(1, Math.min(200, Math.round(300 / Math.max(1, avgDur))));
 
   const parts: Array<{ start: number; end: number }> = [];
   for (let i = 0; i < segments.length; i += segmentsPerPart) {
@@ -270,26 +272,41 @@ export async function transcribeLessonResumable(opts: {
       ? new Uint8Array(await (await fetch(plan.initUri)).arrayBuffer())
       : null;
 
-    for (let i = 0; i < todo.length; i += PART_CONCURRENCY) {
-      const slice = todo.slice(i, i + PART_CONCURRENCY);
-      const texts = await Promise.all(
-        slice.map(async ({ p, i: index }) => ({
-          index,
-          text: await transcribePart(plan, p, initBytes, opts.apiKey),
-        })),
-      );
+    const startedAt = Date.now();
+    let lastError: string | null = null;
+
+    /** Persist a finished part immediately — progress must survive a worker timeout. */
+    const persist = async (index: number, text: string) => {
       const { error } = await supabaseAdmin.from("lesson_transcript_parts").upsert(
-        texts.map((t) => ({
+        {
           course_id: opts.courseId,
           lesson_id: opts.lessonId,
-          part_index: t.index,
-          text: t.text,
-        })),
+          part_index: index,
+          text,
+        },
         { onConflict: "course_id,lesson_id,part_index" },
       );
       if (error) throw new Error(error.message);
-      for (const t of texts) doneMap.set(t.index, t.text);
+      doneMap.set(index, text);
+    };
+
+    for (let i = 0; i < todo.length; i += PART_CONCURRENCY) {
+      if (Date.now() - startedAt > TICK_BUDGET_MS) break;
+      const slice = todo.slice(i, i + PART_CONCURRENCY);
+      const settled = await Promise.allSettled(
+        slice.map(async ({ p, i: index }) => {
+          const text = await transcribePart(plan, p, initBytes, opts.apiKey);
+          await persist(index, text);
+        }),
+      );
+      for (const r of settled) {
+        if (r.status === "rejected") lastError = String((r.reason as Error)?.message ?? r.reason);
+      }
     }
+
+    // Nothing at all landed and something broke: surface the error so the queue
+    // shows a real reason instead of looping silently.
+    if (!doneMap.size && lastError) throw new Error(lastError);
   }
 
   if (doneMap.size < total) {
