@@ -130,8 +130,9 @@ function CodigoDoClube() {
 
   useEffect(() => {
     (async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
+      const health = await ensureLiveSession();
+      if (!health.ok) return;
+      const u = { user: health.user };
       // Tentamos algumas vezes: uma falha de rede não pode fazer parecer
       // que o membro nunca aceitou o Código.
       for (let attempt = 0; attempt < 3; attempt++) {
