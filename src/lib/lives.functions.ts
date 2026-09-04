@@ -215,6 +215,7 @@ export const getLive = createServerFn({ method: "GET" })
       live: { ...live, mode: effectiveMode },
       playbackToken,
       videoUid,
+      externalRecordingUrl,
       actualDurationSeconds,
       replaySegments,
       replayStatus,
