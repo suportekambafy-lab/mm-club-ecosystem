@@ -530,6 +530,11 @@ function AdminAulas() {
                 {/* Lessons */}
                 {!isCollapsed && (
                   <div className="space-y-2 border-t border-border/60 px-4 py-3">
+                    <ModuleCoverEditor
+                      courseId={openCourse}
+                      module={m}
+                      onChange={(cover) => updateModule(mi, { cover })}
+                    />
                     {m.lessons.map((l, li) => {
                       const src = parseVideoUrl(l.videoUrl);
                       const isOpen = expandedLesson === l.id;

@@ -298,6 +298,13 @@ function ModuleAccordion({
         <ChevronDown
           className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ${open ? "" : "-rotate-90"}`}
         />
+        {module.cover && (
+          <span
+            aria-hidden
+            className="h-10 w-16 shrink-0 rounded-lg border border-border bg-surface-2 bg-cover bg-center"
+            style={{ background: module.cover, backgroundSize: "cover" }}
+          />
+        )}
         <div className="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
           <span className="text-[11px] font-medium uppercase tracking-wider text-primary">
             Módulo {String(index + 1).padStart(2, "0")}
