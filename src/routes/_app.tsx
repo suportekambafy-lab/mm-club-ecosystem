@@ -95,23 +95,36 @@ export const Route = createFileRoute("/_app")({
     }
 
 
-    // Club Code gate — force acceptance on first login
-    const { data: prof } = await supabase
-      .from("profiles")
-      .select("club_code_accepted_at, onboarding_completed_at")
-      .eq("id", userId)
-      .maybeSingle();
-    const profile = prof as {
+    // Club Code gate — force acceptance on first login.
+    // Uma falha de leitura NUNCA pode bloquear quem já é membro: tentamos
+    // algumas vezes e, se mesmo assim falhar, deixamos passar.
+    type ProfileGate = {
       club_code_accepted_at?: string | null;
       onboarding_completed_at?: string | null;
-    } | null;
-    const codeAccepted = Boolean(profile?.club_code_accepted_at);
+    };
+    let profile: ProfileGate | null = null;
+    let profileRead = false;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { data: prof, error } = await supabase
+        .from("profiles")
+        .select("club_code_accepted_at, onboarding_completed_at")
+        .eq("id", userId)
+        .maybeSingle();
+      if (!error) {
+        profile = prof as ProfileGate | null;
+        profileRead = true;
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 250 * (attempt + 1)));
+    }
+
+    const codeAccepted = !profileRead || Boolean(profile?.club_code_accepted_at);
     if (!codeAccepted && location.pathname !== "/codigo") {
       throw redirect({ to: "/codigo", replace: true });
     }
 
     // Onboarding guiado pós-pagamento — três passos antes de usar a app.
-    const onboarded = Boolean(profile?.onboarding_completed_at);
+    const onboarded = !profileRead || Boolean(profile?.onboarding_completed_at);
     if (
       codeAccepted &&
       !onboarded &&
