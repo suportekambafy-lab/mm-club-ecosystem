@@ -2484,6 +2484,7 @@ export type Database = {
           enabled_modules: Json
           ended_at: string | null
           expert_id: string | null
+          external_recording_url: string | null
           guest_token: string | null
           id: string
           is_test: boolean
@@ -2524,6 +2525,7 @@ export type Database = {
           enabled_modules?: Json
           ended_at?: string | null
           expert_id?: string | null
+          external_recording_url?: string | null
           guest_token?: string | null
           id?: string
           is_test?: boolean
@@ -2564,6 +2566,7 @@ export type Database = {
           enabled_modules?: Json
           ended_at?: string | null
           expert_id?: string | null
+          external_recording_url?: string | null
           guest_token?: string | null
           id?: string
           is_test?: boolean

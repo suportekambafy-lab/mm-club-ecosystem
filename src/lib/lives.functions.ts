@@ -54,7 +54,7 @@ export const getLive = createServerFn({ method: "GET" })
     const { data: live, error } = await context.supabase
       .from("lives")
       .select(
-        "id,title,description,expert_id,starts_at,started_at,ended_at,updated_at,stream_generation,duration_minutes,visibility,cover_url,status,cf_playback_id,cf_live_input_id,recording_video_uid,mode,replay_trim_start_seconds,replay_trim_end_seconds",
+        "id,title,description,expert_id,starts_at,started_at,ended_at,updated_at,stream_generation,duration_minutes,visibility,cover_url,status,cf_playback_id,cf_live_input_id,recording_video_uid,external_recording_url,mode,replay_trim_start_seconds,replay_trim_end_seconds",
       )
 
       .eq("id", data.id)
@@ -100,7 +100,12 @@ export const getLive = createServerFn({ method: "GET" })
     // "a processar" instead of wrongly claiming the live wasn't recorded.
     let pendingRecording = false;
 
-    if (isReplay && live.cf_live_input_id) {
+    // Gravação externa (feita fora da plataforma) — tem prioridade e dispensa
+    // qualquer consulta ao Cloudflare Stream.
+    const externalRecordingUrl =
+      (live as { external_recording_url?: string | null }).external_recording_url?.trim() || null;
+
+    if (isReplay && live.cf_live_input_id && !externalRecordingUrl) {
       try {
         const { listVideosForLiveInput, signPlaybackToken } = await import("@/lib/cloudflare-stream.server");
         const videos = await listVideosForLiveInput(live.cf_live_input_id);
@@ -186,7 +191,9 @@ export const getLive = createServerFn({ method: "GET" })
     //  - "unavailable" → genuinely no recording for this session
     let replayStatus: "ready" | "processing" | "unavailable" = "ready";
     if (isReplay) {
-      if (videoUid && playbackToken) {
+      if (externalRecordingUrl) {
+        replayStatus = "ready";
+      } else if (videoUid && playbackToken) {
         replayStatus = "ready";
         // Announce the replay once, the first time it is actually playable.
         try {
@@ -208,6 +215,7 @@ export const getLive = createServerFn({ method: "GET" })
       live: { ...live, mode: effectiveMode },
       playbackToken,
       videoUid,
+      externalRecordingUrl,
       actualDurationSeconds,
       replaySegments,
       replayStatus,
