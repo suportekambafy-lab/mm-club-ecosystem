@@ -180,9 +180,9 @@ export async function buildHlsPlan(playlistUrl: string): Promise<HlsPlan> {
   const avgDur = durations.length
     ? durations.reduce((a, b) => a + b, 0) / durations.length
     : 6;
-  // ~10 min of media per part keeps each upload comfortably under the 25MB cap
-  // for typical low-bitrate variants.
-  const segmentsPerPart = Math.max(1, Math.min(200, Math.round(600 / Math.max(1, avgDur))));
+  // ~5 min of media per part: smaller uploads transcribe far faster and each
+  // finished part is saved, so progress never restarts from zero.
+  const segmentsPerPart = Math.max(1, Math.min(200, Math.round(300 / Math.max(1, avgDur))));
 
   const parts: Array<{ start: number; end: number }> = [];
   for (let i = 0; i < segments.length; i += segmentsPerPart) {
