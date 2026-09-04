@@ -191,7 +191,9 @@ export const getLive = createServerFn({ method: "GET" })
     //  - "unavailable" → genuinely no recording for this session
     let replayStatus: "ready" | "processing" | "unavailable" = "ready";
     if (isReplay) {
-      if (videoUid && playbackToken) {
+      if (externalRecordingUrl) {
+        replayStatus = "ready";
+      } else if (videoUid && playbackToken) {
         replayStatus = "ready";
         // Announce the replay once, the first time it is actually playable.
         try {
