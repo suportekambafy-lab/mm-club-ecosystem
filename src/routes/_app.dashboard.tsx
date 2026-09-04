@@ -299,6 +299,39 @@ function ReplayCard({
 }
 
 
+function LegacyBanner() {
+  return (
+    <Link
+      to="/academia/$courseId"
+      params={{ courseId: "marca-milionaria-legacy" }}
+      className="group relative block overflow-hidden rounded-2xl ring-1 ring-border transition hover:ring-[color:var(--hairline)]"
+    >
+      <img
+        src={legacyHero.url}
+        alt="Marca Milionária Legacy"
+        loading="lazy"
+        decoding="async"
+        className="h-44 w-full object-cover transition duration-700 group-hover:scale-[1.02] md:h-64"
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-transparent" />
+      <div className="absolute inset-0 flex flex-col justify-center gap-2 px-6 md:px-10">
+        <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-primary md:text-[11px]">
+          Novo curso
+        </p>
+        <h2 className="font-display text-2xl leading-tight text-white md:text-4xl">
+          Marca Milionária Legacy
+        </h2>
+        <p className="text-xs text-white/70 md:text-sm">
+          Estreia 4 de setembro · 20:30 (Lisboa)
+        </p>
+        <span className="mt-1 inline-flex w-max items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground md:text-sm">
+          Ver contador <ArrowRight className="h-4 w-4" />
+        </span>
+      </div>
+    </Link>
+  );
+}
+
 function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
   const firstName = name.split(" ")[0];
 
