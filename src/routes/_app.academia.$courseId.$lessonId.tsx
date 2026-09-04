@@ -164,8 +164,9 @@ function LessonPlayer() {
 
 
   return (
-    <div className="-mx-3 -my-4 w-[calc(100%+1.5rem)] max-w-[100vw] touch-pan-y overflow-x-clip bg-background overscroll-x-none sm:-mx-4 sm:-my-6 sm:w-[calc(100%+2rem)] md:-mx-8 md:-my-8 md:w-[calc(100%+4rem)] lg:h-[calc(100dvh-3.5rem)] lg:overflow-hidden">
-      <div className="mx-auto flex w-full max-w-[1440px] min-w-0 flex-col overflow-x-clip px-3 py-4 overscroll-x-none sm:px-4 sm:py-6 md:px-6 md:py-6 lg:h-full lg:overflow-hidden">
+    <div className="-mx-3 -my-4 w-[calc(100%+1.5rem)] max-w-[100vw] touch-pan-y overflow-x-clip bg-background overscroll-x-none sm:-mx-4 sm:-my-6 sm:w-[calc(100%+2rem)] md:-mx-8 md:-my-8 md:w-[calc(100%+4rem)]">
+      <div className="mx-auto flex w-full max-w-[1440px] min-w-0 flex-col overflow-x-clip px-3 py-4 overscroll-x-none sm:px-4 sm:py-6 md:px-6 md:py-6">
+
 
         {/* Breadcrumb bar */}
         <div className="mb-4 flex max-w-full items-center gap-2 overflow-x-auto rounded-2xl border border-border bg-surface-1 px-4 py-2.5 text-sm [scrollbar-width:none] md:mb-6 md:gap-3 md:px-5 md:py-3 [&::-webkit-scrollbar]:hidden">
@@ -188,11 +189,12 @@ function LessonPlayer() {
         </div>
 
         {/* Layout: modules sidebar + main content */}
-        <div className="grid min-w-0 gap-4 md:gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(280px,330px)_minmax(0,1fr)]">
-          {/* Modules sidebar — scrollable independently on desktop; below content on mobile */}
-          <aside className="order-2 flex min-h-0 min-w-0 flex-col rounded-2xl border border-border bg-surface-1 p-3 sm:p-4 md:rounded-3xl md:p-5 lg:order-1">
+        <div className="grid min-w-0 items-start gap-4 md:gap-6 lg:grid-cols-[minmax(280px,330px)_minmax(0,1fr)]">
+          {/* Modules sidebar — sticky on desktop; below content on mobile */}
+          <aside className="order-2 flex min-w-0 flex-col rounded-2xl border border-border bg-surface-1 p-3 sm:p-4 md:rounded-3xl md:p-5 lg:sticky lg:top-4 lg:order-1 lg:max-h-[calc(100dvh-6rem)]">
             <p className="mb-4 shrink-0 font-display text-lg text-foreground">Módulos</p>
             <div className="space-y-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
+
               {course.modules!.map((m: Module, mi: number) => (
                 <ModuleAccordion
                   key={m.id}
@@ -208,7 +210,7 @@ function LessonPlayer() {
           </aside>
 
           {/* Main content: video + title/cta */}
-          <div className="order-1 flex min-h-0 min-w-0 flex-col gap-3 sm:gap-4 md:gap-6 lg:order-2 lg:overflow-y-auto lg:pr-1">
+          <div className="order-1 flex min-w-0 flex-col gap-3 sm:gap-4 md:gap-6 lg:order-2">
             {/* Video player */}
             {!source ? (
               <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
