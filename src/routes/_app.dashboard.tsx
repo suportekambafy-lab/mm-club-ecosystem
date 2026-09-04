@@ -386,7 +386,7 @@ function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
                 <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-lg">
                   {legacy.released
                     ? "Já podes começar. Todas as aulas abertas para membros."
-                    : `${legacy.headline} (Lisboa).`}
+                    : `${legacy.headline}.`}
                 </p>
                 <Link
                   to="/academia/$courseId"
