@@ -16,6 +16,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { getLive } from "@/lib/lives.functions";
 import { LivePlayer } from "@/components/mm/live-player";
+import { ExternalReplayPlayer } from "@/components/mm/external-replay-player";
 import { LiveChat } from "@/components/mm/live-chat";
 import { useLivePresence } from "@/hooks/use-live-presence";
 import { useTicker } from "@/hooks/use-ticker";
