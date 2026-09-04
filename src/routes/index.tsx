@@ -16,6 +16,7 @@ import {
 import { MMLogo } from "@/components/mm/logo";
 import { BigTypeHero } from "@/components/mm/big-type-hero";
 import cover from "@/assets/marca-milionaria-cover.png.asset.json";
+import legacyCover from "@/assets/marca-milionaria-legacy-hero.jpg.asset.json";
 import lessonL1 from "@/assets/lesson-l1.jpg";
 import lessonL2 from "@/assets/lesson-l2.jpg";
 import lessonL3 from "@/assets/lesson-l3.jpg";
@@ -138,6 +139,77 @@ function Nav({ scrolled }: { scrolled: boolean }) {
 
 /* ---------- HERO ---------- */
 
+const heroSlides = [
+  {
+    image: legacyCover.url,
+    eyebrow: "Novo curso · Marca Milionária Legacy",
+    title: "Estreia 4 de setembro · 20:30",
+    badge: "Legacy",
+  },
+  {
+    image: cover.url,
+    eyebrow: "Apresentação MM Club",
+    title: "2 min · assiste antes de aderir",
+    badge: "HD",
+  },
+];
+
+function HeroSlides() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const id = window.setInterval(
+      () => setIndex((i) => (i + 1) % heroSlides.length),
+      6000,
+    );
+    return () => window.clearInterval(id);
+  }, []);
+
+  return (
+    <div className="relative h-full w-full overflow-hidden">
+      {heroSlides.map((slide, i) => (
+        <div
+          key={slide.image}
+          aria-hidden={i !== index}
+          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
+            i === index ? "opacity-100" : "opacity-0"
+          }`}
+          style={{ backgroundImage: `url(${slide.image})` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/20" />
+          <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-white/70">
+                {slide.eyebrow}
+              </p>
+              <p className="font-display text-lg text-white">{slide.title}</p>
+            </div>
+            <span className="shrink-0 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-medium text-white backdrop-blur">
+              {slide.badge}
+            </span>
+          </div>
+        </div>
+      ))}
+
+      <div className="absolute left-5 top-5 flex gap-1.5">
+        {heroSlides.map((slide, i) => (
+          <button
+            key={slide.image}
+            type="button"
+            aria-label={`Ver ${slide.eyebrow}`}
+            onClick={() => setIndex(i)}
+            className={`h-1.5 rounded-full transition-all ${
+              i === index ? "w-6 bg-primary" : "w-3 bg-white/40"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+
 function Hero() {
   return (
     <section className="relative pt-32 pb-20 sm:pt-40 sm:pb-28">
@@ -159,7 +231,7 @@ function Hero() {
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
             </span>
             <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
-              Novo · Temporada 2026
+              Novo · Marca Milionária Legacy · 4 set, 20:30
             </span>
           </div>
 
@@ -233,25 +305,8 @@ function Hero() {
                   mmclub.pt / apresentação
                 </span>
               </div>
-              <div
-                className="relative h-full w-full bg-cover bg-center"
-                style={{ backgroundImage: `url(${cover.url})` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/20" />
-                {/* Botão de reprodução temporariamente oculto */}
+              <HeroSlides />
 
-                <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.24em] text-white/70">
-                      Apresentação MM Club
-                    </p>
-                    <p className="font-display text-lg text-white">2 min · assiste antes de aderir</p>
-                  </div>
-                  <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-medium text-white backdrop-blur">
-                    HD
-                  </span>
-                </div>
-              </div>
             </div>
 
             {/* floating chip */}
