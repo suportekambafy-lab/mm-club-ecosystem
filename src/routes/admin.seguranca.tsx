@@ -88,6 +88,7 @@ const KIND_LABEL: Record<string, string> = {
   emergency_enabled: "Emergência ligada",
   emergency_disabled: "Emergência desligada",
   login_failed: "Login falhado",
+  session_diagnostic: "Sessão inválida no browser",
   admin_access: "Acesso admin",
   upload_rejected: "Upload rejeitado",
   webhook_rejected: "Webhook rejeitado",
