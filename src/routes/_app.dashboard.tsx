@@ -323,11 +323,23 @@ function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
           src={legacyHero.url}
           alt="Marca Milionária Legacy"
           decoding="async"
-          className={`absolute inset-0 h-full w-full object-cover brightness-[0.7] transition-opacity duration-1000 ${slide === 1 ? "opacity-100" : "opacity-0"}`}
+          className={`absolute inset-0 h-full w-full object-cover brightness-[1.15] contrast-[1.02] transition-opacity duration-1000 ${slide === 1 ? "opacity-100" : "opacity-0"}`}
         />
-        <div className="absolute inset-0 bg-black/25" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/25" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/20 to-background/45" />
+        {slide === 0 && <div className="absolute inset-0 bg-black/25" />}
+        <div
+          className={
+            slide === 1
+              ? "absolute inset-0 bg-gradient-to-t from-background/85 via-background/25 to-transparent"
+              : "absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/25"
+          }
+        />
+        <div
+          className={
+            slide === 1
+              ? "absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-transparent"
+              : "absolute inset-0 bg-gradient-to-r from-background/80 via-background/20 to-background/45"
+          }
+        />
 
 
         <div className="absolute inset-0 flex items-end">
