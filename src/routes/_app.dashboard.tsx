@@ -124,8 +124,6 @@ function DashboardPage() {
       {/* Cinematic hero — full bleed, autoplay muted loop, editorial overlay */}
       <CinematicHero name={sessionUser?.name ?? ""} loading={userLoading && !sessionUser} />
 
-      <LegacyBanner />
-
       {/* Live activa ou próxima em destaque (com contador) */}
       {!livesLoaded ? null : livesError ? (
         <InlineAlert
@@ -300,41 +298,14 @@ function ReplayCard({
 }
 
 
-function LegacyBanner() {
-  return (
-    <Link
-      to="/academia/$courseId"
-      params={{ courseId: "marca-milionaria-legacy" }}
-      className="group relative block overflow-hidden rounded-2xl ring-1 ring-border transition hover:ring-[color:var(--hairline)]"
-    >
-      <img
-        src={legacyHero.url}
-        alt="Marca Milionária Legacy"
-        loading="lazy"
-        decoding="async"
-        className="h-44 w-full object-cover transition duration-700 group-hover:scale-[1.02] md:h-64"
-      />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-transparent" />
-      <div className="absolute inset-0 flex flex-col justify-center gap-2 px-6 md:px-10">
-        <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-primary md:text-[11px]">
-          Novo curso
-        </p>
-        <h2 className="font-display text-2xl leading-tight text-white md:text-4xl">
-          Marca Milionária Legacy
-        </h2>
-        <p className="text-xs text-white/70 md:text-sm">
-          Estreia 4 de setembro · 20:30 (Lisboa)
-        </p>
-        <span className="mt-1 inline-flex w-max items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground md:text-sm">
-          Ver contador <ArrowRight className="h-4 w-4" />
-        </span>
-      </div>
-    </Link>
-  );
-}
-
 function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
   const firstName = name.split(" ")[0];
+  const [slide, setSlide] = useState(0);
+
+  useEffect(() => {
+    const id = window.setInterval(() => setSlide((s) => (s === 0 ? 1 : 0)), 7000);
+    return () => window.clearInterval(id);
+  }, []);
 
   return (
     <section className="relative -mx-3 overflow-hidden sm:-mx-4 md:-mx-8">
@@ -346,7 +317,13 @@ function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
           fetchPriority="high"
           width={1600}
           height={693}
-          className="absolute inset-0 h-full w-full object-cover brightness-[0.62] contrast-[1.05] saturate-[0.9]"
+          className={`absolute inset-0 h-full w-full object-cover brightness-[0.62] contrast-[1.05] saturate-[0.9] transition-opacity duration-1000 ${slide === 0 ? "opacity-100" : "opacity-0"}`}
+        />
+        <img
+          src={legacyHero.url}
+          alt="Marca Milionária Legacy"
+          decoding="async"
+          className={`absolute inset-0 h-full w-full object-cover brightness-[0.7] transition-opacity duration-1000 ${slide === 1 ? "opacity-100" : "opacity-0"}`}
         />
         <div className="absolute inset-0 bg-black/25" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/25" />
@@ -355,22 +332,57 @@ function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
 
         <div className="absolute inset-0 flex items-end">
           <div className="w-full px-6 pb-8 md:px-14 md:pb-16">
-            <p className="font-display text-[10px] uppercase tracking-[0.32em] text-primary md:text-xs">
-              MM Club
-            </p>
-            <h1 className="mt-3 font-display text-3xl leading-[1.02] tracking-tight text-foreground md:text-6xl lg:text-7xl">
-              Bom regresso,{" "}
-              {loading || !firstName ? (
-                <span className="inline-block h-[0.9em] w-[6ch] animate-pulse rounded-md bg-surface-2 align-middle" />
-              ) : (
-                <span className="text-primary">{firstName}</span>
-              )}
-              {!loading && firstName ? "." : ""}
-            </h1>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-lg">
-              Continua a construir a tua Marca Milionária.
-            </p>
+            {slide === 0 ? (
+              <div className="animate-fade-in">
+                <p className="font-display text-[10px] uppercase tracking-[0.32em] text-primary md:text-xs">
+                  MM Club
+                </p>
+                <h1 className="mt-3 font-display text-3xl leading-[1.02] tracking-tight text-foreground md:text-6xl lg:text-7xl">
+                  Bom regresso,{" "}
+                  {loading || !firstName ? (
+                    <span className="inline-block h-[0.9em] w-[6ch] animate-pulse rounded-md bg-surface-2 align-middle" />
+                  ) : (
+                    <span className="text-primary">{firstName}</span>
+                  )}
+                  {!loading && firstName ? "." : ""}
+                </h1>
+                <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-lg">
+                  Continua a construir a tua Marca Milionária.
+                </p>
+              </div>
+            ) : (
+              <div className="animate-fade-in">
+                <p className="font-display text-[10px] uppercase tracking-[0.32em] text-primary md:text-xs">
+                  Novo curso
+                </p>
+                <h1 className="mt-3 font-display text-3xl leading-[1.02] tracking-tight text-foreground md:text-6xl lg:text-7xl">
+                  Marca Milionária <span className="text-primary">Legacy</span>
+                </h1>
+                <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-lg">
+                  Estreia 4 de setembro · 20:30 (Lisboa).
+                </p>
+                <Link
+                  to="/academia/$courseId"
+                  params={{ courseId: "marca-milionaria-legacy" }}
+                  className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
+                >
+                  Ver contador <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            )}
           </div>
+        </div>
+
+        <div className="absolute bottom-4 right-5 flex gap-2 md:bottom-6 md:right-10">
+          {[0, 1].map((i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setSlide(i)}
+              aria-label={`Ver destaque ${i + 1}`}
+              className={`h-1.5 rounded-full transition-all ${slide === i ? "w-6 bg-primary" : "w-1.5 bg-white/40"}`}
+            />
+          ))}
         </div>
       </div>
     </section>
