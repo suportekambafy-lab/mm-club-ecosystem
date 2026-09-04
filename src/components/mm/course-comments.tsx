@@ -29,7 +29,13 @@ function timeAgo(iso: string) {
  * Mural de comentários de um curso — disponível também enquanto o curso está
  * "Em breve", para os alunos poderem falar sobre o lançamento.
  */
-export function CourseComments({ courseId }: { courseId: string }) {
+export function CourseComments({
+  courseId,
+  lessonId,
+}: {
+  courseId: string;
+  lessonId?: string;
+}) {
   const { user, isAdmin } = useCurrentUser();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
@@ -37,10 +43,12 @@ export function CourseComments({ courseId }: { courseId: string }) {
   const [sending, setSending] = useState(false);
 
   async function load() {
-    const { data, error } = await supabase
+    let query = supabase
       .from("course_comments")
       .select("id,user_id,body,created_at")
-      .eq("course_id", courseId)
+      .eq("course_id", courseId);
+    query = lessonId ? query.eq("lesson_id", lessonId) : query.is("lesson_id", null);
+    const { data, error } = await query
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) {
