@@ -1617,6 +1617,30 @@ export type Database = {
         }
         Relationships: []
       }
+      course_comments: {
+        Row: {
+          body: string
+          course_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          course_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          course_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       domain_events: {
         Row: {
           actor_id: string | null
