@@ -63,14 +63,35 @@ export function pandaThumbFromUrl(raw: string): string | null {
  *   1. Explicit lesson.cover
  *   2. YouTube thumbnail derived from videoUrl
  *   3. Bunny.net thumbnail (b-cdn.net or iframe.mediadelivery.net embed/play/playlist)
- *   4. Course logo or extracted image URL from course.cover
+ *   4. Module cover (the module the lesson belongs to)
+ *   5. Course logo or extracted image URL from course.cover
  */
+function imageFromToken(value?: string | null): string | null {
+  const v = value?.trim();
+  if (!v) return null;
+  const inUrl = v.match(/url\(([^)]+)\)/);
+  if (inUrl) return inUrl[1].replace(/["']/g, "");
+  if (/^(https?:|\/|data:|blob:)/.test(v)) return v;
+  return null;
+}
+
+function moduleCoverForLesson(
+  lesson: Lesson | null | undefined,
+  course: Course,
+): string | null {
+  if (!lesson) return null;
+  const mod = course.modules?.find((m) => m.lessons.some((l) => l.id === lesson.id));
+  return imageFromToken(mod?.cover);
+}
+
 export function lessonThumb(
   lesson: Lesson | null | undefined,
   course: Course,
 ): string | null {
-  // Prefer real video-derived thumbnails (YouTube / Bunny) over any static cover
-  // so the sidebar shows actual frames from each lesson.
+  // An explicit lesson cover set in the admin always wins.
+  const explicit = imageFromToken(lesson?.cover);
+  if (explicit) return explicit;
+
   const raw = (lesson?.videoUrl ?? "").trim();
   if (raw) {
     const v = parseVideoUrl(raw);
@@ -85,13 +106,13 @@ export function lessonThumb(
     if (pandaThumbFromUrl(raw)) return null;
   }
 
-  // Fall back to an explicit lesson cover only when no video thumb is available.
   if (lesson?.cover) return lesson.cover;
+  const modCover = moduleCoverForLesson(lesson, course);
+  if (modCover) return modCover;
   if (course.logo) return course.logo;
-  const match = course.cover?.match(/url\(([^)]+)\)/);
-  if (match) return match[1].replace(/["']/g, "");
-  return null;
+  return imageFromToken(course.cover);
 }
+
 
 
 
