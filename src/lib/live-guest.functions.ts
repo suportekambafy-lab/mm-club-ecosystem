@@ -183,27 +183,36 @@ export const guestSync = createServerFn({ method: "POST" })
     }
 
     // Heartbeat: mantém o convidado "vivo" na lista (evita fantasmas).
+    // IMPORTANTE: cada UPDATE nesta tabela é difundido em tempo real a todos
+    // os membros na sala (e obriga-os a reler a lista). Com dezenas de
+    // convidados a escrever a cada poucos segundos isso multiplica a carga
+    // (convidados × membros) e já derrubou a base de dados a meio de uma live.
+    // Por isso só escrevemos quando há algo novo: mão levantada/baixada ou
+    // quando o último sinal de vida tem mais de 60s (o corte de "fantasma" é 3 min).
     {
-      const patch: {
-        last_seen_at: string;
-        guest_name: string;
-        is_guest: boolean;
-        hand_raised_at?: string | null;
-      } = {
-        last_seen_at: new Date().toISOString(),
-        guest_name: data.displayName,
-        is_guest: true,
-      };
-      if (typeof data.raiseHand === "boolean") {
-        patch.hand_raised_at = data.raiseHand ? new Date().toISOString() : null;
+      const nowIso = new Date().toISOString();
+      const staleBefore = new Date(Date.now() - 60_000).toISOString();
+      const handChanged = typeof data.raiseHand === "boolean";
+
+      if (handChanged) {
+        await supabaseAdmin
+          .from("live_participants")
+          .update({
+            last_seen_at: nowIso,
+            guest_name: data.displayName,
+            is_guest: true,
+            hand_raised_at: data.raiseHand ? nowIso : null,
+          })
+          .eq("live_id", live.id)
+          .eq("user_id", data.guestId);
+      } else {
+        await supabaseAdmin
+          .from("live_participants")
+          .update({ last_seen_at: nowIso, guest_name: data.displayName, is_guest: true })
+          .eq("live_id", live.id)
+          .eq("user_id", data.guestId)
+          .or(`last_seen_at.is.null,last_seen_at.lt.${staleBefore}`);
       }
-
-
-      await supabaseAdmin
-        .from("live_participants")
-        .update(patch)
-        .eq("live_id", live.id)
-        .eq("user_id", data.guestId);
     }
 
 
