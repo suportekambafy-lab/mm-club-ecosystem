@@ -444,17 +444,41 @@ function SalaShell({
     }
 
     refresh();
+
+    // Throttle: com dezenas de participantes cada heartbeat gerava uma
+    // releitura completa da lista em TODOS os clientes (carga N²), o que já
+    // derrubou a base de dados a meio de uma live. Agrupamos as alterações e
+    // relemos no máximo uma vez a cada 10s (com um ciclo de segurança de 45s).
+    const MIN_GAP_MS = 10_000;
+    let lastRun = Date.now();
+    let pending: number | null = null;
+    const scheduleRefresh = () => {
+      if (pending !== null) return;
+      const wait = Math.max(0, MIN_GAP_MS - (Date.now() - lastRun));
+      pending = window.setTimeout(() => {
+        pending = null;
+        lastRun = Date.now();
+        void refresh();
+      }, wait);
+    };
+    const safety = window.setInterval(() => {
+      if (document.visibilityState === "hidden") return;
+      scheduleRefresh();
+    }, 45_000);
+
     const suffix = Math.random().toString(36).slice(2, 8);
     const ch = supabase
       .channel(`sala-count:${liveId}:${suffix}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "live_participants", filter: `live_id=eq.${liveId}` },
-        () => refresh(),
+        () => scheduleRefresh(),
       )
       .subscribe();
     return () => {
       cancelled = true;
+      if (pending !== null) window.clearTimeout(pending);
+      window.clearInterval(safety);
       supabase.removeChannel(ch);
     };
   }, [liveId]);
