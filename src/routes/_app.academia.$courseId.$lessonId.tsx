@@ -368,6 +368,8 @@ function LessonPlayer() {
                 });
               }}
             />
+
+            <CourseComments courseId={course.id} lessonId={current.lesson.id} />
           </div>
         </div>
       </div>
