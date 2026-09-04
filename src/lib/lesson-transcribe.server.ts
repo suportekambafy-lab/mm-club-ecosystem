@@ -270,26 +270,41 @@ export async function transcribeLessonResumable(opts: {
       ? new Uint8Array(await (await fetch(plan.initUri)).arrayBuffer())
       : null;
 
-    for (let i = 0; i < todo.length; i += PART_CONCURRENCY) {
-      const slice = todo.slice(i, i + PART_CONCURRENCY);
-      const texts = await Promise.all(
-        slice.map(async ({ p, i: index }) => ({
-          index,
-          text: await transcribePart(plan, p, initBytes, opts.apiKey),
-        })),
-      );
+    const startedAt = Date.now();
+    let lastError: string | null = null;
+
+    /** Persist a finished part immediately — progress must survive a worker timeout. */
+    const persist = async (index: number, text: string) => {
       const { error } = await supabaseAdmin.from("lesson_transcript_parts").upsert(
-        texts.map((t) => ({
+        {
           course_id: opts.courseId,
           lesson_id: opts.lessonId,
-          part_index: t.index,
-          text: t.text,
-        })),
+          part_index: index,
+          text,
+        },
         { onConflict: "course_id,lesson_id,part_index" },
       );
       if (error) throw new Error(error.message);
-      for (const t of texts) doneMap.set(t.index, t.text);
+      doneMap.set(index, text);
+    };
+
+    for (let i = 0; i < todo.length; i += PART_CONCURRENCY) {
+      if (Date.now() - startedAt > TICK_BUDGET_MS) break;
+      const slice = todo.slice(i, i + PART_CONCURRENCY);
+      const settled = await Promise.allSettled(
+        slice.map(async ({ p, i: index }) => {
+          const text = await transcribePart(plan, p, initBytes, opts.apiKey);
+          await persist(index, text);
+        }),
+      );
+      for (const r of settled) {
+        if (r.status === "rejected") lastError = String((r.reason as Error)?.message ?? r.reason);
+      }
     }
+
+    // Nothing at all landed and something broke: surface the error so the queue
+    // shows a real reason instead of looping silently.
+    if (!doneMap.size && lastError) throw new Error(lastError);
   }
 
   if (doneMap.size < total) {
