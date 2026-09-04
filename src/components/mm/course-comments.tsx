@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, MessageCircle, Send, Trash2 } from "lucide-react";
+import { ArrowUp, Loader2, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { MemberAvatar } from "@/components/mm/member-avatar";
@@ -119,7 +119,6 @@ export function CourseComments({
   return (
     <section className="surface-card space-y-5 p-5 md:p-6">
       <div className="flex items-center gap-2">
-        <MessageCircle className="h-4 w-4 text-primary" />
         <h2 className="type-section text-foreground">Comentários</h2>
         {count > 0 && <span className="text-xs text-muted-foreground">{count}</span>}
       </div>
@@ -146,7 +145,7 @@ export function CourseComments({
                 {sending ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <Send className="h-3.5 w-3.5" />
+                  <ArrowUp className="h-3.5 w-3.5" />
                 )}
                 Publicar
               </button>
