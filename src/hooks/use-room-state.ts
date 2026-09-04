@@ -303,7 +303,7 @@ export function useRoomState({
     const poll = setInterval(() => {
       if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
       void hydrate();
-    }, 20_000);
+    }, 45_000);
     const onFocus = () => void hydrate();
     const onVisible = () => {
       if (document.visibilityState === "visible") void hydrate();

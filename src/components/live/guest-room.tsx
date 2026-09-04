@@ -170,7 +170,12 @@ export function GuestRoom({
   );
 
   useEffect(() => {
-    const id = setInterval(() => void poll(), 5000);
+    // 8s é suficiente para apanhar promoções ao palco; o servidor só grava o
+    // "sinal de vida" uma vez por minuto, por isso o resto são leituras leves.
+    const id = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+      void poll();
+    }, 8000);
     return () => clearInterval(id);
   }, [poll]);
 
