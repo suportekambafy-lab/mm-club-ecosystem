@@ -27,17 +27,43 @@ export const Route = createFileRoute("/_app/jade/$threadId")({
     ],
   }),
   component: JadeThreadPage,
+  errorComponent: JadeThreadError,
 });
 
+function JadeThreadError() {
+  return (
+    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6 text-center">
+      <h1 className="font-display text-xl text-foreground">Não foi possível abrir esta conversa</h1>
+      <p className="text-sm text-muted-foreground">
+        Tenta novamente ou começa uma conversa nova.
+      </p>
+      <Link
+        to="/jade"
+        className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-gold-soft"
+      >
+        Voltar ao MM Inteligence
+      </Link>
+    </div>
+  );
+}
+
 function toUIMessages(rows: AiMessageRow[]): UIMessage[] {
-  return rows.map((r) => ({
-    id: r.client_id ?? r.id,
-    role: r.role,
-    parts: (Array.isArray(r.parts) ? r.parts : []).map((p) => ({
-      type: "text" as const,
-      text: p.text ?? "",
-    })),
-  })) as UIMessage[];
+  const seen = new Set<string>();
+  const out: UIMessage[] = [];
+  for (const r of Array.isArray(rows) ? rows : []) {
+    const id = r.client_id || r.id;
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push({
+      id,
+      role: r.role === "user" || r.role === "assistant" || r.role === "system" ? r.role : "assistant",
+      parts: (Array.isArray(r.parts) ? r.parts : []).map((p) => ({
+        type: "text" as const,
+        text: typeof p?.text === "string" ? p.text : "",
+      })),
+    } as UIMessage);
+  }
+  return out;
 }
 
 function JadeThreadPage() {
