@@ -14,6 +14,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { dropLocalSession, ensureLiveSession } from "@/lib/session-health";
+import { reportSessionDiagnostic } from "@/lib/security.functions";
 
 export const Route = createFileRoute("/_app/codigo")({
   component: CodigoDoClube,
@@ -128,8 +130,9 @@ function CodigoDoClube() {
 
   useEffect(() => {
     (async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
+      const health = await ensureLiveSession();
+      if (!health.ok) return;
+      const u = { user: health.user };
       // Tentamos algumas vezes: uma falha de rede não pode fazer parecer
       // que o membro nunca aceitou o Código.
       for (let attempt = 0; attempt < 3; attempt++) {
@@ -156,13 +159,28 @@ function CodigoDoClube() {
   const handleAccept = async () => {
     if (!checked || saving) return;
     setSaving(true);
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) {
+    // Valida (e, se preciso, repara) a sessão antes de gravar — um token
+    // expirado no dispositivo não pode parecer "sessão expirou" sem tentarmos
+    // renovar primeiro.
+    const health = await ensureLiveSession();
+    if (!health.ok) {
       setSaving(false);
+      void reportSessionDiagnostic({
+        data: {
+          where: "codigo.accept",
+          reason: health.reason,
+          skewSeconds: health.skewSeconds,
+          hadSession: health.reason !== "no_session",
+          online: navigator.onLine,
+          standalone: window.matchMedia?.("(display-mode: standalone)").matches,
+        },
+      }).catch(() => {});
+      await dropLocalSession();
       toast.error("A tua sessão expirou. Entra outra vez.");
-      router.navigate({ to: "/auth", replace: true });
+      router.navigate({ to: "/auth", search: { redirect: "/codigo" } as never, replace: true });
       return;
     }
+    const u = { user: health.user };
     const now = new Date().toISOString();
     const { data: updated, error } = await supabase
       .from("profiles")
