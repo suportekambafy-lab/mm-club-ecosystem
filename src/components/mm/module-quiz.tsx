@@ -135,16 +135,23 @@ export function ModuleQuiz({
   const passed = Boolean(state?.passed);
   const open = phase !== "idle";
 
+  // Percentagem do módulo já assistida (uma aula conta quando chega a 90%).
+  const total = totalLessons ?? pendingLessons.length + (completedLessonsCount ?? 0);
+  const done = completedLessonsCount ?? Math.max(0, total - pendingLessons.length);
+  const progressPct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
+  const remainingPct = Math.max(0, 100 - progressPct);
+
   // O teste só abre depois de todas as aulas do módulo estarem concluídas.
   const blockedMessage = useMemo(() => {
     if (moduleLessonsCompleted) return null;
-    const names = pendingLessons.map((l) => `“${l.title}”`);
-    if (names.length === 0) return "Vê todas as aulas deste módulo antes de fazer o teste.";
-    if (names.length === 1) return `Termina a aula ${names[0]} para fazer o teste.`;
-    const shown = names.slice(0, 3).join(", ");
-    const extra = names.length > 3 ? ` e mais ${names.length - 3}` : "";
-    return `Vê primeiro as aulas que faltam: ${shown}${extra}.`;
-  }, [moduleLessonsCompleted, pendingLessons]);
+    const falta = pendingLessons.length;
+    const aulas = falta === 1 ? "1 aula" : `${falta} aulas`;
+    if (total > 0) {
+      return `Já assististe ${progressPct}% do módulo. Assiste mais ${remainingPct}% (${aulas}) para desbloquear o teste.`;
+    }
+    return "Vê todas as aulas deste módulo para desbloquear o teste.";
+  }, [moduleLessonsCompleted, pendingLessons, progressPct, remainingPct, total]);
+
 
   const start = useCallback(async () => {
     if (blockedMessage) {
