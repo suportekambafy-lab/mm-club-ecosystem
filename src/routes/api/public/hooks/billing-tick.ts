@@ -35,6 +35,13 @@ export const Route = createFileRoute("/api/public/hooks/billing-tick")({
           );
           await reopenStalledRecoveries();
 
+          // Ninguém com pagamento em ordem perde acesso: subscrições ativas
+          // cujo período expirou são reconciliadas com o gateway.
+          const { reconcileLapsedSubscriptions } = await import(
+            "@/lib/billing/reconcile.server"
+          );
+          const reconciled = await reconcileLapsedSubscriptions(25);
+
 
 
           // Drain in batches so a backlog clears within a single tick.
