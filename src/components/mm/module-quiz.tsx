@@ -29,6 +29,8 @@ type Props = {
   moduleTitle: string;
   state: QuizModuleState | undefined;
   moduleLessonsCompleted: boolean;
+  /** Aulas do módulo ainda não concluídas (bloqueiam o teste). */
+  pendingLessons?: Array<{ id: string; title: string }>;
   onPassed: () => void;
   /** Abre e arranca o teste automaticamente (vindo do fim da última aula). */
   autoOpen?: boolean;
