@@ -106,6 +106,7 @@ import { Route as ApiPublicHooksLivesRecordingCheckRouteImport } from './routes/
 import { Route as ApiPublicHooksLivesEgressGuardRouteImport } from './routes/api/public/hooks/lives-egress-guard'
 import { Route as ApiPublicHooksLivesAnnounceCatchupRouteImport } from './routes/api/public/hooks/lives-announce-catchup'
 import { Route as ApiPublicHooksLiveTestEmailRouteImport } from './routes/api/public/hooks/live-test-email'
+import { Route as ApiPublicHooksLegacyWinbackRouteImport } from './routes/api/public/hooks/legacy-winback'
 import { Route as ApiPublicHooksLegacyTeaserRouteImport } from './routes/api/public/hooks/legacy-teaser'
 import { Route as ApiPublicHooksInactivityNudgeRouteImport } from './routes/api/public/hooks/inactivity-nudge'
 import { Route as ApiPublicHooksForceEndLiveRouteImport } from './routes/api/public/hooks/force-end-live'
@@ -636,6 +637,12 @@ const ApiPublicHooksLiveTestEmailRoute =
     path: '/api/public/hooks/live-test-email',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksLegacyWinbackRoute =
+  ApiPublicHooksLegacyWinbackRouteImport.update({
+    id: '/api/public/hooks/legacy-winback',
+    path: '/api/public/hooks/legacy-winback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksLegacyTeaserRoute =
   ApiPublicHooksLegacyTeaserRouteImport.update({
     id: '/api/public/hooks/legacy-teaser',
@@ -856,6 +863,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/force-end-live': typeof ApiPublicHooksForceEndLiveRoute
   '/api/public/hooks/inactivity-nudge': typeof ApiPublicHooksInactivityNudgeRoute
   '/api/public/hooks/legacy-teaser': typeof ApiPublicHooksLegacyTeaserRoute
+  '/api/public/hooks/legacy-winback': typeof ApiPublicHooksLegacyWinbackRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-egress-guard': typeof ApiPublicHooksLivesEgressGuardRoute
@@ -967,6 +975,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/force-end-live': typeof ApiPublicHooksForceEndLiveRoute
   '/api/public/hooks/inactivity-nudge': typeof ApiPublicHooksInactivityNudgeRoute
   '/api/public/hooks/legacy-teaser': typeof ApiPublicHooksLegacyTeaserRoute
+  '/api/public/hooks/legacy-winback': typeof ApiPublicHooksLegacyWinbackRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-egress-guard': typeof ApiPublicHooksLivesEgressGuardRoute
@@ -1088,6 +1097,7 @@ export interface FileRoutesById {
   '/api/public/hooks/force-end-live': typeof ApiPublicHooksForceEndLiveRoute
   '/api/public/hooks/inactivity-nudge': typeof ApiPublicHooksInactivityNudgeRoute
   '/api/public/hooks/legacy-teaser': typeof ApiPublicHooksLegacyTeaserRoute
+  '/api/public/hooks/legacy-winback': typeof ApiPublicHooksLegacyWinbackRoute
   '/api/public/hooks/live-test-email': typeof ApiPublicHooksLiveTestEmailRoute
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-egress-guard': typeof ApiPublicHooksLivesEgressGuardRoute
@@ -1209,6 +1219,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/force-end-live'
     | '/api/public/hooks/inactivity-nudge'
     | '/api/public/hooks/legacy-teaser'
+    | '/api/public/hooks/legacy-winback'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-egress-guard'
@@ -1320,6 +1331,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/force-end-live'
     | '/api/public/hooks/inactivity-nudge'
     | '/api/public/hooks/legacy-teaser'
+    | '/api/public/hooks/legacy-winback'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-egress-guard'
@@ -1440,6 +1452,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/force-end-live'
     | '/api/public/hooks/inactivity-nudge'
     | '/api/public/hooks/legacy-teaser'
+    | '/api/public/hooks/legacy-winback'
     | '/api/public/hooks/live-test-email'
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-egress-guard'
@@ -1495,6 +1508,7 @@ export interface RootRouteChildren {
   ApiPublicHooksForceEndLiveRoute: typeof ApiPublicHooksForceEndLiveRoute
   ApiPublicHooksInactivityNudgeRoute: typeof ApiPublicHooksInactivityNudgeRoute
   ApiPublicHooksLegacyTeaserRoute: typeof ApiPublicHooksLegacyTeaserRoute
+  ApiPublicHooksLegacyWinbackRoute: typeof ApiPublicHooksLegacyWinbackRoute
   ApiPublicHooksLiveTestEmailRoute: typeof ApiPublicHooksLiveTestEmailRoute
   ApiPublicHooksLivesAnnounceCatchupRoute: typeof ApiPublicHooksLivesAnnounceCatchupRoute
   ApiPublicHooksLivesEgressGuardRoute: typeof ApiPublicHooksLivesEgressGuardRoute
@@ -2197,6 +2211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksLiveTestEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/legacy-winback': {
+      id: '/api/public/hooks/legacy-winback'
+      path: '/api/public/hooks/legacy-winback'
+      fullPath: '/api/public/hooks/legacy-winback'
+      preLoaderRoute: typeof ApiPublicHooksLegacyWinbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/legacy-teaser': {
       id: '/api/public/hooks/legacy-teaser'
       path: '/api/public/hooks/legacy-teaser'
@@ -2610,6 +2631,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksForceEndLiveRoute: ApiPublicHooksForceEndLiveRoute,
   ApiPublicHooksInactivityNudgeRoute: ApiPublicHooksInactivityNudgeRoute,
   ApiPublicHooksLegacyTeaserRoute: ApiPublicHooksLegacyTeaserRoute,
+  ApiPublicHooksLegacyWinbackRoute: ApiPublicHooksLegacyWinbackRoute,
   ApiPublicHooksLiveTestEmailRoute: ApiPublicHooksLiveTestEmailRoute,
   ApiPublicHooksLivesAnnounceCatchupRoute:
     ApiPublicHooksLivesAnnounceCatchupRoute,
