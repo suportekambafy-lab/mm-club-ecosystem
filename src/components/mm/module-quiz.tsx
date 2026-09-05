@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   ChevronRight,
   Loader2,
+  Lock,
   RotateCcw,
   Sparkles,
   Trophy,
@@ -29,6 +30,8 @@ type Props = {
   moduleTitle: string;
   state: QuizModuleState | undefined;
   moduleLessonsCompleted: boolean;
+  /** Aulas do módulo ainda não concluídas (bloqueiam o teste). */
+  pendingLessons?: Array<{ id: string; title: string }>;
   onPassed: () => void;
   /** Abre e arranca o teste automaticamente (vindo do fim da última aula). */
   autoOpen?: boolean;
@@ -94,6 +97,7 @@ export function ModuleQuiz({
   moduleTitle,
   state,
   moduleLessonsCompleted,
+  pendingLessons = [],
   onPassed,
   autoOpen,
 }: Props) {
@@ -126,10 +130,27 @@ export function ModuleQuiz({
   const passed = Boolean(state?.passed);
   const open = phase !== "idle";
 
+  // O teste só abre depois de todas as aulas do módulo estarem concluídas.
+  const blockedMessage = useMemo(() => {
+    if (moduleLessonsCompleted) return null;
+    const names = pendingLessons.map((l) => `“${l.title}”`);
+    if (names.length === 0) return "Vê todas as aulas deste módulo antes de fazer o teste.";
+    if (names.length === 1) return `Termina a aula ${names[0]} para fazer o teste.`;
+    const shown = names.slice(0, 3).join(", ");
+    const extra = names.length > 3 ? ` e mais ${names.length - 3}` : "";
+    return `Vê primeiro as aulas que faltam: ${shown}${extra}.`;
+  }, [moduleLessonsCompleted, pendingLessons]);
+
   const start = useCallback(async () => {
+    if (blockedMessage) {
+      setError(blockedMessage);
+      setPhase("idle");
+      return;
+    }
     setPhase("loading");
     setError(null);
     try {
+
       const res = await load({ data: { courseId, moduleId } });
       if (!res.questions.length) throw new Error("Este teste ainda não tem perguntas.");
       setQuestions(res.questions);
@@ -142,7 +163,7 @@ export function ModuleQuiz({
       setError(e?.message ?? "Não foi possível abrir o teste.");
       setPhase("idle");
     }
-  }, [courseId, moduleId, load]);
+  }, [blockedMessage, courseId, moduleId, load]);
 
   const current = questions[step];
   const currentFeedback = current ? feedback[current.id] : undefined;
@@ -204,12 +225,14 @@ export function ModuleQuiz({
   // Vindo do fim da última aula do módulo: abre o teste sozinho.
   const autoRef = useRef(false);
   useEffect(() => {
-    if (!autoOpen || autoRef.current || !available || passed) return;
+    if (!autoOpen || autoRef.current || !available || passed || blockedMessage) return;
     autoRef.current = true;
     void start();
-  }, [autoOpen, available, passed, start]);
+  }, [autoOpen, available, blockedMessage, passed, start]);
 
   if (!available && !passed) return null;
+
+  const blocked = !passed && Boolean(blockedMessage);
 
   return (
     <>
@@ -222,10 +245,18 @@ export function ModuleQuiz({
                 "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1",
                 passed
                   ? "bg-emerald-500/15 text-emerald-500 ring-emerald-500/30"
-                  : "bg-primary/15 text-primary ring-primary/30",
+                  : blocked
+                    ? "bg-surface-3 text-muted-foreground ring-border"
+                    : "bg-primary/15 text-primary ring-primary/30",
               )}
             >
-              {passed ? <Trophy className="h-5 w-5" /> : <BrainCircuit className="h-5 w-5" />}
+              {passed ? (
+                <Trophy className="h-5 w-5" />
+              ) : blocked ? (
+                <Lock className="h-5 w-5" />
+              ) : (
+                <BrainCircuit className="h-5 w-5" />
+              )}
             </span>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-foreground">
@@ -234,11 +265,27 @@ export function ModuleQuiz({
               <p className="text-xs text-muted-foreground">
                 {passed
                   ? `Melhor nota: ${state?.bestScore ?? 100}%. Podes repetir para revisar.`
-                  : `${state?.questionCount ?? 5} perguntas · mínimo ${state?.passScore ?? 80}% para desbloquear o módulo seguinte${
-                      moduleLessonsCompleted ? "" : " · recomendado ver todas as aulas primeiro"
-                    }`}
+                  : blocked
+                    ? blockedMessage
+                    : `${state?.questionCount ?? 5} perguntas · mínimo ${state?.passScore ?? 80}% para desbloquear o módulo seguinte`}
               </p>
-              {error && phase === "idle" && (
+              {blocked && pendingLessons.length > 0 && (
+                <ul className="mt-2 flex flex-wrap gap-1.5">
+                  {pendingLessons.slice(0, 4).map((l) => (
+                    <li key={l.id}>
+                      <Link
+                        to="/academia/$courseId/$lessonId"
+                        params={{ courseId, lessonId: l.id }}
+                        className="inline-flex max-w-[240px] items-center gap-1 truncate rounded-full border border-border bg-surface-1 px-2.5 py-1 text-[11px] text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+                      >
+                        <ChevronRight className="h-3 w-3 shrink-0 text-primary" />
+                        <span className="truncate">{l.title}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {!blocked && error && phase === "idle" && (
                 <p className="mt-1 text-xs text-red-500">{error}</p>
               )}
             </div>
@@ -246,18 +293,31 @@ export function ModuleQuiz({
           <button
             type="button"
             onClick={start}
+            disabled={blocked}
+            aria-disabled={blocked}
             className={cn(
-              "inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-xs font-semibold transition hover:scale-[1.02]",
-              passed
-                ? "border border-border bg-surface-1 text-foreground hover:bg-surface-3"
-                : "bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-gold-soft",
+              "inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-xs font-semibold transition",
+              blocked
+                ? "cursor-not-allowed border border-border bg-surface-2 text-muted-foreground"
+                : "hover:scale-[1.02]",
+              !blocked &&
+                (passed
+                  ? "border border-border bg-surface-1 text-foreground hover:bg-surface-3"
+                  : "bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-gold-soft"),
             )}
           >
-            {passed ? <RotateCcw className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
-            {passed ? "Repetir teste" : "Começar teste"}
+            {blocked ? (
+              <Lock className="h-3.5 w-3.5" />
+            ) : passed ? (
+              <RotateCcw className="h-3.5 w-3.5" />
+            ) : (
+              <Sparkles className="h-3.5 w-3.5" />
+            )}
+            {blocked ? "Teste bloqueado" : passed ? "Repetir teste" : "Começar teste"}
           </button>
         </div>
       </div>
+
 
       {/* Modal do teste — centrado, por cima de tudo */}
       <Dialog
