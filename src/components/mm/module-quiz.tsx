@@ -129,10 +129,27 @@ export function ModuleQuiz({
   const passed = Boolean(state?.passed);
   const open = phase !== "idle";
 
+  // O teste só abre depois de todas as aulas do módulo estarem concluídas.
+  const blockedMessage = useMemo(() => {
+    if (moduleLessonsCompleted) return null;
+    const names = pendingLessons.map((l) => `“${l.title}”`);
+    if (names.length === 0) return "Vê todas as aulas deste módulo antes de fazer o teste.";
+    if (names.length === 1) return `Termina a aula ${names[0]} para fazer o teste.`;
+    const shown = names.slice(0, 3).join(", ");
+    const extra = names.length > 3 ? ` e mais ${names.length - 3}` : "";
+    return `Vê primeiro as aulas que faltam: ${shown}${extra}.`;
+  }, [moduleLessonsCompleted, pendingLessons]);
+
   const start = useCallback(async () => {
+    if (blockedMessage) {
+      setError(blockedMessage);
+      setPhase("idle");
+      return;
+    }
     setPhase("loading");
     setError(null);
     try {
+
       const res = await load({ data: { courseId, moduleId } });
       if (!res.questions.length) throw new Error("Este teste ainda não tem perguntas.");
       setQuestions(res.questions);
