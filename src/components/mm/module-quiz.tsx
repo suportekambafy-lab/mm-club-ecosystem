@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   ChevronRight,
   Loader2,
+  Lock,
   RotateCcw,
   Sparkles,
   Trophy,
