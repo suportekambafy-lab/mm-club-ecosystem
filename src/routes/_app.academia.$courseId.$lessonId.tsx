@@ -83,9 +83,15 @@ function LessonPlayer() {
   // é regravado: a conclusão mantém-se e as horas/progresso não voltam a contar.
   const completedRef = useRef(completed);
   completedRef.current = completed;
+  const rowRef = useRef(row);
+  rowRef.current = row;
   const trackedSaveProgress = useCallback<SaveLessonProgress>(
     (seconds, options) => {
-      if (completedRef.current && options?.completed !== false) return Promise.resolve(null);
+      // Aula já concluída: nada a regravar — devolvemos a linha atual para que
+      // o player saiba que a conclusão está segura.
+      if (completedRef.current && options?.completed !== false) {
+        return Promise.resolve(rowRef.current);
+      }
       pingLearningActivity();
       return saveProgress(seconds, options);
     },
