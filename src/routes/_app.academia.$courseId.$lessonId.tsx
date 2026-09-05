@@ -761,6 +761,10 @@ function TrackedVideoPlayer({
       void saveProgress(completed ? 0 : safeSeconds, {
         ...(completed ? { completed: true } : {}),
         silent: true,
+      }).then((saved) => {
+        // Se a conclusão não chegou ao servidor, volta a tentar na próxima
+        // atualização de tempo em vez de a dar por perdida.
+        if (completed && !saved?.completed) completedSentRef.current = false;
       });
       if (completed) lastSavedRef.current = 0;
     },
