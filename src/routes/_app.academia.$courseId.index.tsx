@@ -283,9 +283,10 @@ function ModuleAccordion({
     module.lessons.length > 0
       ? module.lessons.filter((l: Lesson) => completedLessons?.has(l.id) || l.completed).length
       : 0;
-  const moduleDone =
-    module.lessons.length > 0 &&
-    module.lessons.every((l: Lesson) => completedLessons?.has(l.id) || l.completed);
+  const pendingLessons = module.lessons
+    .filter((l: Lesson) => !(completedLessons?.has(l.id) || l.completed))
+    .map((l: Lesson) => ({ id: l.id, title: l.title }));
+  const moduleDone = module.lessons.length > 0 && pendingLessons.length === 0;
 
   return (
     <div className="overflow-hidden rounded-xl bg-surface-1 ring-1 ring-border">
