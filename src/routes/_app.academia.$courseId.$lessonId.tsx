@@ -730,12 +730,29 @@ function TrackedVideoPlayer({
   }, [source.kind, lessonId]);
 
   const persist = useCallback(
-    (seconds: number, completed = false, force = false) => {
+    (seconds: number, completed = false, force = false, duration?: number) => {
       const safeSeconds = Math.max(0, Math.floor(seconds));
+      if (typeof duration === "number" && Number.isFinite(duration) && duration > 0) {
+        durationRef.current = duration;
+      }
       const delta = safeSeconds - lastSavedRef.current;
       // Avanço normal (não salto) conta como tempo visto.
       if (delta > 0 && delta < 60) watchedRef.current += delta;
+      // Conclusão aos ~90%: muitos membros saem antes dos créditos finais e o
+      // evento "ended" nunca chega, deixando o teste do módulo bloqueado.
+      const total = durationRef.current;
+      if (
+        !completed &&
+        !completedSentRef.current &&
+        total > 60 &&
+        safeSeconds >= total * 0.9 &&
+        watchedRef.current >= 20
+      ) {
+        completed = true;
+        force = true;
+      }
       if (!force && Math.abs(delta) < 5) return;
+      if (completed) completedSentRef.current = true;
       lastSavedRef.current = safeSeconds;
       // Ao concluir, guardamos posição 0 para a aula reabrir do início.
       // Nunca enviamos `completed: false` — numa revisão isso desmarcaria a conclusão.
