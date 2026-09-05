@@ -162,7 +162,7 @@ export function ModuleQuiz({
       setError(e?.message ?? "Não foi possível abrir o teste.");
       setPhase("idle");
     }
-  }, [courseId, moduleId, load]);
+  }, [blockedMessage, courseId, moduleId, load]);
 
   const current = questions[step];
   const currentFeedback = current ? feedback[current.id] : undefined;
