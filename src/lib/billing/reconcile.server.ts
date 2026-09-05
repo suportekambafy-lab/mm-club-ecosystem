@@ -43,8 +43,12 @@ async function listMollieSubscriptions(
 export type ReconcileResult = {
   checked: number;
   repaired: number;
+  lapsed: number;
   details: Array<{ subscriptionId: string; adopted: string; periodEnd: string }>;
 };
+
+/** Dias de tolerância antes de assumir que a subscrição caiu de facto. */
+const LAPSE_GRACE_DAYS = 2;
 
 export async function reconcileLapsedSubscriptions(
   limit = 25,
@@ -53,18 +57,24 @@ export async function reconcileLapsedSubscriptions(
   const { data: rows } = await supabaseAdmin
     .from("billing_subscriptions")
     .select(
-      "id, user_id, product_id, status, gateway, gateway_subscription_id, current_period_end, customer_id",
+      "id, user_id, product_id, price_id, status, gateway, gateway_subscription_id, current_period_end, customer_id",
     )
     .in("status", ["active", "trialing"])
     .lt("current_period_end", nowIso)
     .limit(limit);
 
-  const result: ReconcileResult = { checked: 0, repaired: 0, details: [] };
+  const result: ReconcileResult = {
+    checked: 0,
+    repaired: 0,
+    lapsed: 0,
+    details: [],
+  };
   if (!rows?.length) return result;
 
   for (const row of rows) {
     if (row.gateway !== "mollie" || !row.customer_id) continue;
     result.checked += 1;
+
     try {
       const { data: customer } = await supabaseAdmin
         .from("billing_customers")
