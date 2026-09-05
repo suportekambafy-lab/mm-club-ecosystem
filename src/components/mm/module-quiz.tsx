@@ -224,12 +224,14 @@ export function ModuleQuiz({
   // Vindo do fim da última aula do módulo: abre o teste sozinho.
   const autoRef = useRef(false);
   useEffect(() => {
-    if (!autoOpen || autoRef.current || !available || passed) return;
+    if (!autoOpen || autoRef.current || !available || passed || blockedMessage) return;
     autoRef.current = true;
     void start();
-  }, [autoOpen, available, passed, start]);
+  }, [autoOpen, available, blockedMessage, passed, start]);
 
   if (!available && !passed) return null;
+
+  const blocked = !passed && Boolean(blockedMessage);
 
   return (
     <>
@@ -242,10 +244,18 @@ export function ModuleQuiz({
                 "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1",
                 passed
                   ? "bg-emerald-500/15 text-emerald-500 ring-emerald-500/30"
-                  : "bg-primary/15 text-primary ring-primary/30",
+                  : blocked
+                    ? "bg-surface-3 text-muted-foreground ring-border"
+                    : "bg-primary/15 text-primary ring-primary/30",
               )}
             >
-              {passed ? <Trophy className="h-5 w-5" /> : <BrainCircuit className="h-5 w-5" />}
+              {passed ? (
+                <Trophy className="h-5 w-5" />
+              ) : blocked ? (
+                <Lock className="h-5 w-5" />
+              ) : (
+                <BrainCircuit className="h-5 w-5" />
+              )}
             </span>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-foreground">
@@ -254,11 +264,27 @@ export function ModuleQuiz({
               <p className="text-xs text-muted-foreground">
                 {passed
                   ? `Melhor nota: ${state?.bestScore ?? 100}%. Podes repetir para revisar.`
-                  : `${state?.questionCount ?? 5} perguntas · mínimo ${state?.passScore ?? 80}% para desbloquear o módulo seguinte${
-                      moduleLessonsCompleted ? "" : " · recomendado ver todas as aulas primeiro"
-                    }`}
+                  : blocked
+                    ? blockedMessage
+                    : `${state?.questionCount ?? 5} perguntas · mínimo ${state?.passScore ?? 80}% para desbloquear o módulo seguinte`}
               </p>
-              {error && phase === "idle" && (
+              {blocked && pendingLessons.length > 0 && (
+                <ul className="mt-2 flex flex-wrap gap-1.5">
+                  {pendingLessons.slice(0, 4).map((l) => (
+                    <li key={l.id}>
+                      <Link
+                        to="/academia/$courseId/$lessonId"
+                        params={{ courseId, lessonId: l.id }}
+                        className="inline-flex max-w-[240px] items-center gap-1 truncate rounded-full border border-border bg-surface-1 px-2.5 py-1 text-[11px] text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+                      >
+                        <ChevronRight className="h-3 w-3 shrink-0 text-primary" />
+                        <span className="truncate">{l.title}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {!blocked && error && phase === "idle" && (
                 <p className="mt-1 text-xs text-red-500">{error}</p>
               )}
             </div>
@@ -266,18 +292,31 @@ export function ModuleQuiz({
           <button
             type="button"
             onClick={start}
+            disabled={blocked}
+            aria-disabled={blocked}
             className={cn(
-              "inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-xs font-semibold transition hover:scale-[1.02]",
-              passed
-                ? "border border-border bg-surface-1 text-foreground hover:bg-surface-3"
-                : "bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-gold-soft",
+              "inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-xs font-semibold transition",
+              blocked
+                ? "cursor-not-allowed border border-border bg-surface-2 text-muted-foreground"
+                : "hover:scale-[1.02]",
+              !blocked &&
+                (passed
+                  ? "border border-border bg-surface-1 text-foreground hover:bg-surface-3"
+                  : "bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-gold-soft"),
             )}
           >
-            {passed ? <RotateCcw className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
-            {passed ? "Repetir teste" : "Começar teste"}
+            {blocked ? (
+              <Lock className="h-3.5 w-3.5" />
+            ) : passed ? (
+              <RotateCcw className="h-3.5 w-3.5" />
+            ) : (
+              <Sparkles className="h-3.5 w-3.5" />
+            )}
+            {blocked ? "Teste bloqueado" : passed ? "Repetir teste" : "Começar teste"}
           </button>
         </div>
       </div>
+
 
       {/* Modal do teste — centrado, por cima de tudo */}
       <Dialog
