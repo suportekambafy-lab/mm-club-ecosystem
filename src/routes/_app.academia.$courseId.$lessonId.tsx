@@ -83,9 +83,15 @@ function LessonPlayer() {
   // é regravado: a conclusão mantém-se e as horas/progresso não voltam a contar.
   const completedRef = useRef(completed);
   completedRef.current = completed;
+  const rowRef = useRef(row);
+  rowRef.current = row;
   const trackedSaveProgress = useCallback<SaveLessonProgress>(
     (seconds, options) => {
-      if (completedRef.current && options?.completed !== false) return Promise.resolve(null);
+      // Aula já concluída: nada a regravar — devolvemos a linha atual para que
+      // o player saiba que a conclusão está segura.
+      if (completedRef.current && options?.completed !== false) {
+        return Promise.resolve(rowRef.current);
+      }
       pingLearningActivity();
       return saveProgress(seconds, options);
     },
@@ -731,9 +737,11 @@ function TrackedVideoPlayer({
     return () => video.removeEventListener("loadedmetadata", seek);
   }, [source.kind, lessonId]);
 
+  const lastSeenRef = useRef(0);
   const persist = useCallback(
     (seconds: number, completed = false, force = false, duration?: number) => {
       const safeSeconds = Math.max(0, Math.floor(seconds));
+      lastSeenRef.current = safeSeconds;
       if (typeof duration === "number" && Number.isFinite(duration) && duration > 0) {
         durationRef.current = duration;
       }
@@ -761,11 +769,31 @@ function TrackedVideoPlayer({
       void saveProgress(completed ? 0 : safeSeconds, {
         ...(completed ? { completed: true } : {}),
         silent: true,
+      }).then((saved) => {
+        // Se a conclusão não chegou ao servidor, volta a tentar na próxima
+        // atualização de tempo em vez de a dar por perdida.
+        if (completed && !saved?.completed) completedSentRef.current = false;
       });
       if (completed) lastSavedRef.current = 0;
     },
     [saveProgress],
   );
+
+  // No telemóvel, trocar de app ou fechar o separador não dispara "pause":
+  // gravamos a posição atual assim que a página fica escondida.
+  useEffect(() => {
+    const flush = () => {
+      if (document.visibilityState === "hidden" && lastSeenRef.current > 0) {
+        persist(lastSeenRef.current, false, true);
+      }
+    };
+    document.addEventListener("visibilitychange", flush);
+    window.addEventListener("pagehide", flush);
+    return () => {
+      document.removeEventListener("visibilitychange", flush);
+      window.removeEventListener("pagehide", flush);
+    };
+  }, [persist]);
 
   useEffect(() => {
     if ((source.kind !== "bunny" && source.kind !== "panda") || !source.embedUrl) return;
