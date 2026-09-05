@@ -103,6 +103,8 @@ export function ModuleQuiz({
   pendingLessons = [],
   onPassed,
   autoOpen,
+  totalLessons,
+  completedLessonsCount,
 }: Props) {
   const load = useServerFn(getModuleQuiz);
   const submit = useServerFn(submitModuleQuiz);
