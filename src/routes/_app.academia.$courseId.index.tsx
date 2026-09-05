@@ -352,6 +352,8 @@ function ModuleAccordion({
               state={quizState}
               moduleLessonsCompleted={moduleDone}
               pendingLessons={pendingLessons}
+              totalLessons={module.lessons.length}
+              completedLessonsCount={completedCount}
               autoOpen={autoOpenQuiz}
               onPassed={onQuizPassed}
             />
