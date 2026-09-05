@@ -623,6 +623,7 @@ function TrackedVideoPlayer({
     initialSeekDoneRef.current = false;
     lastSavedRef.current = Math.max(0, Math.floor(startSeconds));
     watchedRef.current = 0;
+    durationRef.current = 0;
   }
 
   useEffect(() => {
