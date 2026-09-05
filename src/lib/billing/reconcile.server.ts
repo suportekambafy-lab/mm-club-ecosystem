@@ -90,7 +90,46 @@ export async function reconcileLapsedSubscriptions(
         .sort((a, b) =>
           String(b.createdAt ?? "").localeCompare(String(a.createdAt ?? "")),
         )[0];
-      if (!active) continue;
+      if (!active) {
+        // O gateway confirma que já não existe subscrição a pagar: a conta
+        // não pode ficar "ativa" sem acesso — entra na recuperação (que trata
+        // avisos, retentativas, grace period e suspensão pelo calendário).
+        const endedAt = row.current_period_end
+          ? new Date(row.current_period_end).getTime()
+          : 0;
+        const graceOver =
+          endedAt > 0 &&
+          Date.now() - endedAt > LAPSE_GRACE_DAYS * 86400000;
+        if (!graceOver) continue;
+
+        const { data: price } = await supabaseAdmin
+          .from("catalog_prices")
+          .select("amount_cents, currency")
+          .eq("id", row.price_id)
+          .maybeSingle();
+
+        await supabaseAdmin
+          .from("billing_subscriptions")
+          .update({ status: "past_due" })
+          .eq("id", row.id)
+          .in("status", ["active", "trialing"]);
+
+        const { startRecovery } = await import(
+          "@/lib/billing/recovery/engine.server"
+        );
+        await startRecovery({
+          subscriptionId: row.id,
+          userId: row.user_id,
+          amountCents: price?.amount_cents ?? 0,
+          currency: price?.currency ?? "EUR",
+          failureReason: "subscription_missing_at_gateway",
+          gatewayPaymentId: `lapsed:${row.id}:${row.current_period_end ?? ""}`,
+        });
+
+        result.lapsed += 1;
+        continue;
+      }
+
 
       const next = active.nextPaymentDate
         ? new Date(`${active.nextPaymentDate}T00:00:00Z`)
