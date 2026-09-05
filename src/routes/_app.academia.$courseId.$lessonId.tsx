@@ -737,9 +737,11 @@ function TrackedVideoPlayer({
     return () => video.removeEventListener("loadedmetadata", seek);
   }, [source.kind, lessonId]);
 
+  const lastSeenRef = useRef(0);
   const persist = useCallback(
     (seconds: number, completed = false, force = false, duration?: number) => {
       const safeSeconds = Math.max(0, Math.floor(seconds));
+      lastSeenRef.current = safeSeconds;
       if (typeof duration === "number" && Number.isFinite(duration) && duration > 0) {
         durationRef.current = duration;
       }
