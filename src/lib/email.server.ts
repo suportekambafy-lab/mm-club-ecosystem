@@ -828,6 +828,53 @@ export const emailTemplates = {
     };
   },
 
+  legacyWinback(
+    name: string,
+    course: { courseId: string; title: string; cover?: string | null },
+  ) {
+    const safe = escapeHtml(name);
+    const cover = course.cover
+      ? course.cover.startsWith("http")
+        ? course.cover
+        : `${APP_URL}${course.cover}`
+      : null;
+    const hero = cover
+      ? `<div style="margin:0 -40px 24px;"><img src="${cover}" alt="${escapeHtml(course.title)}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;"></div>`
+      : "";
+    const paragraphs = [
+      "O Marca Milionária Legacy já saiu. \u{1F525}",
+      "Não é mais um curso: é o passo a passo completo que uso e que já foi testado e validado por vários alunos, com resultados reais — o tipo de acompanhamento que normalmente só existe em mentorias de milhares de euros.",
+      "Dentro do Legacy vais encontrar a estrutura de marca e posicionamento, a criação e validação do produto, a loja pronta a vender, o tráfego e os criativos que trazem clientes, e a parte que quase ninguém mostra: como escalar sem perder o controlo.",
+      "Só há um detalhe: a tua conta está suspensa, por isso as aulas continuam fechadas para ti.",
+      "Atualiza o teu plano e entras hoje mesmo — no Legacy e em tudo o resto do MM Club: academia completa, aulas ao vivo, comunidade e ferramentas.",
+      "Eu entrego o caminho. A execução é tua.",
+    ]
+      .map(
+        (t) =>
+          `<p style="font-size:16px;line-height:1.7;color:#d4d4d4;margin:0 0 16px;">${escapeHtml(t)}</p>`,
+      )
+      .join("");
+    return {
+      subject: "Saiu o Marca Milionária Legacy — a tua conta está suspensa",
+      html: layout(
+        "O Marca Milionária Legacy já está aberto. Atualiza o teu plano para assistir.",
+        `${hero}
+         <div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">Academia · Já disponível</div>
+         <h1 style="font-size:28px;color:#ffffff;margin:0 0 18px;font-weight:600;line-height:1.25;">${escapeHtml(course.title)}</h1>
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 22px;">Olá ${safe},</p>
+         ${paragraphs}
+         <div style="background:#161616;border:1px solid #232323;border-radius:12px;padding:16px 18px;margin:6px 0 26px;">
+           <div style="font-size:11px;color:#c9a961;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">O teu acesso</div>
+           <div style="font-size:16px;color:#ffffff;font-weight:600;line-height:1.5;">Conta suspensa — reativa em menos de um minuto e desbloqueia o Legacy.</div>
+         </div>
+         <p style="margin:0 0 8px;">${btn("Atualizar o meu plano →", `${APP_URL}/subscricao`)}</p>
+         <p style="font-size:14px;line-height:1.65;color:#737373;margin:18px 0 0;">Já reativaste? Então começa aqui: <a href="${APP_URL}/academia/${course.courseId}" style="color:#c9a961;">${escapeHtml(course.title)}</a>.</p>`,
+      ),
+    };
+  },
+
+
+
   shortPublished(opts: {
     name: string;
     authorName: string;
