@@ -59,13 +59,14 @@ export const Route = createFileRoute("/api/public/hooks/billing-tick")({
             key: "billing-tick",
             ok: true,
             durationMs,
-            detail: { requeued, processed, failed },
+            detail: { requeued, processed, failed, reconciled },
           });
 
           return new Response(
             JSON.stringify({
               ok: true,
               requeued,
+              reconciled,
               processed,
               failed,
               durationMs,
