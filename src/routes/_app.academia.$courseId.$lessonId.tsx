@@ -612,6 +612,10 @@ function TrackedVideoPlayer({
   // que o avanço automático dispara — evita cascatas de 2–3 aulas quando o
   // vídeo abre perto do fim ou o player emite "ended" logo ao carregar.
   const watchedRef = useRef(0);
+  // Duração conhecida do vídeo: usada para concluir a aula aos ~90% (muitos
+  // membros saem antes do fim e a aula ficava eternamente "por terminar").
+  const durationRef = useRef(0);
+  const completedSentRef = useRef(false);
   const [canAutoAdvance, setCanAutoAdvance] = useState(false);
   const currentLessonIdRef = useRef(lessonId);
   if (currentLessonIdRef.current !== lessonId) {
@@ -620,6 +624,8 @@ function TrackedVideoPlayer({
     initialSeekDoneRef.current = false;
     lastSavedRef.current = Math.max(0, Math.floor(startSeconds));
     watchedRef.current = 0;
+    durationRef.current = 0;
+    completedSentRef.current = false;
   }
 
   useEffect(() => {
@@ -726,12 +732,29 @@ function TrackedVideoPlayer({
   }, [source.kind, lessonId]);
 
   const persist = useCallback(
-    (seconds: number, completed = false, force = false) => {
+    (seconds: number, completed = false, force = false, duration?: number) => {
       const safeSeconds = Math.max(0, Math.floor(seconds));
+      if (typeof duration === "number" && Number.isFinite(duration) && duration > 0) {
+        durationRef.current = duration;
+      }
       const delta = safeSeconds - lastSavedRef.current;
       // Avanço normal (não salto) conta como tempo visto.
       if (delta > 0 && delta < 60) watchedRef.current += delta;
+      // Conclusão aos ~90%: muitos membros saem antes dos créditos finais e o
+      // evento "ended" nunca chega, deixando o teste do módulo bloqueado.
+      const total = durationRef.current;
+      if (
+        !completed &&
+        !completedSentRef.current &&
+        total > 60 &&
+        safeSeconds >= total * 0.9 &&
+        watchedRef.current >= 20
+      ) {
+        completed = true;
+        force = true;
+      }
       if (!force && Math.abs(delta) < 5) return;
+      if (completed) completedSentRef.current = true;
       lastSavedRef.current = safeSeconds;
       // Ao concluir, guardamos posição 0 para a aula reabrir do início.
       // Nunca enviamos `completed: false` — numa revisão isso desmarcaria a conclusão.
@@ -750,7 +773,7 @@ function TrackedVideoPlayer({
     let cancelled = false;
 
     const onTimeUpdate = (data?: { seconds?: number; duration?: number }) => {
-      if (typeof data?.seconds === "number") persist(data.seconds);
+      if (typeof data?.seconds === "number") persist(data.seconds, false, false, data.duration);
     };
     const onSeeked = (data?: { seconds?: number }) => {
       if (typeof data?.seconds === "number") persist(data.seconds, false, true);
@@ -770,6 +793,10 @@ function TrackedVideoPlayer({
         playerRef.current = player;
         player.on("ready", () => {
           if (cancelled) return;
+          // Guardar a duração real: é com ela que concluímos a aula aos ~90%.
+          player?.getDuration?.((duration) => {
+            if (!cancelled && duration > 0) durationRef.current = duration;
+          });
           const startAt = startRef.current;
           if (startAt > 3) {
             // Só retoma se não estiver nos últimos 20s do vídeo — evita abrir a
@@ -813,12 +840,14 @@ function TrackedVideoPlayer({
       const message = payload?.message;
       if (!message || typeof message !== "string" || !message.startsWith("panda_")) return;
       const seconds = typeof payload?.currentTime === "number" ? payload.currentTime : null;
+      const rawDuration = (payload as { duration?: unknown } | null)?.duration;
+      const duration = typeof rawDuration === "number" ? rawDuration : undefined;
       if (message === "panda_ended") {
         persist(seconds ?? lastSavedRef.current, true, true);
         markEnded();
       }
-      else if (message === "panda_pause" && seconds != null) persist(seconds, false, true);
-      else if (message === "panda_timeupdate" && seconds != null) persist(seconds);
+      else if (message === "panda_pause" && seconds != null) persist(seconds, false, true, duration);
+      else if (message === "panda_timeupdate" && seconds != null) persist(seconds, false, false, duration);
     };
     if (source.kind === "panda") window.addEventListener("message", onPandaMessage);
 
@@ -856,10 +885,11 @@ function TrackedVideoPlayer({
           playsInline
           className="absolute inset-0 h-full w-full bg-black"
           onLoadedMetadata={(event) => {
+            const duration = event.currentTarget.duration || 0;
+            if (duration > 0) durationRef.current = duration;
             const startAt = startRef.current;
             if (initialSeekDoneRef.current || startAt <= 3) return;
             initialSeekDoneRef.current = true;
-            const duration = event.currentTarget.duration || 0;
             if (duration && startAt >= duration - 20) {
               startRef.current = 0;
               lastSavedRef.current = 0;
@@ -867,8 +897,12 @@ function TrackedVideoPlayer({
             }
             event.currentTarget.currentTime = Math.min(startAt, duration || startAt);
           }}
-          onTimeUpdate={(event) => persist(event.currentTarget.currentTime)}
-          onPause={(event) => persist(event.currentTarget.currentTime, false, true)}
+          onTimeUpdate={(event) =>
+            persist(event.currentTarget.currentTime, false, false, event.currentTarget.duration)
+          }
+          onPause={(event) =>
+            persist(event.currentTarget.currentTime, false, true, event.currentTarget.duration)
+          }
           onPlay={() => setEnded(false)}
           onEnded={(event) => {
             persist(event.currentTarget.duration || event.currentTarget.currentTime, true, true);
