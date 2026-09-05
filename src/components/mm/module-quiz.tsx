@@ -96,6 +96,7 @@ export function ModuleQuiz({
   moduleTitle,
   state,
   moduleLessonsCompleted,
+  pendingLessons = [],
   onPassed,
   autoOpen,
 }: Props) {
