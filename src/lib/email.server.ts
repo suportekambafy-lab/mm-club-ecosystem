@@ -21,6 +21,7 @@ export type EmailKind =
   | "absence_ladder"
   | "upcoming_courses"
   | "legacy_teaser"
+  | "legacy_winback"
   | "course_released"
   | "community_post"
   | "short_published"
