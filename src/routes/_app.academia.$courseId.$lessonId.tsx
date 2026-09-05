@@ -773,7 +773,7 @@ function TrackedVideoPlayer({
     let cancelled = false;
 
     const onTimeUpdate = (data?: { seconds?: number; duration?: number }) => {
-      if (typeof data?.seconds === "number") persist(data.seconds);
+      if (typeof data?.seconds === "number") persist(data.seconds, false, false, data.duration);
     };
     const onSeeked = (data?: { seconds?: number }) => {
       if (typeof data?.seconds === "number") persist(data.seconds, false, true);
