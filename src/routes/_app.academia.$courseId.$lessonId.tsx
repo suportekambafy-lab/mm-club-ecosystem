@@ -779,6 +779,22 @@ function TrackedVideoPlayer({
     [saveProgress],
   );
 
+  // No telemóvel, trocar de app ou fechar o separador não dispara "pause":
+  // gravamos a posição atual assim que a página fica escondida.
+  useEffect(() => {
+    const flush = () => {
+      if (document.visibilityState === "hidden" && lastSeenRef.current > 0) {
+        persist(lastSeenRef.current, false, true);
+      }
+    };
+    document.addEventListener("visibilitychange", flush);
+    window.addEventListener("pagehide", flush);
+    return () => {
+      document.removeEventListener("visibilitychange", flush);
+      window.removeEventListener("pagehide", flush);
+    };
+  }, [persist]);
+
   useEffect(() => {
     if ((source.kind !== "bunny" && source.kind !== "panda") || !source.embedUrl) return;
     let player: PlayerJsPlayer | null = null;
