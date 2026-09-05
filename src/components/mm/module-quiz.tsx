@@ -32,6 +32,9 @@ type Props = {
   moduleLessonsCompleted: boolean;
   /** Aulas do módulo ainda não concluídas (bloqueiam o teste). */
   pendingLessons?: Array<{ id: string; title: string }>;
+  /** Total de aulas do módulo e quantas já estão concluídas (para a % de progresso). */
+  totalLessons?: number;
+  completedLessonsCount?: number;
   onPassed: () => void;
   /** Abre e arranca o teste automaticamente (vindo do fim da última aula). */
   autoOpen?: boolean;
