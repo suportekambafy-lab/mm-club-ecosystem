@@ -615,6 +615,7 @@ function TrackedVideoPlayer({
   // Duração conhecida do vídeo: usada para concluir a aula aos ~90% (muitos
   // membros saem antes do fim e a aula ficava eternamente "por terminar").
   const durationRef = useRef(0);
+  const completedSentRef = useRef(false);
   const [canAutoAdvance, setCanAutoAdvance] = useState(false);
   const currentLessonIdRef = useRef(lessonId);
   if (currentLessonIdRef.current !== lessonId) {
