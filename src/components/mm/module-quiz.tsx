@@ -281,6 +281,27 @@ export function ModuleQuiz({
                     ? blockedMessage
                     : `${state?.questionCount ?? 5} perguntas · mínimo ${state?.passScore ?? 80}% para desbloquear o módulo seguinte`}
               </p>
+              {blocked && total > 0 && (
+                <div className="mt-2 max-w-[320px]">
+                  <div
+                    className="h-1.5 w-full overflow-hidden rounded-full bg-surface-3"
+                    role="progressbar"
+                    aria-valuenow={progressPct}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label="Progresso do módulo"
+                  >
+                    <div
+                      className="h-full rounded-full bg-primary transition-all"
+                      style={{ width: `${progressPct}%` }}
+                    />
+                  </div>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    {done}/{total} aulas concluídas · faltam {remainingPct}%. Uma aula conta como
+                    vista quando chegas a 90% do vídeo.
+                  </p>
+                </div>
+              )}
               {blocked && pendingLessons.length > 0 && (
                 <ul className="mt-2 flex flex-wrap gap-1.5">
                   {pendingLessons.slice(0, 4).map((l) => (
