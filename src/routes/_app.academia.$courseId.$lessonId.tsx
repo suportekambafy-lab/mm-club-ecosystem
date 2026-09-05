@@ -793,6 +793,10 @@ function TrackedVideoPlayer({
         playerRef.current = player;
         player.on("ready", () => {
           if (cancelled) return;
+          // Guardar a duração real: é com ela que concluímos a aula aos ~90%.
+          player?.getDuration?.((duration) => {
+            if (!cancelled && duration > 0) durationRef.current = duration;
+          });
           const startAt = startRef.current;
           if (startAt > 3) {
             // Só retoma se não estiver nos últimos 20s do vídeo — evita abrir a
