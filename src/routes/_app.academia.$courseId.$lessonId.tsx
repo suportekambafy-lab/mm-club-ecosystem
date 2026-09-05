@@ -885,10 +885,11 @@ function TrackedVideoPlayer({
           playsInline
           className="absolute inset-0 h-full w-full bg-black"
           onLoadedMetadata={(event) => {
+            const duration = event.currentTarget.duration || 0;
+            if (duration > 0) durationRef.current = duration;
             const startAt = startRef.current;
             if (initialSeekDoneRef.current || startAt <= 3) return;
             initialSeekDoneRef.current = true;
-            const duration = event.currentTarget.duration || 0;
             if (duration && startAt >= duration - 20) {
               startRef.current = 0;
               lastSavedRef.current = 0;
@@ -896,8 +897,12 @@ function TrackedVideoPlayer({
             }
             event.currentTarget.currentTime = Math.min(startAt, duration || startAt);
           }}
-          onTimeUpdate={(event) => persist(event.currentTarget.currentTime)}
-          onPause={(event) => persist(event.currentTarget.currentTime, false, true)}
+          onTimeUpdate={(event) =>
+            persist(event.currentTarget.currentTime, false, false, event.currentTarget.duration)
+          }
+          onPause={(event) =>
+            persist(event.currentTarget.currentTime, false, true, event.currentTarget.duration)
+          }
           onPlay={() => setEnded(false)}
           onEnded={(event) => {
             persist(event.currentTarget.duration || event.currentTarget.currentTime, true, true);
