@@ -612,6 +612,9 @@ function TrackedVideoPlayer({
   // que o avanço automático dispara — evita cascatas de 2–3 aulas quando o
   // vídeo abre perto do fim ou o player emite "ended" logo ao carregar.
   const watchedRef = useRef(0);
+  // Duração conhecida do vídeo: usada para concluir a aula aos ~90% (muitos
+  // membros saem antes do fim e a aula ficava eternamente "por terminar").
+  const durationRef = useRef(0);
   const [canAutoAdvance, setCanAutoAdvance] = useState(false);
   const currentLessonIdRef = useRef(lessonId);
   if (currentLessonIdRef.current !== lessonId) {
