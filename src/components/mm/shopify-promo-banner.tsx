@@ -3,7 +3,7 @@ import { ArrowUpRight, X, Check, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const SHOPIFY_URL = "https://shopify.pxf.io/c/7738721/1061744/13624";
-const SEEN_KEY = "mm_shopify_promo_seen_v1";
+
 
 /** Verde institucional da Shopify — cor de marca de terceiro, não do tema MM. */
 const BRAND = "#008060";
@@ -20,11 +20,11 @@ export function ShopifyPromoBanner() {
   useEffect(() => {
     let alive = true;
     (async () => {
-      if (typeof window !== "undefined" && window.localStorage.getItem(SEEN_KEY)) return;
       const { data: session } = await supabase.auth.getSession();
       const uid = session.session?.user?.id;
       if (!uid) return;
       const { data } = await supabase.rpc("has_role", { _user_id: uid, _role: "admin" });
+      // Enquanto está em pré-lançamento, mostra sempre ao admin (sem memória de "já vi").
       if (alive && data) window.setTimeout(() => alive && setOpen(true), 900);
     })();
     return () => {
@@ -34,19 +34,13 @@ export function ShopifyPromoBanner() {
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && dismiss();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const dismiss = () => {
-    setOpen(false);
-    try {
-      window.localStorage.setItem(SEEN_KEY, "1");
-    } catch {
-      /* storage indisponível */
-    }
-  };
+  const dismiss = () => setOpen(false);
+
 
   if (!open) return null;
 
