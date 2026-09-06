@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ArrowUpRight, X, Check } from "lucide-react";
+import { pushOverlay } from "@/lib/quiz-visibility";
 
 const SHOPIFY_URL = "https://shopify.pxf.io/c/7738721/1061744/13624";
 const SEEN_KEY = "mm_shopify_promo_seen_at";
@@ -45,6 +46,12 @@ export function ShopifyPromoBanner() {
   };
 
 
+
+  useEffect(() => {
+    if (!open) return;
+    const release = pushOverlay();
+    return release;
+  }, [open]);
 
   if (!open) return null;
 
