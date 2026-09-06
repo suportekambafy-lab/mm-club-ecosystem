@@ -79,8 +79,16 @@ export function ShopifyPromoBanner() {
           className="relative px-6 pb-8 pt-9 text-center"
           style={{ background: `linear-gradient(160deg, ${BRAND} 0%, #004c3f 100%)` }}
         >
-          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25">
-            <ShoppingBag className="h-7 w-7 text-white" />
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-lg ring-1 ring-white/40">
+            <img
+              src="https://www.google.com/s2/favicons?domain=shopify.com&sz=128"
+              alt="Logotipo Shopify"
+              width={32}
+              height={32}
+              loading="lazy"
+              decoding="async"
+              className="h-8 w-8 object-contain"
+            />
           </span>
           <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/70">
             Oferta parceiro MM Club
