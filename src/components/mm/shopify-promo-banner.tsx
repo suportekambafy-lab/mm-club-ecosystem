@@ -53,7 +53,7 @@ export function ShopifyPromoBanner({
   trigger = "dashboard",
   enabled = true,
 }: {
-  trigger?: ShopifyPromoTrigger;
+  trigger?: Exclude<ShopifyPromoTrigger, "shorts">;
   enabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
