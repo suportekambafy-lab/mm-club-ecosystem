@@ -113,3 +113,68 @@ const SHOPIFY_TOPIC = /(shopify|loja\s*online|dropship|checkout|e-?commerce)/i;
 export function isShopifyContext(...texts: Array<string | null | undefined>): boolean {
   return texts.some((t) => !!t && SHOPIFY_TOPIC.test(t));
 }
+
+/* ------------------------------------------------------------------ *
+ * Anúncio no vídeo da aula (estilo YouTube: aparece no início e no
+ * fim da aula, com botão "Ignorar anúncio").
+ *
+ * Estado próprio, mas respeita o clique: quem já abriu a conta pelo
+ * link do clube nunca volta a ver nada.
+ * ------------------------------------------------------------------ */
+
+const AD_KEY = "mm_shopify_ad_v1";
+const MAX_ADS = 6;
+const AD_MIN_GAP = 6 * 60 * 60 * 1000; // 6 horas entre anúncios
+
+type AdState = { count: number; lastAt: number; seen: Record<string, number> };
+
+function readAd(): AdState {
+  const base: AdState = { count: 0, lastAt: 0, seen: {} };
+  try {
+    const raw = window.localStorage.getItem(AD_KEY);
+    if (!raw) return base;
+    const p = JSON.parse(raw) as Partial<AdState>;
+    return {
+      count: Number(p.count) || 0,
+      lastAt: Number(p.lastAt) || 0,
+      seen: p.seen && typeof p.seen === "object" ? p.seen : {},
+    };
+  } catch {
+    return base;
+  }
+}
+
+function writeAd(state: AdState) {
+  try {
+    window.localStorage.setItem(AD_KEY, JSON.stringify(state));
+  } catch {
+    /* storage indisponível */
+  }
+}
+
+function adSlot(lessonId: string, trigger: ShopifyPromoTrigger) {
+  return `${lessonId}:${trigger}`;
+}
+
+/** Pode mostrar o anúncio agora, nesta aula e neste momento? */
+export function canShowShopifyAd(lessonId: string, trigger: ShopifyPromoTrigger): boolean {
+  if (read().clicked) return false;
+  const state = readAd();
+  if (state.count >= MAX_ADS) return false;
+  if (state.seen[adSlot(lessonId, trigger)]) return false;
+  const now = Date.now();
+  // O anúncio de fim de aula segue logo o da abertura, por isso não
+  // aplicamos intervalo a esse momento.
+  if (trigger !== "lesson-end" && state.lastAt && now - state.lastAt < AD_MIN_GAP) return false;
+  return true;
+}
+
+/** Registra que o anúncio foi mostrado nesta aula/momento. */
+export function markShopifyAdShown(lessonId: string, trigger: ShopifyPromoTrigger) {
+  const state = readAd();
+  writeAd({
+    count: state.count + 1,
+    lastAt: Date.now(),
+    seen: { ...state.seen, [adSlot(lessonId, trigger)]: Date.now() },
+  });
+}
