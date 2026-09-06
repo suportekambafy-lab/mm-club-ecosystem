@@ -13,6 +13,8 @@ import { useConfirm } from "@/components/mm/confirm-dialog";
 import { notifyShortPublishedByEmail, notifyShortReplyByEmail } from "@/lib/shorts-email.functions";
 import { runModeration } from "@/lib/moderation-client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ShopifyShortAd } from "@/components/mm/shopify-short-ad";
+import { canShowShopifyAd } from "@/lib/shopify-promo";
 
 const SHORTS_PAGE_SIZE = 6;
 
