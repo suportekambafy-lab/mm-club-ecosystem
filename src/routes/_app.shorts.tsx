@@ -451,22 +451,35 @@ function ShortsFeed({
         style={{ scrollbarWidth: "none" }}
       >
         {shorts.map((s, i) => (
-          <ShortItem
-            key={s.id}
-            idx={i}
-            short={s}
-            active={i === activeIdx}
-            mounted={Math.abs(i - activeIdx) <= 2}
-            compact={commentsOpen}
-            muted={muted}
-            onToggleMute={() => setMuted((m) => !m)}
-            onToggleLike={() => onToggleLike(s)}
-            onOpenComments={() => setCommentsFor(s)}
-            onCloseComments={() => setCommentsFor(null)}
-            commentsOpen={commentsOpen}
-            onDelete={() => onDelete(s.id)}
-            canDelete={currentUserId === s.author_id}
-          />
+          <Fragment key={s.id}>
+            <ShortItem
+              idx={i}
+              short={s}
+              active={i === activeIdx && !activeAd}
+              mounted={Math.abs(i - activeIdx) <= 2}
+              compact={commentsOpen}
+              muted={muted}
+              onToggleMute={() => setMuted((m) => !m)}
+              onToggleLike={() => onToggleLike(s)}
+              onOpenComments={() => setCommentsFor(s)}
+              onCloseComments={() => setCommentsFor(null)}
+              commentsOpen={commentsOpen}
+              onDelete={() => onDelete(s.id)}
+              canDelete={currentUserId === s.author_id}
+            />
+            {!commentsOpen && adSlots.has(i + 1) && (
+              <ShopifyShortAd
+                slotId={`shorts:${i + 1}`}
+                active={activeAd === `shorts:${i + 1}`}
+                onSkip={() => {
+                  const el = containerRef.current?.querySelector<HTMLElement>(
+                    `[data-short-idx="${i + 1}"]`,
+                  );
+                  el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+              />
+            )}
+          </Fragment>
         ))}
       </div>
       {commentsFor && (
