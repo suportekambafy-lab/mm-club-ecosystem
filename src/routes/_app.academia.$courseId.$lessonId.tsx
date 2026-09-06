@@ -29,6 +29,9 @@ import { LessonNotes } from "@/components/mm/lesson-notes";
 import { CourseComments } from "@/components/mm/course-comments";
 import { pingLearningActivity, recordLessonCompleted } from "@/lib/learning-activity";
 import { useCourseQuiz, lockedModuleIds } from "@/hooks/use-course-quiz";
+import { ShopifyPromoBanner } from "@/components/mm/shopify-promo-banner";
+import { isShopifyContext } from "@/lib/shopify-promo";
+
 
 
 export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
