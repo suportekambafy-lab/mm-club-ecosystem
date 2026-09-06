@@ -17,7 +17,7 @@ const KEY = "mm_shopify_promo_v2";
 const DAY = 24 * 60 * 60 * 1000;
 
 /** Momentos em que a oferta pode surgir. */
-export type ShopifyPromoTrigger = "dashboard" | "lesson-start" | "lesson-end";
+export type ShopifyPromoTrigger = "dashboard" | "lesson-start" | "lesson-end" | "shorts";
 
 type PromoState = {
   firstSeenAt: number;
