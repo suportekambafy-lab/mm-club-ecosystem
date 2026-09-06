@@ -47,6 +47,12 @@ export function ShopifyPromoBanner() {
 
 
 
+  useEffect(() => {
+    if (!open) return;
+    const release = pushOverlay();
+    return release;
+  }, [open]);
+
   if (!open) return null;
 
   return (
