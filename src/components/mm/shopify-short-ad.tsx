@@ -23,10 +23,13 @@ export function ShopifyShortAd({
   slotId,
   active,
   onSkip,
+  isLast = false,
 }: {
   slotId: string;
   active: boolean;
   onSkip: () => void;
+  /** Não há mais Shorts depois deste anúncio. */
+  isLast?: boolean;
 }) {
   const [left, setLeft] = useState(SKIP_AFTER);
   const [registered, setRegistered] = useState(false);
@@ -77,7 +80,7 @@ export function ShopifyShortAd({
               onClick={onSkip}
               className="flex items-center gap-1.5 rounded-md bg-black/70 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-black/85 animate-in fade-in slide-in-from-right-2"
             >
-              Ignorar
+              {isLast ? "Voltar ao início" : "Ignorar"}
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
           )}
@@ -130,10 +133,10 @@ export function ShopifyShortAd({
         <button
           type="button"
           onClick={onSkip}
-          aria-label="Continuar a ver Shorts"
+          aria-label={isLast ? "Voltar ao início dos Shorts" : "Continuar a ver Shorts"}
           className="absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-10 mx-auto flex w-fit items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 text-[11px] font-medium text-white/80 backdrop-blur transition hover:bg-black/60 lg:bottom-6"
         >
-          Continuar a ver Shorts
+          {isLast ? "Voltar ao início" : "Continuar a ver Shorts"}
           <ChevronDown className="h-3.5 w-3.5 animate-bounce" />
         </button>
       </div>
