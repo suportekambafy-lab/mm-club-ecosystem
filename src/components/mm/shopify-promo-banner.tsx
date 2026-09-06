@@ -1,73 +1,145 @@
 import { useEffect, useState } from "react";
-import { ArrowUpRight, ShoppingBag, Eye } from "lucide-react";
+import { ArrowUpRight, ShoppingBag, X, Check, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const SHOPIFY_URL = "https://shopify.pxf.io/c/7738721/1061744/13624";
+const SEEN_KEY = "mm_shopify_promo_seen_v1";
+
+/** Verde institucional da Shopify — cor de marca de terceiro, não do tema MM. */
+const BRAND = "#008060";
+const BRAND_SOFT = "rgba(0, 128, 96, 0.12)";
 
 /**
- * Banner de oferta Shopify.
- * Por agora só é visível para administradores (pré-lançamento).
- * Para abrir a todos os membros, remover o bloco de verificação de role.
+ * Popup de oferta Shopify (3 meses grátis).
+ * Por agora só aparece a administradores (pré-lançamento).
+ * Para abrir a todos os membros, remover a verificação de role.
  */
 export function ShopifyPromoBanner() {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
     (async () => {
+      if (typeof window !== "undefined" && window.localStorage.getItem(SEEN_KEY)) return;
       const { data: session } = await supabase.auth.getSession();
       const uid = session.session?.user?.id;
       if (!uid) return;
-      const { data } = await supabase.rpc("has_role", {
-        _user_id: uid,
-        _role: "admin",
-      });
-      if (alive) setIsAdmin(Boolean(data));
+      const { data } = await supabase.rpc("has_role", { _user_id: uid, _role: "admin" });
+      if (alive && data) window.setTimeout(() => alive && setOpen(true), 900);
     })();
     return () => {
       alive = false;
     };
   }, []);
 
-  if (!isAdmin) return null;
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && dismiss();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  const dismiss = () => {
+    setOpen(false);
+    try {
+      window.localStorage.setItem(SEEN_KEY, "1");
+    } catch {
+      /* storage indisponível */
+    }
+  };
+
+  if (!open) return null;
 
   return (
-    <a
-      href={SHOPIFY_URL}
-      target="_blank"
-      rel="noreferrer noopener"
-      className="group surface-card relative flex flex-col gap-4 overflow-hidden rounded-3xl border border-primary/30 p-5 transition hover:border-primary/60 sm:flex-row sm:items-center sm:justify-between sm:p-6"
+    <div
+      className="fixed inset-0 z-[90] flex items-end justify-center p-4 sm:items-center"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Oferta Shopify: 3 meses grátis"
     >
-      <span className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
+      <button
+        type="button"
+        aria-label="Fechar"
+        onClick={dismiss}
+        className="absolute inset-0 bg-background/80 backdrop-blur-sm animate-in fade-in"
+      />
 
-      <span className="relative flex items-start gap-4">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-primary/25">
-          <ShoppingBag className="h-5 w-5" />
-        </span>
-        <span className="min-w-0">
-          <span className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary">
-              Oferta parceiro
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-border bg-background/60 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              <Eye className="h-2.5 w-2.5" />
-              Só visível para ti
-            </span>
-          </span>
-          <span className="mt-2 block font-display text-xl leading-tight text-foreground sm:text-2xl">
-            Ganha 3 meses grátis no Shopify hoje.
-          </span>
-          <span className="mt-1 block text-[13px] leading-relaxed text-muted-foreground">
-            Abre a tua nova conta pelo link do MM Club e monta a loja das aulas sem pagar os
-            primeiros 3 meses.
-          </span>
-        </span>
-      </span>
+      <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-border bg-surface-1 shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-bottom-4">
+        <button
+          type="button"
+          onClick={dismiss}
+          aria-label="Fechar"
+          className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-background/70 text-muted-foreground transition hover:text-foreground"
+        >
+          <X className="h-4 w-4" />
+        </button>
 
-      <span className="relative inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition group-hover:brightness-110 sm:self-auto">
-        Criar conta
-        <ArrowUpRight className="h-4 w-4" />
-      </span>
-    </a>
+        {/* Topo estilo painel de loja Shopify */}
+        <div
+          className="relative px-6 pb-8 pt-9 text-center"
+          style={{ background: `linear-gradient(160deg, ${BRAND} 0%, #004c3f 100%)` }}
+        >
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25">
+            <ShoppingBag className="h-7 w-7 text-white" />
+          </span>
+          <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/70">
+            Oferta parceiro MM Club
+          </p>
+          <p className="mt-2 font-display text-3xl leading-[1.05] text-white">
+            3 meses grátis
+            <br />
+            no Shopify
+          </p>
+          <p className="mt-2 text-sm text-white/80">
+            Ao abrir a tua nova conta pelo link do clube.
+          </p>
+        </div>
+
+        <div className="space-y-4 p-6">
+          <ul className="space-y-2.5">
+            {[
+              "Monta a loja exatamente como nas aulas",
+              "Sem pagar a plataforma nos primeiros 3 meses",
+              "Pagamentos, envios e domínio incluídos",
+            ].map((item) => (
+              <li key={item} className="flex items-start gap-2.5 text-[13px] text-muted-foreground">
+                <span
+                  className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full"
+                  style={{ background: BRAND_SOFT, color: BRAND }}
+                >
+                  <Check className="h-2.5 w-2.5" />
+                </span>
+                {item}
+              </li>
+            ))}
+          </ul>
+
+          <a
+            href={SHOPIFY_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            onClick={dismiss}
+            className="flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold text-white transition hover:brightness-110"
+            style={{ background: BRAND }}
+          >
+            Criar a minha loja agora
+            <ArrowUpRight className="h-4 w-4" />
+          </a>
+
+          <button
+            type="button"
+            onClick={dismiss}
+            className="w-full text-center text-xs text-muted-foreground transition hover:text-foreground"
+          >
+            Agora não
+          </button>
+
+          <p className="flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70">
+            <Eye className="h-2.5 w-2.5" />
+            Só visível para ti
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
