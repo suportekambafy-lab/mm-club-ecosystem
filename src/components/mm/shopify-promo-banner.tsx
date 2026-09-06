@@ -1,57 +1,100 @@
 import { useEffect, useState } from "react";
 import { ArrowUpRight, X, Check } from "lucide-react";
 import { pushOverlay } from "@/lib/quiz-visibility";
+import {
+  canShowShopifyPromo,
+  markShopifyPromoClicked,
+  markShopifyPromoShown,
+  touchShopifyPromo,
+  type ShopifyPromoTrigger,
+} from "@/lib/shopify-promo";
 
 const SHOPIFY_URL = "https://shopify.pxf.io/c/7738721/1061744/13624";
-const SEEN_KEY = "mm_shopify_promo_seen_at";
-const REPEAT_MS = 7 * 24 * 60 * 60 * 1000; // volta a aparecer uma vez por semana
 
 /** Verde institucional da Shopify — cor de marca de terceiro, não do tema MM. */
 const BRAND = "#008060";
 const BRAND_SOFT = "rgba(0, 128, 96, 0.12)";
 
+/** Texto por momento: quanto mais próximo da aula, mais direto o convite. */
+const COPY: Record<
+  ShopifyPromoTrigger,
+  { eyebrow: string; kicker: string; sub: string; cta: string; delay: number }
+> = {
+  dashboard: {
+    eyebrow: "Oferta parceiro MM Club",
+    kicker: "3 meses grátis\nno Shopify",
+    sub: "Ao abrir a tua nova conta pelo link do clube.",
+    cta: "Criar a minha loja agora",
+    delay: 1500,
+  },
+  "lesson-start": {
+    eyebrow: "Antes de começares",
+    kicker: "3 meses grátis\nno Shopify",
+    sub: "Abre a conta pelo link do clube e acompanha esta aula a montar a tua loja.",
+    cta: "Abrir a minha conta",
+    delay: 2500,
+  },
+  "lesson-end": {
+    eyebrow: "Passa à prática",
+    kicker: "3 meses grátis\nno Shopify",
+    sub: "Acabaste a aula — aplica agora o que aprendeste na tua própria loja.",
+    cta: "Montar a minha loja",
+    delay: 1200,
+  },
+};
+
 /**
- * Popup de oferta Shopify (3 meses grátis) — visível a todos os membros,
- * no máximo uma vez por semana por dispositivo.
+ * Popup de oferta Shopify (3 meses grátis).
+ *
+ * A frequência e os momentos são decididos em `@/lib/shopify-promo`: quem
+ * clica nunca volta a ver, há no máximo 4 aparições e nunca duas no mesmo dia.
  */
-export function ShopifyPromoBanner() {
+export function ShopifyPromoBanner({
+  trigger = "dashboard",
+  enabled = true,
+}: {
+  trigger?: ShopifyPromoTrigger;
+  enabled?: boolean;
+}) {
   const [open, setOpen] = useState(false);
+  const copy = COPY[trigger];
 
   useEffect(() => {
-    let seen = 0;
-    try {
-      seen = Number(window.localStorage.getItem(SEEN_KEY) ?? 0);
-    } catch {
-      /* storage indisponível */
-    }
-    if (Date.now() - seen < REPEAT_MS) return;
-    const id = window.setTimeout(() => setOpen(true), 900);
-    return () => window.clearTimeout(id);
+    touchShopifyPromo();
   }, []);
 
   useEffect(() => {
+    if (!enabled || open) return;
+    if (!canShowShopifyPromo(trigger)) return;
+    const id = window.setTimeout(() => {
+      // Reconfirma no momento de abrir (evita dois popups no mesmo dia).
+      if (!canShowShopifyPromo(trigger)) return;
+      markShopifyPromoShown();
+      setOpen(true);
+    }, copy.delay);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, trigger]);
+
+  useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && dismiss();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
-
-  const dismiss = () => {
-    setOpen(false);
-    try {
-      window.localStorage.setItem(SEEN_KEY, String(Date.now()));
-    } catch {
-      /* storage indisponível */
-    }
-  };
-
-
 
   useEffect(() => {
     if (!open) return;
     const release = pushOverlay();
     return release;
   }, [open]);
+
+  const dismiss = () => setOpen(false);
+
+  const handleClick = () => {
+    markShopifyPromoClicked();
+    setOpen(false);
+  };
 
   if (!open) return null;
 
@@ -96,16 +139,12 @@ export function ShopifyPromoBanner() {
             />
           </span>
           <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/70">
-            Oferta parceiro MM Club
+            {copy.eyebrow}
           </p>
-          <p className="mt-2 font-display text-3xl leading-[1.05] text-white">
-            3 meses grátis
-            <br />
-            no Shopify
+          <p className="mt-2 whitespace-pre-line font-display text-3xl leading-[1.05] text-white">
+            {copy.kicker}
           </p>
-          <p className="mt-2 text-sm text-white/80">
-            Ao abrir a tua nova conta pelo link do clube.
-          </p>
+          <p className="mt-2 text-sm text-white/80">{copy.sub}</p>
         </div>
 
         <div className="space-y-4 p-6">
@@ -131,11 +170,11 @@ export function ShopifyPromoBanner() {
             href={SHOPIFY_URL}
             target="_blank"
             rel="noreferrer noopener"
-            onClick={dismiss}
+            onClick={handleClick}
             className="flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold text-white transition hover:brightness-110"
             style={{ background: BRAND }}
           >
-            Criar a minha loja agora
+            {copy.cta}
             <ArrowUpRight className="h-4 w-4" />
           </a>
 
