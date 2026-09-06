@@ -139,11 +139,6 @@ export function ShopifyPromoBanner() {
           >
             Agora não
           </button>
-
-          <p className="flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70">
-            <Eye className="h-2.5 w-2.5" />
-            Só visível para ti
-          </p>
         </div>
       </div>
     </div>
