@@ -29,7 +29,7 @@ import { LessonNotes } from "@/components/mm/lesson-notes";
 import { CourseComments } from "@/components/mm/course-comments";
 import { pingLearningActivity, recordLessonCompleted } from "@/lib/learning-activity";
 import { useCourseQuiz, lockedModuleIds } from "@/hooks/use-course-quiz";
-import { ShopifyPromoBanner } from "@/components/mm/shopify-promo-banner";
+import { ShopifyVideoAd } from "@/components/mm/shopify-video-ad";
 import { isShopifyContext } from "@/lib/shopify-promo";
 
 
@@ -232,7 +232,8 @@ function LessonPlayer() {
                 </div>
               </div>
             ) : loaded ? (
-              <TrackedVideoPlayer
+              <div className="relative w-full shrink-0">
+                <TrackedVideoPlayer
                 lessonId={current.lesson.id}
                 title={current.lesson.title}
                 source={source}
@@ -260,8 +261,18 @@ function LessonPlayer() {
                           })
                       : undefined
                 }
-                advanceLabel={quizPending ? "Fazer teste" : undefined}
-              />
+                  advanceLabel={quizPending ? "Fazer teste" : undefined}
+                />
+                <ShopifyVideoAd
+                  lessonId={current.lesson.id}
+                  trigger={completed ? "lesson-end" : "lesson-start"}
+                  enabled={isShopifyContext(
+                    current.lesson.title,
+                    current.module.title,
+                    course.title,
+                  )}
+                />
+              </div>
 
             ) : (
               <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
