@@ -366,12 +366,13 @@ function ShortsFeed({
   // cada 7. A elegibilidade é avaliada uma vez por posição, para o anúncio
   // não desaparecer debaixo dos pés de quem está a fazer scroll.
   const adEligibleRef = useRef<Map<number, boolean>>(new Map());
+  const firstSlotRef = useRef<number | null>(null);
   const adSlots = useMemo(() => {
     const slots = new Set<number>();
     const total = shorts.length;
     if (typeof window === "undefined" || total < 2) return slots;
-    const first = Math.min(3, total);
-    for (let after = first; after <= total; after += 7) {
+    if (firstSlotRef.current === null) firstSlotRef.current = Math.min(3, total);
+    for (let after = firstSlotRef.current; after <= total; after += 7) {
       let ok = adEligibleRef.current.get(after);
       if (ok === undefined) {
         ok = canShowShopifyAd(`shorts:${after}`, "shorts");
