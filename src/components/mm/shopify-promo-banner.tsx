@@ -1,45 +1,49 @@
 import { useEffect, useState } from "react";
-import { ArrowUpRight, X, Check, Eye } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { ArrowUpRight, X, Check } from "lucide-react";
 
 const SHOPIFY_URL = "https://shopify.pxf.io/c/7738721/1061744/13624";
-
+const SEEN_KEY = "mm_shopify_promo_seen_at";
+const REPEAT_MS = 7 * 24 * 60 * 60 * 1000; // volta a aparecer uma vez por semana
 
 /** Verde institucional da Shopify — cor de marca de terceiro, não do tema MM. */
 const BRAND = "#008060";
 const BRAND_SOFT = "rgba(0, 128, 96, 0.12)";
 
 /**
- * Popup de oferta Shopify (3 meses grátis).
- * Por agora só aparece a administradores (pré-lançamento).
- * Para abrir a todos os membros, remover a verificação de role.
+ * Popup de oferta Shopify (3 meses grátis) — visível a todos os membros,
+ * no máximo uma vez por semana por dispositivo.
  */
 export function ShopifyPromoBanner() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    let alive = true;
-    (async () => {
-      const { data: session } = await supabase.auth.getSession();
-      const uid = session.session?.user?.id;
-      if (!uid) return;
-      const { data } = await supabase.rpc("has_role", { _user_id: uid, _role: "admin" });
-      // Enquanto está em pré-lançamento, mostra sempre ao admin (sem memória de "já vi").
-      if (alive && data) window.setTimeout(() => alive && setOpen(true), 900);
-    })();
-    return () => {
-      alive = false;
-    };
+    let seen = 0;
+    try {
+      seen = Number(window.localStorage.getItem(SEEN_KEY) ?? 0);
+    } catch {
+      /* storage indisponível */
+    }
+    if (Date.now() - seen < REPEAT_MS) return;
+    const id = window.setTimeout(() => setOpen(true), 900);
+    return () => window.clearTimeout(id);
   }, []);
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && dismiss();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const dismiss = () => setOpen(false);
+  const dismiss = () => {
+    setOpen(false);
+    try {
+      window.localStorage.setItem(SEEN_KEY, String(Date.now()));
+    } catch {
+      /* storage indisponível */
+    }
+  };
+
 
 
   if (!open) return null;
