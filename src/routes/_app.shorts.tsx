@@ -485,11 +485,13 @@ function ShortsFeed({
               <ShopifyShortAd
                 slotId={`shorts:${i + 1}`}
                 active={activeAd === `shorts:${i + 1}`}
+                isLast={i + 1 >= shorts.length}
                 onSkip={() => {
-                  const el = containerRef.current?.querySelector<HTMLElement>(
-                    `[data-short-idx="${i + 1}"]`,
-                  );
-                  el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  const root = containerRef.current;
+                  const next =
+                    root?.querySelector<HTMLElement>(`[data-short-idx="${i + 1}"]`) ??
+                    root?.querySelector<HTMLElement>('[data-short-idx="0"]');
+                  next?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
               />
             )}
