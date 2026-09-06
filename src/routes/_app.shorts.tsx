@@ -356,19 +356,36 @@ function ShortsFeed({
   const containerRef = useRef<HTMLDivElement>(null);
   const [muted, setMuted] = useState(true);
   const [activeIdx, setActiveIdx] = useState(0);
+  const [activeAd, setActiveAd] = useState<string | null>(null);
   const viewedRef = useRef<Set<string>>(new Set());
+
+  // Anúncio Shopify a cada 5 Shorts (decidido uma vez por sessão, para o
+  // anúncio não desaparecer debaixo dos pés de quem está a fazer scroll).
+  const [adSlots] = useState<Set<number>>(() => {
+    const slots = new Set<number>();
+    if (typeof window === "undefined") return slots;
+    for (const after of [5, 11, 18]) {
+      if (canShowShopifyAd(`shorts:${after}`, "shorts")) slots.add(after);
+    }
+    return slots;
+  });
 
   // IntersectionObserver to detect active short
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    const items = container.querySelectorAll<HTMLElement>("[data-short-idx]");
+    const items = container.querySelectorAll<HTMLElement>("[data-short-idx], [data-shorts-ad]");
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
           if (e.isIntersecting && e.intersectionRatio > 0.6) {
-            const idx = Number((e.target as HTMLElement).dataset.shortIdx);
-            setActiveIdx(idx);
+            const el = e.target as HTMLElement;
+            if (el.dataset.shortsAd) {
+              setActiveAd(el.dataset.shortsAd);
+              return;
+            }
+            setActiveAd(null);
+            setActiveIdx(Number(el.dataset.shortIdx));
           }
         });
       },
@@ -376,7 +393,9 @@ function ShortsFeed({
     );
     items.forEach((el) => io.observe(el));
     return () => io.disconnect();
-  }, [shorts.length]);
+  }, [shorts.length, adSlots]);
+
+
 
   // Count view when a short becomes active (once per session)
   useEffect(() => {
