@@ -361,16 +361,28 @@ function ShortsFeed({
   const [activeAd, setActiveAd] = useState<string | null>(null);
   const viewedRef = useRef<Set<string>>(new Set());
 
-  // Anúncio Shopify a cada 5 Shorts (decidido uma vez por sessão, para o
-  // anúncio não desaparecer debaixo dos pés de quem está a fazer scroll).
-  const [adSlots] = useState<Set<number>>(() => {
+  // Anúncio Shopify entre os Shorts. As posições adaptam-se ao que existe
+  // no feed: com poucos vídeos entra depois do último, com muitos entra a
+  // cada 7. A elegibilidade é avaliada uma vez por posição, para o anúncio
+  // não desaparecer debaixo dos pés de quem está a fazer scroll.
+  const adEligibleRef = useRef<Map<number, boolean>>(new Map());
+  const firstSlotRef = useRef<number | null>(null);
+  const adSlots = useMemo(() => {
     const slots = new Set<number>();
-    if (typeof window === "undefined") return slots;
-    for (const after of [5, 11, 18]) {
-      if (canShowShopifyAd(`shorts:${after}`, "shorts")) slots.add(after);
+    const total = shorts.length;
+    if (typeof window === "undefined" || total < 2) return slots;
+    if (firstSlotRef.current === null) firstSlotRef.current = Math.min(3, total);
+    for (let after = firstSlotRef.current; after <= total; after += 7) {
+      let ok = adEligibleRef.current.get(after);
+      if (ok === undefined) {
+        ok = canShowShopifyAd(`shorts:${after}`, "shorts");
+        adEligibleRef.current.set(after, ok);
+      }
+      if (ok) slots.add(after);
     }
     return slots;
-  });
+  }, [shorts.length]);
+
 
   // IntersectionObserver to detect active short
   useEffect(() => {
@@ -473,11 +485,13 @@ function ShortsFeed({
               <ShopifyShortAd
                 slotId={`shorts:${i + 1}`}
                 active={activeAd === `shorts:${i + 1}`}
+                isLast={i + 1 >= shorts.length}
                 onSkip={() => {
-                  const el = containerRef.current?.querySelector<HTMLElement>(
-                    `[data-short-idx="${i + 1}"]`,
-                  );
-                  el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  const root = containerRef.current;
+                  const next =
+                    root?.querySelector<HTMLElement>(`[data-short-idx="${i + 1}"]`) ??
+                    root?.querySelector<HTMLElement>('[data-short-idx="0"]');
+                  next?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
               />
             )}
