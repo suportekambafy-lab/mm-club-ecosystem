@@ -29,7 +29,7 @@ import { LessonNotes } from "@/components/mm/lesson-notes";
 import { CourseComments } from "@/components/mm/course-comments";
 import { pingLearningActivity, recordLessonCompleted } from "@/lib/learning-activity";
 import { useCourseQuiz, lockedModuleIds } from "@/hooks/use-course-quiz";
-import { ShopifyPromoBanner } from "@/components/mm/shopify-promo-banner";
+import { ShopifyVideoAd } from "@/components/mm/shopify-video-ad";
 import { isShopifyContext } from "@/lib/shopify-promo";
 
 
@@ -175,10 +175,8 @@ function LessonPlayer() {
   return (
     <div className="-mx-3 -my-4 w-[calc(100%+1.5rem)] max-w-[100vw] touch-pan-y overflow-x-clip bg-background overscroll-x-none sm:-mx-4 sm:-my-6 sm:w-[calc(100%+2rem)] md:-mx-8 md:-my-8 md:w-[calc(100%+4rem)]">
       <div className="mx-auto flex w-full max-w-[1440px] min-w-0 flex-col overflow-x-clip px-3 py-4 overscroll-x-none sm:px-4 sm:py-6 md:px-6 md:py-6">
-        <ShopifyPromoBanner
-          trigger={completed ? "lesson-end" : "lesson-start"}
-          enabled={isShopifyContext(current.lesson.title, current.module.title, course.title)}
-        />
+
+
 
 
 
@@ -234,7 +232,8 @@ function LessonPlayer() {
                 </div>
               </div>
             ) : loaded ? (
-              <TrackedVideoPlayer
+              <div className="relative w-full shrink-0">
+                <TrackedVideoPlayer
                 lessonId={current.lesson.id}
                 title={current.lesson.title}
                 source={source}
@@ -262,8 +261,18 @@ function LessonPlayer() {
                           })
                       : undefined
                 }
-                advanceLabel={quizPending ? "Fazer teste" : undefined}
-              />
+                  advanceLabel={quizPending ? "Fazer teste" : undefined}
+                />
+                <ShopifyVideoAd
+                  lessonId={current.lesson.id}
+                  trigger={completed ? "lesson-end" : "lesson-start"}
+                  enabled={isShopifyContext(
+                    current.lesson.title,
+                    current.module.title,
+                    course.title,
+                  )}
+                />
+              </div>
 
             ) : (
               <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-black md:rounded-3xl">
