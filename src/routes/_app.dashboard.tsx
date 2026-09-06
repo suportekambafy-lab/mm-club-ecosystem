@@ -18,6 +18,7 @@ import { Rail } from "@/components/mm/rail";
 import { LiveHeroBanner } from "@/components/mm/live-hero-banner";
 import { currentUser as fallbackUser } from "@/data/user";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { ShopifyPromoBanner } from "@/components/mm/shopify-promo-banner";
 import {
   useUserProgress,
   applyProgress,
