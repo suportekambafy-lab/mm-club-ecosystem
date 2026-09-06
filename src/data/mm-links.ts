@@ -38,7 +38,7 @@ export const mmLinks: MMLink[] = [
     id: "shopify",
     name: "Shopify",
     domain: "shopify.com",
-    url: "https://www.shopify.com/pt",
+    url: "https://shopify.pxf.io/c/7738721/1061744/13624",
     category: "Lojas & Dropshipping",
     description: "A plataforma que usamos nas aulas para construir a loja.",
     affiliate: true,
