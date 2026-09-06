@@ -3,7 +3,7 @@ import { ArrowUpRight, X, Check, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const SHOPIFY_URL = "https://shopify.pxf.io/c/7738721/1061744/13624";
-const SEEN_KEY = "mm_shopify_promo_seen_v1";
+
 
 /** Verde institucional da Shopify — cor de marca de terceiro, não do tema MM. */
 const BRAND = "#008060";
