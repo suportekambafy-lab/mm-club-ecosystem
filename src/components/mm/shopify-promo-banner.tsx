@@ -17,7 +17,7 @@ const BRAND_SOFT = "rgba(0, 128, 96, 0.12)";
 
 /** Texto por momento: quanto mais próximo da aula, mais direto o convite. */
 const COPY: Record<
-  ShopifyPromoTrigger,
+  Exclude<ShopifyPromoTrigger, "shorts">,
   { eyebrow: string; kicker: string; sub: string; cta: string; delay: number }
 > = {
   dashboard: {
@@ -53,7 +53,7 @@ export function ShopifyPromoBanner({
   trigger = "dashboard",
   enabled = true,
 }: {
-  trigger?: ShopifyPromoTrigger;
+  trigger?: Exclude<ShopifyPromoTrigger, "shorts">;
   enabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);

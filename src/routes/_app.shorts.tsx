@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useMutation, useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Heart, Volume2, VolumeX, Plus, X, Upload, Trash2, Eye, Play, MessageCircle, ArrowUp, CornerDownRight, MoreHorizontal, Share2, Link2, Flag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,8 @@ import { useConfirm } from "@/components/mm/confirm-dialog";
 import { notifyShortPublishedByEmail, notifyShortReplyByEmail } from "@/lib/shorts-email.functions";
 import { runModeration } from "@/lib/moderation-client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ShopifyShortAd } from "@/components/mm/shopify-short-ad";
+import { canShowShopifyAd } from "@/lib/shopify-promo";
 
 const SHORTS_PAGE_SIZE = 6;
 
@@ -356,19 +358,36 @@ function ShortsFeed({
   const containerRef = useRef<HTMLDivElement>(null);
   const [muted, setMuted] = useState(true);
   const [activeIdx, setActiveIdx] = useState(0);
+  const [activeAd, setActiveAd] = useState<string | null>(null);
   const viewedRef = useRef<Set<string>>(new Set());
+
+  // Anúncio Shopify a cada 5 Shorts (decidido uma vez por sessão, para o
+  // anúncio não desaparecer debaixo dos pés de quem está a fazer scroll).
+  const [adSlots] = useState<Set<number>>(() => {
+    const slots = new Set<number>();
+    if (typeof window === "undefined") return slots;
+    for (const after of [5, 11, 18]) {
+      if (canShowShopifyAd(`shorts:${after}`, "shorts")) slots.add(after);
+    }
+    return slots;
+  });
 
   // IntersectionObserver to detect active short
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    const items = container.querySelectorAll<HTMLElement>("[data-short-idx]");
+    const items = container.querySelectorAll<HTMLElement>("[data-short-idx], [data-shorts-ad]");
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
           if (e.isIntersecting && e.intersectionRatio > 0.6) {
-            const idx = Number((e.target as HTMLElement).dataset.shortIdx);
-            setActiveIdx(idx);
+            const el = e.target as HTMLElement;
+            if (el.dataset.shortsAd) {
+              setActiveAd(el.dataset.shortsAd);
+              return;
+            }
+            setActiveAd(null);
+            setActiveIdx(Number(el.dataset.shortIdx));
           }
         });
       },
@@ -376,7 +395,9 @@ function ShortsFeed({
     );
     items.forEach((el) => io.observe(el));
     return () => io.disconnect();
-  }, [shorts.length]);
+  }, [shorts.length, adSlots]);
+
+
 
   // Count view when a short becomes active (once per session)
   useEffect(() => {
@@ -432,22 +453,35 @@ function ShortsFeed({
         style={{ scrollbarWidth: "none" }}
       >
         {shorts.map((s, i) => (
-          <ShortItem
-            key={s.id}
-            idx={i}
-            short={s}
-            active={i === activeIdx}
-            mounted={Math.abs(i - activeIdx) <= 2}
-            compact={commentsOpen}
-            muted={muted}
-            onToggleMute={() => setMuted((m) => !m)}
-            onToggleLike={() => onToggleLike(s)}
-            onOpenComments={() => setCommentsFor(s)}
-            onCloseComments={() => setCommentsFor(null)}
-            commentsOpen={commentsOpen}
-            onDelete={() => onDelete(s.id)}
-            canDelete={currentUserId === s.author_id}
-          />
+          <Fragment key={s.id}>
+            <ShortItem
+              idx={i}
+              short={s}
+              active={i === activeIdx && !activeAd}
+              mounted={Math.abs(i - activeIdx) <= 2}
+              compact={commentsOpen}
+              muted={muted}
+              onToggleMute={() => setMuted((m) => !m)}
+              onToggleLike={() => onToggleLike(s)}
+              onOpenComments={() => setCommentsFor(s)}
+              onCloseComments={() => setCommentsFor(null)}
+              commentsOpen={commentsOpen}
+              onDelete={() => onDelete(s.id)}
+              canDelete={currentUserId === s.author_id}
+            />
+            {!commentsOpen && adSlots.has(i + 1) && (
+              <ShopifyShortAd
+                slotId={`shorts:${i + 1}`}
+                active={activeAd === `shorts:${i + 1}`}
+                onSkip={() => {
+                  const el = containerRef.current?.querySelector<HTMLElement>(
+                    `[data-short-idx="${i + 1}"]`,
+                  );
+                  el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+              />
+            )}
+          </Fragment>
         ))}
       </div>
       {commentsFor && (
