@@ -122,6 +122,8 @@ function DashboardPage() {
   return (
     <div className="section-stack">
 
+      <ShopifyPromoBanner />
+
       {/* Cinematic hero — full bleed, autoplay muted loop, editorial overlay */}
       <CinematicHero name={sessionUser?.name ?? ""} loading={userLoading && !sessionUser} />
 
