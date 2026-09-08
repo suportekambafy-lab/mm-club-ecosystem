@@ -57,7 +57,7 @@ function LessonPlayer() {
   // Vem do layout de membro: falso quando a subscrição está em dívida.
   const { hasAccess: ownAccess } = Route.useRouteContext() as { hasAccess?: boolean };
   const viewAs = useViewAs();
-  const hasAccess = viewAs ? viewAs.hasAccess : ownAccess;
+  const hasAccess = ownAccess;
 
   // Recompute from (possibly-overridden) in-memory data so admin edits show up.
   const data = useMemo(() => {
