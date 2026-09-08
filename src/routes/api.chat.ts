@@ -194,7 +194,7 @@ export const Route = createFileRoute("/api/chat")({
         const system = BASE_SYSTEM + buildCatalogOutline(catalog) + context + disambiguation;
 
         const gateway = createLovableAiGatewayProvider(key);
-        const model = gateway("google/gemini-3.5-flash");
+        const model = gateway("google/gemini-2.5-flash");
 
         const result = streamText({
           model,

@@ -70,7 +70,9 @@ export function ShopifyVideoAd({
       if (!canShowShopifyAd(lessonId, trigger)) return;
       shownFor.current = slot;
       markShopifyAdShown(lessonId, trigger);
-      setPhase("full");
+      // No fim da aula os botões "Repetir / Próxima aula / Fazer teste" estão
+      // no ecrã: aí o anúncio entra apenas como faixa, nunca a tapar o player.
+      setPhase(trigger === "lesson-end" ? "mini" : "full");
     }, copy.delay);
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps

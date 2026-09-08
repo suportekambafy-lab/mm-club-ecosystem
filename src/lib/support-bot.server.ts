@@ -107,7 +107,7 @@ export async function replyToCommunityPost(postId: string): Promise<{ replied: b
   let answer = "";
   try {
     const result = await generateText({
-      model: gateway("google/gemini-3.5-flash"),
+      model: gateway("google/gemini-2.5-flash"),
       system: `${SYSTEM}${lessonsContext}`,
       prompt: [
         `Autor: ${row.author?.display_name ?? "Membro"}`,
@@ -200,7 +200,7 @@ export async function replyToCommunityChatMessage(
   let answer = "";
   try {
     const result = await generateText({
-      model: gateway("google/gemini-3.5-flash"),
+      model: gateway("google/gemini-2.5-flash"),
       system: `${SYSTEM}${lessonsContext}`,
       prompt: [
         "Estás a responder no chat ao vivo do grupo (mensagens curtas, conversa em tempo real).",

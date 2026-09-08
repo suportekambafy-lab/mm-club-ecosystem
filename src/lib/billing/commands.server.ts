@@ -541,18 +541,30 @@ async function activateSubscription(args: {
   // Ask the gateway to charge the following cycles automatically.
   let gatewaySubscriptionId: string | null = null;
   if (args.payment.customerId && args.payment.mandateId) {
-    const gwSub = await gw.createSubscription({
-      customerId: args.payment.customerId,
-      mandateId: args.payment.mandateId,
-      amountCents: args.amountCents,
-      currency: args.currency,
-      interval: args.gatewayIntervalStr,
-      description: args.description,
-      webhookUrl: `${(args.payment.metadata.origin as string) ?? ""}/api/public/payments/gateway-webhook`,
-      startDate: end.toISOString().slice(0, 10),
-      metadata: { userId: args.userId, priceId: args.priceId },
-    });
-    gatewaySubscriptionId = gwSub.id;
+    // A Mollie exige descrições únicas por cliente: uma subscrição antiga
+    // (mesmo cancelada) com a mesma descrição fazia o webhook falhar em 422 e
+    // o pagamento ficava sem subscrição. Tornamos a descrição sempre única e,
+    // se ainda assim falhar, guardamos a subscrição local (o acesso é dado) e
+    // registamos o erro em vez de deixar o webhook em erro permanente.
+    const unique = `${args.description} · ${new Date()
+      .toISOString()
+      .slice(0, 10)} ${args.payment.id.slice(-8)}`;
+    try {
+      const gwSub = await gw.createSubscription({
+        customerId: args.payment.customerId,
+        mandateId: args.payment.mandateId,
+        amountCents: args.amountCents,
+        currency: args.currency,
+        interval: args.gatewayIntervalStr,
+        description: unique,
+        webhookUrl: `${(args.payment.metadata.origin as string) ?? ""}/api/public/payments/gateway-webhook`,
+        startDate: end.toISOString().slice(0, 10),
+        metadata: { userId: args.userId, priceId: args.priceId },
+      });
+      gatewaySubscriptionId = gwSub.id;
+    } catch (err) {
+      console.error("[billing] createSubscription failed", err);
+    }
   }
 
   const { data: sub, error } = await supabaseAdmin

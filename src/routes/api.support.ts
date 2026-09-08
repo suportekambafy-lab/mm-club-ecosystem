@@ -114,7 +114,7 @@ export const Route = createFileRoute("/api/support")({
 
         const gateway = createLovableAiGatewayProvider(key);
         const result = streamText({
-          model: gateway("google/gemini-3.5-flash"),
+          model: gateway("google/gemini-2.5-flash"),
           system: `${SYSTEM}\n\nContexto: o membro está autenticado (email ${auth.user.email ?? "desconhecido"}).${lessonsContext}`,
           messages: await convertToModelMessages(messages as UIMessage[]),
           // Falhas transitórias do gateway (429/5xx) são re-tentadas com backoff.
