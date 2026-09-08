@@ -760,6 +760,9 @@ function AppLayout() {
             }}
           />
           )}
+          {!hasAccess && authUser ? (
+            <DebtBanner userId={authUser.id} />
+          ) : null}
           {authUser ? <Outlet /> : <div className="min-h-[60vh]" />}
         </main>
       </div>
