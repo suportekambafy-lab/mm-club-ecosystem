@@ -53,6 +53,8 @@ function LessonPlayer() {
   const { t: deepLinkSeconds } = Route.useSearch();
   const navigate = Route.useNavigate();
   const overridesVersion = useAdminOverridesVersion();
+  // Vem do layout de membro: falso quando a subscrição está em dívida.
+  const { hasAccess } = Route.useRouteContext() as { hasAccess?: boolean };
 
   // Recompute from (possibly-overridden) in-memory data so admin edits show up.
   const data = useMemo(() => {
