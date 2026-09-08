@@ -473,7 +473,9 @@ function AppLayout() {
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.to, item.exact);
-            const locked = !codeAccepted && item.to !== "/codigo";
+            const locked =
+              (!codeAccepted && item.to !== "/codigo") ||
+              (!hasAccess && isLockedPath(item.to));
             if (item.soon || locked) {
               const badge = locked ? "Bloqueado" : "Em breve";
               return (
