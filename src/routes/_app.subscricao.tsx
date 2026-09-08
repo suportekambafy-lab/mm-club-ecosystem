@@ -175,14 +175,7 @@ function SubscriptionPage() {
   }, []);
 
 
-  // Ao entrar/sair do modo "ver como cliente", recarrega com a conta certa.
-  useEffect(() => {
-    if (loadedFor.current === undefined) return; // ainda no primeiro load
-    if (loadedFor.current === viewAsUserId) return;
-    setLoading(true);
-    void load(viewAsUserId).finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewAsUserId]);
+
 
   const run = async (key: string, fn: () => Promise<unknown>, ok?: string) => {
     setBusy(key);
