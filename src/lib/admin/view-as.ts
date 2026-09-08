@@ -39,6 +39,27 @@ export function clearViewAs() {
   window.dispatchEvent(new Event(EVENT));
 }
 
+/** Sessão do admin, guardada para regressar depois do modo cliente. */
+const ADMIN_KEY = "mm_admin_session_v1";
+
+export type SavedSession = { access_token: string; refresh_token: string };
+
+export function saveAdminSession(s: SavedSession) {
+  if (typeof window === "undefined") return;
+  window.sessionStorage.setItem(ADMIN_KEY, JSON.stringify(s));
+}
+
+export function takeAdminSession(): SavedSession | null {
+  if (typeof window === "undefined") return null;
+  const raw = window.sessionStorage.getItem(ADMIN_KEY);
+  window.sessionStorage.removeItem(ADMIN_KEY);
+  try {
+    return raw ? (JSON.parse(raw) as SavedSession) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function subscribeViewAs(fn: () => void): () => void {
   if (typeof window === "undefined") return () => {};
   window.addEventListener(EVENT, fn);
