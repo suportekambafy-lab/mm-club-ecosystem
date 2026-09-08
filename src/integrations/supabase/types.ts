@@ -3319,6 +3319,90 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_conversions: {
+        Row: {
+          created_at: string
+          id: string
+          module_key: string
+          module_label: string | null
+          note: string | null
+          paid_count: number
+          partner: string
+          revenue_cents: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          module_key: string
+          module_label?: string | null
+          note?: string | null
+          paid_count?: number
+          partner?: string
+          revenue_cents?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          module_key?: string
+          module_label?: string | null
+          note?: string | null
+          paid_count?: number
+          partner?: string
+          revenue_cents?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      partner_link_events: {
+        Row: {
+          course_id: string | null
+          course_title: string | null
+          created_at: string
+          id: string
+          kind: string
+          lesson_id: string | null
+          lesson_title: string | null
+          module_id: string | null
+          module_title: string | null
+          partner: string
+          placement: string
+          user_id: string
+        }
+        Insert: {
+          course_id?: string | null
+          course_title?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          lesson_id?: string | null
+          lesson_title?: string | null
+          module_id?: string | null
+          module_title?: string | null
+          partner?: string
+          placement: string
+          user_id: string
+        }
+        Update: {
+          course_id?: string | null
+          course_title?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          lesson_id?: string | null
+          lesson_title?: string | null
+          module_id?: string | null
+          module_title?: string | null
+          partner?: string
+          placement?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pl_ai_analyses: {
         Row: {
           content: string
