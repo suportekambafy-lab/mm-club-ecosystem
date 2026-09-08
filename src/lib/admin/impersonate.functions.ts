@@ -55,9 +55,9 @@ export const startImpersonation = createServerFn({ method: "POST" })
     await supabaseAdmin.from("admin_action_log").insert({
       actor_id: context.userId,
       action: "impersonate.start",
-      target_type: "user",
-      target_id: data.userId,
-      details: { email },
+      entity_type: "user",
+      entity_id: data.userId,
+      after: { email },
     });
 
     return {
