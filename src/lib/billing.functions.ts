@@ -4,7 +4,9 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 import { secured } from "@/lib/security/gate";
 import type {
   CatalogEntry,
@@ -87,14 +89,12 @@ export type BillingOverview = {
  * Resolve de quem é a faturação a mostrar. Um admin pode pedir a vista de
  * outro membro ("entrar como cliente"); qualquer outra pessoa só vê a sua.
  */
-async function resolveBillingTarget<
-  C extends {
-    rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown }>;
-  },
->(
-  context: { supabase: C; userId: string },
+type BillingClient = SupabaseClient<Database>;
+
+async function resolveBillingTarget(
+  context: { supabase: BillingClient; userId: string },
   requested?: string | null,
-): Promise<{ client: C; userId: string }> {
+): Promise<{ client: BillingClient; userId: string }> {
   if (!requested || requested === context.userId) {
     return { client: context.supabase, userId: context.userId };
   }
@@ -104,7 +104,7 @@ async function resolveBillingTarget<
   });
   if (!isAdmin) throw new Error("Forbidden");
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  return { client: supabaseAdmin as unknown as C, userId: requested };
+  return { client: supabaseAdmin as unknown as BillingClient, userId: requested };
 }
 
 export const getBillingOverview = createServerFn({ method: "GET" })
