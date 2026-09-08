@@ -6,6 +6,7 @@ import {
   markShopifyPromoClicked,
   type ShopifyPromoTrigger,
 } from "@/lib/shopify-promo";
+import { logPartnerEvent, type PartnerContext } from "@/lib/partner-track";
 
 const SHOPIFY_URL = "https://shopify.pxf.io/c/7738721/1061744/13624";
 
@@ -45,10 +46,12 @@ export function ShopifyVideoAd({
   lessonId,
   trigger,
   enabled = true,
+  context,
 }: {
   lessonId: string;
   trigger: AdTrigger;
   enabled?: boolean;
+  context?: PartnerContext;
 }) {
   const [phase, setPhase] = useState<"idle" | "full" | "mini" | "done">("idle");
   const [left, setLeft] = useState(SKIP_AFTER);
@@ -70,6 +73,7 @@ export function ShopifyVideoAd({
       if (!canShowShopifyAd(lessonId, trigger)) return;
       shownFor.current = slot;
       markShopifyAdShown(lessonId, trigger);
+      logPartnerEvent("impression", trigger, { ...context, lessonId });
       // No fim da aula os botões "Repetir / Próxima aula / Fazer teste" estão
       // no ecrã: aí o anúncio entra apenas como faixa, nunca a tapar o player.
       setPhase(trigger === "lesson-end" ? "mini" : "full");
@@ -89,8 +93,10 @@ export function ShopifyVideoAd({
 
   const handleClick = useCallback(() => {
     markShopifyPromoClicked();
+    logPartnerEvent("click", trigger, { ...context, lessonId });
     setPhase("done");
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lessonId, trigger]);
 
   if (!enabled || phase === "idle" || phase === "done") return null;
 

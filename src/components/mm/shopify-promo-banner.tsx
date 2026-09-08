@@ -8,6 +8,7 @@ import {
   touchShopifyPromo,
   type ShopifyPromoTrigger,
 } from "@/lib/shopify-promo";
+import { logPartnerEvent, type PartnerContext } from "@/lib/partner-track";
 
 const SHOPIFY_URL = "https://shopify.pxf.io/c/7738721/1061744/13624";
 
@@ -52,9 +53,11 @@ const COPY: Record<
 export function ShopifyPromoBanner({
   trigger = "dashboard",
   enabled = true,
+  context,
 }: {
   trigger?: Exclude<ShopifyPromoTrigger, "shorts">;
   enabled?: boolean;
+  context?: PartnerContext;
 }) {
   const [open, setOpen] = useState(false);
   const copy = COPY[trigger];
@@ -70,6 +73,7 @@ export function ShopifyPromoBanner({
       // Reconfirma no momento de abrir (evita dois popups no mesmo dia).
       if (!canShowShopifyPromo(trigger)) return;
       markShopifyPromoShown();
+      logPartnerEvent("impression", trigger, context ?? {});
       setOpen(true);
     }, copy.delay);
     return () => window.clearTimeout(id);
@@ -93,6 +97,7 @@ export function ShopifyPromoBanner({
 
   const handleClick = () => {
     markShopifyPromoClicked();
+    logPartnerEvent("click", trigger, context ?? {});
     setOpen(false);
   };
 

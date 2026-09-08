@@ -5,6 +5,7 @@ import {
   markShopifyAdShown,
   markShopifyPromoClicked,
 } from "@/lib/shopify-promo";
+import { logPartnerEvent } from "@/lib/partner-track";
 
 const SHOPIFY_URL = "https://shopify.pxf.io/c/7738721/1061744/13624";
 
@@ -38,6 +39,7 @@ export function ShopifyShortAd({
   useEffect(() => {
     if (!active || registered) return;
     if (canShowShopifyAd(slotId, "shorts")) markShopifyAdShown(slotId, "shorts");
+    logPartnerEvent("impression", "shorts", { lessonId: slotId });
     setRegistered(true);
   }, [active, registered, slotId]);
 
@@ -50,6 +52,7 @@ export function ShopifyShortAd({
 
   const handleClick = useCallback(() => {
     markShopifyPromoClicked();
+    logPartnerEvent("click", "shorts", { lessonId: slotId });
   }, []);
 
   return (
