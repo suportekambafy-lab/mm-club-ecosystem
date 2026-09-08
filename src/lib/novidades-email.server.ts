@@ -6,7 +6,8 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { sendEmail } from "@/lib/email.server";
 import { optedOutUserIds } from "@/lib/community-email.server";
-import { NOVIDADES_ASSETS, NOVIDADES_PDF_B64 } from "@/lib/novidades-assets";
+// Os anexos (≈300 KB em base64) são carregados só quando o email é enviado —
+// importá-los no topo punha esse peso em cada render do site (memória).
 
 const APP_URL = "https://mmclub.pt";
 
@@ -84,7 +85,8 @@ const GROUP_IMAGE: Record<string, string> = {
 };
 
 /** Anexos: 4 imagens inline (cid) + o PDF das novidades. */
-export function novidadesAttachments() {
+export async function novidadesAttachments() {
+  const { NOVIDADES_ASSETS, NOVIDADES_PDF_B64 } = await import("@/lib/novidades-assets");
   const imgs = Object.entries(NOVIDADES_ASSETS).map(([key, a]) => ({
     filename: `${key}.${a.type === "image/png" ? "png" : "jpg"}`,
     content: a.b64,
@@ -169,7 +171,7 @@ export async function sendNovidadesTest(to: string, name = "Victor") {
     subject: `[TESTE] ${NOVIDADES_SUBJECT}`,
     html: buildNovidadesHtml(name),
     kind: "product_update",
-    attachments: novidadesAttachments(),
+    attachments: await novidadesAttachments(),
   });
   return { sent: r.sent ? 1 : 0, error: r.error ?? null };
 }
@@ -203,7 +205,7 @@ export async function sendNovidadesBroadcast() {
           to: u.email,
           subject: NOVIDADES_SUBJECT,
           html: buildNovidadesHtml(name),
-          attachments: novidadesAttachments(),
+          attachments: await novidadesAttachments(),
           userId: u.id,
           kind: "product_update",
           ref: NOVIDADES_REF,

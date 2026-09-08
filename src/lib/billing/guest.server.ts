@@ -12,10 +12,26 @@ import { buildCheckoutDescription } from "./description";
 import { TRIAL_VERIFICATION_CENTS } from "./types";
 
 
-/** Looks up an auth user by email (small user base — paged scan). */
+/** Looks up an auth user by email (direct filter, paged scan as fallback). */
 export async function findUserIdByEmail(email: string): Promise<string | null> {
   const target = email.trim().toLowerCase();
-  for (let page = 1; page <= 20; page++) {
+
+  // Filtro direto: não depende de percorrer todas as páginas de utilizadores.
+  try {
+    const { data } = await (supabaseAdmin.auth.admin.listUsers as unknown as (
+      p: Record<string, unknown>,
+    ) => Promise<{ data: { users: { id: string; email?: string | null }[] } }>)({
+      page: 1,
+      perPage: 200,
+      filter: `email.eq.${target}`,
+    });
+    const direct = data?.users?.find((u) => (u.email ?? "").toLowerCase() === target);
+    if (direct) return direct.id;
+  } catch {
+    // Filtro não suportado — segue para a varredura paginada.
+  }
+
+  for (let page = 1; page <= 60; page++) {
     const { data, error } = await supabaseAdmin.auth.admin.listUsers({
       page,
       perPage: 200,
@@ -172,14 +188,30 @@ export async function provisionAccountForIntent(
       },
     });
     if (error || !data.user) {
-      await supabaseAdmin
-        .from("billing_checkout_intents")
-        .update({ status: "failed", error: error?.message ?? "create_user_failed" })
-        .eq("id", intent.id);
-      throw new Error(error?.message ?? "create_user_failed");
+      // O email já pertence a uma conta (constraint de email duplicado ou
+      // criação simultânea): ligamos o pagamento a essa conta em vez de
+      // marcar o checkout como falhado e deixar o comprador sem acesso.
+      const msg = (error?.message ?? "").toLowerCase();
+      const duplicate =
+        msg.includes("already") ||
+        msg.includes("duplicate") ||
+        msg.includes("registered") ||
+        msg.includes("23505");
+      const recovered = duplicate ? await findUserIdByEmail(email) : null;
+      if (!recovered) {
+        await supabaseAdmin
+          .from("billing_checkout_intents")
+          .update({ status: "failed", error: error?.message ?? "create_user_failed" })
+          .eq("id", intent.id);
+        throw new Error(error?.message ?? "create_user_failed");
+      }
+      userId = recovered;
+      const { data: existing } = await supabaseAdmin.auth.admin.getUserById(recovered);
+      neverSignedIn = !existing?.user?.last_sign_in_at;
+    } else {
+      userId = data.user.id;
+      created = true;
     }
-    userId = data.user.id;
-    created = true;
   }
 
   // Reuse the gateway customer created at checkout so the mandate stays

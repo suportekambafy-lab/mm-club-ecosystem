@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Award, Download, Loader2, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getCertificatePdf } from "@/lib/certificates.functions";
@@ -32,6 +32,7 @@ export function CourseCertificate({
   const [cert, setCert] = useState<Certificate | null>(null);
   const [busy, setBusy] = useState(false);
   const [checked, setChecked] = useState(false);
+  const autoTried = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -120,8 +121,13 @@ export function CourseCertificate({
   const pending = !completed && !cert;
 
   // Curso concluído: emite automaticamente, sem obrigar a clicar.
+  // Uma única tentativa automática — se falhar, o botão manual fica disponível
+  // (sem isto uma falha de rede provocava um ciclo infinito de pedidos).
   useEffect(() => {
-    if (checked && completed && !cert && !busy) void issue();
+    if (!checked || !completed || cert || busy) return;
+    if (autoTried.current) return;
+    autoTried.current = true;
+    void issue();
   }, [checked, completed, cert, busy, issue]);
 
   if (!checked) return null;
