@@ -86,9 +86,8 @@ const STATUS_LABEL: Record<string, string> = {
 
 function SubscriptionPage() {
   const navigate = useNavigate();
-  // Um admin em modo "entrar como cliente" vê a faturação real desse membro.
-  const viewAs = useViewAs();
-  const viewAsUserId = viewAs?.userId ?? null;
+  // Em modo "entrar como cliente" a sessão já é do próprio membro, por isso a
+  // faturação é sempre a da conta autenticada.
   const [debt, setDebt] = useState<OutstandingBalance | null>(null);
   const [overview, setOverview] = useState<BillingOverview | null>(null);
   const [loading, setLoading] = useState(true);
