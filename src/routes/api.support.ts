@@ -82,6 +82,11 @@ Resolução típica:
 - Não recebe emails: verificar spam e o endereço no perfil.
 - Pagamento falhado: actualizar o método de pagamento em /subscricao e tentar novamente.
 
+Acesso bloqueado / conta suspensa:
+- Recebes sempre o estado real da conta do membro no contexto. Usa-o.
+- Se o membro não tem acesso por falta de pagamento, diz o motivo LOGO na primeira resposta, com o valor em falta quando existir, e envia para [Subscrição](/subscricao). Nunca respondas com cache, VPN ou outro browser nesse caso.
+- Tranquiliza: progresso, notas e certificados ficam guardados e voltam assim que regularizar.
+
 Escalar para humano (WhatsApp):
 - Escala quando: envolve dinheiro (cobranças, reembolsos, faturas, cancelamentos com disputa), dados da conta que não podes ver, suspeita de erro/bug da plataforma, o membro já tentou o que sugeriste, o membro pede uma pessoa, ou está claramente frustrado.
 - Para escalar: escreve UMA frase a dizer que passas para a equipa humana e termina a mensagem com o marcador exacto [[HUMANO]] na última linha, sozinho.
@@ -106,7 +111,11 @@ export const Route = createFileRoute("/api/support")({
 
         const lastUser = [...(messages as UIMessage[])].reverse().find((m) => m.role === "user");
         const { lessonMomentsContext } = await import("@/lib/lesson-moments.server");
-        const lessonsContext = lastUser ? await lessonMomentsContext(textOf(lastUser), key) : "";
+        const { supportAccountContext } = await import("@/lib/support-account.server");
+        const [lessonsContext, accountContext] = await Promise.all([
+          lastUser ? lessonMomentsContext(textOf(lastUser), key) : Promise.resolve(""),
+          supportAccountContext(auth.user.id),
+        ]);
 
         // Guarda logo a pergunta: se o modelo falhar, a mensagem do membro não
         // se perde e a re-tentativa é idempotente (client_id estável).
@@ -115,7 +124,7 @@ export const Route = createFileRoute("/api/support")({
         const gateway = createLovableAiGatewayProvider(key);
         const result = streamText({
           model: gateway("google/gemini-2.5-flash"),
-          system: `${SYSTEM}\n\nContexto: o membro está autenticado (email ${auth.user.email ?? "desconhecido"}).${lessonsContext}`,
+          system: `${SYSTEM}\n\nContexto: o membro está autenticado (email ${auth.user.email ?? "desconhecido"}).${accountContext}${lessonsContext}`,
           messages: await convertToModelMessages(messages as UIMessage[]),
           // Falhas transitórias do gateway (429/5xx) são re-tentadas com backoff.
           maxRetries: 3,
