@@ -93,6 +93,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicPaymentsGatewayWebhookRouteImport } from './routes/api/public/payments/gateway-webhook'
+import { Route as ApiPublicHooksWinbackIntelligenceRouteImport } from './routes/api/public/hooks/winback-intelligence'
 import { Route as ApiPublicHooksWeeklySummaryRouteImport } from './routes/api/public/hooks/weekly-summary'
 import { Route as ApiPublicHooksWaitlistBroadcastRouteImport } from './routes/api/public/hooks/waitlist-broadcast'
 import { Route as ApiPublicHooksUpcomingCoursesRouteImport } from './routes/api/public/hooks/upcoming-courses'
@@ -559,6 +560,12 @@ const ApiPublicPaymentsGatewayWebhookRoute =
     path: '/api/public/payments/gateway-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksWinbackIntelligenceRoute =
+  ApiPublicHooksWinbackIntelligenceRouteImport.update({
+    id: '/api/public/hooks/winback-intelligence',
+    path: '/api/public/hooks/winback-intelligence',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksWeeklySummaryRoute =
   ApiPublicHooksWeeklySummaryRouteImport.update({
     id: '/api/public/hooks/weekly-summary',
@@ -885,6 +892,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/upcoming-courses': typeof ApiPublicHooksUpcomingCoursesRoute
   '/api/public/hooks/waitlist-broadcast': typeof ApiPublicHooksWaitlistBroadcastRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
+  '/api/public/hooks/winback-intelligence': typeof ApiPublicHooksWinbackIntelligenceRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -998,6 +1006,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/upcoming-courses': typeof ApiPublicHooksUpcomingCoursesRoute
   '/api/public/hooks/waitlist-broadcast': typeof ApiPublicHooksWaitlistBroadcastRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
+  '/api/public/hooks/winback-intelligence': typeof ApiPublicHooksWinbackIntelligenceRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -1121,6 +1130,7 @@ export interface FileRoutesById {
   '/api/public/hooks/upcoming-courses': typeof ApiPublicHooksUpcomingCoursesRoute
   '/api/public/hooks/waitlist-broadcast': typeof ApiPublicHooksWaitlistBroadcastRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
+  '/api/public/hooks/winback-intelligence': typeof ApiPublicHooksWinbackIntelligenceRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -1244,6 +1254,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/upcoming-courses'
     | '/api/public/hooks/waitlist-broadcast'
     | '/api/public/hooks/weekly-summary'
+    | '/api/public/hooks/winback-intelligence'
     | '/api/public/payments/gateway-webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1357,6 +1368,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/upcoming-courses'
     | '/api/public/hooks/waitlist-broadcast'
     | '/api/public/hooks/weekly-summary'
+    | '/api/public/hooks/winback-intelligence'
     | '/api/public/payments/gateway-webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1479,6 +1491,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/upcoming-courses'
     | '/api/public/hooks/waitlist-broadcast'
     | '/api/public/hooks/weekly-summary'
+    | '/api/public/hooks/winback-intelligence'
     | '/api/public/payments/gateway-webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1535,6 +1548,7 @@ export interface RootRouteChildren {
   ApiPublicHooksUpcomingCoursesRoute: typeof ApiPublicHooksUpcomingCoursesRoute
   ApiPublicHooksWaitlistBroadcastRoute: typeof ApiPublicHooksWaitlistBroadcastRoute
   ApiPublicHooksWeeklySummaryRoute: typeof ApiPublicHooksWeeklySummaryRoute
+  ApiPublicHooksWinbackIntelligenceRoute: typeof ApiPublicHooksWinbackIntelligenceRoute
   ApiPublicPaymentsGatewayWebhookRoute: typeof ApiPublicPaymentsGatewayWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -2132,6 +2146,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsGatewayWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/winback-intelligence': {
+      id: '/api/public/hooks/winback-intelligence'
+      path: '/api/public/hooks/winback-intelligence'
+      fullPath: '/api/public/hooks/winback-intelligence'
+      preLoaderRoute: typeof ApiPublicHooksWinbackIntelligenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/weekly-summary': {
       id: '/api/public/hooks/weekly-summary'
       path: '/api/public/hooks/weekly-summary'
@@ -2669,6 +2690,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksUpcomingCoursesRoute: ApiPublicHooksUpcomingCoursesRoute,
   ApiPublicHooksWaitlistBroadcastRoute: ApiPublicHooksWaitlistBroadcastRoute,
   ApiPublicHooksWeeklySummaryRoute: ApiPublicHooksWeeklySummaryRoute,
+  ApiPublicHooksWinbackIntelligenceRoute:
+    ApiPublicHooksWinbackIntelligenceRoute,
   ApiPublicPaymentsGatewayWebhookRoute: ApiPublicPaymentsGatewayWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,

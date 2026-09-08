@@ -53,6 +53,8 @@ function LessonPlayer() {
   const { t: deepLinkSeconds } = Route.useSearch();
   const navigate = Route.useNavigate();
   const overridesVersion = useAdminOverridesVersion();
+  // Vem do layout de membro: falso quando a subscrição está em dívida.
+  const { hasAccess } = Route.useRouteContext() as { hasAccess?: boolean };
 
   // Recompute from (possibly-overridden) in-memory data so admin edits show up.
   const data = useMemo(() => {
@@ -165,6 +167,37 @@ function LessonPlayer() {
       </div>
     );
   }
+
+  // Membro em dívida: o catálogo abre, a aula não.
+  if (hasAccess === false) {
+    return (
+      <div className="mx-auto flex min-h-[60vh] w-full max-w-lg flex-col items-center justify-center gap-4 px-4 text-center">
+        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+          <Lock className="h-6 w-6 text-primary" />
+        </span>
+        <h1 className="font-display text-2xl">Esta aula está trancada</h1>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          O teu acesso está suspenso por falta de pagamento. Regulariza a
+          subscrição e voltas a esta aula exactamente onde ficaste — o teu
+          progresso, notas e certificados continuam guardados.
+        </p>
+        <Link
+          to="/subscricao"
+          className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+        >
+          Ver o meu plano
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+        <Link
+          to="/academia"
+          className="text-xs text-muted-foreground underline underline-offset-4"
+        >
+          Voltar à academia
+        </Link>
+      </div>
+    );
+  }
+
 
   const { course, current, next } = data;
   const nextBlocked = Boolean(next && lockedModules.has(next.module.id));
