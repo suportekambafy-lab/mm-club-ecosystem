@@ -453,6 +453,74 @@ function SubscriptionPage() {
 
       ) : (
         <>
+          {/* Dívida em aberto — o plano mantém-se, apenas está suspenso. */}
+          {debt && debt.cycles > 0 ? (
+            <section className="overflow-hidden rounded-2xl bg-amber-400/10 ring-1 ring-amber-400/40">
+              <div className="flex flex-wrap items-start justify-between gap-4 p-6">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-500">
+                    Pagamento em falta
+                  </p>
+                  <p className="mt-2 font-display text-2xl text-foreground">
+                    {formatMoney(debt.amountCents, debt.currency)} em dívida
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {debt.cycles === 1
+                      ? "1 mensalidade em atraso"
+                      : `${debt.cycles} mensalidades em atraso`}
+                    {" · "}
+                    {formatMoney(debt.cycleAmountCents, debt.currency)} cada
+                    {debt.dueSince ? ` · desde ${dt(debt.dueSince)}` : ""}
+                  </p>
+                  {debt.nextIncreaseAt ? (
+                    <p className="mt-1 text-xs text-amber-500">
+                      Se não pagares, a dívida sobe para{" "}
+                      {formatMoney(
+                        debt.amountCents + debt.cycleAmountCents,
+                        debt.currency,
+                      )}{" "}
+                      a {dt(debt.nextIncreaseAt)}.
+                    </p>
+                  ) : null}
+                </div>
+                <button
+                  type="button"
+                  disabled={busy === "settle"}
+                  onClick={() =>
+                    onSelectPlan(debt.priceSlug ?? sub.priceSlug, "settle")
+                  }
+                  className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-5 py-2.5 text-sm font-semibold text-amber-950 transition hover:bg-amber-300 disabled:opacity-60"
+                >
+                  {busy === "settle" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : null}
+                  Pagar faturas pendentes
+                </button>
+              </div>
+              {debt.unpaidInvoices.length > 0 ? (
+                <ul className="border-t border-amber-400/30">
+                  {debt.unpaidInvoices.map((inv) => (
+                    <li
+                      key={inv.id}
+                      className="flex items-center gap-4 border-b border-amber-400/20 px-6 py-3 text-sm last:border-0"
+                    >
+                      <FileText className="h-4 w-4 shrink-0 text-amber-500" />
+                      <span className="min-w-0 flex-1 truncate text-foreground">
+                        {inv.number ?? "Fatura"}
+                        <span className="text-muted-foreground">
+                          {inv.issuedAt ? ` · ${dt(inv.issuedAt)}` : ""}
+                        </span>
+                      </span>
+                      <span className="shrink-0 tabular-nums text-foreground">
+                        {formatMoney(inv.totalCents, inv.currency)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </section>
+          ) : null}
+
           {/* Plano */}
           <section className="overflow-hidden rounded-2xl bg-surface-1 ring-1 ring-border">
             <div className="flex flex-wrap items-start justify-between gap-4 p-6">
