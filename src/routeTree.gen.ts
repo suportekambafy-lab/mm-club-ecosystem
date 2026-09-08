@@ -36,6 +36,7 @@ import { Route as AdminSegurancaRouteImport } from './routes/admin.seguranca'
 import { Route as AdminSaudeRouteImport } from './routes/admin.saude'
 import { Route as AdminQuizzesRouteImport } from './routes/admin.quizzes'
 import { Route as AdminProgressoRouteImport } from './routes/admin.progresso'
+import { Route as AdminParceriasRouteImport } from './routes/admin.parcerias'
 import { Route as AdminModeracaoRouteImport } from './routes/admin.moderacao'
 import { Route as AdminLivesRouteImport } from './routes/admin.lives'
 import { Route as AdminFinanceiroRouteImport } from './routes/admin.financeiro'
@@ -261,6 +262,11 @@ const AdminQuizzesRoute = AdminQuizzesRouteImport.update({
 const AdminProgressoRoute = AdminProgressoRouteImport.update({
   id: '/progresso',
   path: '/progresso',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminParceriasRoute = AdminParceriasRouteImport.update({
+  id: '/parcerias',
+  path: '/parcerias',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminModeracaoRoute = AdminModeracaoRouteImport.update({
@@ -801,6 +807,7 @@ export interface FileRoutesByFullPath {
   '/admin/financeiro': typeof AdminFinanceiroRouteWithChildren
   '/admin/lives': typeof AdminLivesRouteWithChildren
   '/admin/moderacao': typeof AdminModeracaoRoute
+  '/admin/parcerias': typeof AdminParceriasRoute
   '/admin/progresso': typeof AdminProgressoRoute
   '/admin/quizzes': typeof AdminQuizzesRoute
   '/admin/saude': typeof AdminSaudeRoute
@@ -915,6 +922,7 @@ export interface FileRoutesByTo {
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/moderacao': typeof AdminModeracaoRoute
+  '/admin/parcerias': typeof AdminParceriasRoute
   '/admin/progresso': typeof AdminProgressoRoute
   '/admin/quizzes': typeof AdminQuizzesRoute
   '/admin/saude': typeof AdminSaudeRoute
@@ -1035,6 +1043,7 @@ export interface FileRoutesById {
   '/admin/financeiro': typeof AdminFinanceiroRouteWithChildren
   '/admin/lives': typeof AdminLivesRouteWithChildren
   '/admin/moderacao': typeof AdminModeracaoRoute
+  '/admin/parcerias': typeof AdminParceriasRoute
   '/admin/progresso': typeof AdminProgressoRoute
   '/admin/quizzes': typeof AdminQuizzesRoute
   '/admin/saude': typeof AdminSaudeRoute
@@ -1157,6 +1166,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro'
     | '/admin/lives'
     | '/admin/moderacao'
+    | '/admin/parcerias'
     | '/admin/progresso'
     | '/admin/quizzes'
     | '/admin/saude'
@@ -1271,6 +1281,7 @@ export interface FileRouteTypes {
     | '/admin/eventos'
     | '/admin/ferramentas'
     | '/admin/moderacao'
+    | '/admin/parcerias'
     | '/admin/progresso'
     | '/admin/quizzes'
     | '/admin/saude'
@@ -1390,6 +1401,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro'
     | '/admin/lives'
     | '/admin/moderacao'
+    | '/admin/parcerias'
     | '/admin/progresso'
     | '/admin/quizzes'
     | '/admin/saude'
@@ -1719,6 +1731,13 @@ declare module '@tanstack/react-router' {
       path: '/progresso'
       fullPath: '/admin/progresso'
       preLoaderRoute: typeof AdminProgressoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/parcerias': {
+      id: '/admin/parcerias'
+      path: '/parcerias'
+      fullPath: '/admin/parcerias'
+      preLoaderRoute: typeof AdminParceriasRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/moderacao': {
@@ -2570,6 +2589,7 @@ interface AdminRouteChildren {
   AdminFinanceiroRoute: typeof AdminFinanceiroRouteWithChildren
   AdminLivesRoute: typeof AdminLivesRouteWithChildren
   AdminModeracaoRoute: typeof AdminModeracaoRoute
+  AdminParceriasRoute: typeof AdminParceriasRoute
   AdminProgressoRoute: typeof AdminProgressoRoute
   AdminQuizzesRoute: typeof AdminQuizzesRoute
   AdminSaudeRoute: typeof AdminSaudeRoute
@@ -2589,6 +2609,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminFinanceiroRoute: AdminFinanceiroRouteWithChildren,
   AdminLivesRoute: AdminLivesRouteWithChildren,
   AdminModeracaoRoute: AdminModeracaoRoute,
+  AdminParceriasRoute: AdminParceriasRoute,
   AdminProgressoRoute: AdminProgressoRoute,
   AdminQuizzesRoute: AdminQuizzesRoute,
   AdminSaudeRoute: AdminSaudeRoute,

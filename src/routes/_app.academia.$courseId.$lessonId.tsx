@@ -271,6 +271,14 @@ function LessonPlayer() {
                     current.module.title,
                     course.title,
                   )}
+                  context={{
+                    courseId: course.id,
+                    courseTitle: course.title,
+                    moduleId: current.module.id,
+                    moduleTitle: current.module.title,
+                    lessonId: current.lesson.id,
+                    lessonTitle: current.lesson.title,
+                  }}
                 />
               </div>
 
