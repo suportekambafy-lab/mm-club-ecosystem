@@ -320,7 +320,7 @@ export const getCreditPurchases = createServerFn({ method: "POST" })
     const { data: payments } = await supabaseAdmin
       .from("billing_payments")
       .select(
-        "id, user_id, amount_cents, currency, status, paid_at, created_at, metadata, price:catalog_prices(id, slug, credits, product:catalog_products(name, kind))",
+        "id, user_id, amount_cents, currency, status, paid_at, created_at, metadata, price:catalog_prices(id, slug, grants_credits, product:catalog_products(name, kind))",
       )
       .order("created_at", { ascending: false })
       .limit(500);
@@ -334,7 +334,7 @@ export const getCreditPurchases = createServerFn({ method: "POST" })
       const price = (p as any).price;
       if (price?.product?.kind !== "credit_pack") continue;
       const paid = p.status === "paid";
-      const grantedCredits = Number(price?.credits ?? 0);
+      const grantedCredits = Number(price?.grants_credits ?? 0);
       rows.push({
         paymentId: p.id,
         userId: p.user_id ?? null,
