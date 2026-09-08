@@ -106,13 +106,20 @@ function SubscriptionPage() {
     (m) => m.status !== "revoked",
   );
 
-  const load = async () => {
+  // O alvo de "ver como cliente" só é conhecido depois da hidratação, por isso
+  // o carregamento recebe sempre o alvo explicitamente.
+  const loadedFor = useRef<string | null | undefined>(undefined);
+
+  const load = async (target: string | null = viewAsUserId) => {
+    loadedFor.current = target;
     try {
-      setOverview(await getBillingOverview({ data: { viewAsUserId } }));
-      listInvoices({ data: { viewAsUserId } })
+      setOverview(
+        await getBillingOverview({ data: { viewAsUserId: target } }),
+      );
+      listInvoices({ data: { viewAsUserId: target } })
         .then(setInvoices)
         .catch(() => setInvoices([]));
-      getOutstandingBalance({ data: { viewAsUserId } })
+      getOutstandingBalance({ data: { viewAsUserId: target } })
         .then(setDebt)
         .catch(() => setDebt(null));
     } catch (e) {
