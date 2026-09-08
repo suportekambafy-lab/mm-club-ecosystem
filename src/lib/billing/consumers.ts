@@ -24,6 +24,9 @@ export const CONSUMERS_BY_EVENT: Record<DomainEventType, ConsumerName[]> = {
   SubscriptionCancelled: ["timeline", "email"],
   SubscriptionExpired: ["entitlements", "timeline", "email"],
   SubscriptionResumed: ["entitlements", "timeline"],
+  // Renovação normal: sem email (o recibo já vai no PaymentSucceeded/fatura),
+  // mas o acesso TEM de ser reemitido com o novo fim de período.
+  SubscriptionRenewed: ["entitlements", "timeline"],
   TrialStarted: ["entitlements", "timeline"],
   TrialEnded: ["timeline", "email"],
   PaymentSucceeded: ["timeline", "credits"],

@@ -649,7 +649,19 @@ async function renewPeriod(
       aggregateId: subscriptionId,
       payload: { userId, subscriptionId },
     });
+    return;
   }
+
+  // Renovação de uma subscrição já ativa: sem este evento os acessos
+  // continuavam a expirar no fim do período ANTERIOR (membro paga e perde
+  // acesso dias depois). Idempotente por período.
+  await emitEvent({
+    type: "SubscriptionRenewed",
+    aggregateType: "subscription",
+    aggregateId: subscriptionId,
+    idempotencyKey: `renew:${subscriptionId}:${end.toISOString()}`,
+    payload: { userId, subscriptionId },
+  });
 }
 
 async function markPastDue(subscriptionId: string, userId: string) {

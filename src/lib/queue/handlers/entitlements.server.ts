@@ -15,6 +15,8 @@ export async function entitlementsConsumer(job: JobPayload): Promise<void> {
 
   switch (job.eventType) {
     case "SubscriptionActivated":
+    case "SubscriptionRenewed":
+    case "SubscriptionResumed":
     case "SubscriptionUpgraded":
     case "SubscriptionDowngraded":
     case "PaymentRecovered": {
