@@ -87,7 +87,11 @@ export type BillingOverview = {
  * Resolve de quem é a faturação a mostrar. Um admin pode pedir a vista de
  * outro membro ("entrar como cliente"); qualquer outra pessoa só vê a sua.
  */
-async function resolveBillingTarget<C extends { rpc: unknown }>(
+async function resolveBillingTarget<
+  C extends {
+    rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown }>;
+  },
+>(
   context: { supabase: C; userId: string },
   requested?: string | null,
 ): Promise<{ client: C; userId: string }> {
