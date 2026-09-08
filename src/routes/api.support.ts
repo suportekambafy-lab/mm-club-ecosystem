@@ -111,7 +111,11 @@ export const Route = createFileRoute("/api/support")({
 
         const lastUser = [...(messages as UIMessage[])].reverse().find((m) => m.role === "user");
         const { lessonMomentsContext } = await import("@/lib/lesson-moments.server");
-        const lessonsContext = lastUser ? await lessonMomentsContext(textOf(lastUser), key) : "";
+        const { supportAccountContext } = await import("@/lib/support-account.server");
+        const [lessonsContext, accountContext] = await Promise.all([
+          lastUser ? lessonMomentsContext(textOf(lastUser), key) : Promise.resolve(""),
+          supportAccountContext(auth.user.id),
+        ]);
 
         // Guarda logo a pergunta: se o modelo falhar, a mensagem do membro não
         // se perde e a re-tentativa é idempotente (client_id estável).
