@@ -256,7 +256,7 @@ export const revertModerationAction = createServerFn({ method: "POST" })
     const restore = await restoreModeratedContent(data.actionId);
 
     if (action.author_id) {
-      await context.supabase.from("notifications").insert({
+      await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
         user_id: action.author_id,
         kind: "appeal",
         course_id: "recurso-aceite",
@@ -321,7 +321,7 @@ export const decideAppeal = createServerFn({ method: "POST" })
     }
 
 
-    await context.supabase.from("notifications").insert({
+    await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: appeal.user_id,
       kind: "appeal",
       course_id: data.decision === "accepted" ? "recurso-aceite" : "recurso-recusado",
