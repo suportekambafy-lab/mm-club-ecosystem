@@ -34,11 +34,6 @@ export function DebtBanner({ userId }: { userId: string | null }) {
     };
   }, [userId]);
 
-  return () => {
-      cancelled = true;
-    };
-  }, [userId]);
-
   return (
     <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-amber-400/40 bg-amber-400/10 px-4 py-3.5 text-amber-100 sm:flex-row sm:items-center sm:gap-4 sm:px-5">
       <AlertTriangle className="h-5 w-5 shrink-0 text-amber-400" />
