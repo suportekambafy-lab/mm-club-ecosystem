@@ -52,7 +52,8 @@ export async function entitlementsConsumer(job: JobPayload): Promise<void> {
         userId,
         productId,
         source: "purchase",
-        sourceId: (job.paymentId as string | undefined) ?? null,
+        // uuid column — never the gateway reference (tr_…).
+        sourceId: (job.paymentRowId as string | undefined) ?? null,
       });
       return;
     }
