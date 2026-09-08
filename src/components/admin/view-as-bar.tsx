@@ -8,6 +8,16 @@ import {
   type ViewAsTarget,
 } from "@/lib/admin/view-as";
 
+const STATUS_PT: Record<string, string> = {
+  active: "plano ativo",
+  trialing: "em período de teste",
+  past_due: "pagamento em falta",
+  grace_period: "período de tolerância",
+  suspended: "suspensa",
+  cancelled: "cancelada",
+  expired: "expirada",
+};
+
 /** Barra fixa a lembrar o admin de que está dentro da conta de um membro. */
 export function ViewAsBar({ target }: { target: ViewAsTarget }) {
   const [busy, setBusy] = useState(false);
