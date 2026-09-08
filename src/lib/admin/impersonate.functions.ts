@@ -12,6 +12,10 @@ export type ImpersonationTicket = {
   userId: string;
   name: string;
   email: string;
+  /** Acesso real do membro (entitlement academy.access). */
+  hasAccess: boolean;
+  /** Estado real da subscrição (active, trialing, suspended, ...). */
+  status: string | null;
   /** Token de uso único para o browser abrir a sessão do membro. */
   tokenHash: string;
 };
@@ -43,6 +47,18 @@ export const startImpersonation = createServerFn({ method: "POST" })
       .eq("id", data.userId)
       .maybeSingle();
 
+    const { data: access } = await supabaseAdmin.rpc("has_feature", {
+      _user_id: data.userId,
+      _feature: "academy.access",
+    });
+    const { data: sub } = await supabaseAdmin
+      .from("billing_subscriptions")
+      .select("status, created_at")
+      .eq("user_id", data.userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
     const link = await supabaseAdmin.auth.admin.generateLink({
       type: "magiclink",
       email,
@@ -64,6 +80,8 @@ export const startImpersonation = createServerFn({ method: "POST" })
       userId: data.userId,
       name: profile?.display_name ?? email.split("@")[0] ?? "Membro",
       email,
+      hasAccess: Boolean(access),
+      status: sub?.status ?? null,
       tokenHash,
     };
   });

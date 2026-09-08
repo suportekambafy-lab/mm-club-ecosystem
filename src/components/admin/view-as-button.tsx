@@ -47,7 +47,8 @@ export function ViewAsButton({
         userId: ticket.userId,
         name: ticket.name,
         email: ticket.email,
-        hasAccess: false,
+        hasAccess: ticket.hasAccess,
+        status: ticket.status,
       });
       toast.success(`Sessão aberta como ${ticket.name}`);
       await router.navigate({ to: "/dashboard" });

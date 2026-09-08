@@ -16,7 +16,7 @@ export function DebtBanner({ userId }: { userId: string | null }) {
     let cancelled = false;
     (async () => {
       try {
-        const b = await getOutstandingBalance({ data: { viewAsUserId: userId } });
+        const b = await getOutstandingBalance({ data: {} });
         if (cancelled || b.amountCents <= 0) return;
         setCycles(b.cycles);
         setDebt(

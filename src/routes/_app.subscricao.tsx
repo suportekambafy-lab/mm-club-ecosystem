@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -38,7 +38,6 @@ import {
   type InvoiceListItem,
   type OutstandingBalance,
 } from "@/lib/billing.functions";
-import { useViewAs } from "@/hooks/use-view-as";
 import { formatMoney } from "@/lib/billing/types";
 
 
@@ -86,9 +85,8 @@ const STATUS_LABEL: Record<string, string> = {
 
 function SubscriptionPage() {
   const navigate = useNavigate();
-  // Um admin em modo "entrar como cliente" vê a faturação real desse membro.
-  const viewAs = useViewAs();
-  const viewAsUserId = viewAs?.userId ?? null;
+  // Em modo "entrar como cliente" a sessão já é do próprio membro, por isso a
+  // faturação é sempre a da conta autenticada.
   const [debt, setDebt] = useState<OutstandingBalance | null>(null);
   const [overview, setOverview] = useState<BillingOverview | null>(null);
   const [loading, setLoading] = useState(true);
@@ -106,22 +104,16 @@ function SubscriptionPage() {
     (m) => m.status !== "revoked",
   );
 
-  // O alvo de "ver como cliente" só é conhecido depois da hidratação, por isso
-  // o carregamento recebe sempre o alvo explicitamente.
-  const loadedFor = useRef<string | null | undefined>(undefined);
-
-  const load = async (target: string | null = viewAsUserId) => {
-    loadedFor.current = target;
+  const load = async () => {
     try {
-      setOverview(
-        await getBillingOverview({ data: { viewAsUserId: target } }),
-      );
-      listInvoices({ data: { viewAsUserId: target } })
+      setOverview(await getBillingOverview({ data: {} }));
+      listInvoices({ data: {} })
         .then(setInvoices)
         .catch(() => setInvoices([]));
-      getOutstandingBalance({ data: { viewAsUserId: target } })
+      getOutstandingBalance({ data: {} })
         .then(setDebt)
         .catch(() => setDebt(null));
+
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha ao carregar faturação.");
     } finally {
@@ -182,14 +174,7 @@ function SubscriptionPage() {
   }, []);
 
 
-  // Ao entrar/sair do modo "ver como cliente", recarrega com a conta certa.
-  useEffect(() => {
-    if (loadedFor.current === undefined) return; // ainda no primeiro load
-    if (loadedFor.current === viewAsUserId) return;
-    setLoading(true);
-    void load(viewAsUserId).finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewAsUserId]);
+
 
   const run = async (key: string, fn: () => Promise<unknown>, ok?: string) => {
     setBusy(key);
