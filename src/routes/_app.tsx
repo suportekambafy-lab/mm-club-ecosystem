@@ -232,7 +232,7 @@ const flatNav = navItems;
 function AppLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
-  const { authUser: initialAuthUser, codeAccepted: initialCodeAccepted } = Route.useRouteContext() as { authUser: User; codeAccepted: boolean };
+  const { authUser: initialAuthUser, codeAccepted: initialCodeAccepted, hasAccess } = Route.useRouteContext() as { authUser: User; codeAccepted: boolean; hasAccess: boolean };
   const { theme, toggle: toggleTheme, mounted: themeMounted } = useTheme();
   const codeAccepted = initialCodeAccepted;
   const [authUser, setAuthUser] = useState<User | null>(initialAuthUser);
