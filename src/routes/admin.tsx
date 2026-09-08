@@ -30,6 +30,7 @@ import {
   GraduationCap,
   Gavel,
   Headset,
+  Coins,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import mmIcon from "@/assets/mm-icon.png.asset.json";
@@ -87,6 +88,7 @@ type AdminTo =
   | "/admin/eventos"
   | "/admin/lives"
   | "/admin/ferramentas"
+  | "/admin/parcerias"
   | "/admin/comunicacao"
   | "/admin/seguranca"
   | "/admin/moderacao"
@@ -110,6 +112,7 @@ const nav: Array<{ label: string; items: NavItem[] }> = [
       { to: "/admin/financeiro/catalogo", label: "Catálogo", icon: Package },
       { to: "/admin/saude", label: "Saúde do billing", icon: HeartPulse },
       { to: "/admin/comunicacao", label: "Comunicação", icon: Mail },
+      { to: "/admin/parcerias", label: "Parcerias & Créditos", icon: Coins },
 
     ],
   },
@@ -147,6 +150,7 @@ const CRUMBS: Record<string, string> = {
   "/admin/financeiro/catalogo": "Catálogo",
   "/admin/saude": "Saúde do billing",
   "/admin/comunicacao": "Comunicação",
+  "/admin/parcerias": "Parcerias & Créditos",
   "/admin/cursos": "Cursos",
   "/admin/aulas": "Aulas",
   "/admin/progresso": "Progresso dos alunos",
