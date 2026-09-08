@@ -169,7 +169,7 @@ function LessonPlayer() {
   }
 
   // Membro em dívida: o catálogo abre, a aula não.
-  if (!hasAccess) {
+  if (hasAccess === false) {
     return (
       <div className="mx-auto flex min-h-[60vh] w-full max-w-lg flex-col items-center justify-center gap-4 px-4 text-center">
         <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
