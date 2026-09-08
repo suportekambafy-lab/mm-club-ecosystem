@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Eye, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ViewAsButton } from "@/components/admin/view-as-button";
 import {
   day,
   dt,
@@ -145,12 +146,17 @@ function CustomerPage() {
       </div>
 
       <header className="rounded-2xl border border-border bg-surface-1 p-5">
-        <h1 className="text-xl font-semibold">{data.name ?? "Membro"}</h1>
-        <p className="text-sm text-muted-foreground">{data.email ?? userId}</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Cliente desde {day(data.createdAt)}
-          {data.country ? ` · ${data.country}` : ""}
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-xl font-semibold">{data.name ?? "Membro"}</h1>
+            <p className="text-sm text-muted-foreground">{data.email ?? userId}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Cliente desde {day(data.createdAt)}
+              {data.country ? ` · ${data.country}` : ""}
+            </p>
+          </div>
+          <ViewAsButton userId={userId} />
+        </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
             label="Total faturado (líquido)"

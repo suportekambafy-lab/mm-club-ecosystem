@@ -44,6 +44,8 @@ import { NotificationsBell } from "@/components/mm/notifications";
 import { NotificationsPrompt } from "@/components/mm/notifications-prompt";
 import { isLockedPath } from "@/lib/member-access";
 import { DebtBanner } from "@/components/mm/debt-banner";
+import { ViewAsBar } from "@/components/admin/view-as-bar";
+import { useViewAs } from "@/hooks/use-view-as";
 
 import { cn } from "@/lib/utils";
 // Boot-time: apply admin overrides to in-memory data
@@ -232,7 +234,10 @@ const flatNav = navItems;
 function AppLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
-  const { authUser: initialAuthUser, codeAccepted: initialCodeAccepted, hasAccess } = Route.useRouteContext() as { authUser: User; codeAccepted: boolean; hasAccess: boolean };
+  const { authUser: initialAuthUser, codeAccepted: initialCodeAccepted, hasAccess: ownAccess } = Route.useRouteContext() as { authUser: User; codeAccepted: boolean; hasAccess: boolean };
+  // Modo admin "ver como cliente": o acesso passa a ser o do membro escolhido.
+  const viewAs = useViewAs();
+  const hasAccess = viewAs ? viewAs.hasAccess : ownAccess;
   const { theme, toggle: toggleTheme, mounted: themeMounted } = useTheme();
   const codeAccepted = initialCodeAccepted;
   const [authUser, setAuthUser] = useState<User | null>(initialAuthUser);
@@ -760,8 +765,9 @@ function AppLayout() {
             }}
           />
           )}
+          {viewAs ? <ViewAsBar target={viewAs} /> : null}
           {!hasAccess && authUser ? (
-            <DebtBanner userId={authUser.id} />
+            <DebtBanner userId={viewAs ? viewAs.userId : authUser.id} />
           ) : null}
           {authUser ? <Outlet /> : <div className="min-h-[60vh]" />}
         </main>

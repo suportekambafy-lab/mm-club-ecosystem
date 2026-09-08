@@ -10,6 +10,7 @@ import {
   STATUS_LABEL,
 } from "@/components/admin/finance-ui";
 import { listAdminSubscriptions } from "@/lib/admin-finance.functions";
+import { ViewAsButton } from "@/components/admin/view-as-button";
 import type { SubscriptionStatus } from "@/lib/billing/types";
 import { cn } from "@/lib/utils";
 
@@ -196,6 +197,7 @@ function SubscriptionsPage() {
                     >
                       Abrir
                     </Link>
+                    <ViewAsButton userId={r.userId} className="ml-2" />
                   </td>
                 </tr>
               ))}
