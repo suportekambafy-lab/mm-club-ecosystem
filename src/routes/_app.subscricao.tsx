@@ -105,22 +105,16 @@ function SubscriptionPage() {
     (m) => m.status !== "revoked",
   );
 
-  // O alvo de "ver como cliente" só é conhecido depois da hidratação, por isso
-  // o carregamento recebe sempre o alvo explicitamente.
-  const loadedFor = useRef<string | null | undefined>(undefined);
-
-  const load = async (target: string | null = viewAsUserId) => {
-    loadedFor.current = target;
+  const load = async () => {
     try {
-      setOverview(
-        await getBillingOverview({ data: { viewAsUserId: target } }),
-      );
-      listInvoices({ data: { viewAsUserId: target } })
+      setOverview(await getBillingOverview({ data: {} }));
+      listInvoices({ data: {} })
         .then(setInvoices)
         .catch(() => setInvoices([]));
-      getOutstandingBalance({ data: { viewAsUserId: target } })
+      getOutstandingBalance({ data: {} })
         .then(setDebt)
         .catch(() => setDebt(null));
+
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha ao carregar faturação.");
     } finally {
