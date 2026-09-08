@@ -26,7 +26,8 @@ export type EmailKind =
   | "community_post"
   | "short_published"
   | "short_reply"
-  | "product_update";
+  | "product_update"
+  | "winback";
 
 type SendOpts = {
   to: string;
@@ -873,6 +874,161 @@ export const emailTemplates = {
       ),
     };
   },
+
+  /**
+   * Recuperação inteligente: um email por gatilho, sempre com o mesmo pedido
+   * (regularizar) mas com o motivo do momento — live a começar, aulas novas,
+   * progresso interrompido, comunidade activa ou marco de dias em dívida.
+   */
+  winback(opts: {
+    name: string;
+    variant: "live" | "lessons" | "progress" | "community" | "milestone";
+    days: number;
+    debt?: string | null;
+    /** Live que vem a caminho. */
+    live?: { title: string; whenLabel: string; cover?: string | null } | null;
+    /** Curso / aulas em destaque. */
+    course?: { courseId: string; title: string; cover?: string | null } | null;
+    lessonsCount?: number | null;
+    /** Aula onde ficou. */
+    progress?: { courseTitle: string; lessonTitle: string; percent: number } | null;
+    posts?: number | null;
+  }) {
+    const safe = escapeHtml(opts.name);
+    const first = safe.split(" ")[0] ?? safe;
+    const coverRaw = opts.live?.cover ?? opts.course?.cover ?? null;
+    const cover = coverRaw
+      ? coverRaw.startsWith("http")
+        ? coverRaw
+        : `${APP_URL}${coverRaw}`
+      : null;
+    const hero = cover
+      ? `<div style="margin:0 -40px 24px;"><img src="${cover}" alt="MM Club" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;"></div>`
+      : "";
+
+    let eyebrow = "Recuperação";
+    let subject = "";
+    let heading = "";
+    let lines: string[] = [];
+
+    if (opts.variant === "live" && opts.live) {
+      eyebrow = "Aula ao vivo";
+      subject = `${opts.live.title} é ${opts.live.whenLabel} — e tu estás de fora`;
+      heading = opts.live.title;
+      lines = [
+        `${first}, temos aula ao vivo ${opts.live.whenLabel}.`,
+        "Vai ser em direto, com perguntas e respostas, e não fica igual em gravação.",
+        "O problema é este: a tua conta está suspensa por falta de pagamento, por isso a sala vai estar fechada para ti.",
+        "Regulariza agora e entras na live com todos os outros.",
+      ];
+    } else if (opts.variant === "lessons" && opts.course) {
+      eyebrow = "Academia";
+      subject = `Tens ${opts.lessonsCount ?? "novas"} aulas fechadas no ${opts.course.title}`;
+      heading = `${opts.course.title} está à tua espera`;
+      lines = [
+        `${first}, o ${opts.course.title} tem ${opts.lessonsCount ?? "várias"} aulas prontas: marca e posicionamento, produto, loja a vender, tráfego, criativos e escala.`,
+        "É o caminho completo, na ordem certa, sem enfeites.",
+        "Só que, com a conta suspensa, nenhuma dessas aulas abre.",
+        "Regulariza o pagamento e desbloqueias tudo hoje mesmo.",
+      ];
+    } else if (opts.variant === "progress" && opts.progress) {
+      eyebrow = "O teu progresso";
+      subject = `Paraste em "${opts.progress.lessonTitle}" — falta pouco`;
+      heading = "Estavas a meio do caminho";
+      lines = [
+        `${first}, ias em ${opts.progress.percent}% do ${opts.progress.courseTitle} e paraste em "${opts.progress.lessonTitle}".`,
+        "Todo esse progresso continua guardado — nada foi apagado.",
+        "Mas enquanto a conta estiver suspensa não consegues abrir a aula seguinte.",
+        "Regulariza e continuas exactamente de onde ficaste.",
+      ];
+    } else if (opts.variant === "community") {
+      eyebrow = "Comunidade";
+      subject = `${opts.posts ?? "Vários"} tópicos novos na comunidade esta semana`;
+      heading = "A comunidade não parou";
+      lines = [
+        `${first}, houve ${opts.posts ?? "vários"} tópicos novos esta semana: pessoas a mostrar lojas, criativos, números e a tirar dúvidas entre elas.`,
+        "É ali que aparecem as ideias que ninguém publica no YouTube.",
+        "Com a conta suspensa, a comunidade está fechada para ti.",
+        "Volta hoje — é um minuto.",
+      ];
+    } else {
+      eyebrow = "A tua conta";
+      const stage =
+        opts.days <= 3
+          ? {
+              subject: `${first}, o teu acesso está suspenso — resolve em 1 minuto`,
+              heading: "Falta um passo",
+              lines: [
+                "O pagamento não foi concluído e o teu acesso ficou suspenso.",
+                "Nada foi apagado: perfil, progresso, certificados e notas continuam guardados.",
+                "Basta atualizar o método de pagamento e tudo volta imediatamente.",
+              ],
+            }
+          : opts.days <= 14
+            ? {
+                subject: `Já vão ${opts.days} dias fora, ${first}`,
+                heading: `${opts.days} dias parado`,
+                lines: [
+                  `Estás há ${opts.days} dias sem acesso às aulas, às lives e à comunidade.`,
+                  "Quem continuou já avançou módulos inteiros neste tempo — e a diferença só cresce.",
+                  "A boa notícia: voltas exactamente ao ponto onde ficaste.",
+                ],
+              }
+            : opts.days <= 45
+              ? {
+                  subject: `${first}, ainda dá para recuperar o tempo perdido`,
+                  heading: "Isto ainda não acabou",
+                  lines: [
+                    `Vais em ${opts.days} dias sem entrar. Não te escrevo por causa da dívida — escrevo porque começaste algo e ficou a meio.`,
+                    "O plano continua o mesmo: uma aula por dia, executar, medir, ajustar.",
+                    "Regulariza e em duas semanas estás outra vez à frente.",
+                  ],
+                }
+              : {
+                  subject: `Última chamada, ${first}`,
+                  heading: "Última chamada",
+                  lines: [
+                    `São ${opts.days} dias em dívida. Ao chegar aos 90 a subscrição é cancelada de forma definitiva.`,
+                    "Ainda dá para travar isso hoje e manter tudo o que já construíste dentro do clube.",
+                    "Depois disso, voltar significa começar de novo.",
+                  ],
+                };
+      subject = stage.subject;
+      heading = stage.heading;
+      lines = stage.lines;
+    }
+
+    const paragraphs = lines
+      .map(
+        (t) =>
+          `<p style="font-size:16px;line-height:1.7;color:#d4d4d4;margin:0 0 16px;">${escapeHtml(t)}</p>`,
+      )
+      .join("");
+
+    const debtBox = `<div style="background:#161616;border:1px solid #232323;border-radius:12px;padding:16px 18px;margin:6px 0 26px;">
+      <div style="font-size:11px;color:#c9a961;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">Estado da conta</div>
+      <div style="font-size:16px;color:#ffffff;font-weight:600;line-height:1.5;">Suspensa${
+        opts.debt ? ` · ${escapeHtml(opts.debt)} em dívida` : ""
+      } — reativa em menos de um minuto.</div>
+    </div>`;
+
+    return {
+      subject,
+      html: layout(
+        subject,
+        `${hero}
+         <div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">${escapeHtml(eyebrow)}</div>
+         <h1 style="font-size:26px;color:#ffffff;margin:0 0 18px;font-weight:600;line-height:1.28;">${escapeHtml(heading)}</h1>
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 22px;">Olá ${safe},</p>
+         ${paragraphs}
+         ${debtBox}
+         <p style="margin:0 0 8px;">${btn("Regularizar e voltar →", `${APP_URL}/subscricao`)}</p>
+         <p style="font-size:14px;line-height:1.65;color:#737373;margin:18px 0 0;">Se houve algum problema com o pagamento, responde a este email que resolvemos contigo.</p>`,
+      ),
+    };
+  },
+
+
 
 
 

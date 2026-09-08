@@ -42,6 +42,8 @@ import { MMLogo } from "@/components/mm/logo";
 import { GlobalSearch } from "@/components/mm/global-search";
 import { NotificationsBell } from "@/components/mm/notifications";
 import { NotificationsPrompt } from "@/components/mm/notifications-prompt";
+import { isLockedPath } from "@/lib/member-access";
+import { DebtBanner } from "@/components/mm/debt-banner";
 
 import { cn } from "@/lib/utils";
 // Boot-time: apply admin overrides to in-memory data
@@ -74,26 +76,45 @@ export const Route = createFileRoute("/_app")({
       _role: "admin",
     });
 
+    let hasAccess = true;
+
     if (!isAdmin) {
       // Access is decided by Entitlements, never by a payment status.
-      const { data: hasAccess } = await supabase.rpc("has_feature", {
+      const { data: access } = await supabase.rpc("has_feature", {
         _user_id: userId,
         _feature: "academy.access",
       });
+      hasAccess = Boolean(access);
+
       if (!hasAccess) {
-        // Leva o membro directamente ao plano que já tinha escolhido.
-        const intended = readIntendedPlan();
-        const offerPath = intendedOfferPath(intended);
-        if (offerPath) {
-          throw redirect({ to: offerPath as never, replace: true });
+        // Quem já foi membro entra sempre — só com o conteúdo trancado.
+        const { data: subs } = await supabase
+          .from("billing_subscriptions")
+          .select("id")
+          .eq("user_id", userId)
+          .limit(1);
+        const wasMember = (subs ?? []).length > 0;
+
+        if (!wasMember) {
+          // Nunca subscreveu: segue para o plano que já tinha escolhido.
+          const intended = readIntendedPlan();
+          const offerPath = intendedOfferPath(intended);
+          if (offerPath) {
+            throw redirect({ to: offerPath as never, replace: true });
+          }
+          throw redirect({
+            to: "/checkout",
+            search: intended ? ({ plan: intended.slug } as never) : undefined,
+            replace: true,
+          });
         }
-        throw redirect({
-          to: "/checkout",
-          search: intended ? ({ plan: intended.slug } as never) : undefined,
-          replace: true,
-        });
+
+        if (isLockedPath(location.pathname)) {
+          throw redirect({ to: "/subscricao", replace: true });
+        }
+      } else {
+        clearIntendedPlan();
       }
-      clearIntendedPlan();
     }
 
 
