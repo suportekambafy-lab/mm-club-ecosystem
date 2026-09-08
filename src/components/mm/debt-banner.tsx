@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { AlertTriangle, ArrowRight } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { getOutstandingBalance } from "@/lib/billing.functions";
 
 /**
  * Aviso permanente para quem está em dívida: explica em linguagem simples
@@ -9,26 +9,25 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export function DebtBanner({ userId }: { userId: string | null }) {
   const [debt, setDebt] = useState<string | null>(null);
+  const [cycles, setCycles] = useState(0);
 
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("billing_invoices")
-        .select("total_cents, currency, status")
-        .eq("user_id", userId)
-        .neq("status", "paid")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (cancelled || !data) return;
-      setDebt(
-        new Intl.NumberFormat("pt-PT", {
-          style: "currency",
-          currency: String(data.currency ?? "EUR"),
-        }).format((data.total_cents as number) / 100),
-      );
+      try {
+        const b = await getOutstandingBalance({ data: { viewAsUserId: userId } });
+        if (cancelled || b.amountCents <= 0) return;
+        setCycles(b.cycles);
+        setDebt(
+          new Intl.NumberFormat("pt-PT", {
+            style: "currency",
+            currency: b.currency || "EUR",
+          }).format(b.amountCents / 100),
+        );
+      } catch {
+        /* sem detalhe da dívida, mostramos a mensagem genérica */
+      }
     })();
     return () => {
       cancelled = true;
@@ -40,7 +39,9 @@ export function DebtBanner({ userId }: { userId: string | null }) {
       <AlertTriangle className="h-5 w-5 shrink-0 text-amber-400" />
       <div className="min-w-0 flex-1 text-sm leading-relaxed text-amber-950 dark:text-amber-100">
         <strong className="font-semibold">O teu acesso está suspenso.</strong>{" "}
-        {debt ? `Tens ${debt} em dívida. ` : "Há um pagamento em falta. "}
+        {debt
+          ? `Tens ${debt} em dívida${cycles > 1 ? ` (${cycles} mensalidades)` : ""}. `
+          : "Há um pagamento em falta. "}
         Regulariza para voltares a ver as aulas, as lives, a comunidade e as
         ferramentas. Nada foi apagado — o teu progresso está guardado.
       </div>
