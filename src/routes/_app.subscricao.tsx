@@ -175,6 +175,12 @@ function SubscriptionPage() {
   }, []);
 
 
+  // Ao entrar/sair do modo "ver como cliente", recarrega com a conta certa.
+  useEffect(() => {
+    if (!loading) void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewAsUserId]);
+
   const run = async (key: string, fn: () => Promise<unknown>, ok?: string) => {
     setBusy(key);
     setError(null);
