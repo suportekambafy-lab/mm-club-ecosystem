@@ -129,11 +129,20 @@ export const Route = createFileRoute("/api/support")({
         // se perde e a re-tentativa é idempotente (client_id estável).
         await persistSupport(auth.user.id, auth.user.email ?? null, messages as UIMessage[]);
 
+        // Ferramentas com ações reais — sempre limitadas ao membro autenticado.
+        const { buildSupportTools } = await import("@/lib/support-tools.server");
+        const origin = new URL(request.url).origin;
+
         const gateway = createLovableAiGatewayProvider(key);
         const result = streamText({
           model: gateway("google/gemini-2.5-flash"),
           system: `${SYSTEM}\n\nContexto: o membro está autenticado (email ${auth.user.email ?? "desconhecido"}).${accountContext}${lessonsContext}`,
           messages: await convertToModelMessages(messages as UIMessage[]),
+          tools: buildSupportTools(
+            { id: auth.user.id, email: auth.user.email ?? null },
+            origin,
+          ),
+          stopWhen: stepCountIs(5),
           // Falhas transitórias do gateway (429/5xx) são re-tentadas com backoff.
           maxRetries: 3,
           onError: (err) => {
