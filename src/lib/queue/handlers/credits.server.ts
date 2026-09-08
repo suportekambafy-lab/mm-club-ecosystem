@@ -36,6 +36,9 @@ export async function creditsConsumer(job: JobPayload): Promise<void> {
     _reason: `purchase:${paymentId}`,
   });
 
+  // `paymentId` is the gateway reference (tr_…); uuid columns need the row id.
+  const paymentRowId = (job.paymentRowId as string | undefined) ?? null;
+
   await recordLedgerEntry({
     userId,
     entryType: "credit_granted",
@@ -43,7 +46,7 @@ export async function creditsConsumer(job: JobPayload): Promise<void> {
     amountCents: 0,
     creditsDelta: credits,
     sourceType: "payment",
-    sourceId: paymentId,
+    sourceId: paymentRowId,
     idempotencyKey: `credits:${paymentId}`,
     memo: `${credits} créditos — ${String(job.productName ?? "MM Studio")}`,
   });
