@@ -41,9 +41,12 @@ export function ViewAsBar({ target }: { target: ViewAsTarget }) {
       <p className="min-w-0 flex-1 text-sky-950 dark:text-sky-100">
         Estás dentro da conta de{" "}
         <strong className="font-semibold">{target.name}</strong>
-        {target.email ? ` (${target.email})` : ""}. Tudo o que fizeres é como
+        {target.email ? ` (${target.email})` : ""}
+        {target.status ? ` · ${STATUS_PT[target.status] ?? target.status}` : ""}
+        {target.hasAccess ? " · com acesso" : ""}. Tudo o que fizeres é como
         este membro.
       </p>
+
       <button
         type="button"
         onClick={leave}
