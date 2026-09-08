@@ -26,6 +26,7 @@ import {
   getBillingOverview,
   getCatalog,
   getInvoicePdf,
+  getOutstandingBalance,
   listInvoices,
   removePaymentMethod,
   resumeSubscription,
@@ -35,7 +36,9 @@ import {
   type BillingOverview,
   type CatalogView,
   type InvoiceListItem,
+  type OutstandingBalance,
 } from "@/lib/billing.functions";
+import { useViewAs } from "@/hooks/use-view-as";
 import { formatMoney } from "@/lib/billing/types";
 
 
@@ -73,6 +76,8 @@ const STATUS_LABEL: Record<string, string> = {
   active: "Ativa",
   trialing: "Período de teste",
   past_due: "Pagamento em falta",
+  grace_period: "Período de tolerância",
+  suspended: "Suspensa (pagamento em falta)",
   paused: "Pausada",
   cancelled: "Cancelada",
   canceled: "Cancelada",
@@ -81,6 +86,10 @@ const STATUS_LABEL: Record<string, string> = {
 
 function SubscriptionPage() {
   const navigate = useNavigate();
+  // Um admin em modo "entrar como cliente" vê a faturação real desse membro.
+  const viewAs = useViewAs();
+  const viewAsUserId = viewAs?.userId ?? null;
+  const [debt, setDebt] = useState<OutstandingBalance | null>(null);
   const [overview, setOverview] = useState<BillingOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -99,10 +108,13 @@ function SubscriptionPage() {
 
   const load = async () => {
     try {
-      setOverview(await getBillingOverview({ data: undefined }));
-      listInvoices({ data: undefined })
+      setOverview(await getBillingOverview({ data: { viewAsUserId } }));
+      listInvoices({ data: { viewAsUserId } })
         .then(setInvoices)
         .catch(() => setInvoices([]));
+      getOutstandingBalance({ data: { viewAsUserId } })
+        .then(setDebt)
+        .catch(() => setDebt(null));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha ao carregar faturação.");
     } finally {
