@@ -197,7 +197,7 @@ export const Route = createFileRoute("/_app")({
       throw redirect({ to: "/bem-vindo", replace: true });
     }
 
-    return { authUser: data.session.user, codeAccepted };
+    return { authUser: data.session.user, codeAccepted, hasAccess };
   },
 
   component: AppLayout,
