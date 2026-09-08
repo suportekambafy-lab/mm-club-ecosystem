@@ -1,6 +1,6 @@
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { createFileRoute } from "@tanstack/react-router";
-import { convertToModelMessages, streamText, type UIMessage } from "ai";
+import { convertToModelMessages, stepCountIs, streamText, type UIMessage } from "ai";
 import { buildSupportRows, textOf } from "@/lib/support-messages";
 
 
@@ -87,6 +87,14 @@ Acesso bloqueado / conta suspensa:
 - Se o membro não tem acesso por falta de pagamento, diz o motivo LOGO na primeira resposta, com o valor em falta quando existir, e envia para [Subscrição](/subscricao). Nunca respondas com cache, VPN ou outro browser nesse caso.
 - Tranquiliza: progresso, notas e certificados ficam guardados e voltam assim que regularizar.
 
+Ações que consegues executar de verdade (usa as ferramentas, não peças ao membro para fazer o que tu podes fazer):
+- enviar_email_recuperar_password: envia o email para definir nova palavra-passe. Usa logo que o membro diga que esqueceu, não consegue entrar ou quer mudar a palavra-passe. Depois confirma: "Enviei agora para o teu email…".
+- enviar_link_de_entrada: link de entrada por email quando não consegue iniciar sessão mas tem acesso ao email.
+- ver_estado_da_conta: confirma acesso, plano e dívida reais antes de explicar bloqueios.
+- listar_faturas e enviar_fatura_por_email: mostra as faturas e reenvia-as por email quando pedidas.
+- falar_com_humano: marca a conversa para a equipa.
+Regras: executa a ferramenta primeiro e só depois responde, contando em linguagem simples o que fizeste. Nunca digas que enviaste algo sem ter chamado a ferramenta. Se a ferramenta devolver ok:false, diz o que aconteceu com honestidade. Nunca prometas ações que não tens (não alteras planos, não fazes reembolsos, não apagas contas).
+
 Escalar para humano (WhatsApp):
 - Escala quando: envolve dinheiro (cobranças, reembolsos, faturas, cancelamentos com disputa), dados da conta que não podes ver, suspeita de erro/bug da plataforma, o membro já tentou o que sugeriste, o membro pede uma pessoa, ou está claramente frustrado.
 - Para escalar: escreve UMA frase a dizer que passas para a equipa humana e termina a mensagem com o marcador exacto [[HUMANO]] na última linha, sozinho.
@@ -121,11 +129,20 @@ export const Route = createFileRoute("/api/support")({
         // se perde e a re-tentativa é idempotente (client_id estável).
         await persistSupport(auth.user.id, auth.user.email ?? null, messages as UIMessage[]);
 
+        // Ferramentas com ações reais — sempre limitadas ao membro autenticado.
+        const { buildSupportTools } = await import("@/lib/support-tools.server");
+        const origin = new URL(request.url).origin;
+
         const gateway = createLovableAiGatewayProvider(key);
         const result = streamText({
           model: gateway("google/gemini-2.5-flash"),
           system: `${SYSTEM}\n\nContexto: o membro está autenticado (email ${auth.user.email ?? "desconhecido"}).${accountContext}${lessonsContext}`,
           messages: await convertToModelMessages(messages as UIMessage[]),
+          tools: buildSupportTools(
+            { id: auth.user.id, email: auth.user.email ?? null },
+            origin,
+          ),
+          stopWhen: stepCountIs(5),
           // Falhas transitórias do gateway (429/5xx) são re-tentadas com backoff.
           maxRetries: 3,
           onError: (err) => {

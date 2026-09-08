@@ -4176,6 +4176,30 @@ export type Database = {
         }
         Relationships: []
       }
+      support_actions: {
+        Row: {
+          action: string
+          created_at: string
+          detail: Json
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       support_messages: {
         Row: {
           client_id: string
