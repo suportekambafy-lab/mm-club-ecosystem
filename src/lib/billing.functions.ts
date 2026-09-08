@@ -87,10 +87,10 @@ export type BillingOverview = {
  * Resolve de quem é a faturação a mostrar. Um admin pode pedir a vista de
  * outro membro ("entrar como cliente"); qualquer outra pessoa só vê a sua.
  */
-async function resolveBillingTarget(
-  context: { supabase: any; userId: string },
+async function resolveBillingTarget<C extends { rpc: unknown }>(
+  context: { supabase: C; userId: string },
   requested?: string | null,
-): Promise<{ client: any; userId: string }> {
+): Promise<{ client: C; userId: string }> {
   if (!requested || requested === context.userId) {
     return { client: context.supabase, userId: context.userId };
   }
@@ -100,7 +100,7 @@ async function resolveBillingTarget(
   });
   if (!isAdmin) throw new Error("Forbidden");
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  return { client: supabaseAdmin, userId: requested };
+  return { client: supabaseAdmin as unknown as C, userId: requested };
 }
 
 export const getBillingOverview = createServerFn({ method: "GET" })

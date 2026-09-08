@@ -210,8 +210,8 @@ function SubscriptionPage() {
     }
   };
 
-  const onSelectPlan = async (priceSlug: string) => {
-    setBusy(`plan-${priceSlug}`);
+  const onSelectPlan = async (priceSlug: string, busyKey?: string) => {
+    setBusy(busyKey ?? `plan-${priceSlug}`);
     setError(null);
     try {
       const { checkoutUrl } = await startCheckout({
