@@ -337,7 +337,7 @@ function PartnersPage() {
                         >
                           <td className="px-4 py-2.5">
                             <div className="flex items-center gap-2.5">
-                              <MemberAvatar userId={c.userId} name={c.name} size={28} />
+                              <MemberAvatar name={c.name} avatarUrl={c.avatarUrl} size={28} />
                               <div className="min-w-0">
                                 <p className="truncate text-admin-fg">{c.name}</p>
                                 {c.email ? (
@@ -421,7 +421,7 @@ function PartnersPage() {
                       <tr key={r.paymentId} className="border-t border-admin-border">
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2.5">
-                            <MemberAvatar userId={r.userId ?? ""} name={r.name} size={28} />
+                            <MemberAvatar name={r.name} avatarUrl={r.avatarUrl} size={28} />
                             <div className="min-w-0">
                               <p className="truncate text-admin-fg">{r.name}</p>
                               {r.email ? (

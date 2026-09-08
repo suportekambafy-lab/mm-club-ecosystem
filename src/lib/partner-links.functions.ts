@@ -24,6 +24,7 @@ export type PartnerClicker = {
   userId: string;
   name: string;
   email: string | null;
+  avatarUrl: string | null;
   moduleLabel: string;
   lessonTitle: string | null;
   placement: string;
@@ -43,6 +44,7 @@ export type CreditBuyer = {
   userId: string | null;
   name: string;
   email: string | null;
+  avatarUrl: string | null;
   product: string;
   amountCents: number;
   currency: string;
@@ -185,6 +187,7 @@ export const getPartnerLinkStats = createServerFn({ method: "POST" })
               userId: e.user_id,
               name: "Membro",
               email: null,
+              avatarUrl: null,
               moduleLabel: row.label,
               lessonTitle: e.lesson_title ?? null,
               placement: e.placement,
@@ -232,9 +235,10 @@ export const getPartnerLinkStats = createServerFn({ method: "POST" })
     if (ids.length) {
       const { data: profiles } = await supabaseAdmin
         .from("profiles")
-        .select("id, display_name")
+        .select("id, display_name, avatar_url")
         .in("id", ids);
       const names = new Map((profiles ?? []).map((p) => [p.id, p.display_name ?? ""]));
+      const avatars = new Map((profiles ?? []).map((p) => [p.id, p.avatar_url ?? null]));
       const emails = new Map<string, string | null>();
       await Promise.all(
         ids.slice(0, 200).map(async (id) => {
@@ -243,8 +247,9 @@ export const getPartnerLinkStats = createServerFn({ method: "POST" })
         }),
       );
       for (const c of clickers.values()) {
-        c.name = names.get(c.userId) || c.email || "Membro";
         c.email = emails.get(c.userId) ?? null;
+        c.avatarUrl = avatars.get(c.userId) ?? null;
+        c.name = names.get(c.userId) || c.email || "Membro";
         if (!names.get(c.userId) && c.email) c.name = c.email;
       }
     }
@@ -340,6 +345,7 @@ export const getCreditPurchases = createServerFn({ method: "POST" })
         userId: p.user_id ?? null,
         name: "Membro",
         email: null,
+        avatarUrl: null,
         product: price?.product?.name ?? price?.slug ?? "Pacote de créditos",
         amountCents: p.amount_cents ?? 0,
         currency: p.currency ?? "EUR",
@@ -358,9 +364,10 @@ export const getCreditPurchases = createServerFn({ method: "POST" })
     if (ids.length) {
       const { data: profiles } = await supabaseAdmin
         .from("profiles")
-        .select("id, display_name")
+        .select("id, display_name, avatar_url")
         .in("id", ids);
       const names = new Map((profiles ?? []).map((p) => [p.id, p.display_name ?? ""]));
+      const avatars = new Map((profiles ?? []).map((p) => [p.id, p.avatar_url ?? null]));
       const emails = new Map<string, string | null>();
       await Promise.all(
         ids.slice(0, 200).map(async (id) => {
@@ -371,6 +378,7 @@ export const getCreditPurchases = createServerFn({ method: "POST" })
       for (const r of rows) {
         if (!r.userId) continue;
         r.email = emails.get(r.userId) ?? null;
+        r.avatarUrl = avatars.get(r.userId) ?? null;
         r.name = names.get(r.userId) || r.email || "Membro";
       }
     }
