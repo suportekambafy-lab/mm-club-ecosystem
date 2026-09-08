@@ -196,6 +196,7 @@ function SubscriptionsPage() {
                     >
                       Abrir
                     </Link>
+                    <ViewAsButton userId={r.userId} className="ml-2" />
                   </td>
                 </tr>
               ))}
