@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -38,7 +38,6 @@ import {
   type InvoiceListItem,
   type OutstandingBalance,
 } from "@/lib/billing.functions";
-import { useViewAs } from "@/hooks/use-view-as";
 import { formatMoney } from "@/lib/billing/types";
 
 
