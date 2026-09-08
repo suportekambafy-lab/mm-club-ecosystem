@@ -1,10 +1,9 @@
 /**
  * Modo "Entrar como cliente" (admin).
  *
- * Não troca de sessão — o admin continua autenticado como ele mesmo. O que
- * mudamos é a *vista*: a app passa a calcular o acesso com o estado real da
- * conta escolhida, para o admin ver exactamente o que esse membro vê
- * (conteúdo trancado, aviso de dívida, menu bloqueado).
+ * O admin passa a estar mesmo autenticado na conta do membro. Guardamos a
+ * sessão do admin para poder voltar atrás com um clique, e um marcador da
+ * conta em uso para mostrar a barra de contexto.
  */
 export type ViewAsTarget = {
   userId: string;
