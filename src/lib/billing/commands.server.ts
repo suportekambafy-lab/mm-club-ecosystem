@@ -473,6 +473,8 @@ async function onPaymentPaid(args: {
       amountCents: payment.amountCents,
       currency: payment.currency,
       paymentId: payment.id,
+      // Internal row id — the only value safe for uuid columns (ledger, grants).
+      paymentRowId,
     },
   });
 }
