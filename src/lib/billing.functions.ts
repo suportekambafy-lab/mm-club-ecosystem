@@ -83,13 +83,43 @@ export type BillingOverview = {
   paymentMethods: PaymentMethodView[];
 };
 
+/**
+ * Resolve de quem é a faturação a mostrar. Um admin pode pedir a vista de
+ * outro membro ("entrar como cliente"); qualquer outra pessoa só vê a sua.
+ */
+async function resolveBillingTarget(
+  context: { supabase: any; userId: string },
+  requested?: string | null,
+): Promise<{ client: any; userId: string }> {
+  if (!requested || requested === context.userId) {
+    return { client: context.supabase, userId: context.userId };
+  }
+  const { data: isAdmin } = await context.supabase.rpc("has_role", {
+    _user_id: context.userId,
+    _role: "admin",
+  });
+  if (!isAdmin) throw new Error("Forbidden");
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return { client: supabaseAdmin, userId: requested };
+}
+
 export const getBillingOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<BillingOverview> => {
-    const { supabase, userId } = context;
+  .inputValidator((input: unknown) =>
+    z
+      .object({ viewAsUserId: z.string().uuid().nullish() })
+      .default({})
+      .parse(input ?? {}),
+  )
+  .handler(async ({ data, context }): Promise<BillingOverview> => {
+    const { client: supabase, userId } = await resolveBillingTarget(
+      context,
+      data?.viewAsUserId ?? null,
+    );
 
-    // Opening the billing page is a recovery trigger.
+    // Opening the billing page is a recovery trigger (só na própria conta).
     try {
+      if (userId !== context.userId) throw new Error("skip");
       const { triggerRecoveryNow } = await import(
         "@/lib/billing/recovery/engine.server"
       );
@@ -507,16 +537,26 @@ export type InvoiceListItem = {
 /** Member invoices (creates any missing ones for past paid payments). */
 export const listInvoices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<InvoiceListItem[]> => {
+  .inputValidator((input: unknown) =>
+    z
+      .object({ viewAsUserId: z.string().uuid().nullish() })
+      .default({})
+      .parse(input ?? {}),
+  )
+  .handler(async ({ data: input, context }): Promise<InvoiceListItem[]> => {
+    const { client, userId } = await resolveBillingTarget(
+      context,
+      input?.viewAsUserId ?? null,
+    );
     const { backfillInvoicesForUser } = await import(
       "@/lib/billing/invoices.server"
     );
-    await backfillInvoicesForUser(context.userId);
+    await backfillInvoicesForUser(userId);
 
-    const { data } = await context.supabase
+    const { data } = await client
       .from("billing_invoices")
       .select("id, number, status, total_cents, currency, issued_at, paid_at, lines")
-      .eq("user_id", context.userId)
+      .eq("user_id", userId)
       .order("issued_at", { ascending: false })
       .limit(50);
 
@@ -550,3 +590,23 @@ export const getInvoicePdf = createServerFn({ method: "POST" })
     for (const b of bytes) binary += String.fromCharCode(b);
     return { base64: btoa(binary) };
   });
+
+/** Dívida em aberto (ciclos de 30 dias) de quem está suspenso. */
+export const getOutstandingBalance = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({ viewAsUserId: z.string().uuid().nullish() })
+      .default({})
+      .parse(input ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId } = await resolveBillingTarget(
+      context,
+      data?.viewAsUserId ?? null,
+    );
+    const { getOutstanding } = await import("@/lib/billing/debt.server");
+    return getOutstanding(userId);
+  });
+
+export type { OutstandingBalance } from "@/lib/billing/debt.server";
