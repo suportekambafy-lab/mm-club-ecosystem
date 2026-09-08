@@ -31,7 +31,6 @@ import { pingLearningActivity, recordLessonCompleted } from "@/lib/learning-acti
 import { useCourseQuiz, lockedModuleIds } from "@/hooks/use-course-quiz";
 import { ShopifyVideoAd } from "@/components/mm/shopify-video-ad";
 import { isShopifyContext } from "@/lib/shopify-promo";
-import { useViewAs } from "@/hooks/use-view-as";
 
 
 
@@ -56,8 +55,7 @@ function LessonPlayer() {
   const overridesVersion = useAdminOverridesVersion();
   // Vem do layout de membro: falso quando a subscrição está em dívida.
   const { hasAccess: ownAccess } = Route.useRouteContext() as { hasAccess?: boolean };
-  const viewAs = useViewAs();
-  const hasAccess = viewAs ? viewAs.hasAccess : ownAccess;
+  const hasAccess = ownAccess;
 
   // Recompute from (possibly-overridden) in-memory data so admin edits show up.
   const data = useMemo(() => {

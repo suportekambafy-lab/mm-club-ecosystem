@@ -237,7 +237,8 @@ function AppLayout() {
   const { authUser: initialAuthUser, codeAccepted: initialCodeAccepted, hasAccess: ownAccess } = Route.useRouteContext() as { authUser: User; codeAccepted: boolean; hasAccess: boolean };
   // Modo admin "ver como cliente": o acesso passa a ser o do membro escolhido.
   const viewAs = useViewAs();
-  const hasAccess = viewAs ? viewAs.hasAccess : ownAccess;
+  // Em modo cliente a sessão já é do membro, logo o acesso real é o dele.
+  const hasAccess = ownAccess;
   const { theme, toggle: toggleTheme, mounted: themeMounted } = useTheme();
   const codeAccepted = initialCodeAccepted;
   const [authUser, setAuthUser] = useState<User | null>(initialAuthUser);
