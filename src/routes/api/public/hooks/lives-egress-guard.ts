@@ -77,10 +77,12 @@ export const Route = createFileRoute("/api/public/hooks/lives-egress-guard")({
           // Lives no ar sem gravação ativa → reiniciar (alterna RTMPS/RTMP).
           const { data: onAir } = await supabaseAdmin
             .from("lives")
-            .select("id,mode,started_at")
+            .select("id,mode,started_at,recording_stopped_at")
             .eq("status", "live");
 
           for (const row of onAir ?? []) {
+            // O anfitrião parou a gravação de propósito → não voltar a ligar.
+            if (row.recording_stopped_at) continue;
             const hasActive = active.some((e) => {
               const p = e.roomName ? parseRoomName(e.roomName) : null;
               return p?.liveId === row.id;
