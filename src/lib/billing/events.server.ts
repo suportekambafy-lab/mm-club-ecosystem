@@ -14,6 +14,7 @@ export type DomainEventType =
   | "SubscriptionCancelled"
   | "SubscriptionExpired"
   | "SubscriptionResumed"
+  | "SubscriptionRenewed"
   | "TrialStarted"
   | "TrialEnded"
   | "PaymentSucceeded"
