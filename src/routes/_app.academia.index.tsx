@@ -15,6 +15,8 @@ import { CardGridSkeleton, RailSkeleton } from "@/components/mm/skeletons";
 import { NextStepCard } from "@/components/mm/next-step-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { trackUx } from "@/lib/ux-analytics";
+import { isFeaturedCourse, sortCatalog } from "@/lib/course-order";
+import { Crown } from "lucide-react";
 
 
 export const Route = createFileRoute("/_app/academia/")({
@@ -69,7 +71,10 @@ function AcademiaPage() {
 
   const catalog = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const all = [...enrolled, ...upcomingCourses.map((c) => ({ ...c, progress: 0 }))];
+    const all = sortCatalog([
+      ...enrolled,
+      ...upcomingCourses.map((c) => ({ ...c, progress: 0 })),
+    ]);
     return all.filter((c) => {
       if (objective !== "all" && c.objectiveId !== objective) return false;
       if (!q) return true;
