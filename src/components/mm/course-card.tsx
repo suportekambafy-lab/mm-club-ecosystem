@@ -99,7 +99,7 @@ export function CourseCard({ course, className, variant = "default", resumeLesso
           />
 
           <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
-            {isFeaturedCourse(course) && (
+            {isFeaturedCourse(course) && !resumeThumb && (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary-foreground shadow-[0_10px_30px_-12px_oklch(0.82_0.13_82_/_0.8)]">
                 <Crown className="h-3 w-3" />
                 Legacy · Começa aqui
