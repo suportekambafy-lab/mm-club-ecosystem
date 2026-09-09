@@ -782,6 +782,8 @@ function AppLayout() {
           {viewAs ? <ViewAsBar target={viewAs} /> : null}
           {!hasAccess && authUser ? (
             <DebtBanner userId={viewAs ? viewAs.userId : authUser.id} />
+          ) : authUser ? (
+            <CancelBanner />
           ) : null}
           {authUser ? <Outlet /> : <div className="min-h-[60vh]" />}
         </main>
