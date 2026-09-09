@@ -351,13 +351,15 @@ function AppLayout() {
         .maybeSingle();
       if (cancelled) return;
       const row = sub as unknown as {
+        status?: string | null;
         product?: { name?: string } | null;
         price?: { interval?: string; display_label?: string | null } | null;
       } | null;
-      setPlanLabel(
-        row?.price?.display_label ||
-          tierName(row?.product?.name, row?.price?.interval),
-      );
+      const isTrial = row?.status === "trialing";
+      const label =
+        (isTrial ? row?.price?.display_label : null) ||
+        tierName(row?.product?.name, row?.price?.interval);
+      setPlanLabel(stripTrialSuffix(label));
 
 
     })();
