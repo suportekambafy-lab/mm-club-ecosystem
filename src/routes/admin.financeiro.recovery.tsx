@@ -432,7 +432,31 @@ function RecoveryPage() {
         )}
       </Panel>
 
-      <Panel title="Dívida em aberto">
+      <Panel
+        title="Dívida em aberto"
+        action={
+          data.customers.length > 0 ? (
+            <button
+              type="button"
+              disabled={forceAllMutation.isPending}
+              onClick={() =>
+                forceAllMutation.mutate(
+                  Array.from(new Set(data.customers.map((c) => c.userId))),
+                )
+              }
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition hover:border-primary hover:text-primary disabled:opacity-50"
+            >
+              {forceAllMutation.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Zap className="h-3.5 w-3.5" />
+              )}
+              Tentar todos
+            </button>
+          ) : null
+        }
+      >
+
 
         {data.customers.length === 0 ? (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
