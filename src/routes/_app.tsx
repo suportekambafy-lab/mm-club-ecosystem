@@ -935,6 +935,18 @@ function tierName(
   interval?: string | null,
 ): string {
   if (!productName) return "Membro MM Club";
-  return interval === "year" ? `${productName} Anual` : productName;
+  const clean = stripTrialSuffix(productName);
+  return interval === "year" ? `${clean} Anual` : clean;
+}
+
+/** Remove sufixos promocionais de trial ("— 14 dias grátis") do nome do plano. */
+function stripTrialSuffix(label: string): string {
+  return (
+    label
+      .split(/\s*[—–-]\s*/)
+      .filter((part) => !/(dias|grátis|gratis|trial|teste)/i.test(part))
+      .join(" — ")
+      .trim() || "Membro MM Club"
+  );
 }
 
