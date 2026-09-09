@@ -139,6 +139,7 @@ function CustomerRow({
 function RecoveryPage() {
   const load = useServerFn(getRecoveryOverview);
   const force = useServerFn(forceRecoveryAttempt);
+  const forceAll = useServerFn(forceRecoveryAttemptAll);
   const notifyFailed = useServerFn(notifyFailedPayments);
   const reopen = useServerFn(reopenStalledRecovery);
   const qc = useQueryClient();
