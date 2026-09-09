@@ -343,7 +343,7 @@ function AppLayout() {
       }
       const { data: sub } = await supabase
         .from("billing_subscriptions")
-        .select("status, product:catalog_products(name), price:catalog_prices!billing_subscriptions_price_id_fkey(interval, display_label)")
+        .select("status, product:catalog_products(name), price:catalog_prices!billing_subscriptions_price_id_fkey(interval, display_label, amount_cents)")
         .eq("user_id", authUser.id)
         .in("status", ["active", "trialing", "past_due", "grace_period"])
         .order("created_at", { ascending: false })
@@ -353,13 +353,24 @@ function AppLayout() {
       const row = sub as unknown as {
         status?: string | null;
         product?: { name?: string } | null;
-        price?: { interval?: string; display_label?: string | null } | null;
+        price?: {
+          interval?: string;
+          display_label?: string | null;
+          amount_cents?: number | null;
+        } | null;
       } | null;
       const isTrial = row?.status === "trialing";
-      const label =
-        (isTrial ? row?.price?.display_label : null) ||
-        tierName(row?.product?.name, row?.price?.interval);
-      setPlanLabel(stripTrialSuffix(label));
+      const promo = isPromoLabel(row?.price?.display_label);
+      if (isTrial && row?.price?.display_label) {
+        setPlanLabel(row.price.display_label);
+      } else if (row?.price?.display_label && !promo) {
+        setPlanLabel(row.price.display_label);
+      } else {
+        setPlanLabel(
+          tierFromAmount(row?.price?.amount_cents, row?.price?.interval) ||
+            stripTrialSuffix(tierName(row?.product?.name, row?.price?.interval)),
+        );
+      }
 
 
     })();
@@ -940,6 +951,23 @@ function tierName(
 }
 
 /** Remove sufixos promocionais de trial ("— 14 dias grátis") do nome do plano. */
+/** Etiqueta promocional (trial), não serve como nome de plano pago. */
+function isPromoLabel(label?: string | null): boolean {
+  return !!label && /(dias|grátis|gratis|trial|teste|meses)/i.test(label);
+}
+
+/** Nome do escalão a partir do preço real do catálogo. */
+function tierFromAmount(
+  amountCents?: number | null,
+  interval?: string | null,
+): string | null {
+  if (!amountCents) return null;
+  if (interval === "year" || amountCents >= 24990) return "MM Club Elite";
+  if (amountCents >= 14990) return "MM Club Plus";
+  if (amountCents >= 2990) return "MM Club Start";
+  return null;
+}
+
 function stripTrialSuffix(label: string): string {
   return (
     label
