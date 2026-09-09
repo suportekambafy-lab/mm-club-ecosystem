@@ -343,7 +343,7 @@ function AppLayout() {
       }
       const { data: sub } = await supabase
         .from("billing_subscriptions")
-        .select("status, product:catalog_products(name), price:catalog_prices!billing_subscriptions_price_id_fkey(interval, display_label)")
+        .select("status, product:catalog_products(name), price:catalog_prices!billing_subscriptions_price_id_fkey(interval, display_label, amount_cents)")
         .eq("user_id", authUser.id)
         .in("status", ["active", "trialing", "past_due", "grace_period"])
         .order("created_at", { ascending: false })
@@ -353,13 +353,24 @@ function AppLayout() {
       const row = sub as unknown as {
         status?: string | null;
         product?: { name?: string } | null;
-        price?: { interval?: string; display_label?: string | null } | null;
+        price?: {
+          interval?: string;
+          display_label?: string | null;
+          amount_cents?: number | null;
+        } | null;
       } | null;
       const isTrial = row?.status === "trialing";
-      const label =
-        (isTrial ? row?.price?.display_label : null) ||
-        tierName(row?.product?.name, row?.price?.interval);
-      setPlanLabel(stripTrialSuffix(label));
+      const promo = isPromoLabel(row?.price?.display_label);
+      if (isTrial && row?.price?.display_label) {
+        setPlanLabel(row.price.display_label);
+      } else if (row?.price?.display_label && !promo) {
+        setPlanLabel(row.price.display_label);
+      } else {
+        setPlanLabel(
+          tierFromAmount(row?.price?.amount_cents, row?.price?.interval) ||
+            stripTrialSuffix(tierName(row?.product?.name, row?.price?.interval)),
+        );
+      }
 
 
     })();
