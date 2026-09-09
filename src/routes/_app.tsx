@@ -44,6 +44,7 @@ import { NotificationsBell } from "@/components/mm/notifications";
 import { NotificationsPrompt } from "@/components/mm/notifications-prompt";
 import { isLockedPath } from "@/lib/member-access";
 import { DebtBanner } from "@/components/mm/debt-banner";
+import { CancelBanner } from "@/components/mm/cancel-banner";
 import { ViewAsBar } from "@/components/admin/view-as-bar";
 import { useViewAs } from "@/hooks/use-view-as";
 
