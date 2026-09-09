@@ -7,6 +7,7 @@ import { AlertTriangle, Loader2, MailWarning, Timer, Zap } from "lucide-react";
 import { dt, money, Panel, StatCard } from "@/components/admin/finance-ui";
 import {
   forceRecoveryAttempt,
+  forceRecoveryAttemptAll,
   getRecoveryOverview,
   notifyFailedPayments,
   reopenStalledRecovery,
@@ -138,6 +139,7 @@ function CustomerRow({
 function RecoveryPage() {
   const load = useServerFn(getRecoveryOverview);
   const force = useServerFn(forceRecoveryAttempt);
+  const forceAll = useServerFn(forceRecoveryAttemptAll);
   const notifyFailed = useServerFn(notifyFailedPayments);
   const reopen = useServerFn(reopenStalledRecovery);
   const qc = useQueryClient();
@@ -158,6 +160,19 @@ function RecoveryPage() {
       qc.invalidateQueries({ queryKey: ["admin-recovery"] });
     },
     onError: () => toast.error("Não foi possível iniciar a tentativa."),
+  });
+
+  const forceAllMutation = useMutation({
+    mutationFn: (userIds: string[]) => forceAll({ data: { userIds } }),
+    onSuccess: (res) => {
+      toast.success(
+        res.failed > 0
+          ? `${res.queued} tentativa(s) em fila · ${res.failed} falharam.`
+          : `${res.queued} tentativa(s) de cobrança em fila.`,
+      );
+      qc.invalidateQueries({ queryKey: ["admin-recovery"] });
+    },
+    onError: () => toast.error("Não foi possível tentar todas as cobranças."),
   });
 
   const notifyMutation = useMutation({
@@ -417,7 +432,31 @@ function RecoveryPage() {
         )}
       </Panel>
 
-      <Panel title="Dívida em aberto">
+      <Panel
+        title="Dívida em aberto"
+        action={
+          data.customers.length > 0 ? (
+            <button
+              type="button"
+              disabled={forceAllMutation.isPending}
+              onClick={() =>
+                forceAllMutation.mutate(
+                  Array.from(new Set(data.customers.map((c) => c.userId))),
+                )
+              }
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition hover:border-primary hover:text-primary disabled:opacity-50"
+            >
+              {forceAllMutation.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Zap className="h-3.5 w-3.5" />
+              )}
+              Tentar todos
+            </button>
+          ) : null
+        }
+      >
+
 
         {data.customers.length === 0 ? (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">

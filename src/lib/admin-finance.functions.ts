@@ -409,6 +409,35 @@ export const forceRecoveryAttempt = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Tenta cobrar de imediato todos os membros indicados. */
+export const forceRecoveryAttemptAll = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({ userIds: z.array(z.string().uuid()).min(1).max(200) })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const { triggerRecoveryNow } = await import(
+      "@/lib/billing/recovery/engine.server"
+    );
+    const unique = Array.from(new Set(data.userIds));
+    let queued = 0;
+    let failed = 0;
+    for (const userId of unique) {
+      try {
+        await triggerRecoveryNow(userId, "admin_manual");
+        queued += 1;
+      } catch {
+        failed += 1;
+      }
+    }
+    const { drainQueue } = await import("@/lib/queue/worker.server");
+    await drainQueue(Math.min(200, unique.length * 3));
+    return { queued, failed };
+  });
+
 /** Avisa os membros com cobrança falhada para atualizarem o método. */
 export const notifyFailedPayments = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
