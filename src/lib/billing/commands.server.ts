@@ -569,24 +569,66 @@ async function activateSubscription(args: {
     }
   }
 
-  const { data: sub, error } = await supabaseAdmin
+  const row = {
+    customer_id: args.customerId!,
+    user_id: args.userId,
+    product_id: args.productId,
+    price_id: args.priceId,
+    status: (trialDays > 0 ? "trialing" : "active") as
+      | "trialing"
+      | "active",
+    gateway: gw.name,
+    gateway_subscription_id: gatewaySubscriptionId,
+    payment_method_id: paymentMethodId,
+    trial_end: trialDays > 0 ? end.toISOString() : null,
+    current_period_start: start.toISOString(),
+    current_period_end: end.toISOString(),
+  };
+
+  // Só pode existir uma subscrição viva por produto. Se o membro já tem uma
+  // (webhook repetido, renovação manual, upgrade), actualizamos essa em vez de
+  // inserir — assim o webhook nunca falha em duplicado.
+  const { data: existing } = await supabaseAdmin
     .from("billing_subscriptions")
-    .insert({
-      customer_id: args.customerId!,
-      user_id: args.userId,
-      product_id: args.productId,
-      price_id: args.priceId,
-      status: trialDays > 0 ? "trialing" : "active",
-      gateway: gw.name,
-      gateway_subscription_id: gatewaySubscriptionId,
-      payment_method_id: paymentMethodId,
-      trial_end: trialDays > 0 ? end.toISOString() : null,
-      current_period_start: start.toISOString(),
-      current_period_end: end.toISOString(),
-    })
     .select("id")
-    .single();
-  if (error) throw new Error(error.message);
+    .eq("user_id", args.userId)
+    .eq("product_id", args.productId)
+    .in("status", [
+      "trialing",
+      "active",
+      "past_due",
+      "grace_period",
+      "suspended",
+    ])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  let sub: { id: string };
+  if (existing?.id) {
+    const { data: updated, error: upErr } = await supabaseAdmin
+      .from("billing_subscriptions")
+      .update({
+        ...row,
+        gateway_subscription_id:
+          gatewaySubscriptionId ?? undefined,
+        cancel_at_period_end: false,
+        cancelled_at: null,
+      })
+      .eq("id", existing.id)
+      .select("id")
+      .single();
+    if (upErr) throw new Error(upErr.message);
+    sub = updated;
+  } else {
+    const { data: inserted, error } = await supabaseAdmin
+      .from("billing_subscriptions")
+      .insert(row)
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    sub = inserted;
+  }
 
   await supabaseAdmin
     .from("billing_payments")

@@ -95,7 +95,7 @@ async function inCooldown(userId: string): Promise<boolean> {
     .eq("user_id", userId)
     .eq("kind", "winback")
     .eq("status", "sent")
-    .gte("created_at", since)
+    .gte("sent_at", since)
     .limit(1);
   return (data ?? []).length > 0;
 }
