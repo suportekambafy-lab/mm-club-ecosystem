@@ -7,6 +7,7 @@ import { AlertTriangle, Loader2, MailWarning, Timer, Zap } from "lucide-react";
 import { dt, money, Panel, StatCard } from "@/components/admin/finance-ui";
 import {
   forceRecoveryAttempt,
+  forceRecoveryAttemptAll,
   getRecoveryOverview,
   notifyFailedPayments,
   reopenStalledRecovery,
