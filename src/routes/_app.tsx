@@ -351,13 +351,15 @@ function AppLayout() {
         .maybeSingle();
       if (cancelled) return;
       const row = sub as unknown as {
+        status?: string | null;
         product?: { name?: string } | null;
         price?: { interval?: string; display_label?: string | null } | null;
       } | null;
-      setPlanLabel(
-        row?.price?.display_label ||
-          tierName(row?.product?.name, row?.price?.interval),
-      );
+      const isTrial = row?.status === "trialing";
+      const label =
+        (isTrial ? row?.price?.display_label : null) ||
+        tierName(row?.product?.name, row?.price?.interval);
+      setPlanLabel(stripTrialSuffix(label));
 
 
     })();
@@ -933,6 +935,18 @@ function tierName(
   interval?: string | null,
 ): string {
   if (!productName) return "Membro MM Club";
-  return interval === "year" ? `${productName} Anual` : productName;
+  const clean = stripTrialSuffix(productName);
+  return interval === "year" ? `${clean} Anual` : clean;
+}
+
+/** Remove sufixos promocionais de trial ("— 14 dias grátis") do nome do plano. */
+function stripTrialSuffix(label: string): string {
+  return (
+    label
+      .split(/\s*[—–-]\s*/)
+      .filter((part) => !/(dias|grátis|gratis|trial|teste)/i.test(part))
+      .join(" — ")
+      .trim() || "Membro MM Club"
+  );
 }
 
