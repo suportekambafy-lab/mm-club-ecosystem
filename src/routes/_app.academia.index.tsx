@@ -305,9 +305,17 @@ function PosterCard({
           }}
         />
 
-        <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/45 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-white backdrop-blur-md">
-          <Clock className="h-3 w-3" />
-          {totalDuration}
+        <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
+          {featured && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary-foreground shadow-[0_10px_30px_-12px_oklch(0.82_0.13_82_/_0.8)]">
+              <Crown className="h-3 w-3" />
+              Legacy · Começa aqui
+            </span>
+          )}
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/45 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-white backdrop-blur-md">
+            <Clock className="h-3 w-3" />
+            {totalDuration}
+          </span>
         </div>
 
         <div className="absolute right-3 top-3 flex h-11 w-11 translate-y-1 items-center justify-center rounded-full bg-primary opacity-0 shadow-[0_10px_30px_-8px_oklch(0.82_0.13_82_/_0.7)] transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
