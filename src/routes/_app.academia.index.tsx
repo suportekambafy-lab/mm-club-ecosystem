@@ -279,12 +279,17 @@ function PosterCard({
     : courseCoverBackground(course);
 
 
+  const featured = isFeaturedCourse(course);
+
   return (
     <Link
       {...linkProps}
       className={
         (inGrid ? "" : "w-[min(82vw,320px)] shrink-0 ") +
-        "group relative flex flex-col overflow-hidden rounded-2xl bg-surface-1 ring-1 ring-border transition-all duration-500 hover:-translate-y-1 hover:ring-[color:var(--hairline)] hover:shadow-[0_28px_80px_-30px_oklch(0.82_0.13_82_/_0.35)]"
+        "group relative flex flex-col overflow-hidden rounded-2xl bg-surface-1 ring-1 transition-all duration-500 hover:-translate-y-1 hover:ring-[color:var(--hairline)] hover:shadow-[0_28px_80px_-30px_oklch(0.82_0.13_82_/_0.35)] " +
+        (featured
+          ? "ring-primary/60 shadow-[0_20px_60px_-32px_oklch(0.82_0.13_82_/_0.55)]"
+          : "ring-border")
       }
     >
       <div
