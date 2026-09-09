@@ -162,6 +162,19 @@ function RecoveryPage() {
     onError: () => toast.error("Não foi possível iniciar a tentativa."),
   });
 
+  const forceAllMutation = useMutation({
+    mutationFn: (userIds: string[]) => forceAll({ data: { userIds } }),
+    onSuccess: (res) => {
+      toast.success(
+        res.failed > 0
+          ? `${res.queued} tentativa(s) em fila · ${res.failed} falharam.`
+          : `${res.queued} tentativa(s) de cobrança em fila.`,
+      );
+      qc.invalidateQueries({ queryKey: ["admin-recovery"] });
+    },
+    onError: () => toast.error("Não foi possível tentar todas as cobranças."),
+  });
+
   const notifyMutation = useMutation({
     mutationFn: (userId?: string) => notifyFailed({ data: { userId } }),
     onSuccess: (res) =>
