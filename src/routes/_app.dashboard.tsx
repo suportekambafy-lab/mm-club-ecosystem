@@ -28,6 +28,7 @@ import {
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
 import { expertsById } from "@/data/experts";
 import { courses } from "@/data/courses";
+import { sortCatalog } from "@/lib/course-order";
 
 import {
   CinematicHeroSkeleton,
@@ -192,7 +193,7 @@ function DashboardPage() {
           </Link>
         }
       >
-        {courses.map((c) => (
+        {sortCatalog(courses).map((c) => (
           <CourseCard
             key={c.id}
             course={applyProgress(c, progress)}

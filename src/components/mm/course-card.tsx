@@ -10,6 +10,8 @@ import { formatCourseRelease } from "@/data/courses";
 import { useCourseAccess } from "@/hooks/use-course-release";
 import { courseCoverBackground } from "@/lib/course-cover";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
+import { isFeaturedCourse } from "@/lib/course-order";
+import { Crown } from "lucide-react";
 
 
 interface Props {
