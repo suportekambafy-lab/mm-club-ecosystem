@@ -951,6 +951,23 @@ function tierName(
 }
 
 /** Remove sufixos promocionais de trial ("— 14 dias grátis") do nome do plano. */
+/** Etiqueta promocional (trial), não serve como nome de plano pago. */
+function isPromoLabel(label?: string | null): boolean {
+  return !!label && /(dias|grátis|gratis|trial|teste|meses)/i.test(label);
+}
+
+/** Nome do escalão a partir do preço real do catálogo. */
+function tierFromAmount(
+  amountCents?: number | null,
+  interval?: string | null,
+): string | null {
+  if (!amountCents) return null;
+  if (interval === "year" || amountCents >= 24990) return "MM Club Elite";
+  if (amountCents >= 14990) return "MM Club Plus";
+  if (amountCents >= 2990) return "MM Club Start";
+  return null;
+}
+
 function stripTrialSuffix(label: string): string {
   return (
     label
