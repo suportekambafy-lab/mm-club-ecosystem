@@ -15,6 +15,8 @@ import { CardGridSkeleton, RailSkeleton } from "@/components/mm/skeletons";
 import { NextStepCard } from "@/components/mm/next-step-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { trackUx } from "@/lib/ux-analytics";
+import { isFeaturedCourse, sortCatalog } from "@/lib/course-order";
+import { Crown } from "lucide-react";
 
 
 export const Route = createFileRoute("/_app/academia/")({
@@ -69,7 +71,10 @@ function AcademiaPage() {
 
   const catalog = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const all = [...enrolled, ...upcomingCourses.map((c) => ({ ...c, progress: 0 }))];
+    const all = sortCatalog([
+      ...enrolled,
+      ...upcomingCourses.map((c) => ({ ...c, progress: 0 })),
+    ]);
     return all.filter((c) => {
       if (objective !== "all" && c.objectiveId !== objective) return false;
       if (!q) return true;
@@ -274,12 +279,17 @@ function PosterCard({
     : courseCoverBackground(course);
 
 
+  const featured = isFeaturedCourse(course);
+
   return (
     <Link
       {...linkProps}
       className={
         (inGrid ? "" : "w-[min(82vw,320px)] shrink-0 ") +
-        "group relative flex flex-col overflow-hidden rounded-2xl bg-surface-1 ring-1 ring-border transition-all duration-500 hover:-translate-y-1 hover:ring-[color:var(--hairline)] hover:shadow-[0_28px_80px_-30px_oklch(0.82_0.13_82_/_0.35)]"
+        "group relative flex flex-col overflow-hidden rounded-2xl bg-surface-1 ring-1 transition-all duration-500 hover:-translate-y-1 hover:ring-[color:var(--hairline)] hover:shadow-[0_28px_80px_-30px_oklch(0.82_0.13_82_/_0.35)] " +
+        (featured
+          ? "ring-primary/60 shadow-[0_20px_60px_-32px_oklch(0.82_0.13_82_/_0.55)]"
+          : "ring-border")
       }
     >
       <div
@@ -295,9 +305,17 @@ function PosterCard({
           }}
         />
 
-        <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/45 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-white backdrop-blur-md">
-          <Clock className="h-3 w-3" />
-          {totalDuration}
+        <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
+          {featured && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary-foreground shadow-[0_10px_30px_-12px_oklch(0.82_0.13_82_/_0.8)]">
+              <Crown className="h-3 w-3" />
+              Legacy · Começa aqui
+            </span>
+          )}
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/45 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-white backdrop-blur-md">
+            <Clock className="h-3 w-3" />
+            {totalDuration}
+          </span>
         </div>
 
         <div className="absolute right-3 top-3 flex h-11 w-11 translate-y-1 items-center justify-center rounded-full bg-primary opacity-0 shadow-[0_10px_30px_-8px_oklch(0.82_0.13_82_/_0.7)] transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
