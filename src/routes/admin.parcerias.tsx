@@ -2,12 +2,26 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowUpRight, Coins, Loader2, MousePointerClick, Users, Check } from "lucide-react";
+import {
+  ArrowUpRight,
+  Coins,
+  Gift,
+  Handshake,
+  Loader2,
+  MousePointerClick,
+  Users,
+  Check,
+} from "lucide-react";
+import { toast } from "sonner";
 import {
   getCreditPurchases,
   getPartnerLinkStats,
   savePartnerConversion,
 } from "@/lib/partner-links.functions";
+import {
+  decidePartnerPayout,
+  getPartnersOverview,
+} from "@/lib/partners-admin.functions";
 import { MemberAvatar } from "@/components/mm/member-avatar";
 
 export const Route = createFileRoute("/admin/parcerias")({
@@ -78,7 +92,7 @@ function Card({
 }
 
 function PartnersPage() {
-  const [tab, setTab] = useState<"shopify" | "creditos">("shopify");
+  const [tab, setTab] = useState<"shopify" | "creditos" | "mmpartners">("shopify");
   const statsFn = useServerFn(getPartnerLinkStats);
   const creditsFn = useServerFn(getCreditPurchases);
   const saveFn = useServerFn(savePartnerConversion);
@@ -123,6 +137,7 @@ function PartnersPage() {
           [
             ["shopify", "Convite Shopify"],
             ["creditos", "Compras de créditos"],
+            ["mmpartners", "MM Partners"],
           ] as const
         ).map(([key, label]) => (
           <button

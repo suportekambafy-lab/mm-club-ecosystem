@@ -42,6 +42,16 @@ export const Route = createFileRoute("/api/public/hooks/billing-tick")({
           );
           const reconciled = await reconcileLapsedSubscriptions(25);
 
+          // MM Partners: recompensas e benefício grátis sempre em dia.
+          const { sweepPartners } = await import("@/lib/partners/core.server");
+          const partners = await sweepPartners(40).catch((err) => {
+            console.error("[billing-tick] partners sweep", err);
+            return 0;
+          });
+          void partners;
+
+
+
 
 
           // Drain in batches so a backlog clears within a single tick.
