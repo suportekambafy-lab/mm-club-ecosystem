@@ -28,6 +28,8 @@ export type PartnerDashboard = {
   link: string | null;
   activeCount: number;
   totalCount: number;
+  clicks: number;
+  uniqueClicks: number;
   freeBenefitActive: boolean;
   balanceCents: number;
   earnedCents: number;
@@ -40,7 +42,8 @@ export type PartnerDashboard = {
   payouts: PartnerPayoutView[];
 };
 
-const SITE = "https://mmclub.online";
+/** Domínio oficial do clube — os links de convite usam sempre este endereço. */
+const SITE = "https://mmclub.pt";
 
 async function loadDashboard(userId: string, origin?: string | null): Promise<PartnerDashboard> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -53,6 +56,8 @@ async function loadDashboard(userId: string, origin?: string | null): Promise<Pa
     link: null,
     activeCount: 0,
     totalCount: 0,
+    clicks: 0,
+    uniqueClicks: 0,
     freeBenefitActive: false,
     balanceCents: 0,
     earnedCents: 0,
@@ -66,7 +71,10 @@ async function loadDashboard(userId: string, origin?: string | null): Promise<Pa
   };
   if (!account) return base;
 
-  const snapshot = await core.evaluatePartner(account.id);
+  const [snapshot, clickStats] = await Promise.all([
+    core.evaluatePartner(account.id),
+    core.clicksOf(account.id),
+  ]);
 
   const [{ data: referrals }, { data: payouts }] = await Promise.all([
     supabaseAdmin
@@ -92,15 +100,17 @@ async function loadDashboard(userId: string, origin?: string | null): Promise<Pa
     for (const p of profiles ?? []) names.set(p.id, p.display_name ?? "");
   }
 
-  const root = origin && origin.startsWith("http") ? origin.replace(/\/$/, "") : SITE;
+  void origin; // o link é sempre o domínio oficial do clube
 
   return {
     ...base,
     joined: true,
     code: account.code,
-    link: `${root}/?ref=${account.code}`,
+    link: `${SITE}/?ref=${account.code}`,
     activeCount: snapshot.activeCount,
     totalCount: snapshot.totalCount,
+    clicks: clickStats.clicks,
+    uniqueClicks: clickStats.uniqueClicks,
     freeBenefitActive: snapshot.freeBenefitActive,
     balanceCents: snapshot.balanceCents,
     earnedCents: snapshot.earnedCents,

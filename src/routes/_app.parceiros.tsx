@@ -9,6 +9,7 @@ import {
   Gift,
   Handshake,
   Loader2,
+  MousePointerClick,
   Share2,
   Users,
   Wallet,
@@ -246,7 +247,13 @@ function PartnersPage() {
         </p>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <Stat
+          label="Cliques no link"
+          value={String(data.clicks)}
+          hint={`${data.uniqueClicks} pessoas diferentes`}
+          icon={MousePointerClick}
+        />
         <Stat label="A pagar agora" value={String(data.activeCount)} icon={Users} />
         <Stat label="Total de indicados" value={String(data.totalCount)} icon={Handshake} />
         <Stat label="Saldo disponível" value={money(data.balanceCents)} icon={Wallet} />
@@ -417,10 +424,12 @@ function PartnersPage() {
 function Stat({
   label,
   value,
+  hint,
   icon: Icon,
 }: {
   label: string;
   value: string;
+  hint?: string;
   icon: typeof Users;
 }) {
   return (
@@ -430,6 +439,7 @@ function Stat({
         {label}
       </div>
       <p className="mt-2 text-xl font-semibold">{value}</p>
+      {hint ? <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }

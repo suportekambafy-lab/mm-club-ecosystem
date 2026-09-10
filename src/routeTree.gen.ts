@@ -94,6 +94,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicPaymentsGatewayWebhookRouteImport } from './routes/api/public/payments/gateway-webhook'
+import { Route as ApiPublicPartnersClickRouteImport } from './routes/api/public/partners/click'
 import { Route as ApiPublicHooksWinbackIntelligenceRouteImport } from './routes/api/public/hooks/winback-intelligence'
 import { Route as ApiPublicHooksWeeklySummaryRouteImport } from './routes/api/public/hooks/weekly-summary'
 import { Route as ApiPublicHooksWaitlistBroadcastRouteImport } from './routes/api/public/hooks/waitlist-broadcast'
@@ -566,6 +567,11 @@ const ApiPublicPaymentsGatewayWebhookRoute =
     path: '/api/public/payments/gateway-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPartnersClickRoute = ApiPublicPartnersClickRouteImport.update({
+  id: '/api/public/partners/click',
+  path: '/api/public/partners/click',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksWinbackIntelligenceRoute =
   ApiPublicHooksWinbackIntelligenceRouteImport.update({
     id: '/api/public/hooks/winback-intelligence',
@@ -900,6 +906,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/waitlist-broadcast': typeof ApiPublicHooksWaitlistBroadcastRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
   '/api/public/hooks/winback-intelligence': typeof ApiPublicHooksWinbackIntelligenceRoute
+  '/api/public/partners/click': typeof ApiPublicPartnersClickRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -1015,6 +1022,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/waitlist-broadcast': typeof ApiPublicHooksWaitlistBroadcastRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
   '/api/public/hooks/winback-intelligence': typeof ApiPublicHooksWinbackIntelligenceRoute
+  '/api/public/partners/click': typeof ApiPublicPartnersClickRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -1140,6 +1148,7 @@ export interface FileRoutesById {
   '/api/public/hooks/waitlist-broadcast': typeof ApiPublicHooksWaitlistBroadcastRoute
   '/api/public/hooks/weekly-summary': typeof ApiPublicHooksWeeklySummaryRoute
   '/api/public/hooks/winback-intelligence': typeof ApiPublicHooksWinbackIntelligenceRoute
+  '/api/public/partners/click': typeof ApiPublicPartnersClickRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -1265,6 +1274,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/waitlist-broadcast'
     | '/api/public/hooks/weekly-summary'
     | '/api/public/hooks/winback-intelligence'
+    | '/api/public/partners/click'
     | '/api/public/payments/gateway-webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1380,6 +1390,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/waitlist-broadcast'
     | '/api/public/hooks/weekly-summary'
     | '/api/public/hooks/winback-intelligence'
+    | '/api/public/partners/click'
     | '/api/public/payments/gateway-webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1504,6 +1515,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/waitlist-broadcast'
     | '/api/public/hooks/weekly-summary'
     | '/api/public/hooks/winback-intelligence'
+    | '/api/public/partners/click'
     | '/api/public/payments/gateway-webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1561,6 +1573,7 @@ export interface RootRouteChildren {
   ApiPublicHooksWaitlistBroadcastRoute: typeof ApiPublicHooksWaitlistBroadcastRoute
   ApiPublicHooksWeeklySummaryRoute: typeof ApiPublicHooksWeeklySummaryRoute
   ApiPublicHooksWinbackIntelligenceRoute: typeof ApiPublicHooksWinbackIntelligenceRoute
+  ApiPublicPartnersClickRoute: typeof ApiPublicPartnersClickRoute
   ApiPublicPaymentsGatewayWebhookRoute: typeof ApiPublicPaymentsGatewayWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -2165,6 +2178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsGatewayWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/partners/click': {
+      id: '/api/public/partners/click'
+      path: '/api/public/partners/click'
+      fullPath: '/api/public/partners/click'
+      preLoaderRoute: typeof ApiPublicPartnersClickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/winback-intelligence': {
       id: '/api/public/hooks/winback-intelligence'
       path: '/api/public/hooks/winback-intelligence'
@@ -2713,6 +2733,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksWeeklySummaryRoute: ApiPublicHooksWeeklySummaryRoute,
   ApiPublicHooksWinbackIntelligenceRoute:
     ApiPublicHooksWinbackIntelligenceRoute,
+  ApiPublicPartnersClickRoute: ApiPublicPartnersClickRoute,
   ApiPublicPaymentsGatewayWebhookRoute: ApiPublicPaymentsGatewayWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,

@@ -29,7 +29,11 @@ const MM_CLUB_FEATURES = [
   "events.access",
 ];
 
-const PAID_STATUS = ["active", "grace_period"] as const;
+/**
+ * Só conta quem paga a sério: subscrição ativa, fora do período de teste e com
+ * pelo menos um pagamento confirmado. Dívida (grace_period) não conta.
+ */
+const PAID_STATUS = ["active"] as const;
 
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -136,29 +140,61 @@ async function paidStates(userIds: string[]): Promise<Map<string, PaidState>> {
   const out = new Map<string, PaidState>();
   if (!userIds.length) return out;
 
-  const { data } = await supabaseAdmin
-    .from("billing_subscriptions")
-    .select("user_id, status, trial_end, current_period_end, created_at")
-    .in("user_id", userIds)
-    .order("created_at", { ascending: false });
+  const [{ data: subs }, { data: payments }] = await Promise.all([
+    supabaseAdmin
+      .from("billing_subscriptions")
+      .select("user_id, status, trial_end, current_period_end, created_at")
+      .in("user_id", userIds)
+      .order("created_at", { ascending: false }),
+    supabaseAdmin
+      .from("billing_payments")
+      .select("user_id, amount_cents, status")
+      .in("user_id", userIds)
+      .eq("status", "paid"),
+  ]);
+
+  // Pagamento real: pelo menos um pagamento confirmado com valor > 0
+  // (a verificação de cartão de 1 € do trial não conta).
+  const reallyPaid = new Set<string>();
+  for (const p of payments ?? []) {
+    if (p.user_id && (p.amount_cents ?? 0) > 100) reallyPaid.add(p.user_id);
+  }
 
   const now = Date.now();
-  for (const s of data ?? []) {
+  for (const s of subs ?? []) {
     const prev = out.get(s.user_id);
     const inTrial = Boolean(s.trial_end && new Date(s.trial_end).getTime() > now);
-    const paid =
-      (PAID_STATUS as readonly string[]).includes(s.status) && !inTrial;
+    const live = (PAID_STATUS as readonly string[]).includes(s.status);
+    const periodOk =
+      !s.current_period_end || new Date(s.current_period_end).getTime() > now;
+    const paid = live && !inTrial && periodOk && reallyPaid.has(s.user_id);
     const state: PaidState = {
       paid: paid || Boolean(prev?.paid),
       trial: inTrial || Boolean(prev?.trial),
       cancelled:
         !paid &&
         !inTrial &&
-        ["cancelled", "expired", "suspended"].includes(s.status),
+        ["cancelled", "expired", "suspended", "past_due", "grace_period"].includes(
+          s.status,
+        ),
     };
     out.set(s.user_id, state);
   }
   return out;
+}
+
+/** Cliques no link do parceiro (total e dispositivos diferentes). */
+export async function clicksOf(
+  partnerId: string,
+): Promise<{ clicks: number; uniqueClicks: number }> {
+  const { data } = await supabaseAdmin
+    .from("mm_partner_clicks")
+    .select("visitor_key")
+    .eq("partner_id", partnerId)
+    .limit(5000);
+  const rows = data ?? [];
+  const unique = new Set(rows.map((r) => r.visitor_key ?? "").filter(Boolean));
+  return { clicks: rows.length, uniqueClicks: unique.size || rows.length };
 }
 
 /** O parceiro paga mensalidade agora? (para devolver o valor do Start) */

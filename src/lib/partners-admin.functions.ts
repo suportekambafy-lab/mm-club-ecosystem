@@ -11,6 +11,7 @@ export type AdminPartnerRow = {
   email: string | null;
   avatarUrl: string | null;
   code: string;
+  clicks: number;
   activeCount: number;
   totalCount: number;
   freeBenefitActive: boolean;
@@ -69,25 +70,35 @@ export const getPartnersOverview = createServerFn({ method: "POST" })
     const list = accounts ?? [];
     const ids = list.map((a) => a.id);
 
-    const [{ data: referrals }, { data: ledger }, { data: payouts }] = await Promise.all([
-      ids.length
-        ? supabaseAdmin
-            .from("mm_partner_referrals")
-            .select("partner_id, status")
-            .in("partner_id", ids)
-        : Promise.resolve({ data: [] as { partner_id: string; status: string }[] }),
-      ids.length
-        ? supabaseAdmin
-            .from("mm_partner_ledger")
-            .select("partner_id, amount_cents")
-            .in("partner_id", ids)
-        : Promise.resolve({ data: [] as { partner_id: string; amount_cents: number }[] }),
-      supabaseAdmin
-        .from("mm_partner_payouts")
-        .select("id, partner_id, amount_cents, method, target, holder, status, note, created_at")
-        .order("created_at", { ascending: false })
-        .limit(200),
-    ]);
+    const [{ data: referrals }, { data: ledger }, { data: payouts }, { data: clicks }] =
+      await Promise.all([
+        ids.length
+          ? supabaseAdmin
+              .from("mm_partner_referrals")
+              .select("partner_id, status")
+              .in("partner_id", ids)
+          : Promise.resolve({ data: [] as { partner_id: string; status: string }[] }),
+        ids.length
+          ? supabaseAdmin
+              .from("mm_partner_ledger")
+              .select("partner_id, amount_cents")
+              .in("partner_id", ids)
+          : Promise.resolve({ data: [] as { partner_id: string; amount_cents: number }[] }),
+        supabaseAdmin
+          .from("mm_partner_payouts")
+          .select("id, partner_id, amount_cents, method, target, holder, status, note, created_at")
+          .order("created_at", { ascending: false })
+          .limit(200),
+        ids.length
+          ? supabaseAdmin
+              .from("mm_partner_clicks")
+              .select("partner_id, visitor_key")
+              .in("partner_id", ids)
+              .limit(20000)
+          : Promise.resolve({
+              data: [] as { partner_id: string; visitor_key: string | null }[],
+            }),
+      ]);
 
     const counts = new Map<string, { active: number; total: number }>();
     for (const r of referrals ?? []) {
@@ -95,6 +106,11 @@ export const getPartnersOverview = createServerFn({ method: "POST" })
       c.total += 1;
       if (r.status === "paid") c.active += 1;
       counts.set(r.partner_id, c);
+    }
+
+    const clickCounts = new Map<string, number>();
+    for (const c of clicks ?? []) {
+      clickCounts.set(c.partner_id, (clickCounts.get(c.partner_id) ?? 0) + 1);
     }
 
     const money = new Map<string, { earned: number; paid: number }>();
@@ -136,6 +152,7 @@ export const getPartnersOverview = createServerFn({ method: "POST" })
         email: emails.get(a.user_id) ?? null,
         avatarUrl: avatars.get(a.user_id) ?? null,
         code: a.code,
+        clicks: clickCounts.get(a.id) ?? 0,
         activeCount: c.active,
         totalCount: c.total,
         freeBenefitActive: a.free_benefit_active,
