@@ -28,6 +28,8 @@ export type PartnerDashboard = {
   link: string | null;
   activeCount: number;
   totalCount: number;
+  clicks: number;
+  uniqueClicks: number;
   freeBenefitActive: boolean;
   balanceCents: number;
   earnedCents: number;
@@ -40,7 +42,8 @@ export type PartnerDashboard = {
   payouts: PartnerPayoutView[];
 };
 
-const SITE = "https://mmclub.online";
+/** Domínio oficial do clube — os links de convite usam sempre este endereço. */
+const SITE = "https://mmclub.pt";
 
 async function loadDashboard(userId: string, origin?: string | null): Promise<PartnerDashboard> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
