@@ -152,6 +152,7 @@ export const getPartnersOverview = createServerFn({ method: "POST" })
         email: emails.get(a.user_id) ?? null,
         avatarUrl: avatars.get(a.user_id) ?? null,
         code: a.code,
+        clicks: clickCounts.get(a.id) ?? 0,
         activeCount: c.active,
         totalCount: c.total,
         freeBenefitActive: a.free_benefit_active,
