@@ -11,6 +11,8 @@ import {
   Loader2,
   MousePointerClick,
   Share2,
+  Sparkles,
+  TrendingUp,
   Users,
   Wallet,
 } from "lucide-react";
@@ -21,6 +23,8 @@ import {
   requestPartnerPayout,
   savePartnerPayoutDetails,
 } from "@/lib/partners.functions";
+import partnersHero from "@/assets/partners-hero.jpg";
+import partnersSocial from "@/assets/partners-social.jpg";
 
 export const Route = createFileRoute("/_app/parceiros")({
   head: () => ({
@@ -161,47 +165,103 @@ function PartnersPage() {
 
   if (!data?.joined) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-10 md:py-16">
-        <div className="surface-card rounded-2xl p-6 md:p-10">
-          <Handshake className="h-8 w-8 text-primary" strokeWidth={1.6} />
-          <h1 className="mt-4 text-2xl font-semibold tracking-tight md:text-3xl">MM Partners</h1>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground md:text-base">
-            Traz pessoas para o clube com o teu link pessoal e sê recompensado por isso.
-          </p>
-          <ul className="mt-6 space-y-3 text-sm">
-            <li className="flex gap-3">
-              <Gift className="mt-0.5 h-4 w-4 text-primary" />
-              <span>
-                <strong>3 indicados a pagar</strong> ao mesmo tempo: o teu MM Club Start fica
-                grátis enquanto eles se mantiverem ativos.
+      <div className="px-4 py-6 md:py-10">
+        <section className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl border border-border bg-[#0b0a09]">
+          <div className="grid items-stretch lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="relative z-10 p-6 sm:p-10 lg:p-14">
+              <span className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-gold">
+                <Sparkles className="h-3.5 w-3.5" /> Programa de parceiros
               </span>
-            </li>
-            <li className="flex gap-3">
-              <BadgeEuro className="mt-0.5 h-4 w-4 text-primary" />
-              <span>
-                <strong>A partir do 4.º</strong> indicado pago: ganhas <strong>5 €</strong> por
-                cada um, uma única vez.
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <Wallet className="mt-0.5 h-4 w-4 text-primary" />
-              <span>Retiras o saldo quando quiseres, por IBAN ou MB Way, a partir de 25 €.</span>
-            </li>
-          </ul>
-          <button
-            type="button"
-            onClick={() => join.mutate()}
-            disabled={join.isPending}
-            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
-          >
-            {join.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            Quero o meu link
-          </button>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Ao entrares, aceitas que só contam contas reais com plano pago. Indicações a ti mesmo
-            não contam.
-          </p>
-        </div>
+              <h1 className="mt-5 text-3xl font-semibold leading-[1.05] tracking-tight text-white sm:text-4xl lg:text-5xl">
+                Transforma a tua
+                <span className="block bg-gradient-to-r from-gold-soft via-gold to-gold-deep bg-clip-text text-transparent">
+                  influência em receita
+                </span>
+              </h1>
+              <p className="mt-5 max-w-lg text-sm leading-relaxed text-white/70 md:text-base">
+                Recebes um link só teu, acompanhas cada clique em tempo real e és pago por cada
+                pessoa que entra no clube e fica.
+              </p>
+
+              <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                <Pillar
+                  icon={Gift}
+                  title="3 ativos"
+                  text="MM Club Start grátis enquanto se mantiverem a pagar."
+                />
+                <Pillar icon={BadgeEuro} title="5 € cada" text="Do 4.º indicado pago em diante." />
+                <Pillar icon={Wallet} title="Retiras a partir de 25 €" text="IBAN ou MB Way." />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => join.mutate()}
+                disabled={join.isPending}
+                className="mt-9 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-gold-soft to-gold-deep px-6 py-3.5 text-sm font-semibold text-[#12100d] shadow-[0_18px_40px_-18px_oklch(0.72_0.14_74/0.9)] transition hover:brightness-110 disabled:opacity-50"
+              >
+                {join.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Quero o meu link
+              </button>
+              <p className="mt-4 max-w-md text-xs text-white/45">
+                Só contam contas reais com plano pago. Indicações a ti mesmo não contam.
+              </p>
+            </div>
+
+            <div className="relative min-h-[320px] lg:min-h-[560px]">
+              <img
+                src={partnersHero}
+                alt="Empresária a partilhar o seu link MM Partners"
+                width={1280}
+                height={1600}
+                className="absolute inset-0 h-full w-full object-cover object-top"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0b0a09] via-[#0b0a09]/25 to-transparent lg:bg-gradient-to-r lg:from-[#0b0a09] lg:via-[#0b0a09]/35 lg:to-transparent" />
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto mt-6 grid max-w-6xl gap-4 lg:grid-cols-[1fr_1fr]">
+          <div className="surface-card overflow-hidden rounded-3xl">
+            <img
+              src={partnersSocial}
+              alt="Dois membros do MM Club a acompanhar resultados"
+              width={1280}
+              height={960}
+              loading="lazy"
+              className="h-56 w-full object-cover sm:h-72"
+            />
+            <div className="p-5 md:p-6">
+              <h2 className="text-base font-medium">Como funciona, sem letras pequenas</h2>
+              <ol className="mt-3 space-y-2 text-sm text-muted-foreground">
+                <li>1. Entras e recebes o teu link em mmclub.pt.</li>
+                <li>2. Partilhas com quem quer construir marca.</li>
+                <li>3. Contamos cada clique e cada plano realmente pago.</li>
+                <li>4. Recebes: Start grátis aos 3 ativos, 5 € por cada indicado seguinte.</li>
+              </ol>
+            </div>
+          </div>
+          <div className="surface-card rounded-3xl p-5 md:p-6">
+            <TrendingUp className="h-6 w-6 text-primary" strokeWidth={1.6} />
+            <h2 className="mt-3 text-base font-medium">Painel com números reais</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Depois de entrares vês cliques, pessoas diferentes que abriram o link, indicados a
+              pagar, saldo disponível e histórico de pagamentos.
+            </p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {[
+                ["Cliques no link", "—"],
+                ["A pagar agora", "—"],
+                ["Saldo disponível", "—"],
+                ["Já recebido", "—"],
+              ].map(([l, v]) => (
+                <div key={l} className="rounded-2xl border border-border bg-muted/40 p-4">
+                  <p className="text-xs text-muted-foreground">{l}</p>
+                  <p className="mt-1 text-lg font-semibold text-muted-foreground/60">{v}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
       </div>
     );
   }
@@ -209,43 +269,53 @@ function PartnersPage() {
   const pendingPayout = data.payouts.find((p) => p.status === "requested");
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 md:py-10">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">MM Partners</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Partilha o teu link, acompanha quem entrou e recebe as tuas recompensas.
-        </p>
-      </header>
-
-      <section className="surface-card rounded-2xl p-5 md:p-6">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">O teu link</p>
-        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <code className="flex-1 truncate rounded-xl bg-muted px-4 py-3 text-sm">
-            {data.link}
-          </code>
-          <div className="flex gap-2">
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 md:py-10">
+      <header className="relative overflow-hidden rounded-3xl border border-border bg-[#0b0a09] p-6 md:p-10">
+        <img
+          src={partnersHero}
+          alt=""
+          aria-hidden
+          width={1280}
+          height={1600}
+          className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-[42%] object-cover object-top opacity-70 md:block"
+        />
+        <div className="absolute inset-0 hidden bg-gradient-to-r from-[#0b0a09] via-[#0b0a09]/85 to-transparent md:block" />
+        <div className="relative z-10 max-w-xl">
+          <span className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-gold">
+            <Handshake className="h-3.5 w-3.5" /> MM Partners
+          </span>
+          <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white md:text-4xl">
+            {data.freeBenefitActive ? "Start grátis ativo" : "O teu negócio de indicações"}
+          </h1>
+          <p className="mt-3 text-sm text-white/65">
+            Partilha o teu link, acompanha cliques e conversões e recebe as tuas recompensas.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-2">
             <button
               type="button"
               onClick={copyLink}
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-gold-soft to-gold-deep px-4 py-3 text-sm font-semibold text-[#12100d] transition hover:brightness-110"
             >
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copied ? "Copiado" : "Copiar"}
+              {copied ? "Copiado" : "Copiar link"}
             </button>
             <button
               type="button"
               onClick={shareLink}
-              className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-3 text-sm transition hover:bg-muted"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-4 py-3 text-sm text-white transition hover:bg-white/10"
             >
               <Share2 className="h-4 w-4" />
               Partilhar
             </button>
           </div>
+          <code className="mt-4 block max-w-md truncate rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80">
+            {data.link}
+          </code>
+          <p className="mt-2 text-xs text-white/45">
+            Código: <strong className="text-white/70">{data.code}</strong>
+          </p>
         </div>
-        <p className="mt-3 text-xs text-muted-foreground">
-          Código: <strong>{data.code}</strong>
-        </p>
-      </section>
+      </header>
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <Stat
@@ -276,7 +346,7 @@ function PartnersPage() {
         )}
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
           <div
-            className="h-full rounded-full bg-primary transition-all"
+            className="h-full rounded-full bg-gradient-to-r from-gold-soft to-gold-deep transition-all"
             style={{ width: `${progress.pct}%` }}
           />
         </div>
@@ -417,6 +487,24 @@ function PartnersPage() {
           </ul>
         ) : null}
       </section>
+    </div>
+  );
+}
+
+function Pillar({
+  icon: Icon,
+  title,
+  text,
+}: {
+  icon: typeof Users;
+  title: string;
+  text: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+      <Icon className="h-4 w-4 text-gold" strokeWidth={1.8} />
+      <p className="mt-2 text-sm font-medium text-white">{title}</p>
+      <p className="mt-1 text-xs leading-relaxed text-white/55">{text}</p>
     </div>
   );
 }
