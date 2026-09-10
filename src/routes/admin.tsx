@@ -89,6 +89,7 @@ type AdminTo =
   | "/admin/lives"
   | "/admin/ferramentas"
   | "/admin/parcerias"
+  | "/admin/partners-leads"
   | "/admin/comunicacao"
   | "/admin/seguranca"
   | "/admin/moderacao"
