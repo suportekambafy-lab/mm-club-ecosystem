@@ -2597,6 +2597,7 @@ export type Database = {
       mm_partner_accounts: {
         Row: {
           accepted_at: string
+          clicks_total: number
           code: string
           created_at: string
           free_benefit_active: boolean
@@ -2611,6 +2612,7 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string
+          clicks_total?: number
           code: string
           created_at?: string
           free_benefit_active?: boolean
@@ -2625,6 +2627,7 @@ export type Database = {
         }
         Update: {
           accepted_at?: string
+          clicks_total?: number
           code?: string
           created_at?: string
           free_benefit_active?: boolean
@@ -2638,6 +2641,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      mm_partner_clicks: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          partner_id: string
+          referer: string | null
+          user_agent: string | null
+          visitor_key: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          partner_id: string
+          referer?: string | null
+          user_agent?: string | null
+          visitor_key?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          partner_id?: string
+          referer?: string | null
+          user_agent?: string | null
+          visitor_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mm_partner_clicks_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "mm_partner_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mm_partner_ledger: {
         Row: {
