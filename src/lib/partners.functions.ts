@@ -56,6 +56,8 @@ async function loadDashboard(userId: string, origin?: string | null): Promise<Pa
     link: null,
     activeCount: 0,
     totalCount: 0,
+    clicks: 0,
+    uniqueClicks: 0,
     freeBenefitActive: false,
     balanceCents: 0,
     earnedCents: 0,
