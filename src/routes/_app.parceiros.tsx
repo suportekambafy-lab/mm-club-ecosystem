@@ -9,6 +9,7 @@ import {
   Gift,
   Handshake,
   Loader2,
+  MousePointerClick,
   Share2,
   Users,
   Wallet,
@@ -423,10 +424,12 @@ function PartnersPage() {
 function Stat({
   label,
   value,
+  hint,
   icon: Icon,
 }: {
   label: string;
   value: string;
+  hint?: string;
   icon: typeof Users;
 }) {
   return (
@@ -436,6 +439,7 @@ function Stat({
         {label}
       </div>
       <p className="mt-2 text-xl font-semibold">{value}</p>
+      {hint ? <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }
