@@ -155,7 +155,9 @@ function PartnersPage() {
         ))}
       </div>
 
-      {tab === "shopify" ? (
+      {tab === "mmpartners" ? (
+        <MMPartnersTab />
+      ) : tab === "shopify" ? (
         stats.isLoading ? (
           <div className="flex items-center gap-2 p-6 text-[13px] text-admin-muted">
             <Loader2 className="h-4 w-4 animate-spin" /> A carregar…
