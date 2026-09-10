@@ -29,7 +29,11 @@ const MM_CLUB_FEATURES = [
   "events.access",
 ];
 
-const PAID_STATUS = ["active", "grace_period"] as const;
+/**
+ * Só conta quem paga a sério: subscrição ativa, fora do período de teste e com
+ * pelo menos um pagamento confirmado. Dívida (grace_period) não conta.
+ */
+const PAID_STATUS = ["active"] as const;
 
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
