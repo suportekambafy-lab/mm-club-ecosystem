@@ -71,7 +71,10 @@ async function loadDashboard(userId: string, origin?: string | null): Promise<Pa
   };
   if (!account) return base;
 
-  const snapshot = await core.evaluatePartner(account.id);
+  const [snapshot, clickStats] = await Promise.all([
+    core.evaluatePartner(account.id),
+    core.clicksOf(account.id),
+  ]);
 
   const [{ data: referrals }, { data: payouts }] = await Promise.all([
     supabaseAdmin
@@ -97,15 +100,17 @@ async function loadDashboard(userId: string, origin?: string | null): Promise<Pa
     for (const p of profiles ?? []) names.set(p.id, p.display_name ?? "");
   }
 
-  const root = origin && origin.startsWith("http") ? origin.replace(/\/$/, "") : SITE;
+  void origin; // o link é sempre o domínio oficial do clube
 
   return {
     ...base,
     joined: true,
     code: account.code,
-    link: `${root}/?ref=${account.code}`,
+    link: `${SITE}/?ref=${account.code}`,
     activeCount: snapshot.activeCount,
     totalCount: snapshot.totalCount,
+    clicks: clickStats.clicks,
+    uniqueClicks: clickStats.uniqueClicks,
     freeBenefitActive: snapshot.freeBenefitActive,
     balanceCents: snapshot.balanceCents,
     earnedCents: snapshot.earnedCents,
