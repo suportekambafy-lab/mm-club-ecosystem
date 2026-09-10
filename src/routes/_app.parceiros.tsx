@@ -246,7 +246,13 @@ function PartnersPage() {
         </p>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <Stat
+          label="Cliques no link"
+          value={String(data.clicks)}
+          hint={`${data.uniqueClicks} pessoas diferentes`}
+          icon={MousePointerClick}
+        />
         <Stat label="A pagar agora" value={String(data.activeCount)} icon={Users} />
         <Stat label="Total de indicados" value={String(data.totalCount)} icon={Handshake} />
         <Stat label="Saldo disponível" value={money(data.balanceCents)} icon={Wallet} />
