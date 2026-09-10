@@ -606,6 +606,7 @@ function MMPartnersTab() {
               <tr className="border-t border-admin-border">
                 <th className="px-4 py-2 font-normal">Membro</th>
                 <th className="px-4 py-2 font-normal">Código</th>
+                <th className="px-4 py-2 font-normal">Cliques</th>
                 <th className="px-4 py-2 font-normal">A pagar</th>
                 <th className="px-4 py-2 font-normal">Total</th>
                 <th className="px-4 py-2 font-normal">MM grátis</th>
@@ -616,7 +617,7 @@ function MMPartnersTab() {
             <tbody>
               {partners.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 text-admin-muted">
+                  <td colSpan={8} className="px-4 py-6 text-admin-muted">
                     Ainda ninguém entrou no MM Partners.
                   </td>
                 </tr>
@@ -635,6 +636,7 @@ function MMPartnersTab() {
                       </div>
                     </td>
                     <td className="px-4 py-2.5 text-admin-muted">{p.code}</td>
+                    <td className="px-4 py-2.5 text-admin-muted">{p.clicks}</td>
                     <td className="px-4 py-2.5 text-admin-fg">{p.activeCount}</td>
                     <td className="px-4 py-2.5 text-admin-muted">{p.totalCount}</td>
                     <td className="px-4 py-2.5 text-admin-muted">
