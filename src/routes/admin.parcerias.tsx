@@ -468,3 +468,187 @@ function PartnersPage() {
     </div>
   );
 }
+
+/** MM Partners — parceiros, indicados a pagar e pedidos de retirada. */
+function MMPartnersTab() {
+  const overviewFn = useServerFn(getPartnersOverview);
+  const decideFn = useServerFn(decidePartnerPayout);
+  const qc = useQueryClient();
+
+  const data = useQuery({
+    queryKey: ["admin", "mm-partners"],
+    queryFn: () => overviewFn({}),
+  });
+
+  const decide = useMutation({
+    mutationFn: (input: { payoutId: string; decision: "paid" | "rejected"; note?: string }) =>
+      decideFn({ data: input }),
+    onSuccess: () => {
+      toast.success("Pedido atualizado.");
+      qc.invalidateQueries({ queryKey: ["admin", "mm-partners"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  if (data.isLoading) {
+    return (
+      <div className="flex items-center gap-2 p-6 text-[13px] text-admin-muted">
+        <Loader2 className="h-4 w-4 animate-spin" /> A carregar…
+      </div>
+    );
+  }
+  if (data.isError || !data.data) {
+    return <p className="p-6 text-[13px] text-admin-muted">Não foi possível carregar o MM Partners.</p>;
+  }
+
+  const { totals, partners, payouts } = data.data;
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Card label="Parceiros" value={String(totals.partners)} icon={Handshake} />
+        <Card
+          label="Indicados a pagar"
+          value={String(totals.activeReferrals)}
+          hint={`${totals.freeBenefits} com MM grátis`}
+          icon={Users}
+        />
+        <Card
+          label="Retiradas por pagar"
+          value={money(totals.pendingPayoutCents)}
+          icon={Coins}
+        />
+        <Card label="Já pago" value={money(totals.paidOutCents)} icon={Gift} />
+      </div>
+
+      <section className="rounded-xl bg-admin-panel">
+        <h2 className="px-4 py-3 text-[14px] font-medium text-admin-fg">Pedidos de retirada</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[860px] text-[13px]">
+            <thead className="text-left text-[12px] text-admin-faint">
+              <tr className="border-t border-admin-border">
+                <th className="px-4 py-2 font-normal">Parceiro</th>
+                <th className="px-4 py-2 font-normal">Valor</th>
+                <th className="px-4 py-2 font-normal">Pagar para</th>
+                <th className="px-4 py-2 font-normal">Pedido</th>
+                <th className="px-4 py-2 font-normal">Estado</th>
+                <th className="px-4 py-2 font-normal" />
+              </tr>
+            </thead>
+            <tbody>
+              {payouts.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-6 text-admin-muted">
+                    Sem pedidos de retirada.
+                  </td>
+                </tr>
+              ) : (
+                payouts.map((p) => (
+                  <tr key={p.id} className="border-t border-admin-border">
+                    <td className="px-4 py-2.5">
+                      <p className="text-admin-fg">{p.name}</p>
+                      {p.email ? (
+                        <p className="text-[12px] text-admin-faint">{p.email}</p>
+                      ) : null}
+                    </td>
+                    <td className="px-4 py-2.5 text-admin-fg">{money(p.amountCents)}</td>
+                    <td className="px-4 py-2.5 text-admin-muted">
+                      {p.method === "mbway" ? "MB Way" : "IBAN"} · {p.target}
+                      {p.holder ? ` · ${p.holder}` : ""}
+                    </td>
+                    <td className="px-4 py-2.5 text-admin-muted">{when(p.createdAt)}</td>
+                    <td className="px-4 py-2.5 text-admin-muted">
+                      {p.status === "requested"
+                        ? "Em análise"
+                        : p.status === "paid"
+                          ? "Pago"
+                          : "Recusado"}
+                      {p.note ? ` · ${p.note}` : ""}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      {p.status === "requested" ? (
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            disabled={decide.isPending}
+                            onClick={() => decide.mutate({ payoutId: p.id, decision: "paid" })}
+                            className="rounded-md bg-admin-hover px-2.5 py-1 text-[12px] text-admin-fg disabled:opacity-40"
+                          >
+                            Marcar como pago
+                          </button>
+                          <button
+                            type="button"
+                            disabled={decide.isPending}
+                            onClick={() => {
+                              const note = window.prompt("Motivo da recusa (opcional)") ?? "";
+                              decide.mutate({ payoutId: p.id, decision: "rejected", note });
+                            }}
+                            className="rounded-md px-2.5 py-1 text-[12px] text-admin-muted transition hover:text-admin-fg disabled:opacity-40"
+                          >
+                            Recusar
+                          </button>
+                        </div>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="rounded-xl bg-admin-panel">
+        <h2 className="px-4 py-3 text-[14px] font-medium text-admin-fg">Parceiros</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[860px] text-[13px]">
+            <thead className="text-left text-[12px] text-admin-faint">
+              <tr className="border-t border-admin-border">
+                <th className="px-4 py-2 font-normal">Membro</th>
+                <th className="px-4 py-2 font-normal">Código</th>
+                <th className="px-4 py-2 font-normal">A pagar</th>
+                <th className="px-4 py-2 font-normal">Total</th>
+                <th className="px-4 py-2 font-normal">MM grátis</th>
+                <th className="px-4 py-2 font-normal">Saldo</th>
+                <th className="px-4 py-2 font-normal">Ganho</th>
+              </tr>
+            </thead>
+            <tbody>
+              {partners.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-6 text-admin-muted">
+                    Ainda ninguém entrou no MM Partners.
+                  </td>
+                </tr>
+              ) : (
+                partners.map((p) => (
+                  <tr key={p.partnerId} className="border-t border-admin-border">
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-2.5">
+                        <MemberAvatar name={p.name} avatarUrl={p.avatarUrl} size={28} />
+                        <div className="min-w-0">
+                          <p className="truncate text-admin-fg">{p.name}</p>
+                          {p.email ? (
+                            <p className="truncate text-[12px] text-admin-faint">{p.email}</p>
+                          ) : null}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2.5 text-admin-muted">{p.code}</td>
+                    <td className="px-4 py-2.5 text-admin-fg">{p.activeCount}</td>
+                    <td className="px-4 py-2.5 text-admin-muted">{p.totalCount}</td>
+                    <td className="px-4 py-2.5 text-admin-muted">
+                      {p.freeBenefitActive ? "Sim" : "—"}
+                    </td>
+                    <td className="px-4 py-2.5 text-admin-fg">{money(p.balanceCents)}</td>
+                    <td className="px-4 py-2.5 text-admin-muted">{money(p.earnedCents)}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  );
+}
