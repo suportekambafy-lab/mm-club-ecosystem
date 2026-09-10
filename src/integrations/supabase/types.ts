@@ -2594,6 +2594,205 @@ export type Database = {
         }
         Relationships: []
       }
+      mm_partner_accounts: {
+        Row: {
+          accepted_at: string
+          code: string
+          created_at: string
+          free_benefit_active: boolean
+          free_benefit_since: string | null
+          id: string
+          payout_holder: string | null
+          payout_method: string | null
+          payout_target: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          code: string
+          created_at?: string
+          free_benefit_active?: boolean
+          free_benefit_since?: string | null
+          id?: string
+          payout_holder?: string | null
+          payout_method?: string | null
+          payout_target?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          code?: string
+          created_at?: string
+          free_benefit_active?: boolean
+          free_benefit_since?: string | null
+          id?: string
+          payout_holder?: string | null
+          payout_method?: string | null
+          payout_target?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mm_partner_ledger: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          id: string
+          kind: string
+          memo: string | null
+          partner_id: string
+          ref_key: string | null
+          referral_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          id?: string
+          kind: string
+          memo?: string | null
+          partner_id: string
+          ref_key?: string | null
+          referral_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          memo?: string | null
+          partner_id?: string
+          ref_key?: string | null
+          referral_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mm_partner_ledger_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "mm_partner_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mm_partner_ledger_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "mm_partner_referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mm_partner_payouts: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          holder: string | null
+          id: string
+          method: string
+          note: string | null
+          partner_id: string
+          status: string
+          target: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          holder?: string | null
+          id?: string
+          method: string
+          note?: string | null
+          partner_id: string
+          status?: string
+          target: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          holder?: string | null
+          id?: string
+          method?: string
+          note?: string | null
+          partner_id?: string
+          status?: string
+          target?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mm_partner_payouts_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "mm_partner_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mm_partner_referrals: {
+        Row: {
+          code: string
+          created_at: string
+          first_paid_at: string | null
+          id: string
+          partner_id: string
+          referred_user_id: string
+          reward_cents: number
+          reward_kind: string | null
+          rewarded_at: string | null
+          source: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          first_paid_at?: string | null
+          id?: string
+          partner_id: string
+          referred_user_id: string
+          reward_cents?: number
+          reward_kind?: string | null
+          rewarded_at?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          first_paid_at?: string | null
+          id?: string
+          partner_id?: string
+          referred_user_id?: string
+          reward_cents?: number
+          reward_kind?: string | null
+          rewarded_at?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mm_partner_referrals_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "mm_partner_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mm_short_comments: {
         Row: {
           body: string

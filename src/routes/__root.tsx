@@ -241,6 +241,12 @@ function RootComponent() {
 
   useEffect(() => installZoomLock(), []);
 
+  // Convite MM Partners (?ref=CODIGO) — guardado até o membro criar conta.
+  useEffect(() => {
+    void import("@/lib/partner-ref").then((m) => m.capturePartnerRef());
+  }, []);
+
+
   // PageView do Meta em cada navegação (SPA não recarrega a página).
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   useEffect(() => {

@@ -49,6 +49,7 @@ import { Route as AdminAulasRouteImport } from './routes/admin.aulas'
 import { Route as AppSubscricaoRouteImport } from './routes/_app.subscricao'
 import { Route as AppShortsRouteImport } from './routes/_app.shorts'
 import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
+import { Route as AppParceirosRouteImport } from './routes/_app.parceiros'
 import { Route as AppLivesRouteImport } from './routes/_app.lives'
 import { Route as AppJadeRouteImport } from './routes/_app.jade'
 import { Route as AppFerramentasRouteImport } from './routes/_app.ferramentas'
@@ -328,6 +329,11 @@ const AppShortsRoute = AppShortsRouteImport.update({
 const AppPerfilRoute = AppPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppParceirosRoute = AppParceirosRouteImport.update({
+  id: '/parceiros',
+  path: '/parceiros',
   getParentRoute: () => AppRoute,
 } as any)
 const AppLivesRoute = AppLivesRouteImport.update({
@@ -802,6 +808,7 @@ export interface FileRoutesByFullPath {
   '/ferramentas': typeof AppFerramentasRouteWithChildren
   '/jade': typeof AppJadeRouteWithChildren
   '/lives': typeof AppLivesRouteWithChildren
+  '/parceiros': typeof AppParceirosRoute
   '/perfil': typeof AppPerfilRoute
   '/shorts': typeof AppShortsRoute
   '/subscricao': typeof AppSubscricaoRoute
@@ -920,6 +927,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AppDashboardRoute
   '/eventos': typeof AppEventosRoute
   '/ferramentas': typeof AppFerramentasRouteWithChildren
+  '/parceiros': typeof AppParceirosRoute
   '/perfil': typeof AppPerfilRoute
   '/shorts': typeof AppShortsRoute
   '/subscricao': typeof AppSubscricaoRoute
@@ -1040,6 +1048,7 @@ export interface FileRoutesById {
   '/_app/ferramentas': typeof AppFerramentasRouteWithChildren
   '/_app/jade': typeof AppJadeRouteWithChildren
   '/_app/lives': typeof AppLivesRouteWithChildren
+  '/_app/parceiros': typeof AppParceirosRoute
   '/_app/perfil': typeof AppPerfilRoute
   '/_app/shorts': typeof AppShortsRoute
   '/_app/subscricao': typeof AppSubscricaoRoute
@@ -1164,6 +1173,7 @@ export interface FileRouteTypes {
     | '/ferramentas'
     | '/jade'
     | '/lives'
+    | '/parceiros'
     | '/perfil'
     | '/shorts'
     | '/subscricao'
@@ -1282,6 +1292,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/eventos'
     | '/ferramentas'
+    | '/parceiros'
     | '/perfil'
     | '/shorts'
     | '/subscricao'
@@ -1401,6 +1412,7 @@ export interface FileRouteTypes {
     | '/_app/ferramentas'
     | '/_app/jade'
     | '/_app/lives'
+    | '/_app/parceiros'
     | '/_app/perfil'
     | '/_app/shorts'
     | '/_app/subscricao'
@@ -1836,6 +1848,13 @@ declare module '@tanstack/react-router' {
       path: '/perfil'
       fullPath: '/perfil'
       preLoaderRoute: typeof AppPerfilRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/parceiros': {
+      id: '/_app/parceiros'
+      path: '/parceiros'
+      fullPath: '/parceiros'
+      preLoaderRoute: typeof AppParceirosRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/lives': {
@@ -2520,6 +2539,7 @@ interface AppRouteChildren {
   AppFerramentasRoute: typeof AppFerramentasRouteWithChildren
   AppJadeRoute: typeof AppJadeRouteWithChildren
   AppLivesRoute: typeof AppLivesRouteWithChildren
+  AppParceirosRoute: typeof AppParceirosRoute
   AppPerfilRoute: typeof AppPerfilRoute
   AppShortsRoute: typeof AppShortsRoute
   AppSubscricaoRoute: typeof AppSubscricaoRoute
@@ -2541,6 +2561,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppFerramentasRoute: AppFerramentasRouteWithChildren,
   AppJadeRoute: AppJadeRouteWithChildren,
   AppLivesRoute: AppLivesRouteWithChildren,
+  AppParceirosRoute: AppParceirosRoute,
   AppPerfilRoute: AppPerfilRoute,
   AppShortsRoute: AppShortsRoute,
   AppSubscricaoRoute: AppSubscricaoRoute,

@@ -33,6 +33,7 @@ import {
   Clapperboard,
   Award,
   LifeBuoy,
+  Handshake,
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import type { User } from "@supabase/supabase-js";
@@ -206,7 +207,7 @@ export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
 
-type NavTo = "/dashboard" | "/academia" | "/certificados" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/shorts" | "/eventos" | "/perfil" | "/codigo" | "/ajuda";
+type NavTo = "/dashboard" | "/academia" | "/certificados" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/shorts" | "/eventos" | "/perfil" | "/codigo" | "/ajuda" | "/parceiros";
 type NavItem = {
   to: NavTo;
   label: string;
@@ -224,6 +225,7 @@ const navItems: NavItem[] = [
   { to: "/comunidade", label: "Comunidade", icon: Users },
   { to: "/shorts", label: "MM Shorts", icon: Clapperboard },
   { to: "/ferramentas", label: "Ferramentas", icon: Wrench },
+  { to: "/parceiros", label: "MM Partners", icon: Handshake },
   { to: "/eventos", label: "Eventos", icon: CalendarDays, soon: true },
   { to: "/certificados", label: "Certificados", icon: Award },
   { to: "/codigo", label: "Código do Clube", icon: ShieldCheck },
@@ -250,6 +252,27 @@ function AppLayout() {
   useSessionGuard(authUser?.id ?? null);
   useEffect(() => {
     if (authUser?.id) void pingLastSeen(authUser.id);
+  }, [authUser?.id]);
+
+  // MM Partners: liga o membro a quem o convidou (uma única vez por conta).
+  useEffect(() => {
+    if (!authUser?.id) return;
+    let cancelled = false;
+    void (async () => {
+      const ref = await import("@/lib/partner-ref");
+      const code = ref.pendingPartnerRef();
+      if (!code || cancelled) return;
+      const { claimPartnerReferral } = await import("@/lib/partners.functions");
+      try {
+        await claimPartnerReferral({ data: { code, source: "link" } });
+      } catch {
+        /* tenta de novo numa próxima visita */
+      }
+      ref.clearPartnerRef();
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [authUser?.id]);
 
 
