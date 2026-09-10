@@ -31,6 +31,7 @@ import {
   Gavel,
   Headset,
   Coins,
+  UserPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import mmIcon from "@/assets/mm-icon.png.asset.json";
@@ -89,6 +90,7 @@ type AdminTo =
   | "/admin/lives"
   | "/admin/ferramentas"
   | "/admin/parcerias"
+  | "/admin/partners-leads"
   | "/admin/comunicacao"
   | "/admin/seguranca"
   | "/admin/moderacao"
@@ -113,6 +115,7 @@ const nav: Array<{ label: string; items: NavItem[] }> = [
       { to: "/admin/saude", label: "Saúde do billing", icon: HeartPulse },
       { to: "/admin/comunicacao", label: "Comunicação", icon: Mail },
       { to: "/admin/parcerias", label: "Parcerias & Créditos", icon: Coins },
+      { to: "/admin/partners-leads", label: "Leads do MM Partners", icon: UserPlus },
 
     ],
   },
@@ -151,6 +154,7 @@ const CRUMBS: Record<string, string> = {
   "/admin/saude": "Saúde do billing",
   "/admin/comunicacao": "Comunicação",
   "/admin/parcerias": "Parcerias & Créditos",
+  "/admin/partners-leads": "Leads do MM Partners",
   "/admin/cursos": "Cursos",
   "/admin/aulas": "Aulas",
   "/admin/progresso": "Progresso dos alunos",
