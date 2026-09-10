@@ -7,12 +7,41 @@ const MAX_AGE_MS = 90 * 86400000;
 
 type Stored = { code: string; at: number };
 
+const VISITOR_KEY = "mm_visitor_id";
+
+/** Identificador anónimo do dispositivo (só para não contar cliques repetidos). */
+function visitorId(): string {
+  try {
+    const existing = window.localStorage.getItem(VISITOR_KEY);
+    if (existing) return existing;
+    const fresh =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `v${Date.now()}${Math.random().toString(36).slice(2)}`;
+    window.localStorage.setItem(VISITOR_KEY, fresh);
+    return fresh;
+  } catch {
+    return `v${Date.now()}${Math.random().toString(36).slice(2)}`;
+  }
+}
+
 export function capturePartnerRef(): void {
   if (typeof window === "undefined") return;
   const code = new URLSearchParams(window.location.search).get("ref");
   if (!code) return;
   const clean = code.trim().toUpperCase().slice(0, 20);
   if (!/^[A-Z0-9]{4,20}$/.test(clean)) return;
+
+  // Conta o clique (o servidor ignora repetições do mesmo dispositivo).
+  void fetch("/api/public/partners/click", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ code: clean, visitor: visitorId() }),
+    keepalive: true,
+  }).catch(() => {
+    /* sem rede: o convite continua guardado */
+  });
+
   try {
     const current = readStored();
     if (current) return; // primeira origem ganha
