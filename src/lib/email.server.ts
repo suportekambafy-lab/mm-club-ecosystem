@@ -208,12 +208,13 @@ export const emailTemplates = {
       subject: `${opts.authorName} publicou na comunidade${short ? `: ${short}` : ""}`,
       html: layout(
         `${opts.authorName} publicou na comunidade do MM Club.`,
-        `${heroImg}
+         `${heroImg}
+         ${opts.locked ? lockedNotice("participares na comunidade") : ""}
          <div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">MM Club · Comunidade${opts.categoryLabel ? ` · ${escapeHtml(opts.categoryLabel)}` : ""}</div>
          <h1 style="font-size:24px;color:#ffffff;margin:0 0 16px;font-weight:600;line-height:1.3;">${author} publicou na comunidade</h1>
          ${excerpt ? `<div style="background:#0a0a0a;border-left:3px solid #c9a961;padding:18px 22px;margin:0 0 24px;border-radius:8px;font-size:15px;line-height:1.7;color:#e5e5e5;white-space:pre-wrap;">${excerpt}</div>` : ""}
-         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Olá ${safe}, entra na comunidade para responder e participar na conversa.</p>
-         <p style="margin:0 0 8px;">${btn("Ver publicação →", `${APP_URL}/comunidade?post=${opts.postId}`)}</p>`,
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Olá ${safe}, ${opts.locked ? "a comunidade está trancada enquanto a conta estiver suspensa. Regulariza e voltas à conversa." : "entra na comunidade para responder e participar na conversa."}</p>
+         ${opts.locked ? lockedCta("Regularizar pagamento e voltar →") : `<p style="margin:0 0 8px;">${btn("Ver publicação →", `${APP_URL}/comunidade?post=${opts.postId}`)}</p>`}`,
       ),
     };
   },
