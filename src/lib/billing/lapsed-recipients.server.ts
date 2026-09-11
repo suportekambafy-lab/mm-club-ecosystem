@@ -31,8 +31,8 @@ export async function lapsedUserIds(): Promise<Set<string>> {
   const nowIso = new Date().toISOString();
   const { data: grants, error: grantErr } = await supabaseAdmin
     .from("entitlement_grants")
-    .select("user_id,feature,expires_at,revoked_at")
-    .eq("feature", "academy.access")
+    .select("user_id,feature_key,expires_at,revoked_at")
+    .eq("feature_key", "academy.access")
     .in("user_id", Array.from(lapsed));
   if (grantErr) {
     console.error("[lapsed-recipients] grants read failed", grantErr.message);
