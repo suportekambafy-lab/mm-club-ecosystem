@@ -162,6 +162,22 @@ function escapeHtml(s: string): string {
 const btn = (label: string, href: string) =>
   `<a href="${href}" style="display:inline-block;background:#c9a961;color:#0a0a0a;padding:14px 28px;border-radius:999px;text-decoration:none;font-weight:600;font-size:15px;">${label}</a>`;
 
+// ---------- versão para contas suspensas / em dívida ----------
+
+/** Faixa de aviso no topo do conteúdo (contas sem acesso). */
+function lockedNotice(what = "entrares"): string {
+  return `<div style="background:#2a1f05;border:1px solid #7a5c12;border-left:4px solid #e0b74a;border-radius:10px;padding:14px 18px;margin:0 0 22px;">
+  <div style="font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:#e0b74a;margin-bottom:6px;font-weight:600;">Conta suspensa</div>
+  <div style="font-size:14px;line-height:1.6;color:#f0dca8;">A tua conta está suspensa por falta de pagamento. Podes ver o que está a acontecer no clube, mas para ${escapeHtml(what)} precisas de regularizar o pagamento.</div>
+</div>`;
+}
+
+/** CTA que substitui o botão normal quando a conta está suspensa. */
+function lockedCta(label = "Regularizar pagamento e assistir →"): string {
+  return `<p style="margin:0 0 10px;"><a href="${APP_URL}/subscricao" style="display:inline-block;background:#e0b74a;color:#111111;padding:14px 28px;border-radius:999px;text-decoration:none;font-weight:600;font-size:15px;">${escapeHtml(label)}</a></p>
+<p style="font-size:13px;line-height:1.6;color:#8a8a8a;margin:14px 0 0;">O teu progresso, notas e certificados continuam guardados. Assim que o pagamento entrar, o acesso volta na hora.</p>`;
+}
+
 // ---------- templates ----------
 
 export const emailTemplates = {
