@@ -207,7 +207,10 @@ export const savePartnerPayoutDetails = createServerFn({ method: "POST" })
     if (!data.target) throw new Error("Indica o IBAN ou o número MB Way.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const core = await import("@/lib/partners/core.server");
-    const account = await core.ensureAccount(context.userId);
+    const account = await core.findAccountByUser(context.userId);
+    if (!account || account.status !== "active") {
+      throw new Error("O teu pedido para o MM Partners ainda não foi aprovado.");
+    }
     const { error } = await supabaseAdmin
       .from("mm_partner_accounts")
       .update({
