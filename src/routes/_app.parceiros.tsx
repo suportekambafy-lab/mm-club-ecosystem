@@ -298,17 +298,20 @@ function PartnersPage() {
             </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {[
-                ["Cliques no link", "—"],
-                ["A pagar agora", "—"],
-                ["Saldo disponível", "—"],
-                ["Já recebido", "—"],
+                ["Cliques no link", "1 284"],
+                ["A pagar agora", "14 indicados"],
+                ["Saldo disponível", "350 €"],
+                ["Já recebido", "1 120 €"],
               ].map(([l, v]) => (
                 <div key={l} className="rounded-2xl border border-border bg-muted/40 p-4">
                   <p className="text-xs text-muted-foreground">{l}</p>
-                  <p className="mt-1 text-lg font-semibold text-muted-foreground/60">{v}</p>
+                  <p className="mt-1 text-lg font-semibold text-gold">{v}</p>
                 </div>
               ))}
             </div>
+            <p className="mt-4 text-[11px] uppercase tracking-[0.14em] text-muted-foreground/60">
+              Números de exemplo
+            </p>
           </div>
         </section>
       </div>
