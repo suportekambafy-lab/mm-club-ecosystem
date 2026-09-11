@@ -577,9 +577,9 @@ function AppLayout() {
                     active ? "text-primary" : "text-muted-foreground/80 group-hover:text-foreground",
                   )}
                 />
-                {!compact && <span className="flex-1">{item.label}</span>}
+                {!compact && <span className="flex-1 truncate whitespace-nowrap">{item.label}</span>}
                 {!compact && item.isNew && (
-                  <span className="rounded-full bg-primary px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary-foreground">
+                  <span className="shrink-0 whitespace-nowrap rounded-full bg-primary px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary-foreground">
                     Novo
                   </span>
                 )}
