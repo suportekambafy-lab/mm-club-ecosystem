@@ -2597,45 +2597,60 @@ export type Database = {
       mm_partner_accounts: {
         Row: {
           accepted_at: string
+          application_note: string | null
           clicks_total: number
           code: string
           created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
           free_benefit_active: boolean
           free_benefit_since: string | null
           id: string
           payout_holder: string | null
           payout_method: string | null
           payout_target: string | null
+          requested_at: string
           status: string
           updated_at: string
           user_id: string
         }
         Insert: {
           accepted_at?: string
+          application_note?: string | null
           clicks_total?: number
           code: string
           created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
           free_benefit_active?: boolean
           free_benefit_since?: string | null
           id?: string
           payout_holder?: string | null
           payout_method?: string | null
           payout_target?: string | null
+          requested_at?: string
           status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           accepted_at?: string
+          application_note?: string | null
           clicks_total?: number
           code?: string
           created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
           free_benefit_active?: boolean
           free_benefit_since?: string | null
           id?: string
           payout_holder?: string | null
           payout_method?: string | null
           payout_target?: string | null
+          requested_at?: string
           status?: string
           updated_at?: string
           user_id?: string
