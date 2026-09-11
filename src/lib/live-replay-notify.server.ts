@@ -30,12 +30,22 @@ export async function notifyReplayReady(liveId: string): Promise<{ sent: boolean
     const { data: subs } = await supabaseAdmin
       .from("billing_subscriptions")
       .select("user_id, status")
-      .in("status", ["active", "trialing"]);
+      .in("status", [
+        "active",
+        "trialing",
+        "grace_period",
+        "past_due",
+        "suspended",
+        "expired",
+        "cancelled",
+      ]);
     const allowed = new Set((subs ?? []).map((s) => s.user_id as string));
     if (allowed.size === 0) return { sent: true };
 
     const { optedOutUserIds } = await import("@/lib/community-email.server");
     const optedOut = await optedOutUserIds("lives");
+    const { lapsedUserIds } = await import("@/lib/billing/lapsed-recipients.server");
+    const lapsed = await lapsedUserIds();
 
     let page = 1;
     for (let i = 0; i < 20; i++) {
