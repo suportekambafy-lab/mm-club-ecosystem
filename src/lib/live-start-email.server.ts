@@ -34,6 +34,8 @@ export async function sendLiveStartEmails(liveId: string) {
   let failed = 0;
 
   const optedOut = await optedOutUserIds("lives");
+  const { lapsedUserIds } = await import("@/lib/billing/lapsed-recipients.server");
+  const lapsed = await lapsedUserIds();
 
   for (const userId of userIds) {
     if (optedOut.has(userId)) {
