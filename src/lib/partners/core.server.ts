@@ -56,23 +56,50 @@ export type PartnerAccountRow = {
   free_benefit_active: boolean;
   free_benefit_since: string | null;
   accepted_at: string;
+  application_note: string | null;
+  requested_at: string | null;
+  decided_at: string | null;
+  decision_note: string | null;
 };
+
+const ACCOUNT_COLUMNS =
+  "id, user_id, code, status, payout_method, payout_target, payout_holder, free_benefit_active, free_benefit_since, accepted_at, application_note, requested_at, decided_at, decision_note";
 
 export async function findAccountByUser(
   userId: string,
 ): Promise<PartnerAccountRow | null> {
   const { data } = await supabaseAdmin
     .from("mm_partner_accounts")
-    .select(
-      "id, user_id, code, status, payout_method, payout_target, payout_holder, free_benefit_active, free_benefit_since, accepted_at",
-    )
+    .select(ACCOUNT_COLUMNS)
     .eq("user_id", userId)
     .maybeSingle();
   return (data as PartnerAccountRow | null) ?? null;
 }
 
+/**
+ * Quem está em dívida não pode candidatar-se: primeiro regulariza a conta.
+ */
+export async function partnerEligibility(
+  userId: string,
+): Promise<{ ok: boolean; reason?: string }> {
+  const { getOutstanding } = await import("@/lib/billing/debt.server");
+  const debt = await getOutstanding(userId);
+  const blocked = ["past_due", "grace_period", "suspended", "expired"];
+  if ((debt.status && blocked.includes(debt.status)) || debt.amountCents > 0) {
+    return {
+      ok: false,
+      reason:
+        "A tua conta está suspensa ou com valores em atraso. Regulariza a dívida em /subscricao para te candidatares ao MM Partners.",
+    };
+  }
+  return { ok: true };
+}
+
 /** Cria (ou devolve) a conta de parceiro do membro. */
-export async function ensureAccount(userId: string): Promise<PartnerAccountRow> {
+export async function ensureAccount(
+  userId: string,
+  init?: { status?: string; applicationNote?: string | null },
+): Promise<PartnerAccountRow> {
   const existing = await findAccountByUser(userId);
   if (existing) return existing;
 
@@ -80,10 +107,14 @@ export async function ensureAccount(userId: string): Promise<PartnerAccountRow> 
     const code = randomCode();
     const { data, error } = await supabaseAdmin
       .from("mm_partner_accounts")
-      .insert({ user_id: userId, code })
-      .select(
-        "id, user_id, code, status, payout_method, payout_target, payout_holder, free_benefit_active, free_benefit_since, accepted_at",
-      )
+      .insert({
+        user_id: userId,
+        code,
+        status: init?.status ?? "pending",
+        application_note: init?.applicationNote ?? null,
+        requested_at: new Date().toISOString(),
+      })
+      .select(ACCOUNT_COLUMNS)
       .maybeSingle();
     if (data) return data as PartnerAccountRow;
     // 23505: código repetido (tenta outro) ou conta já criada em paralelo.

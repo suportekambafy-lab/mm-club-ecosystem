@@ -24,6 +24,12 @@ export type PartnerPayoutView = {
 
 export type PartnerDashboard = {
   joined: boolean;
+  /** none = nunca pediu; pending = pedido em análise; active = aprovado; rejected = recusado. */
+  applicationStatus: "none" | "pending" | "active" | "rejected";
+  requestedAt: string | null;
+  decisionNote: string | null;
+  eligible: boolean;
+  ineligibleReason: string | null;
   code: string | null;
   link: string | null;
   activeCount: number;
@@ -50,8 +56,14 @@ async function loadDashboard(userId: string, origin?: string | null): Promise<Pa
   const core = await import("@/lib/partners/core.server");
 
   const account = await core.findAccountByUser(userId);
+  const eligibility = account ? { ok: true as const } : await core.partnerEligibility(userId);
   const base: PartnerDashboard = {
     joined: false,
+    applicationStatus: "none",
+    requestedAt: null,
+    decisionNote: null,
+    eligible: eligibility.ok,
+    ineligibleReason: "reason" in eligibility ? (eligibility.reason ?? null) : null,
     code: null,
     link: null,
     activeCount: 0,
@@ -70,6 +82,16 @@ async function loadDashboard(userId: string, origin?: string | null): Promise<Pa
     payouts: [],
   };
   if (!account) return base;
+
+  if (account.status !== "active") {
+    return {
+      ...base,
+      applicationStatus: account.status === "rejected" ? "rejected" : "pending",
+      requestedAt: account.requested_at ?? account.accepted_at ?? null,
+      decisionNote: account.decision_note ?? null,
+      eligible: true,
+    };
+  }
 
   const [snapshot, clickStats] = await Promise.all([
     core.evaluatePartner(account.id),
@@ -150,14 +172,27 @@ export const getPartnerDashboard = createServerFn({ method: "POST" })
   }))
   .handler(async ({ context, data }) => loadDashboard(context.userId, data.origin));
 
-export const joinPartners = createServerFn({ method: "POST" })
+/**
+ * Candidatura ao MM Partners. A entrada deixou de ser livre: o pedido fica
+ * pendente até a equipa aprovar, e contas em dívida não podem candidatar-se.
+ */
+export const requestPartnerAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data?: { origin?: string | null }) => ({
+  .inputValidator((data?: { origin?: string | null; note?: string }) => ({
     origin: data?.origin ? String(data.origin).slice(0, 200) : null,
+    note: String(data?.note ?? "").trim().slice(0, 600),
   }))
   .handler(async ({ context, data }) => {
     const core = await import("@/lib/partners/core.server");
-    await core.ensureAccount(context.userId);
+    const existing = await core.findAccountByUser(context.userId);
+    if (!existing) {
+      const eligibility = await core.partnerEligibility(context.userId);
+      if (!eligibility.ok) throw new Error(eligibility.reason ?? "Conta não elegível.");
+      await core.ensureAccount(context.userId, {
+        status: "pending",
+        applicationNote: data.note || null,
+      });
+    }
     return loadDashboard(context.userId, data.origin);
   });
 
@@ -172,7 +207,10 @@ export const savePartnerPayoutDetails = createServerFn({ method: "POST" })
     if (!data.target) throw new Error("Indica o IBAN ou o número MB Way.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const core = await import("@/lib/partners/core.server");
-    const account = await core.ensureAccount(context.userId);
+    const account = await core.findAccountByUser(context.userId);
+    if (!account || account.status !== "active") {
+      throw new Error("O teu pedido para o MM Partners ainda não foi aprovado.");
+    }
     const { error } = await supabaseAdmin
       .from("mm_partner_accounts")
       .update({

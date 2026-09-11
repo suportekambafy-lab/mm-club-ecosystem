@@ -264,3 +264,134 @@ export const adjustPartnerBalance = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export type PartnerApplicationRow = {
+  id: string;
+  userId: string;
+  name: string;
+  email: string | null;
+  avatarUrl: string | null;
+  code: string;
+  status: string;
+  note: string | null;
+  requestedAt: string | null;
+  decidedAt: string | null;
+  decisionNote: string | null;
+  subscriptionStatus: string | null;
+};
+
+/** Pedidos de adesão ao MM Partners (pendentes primeiro). */
+export const getPartnerApplications = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ pending: number; rows: PartnerApplicationRow[] }> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: accounts } = await supabaseAdmin
+      .from("mm_partner_accounts")
+      .select(
+        "id, user_id, code, status, application_note, requested_at, decided_at, decision_note",
+      )
+      .order("requested_at", { ascending: false })
+      .limit(500);
+
+    const list = accounts ?? [];
+    const userIds = list.map((a) => a.user_id);
+    const names = new Map<string, string>();
+    const avatars = new Map<string, string | null>();
+    const emails = new Map<string, string | null>();
+    const subStatus = new Map<string, string>();
+
+    if (userIds.length) {
+      const [{ data: profiles }, { data: subs }] = await Promise.all([
+        supabaseAdmin.from("profiles").select("id, display_name, avatar_url").in("id", userIds),
+        supabaseAdmin
+          .from("billing_subscriptions")
+          .select("user_id, status, updated_at")
+          .in("user_id", userIds)
+          .order("updated_at", { ascending: false }),
+      ]);
+      for (const p of profiles ?? []) {
+        names.set(p.id, p.display_name ?? "");
+        avatars.set(p.id, p.avatar_url ?? null);
+      }
+      for (const s of subs ?? []) {
+        if (!subStatus.has(s.user_id)) subStatus.set(s.user_id, s.status as string);
+      }
+      await Promise.all(
+        userIds.slice(0, 200).map(async (id) => {
+          const { data } = await supabaseAdmin.auth.admin.getUserById(id);
+          emails.set(id, data?.user?.email ?? null);
+        }),
+      );
+    }
+
+    const rows: PartnerApplicationRow[] = list.map((a) => ({
+      id: a.id,
+      userId: a.user_id,
+      name: names.get(a.user_id) || emails.get(a.user_id) || "Membro",
+      email: emails.get(a.user_id) ?? null,
+      avatarUrl: avatars.get(a.user_id) ?? null,
+      code: a.code,
+      status: a.status,
+      note: a.application_note ?? null,
+      requestedAt: a.requested_at ?? null,
+      decidedAt: a.decided_at ?? null,
+      decisionNote: a.decision_note ?? null,
+      subscriptionStatus: subStatus.get(a.user_id) ?? null,
+    }));
+
+    const order = { pending: 0, active: 1, rejected: 2 } as Record<string, number>;
+    rows.sort((a, b) => (order[a.status] ?? 3) - (order[b.status] ?? 3));
+
+    return { pending: rows.filter((r) => r.status === "pending").length, rows };
+  });
+
+/** Aprova ou recusa um pedido de adesão. */
+export const decidePartnerApplication = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data?: { accountId?: string; decision?: string; note?: string }) => ({
+    accountId: String(data?.accountId ?? ""),
+    decision: data?.decision === "rejected" ? "rejected" : "active",
+    note: data?.note ? String(data.note).slice(0, 300) : null,
+  }))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context);
+    if (!data.accountId) throw new Error("Pedido inválido");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const core = await import("@/lib/partners/core.server");
+
+    const { data: account } = await supabaseAdmin
+      .from("mm_partner_accounts")
+      .select("id, user_id, status")
+      .eq("id", data.accountId)
+      .maybeSingle();
+    if (!account) throw new Error("Pedido não encontrado");
+
+    if (data.decision === "active") {
+      const eligibility = await core.partnerEligibility(account.user_id);
+      if (!eligibility.ok) throw new Error(eligibility.reason ?? "Conta com dívida em aberto.");
+    }
+
+    const { error } = await supabaseAdmin
+      .from("mm_partner_accounts")
+      .update({
+        status: data.decision,
+        decision_note: data.note,
+        decided_by: context.userId,
+        decided_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", account.id);
+    if (error) throw new Error(error.message);
+
+    if (data.decision === "active") {
+      try {
+        await core.evaluatePartner(account.id);
+      } catch (err) {
+        console.error("[mm-partners] evaluate after approval failed", err);
+      }
+    }
+
+    return { ok: true };
+  });

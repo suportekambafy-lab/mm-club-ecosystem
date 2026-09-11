@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -19,7 +19,7 @@ import {
 import { toast } from "sonner";
 import {
   getPartnerDashboard,
-  joinPartners,
+  requestPartnerAccess,
   requestPartnerPayout,
   savePartnerPayoutDetails,
 } from "@/lib/partners.functions";
@@ -69,7 +69,7 @@ const PAYOUT_STATUS: Record<string, string> = {
 
 function PartnersPage() {
   const dashFn = useServerFn(getPartnerDashboard);
-  const joinFn = useServerFn(joinPartners);
+  const joinFn = useServerFn(requestPartnerAccess);
   const saveFn = useServerFn(savePartnerPayoutDetails);
   const payoutFn = useServerFn(requestPartnerPayout);
   const qc = useQueryClient();
@@ -88,6 +88,7 @@ function PartnersPage() {
   const [target, setTarget] = useState("");
   const [holder, setHolder] = useState("");
   const [copied, setCopied] = useState(false);
+  const [note, setNote] = useState("");
 
   useEffect(() => {
     if (!data?.joined) return;
@@ -99,9 +100,9 @@ function PartnersPage() {
   const refresh = () => qc.invalidateQueries({ queryKey: ["mm-partners"] });
 
   const join = useMutation({
-    mutationFn: () => joinFn({ data: { origin } }),
+    mutationFn: () => joinFn({ data: { origin, note } }),
     onSuccess: () => {
-      toast.success("Bem-vindo ao MM Partners. O teu link já está pronto.");
+      toast.success("Candidatura enviada. Avisamos-te quando for aprovada.");
       refresh();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -193,18 +194,66 @@ function PartnersPage() {
                 <Pillar icon={Wallet} title="Retiras a partir de 25 €" text="IBAN ou MB Way." />
               </div>
 
-              <button
-                type="button"
-                onClick={() => join.mutate()}
-                disabled={join.isPending}
-                className="mt-9 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-gold-soft to-gold-deep px-6 py-3.5 text-sm font-semibold text-[#12100d] shadow-[0_18px_40px_-18px_oklch(0.72_0.14_74/0.9)] transition hover:brightness-110 disabled:opacity-50"
-              >
-                {join.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                Quero o meu link
-              </button>
-              <p className="mt-4 max-w-md text-xs text-white/45">
-                Só contam contas reais com plano pago. Indicações a ti mesmo não contam.
-              </p>
+              {data?.applicationStatus === "pending" ? (
+                <div className="mt-9 rounded-2xl border border-gold/30 bg-gold/10 p-5">
+                  <p className="text-sm font-medium text-gold">Pedido em análise</p>
+                  <p className="mt-2 text-sm text-white/70">
+                    Recebemos a tua candidatura
+                    {data.requestedAt
+                      ? ` em ${new Date(data.requestedAt).toLocaleDateString("pt-PT")}`
+                      : ""}
+                    . A equipa responde em poucos dias e avisamos-te por email.
+                  </p>
+                </div>
+              ) : data?.applicationStatus === "rejected" ? (
+                <div className="mt-9 rounded-2xl border border-destructive/40 bg-destructive/10 p-5">
+                  <p className="text-sm font-medium text-white">Candidatura recusada</p>
+                  <p className="mt-2 text-sm text-white/70">
+                    {data.decisionNote || "Fala com o MM Suporte para saberes mais."}
+                  </p>
+                </div>
+              ) : data && !data.eligible ? (
+                <div className="mt-9 rounded-2xl border border-gold/30 bg-gold/10 p-5">
+                  <p className="text-sm font-medium text-gold">Regulariza a tua conta primeiro</p>
+                  <p className="mt-2 text-sm text-white/70">
+                    {data.ineligibleReason ??
+                      "A tua conta está suspensa. Paga os valores em atraso para te candidatares."}
+                  </p>
+                  <Link
+                    to="/subscricao"
+                    className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-gold-soft to-gold-deep px-5 py-2.5 text-sm font-semibold text-[#12100d]"
+                  >
+                    Pagar agora
+                  </Link>
+                </div>
+              ) : (
+                <div className="mt-9 max-w-lg">
+                  <label className="text-xs uppercase tracking-[0.14em] text-white/45">
+                    Conta-nos como vais divulgar
+                  </label>
+                  <textarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    rows={3}
+                    maxLength={600}
+                    placeholder="Ex.: tenho 8 mil seguidores no Instagram sobre e-commerce…"
+                    className="mt-2 w-full rounded-xl border border-white/15 bg-white/5 p-3 text-sm text-white placeholder:text-white/30 focus:border-gold/50 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => join.mutate()}
+                    disabled={join.isPending}
+                    className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-gold-soft to-gold-deep px-6 py-3.5 text-sm font-semibold text-[#12100d] shadow-[0_18px_40px_-18px_oklch(0.72_0.14_74/0.9)] transition hover:brightness-110 disabled:opacity-50"
+                  >
+                    {join.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    Enviar candidatura
+                  </button>
+                  <p className="mt-4 max-w-md text-xs text-white/45">
+                    A entrada é por aprovação. Só contam contas reais com plano pago e indicações a
+                    ti mesmo não contam.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="relative min-h-[320px] lg:min-h-[560px]">
