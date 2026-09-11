@@ -316,12 +316,19 @@ export const emailTemplates = {
       html: layout(
         `${kicker}: ${opts.title} — ${dateFmt}`,
         `${heroImg}
+         ${opts.locked ? lockedNotice("entrares na live") : ""}
          <div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">${escapeHtml(eyebrow)}</div>
          <h1 style="font-size:26px;color:#ffffff;margin:0 0 12px;font-weight:600;line-height:1.25;">${title}</h1>
          <p style="font-size:14px;line-height:1.6;color:#c9a961;margin:0 0 16px;font-weight:500;">${escapeHtml(dateFmt)} (Lisboa)</p>
          ${desc ? `<p style="font-size:15px;line-height:1.7;color:#d4d4d4;margin:0 0 20px;">${desc}</p>` : ""}
-         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Olá ${safe}, ${opts.isScheduled ? "guarda a data. Vais receber o link direto do direto na comunidade e no dashboard." : "o direto começou. Entra agora para não perderes."}</p>
-         <p style="margin:0 0 8px;">${btn(cta, `${APP_URL}/lives/${opts.liveId}`)}</p>`,
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Olá ${safe}, ${
+           opts.locked
+             ? "esta live é dos membros com plano activo. Regulariza o pagamento e entras com todos."
+             : opts.isScheduled
+               ? "guarda a data. Vais receber o link direto do direto na comunidade e no dashboard."
+               : "o direto começou. Entra agora para não perderes."
+         }</p>
+         ${opts.locked ? lockedCta("Regularizar pagamento e assistir →") : `<p style="margin:0 0 8px;">${btn(cta, `${APP_URL}/lives/${opts.liveId}`)}</p>`}`,
       ),
     };
   },
