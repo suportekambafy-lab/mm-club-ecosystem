@@ -99,13 +99,19 @@ export function ChallengeLivesModule({
               month: "short",
               year: "numeric",
             }).format(new Date(l.starts_at));
+            const active = activeLiveId === l.id;
             return (
               <li key={l.id}>
                 <Link
-                  to="/lives/$liveId"
-                  params={{ liveId: l.id }}
-                  className="flex items-center gap-3 px-4 py-3 transition hover:bg-surface-2/50 sm:px-5"
+                  to={courseId ? "/academia/$courseId/live/$liveId" : "/lives/$liveId"}
+                  params={
+                    courseId
+                      ? ({ courseId, liveId: l.id } as never)
+                      : ({ liveId: l.id } as never)
+                  }
+                  className={`flex items-center gap-3 px-4 py-3 transition hover:bg-surface-2/50 sm:px-5 ${active ? "bg-surface-2" : ""}`}
                 >
+
                   <span
                     aria-hidden
                     className="flex h-9 w-14 shrink-0 items-center justify-center rounded-md border border-border bg-surface-2 bg-cover bg-center text-primary"
