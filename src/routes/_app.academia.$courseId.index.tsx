@@ -246,7 +246,7 @@ function CourseDetail() {
               />
             ))}
             {isFeaturedCourse(course) && (
-              <ChallengeLivesModule index={course.modules.length} />
+              <ChallengeLivesModule index={course.modules.length} courseId={course.id} />
             )}
           </div>
         </section>
