@@ -127,6 +127,16 @@ export async function sendEmail(opts: SendOpts): Promise<{
 
 // ---------- shared template layout ----------
 
+/**
+ * Stable, cache-friendly cover URL for live emails.
+ * Always points at the public proxy so inbox clients render the image even if
+ * the stored storage URL is long/signed or gets rotated later.
+ */
+function liveCoverEmailUrl(liveId: string, coverUrl?: string | null): string {
+  if (coverUrl && !coverUrl.startsWith("http")) return `${APP_URL}${coverUrl}`;
+  return `${APP_URL}/api/public/lives/${liveId}/cover/png`;
+}
+
 function layout(previewText: string, bodyHtml: string): string {
   return `<!doctype html>
 <html lang="pt"><head>
@@ -292,6 +302,7 @@ export const emailTemplates = {
   },
 
   liveAnnouncement(opts: {
+
     name: string;
     title: string;
     description?: string | null;
@@ -309,9 +320,7 @@ export const emailTemplates = {
       timeStyle: "short",
       timeZone: "Europe/Lisbon",
     }).format(new Date(opts.startsAt));
-    const cover = opts.coverUrl
-      ? (opts.coverUrl.startsWith("http") ? opts.coverUrl : `${APP_URL}${opts.coverUrl}`)
-      : null;
+    const cover = liveCoverEmailUrl(opts.liveId, opts.coverUrl);
     const kicker = opts.isScheduled ? "Nova live agendada" : "Estamos AO VIVO";
     const eyebrow = opts.isScheduled ? "MM Club · Direto" : "MM Club · AO VIVO agora";
     const cta = opts.isScheduled ? "Ver detalhes da live →" : "Entrar na live →";
@@ -364,11 +373,7 @@ export const emailTemplates = {
       }).format(new Date(iso));
     const oldFmt = fmt(opts.oldStartsAt);
     const newFmt = fmt(opts.startsAt);
-    const cover = opts.coverUrl
-      ? opts.coverUrl.startsWith("http")
-        ? opts.coverUrl
-        : `${APP_URL}${opts.coverUrl}`
-      : null;
+    const cover = liveCoverEmailUrl(opts.liveId, opts.coverUrl);
     const heroImg = cover
       ? `<div style="margin:0 -40px 24px;"><img src="${cover}" alt="${title}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;text-decoration:none;"></div>`
       : "";
@@ -409,11 +414,7 @@ export const emailTemplates = {
       dateStyle: "long",
       timeZone: "Europe/Lisbon",
     }).format(new Date(opts.startsAt));
-    const cover = opts.coverUrl
-      ? opts.coverUrl.startsWith("http")
-        ? opts.coverUrl
-        : `${APP_URL}${opts.coverUrl}`
-      : null;
+    const cover = liveCoverEmailUrl(opts.liveId, opts.coverUrl);
     const heroImg = cover
       ? `<div style="margin:0 -40px 24px;"><img src="${cover}" alt="${title}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;text-decoration:none;"></div>`
       : "";

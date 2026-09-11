@@ -134,6 +134,7 @@ import { Route as AppFerramentasStudioCriativosRouteImport } from './routes/_app
 import { Route as AppFerramentasProductLabProductIdRouteImport } from './routes/_app.ferramentas.product-lab.$productId'
 import { Route as AppAcademiaCourseIdLessonIdRouteImport } from './routes/_app.academia.$courseId.$lessonId'
 import { Route as ApiPublicLivesLiveIdCoverSvgRouteImport } from './routes/api/public/lives.$liveId.cover.svg'
+import { Route as ApiPublicLivesLiveIdCoverPngRouteImport } from './routes/api/public/lives.$liveId.cover.png'
 
 const VipRoute = VipRouteImport.update({
   id: '/vip',
@@ -803,6 +804,12 @@ const ApiPublicLivesLiveIdCoverSvgRoute =
     path: '/api/public/lives/$liveId/cover/svg',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicLivesLiveIdCoverPngRoute =
+  ApiPublicLivesLiveIdCoverPngRouteImport.update({
+    id: '/api/public/lives/$liveId/cover/png',
+    path: '/api/public/lives/$liveId/cover/png',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -928,6 +935,7 @@ export interface FileRoutesByFullPath {
   '/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
   '/ferramentas/product-lab/': typeof AppFerramentasProductLabIndexRoute
   '/ferramentas/studio/': typeof AppFerramentasStudioIndexRoute
+  '/api/public/lives/$liveId/cover/png': typeof ApiPublicLivesLiveIdCoverPngRoute
   '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
 }
 export interface FileRoutesByTo {
@@ -1046,6 +1054,7 @@ export interface FileRoutesByTo {
   '/academia/$courseId': typeof AppAcademiaCourseIdIndexRoute
   '/ferramentas/product-lab': typeof AppFerramentasProductLabIndexRoute
   '/ferramentas/studio': typeof AppFerramentasStudioIndexRoute
+  '/api/public/lives/$liveId/cover/png': typeof ApiPublicLivesLiveIdCoverPngRoute
   '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
 }
 export interface FileRoutesById {
@@ -1174,6 +1183,7 @@ export interface FileRoutesById {
   '/_app/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
   '/_app/ferramentas/product-lab/': typeof AppFerramentasProductLabIndexRoute
   '/_app/ferramentas/studio/': typeof AppFerramentasStudioIndexRoute
+  '/api/public/lives/$liveId/cover/png': typeof ApiPublicLivesLiveIdCoverPngRoute
   '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
 }
 export interface FileRouteTypes {
@@ -1302,6 +1312,7 @@ export interface FileRouteTypes {
     | '/academia/$courseId/'
     | '/ferramentas/product-lab/'
     | '/ferramentas/studio/'
+    | '/api/public/lives/$liveId/cover/png'
     | '/api/public/lives/$liveId/cover/svg'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1420,6 +1431,7 @@ export interface FileRouteTypes {
     | '/academia/$courseId'
     | '/ferramentas/product-lab'
     | '/ferramentas/studio'
+    | '/api/public/lives/$liveId/cover/png'
     | '/api/public/lives/$liveId/cover/svg'
   id:
     | '__root__'
@@ -1547,6 +1559,7 @@ export interface FileRouteTypes {
     | '/_app/academia/$courseId/'
     | '/_app/ferramentas/product-lab/'
     | '/_app/ferramentas/studio/'
+    | '/api/public/lives/$liveId/cover/png'
     | '/api/public/lives/$liveId/cover/svg'
   fileRoutesById: FileRoutesById
 }
@@ -1602,6 +1615,7 @@ export interface RootRouteChildren {
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  ApiPublicLivesLiveIdCoverPngRoute: typeof ApiPublicLivesLiveIdCoverPngRoute
   ApiPublicLivesLiveIdCoverSvgRoute: typeof ApiPublicLivesLiveIdCoverSvgRoute
 }
 
@@ -2482,6 +2496,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicLivesLiveIdCoverSvgRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/lives/$liveId/cover/png': {
+      id: '/api/public/lives/$liveId/cover/png'
+      path: '/api/public/lives/$liveId/cover/png'
+      fullPath: '/api/public/lives/$liveId/cover/png'
+      preLoaderRoute: typeof ApiPublicLivesLiveIdCoverPngRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -2780,6 +2801,7 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  ApiPublicLivesLiveIdCoverPngRoute: ApiPublicLivesLiveIdCoverPngRoute,
   ApiPublicLivesLiveIdCoverSvgRoute: ApiPublicLivesLiveIdCoverSvgRoute,
 }
 export const routeTree = rootRouteImport
