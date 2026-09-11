@@ -65,6 +65,7 @@ export const notifyNewLesson = createServerFn({ method: "POST" })
         data.lessonTitle,
         data.courseId,
         data.lessonId,
+        lapsed.has(userId),
       );
       const r = await sendEmail({
         to: u.email,
