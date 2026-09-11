@@ -386,7 +386,7 @@ export const emailTemplates = {
            <p style="margin:0;font-size:16px;color:#c9a961;font-weight:600;">${escapeHtml(newFmt)} (Lisboa)</p>
          </div>
          ${desc ? `<p style="font-size:15px;line-height:1.7;color:#d4d4d4;margin:0 0 20px;">${desc}</p>` : ""}
-         <p style="margin:0 0 8px;">${btn("Ver detalhes da live →", `${APP_URL}/lives/${opts.liveId}`)}</p>`,
+         ${opts.locked ? lockedCta("Regularizar pagamento e assistir →") : `<p style="margin:0 0 8px;">${btn("Ver detalhes da live →", `${APP_URL}/lives/${opts.liveId}`)}</p>`}`,
       ),
     };
   },
