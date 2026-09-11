@@ -127,6 +127,16 @@ export async function sendEmail(opts: SendOpts): Promise<{
 
 // ---------- shared template layout ----------
 
+/**
+ * Stable, cache-friendly cover URL for live emails.
+ * Always points at the public proxy so inbox clients render the image even if
+ * the stored storage URL is long/signed or gets rotated later.
+ */
+function liveCoverEmailUrl(liveId: string, coverUrl?: string | null): string {
+  if (coverUrl && !coverUrl.startsWith("http")) return `${APP_URL}${coverUrl}`;
+  return `${APP_URL}/api/public/lives/${liveId}/cover/png`;
+}
+
 function layout(previewText: string, bodyHtml: string): string {
   return `<!doctype html>
 <html lang="pt"><head>
