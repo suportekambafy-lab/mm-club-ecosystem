@@ -40,6 +40,9 @@ const iconByKind: Record<NotifKind, typeof Bell> = {
   rank: Trophy,
   moderation: Gavel,
   appeal: ShieldQuestion,
+  partner_pending: Handshake,
+  partner_approved: Handshake,
+  partner_rejected: Handshake,
 };
 
 const labelByKind: Record<NotifKind, string> = {
