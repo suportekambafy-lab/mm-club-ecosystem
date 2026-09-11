@@ -27,6 +27,9 @@ export type EmailKind =
   | "short_published"
   | "short_reply"
   | "product_update"
+  | "partner_pending"
+  | "partner_approved"
+  | "partner_rejected"
   | "winback";
 
 type SendOpts = {
