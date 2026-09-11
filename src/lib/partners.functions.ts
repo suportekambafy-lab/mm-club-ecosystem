@@ -83,6 +83,16 @@ async function loadDashboard(userId: string, origin?: string | null): Promise<Pa
   };
   if (!account) return base;
 
+  if (account.status !== "active") {
+    return {
+      ...base,
+      applicationStatus: account.status === "rejected" ? "rejected" : "pending",
+      requestedAt: account.requested_at ?? account.accepted_at ?? null,
+      decisionNote: account.decision_note ?? null,
+      eligible: true,
+    };
+  }
+
   const [snapshot, clickStats] = await Promise.all([
     core.evaluatePartner(account.id),
     core.clicksOf(account.id),
