@@ -45,6 +45,9 @@ export const notifyNewLesson = createServerFn({ method: "POST" })
       userIds = Array.from(new Set((rows ?? []).map((r) => r.user_id as string)));
     }
 
+    const { lapsedUserIds } = await import("@/lib/billing/lapsed-recipients.server");
+    const lapsed = await lapsedUserIds();
+
     const ref = `${data.courseId}:${data.lessonId}`;
     let sent = 0;
     let skipped = 0;
