@@ -24,7 +24,7 @@ function isChallengeReplay(l: Live) {
  */
 export function ChallengeLivesModule({ index }: { index: number }) {
   const [lives, setLives] = useState<Live[] | null>(null);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
 
   useEffect(() => {
     let alive = true;
