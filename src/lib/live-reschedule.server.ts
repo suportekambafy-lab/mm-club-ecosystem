@@ -84,6 +84,7 @@ export async function notifyLiveRescheduled(args: {
         startsAt: newStartsAt,
         coverUrl: (live.cover_url as string | null) ?? null,
         liveId,
+        locked: lapsed.has(u.id),
       });
       try {
         const r = await sendEmail({
