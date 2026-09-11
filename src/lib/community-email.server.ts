@@ -55,6 +55,8 @@ export async function sendCommunityPostEmails(postId: string) {
 
   const authorName = author?.display_name ?? "Um membro";
   const optedOut = await optedOutUserIds("community_posts");
+  const { lapsedUserIds } = await import("@/lib/billing/lapsed-recipients.server");
+  const lapsed = await lapsedUserIds();
 
   let sent = 0;
   let skipped = 0;
