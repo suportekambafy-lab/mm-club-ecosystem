@@ -436,6 +436,7 @@ export const adminCreateLive = createServerFn({ method: "POST" })
             coverUrl: finalCoverUrl,
             liveId: row.id,
             isScheduled,
+            locked: lapsed.has(u.id),
           });
           await sendEmail({
             to: u.email,
