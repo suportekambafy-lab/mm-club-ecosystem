@@ -376,7 +376,8 @@ export const emailTemplates = {
       subject: `Novo horário: ${opts.title}`,
       html: layout(
         `A live ${opts.title} passou para ${newFmt}.`,
-        `${heroImg}
+         `${heroImg}
+         ${opts.locked ? lockedNotice("entrares na live") : ""}
          <div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">MM Club · Horário alterado</div>
          <h1 style="font-size:26px;color:#ffffff;margin:0 0 12px;font-weight:600;line-height:1.25;">${title}</h1>
          <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 20px;">Olá ${safe}, esta live mudou de horário. Actualiza a tua agenda.</p>
