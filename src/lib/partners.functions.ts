@@ -24,6 +24,12 @@ export type PartnerPayoutView = {
 
 export type PartnerDashboard = {
   joined: boolean;
+  /** none = nunca pediu; pending = pedido em análise; active = aprovado; rejected = recusado. */
+  applicationStatus: "none" | "pending" | "active" | "rejected";
+  requestedAt: string | null;
+  decisionNote: string | null;
+  eligible: boolean;
+  ineligibleReason: string | null;
   code: string | null;
   link: string | null;
   activeCount: number;
