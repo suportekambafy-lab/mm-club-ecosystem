@@ -246,6 +246,25 @@ function communityCopy(
       subtitle: "Toca para ver como a tua posição foi calculada",
     };
   }
+  if (kind === "partner_pending") {
+    return {
+      title: "Candidatura enviada ao MM Partners",
+      subtitle: "A equipa está a analisar — avisamos-te da decisão",
+    };
+  }
+  if (kind === "partner_approved") {
+    return {
+      title: "Estás dentro do MM Partners",
+      subtitle: "Abre o teu painel e copia o teu link de afiliado",
+    };
+  }
+  if (kind === "partner_rejected") {
+    return {
+      title: "Candidatura ao MM Partners não aprovada",
+      subtitle: "Toca para ver os detalhes",
+    };
+  }
+
 
   if (kind === "like") {
     return {
