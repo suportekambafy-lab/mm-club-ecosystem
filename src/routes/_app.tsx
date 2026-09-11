@@ -225,7 +225,7 @@ const navItems: NavItem[] = [
   { to: "/comunidade", label: "Comunidade", icon: Users },
   { to: "/shorts", label: "MM Shorts", icon: Clapperboard },
   { to: "/ferramentas", label: "Ferramentas", icon: Wrench },
-  { to: "/parceiros", label: "MM Partners", icon: Handshake },
+  { to: "/parceiros", label: "Seja Afiliado", icon: Handshake },
   { to: "/eventos", label: "Eventos", icon: CalendarDays, soon: true },
   { to: "/certificados", label: "Certificados", icon: Award },
   { to: "/codigo", label: "Código do Clube", icon: ShieldCheck },
