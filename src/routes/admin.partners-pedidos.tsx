@@ -134,7 +134,7 @@ function ApplicationsPage() {
             <li key={r.id} className="rounded-xl bg-admin-panel p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3">
-                  <MemberAvatar name={r.name} src={r.avatarUrl} size={40} />
+                  <MemberAvatar name={r.name} avatarUrl={r.avatarUrl} size={40} />
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-admin-fg">{r.name}</p>
                     <p className="truncate text-xs text-admin-muted">{r.email ?? "—"}</p>
