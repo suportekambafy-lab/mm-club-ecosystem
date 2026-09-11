@@ -172,14 +172,27 @@ export const getPartnerDashboard = createServerFn({ method: "POST" })
   }))
   .handler(async ({ context, data }) => loadDashboard(context.userId, data.origin));
 
-export const joinPartners = createServerFn({ method: "POST" })
+/**
+ * Candidatura ao MM Partners. A entrada deixou de ser livre: o pedido fica
+ * pendente até a equipa aprovar, e contas em dívida não podem candidatar-se.
+ */
+export const requestPartnerAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data?: { origin?: string | null }) => ({
+  .inputValidator((data?: { origin?: string | null; note?: string }) => ({
     origin: data?.origin ? String(data.origin).slice(0, 200) : null,
+    note: String(data?.note ?? "").trim().slice(0, 600),
   }))
   .handler(async ({ context, data }) => {
     const core = await import("@/lib/partners/core.server");
-    await core.ensureAccount(context.userId);
+    const existing = await core.findAccountByUser(context.userId);
+    if (!existing) {
+      const eligibility = await core.partnerEligibility(context.userId);
+      if (!eligibility.ok) throw new Error(eligibility.reason ?? "Conta não elegível.");
+      await core.ensureAccount(context.userId, {
+        status: "pending",
+        applicationNote: data.note || null,
+      });
+    }
     return loadDashboard(context.userId, data.origin);
   });
 
