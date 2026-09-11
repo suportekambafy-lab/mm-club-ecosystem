@@ -188,6 +188,7 @@ export const emailTemplates = {
     imageUrl?: string | null;
     postId: string;
     categoryLabel?: string | null;
+    locked?: boolean;
   }) {
     const safe = escapeHtml(opts.name);
     const author = escapeHtml(opts.authorName);
