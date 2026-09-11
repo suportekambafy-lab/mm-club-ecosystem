@@ -39,6 +39,8 @@ export async function sendShortPublishedEmails(shortId: string) {
     .maybeSingle();
   const authorName = author?.display_name ?? "MM Club";
   const optedOut = await optedOutUserIds("community_posts");
+  const { lapsedUserIds } = await import("@/lib/billing/lapsed-recipients.server");
+  const lapsed = await lapsedUserIds();
 
   let sent = 0;
   let skipped = 0;
@@ -66,6 +68,7 @@ export async function sendShortPublishedEmails(shortId: string) {
         caption: short.caption,
         thumbnailUrl: short.thumbnail_url,
         shortId: short.id,
+        locked: lapsed.has(u.id),
       });
       const res = await sendEmail({
         to: u.email,

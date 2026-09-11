@@ -412,6 +412,8 @@ export const adminCreateLive = createServerFn({ method: "POST" })
 
       const { sendEmail, emailTemplates } = await import("@/lib/email.server");
       const isScheduled = new Date(startsAt).getTime() > Date.now() + 5 * 60 * 1000;
+      const { lapsedUserIds } = await import("@/lib/billing/lapsed-recipients.server");
+      const lapsed = await lapsedUserIds();
       let page = 1;
       // Bounded loop to avoid runaway execution.
       for (let i = 0; i < 20; i++) {
@@ -434,6 +436,7 @@ export const adminCreateLive = createServerFn({ method: "POST" })
             coverUrl: finalCoverUrl,
             liveId: row.id,
             isScheduled,
+            locked: lapsed.has(u.id),
           });
           await sendEmail({
             to: u.email,

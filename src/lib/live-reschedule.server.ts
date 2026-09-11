@@ -28,9 +28,19 @@ export async function notifyLiveRescheduled(args: {
   const { data: subs } = await supabaseAdmin
     .from("billing_subscriptions")
     .select("user_id,status")
-    .in("status", ["active", "trialing"]);
+    .in("status", [
+      "active",
+      "trialing",
+      "grace_period",
+      "past_due",
+      "suspended",
+      "expired",
+      "cancelled",
+    ]);
   const allowed = new Set((subs ?? []).map((s) => s.user_id as string));
   if (allowed.size === 0) return { sent: 0, skipped: 0, failed: 0 };
+  const { lapsedUserIds } = await import("@/lib/billing/lapsed-recipients.server");
+  const lapsed = await lapsedUserIds();
 
   // Uma vez por (membro, live, novo horário).
   const ref = `${liveId}:${new Date(newStartsAt).toISOString()}`;
@@ -74,6 +84,7 @@ export async function notifyLiveRescheduled(args: {
         startsAt: newStartsAt,
         coverUrl: (live.cover_url as string | null) ?? null,
         liveId,
+        locked: lapsed.has(u.id),
       });
       try {
         const r = await sendEmail({

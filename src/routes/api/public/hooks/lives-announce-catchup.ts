@@ -46,6 +46,9 @@ export const Route = createFileRoute("/api/public/hooks/lives-announce-catchup")
             (logged ?? []).map((r) => `${r.user_id ?? ""}:${r.ref ?? ""}`),
           );
 
+          const { lapsedUserIds } = await import("@/lib/billing/lapsed-recipients.server");
+          const lapsed = await lapsedUserIds();
+
           let sent = 0;
           let page = 1;
           for (let i = 0; i < 20; i++) {
@@ -71,6 +74,7 @@ export const Route = createFileRoute("/api/public/hooks/lives-announce-catchup")
                   coverUrl: (live.cover_url as string | null) ?? null,
                   liveId: id,
                   isScheduled: true,
+                  locked: lapsed.has(u.id),
                 });
                 try {
                   await sendEmail({

@@ -34,6 +34,8 @@ export async function sendLiveStartEmails(liveId: string) {
   let failed = 0;
 
   const optedOut = await optedOutUserIds("lives");
+  const { lapsedUserIds } = await import("@/lib/billing/lapsed-recipients.server");
+  const lapsed = await lapsedUserIds();
 
   for (const userId of userIds) {
     if (optedOut.has(userId)) {
@@ -53,6 +55,7 @@ export async function sendLiveStartEmails(liveId: string) {
       coverUrl: (live.cover_url as string | null) ?? null,
       liveId,
       isScheduled: false,
+      locked: lapsed.has(userId),
     });
     try {
       const r = await sendEmail({

@@ -162,6 +162,22 @@ function escapeHtml(s: string): string {
 const btn = (label: string, href: string) =>
   `<a href="${href}" style="display:inline-block;background:#c9a961;color:#0a0a0a;padding:14px 28px;border-radius:999px;text-decoration:none;font-weight:600;font-size:15px;">${label}</a>`;
 
+// ---------- versão para contas suspensas / em dívida ----------
+
+/** Faixa de aviso no topo do conteúdo (contas sem acesso). */
+function lockedNotice(what = "entrares"): string {
+  return `<div style="background:#2a1f05;border:1px solid #7a5c12;border-left:4px solid #e0b74a;border-radius:10px;padding:14px 18px;margin:0 0 22px;">
+  <div style="font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:#e0b74a;margin-bottom:6px;font-weight:600;">Conta suspensa</div>
+  <div style="font-size:14px;line-height:1.6;color:#f0dca8;">A tua conta está suspensa por falta de pagamento. Podes ver o que está a acontecer no clube, mas para ${escapeHtml(what)} precisas de regularizar o pagamento.</div>
+</div>`;
+}
+
+/** CTA que substitui o botão normal quando a conta está suspensa. */
+function lockedCta(label = "Regularizar pagamento e assistir →"): string {
+  return `<p style="margin:0 0 10px;"><a href="${APP_URL}/subscricao" style="display:inline-block;background:#e0b74a;color:#111111;padding:14px 28px;border-radius:999px;text-decoration:none;font-weight:600;font-size:15px;">${escapeHtml(label)}</a></p>
+<p style="font-size:13px;line-height:1.6;color:#8a8a8a;margin:14px 0 0;">O teu progresso, notas e certificados continuam guardados. Assim que o pagamento entrar, o acesso volta na hora.</p>`;
+}
+
 // ---------- templates ----------
 
 export const emailTemplates = {
@@ -172,6 +188,7 @@ export const emailTemplates = {
     imageUrl?: string | null;
     postId: string;
     categoryLabel?: string | null;
+    locked?: boolean;
   }) {
     const safe = escapeHtml(opts.name);
     const author = escapeHtml(opts.authorName);
@@ -191,12 +208,13 @@ export const emailTemplates = {
       subject: `${opts.authorName} publicou na comunidade${short ? `: ${short}` : ""}`,
       html: layout(
         `${opts.authorName} publicou na comunidade do MM Club.`,
-        `${heroImg}
+         `${heroImg}
+         ${opts.locked ? lockedNotice("participares na comunidade") : ""}
          <div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">MM Club · Comunidade${opts.categoryLabel ? ` · ${escapeHtml(opts.categoryLabel)}` : ""}</div>
          <h1 style="font-size:24px;color:#ffffff;margin:0 0 16px;font-weight:600;line-height:1.3;">${author} publicou na comunidade</h1>
          ${excerpt ? `<div style="background:#0a0a0a;border-left:3px solid #c9a961;padding:18px 22px;margin:0 0 24px;border-radius:8px;font-size:15px;line-height:1.7;color:#e5e5e5;white-space:pre-wrap;">${excerpt}</div>` : ""}
-         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Olá ${safe}, entra na comunidade para responder e participar na conversa.</p>
-         <p style="margin:0 0 8px;">${btn("Ver publicação →", `${APP_URL}/comunidade?post=${opts.postId}`)}</p>`,
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Olá ${safe}, ${opts.locked ? "a comunidade está trancada enquanto a conta estiver suspensa. Regulariza e voltas à conversa." : "entra na comunidade para responder e participar na conversa."}</p>
+         ${opts.locked ? lockedCta("Regularizar pagamento e voltar →") : `<p style="margin:0 0 8px;">${btn("Ver publicação →", `${APP_URL}/comunidade?post=${opts.postId}`)}</p>`}`,
       ),
     };
   },
@@ -232,7 +250,14 @@ export const emailTemplates = {
     };
   },
 
-  newLesson(name: string, courseTitle: string, lessonTitle: string, courseId: string, lessonId: string) {
+  newLesson(
+    name: string,
+    courseTitle: string,
+    lessonTitle: string,
+    courseId: string,
+    lessonId: string,
+    locked = false,
+  ) {
     const safe = escapeHtml(name);
     const course = escapeHtml(courseTitle);
     const lesson = escapeHtml(lessonTitle);
@@ -240,10 +265,11 @@ export const emailTemplates = {
       subject: `Nova aula: ${lessonTitle}`,
       html: layout(
         `Acabou de sair conteúdo novo em ${courseTitle}.`,
-        `<div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">${course}</div>
+        `${locked ? lockedNotice("veres a aula") : ""}
+         <div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">${course}</div>
          <h1 style="font-size:26px;color:#ffffff;margin:0 0 12px;font-weight:600;line-height:1.25;">${lesson}</h1>
-         <p style="font-size:16px;line-height:1.65;color:#d4d4d4;margin:0 0 24px;">${safe}, acabou de sair conteúdo novo no curso onde tens acesso. Assiste enquanto está fresco.</p>
-         <p style="margin:0 0 8px;">${btn("Assistir agora →", `${APP_URL}/academia/${courseId}/${lessonId}`)}</p>`,
+         <p style="font-size:16px;line-height:1.65;color:#d4d4d4;margin:0 0 24px;">${safe}, ${locked ? "acabou de sair conteúdo novo. Regulariza o pagamento para voltares a assistir." : "acabou de sair conteúdo novo no curso onde tens acesso. Assiste enquanto está fresco."}</p>
+         ${locked ? lockedCta("Regularizar pagamento e assistir →") : `<p style="margin:0 0 8px;">${btn("Assistir agora →", `${APP_URL}/academia/${courseId}/${lessonId}`)}</p>`}`,
       ),
     };
   },
@@ -273,6 +299,7 @@ export const emailTemplates = {
     coverUrl?: string | null;
     liveId: string;
     isScheduled: boolean;
+    locked?: boolean;
   }) {
     const safe = escapeHtml(opts.name);
     const title = escapeHtml(opts.title);
@@ -299,12 +326,19 @@ export const emailTemplates = {
       html: layout(
         `${kicker}: ${opts.title} — ${dateFmt}`,
         `${heroImg}
+         ${opts.locked ? lockedNotice("entrares na live") : ""}
          <div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">${escapeHtml(eyebrow)}</div>
          <h1 style="font-size:26px;color:#ffffff;margin:0 0 12px;font-weight:600;line-height:1.25;">${title}</h1>
          <p style="font-size:14px;line-height:1.6;color:#c9a961;margin:0 0 16px;font-weight:500;">${escapeHtml(dateFmt)} (Lisboa)</p>
          ${desc ? `<p style="font-size:15px;line-height:1.7;color:#d4d4d4;margin:0 0 20px;">${desc}</p>` : ""}
-         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Olá ${safe}, ${opts.isScheduled ? "guarda a data. Vais receber o link direto do direto na comunidade e no dashboard." : "o direto começou. Entra agora para não perderes."}</p>
-         <p style="margin:0 0 8px;">${btn(cta, `${APP_URL}/lives/${opts.liveId}`)}</p>`,
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Olá ${safe}, ${
+           opts.locked
+             ? "esta live é dos membros com plano activo. Regulariza o pagamento e entras com todos."
+             : opts.isScheduled
+               ? "guarda a data. Vais receber o link direto do direto na comunidade e no dashboard."
+               : "o direto começou. Entra agora para não perderes."
+         }</p>
+         ${opts.locked ? lockedCta("Regularizar pagamento e assistir →") : `<p style="margin:0 0 8px;">${btn(cta, `${APP_URL}/lives/${opts.liveId}`)}</p>`}`,
       ),
     };
   },
@@ -317,6 +351,7 @@ export const emailTemplates = {
     startsAt: string;
     coverUrl?: string | null;
     liveId: string;
+    locked?: boolean;
   }) {
     const safe = escapeHtml(opts.name);
     const title = escapeHtml(opts.title);
@@ -341,7 +376,8 @@ export const emailTemplates = {
       subject: `Novo horário: ${opts.title}`,
       html: layout(
         `A live ${opts.title} passou para ${newFmt}.`,
-        `${heroImg}
+         `${heroImg}
+         ${opts.locked ? lockedNotice("entrares na live") : ""}
          <div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">MM Club · Horário alterado</div>
          <h1 style="font-size:26px;color:#ffffff;margin:0 0 12px;font-weight:600;line-height:1.25;">${title}</h1>
          <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 20px;">Olá ${safe}, esta live mudou de horário. Actualiza a tua agenda.</p>
@@ -350,7 +386,7 @@ export const emailTemplates = {
            <p style="margin:0;font-size:16px;color:#c9a961;font-weight:600;">${escapeHtml(newFmt)} (Lisboa)</p>
          </div>
          ${desc ? `<p style="font-size:15px;line-height:1.7;color:#d4d4d4;margin:0 0 20px;">${desc}</p>` : ""}
-         <p style="margin:0 0 8px;">${btn("Ver detalhes da live →", `${APP_URL}/lives/${opts.liveId}`)}</p>`,
+         ${opts.locked ? lockedCta("Regularizar pagamento e assistir →") : `<p style="margin:0 0 8px;">${btn("Ver detalhes da live →", `${APP_URL}/lives/${opts.liveId}`)}</p>`}`,
       ),
     };
   },
@@ -364,6 +400,7 @@ export const emailTemplates = {
     startsAt: string;
     coverUrl?: string | null;
     liveId: string;
+    locked?: boolean;
   }) {
     const safe = escapeHtml(opts.name);
     const title = escapeHtml(opts.title);
@@ -384,13 +421,14 @@ export const emailTemplates = {
       subject: `Gravação disponível: ${opts.title}`,
       html: layout(
         `A gravação de ${opts.title} já está disponível.`,
-        `${heroImg}
+         `${heroImg}
+         ${opts.locked ? lockedNotice("veres a gravação") : ""}
          <div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">MM Club · Replay disponível</div>
          <h1 style="font-size:26px;color:#ffffff;margin:0 0 12px;font-weight:600;line-height:1.25;">${title}</h1>
          <p style="font-size:14px;line-height:1.6;color:#c9a961;margin:0 0 16px;font-weight:500;">Sessão de ${escapeHtml(dateFmt)}</p>
          ${desc ? `<p style="font-size:15px;line-height:1.7;color:#d4d4d4;margin:0 0 20px;">${desc}</p>` : ""}
-         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Olá ${safe}, a gravação já terminou de processar e está pronta para ver quando quiseres.</p>
-         <p style="margin:0 0 8px;">${btn("Ver gravação →", `${APP_URL}/lives/${opts.liveId}`)}</p>`,
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Olá ${safe}, ${opts.locked ? "a gravação já está pronta, mas o acesso está trancado enquanto a conta estiver suspensa." : "a gravação já terminou de processar e está pronta para ver quando quiseres."}</p>
+         ${opts.locked ? lockedCta("Regularizar pagamento e ver →") : `<p style="margin:0 0 8px;">${btn("Ver gravação →", `${APP_URL}/lives/${opts.liveId}`)}</p>`}`,
       ),
     };
   },
@@ -1041,6 +1079,7 @@ export const emailTemplates = {
     caption?: string | null;
     thumbnailUrl?: string | null;
     shortId: string;
+    locked?: boolean;
   }) {
     const safe = escapeHtml(opts.name);
     const author = escapeHtml(opts.authorName);
@@ -1053,12 +1092,13 @@ export const emailTemplates = {
       subject: `Novo MM Short${raw ? `: ${raw.slice(0, 60)}` : ` de ${opts.authorName}`}`,
       html: layout(
         `${opts.authorName} publicou um novo MM Short.`,
-        `${thumb}
+         `${thumb}
+         ${opts.locked ? lockedNotice("veres os Shorts") : ""}
          <div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">MM Shorts</div>
          <h1 style="font-size:24px;color:#ffffff;margin:0 0 16px;font-weight:600;line-height:1.3;">${author} publicou um novo Short</h1>
          ${excerpt ? `<div style="background:#0a0a0a;border-left:3px solid #c9a961;padding:18px 22px;margin:0 0 24px;border-radius:8px;font-size:15px;line-height:1.7;color:#e5e5e5;white-space:pre-wrap;">${excerpt}</div>` : ""}
-         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Olá ${safe}, são poucos segundos — vê agora no MM Club.</p>
-         <p style="margin:0 0 8px;">${btn("Ver o Short →", `${APP_URL}/shorts?s=${opts.shortId}`)}</p>`,
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Olá ${safe}, ${opts.locked ? "regulariza o pagamento para voltares a ver os Shorts e as aulas." : "são poucos segundos — vê agora no MM Club."}</p>
+         ${opts.locked ? lockedCta("Regularizar pagamento →") : `<p style="margin:0 0 8px;">${btn("Ver o Short →", `${APP_URL}/shorts?s=${opts.shortId}`)}</p>`}`,
       ),
     };
   },
