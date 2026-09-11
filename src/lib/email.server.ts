@@ -292,6 +292,7 @@ export const emailTemplates = {
   },
 
   liveAnnouncement(opts: {
+
     name: string;
     title: string;
     description?: string | null;
