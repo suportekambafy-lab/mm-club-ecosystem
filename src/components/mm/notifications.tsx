@@ -365,7 +365,9 @@ export function NotificationsBell({ className }: { className?: string }) {
           ? Number(n.course_id.slice(4)) || null
           : null;
       const copy = communityCopy(n.kind, n.actor_name, isShort, rankPosition);
-      const href = n.kind === "appeal"
+      const href = n.kind.startsWith("partner_")
+        ? "/parceiros"
+        : n.kind === "appeal"
         ? "/comunidade"
         : n.kind === "moderation"
         ? "/comunidade"
