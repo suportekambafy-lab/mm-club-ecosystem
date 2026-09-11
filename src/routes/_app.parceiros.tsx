@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   BadgeEuro,
   Check,
+  CircleAlert,
   Copy,
   Gift,
   Handshake,
@@ -23,6 +24,12 @@ import {
   savePartnerPayoutDetails,
 } from "@/lib/partners.functions";
 import { Slider } from "@/components/ui/slider";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import partnersHero from "@/assets/partners-hero.jpg";
 import partnersSocial from "@/assets/partners-social.jpg";
 
@@ -600,6 +607,7 @@ function ReferralSimulator() {
   const total = cash + (freeStart ? startValue : 0);
 
   return (
+    <TooltipProvider delayDuration={100}>
     <section className="mx-auto mt-6 max-w-6xl overflow-hidden rounded-3xl border border-border bg-[#0b0a09] p-6 md:p-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -675,5 +683,26 @@ function ReferralSimulator() {
         Valores estimados. As comissões são pagas uma única vez por indicado.
       </p>
     </section>
+    </TooltipProvider>
+  );
+}
+
+/** Ícone de ajuda que explica cada quadro da simulação. */
+function SimHint({ text }: { text: string }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label={text}
+          className="shrink-0 rounded-full p-0.5 text-white/40 transition-colors hover:text-gold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
+        >
+          <CircleAlert className="h-4 w-4" strokeWidth={1.8} />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-[260px] text-xs leading-relaxed">
+        {text}
+      </TooltipContent>
+    </Tooltip>
   );
 }
