@@ -638,14 +638,20 @@ function ReferralSimulator() {
 
       <div className="mt-8 grid gap-3 sm:grid-cols-3">
         <div className="rounded-2xl border border-border bg-white/5 p-5">
-          <p className="text-xs text-white/50">Comissões (10 € do 4.º em diante)</p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-xs text-white/50">Comissões (10 € do 4.º em diante)</p>
+            <SimHint text="Valor único por cada indicado pago a partir do 4.º. Os 3 primeiros indicados não dão comissão: dão-te o MM Club Start grátis." />
+          </div>
           <p className="mt-1 text-2xl font-semibold text-white">{cash} €</p>
           <p className="mt-0.5 text-xs text-white/40">
             {cashPeople} {cashPeople === 1 ? "indicado" : "indicados"} elegíveis
           </p>
         </div>
         <div className="rounded-2xl border border-border bg-white/5 p-5">
-          <p className="text-xs text-white/50">MM Club Start</p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-xs text-white/50">MM Club Start</p>
+            <SimHint text="Com 3 indicados com plano pago ativo, não pagas a tua mensalidade Start (29,90 €/mês) enquanto eles se mantiverem ativos." />
+          </div>
           <p className="mt-1 text-2xl font-semibold text-white">
             {freeStart ? "Grátis" : "A pagar"}
           </p>
@@ -654,7 +660,10 @@ function ReferralSimulator() {
           </p>
         </div>
         <div className="rounded-2xl border border-gold/40 bg-gold/10 p-5">
-          <p className="text-xs text-gold/80">Benefício no mês</p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-xs text-gold/80">Benefício total</p>
+            <SimHint text="Soma das comissões (pagas uma única vez por indicado) com a mensalidade de 29,90 € que poupas todos os meses. Não é um valor recorrente." />
+          </div>
           <p className="mt-1 text-2xl font-semibold text-gold">
             {total.toFixed(2).replace(".", ",")} €
           </p>
