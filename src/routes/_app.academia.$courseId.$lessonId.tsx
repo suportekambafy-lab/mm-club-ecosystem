@@ -31,6 +31,9 @@ import { pingLearningActivity, recordLessonCompleted } from "@/lib/learning-acti
 import { useCourseQuiz, lockedModuleIds } from "@/hooks/use-course-quiz";
 import { ShopifyVideoAd } from "@/components/mm/shopify-video-ad";
 import { isShopifyContext } from "@/lib/shopify-promo";
+import { ChallengeLivesModule } from "@/components/mm/challenge-lives-module";
+import { isFeaturedCourse } from "@/lib/course-order";
+
 
 
 
@@ -253,7 +256,11 @@ function LessonPlayer() {
                   defaultOpen={mi < 2 || m.lessons.some((l: Lesson) => l.id === current.lesson.id)}
                 />
               ))}
+              {isFeaturedCourse(course) && (
+                <ChallengeLivesModule index={course.modules!.length} />
+              )}
             </div>
+
           </aside>
 
           {/* Main content: video + title/cta */}
