@@ -253,7 +253,11 @@ function LessonPlayer() {
                   defaultOpen={mi < 2 || m.lessons.some((l: Lesson) => l.id === current.lesson.id)}
                 />
               ))}
+              {isFeaturedCourse(course) && (
+                <ChallengeLivesModule index={course.modules!.length} />
+              )}
             </div>
+
           </aside>
 
           {/* Main content: video + title/cta */}
