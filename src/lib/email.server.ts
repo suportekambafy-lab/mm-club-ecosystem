@@ -263,10 +263,11 @@ export const emailTemplates = {
       subject: `Nova aula: ${lessonTitle}`,
       html: layout(
         `Acabou de sair conteúdo novo em ${courseTitle}.`,
-        `<div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">${course}</div>
+        `${locked ? lockedNotice("veres a aula") : ""}
+         <div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">${course}</div>
          <h1 style="font-size:26px;color:#ffffff;margin:0 0 12px;font-weight:600;line-height:1.25;">${lesson}</h1>
-         <p style="font-size:16px;line-height:1.65;color:#d4d4d4;margin:0 0 24px;">${safe}, acabou de sair conteúdo novo no curso onde tens acesso. Assiste enquanto está fresco.</p>
-         <p style="margin:0 0 8px;">${btn("Assistir agora →", `${APP_URL}/academia/${courseId}/${lessonId}`)}</p>`,
+         <p style="font-size:16px;line-height:1.65;color:#d4d4d4;margin:0 0 24px;">${safe}, ${locked ? "acabou de sair conteúdo novo. Regulariza o pagamento para voltares a assistir." : "acabou de sair conteúdo novo no curso onde tens acesso. Assiste enquanto está fresco."}</p>
+         ${locked ? lockedCta("Regularizar pagamento e assistir →") : `<p style="margin:0 0 8px;">${btn("Assistir agora →", `${APP_URL}/academia/${courseId}/${lessonId}`)}</p>`}`,
       ),
     };
   },
