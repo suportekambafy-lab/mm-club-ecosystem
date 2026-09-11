@@ -133,6 +133,7 @@ import { Route as AppFerramentasStudioImagensRouteImport } from './routes/_app.f
 import { Route as AppFerramentasStudioCriativosRouteImport } from './routes/_app.ferramentas.studio.criativos'
 import { Route as AppFerramentasProductLabProductIdRouteImport } from './routes/_app.ferramentas.product-lab.$productId'
 import { Route as AppAcademiaCourseIdLessonIdRouteImport } from './routes/_app.academia.$courseId.$lessonId'
+import { Route as AppAcademiaCourseIdLiveLiveIdRouteImport } from './routes/_app.academia.$courseId.live.$liveId'
 import { Route as ApiPublicLivesLiveIdCoverSvgRouteImport } from './routes/api/public/lives.$liveId.cover.svg'
 import { Route as ApiPublicLivesLiveIdCoverPngRouteImport } from './routes/api/public/lives.$liveId.cover.png'
 
@@ -798,6 +799,12 @@ const AppAcademiaCourseIdLessonIdRoute =
     path: '/$lessonId',
     getParentRoute: () => AppAcademiaCourseIdRoute,
   } as any)
+const AppAcademiaCourseIdLiveLiveIdRoute =
+  AppAcademiaCourseIdLiveLiveIdRouteImport.update({
+    id: '/live/$liveId',
+    path: '/live/$liveId',
+    getParentRoute: () => AppAcademiaCourseIdRoute,
+  } as any)
 const ApiPublicLivesLiveIdCoverSvgRoute =
   ApiPublicLivesLiveIdCoverSvgRouteImport.update({
     id: '/api/public/lives/$liveId/cover/svg',
@@ -935,6 +942,7 @@ export interface FileRoutesByFullPath {
   '/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
   '/ferramentas/product-lab/': typeof AppFerramentasProductLabIndexRoute
   '/ferramentas/studio/': typeof AppFerramentasStudioIndexRoute
+  '/academia/$courseId/live/$liveId': typeof AppAcademiaCourseIdLiveLiveIdRoute
   '/api/public/lives/$liveId/cover/png': typeof ApiPublicLivesLiveIdCoverPngRoute
   '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
 }
@@ -1054,6 +1062,7 @@ export interface FileRoutesByTo {
   '/academia/$courseId': typeof AppAcademiaCourseIdIndexRoute
   '/ferramentas/product-lab': typeof AppFerramentasProductLabIndexRoute
   '/ferramentas/studio': typeof AppFerramentasStudioIndexRoute
+  '/academia/$courseId/live/$liveId': typeof AppAcademiaCourseIdLiveLiveIdRoute
   '/api/public/lives/$liveId/cover/png': typeof ApiPublicLivesLiveIdCoverPngRoute
   '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
 }
@@ -1183,6 +1192,7 @@ export interface FileRoutesById {
   '/_app/academia/$courseId/': typeof AppAcademiaCourseIdIndexRoute
   '/_app/ferramentas/product-lab/': typeof AppFerramentasProductLabIndexRoute
   '/_app/ferramentas/studio/': typeof AppFerramentasStudioIndexRoute
+  '/_app/academia/$courseId/live/$liveId': typeof AppAcademiaCourseIdLiveLiveIdRoute
   '/api/public/lives/$liveId/cover/png': typeof ApiPublicLivesLiveIdCoverPngRoute
   '/api/public/lives/$liveId/cover/svg': typeof ApiPublicLivesLiveIdCoverSvgRoute
 }
@@ -1312,6 +1322,7 @@ export interface FileRouteTypes {
     | '/academia/$courseId/'
     | '/ferramentas/product-lab/'
     | '/ferramentas/studio/'
+    | '/academia/$courseId/live/$liveId'
     | '/api/public/lives/$liveId/cover/png'
     | '/api/public/lives/$liveId/cover/svg'
   fileRoutesByTo: FileRoutesByTo
@@ -1431,6 +1442,7 @@ export interface FileRouteTypes {
     | '/academia/$courseId'
     | '/ferramentas/product-lab'
     | '/ferramentas/studio'
+    | '/academia/$courseId/live/$liveId'
     | '/api/public/lives/$liveId/cover/png'
     | '/api/public/lives/$liveId/cover/svg'
   id:
@@ -1559,6 +1571,7 @@ export interface FileRouteTypes {
     | '/_app/academia/$courseId/'
     | '/_app/ferramentas/product-lab/'
     | '/_app/ferramentas/studio/'
+    | '/_app/academia/$courseId/live/$liveId'
     | '/api/public/lives/$liveId/cover/png'
     | '/api/public/lives/$liveId/cover/svg'
   fileRoutesById: FileRoutesById
@@ -2489,6 +2502,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAcademiaCourseIdLessonIdRouteImport
       parentRoute: typeof AppAcademiaCourseIdRoute
     }
+    '/_app/academia/$courseId/live/$liveId': {
+      id: '/_app/academia/$courseId/live/$liveId'
+      path: '/live/$liveId'
+      fullPath: '/academia/$courseId/live/$liveId'
+      preLoaderRoute: typeof AppAcademiaCourseIdLiveLiveIdRouteImport
+      parentRoute: typeof AppAcademiaCourseIdRoute
+    }
     '/api/public/lives/$liveId/cover/svg': {
       id: '/api/public/lives/$liveId/cover/svg'
       path: '/api/public/lives/$liveId/cover/svg'
@@ -2509,11 +2529,13 @@ declare module '@tanstack/react-router' {
 interface AppAcademiaCourseIdRouteChildren {
   AppAcademiaCourseIdLessonIdRoute: typeof AppAcademiaCourseIdLessonIdRoute
   AppAcademiaCourseIdIndexRoute: typeof AppAcademiaCourseIdIndexRoute
+  AppAcademiaCourseIdLiveLiveIdRoute: typeof AppAcademiaCourseIdLiveLiveIdRoute
 }
 
 const AppAcademiaCourseIdRouteChildren: AppAcademiaCourseIdRouteChildren = {
   AppAcademiaCourseIdLessonIdRoute: AppAcademiaCourseIdLessonIdRoute,
   AppAcademiaCourseIdIndexRoute: AppAcademiaCourseIdIndexRoute,
+  AppAcademiaCourseIdLiveLiveIdRoute: AppAcademiaCourseIdLiveLiveIdRoute,
 }
 
 const AppAcademiaCourseIdRouteWithChildren =

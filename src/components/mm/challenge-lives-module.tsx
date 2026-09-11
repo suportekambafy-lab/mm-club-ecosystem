@@ -22,7 +22,16 @@ function isChallengeReplay(l: Live) {
  * Módulo dinâmico: agrupa as gravações das lives do Desafio Primeira Venda
  * dentro do curso, mantendo o replay a tocar na página da live (tokens assinados).
  */
-export function ChallengeLivesModule({ index }: { index: number }) {
+export function ChallengeLivesModule({
+  index,
+  courseId,
+  activeLiveId,
+}: {
+  index: number;
+  /** Quando presente, as gravações abrem dentro do curso (mesmo lugar da aula). */
+  courseId?: string;
+  activeLiveId?: string;
+}) {
   const [lives, setLives] = useState<Live[] | null>(null);
   const [open, setOpen] = useState(true);
 
