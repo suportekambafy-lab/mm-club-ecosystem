@@ -17,7 +17,7 @@ export async function lapsedUserIds(): Promise<Set<string>> {
   const { data: subs, error } = await supabaseAdmin
     .from("billing_subscriptions")
     .select("user_id,status")
-    .in("status", LAPSED_STATUSES as unknown as string[]);
+    .in("status", [...LAPSED_STATUSES]);
   if (error) {
     console.error("[lapsed-recipients] subs read failed", error.message);
     return lapsed;
