@@ -421,13 +421,14 @@ export const emailTemplates = {
       subject: `Gravação disponível: ${opts.title}`,
       html: layout(
         `A gravação de ${opts.title} já está disponível.`,
-        `${heroImg}
+         `${heroImg}
+         ${opts.locked ? lockedNotice("veres a gravação") : ""}
          <div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">MM Club · Replay disponível</div>
          <h1 style="font-size:26px;color:#ffffff;margin:0 0 12px;font-weight:600;line-height:1.25;">${title}</h1>
          <p style="font-size:14px;line-height:1.6;color:#c9a961;margin:0 0 16px;font-weight:500;">Sessão de ${escapeHtml(dateFmt)}</p>
          ${desc ? `<p style="font-size:15px;line-height:1.7;color:#d4d4d4;margin:0 0 20px;">${desc}</p>` : ""}
-         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Olá ${safe}, a gravação já terminou de processar e está pronta para ver quando quiseres.</p>
-         <p style="margin:0 0 8px;">${btn("Ver gravação →", `${APP_URL}/lives/${opts.liveId}`)}</p>`,
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Olá ${safe}, ${opts.locked ? "a gravação já está pronta, mas o acesso está trancado enquanto a conta estiver suspensa." : "a gravação já terminou de processar e está pronta para ver quando quiseres."}</p>
+         ${opts.locked ? lockedCta("Regularizar pagamento e ver →") : `<p style="margin:0 0 8px;">${btn("Ver gravação →", `${APP_URL}/lives/${opts.liveId}`)}</p>`}`,
       ),
     };
   },
