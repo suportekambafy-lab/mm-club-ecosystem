@@ -68,6 +68,7 @@ export async function sendShortPublishedEmails(shortId: string) {
         caption: short.caption,
         thumbnailUrl: short.thumbnail_url,
         shortId: short.id,
+        locked: lapsed.has(u.id),
       });
       const res = await sendEmail({
         to: u.email,
