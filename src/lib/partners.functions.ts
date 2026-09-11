@@ -56,8 +56,14 @@ async function loadDashboard(userId: string, origin?: string | null): Promise<Pa
   const core = await import("@/lib/partners/core.server");
 
   const account = await core.findAccountByUser(userId);
+  const eligibility = account ? { ok: true as const } : await core.partnerEligibility(userId);
   const base: PartnerDashboard = {
     joined: false,
+    applicationStatus: "none",
+    requestedAt: null,
+    decisionNote: null,
+    eligible: eligibility.ok,
+    ineligibleReason: "reason" in eligibility ? (eligibility.reason ?? null) : null,
     code: null,
     link: null,
     activeCount: 0,
