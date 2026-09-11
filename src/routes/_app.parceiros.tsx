@@ -313,6 +313,8 @@ function PartnersPage() {
             </p>
           </div>
         </section>
+
+        <ReferralSimulator />
       </div>
     );
   }
