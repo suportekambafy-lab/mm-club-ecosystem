@@ -6,13 +6,13 @@
  *  - Com 3 indicados ativos ao mesmo tempo, o parceiro tem o MM Club Start
  *    grátis: recebe acesso garantido e, se já pagar mensalidade, o valor do
  *    Start volta em saldo cada mês.
- *  - A partir do 4.º indicado pago: 5 € uma única vez por indicado.
+ *  - A partir do 4.º indicado pago: 10 € uma única vez por indicado.
  *  - O saldo é retirado a pedido, com aprovação da equipa.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { grantFeature, revokeBySource } from "@/lib/entitlements/grants.server";
 
-export const CASH_REWARD_CENTS = 500;
+export const CASH_REWARD_CENTS = 1000;
 export const FREE_SLOTS = 3;
 export const START_PRICE_CENTS = 2990;
 export const MIN_PAYOUT_CENTS = 2500;
@@ -287,7 +287,7 @@ export async function evaluatePartner(partnerId: string): Promise<PartnerSnapsho
   }
 
   // 2) Recompensas: os 3 primeiros pagos dão o benefício grátis; do 4.º em
-  //    diante, 5 € uma única vez por indicado.
+  //    diante, 10 € uma única vez por indicado.
   const everPaid = list
     .filter((r) => r.first_paid_at)
     .sort(
