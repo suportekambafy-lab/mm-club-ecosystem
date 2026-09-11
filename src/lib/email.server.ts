@@ -400,6 +400,7 @@ export const emailTemplates = {
     startsAt: string;
     coverUrl?: string | null;
     liveId: string;
+    locked?: boolean;
   }) {
     const safe = escapeHtml(opts.name);
     const title = escapeHtml(opts.title);
