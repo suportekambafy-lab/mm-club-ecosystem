@@ -66,6 +66,7 @@ export async function notifyReplayReady(liveId: string): Promise<{ sent: boolean
           startsAt: live.starts_at,
           coverUrl: live.cover_url,
           liveId: live.id,
+          locked: lapsed.has(u.id),
         });
         await sendEmail({
           to: u.email,
