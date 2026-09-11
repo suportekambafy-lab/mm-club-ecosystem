@@ -214,6 +214,7 @@ type NavItem = {
   icon: typeof LayoutDashboard;
   exact?: boolean;
   soon?: boolean;
+  isNew?: boolean;
 };
 
 // Editorial single-list nav — MasterClass / Apple TV energy, no SaaS group labels.
