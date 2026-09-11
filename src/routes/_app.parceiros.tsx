@@ -33,13 +33,13 @@ export const Route = createFileRoute("/_app/parceiros")({
       {
         name: "description",
         content:
-          "Partilha o teu link MM Partners: com 3 indicados a pagar tens o MM Club Start grátis e, a partir do 4.º, ganhas 5 € por cada indicado.",
+          "Partilha o teu link MM Partners: com 3 indicados a pagar tens o MM Club Start grátis e, a partir do 4.º, ganhas 10 € por cada indicado.",
       },
       { property: "og:title", content: "MM Partners — ganha com quem trazes" },
       {
         property: "og:description",
         content:
-          "3 indicados a pagar = MM Club Start grátis. Do 4.º em diante, 5 € por cada indicado pago.",
+          "3 indicados a pagar = MM Club Start grátis. Do 4.º em diante, 10 € por cada indicado pago.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -190,8 +190,8 @@ function PartnersPage() {
                   title="3 ativos"
                   text="MM Club Start grátis enquanto se mantiverem a pagar."
                 />
-                <Pillar icon={BadgeEuro} title="5 € cada" text="Do 4.º indicado pago em diante." />
-                <Pillar icon={Wallet} title="Retiras a partir de 25 €" text="IBAN ou MB Way." />
+                <Pillar icon={BadgeEuro} title="10 € cada" text="Do 4.º indicado pago em diante." />
+                <Pillar icon={Wallet} title="Retiras a partir de 210 €" text="IBAN ou MB Way." />
               </div>
 
               {data?.applicationStatus === "pending" ? (
@@ -285,7 +285,7 @@ function PartnersPage() {
                 <li>1. Entras e recebes o teu link em mmclub.pt.</li>
                 <li>2. Partilhas com quem quer construir marca.</li>
                 <li>3. Contamos cada clique e cada plano realmente pago.</li>
-                <li>4. Recebes: Start grátis aos 3 ativos, 5 € por cada indicado seguinte.</li>
+                <li>4. Recebes: Start grátis aos 3 ativos, 10 € por cada indicado seguinte.</li>
               </ol>
             </div>
           </div>
