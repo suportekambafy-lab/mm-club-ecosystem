@@ -8,6 +8,13 @@
       "when": 1789121467373,
       "tag": "0000_partner_applications",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789121770187,
+      "tag": "0001_partner_applications_rls",
+      "breakpoints": true
     }
   ]
 }
