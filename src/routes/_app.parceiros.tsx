@@ -191,7 +191,7 @@ function PartnersPage() {
                   text="MM Club Start grátis enquanto se mantiverem a pagar."
                 />
                 <Pillar icon={BadgeEuro} title="10 € cada" text="Do 4.º indicado pago em diante." />
-                <Pillar icon={Wallet} title="Retiras a partir de 210 €" text="IBAN ou MB Way." />
+                <Pillar icon={Wallet} title="Retiras a partir de 25 €" text="IBAN ou MB Way." />
               </div>
 
               {data?.applicationStatus === "pending" ? (
