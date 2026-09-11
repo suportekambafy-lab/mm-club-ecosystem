@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_app/academia/$courseId/live/$liveId")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: CourseLiveReplay;
+  component: CourseLiveReplay,
 });
 
 type LiveData = Awaited<ReturnType<typeof getLive>>;
