@@ -22,6 +22,7 @@ import {
   requestPartnerPayout,
   savePartnerPayoutDetails,
 } from "@/lib/partners.functions";
+import { Slider } from "@/components/ui/slider";
 import partnersHero from "@/assets/partners-hero.jpg";
 import partnersSocial from "@/assets/partners-social.jpg";
 
@@ -582,5 +583,88 @@ function Stat({
       <p className="mt-2 text-xl font-semibold">{value}</p>
       {hint ? <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p> : null}
     </div>
+  );
+}
+
+/**
+ * Simulação de indicações: o visitante arrasta a barra e vê quanto ganha.
+ * 3 indicados pagos = MM Club Start grátis; do 4.º em diante 10 € por indicado.
+ */
+function ReferralSimulator() {
+  const [count, setCount] = useState(6);
+
+  const cashPeople = Math.max(0, count - 3);
+  const cash = cashPeople * 10;
+  const freeStart = count >= 3;
+  const startValue = 29.9;
+  const total = cash + (freeStart ? startValue : 0);
+
+  return (
+    <section className="mx-auto mt-6 max-w-6xl overflow-hidden rounded-3xl border border-border bg-[#0b0a09] p-6 md:p-10">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-gold">
+            Simulação de indicação
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
+            Arrasta e vê quanto ganhas
+          </h2>
+          <p className="mt-2 max-w-xl text-sm text-white/60">
+            Conta apenas quem tem um plano pago ativo. Ao chegares a 3 indicados pagos, o teu MM
+            Club Start fica grátis enquanto eles se mantiverem.
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs uppercase tracking-[0.14em] text-white/40">Indicados pagos</p>
+          <p className="text-4xl font-semibold text-gold">{count}</p>
+        </div>
+      </div>
+
+      <div className="mt-8">
+        <Slider
+          value={[count]}
+          onValueChange={(v) => setCount(v[0] ?? 0)}
+          min={0}
+          max={30}
+          step={1}
+          aria-label="Número de indicados pagos"
+        />
+        <div className="mt-2 flex justify-between text-[11px] text-white/40">
+          <span>0</span>
+          <span>15</span>
+          <span>30</span>
+        </div>
+      </div>
+
+      <div className="mt-8 grid gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl border border-border bg-white/5 p-5">
+          <p className="text-xs text-white/50">Comissões (10 € do 4.º em diante)</p>
+          <p className="mt-1 text-2xl font-semibold text-white">{cash} €</p>
+          <p className="mt-0.5 text-xs text-white/40">
+            {cashPeople} {cashPeople === 1 ? "indicado" : "indicados"} elegíveis
+          </p>
+        </div>
+        <div className="rounded-2xl border border-border bg-white/5 p-5">
+          <p className="text-xs text-white/50">MM Club Start</p>
+          <p className="mt-1 text-2xl font-semibold text-white">
+            {freeStart ? "Grátis" : "A pagar"}
+          </p>
+          <p className="mt-0.5 text-xs text-white/40">
+            {freeStart ? "Poupas 29,90 €/mês" : "Faltam " + (3 - count) + " indicados pagos"}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-gold/40 bg-gold/10 p-5">
+          <p className="text-xs text-gold/80">Benefício no mês</p>
+          <p className="mt-1 text-2xl font-semibold text-gold">
+            {total.toFixed(2).replace(".", ",")} €
+          </p>
+          <p className="mt-0.5 text-xs text-gold/60">Comissões + mensalidade poupada</p>
+        </div>
+      </div>
+
+      <p className="mt-4 text-[11px] uppercase tracking-[0.14em] text-white/40">
+        Valores estimados. As comissões são pagas uma única vez por indicado.
+      </p>
+    </section>
   );
 }
