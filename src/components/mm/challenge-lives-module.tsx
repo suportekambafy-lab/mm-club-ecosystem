@@ -24,7 +24,7 @@ function isChallengeReplay(l: Live) {
  */
 export function ChallengeLivesModule({ index }: { index: number }) {
   const [lives, setLives] = useState<Live[] | null>(null);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
 
   useEffect(() => {
     let alive = true;
@@ -74,7 +74,11 @@ export function ChallengeLivesModule({ index }: { index: number }) {
             {CHALLENGE_MODULE_TITLE}
           </h3>
         </div>
+        <span className="hidden shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-primary sm:inline-block">
+          Acesso livre · sem teste
+        </span>
         <span className="shrink-0 text-xs text-muted-foreground">{lives.length}</span>
+
       </button>
 
       {open && (
