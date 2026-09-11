@@ -59,6 +59,9 @@ const labelByKind: Record<NotifKind, string> = {
   rank: "Ranking",
   moderation: "Moderação",
   appeal: "Recurso",
+  partner_pending: "MM Partners",
+  partner_approved: "MM Partners",
+  partner_rejected: "MM Partners",
 
 };
 
