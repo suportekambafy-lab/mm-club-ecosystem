@@ -248,7 +248,14 @@ export const emailTemplates = {
     };
   },
 
-  newLesson(name: string, courseTitle: string, lessonTitle: string, courseId: string, lessonId: string) {
+  newLesson(
+    name: string,
+    courseTitle: string,
+    lessonTitle: string,
+    courseId: string,
+    lessonId: string,
+    locked = false,
+  ) {
     const safe = escapeHtml(name);
     const course = escapeHtml(courseTitle);
     const lesson = escapeHtml(lessonTitle);
