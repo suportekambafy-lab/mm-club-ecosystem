@@ -11,7 +11,6 @@ import {
   Loader2,
   MousePointerClick,
   Share2,
-  Sparkles,
   TrendingUp,
   Users,
   Wallet,
@@ -170,8 +169,8 @@ function PartnersPage() {
         <section className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl border border-border bg-[#0b0a09]">
           <div className="grid items-stretch lg:grid-cols-[1.05fr_0.95fr]">
             <div className="relative z-10 p-6 sm:p-10 lg:p-14">
-              <span className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-gold">
-                <Sparkles className="h-3.5 w-3.5" /> Programa de parceiros
+              <span className="inline-flex items-center rounded-full border border-gold/40 bg-gold/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-gold">
+                Programa de parceiros
               </span>
               <h1 className="mt-5 text-3xl font-semibold leading-[1.05] tracking-tight text-white sm:text-4xl lg:text-5xl">
                 Transforma a tua
