@@ -1079,6 +1079,7 @@ export const emailTemplates = {
     caption?: string | null;
     thumbnailUrl?: string | null;
     shortId: string;
+    locked?: boolean;
   }) {
     const safe = escapeHtml(opts.name);
     const author = escapeHtml(opts.authorName);
