@@ -85,6 +85,7 @@ export async function sendCommunityPostEmails(postId: string) {
         imageUrl: post.image_url,
         postId: post.id,
         categoryLabel: category?.name ?? null,
+        locked: lapsed.has(u.id),
       });
       const res = await sendEmail({
         to: u.email,
