@@ -55,6 +55,7 @@ export async function sendLiveStartEmails(liveId: string) {
       coverUrl: (live.cover_url as string | null) ?? null,
       liveId,
       isScheduled: false,
+      locked: lapsed.has(userId),
     });
     try {
       const r = await sendEmail({
