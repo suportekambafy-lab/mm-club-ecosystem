@@ -11,7 +11,6 @@ import {
   Loader2,
   MousePointerClick,
   Share2,
-  Sparkles,
   TrendingUp,
   Users,
   Wallet,
