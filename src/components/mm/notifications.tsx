@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile, BellRing, BellOff, UserRound, GraduationCap, Trophy, Gavel, ShieldQuestion } from "lucide-react";
+import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile, BellRing, BellOff, UserRound, GraduationCap, Trophy, Gavel, ShieldQuestion, Handshake } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
@@ -40,6 +40,9 @@ const iconByKind: Record<NotifKind, typeof Bell> = {
   rank: Trophy,
   moderation: Gavel,
   appeal: ShieldQuestion,
+  partner_pending: Handshake,
+  partner_approved: Handshake,
+  partner_rejected: Handshake,
 };
 
 const labelByKind: Record<NotifKind, string> = {
@@ -56,6 +59,9 @@ const labelByKind: Record<NotifKind, string> = {
   rank: "Ranking",
   moderation: "Moderação",
   appeal: "Recurso",
+  partner_pending: "MM Partners",
+  partner_approved: "MM Partners",
+  partner_rejected: "MM Partners",
 
 };
 
@@ -240,6 +246,25 @@ function communityCopy(
       subtitle: "Toca para ver como a tua posição foi calculada",
     };
   }
+  if (kind === "partner_pending") {
+    return {
+      title: "Candidatura enviada ao MM Partners",
+      subtitle: "A equipa está a analisar — avisamos-te da decisão",
+    };
+  }
+  if (kind === "partner_approved") {
+    return {
+      title: "Estás dentro do MM Partners",
+      subtitle: "Abre o teu painel e copia o teu link de afiliado",
+    };
+  }
+  if (kind === "partner_rejected") {
+    return {
+      title: "Candidatura ao MM Partners não aprovada",
+      subtitle: "Toca para ver os detalhes",
+    };
+  }
+
 
   if (kind === "like") {
     return {
@@ -340,7 +365,9 @@ export function NotificationsBell({ className }: { className?: string }) {
           ? Number(n.course_id.slice(4)) || null
           : null;
       const copy = communityCopy(n.kind, n.actor_name, isShort, rankPosition);
-      const href = n.kind === "appeal"
+      const href = n.kind.startsWith("partner_")
+        ? "/parceiros"
+        : n.kind === "appeal"
         ? "/comunidade"
         : n.kind === "moderation"
         ? "/comunidade"

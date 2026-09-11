@@ -363,7 +363,7 @@ export const decidePartnerApplication = createServerFn({ method: "POST" })
 
     const { data: account } = await supabaseAdmin
       .from("mm_partner_accounts")
-      .select("id, user_id, status")
+      .select("id, user_id, status, code")
       .eq("id", data.accountId)
       .maybeSingle();
     if (!account) throw new Error("Pedido não encontrado");
@@ -391,6 +391,18 @@ export const decidePartnerApplication = createServerFn({ method: "POST" })
       } catch (err) {
         console.error("[mm-partners] evaluate after approval failed", err);
       }
+    }
+
+    // Avisa o membro apenas quando o estado muda de facto (evita duplicados).
+    if (account.status !== data.decision) {
+      const { notifyPartnerDecision } = await import("@/lib/partners/notify.server");
+      await notifyPartnerDecision({
+        userId: account.user_id,
+        accountId: account.id,
+        code: account.code,
+        decision: data.decision as "active" | "rejected",
+        note: data.note,
+      });
     }
 
     return { ok: true };

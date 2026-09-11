@@ -1,0 +1,2 @@
+ALTER TABLE public.notifications DROP CONSTRAINT notifications_kind_check;
+ALTER TABLE public.notifications ADD CONSTRAINT notifications_kind_check CHECK (kind = ANY (ARRAY['like','reply','mention','reaction','comment_reply','inactivity','live','course_released','rank','moderation','appeal','partner_pending','partner_approved','partner_rejected']));

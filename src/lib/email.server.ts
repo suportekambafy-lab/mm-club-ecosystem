@@ -27,6 +27,9 @@ export type EmailKind =
   | "short_published"
   | "short_reply"
   | "product_update"
+  | "partner_pending"
+  | "partner_approved"
+  | "partner_rejected"
   | "winback";
 
 type SendOpts = {
@@ -1088,7 +1091,62 @@ export const emailTemplates = {
       ),
     };
   },
+
+  partnerApplicationReceived(name: string) {
+    const safe = escapeHtml(name);
+    return {
+      subject: "Recebemos a tua candidatura ao MM Partners",
+      html: layout(
+        "A tua candidatura ao programa de afiliados está em análise.",
+        `<div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">MM Partners</div>
+         <h1 style="font-size:26px;color:#ffffff;margin:0 0 14px;font-weight:600;line-height:1.25;">Candidatura recebida</h1>
+         <p style="font-size:16px;line-height:1.7;color:#d4d4d4;margin:0 0 16px;">Olá ${safe}, recebemos o teu pedido para entrar no MM Partners. A equipa vai analisar e recebes a resposta por email e no sino de avisos.</p>
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 26px;">Assim que for aprovado, tens acesso ao teu link personalizado, às comissões de 10 € por indicado pago e ao MM Club Start grátis com 3 indicados ativos.</p>
+         <p style="margin:0 0 8px;">${btn("Ver o meu pedido →", `${APP_URL}/parceiros`)}</p>`,
+      ),
+    };
+  },
+
+  partnerApproved(name: string, code: string) {
+    const safe = escapeHtml(name);
+    const link = `${APP_URL}/?ref=${encodeURIComponent(code)}`;
+    return {
+      subject: "Estás dentro do MM Partners 🎉",
+      html: layout(
+        "A tua candidatura foi aprovada — já podes começar a indicar.",
+        `<div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">MM Partners · Aprovado</div>
+         <h1 style="font-size:26px;color:#ffffff;margin:0 0 14px;font-weight:600;line-height:1.25;">Bem-vindo ao MM Partners, ${safe}</h1>
+         <p style="font-size:16px;line-height:1.7;color:#d4d4d4;margin:0 0 20px;">A tua candidatura foi aprovada. A partir de agora, cada pessoa que entrar pelo teu link e ficar com plano pago conta para ti.</p>
+         <div style="background:#161616;border:1px solid #232323;border-radius:12px;padding:16px 18px;margin:0 0 24px;">
+           <div style="font-size:11px;color:#c9a961;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">O teu link</div>
+           <a href="${link}" style="font-size:15px;color:#ffffff;text-decoration:none;word-break:break-all;">${escapeHtml(link)}</a>
+         </div>
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 26px;">Com 3 indicados pagos ativos tens o MM Club Start grátis. A partir do 4.º, ganhas 10 € por cada indicado pago.</p>
+         <p style="margin:0 0 8px;">${btn("Abrir o meu painel →", `${APP_URL}/parceiros`)}</p>`,
+      ),
+    };
+  },
+
+  partnerRejected(name: string, note?: string | null) {
+    const safe = escapeHtml(name);
+    const reason = note?.trim()
+      ? `<div style="background:#0a0a0a;border-left:3px solid #c9a961;padding:16px 20px;margin:0 0 22px;border-radius:8px;font-size:15px;line-height:1.7;color:#e5e5e5;white-space:pre-wrap;">${escapeHtml(note.trim())}</div>`
+      : "";
+    return {
+      subject: "A tua candidatura ao MM Partners",
+      html: layout(
+        "Decisão sobre a tua candidatura ao programa de afiliados.",
+        `<div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">MM Partners</div>
+         <h1 style="font-size:26px;color:#ffffff;margin:0 0 14px;font-weight:600;line-height:1.25;">Candidatura não aprovada por agora</h1>
+         <p style="font-size:16px;line-height:1.7;color:#d4d4d4;margin:0 0 18px;">Olá ${safe}, analisámos o teu pedido e neste momento não conseguimos aprovar a tua entrada no MM Partners.</p>
+         ${reason}
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 26px;">Podes voltar a candidatar-te mais à frente. Se tiveres dúvidas, fala com a equipa no MM Suporte.</p>
+         <p style="margin:0 0 8px;">${btn("Falar com o suporte →", `${APP_URL}/ajuda`)}</p>`,
+      ),
+    };
+  },
 };
+
 
 
 

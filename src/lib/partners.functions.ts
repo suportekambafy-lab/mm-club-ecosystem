@@ -188,10 +188,14 @@ export const requestPartnerAccess = createServerFn({ method: "POST" })
     if (!existing) {
       const eligibility = await core.partnerEligibility(context.userId);
       if (!eligibility.ok) throw new Error(eligibility.reason ?? "Conta não elegível.");
-      await core.ensureAccount(context.userId, {
+      const account = await core.ensureAccount(context.userId, {
         status: "pending",
         applicationNote: data.note || null,
       });
+      const { notifyPartnerApplicationReceived } = await import(
+        "@/lib/partners/notify.server"
+      );
+      await notifyPartnerApplicationReceived(context.userId, account.id);
     }
     return loadDashboard(context.userId, data.origin);
   });

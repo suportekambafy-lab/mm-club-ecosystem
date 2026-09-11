@@ -214,6 +214,7 @@ type NavItem = {
   icon: typeof LayoutDashboard;
   exact?: boolean;
   soon?: boolean;
+  isNew?: boolean;
 };
 
 // Editorial single-list nav — MasterClass / Apple TV energy, no SaaS group labels.
@@ -225,7 +226,7 @@ const navItems: NavItem[] = [
   { to: "/comunidade", label: "Comunidade", icon: Users },
   { to: "/shorts", label: "MM Shorts", icon: Clapperboard },
   { to: "/ferramentas", label: "Ferramentas", icon: Wrench },
-  { to: "/parceiros", label: "Seja Afiliado", icon: Handshake },
+  { to: "/parceiros", label: "Seja Afiliado", icon: Handshake, isNew: true },
   { to: "/eventos", label: "Eventos", icon: CalendarDays, soon: true },
   { to: "/certificados", label: "Certificados", icon: Award },
   { to: "/codigo", label: "Código do Clube", icon: ShieldCheck },
@@ -577,6 +578,11 @@ function AppLayout() {
                   )}
                 />
                 {!compact && <span className="flex-1">{item.label}</span>}
+                {!compact && item.isNew && (
+                  <span className="rounded-full bg-primary px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary-foreground">
+                    Novo
+                  </span>
+                )}
                 {compact && active && (
                   <span
                     aria-hidden
