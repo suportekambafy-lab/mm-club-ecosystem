@@ -373,11 +373,7 @@ export const emailTemplates = {
       }).format(new Date(iso));
     const oldFmt = fmt(opts.oldStartsAt);
     const newFmt = fmt(opts.startsAt);
-    const cover = opts.coverUrl
-      ? opts.coverUrl.startsWith("http")
-        ? opts.coverUrl
-        : `${APP_URL}${opts.coverUrl}`
-      : null;
+    const cover = liveCoverEmailUrl(opts.liveId, opts.coverUrl);
     const heroImg = cover
       ? `<div style="margin:0 -40px 24px;"><img src="${cover}" alt="${title}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;text-decoration:none;"></div>`
       : "";
