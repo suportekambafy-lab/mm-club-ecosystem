@@ -309,9 +309,7 @@ export const emailTemplates = {
       timeStyle: "short",
       timeZone: "Europe/Lisbon",
     }).format(new Date(opts.startsAt));
-    const cover = opts.coverUrl
-      ? (opts.coverUrl.startsWith("http") ? opts.coverUrl : `${APP_URL}${opts.coverUrl}`)
-      : null;
+    const cover = liveCoverEmailUrl(opts.liveId, opts.coverUrl);
     const kicker = opts.isScheduled ? "Nova live agendada" : "Estamos AO VIVO";
     const eyebrow = opts.isScheduled ? "MM Club · Direto" : "MM Club · AO VIVO agora";
     const cta = opts.isScheduled ? "Ver detalhes da live →" : "Entrar na live →";
