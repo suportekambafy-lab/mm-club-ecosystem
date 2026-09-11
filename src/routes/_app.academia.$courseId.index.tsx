@@ -242,9 +242,13 @@ function CourseDetail() {
                 onQuizPassed={quiz.refetch}
               />
             ))}
+            {isFeaturedCourse(course) && (
+              <ChallengeLivesModule index={course.modules.length} />
+            )}
           </div>
         </section>
       )}
+
 
       <CourseComments courseId={course.id} />
     </div>
