@@ -289,6 +289,7 @@ export const emailTemplates = {
     coverUrl?: string | null;
     liveId: string;
     isScheduled: boolean;
+    locked?: boolean;
   }) {
     const safe = escapeHtml(opts.name);
     const title = escapeHtml(opts.title);
