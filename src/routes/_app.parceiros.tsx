@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -19,7 +19,7 @@ import {
 import { toast } from "sonner";
 import {
   getPartnerDashboard,
-  joinPartners,
+  requestPartnerAccess,
   requestPartnerPayout,
   savePartnerPayoutDetails,
 } from "@/lib/partners.functions";
@@ -69,7 +69,7 @@ const PAYOUT_STATUS: Record<string, string> = {
 
 function PartnersPage() {
   const dashFn = useServerFn(getPartnerDashboard);
-  const joinFn = useServerFn(joinPartners);
+  const joinFn = useServerFn(requestPartnerAccess);
   const saveFn = useServerFn(savePartnerPayoutDetails);
   const payoutFn = useServerFn(requestPartnerPayout);
   const qc = useQueryClient();
@@ -88,6 +88,7 @@ function PartnersPage() {
   const [target, setTarget] = useState("");
   const [holder, setHolder] = useState("");
   const [copied, setCopied] = useState(false);
+  const [note, setNote] = useState("");
 
   useEffect(() => {
     if (!data?.joined) return;
@@ -99,9 +100,9 @@ function PartnersPage() {
   const refresh = () => qc.invalidateQueries({ queryKey: ["mm-partners"] });
 
   const join = useMutation({
-    mutationFn: () => joinFn({ data: { origin } }),
+    mutationFn: () => joinFn({ data: { origin, note } }),
     onSuccess: () => {
-      toast.success("Bem-vindo ao MM Partners. O teu link já está pronto.");
+      toast.success("Candidatura enviada. Avisamos-te quando for aprovada.");
       refresh();
     },
     onError: (e: Error) => toast.error(e.message),
