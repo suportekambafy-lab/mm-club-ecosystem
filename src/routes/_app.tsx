@@ -819,8 +819,10 @@ function AppLayout() {
         </main>
       </div>
 
-      {/* MM Suporte — disponível em toda a área de membros */}
-      <SupportWidget userName={displayName} />
+      {/* MM Suporte — apenas no Início e no Centro de Ajuda */}
+      {(pathname === "/dashboard" || pathname === "/ajuda" || pathname.startsWith("/ajuda/")) && (
+        <SupportWidget userName={displayName} />
+      )}
 
       {/* Mobile Bottom Tab Bar */}
       <MobileTabBar
