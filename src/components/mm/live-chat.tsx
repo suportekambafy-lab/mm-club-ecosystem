@@ -3,7 +3,12 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowDown, Send, MessagesSquare, Lock, Pin, PinOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
-import { listChatMessages, sendChatMessage, setChatMessagePinned } from "@/lib/lives.functions";
+import {
+  getChatAuthors,
+  listChatMessages,
+  sendChatMessage,
+  setChatMessagePinned,
+} from "@/lib/lives.functions";
 import { useAdminIds } from "@/hooks/use-admin-ids";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { cn } from "@/lib/utils";
@@ -18,6 +23,9 @@ type Message = {
   created_at: string;
   pinned_at?: string | null;
   pinned_by?: string | null;
+  /** Nome resolvido no servidor (pode faltar em mensagens de tempo real). */
+  author_name?: string | null;
+  author_avatar?: string | null;
 };
 
 type Profile = {
@@ -91,6 +99,7 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
   const fetchInitial = useServerFn(listChatMessages);
   const send = useServerFn(sendChatMessage);
   const setPinned = useServerFn(setChatMessagePinned);
+  const fetchAuthors = useServerFn(getChatAuthors);
   const adminIds = useAdminIds();
   const [hostIds, setHostIds] = useState<Set<string>>(() => new Set());
   const isVerified = (uid: string) => adminIds.has(uid) || hostIds.has(uid);
@@ -179,7 +188,9 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
     }
   }
 
-  // Fetch profiles for any user_ids we don't have yet.
+  // Nomes/avatares em falta (mensagens que chegam por tempo real): pedimos ao
+  // servidor, que resolve sempre — no browser a leitura podia falhar e a
+  // mensagem ficava sem nome.
   useEffect(() => {
     const missing = Array.from(
       new Set(
@@ -191,14 +202,11 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
     if (missing.length === 0) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id,display_name,avatar_url")
-        .in("id", missing);
+      const data = await fetchAuthors({ data: { userIds: missing.slice(0, 100) } }).catch(() => null);
       if (cancelled || !data) return;
       // Resolve storage paths to signed URLs (cache partilhado).
       const resolved = await Promise.all(
-        data.map(async (p) => {
+        data.map(async (p: { id: string; display_name: string | null; avatar_url: string | null }) => {
           const url = await resolveAvatarUrl(p.avatar_url);
           return { ...p, avatar_url: url ?? cachedAvatarUrl(p.avatar_url) } as Profile;
         }),
@@ -213,7 +221,7 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [messages, profiles]);
+  }, [messages, profiles, fetchAuthors]);
 
   function onScroll() {
     const el = scrollRef.current;
@@ -296,7 +304,9 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
         if (!pinned) return null;
         const p = pinned.user_id ? profiles[pinned.user_id] : undefined;
         const pname = pinned.user_id
-          ? p?.display_name || (pinned.user_id === currentUserId ? "Tu" : pinned.user_id.slice(0, 6))
+          ? p?.display_name ||
+            pinned.author_name ||
+            (pinned.user_id === currentUserId ? "Tu" : "Membro MM")
           : `${pinned.guest_name || "Convidado"} (convidado)`;
         return (
           <div className="flex shrink-0 items-start gap-2 border-b border-border/60 bg-primary/5 px-3 py-2">
@@ -342,7 +352,7 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
                 const mine = Boolean(m.user_id) && m.user_id === currentUserId;
                 const profile = m.user_id ? profiles[m.user_id] : undefined;
                 const name = m.user_id
-                  ? profile?.display_name || (mine ? "Tu" : m.user_id.slice(0, 6))
+                  ? profile?.display_name || m.author_name || (mine ? "Tu" : "Membro MM")
                   : `${m.guest_name || "Convidado"} (convidado)`;
                 const time = formatTime(m.created_at);
                 const authorIsAdmin = Boolean(m.user_id) && isVerified(m.user_id as string);
@@ -368,8 +378,8 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
                             />
                           ) : (
                             initialsOf(
-                              profile?.display_name ?? m.guest_name,
-                              mine ? "Tu" : m.user_id ?? m.guest_name ?? "C",
+                              profile?.display_name ?? m.author_name ?? m.guest_name,
+                              mine ? "Tu" : "M",
                             )
                           )}
                         </div>
