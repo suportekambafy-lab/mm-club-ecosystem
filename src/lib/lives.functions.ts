@@ -230,6 +230,50 @@ export const getLive = createServerFn({ method: "GET" })
 
 
 
+/**
+ * Junta o nome/avatar do autor às mensagens do chat.
+ *
+ * O nome é resolvido no servidor porque no browser a leitura de `profiles`
+ * pode falhar (sessão a expirar, RLS) e o chat acabava a mostrar um código
+ * em vez do nome do membro.
+ */
+type ChatRow = {
+  id: string;
+  live_id: string;
+  user_id: string | null;
+  body: string;
+  created_at: string;
+  pinned_at: string | null;
+  pinned_by: string | null;
+  guest_id: string | null;
+  guest_name: string | null;
+};
+
+async function attachChatAuthors(rows: ChatRow[]) {
+  const ids = [...new Set(rows.map((r) => r.user_id).filter((v): v is string => Boolean(v)))];
+  const byId = new Map<string, { display_name: string | null; avatar_url: string | null }>();
+  if (ids.length > 0) {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profiles } = await supabaseAdmin
+      .from("profiles")
+      .select("id,display_name,avatar_url")
+      .in("id", ids);
+    for (const p of profiles ?? []) {
+      byId.set(p.id, { display_name: p.display_name, avatar_url: p.avatar_url });
+    }
+  }
+  return rows.map((r) => {
+    const p = r.user_id ? byId.get(r.user_id) : undefined;
+    return {
+      ...r,
+      author_name: r.user_id
+        ? (p?.display_name && p.display_name.trim()) || "Membro MM"
+        : (r.guest_name && r.guest_name.trim()) || "Convidado",
+      author_avatar: p?.avatar_url ?? null,
+    };
+  });
+}
+
 // Chat messages: initial fetch + send.
 export const listChatMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -242,7 +286,25 @@ export const listChatMessages = createServerFn({ method: "GET" })
       .order("created_at", { ascending: true })
       .limit(200);
     if (error) throw new Error(error.message);
-    return rows ?? [];
+    return attachChatAuthors((rows ?? []) as ChatRow[]);
+  });
+
+/** Nomes/avatares de autores para mensagens que chegam por tempo real. */
+export const getChatAuthors = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => z.object({ userIds: z.array(z.string().uuid()).max(100) }).parse(i))
+  .handler(async ({ data }) => {
+    if (data.userIds.length === 0) return [];
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profiles } = await supabaseAdmin
+      .from("profiles")
+      .select("id,display_name,avatar_url")
+      .in("id", data.userIds);
+    return (profiles ?? []).map((p) => ({
+      id: p.id,
+      display_name: (p.display_name && p.display_name.trim()) || "Membro MM",
+      avatar_url: p.avatar_url,
+    }));
   });
 
 export const sendChatMessage = createServerFn({ method: "POST" })
