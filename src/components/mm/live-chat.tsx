@@ -99,6 +99,7 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
   const fetchInitial = useServerFn(listChatMessages);
   const send = useServerFn(sendChatMessage);
   const setPinned = useServerFn(setChatMessagePinned);
+  const fetchAuthors = useServerFn(getChatAuthors);
   const adminIds = useAdminIds();
   const [hostIds, setHostIds] = useState<Set<string>>(() => new Set());
   const isVerified = (uid: string) => adminIds.has(uid) || hostIds.has(uid);
