@@ -278,7 +278,20 @@ export const sendChatMessage = createServerFn({ method: "POST" })
       .insert({ live_id: data.liveId, body: data.body, user_id: context.userId })
       .select("id,live_id,user_id,body,created_at,pinned_at,pinned_by,guest_id,guest_name")
       .single();
-    if (error) throw new Error(error.message);
+    if (error) {
+      // Nunca mostramos erros técnicos de base de dados no chat ao vivo.
+      if (/row-level security/i.test(error.message)) {
+        const { data: restricted } = await context.supabase.rpc("is_community_restricted", {
+          _user_id: context.userId,
+        });
+        throw new Error(
+          restricted
+            ? "A tua participação no chat está temporariamente limitada. Fala com o suporte para resolver."
+            : "Não conseguimos enviar a mensagem: o teu acesso a esta live não está ativo.",
+        );
+      }
+      throw new Error("Não conseguimos enviar a mensagem. Tenta novamente.");
+    }
     return row;
   });
 
