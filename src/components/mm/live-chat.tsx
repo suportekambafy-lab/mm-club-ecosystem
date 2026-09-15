@@ -304,7 +304,9 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
         if (!pinned) return null;
         const p = pinned.user_id ? profiles[pinned.user_id] : undefined;
         const pname = pinned.user_id
-          ? p?.display_name || (pinned.user_id === currentUserId ? "Tu" : pinned.user_id.slice(0, 6))
+          ? p?.display_name ||
+            pinned.author_name ||
+            (pinned.user_id === currentUserId ? "Tu" : "Membro MM")
           : `${pinned.guest_name || "Convidado"} (convidado)`;
         return (
           <div className="flex shrink-0 items-start gap-2 border-b border-border/60 bg-primary/5 px-3 py-2">
@@ -350,7 +352,7 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
                 const mine = Boolean(m.user_id) && m.user_id === currentUserId;
                 const profile = m.user_id ? profiles[m.user_id] : undefined;
                 const name = m.user_id
-                  ? profile?.display_name || (mine ? "Tu" : m.user_id.slice(0, 6))
+                  ? profile?.display_name || m.author_name || (mine ? "Tu" : "Membro MM")
                   : `${m.guest_name || "Convidado"} (convidado)`;
                 const time = formatTime(m.created_at);
                 const authorIsAdmin = Boolean(m.user_id) && isVerified(m.user_id as string);
