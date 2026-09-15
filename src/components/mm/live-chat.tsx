@@ -3,7 +3,12 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowDown, Send, MessagesSquare, Lock, Pin, PinOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cachedAvatarUrl, resolveAvatarUrl } from "@/lib/avatar-cache";
-import { listChatMessages, sendChatMessage, setChatMessagePinned } from "@/lib/lives.functions";
+import {
+  getChatAuthors,
+  listChatMessages,
+  sendChatMessage,
+  setChatMessagePinned,
+} from "@/lib/lives.functions";
 import { useAdminIds } from "@/hooks/use-admin-ids";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { cn } from "@/lib/utils";
@@ -200,7 +205,7 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
       if (cancelled || !data) return;
       // Resolve storage paths to signed URLs (cache partilhado).
       const resolved = await Promise.all(
-        data.map(async (p) => {
+        data.map(async (p: { id: string; display_name: string | null; avatar_url: string | null }) => {
           const url = await resolveAvatarUrl(p.avatar_url);
           return { ...p, avatar_url: url ?? cachedAvatarUrl(p.avatar_url) } as Profile;
         }),
