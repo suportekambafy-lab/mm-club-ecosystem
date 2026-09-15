@@ -182,7 +182,9 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
     }
   }
 
-  // Fetch profiles for any user_ids we don't have yet.
+  // Nomes/avatares em falta (mensagens que chegam por tempo real): pedimos ao
+  // servidor, que resolve sempre — no browser a leitura podia falhar e a
+  // mensagem ficava sem nome.
   useEffect(() => {
     const missing = Array.from(
       new Set(
@@ -194,10 +196,7 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
     if (missing.length === 0) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id,display_name,avatar_url")
-        .in("id", missing);
+      const data = await fetchAuthors({ data: { userIds: missing.slice(0, 100) } }).catch(() => null);
       if (cancelled || !data) return;
       // Resolve storage paths to signed URLs (cache partilhado).
       const resolved = await Promise.all(
@@ -216,7 +215,7 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [messages, profiles]);
+  }, [messages, profiles, fetchAuthors]);
 
   function onScroll() {
     const el = scrollRef.current;
