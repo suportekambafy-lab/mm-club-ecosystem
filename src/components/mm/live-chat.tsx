@@ -378,8 +378,8 @@ export function LiveChat({ liveId, currentUserId, readOnly }: Props) {
                             />
                           ) : (
                             initialsOf(
-                              profile?.display_name ?? m.guest_name,
-                              mine ? "Tu" : m.user_id ?? m.guest_name ?? "C",
+                              profile?.display_name ?? m.author_name ?? m.guest_name,
+                              mine ? "Tu" : "M",
                             )
                           )}
                         </div>
