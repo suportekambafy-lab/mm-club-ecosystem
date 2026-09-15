@@ -18,6 +18,9 @@ type Message = {
   created_at: string;
   pinned_at?: string | null;
   pinned_by?: string | null;
+  /** Nome resolvido no servidor (pode faltar em mensagens de tempo real). */
+  author_name?: string | null;
+  author_avatar?: string | null;
 };
 
 type Profile = {
