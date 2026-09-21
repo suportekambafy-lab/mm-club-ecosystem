@@ -607,24 +607,56 @@ async function chargeBestMandate(args: {
   // Prefer a card we have not burned yet in this cycle; otherwise round-robin.
   const fresh = mandates.filter((m) => !triedIds.includes(m.id));
   const pool = fresh.length > 0 ? fresh : mandates;
-  const chosen = pool[(args.attemptNumber - 1) % pool.length];
+  const start = (args.attemptNumber - 1) % pool.length;
+  // Rotate through every mandate: a single card can be rejected for reasons
+  // that have nothing to do with funds (mandate revoked by the bank, wrong
+  // mandate scope). Burning the whole attempt on it would be wasteful.
+  const order = pool.map((_, i) => pool[(start + i) % pool.length]);
 
   const origin = process.env.PUBLIC_APP_URL ?? "https://mmclub.pt";
-  const payment = await gw.chargeWithMandate({
-    customerId: customer.gateway_customer_id,
-    mandateId: chosen.id,
-    amountCents: args.amountCents,
-    currency: args.currency,
-    description: "MM Club — recuperação de pagamento",
-    webhookUrl: `${origin}/api/public/payments/gateway-webhook`,
-    metadata: {
-      userId: args.userId,
-      subscriptionId: args.subscriptionId,
-      recoveryCycle: args.cycleKey,
-      recoveryAttempt: args.attemptNumber,
-      origin,
-    },
-  });
+  let chosen: { id: string; method: string | null } | null = null;
+  let payment: Awaited<ReturnType<typeof gw.chargeWithMandate>> | null = null;
+  let lastError: unknown = null;
+
+  for (const candidate of order) {
+    try {
+      payment = await gw.chargeWithMandate({
+        customerId: customer.gateway_customer_id,
+        mandateId: candidate.id,
+        amountCents: args.amountCents,
+        currency: args.currency,
+        description: "MM Club — recuperação de pagamento",
+        webhookUrl: `${origin}/api/public/payments/gateway-webhook`,
+        metadata: {
+          userId: args.userId,
+          subscriptionId: args.subscriptionId,
+          recoveryCycle: args.cycleKey,
+          recoveryAttempt: args.attemptNumber,
+          origin,
+        },
+      });
+      chosen = candidate;
+      break;
+    } catch (err) {
+      lastError = err;
+      const msg = err instanceof Error ? err.message : String(err);
+      // Mandate is gone or unusable at the gateway — stop trusting it locally.
+      if (/410|no longer available|mandate scope|invalid.*mandate/i.test(msg)) {
+        await supabaseAdmin
+          .from("billing_payment_methods")
+          .update({ status: "revoked", is_default: false })
+          .eq("user_id", args.userId)
+          .eq("gateway_mandate_id", candidate.id);
+      }
+      console.error("[recovery] mandate charge failed", candidate.id, msg);
+    }
+  }
+
+  if (!payment || !chosen) {
+    if (lastError) console.error("[recovery] all mandates failed", args.userId);
+    return null;
+  }
+
 
   await supabaseAdmin.from("billing_payments").upsert(
     {
