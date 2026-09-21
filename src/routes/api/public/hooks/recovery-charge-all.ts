@@ -20,7 +20,7 @@ export const Route = createFileRoute("/api/public/hooks/recovery-charge-all")({
         const { supabaseAdmin } = await import(
           "@/integrations/supabase/client.server"
         );
-        const { triggerRecoveryNow } = await import(
+        const { triggerRecoveryNow, forceChargeNow } = await import(
           "@/lib/billing/recovery/engine.server"
         );
         const { drainQueue } = await import("@/lib/queue/worker.server");
@@ -52,10 +52,17 @@ export const Route = createFileRoute("/api/public/hooks/recovery-charge-all")({
         );
         let triggered = 0;
         let failed = 0;
+        let chargedNow = 0;
+        const skipped: Record<string, number> = {};
         for (const userId of userIds) {
           try {
             const r = await triggerRecoveryNow(userId, "admin_manual");
             triggered += r.triggered;
+            // Cobrança imediata: não espera pelo calendário.
+            const forced = await forceChargeNow(userId);
+            if (forced.charged) chargedNow += 1;
+            else if (forced.reason)
+              skipped[forced.reason] = (skipped[forced.reason] ?? 0) + 1;
           } catch (err) {
             failed += 1;
             console.error("[recovery-charge-all]", userId, err);
@@ -76,6 +83,8 @@ export const Route = createFileRoute("/api/public/hooks/recovery-charge-all")({
             ok: true,
             members: userIds.length,
             triggered,
+            chargedNow,
+            skipped,
             failed,
             processed,
             jobsFailed,
