@@ -224,9 +224,11 @@ function SubscriptionPage() {
       });
       window.location.href = checkoutUrl;
     } catch (e) {
-      setError(
-        e instanceof Error ? e.message : "Não foi possível mudar de plano.",
-      );
+      const fallback =
+        busyKey === "settle"
+          ? "Não foi possível abrir o pagamento agora. Tenta outra vez dentro de alguns minutos ou fala com o suporte."
+          : "Não foi possível mudar de plano.";
+      setError(e instanceof Error && e.message ? e.message : fallback);
       setBusy(null);
     }
   };

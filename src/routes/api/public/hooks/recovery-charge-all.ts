@@ -25,10 +25,21 @@ export const Route = createFileRoute("/api/public/hooks/recovery-charge-all")({
         );
         const { drainQueue } = await import("@/lib/queue/worker.server");
 
-        const { data: subs, error } = await supabaseAdmin
+        // Opcional: { "userId": "..." } cobra só esse membro.
+        let onlyUserId: string | null = null;
+        try {
+          const body = (await request.json()) as { userId?: string } | null;
+          onlyUserId = body?.userId ?? null;
+        } catch {
+          onlyUserId = null;
+        }
+
+        let query = supabaseAdmin
           .from("billing_subscriptions")
           .select("user_id, status")
           .in("status", ["past_due", "grace_period", "suspended"]);
+        if (onlyUserId) query = query.eq("user_id", onlyUserId);
+        const { data: subs, error } = await query;
         if (error) {
           return new Response(JSON.stringify({ error: error.message }), {
             status: 500,

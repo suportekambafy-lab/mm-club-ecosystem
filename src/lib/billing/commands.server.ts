@@ -89,30 +89,46 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
   // One live subscription per product, always: a member who already has an
   // active/trialing plan can never open a second checkout for the same product
   // (this is what produced duplicated trials via the VIP flow).
+  //
+  // Quem está em atraso (past_due/grace_period/suspended/expired) TEM de poder
+  // pagar à mão: nesse caso não abrimos uma segunda subscrição, o pagamento
+  // liquida a dívida e renova o período da subscrição que já existe.
   const subscriptionLike =
     price.interval !== "one_time" && price.interval !== "lifetime";
+  let settlingSubscriptionId: string | null = null;
   if (subscriptionLike) {
     const { data: live } = await supabaseAdmin
       .from("billing_subscriptions")
       .select("id, status")
       .eq("user_id", input.userId)
       .eq("product_id", price.product.id)
-      .in("status", ["trialing", "active", "past_due", "grace_period", "suspended"])
+      .in("status", ["trialing", "active", "past_due", "grace_period", "suspended", "expired"])
+      .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
     if (live?.id) {
-      throw new Error(
-        "Já tens uma subscrição deste plano. Gere-a em /subscricao para mudares de plano.",
+      const inDebt = ["past_due", "grace_period", "suspended", "expired"].includes(
+        String(live.status),
       );
+      if (!inDebt) {
+        throw new Error(
+          "Já tens uma subscrição deste plano. Gere-a em /subscricao para mudares de plano.",
+        );
+      }
+      settlingSubscriptionId = live.id as string;
     }
   }
 
-  // Recovery before new revenue: settle any open debt first.
-  try {
-    const { triggerRecoveryNow } = await import("./recovery/engine.server");
-    await triggerRecoveryNow(input.userId, "before_checkout");
-  } catch (err) {
-    console.error("[recovery] trigger before checkout", err);
+  // Recovery before new revenue: settle any open debt first. Quando o próprio
+  // membro está a pagar à mão não disparamos cobrança automática, senão o
+  // cartão era tentado duas vezes ao mesmo tempo.
+  if (!settlingSubscriptionId) {
+    try {
+      const { triggerRecoveryNow } = await import("./recovery/engine.server");
+      await triggerRecoveryNow(input.userId, "before_checkout");
+    } catch (err) {
+      console.error("[recovery] trigger before checkout", err);
+    }
   }
 
 
@@ -132,11 +148,19 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
       ? "/ferramentas/studio?topup=success"
       : "/dashboard?checkout=success");
 
+  // Quem está a regularizar paga a mensalidade cheia: o desconto de
+  // verificação de 1,00 € é só para quem entra em trial pela primeira vez.
+  const chargeCents =
+    !settlingSubscriptionId && price.trialDays > 0
+      ? TRIAL_VERIFICATION_CENTS
+      : price.amountCents;
+
   const payment = await gw.createCharge({
-    // Trial prices only create a mandate: 1,00 € card verification, no plan charge.
-    amountCents: price.trialDays > 0 ? TRIAL_VERIFICATION_CENTS : price.amountCents,
+    amountCents: chargeCents,
     currency: price.currency,
-    description: buildCheckoutDescription(price),
+    description: settlingSubscriptionId
+      ? `MM Club — regularização ${price.product.name}`
+      : buildCheckoutDescription(price),
     redirectUrl: `${origin}${successPath}`,
     webhookUrl: `${origin}/api/public/payments/gateway-webhook`,
     customerId: customer.gatewayCustomerId,
@@ -150,6 +174,9 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
       kind: price.product.kind,
       recurring,
       origin,
+      ...(settlingSubscriptionId
+        ? { purpose: "settle_debt", subscriptionId: settlingSubscriptionId }
+        : {}),
     },
   });
 
@@ -157,12 +184,17 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
     customer_id: customer.id,
     user_id: input.userId,
     price_id: price.id,
+    subscription_id: settlingSubscriptionId,
     gateway: gw.name,
     gateway_payment_id: payment.id,
     status: payment.status,
-    amount_cents: price.trialDays > 0 ? TRIAL_VERIFICATION_CENTS : price.amountCents,
+    amount_cents: chargeCents,
     currency: price.currency,
-    metadata: { priceSlug: price.slug, recurring } as never,
+    metadata: {
+      priceSlug: price.slug,
+      recurring,
+      ...(settlingSubscriptionId ? { purpose: "settle_debt" } : {}),
+    } as never,
   });
 
   if (!payment.checkoutUrl) throw new Error("Gateway returned no checkout URL");
