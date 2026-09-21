@@ -91,7 +91,7 @@ export async function sweepCardOnFile(limit = 500): Promise<{
   const { data: subs } = await supabaseAdmin
     .from("billing_subscriptions")
     .select("user_id, status")
-    .in("status", BILLABLE_STATUSES as unknown as string[])
+    .in("status", [...BILLABLE_STATUSES])
     .limit(limit);
 
   const userIds = Array.from(new Set((subs ?? []).map((s) => s.user_id as string)));
