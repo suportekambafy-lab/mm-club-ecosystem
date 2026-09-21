@@ -529,6 +529,10 @@ export async function runRecoveryAttempt(payload: RecoveryJobPayload): Promise<v
 
     if (!charged) {
       await fail(idempotencyKey, "no_payment_method", "Sem método de pagamento válido.");
+      // Sem cartão utilizável a cobrança automática não avança: pedimos ao
+      // membro um cartão novo em vez de continuar a falhar em silêncio.
+      const { ensureCardOnFile } = await import("../card-health.server");
+      await ensureCardOnFile(userId).catch(() => null);
       return;
     }
 
