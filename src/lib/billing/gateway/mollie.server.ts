@@ -171,8 +171,11 @@ export const mollieGateway: PaymentGateway = {
         }[];
       };
     }>(`/customers/${encodeURIComponent(customerId)}/mandates`);
+    // "pending" mandates matter: right after the 1,00 € verification the card
+    // can still be settling. We report them (with their real status) so they
+    // get stored locally instead of being lost.
     return (raw._embedded?.mandates ?? [])
-      .filter((m) => m.status === "valid")
+      .filter((m) => m.status === "valid" || m.status === "pending")
       .map((m) => ({
         id: m.id,
         status: m.status,
