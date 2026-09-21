@@ -595,7 +595,9 @@ async function chargeBestMandate(args: {
 
   let mandates: { id: string; method: string | null }[] = [];
   try {
-    mandates = await gw.listMandates(customer.gateway_customer_id);
+    const all = await gw.listMandates(customer.gateway_customer_id);
+    // Only fully valid mandates can be charged off-session.
+    mandates = all.filter((m) => m.status === "valid");
   } catch {
     return null;
   }

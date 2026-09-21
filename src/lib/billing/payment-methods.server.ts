@@ -45,6 +45,9 @@ export async function syncPaymentMethods(userId: string): Promise<void> {
 
   let first = true;
   for (const m of mandates) {
+    // A mandate still settling is kept as "pending": it exists, so we never
+    // treat the member as "no card on file", but it is not charged yet.
+    const status = m.status === "valid" ? "active" : "pending";
     const existing = known.get(m.id);
     if (existing) {
       await supabaseAdmin
@@ -53,7 +56,7 @@ export async function syncPaymentMethods(userId: string): Promise<void> {
           method: m.method,
           brand: m.brand,
           last4: m.last4,
-          status: "active",
+          status,
         })
         .eq("id", existing.id);
     } else {
@@ -69,8 +72,8 @@ export async function syncPaymentMethods(userId: string): Promise<void> {
           method: m.method,
           brand: m.brand,
           last4: m.last4,
-          is_default: !hasDefault && first,
-          status: "active",
+          is_default: !hasDefault && first && status === "active",
+          status,
         },
         { onConflict: "user_id,gateway_mandate_id" },
       );
