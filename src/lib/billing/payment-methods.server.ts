@@ -72,8 +72,8 @@ export async function syncPaymentMethods(userId: string): Promise<void> {
           method: m.method,
           brand: m.brand,
           last4: m.last4,
-          is_default: !hasDefault && first,
-          status: "active",
+          is_default: !hasDefault && first && status === "active",
+          status,
         },
         { onConflict: "user_id,gateway_mandate_id" },
       );
