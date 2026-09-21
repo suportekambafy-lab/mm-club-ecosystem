@@ -89,21 +89,33 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
   // One live subscription per product, always: a member who already has an
   // active/trialing plan can never open a second checkout for the same product
   // (this is what produced duplicated trials via the VIP flow).
+  //
+  // Quem está em atraso (past_due/grace_period/suspended/expired) TEM de poder
+  // pagar à mão: nesse caso não abrimos uma segunda subscrição, o pagamento
+  // liquida a dívida e renova o período da subscrição que já existe.
   const subscriptionLike =
     price.interval !== "one_time" && price.interval !== "lifetime";
+  let settlingSubscriptionId: string | null = null;
   if (subscriptionLike) {
     const { data: live } = await supabaseAdmin
       .from("billing_subscriptions")
       .select("id, status")
       .eq("user_id", input.userId)
       .eq("product_id", price.product.id)
-      .in("status", ["trialing", "active", "past_due", "grace_period", "suspended"])
+      .in("status", ["trialing", "active", "past_due", "grace_period", "suspended", "expired"])
+      .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
     if (live?.id) {
-      throw new Error(
-        "Já tens uma subscrição deste plano. Gere-a em /subscricao para mudares de plano.",
+      const inDebt = ["past_due", "grace_period", "suspended", "expired"].includes(
+        String(live.status),
       );
+      if (!inDebt) {
+        throw new Error(
+          "Já tens uma subscrição deste plano. Gere-a em /subscricao para mudares de plano.",
+        );
+      }
+      settlingSubscriptionId = live.id as string;
     }
   }
 
