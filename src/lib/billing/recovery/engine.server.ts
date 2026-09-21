@@ -1095,3 +1095,93 @@ export async function reopenStalledRecoveries(): Promise<{
   return { cycles: touchedCycles, attempts: touchedAttempts };
 }
 
+
+// ------------------------------------------------- cobrança imediata (admin)
+
+/**
+ * Cobrança forçada agora, sem calendário: tenta o cartão do membro no
+ * momento. Mantém a guarda de pagamento pendente (nunca empilha cobranças)
+ * e registra a tentativa no histórico de dunning para auditoria.
+ */
+export async function forceChargeNow(
+  userId: string,
+): Promise<{ charged: boolean; reason?: string }> {
+  if (await isUserBlockedByPending(userId)) {
+    return { charged: false, reason: "pending_payment" };
+  }
+
+  const { data: sub } = await supabaseAdmin
+    .from("billing_subscriptions")
+    .select("id, status, gateway, price_id")
+    .eq("user_id", userId)
+    .in("status", ["past_due", "grace_period", "suspended"])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!sub) return { charged: false, reason: "no_open_subscription" };
+
+  if (await hasPendingPayment(sub.id)) {
+    return { charged: false, reason: "pending_payment" };
+  }
+
+  const { data: price } = await supabaseAdmin
+    .from("catalog_prices")
+    .select("amount_cents, currency")
+    .eq("id", sub.price_id)
+    .maybeSingle();
+  const amountCents = price?.amount_cents ?? 0;
+  if (amountCents <= 0) return { charged: false, reason: "nothing_owed" };
+
+  const cycleKey = `force:${sub.id}:${new Date().toISOString().slice(0, 13)}`;
+  const attemptNumber = (await attemptsUsed(cycleKey)) + 1;
+  const idempotencyKey = `recovery:${cycleKey}:${attemptNumber}`;
+
+  const { error: insertError } = await supabaseAdmin
+    .from("billing_dunning_attempts")
+    .upsert(
+      {
+        cycle_key: cycleKey,
+        subscription_id: sub.id,
+        user_id: userId,
+        attempt_number: attemptNumber,
+        scheduled_for: new Date().toISOString(),
+        phase: "immediate",
+        status: "attempted",
+        attempted_at: new Date().toISOString(),
+        amount_cents: amountCents,
+        currency: price?.currency ?? "EUR",
+        idempotency_key: idempotencyKey,
+      },
+      { onConflict: "idempotency_key", ignoreDuplicates: true },
+    );
+  if (insertError) return { charged: false, reason: insertError.message };
+
+  try {
+    const charged = await chargeBestMandate({
+      userId,
+      subscriptionId: sub.id,
+      cycleKey,
+      attemptNumber,
+      amountCents,
+      currency: price?.currency ?? "EUR",
+      gatewayName: sub.gateway,
+    });
+    if (!charged) {
+      await fail(idempotencyKey, "no_payment_method", "Sem método de pagamento válido.");
+      return { charged: false, reason: "no_payment_method" };
+    }
+    await supabaseAdmin
+      .from("billing_dunning_attempts")
+      .update({
+        gateway_payment_id: charged.gatewayPaymentId,
+        mandate_id: charged.mandateId,
+        method: charged.method,
+      })
+      .eq("idempotency_key", idempotencyKey);
+    return { charged: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    await fail(idempotencyKey, "gateway_error", message);
+    return { charged: false, reason: message };
+  }
+}
