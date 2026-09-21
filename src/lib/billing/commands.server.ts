@@ -144,11 +144,19 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
       ? "/ferramentas/studio?topup=success"
       : "/dashboard?checkout=success");
 
+  // Quem está a regularizar paga a mensalidade cheia: o desconto de
+  // verificação de 1,00 € é só para quem entra em trial pela primeira vez.
+  const chargeCents =
+    !settlingSubscriptionId && price.trialDays > 0
+      ? TRIAL_VERIFICATION_CENTS
+      : price.amountCents;
+
   const payment = await gw.createCharge({
-    // Trial prices only create a mandate: 1,00 € card verification, no plan charge.
-    amountCents: price.trialDays > 0 ? TRIAL_VERIFICATION_CENTS : price.amountCents,
+    amountCents: chargeCents,
     currency: price.currency,
-    description: buildCheckoutDescription(price),
+    description: settlingSubscriptionId
+      ? `MM Club — regularização ${price.product.name}`
+      : buildCheckoutDescription(price),
     redirectUrl: `${origin}${successPath}`,
     webhookUrl: `${origin}/api/public/payments/gateway-webhook`,
     customerId: customer.gatewayCustomerId,
@@ -162,6 +170,9 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
       kind: price.product.kind,
       recurring,
       origin,
+      ...(settlingSubscriptionId
+        ? { purpose: "settle_debt", subscriptionId: settlingSubscriptionId }
+        : {}),
     },
   });
 
@@ -169,12 +180,17 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
     customer_id: customer.id,
     user_id: input.userId,
     price_id: price.id,
+    subscription_id: settlingSubscriptionId,
     gateway: gw.name,
     gateway_payment_id: payment.id,
     status: payment.status,
-    amount_cents: price.trialDays > 0 ? TRIAL_VERIFICATION_CENTS : price.amountCents,
+    amount_cents: chargeCents,
     currency: price.currency,
-    metadata: { priceSlug: price.slug, recurring } as never,
+    metadata: {
+      priceSlug: price.slug,
+      recurring,
+      ...(settlingSubscriptionId ? { purpose: "settle_debt" } : {}),
+    } as never,
   });
 
   if (!payment.checkoutUrl) throw new Error("Gateway returned no checkout URL");
