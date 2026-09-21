@@ -1204,6 +1204,8 @@ export async function forceChargeNow(
     });
     if (!charged) {
       await fail(idempotencyKey, "no_payment_method", "Sem método de pagamento válido.");
+      const { ensureCardOnFile } = await import("../card-health.server");
+      await ensureCardOnFile(userId).catch(() => null);
       return { charged: false, reason: "no_payment_method" };
     }
     await supabaseAdmin
