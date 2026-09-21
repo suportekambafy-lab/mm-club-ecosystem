@@ -50,6 +50,44 @@ export const Route = createFileRoute("/api/public/hooks/billing-tick")({
           });
           void partners;
 
+          // Cartão em arquivo: uma vez por dia confirmamos que cada membro com
+          // plano tem um método de pagamento utilizável (o banco/gateway pode
+          // revogar o mandato sem avisar) e pedimos cartão novo a quem não tem.
+          try {
+            const { supabaseAdmin } = await import(
+              "@/integrations/supabase/client.server"
+            );
+            const { data: last } = await supabaseAdmin
+              .from("ops_heartbeats")
+              .select("last_run_at")
+              .eq("key", "card-health")
+              .limit(1)
+              .maybeSingle();
+            const lastAt = last?.last_run_at
+              ? new Date(last.last_run_at as string).getTime()
+              : 0;
+            if (Date.now() - lastAt > 20 * 3_600_000) {
+              const { sweepCardOnFile } = await import(
+                "@/lib/billing/card-health.server"
+              );
+              const card = await sweepCardOnFile(500);
+              await recordHeartbeat({
+                key: "card-health",
+                ok: true,
+                durationMs: 0,
+                detail: {
+                  checked: card.checked,
+                  withoutCard: card.withoutCard,
+                  nudged: card.nudged,
+                },
+              });
+            }
+          } catch (err) {
+            console.error("[billing-tick] card health", err);
+          }
+
+
+
 
 
 
