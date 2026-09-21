@@ -119,12 +119,16 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
     }
   }
 
-  // Recovery before new revenue: settle any open debt first.
-  try {
-    const { triggerRecoveryNow } = await import("./recovery/engine.server");
-    await triggerRecoveryNow(input.userId, "before_checkout");
-  } catch (err) {
-    console.error("[recovery] trigger before checkout", err);
+  // Recovery before new revenue: settle any open debt first. Quando o próprio
+  // membro está a pagar à mão não disparamos cobrança automática, senão o
+  // cartão era tentado duas vezes ao mesmo tempo.
+  if (!settlingSubscriptionId) {
+    try {
+      const { triggerRecoveryNow } = await import("./recovery/engine.server");
+      await triggerRecoveryNow(input.userId, "before_checkout");
+    } catch (err) {
+      console.error("[recovery] trigger before checkout", err);
+    }
   }
 
 
