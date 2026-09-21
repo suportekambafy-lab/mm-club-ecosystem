@@ -303,13 +303,13 @@ export async function handleGatewayPayment(
   if (payment.status === "paid" && !alreadyPaid) {
     // Whatever card the member just used becomes a saved method, so it can be
     // reused for future charges (credit packs, renewals, retries…).
-    if (payment.customerId) {
-      try {
-        const { syncPaymentMethods } = await import("./payment-methods.server");
-        await syncPaymentMethods(userId);
-      } catch (err) {
-        console.error("[billing] syncPaymentMethods after payment", err);
-      }
+    // Always sync: even the 1,00 € trial verification creates a reusable
+    // mandate, and the gateway does not always echo the customer back.
+    try {
+      const { syncPaymentMethods } = await import("./payment-methods.server");
+      await syncPaymentMethods(userId);
+    } catch (err) {
+      console.error("[billing] syncPaymentMethods after payment", err);
     }
     await onPaymentPaid({ payment, userId, priceId, paymentRowId, customerId: customer?.id ?? null, subscriptionId });
     await resolveRecoveryForPayment({
