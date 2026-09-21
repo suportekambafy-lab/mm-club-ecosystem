@@ -59,13 +59,12 @@ export const Route = createFileRoute("/api/public/hooks/billing-tick")({
             );
             const { data: last } = await supabaseAdmin
               .from("ops_heartbeats")
-              .select("created_at")
+              .select("last_run_at")
               .eq("key", "card-health")
-              .order("created_at", { ascending: false })
               .limit(1)
               .maybeSingle();
-            const lastAt = last?.created_at
-              ? new Date(last.created_at as string).getTime()
+            const lastAt = last?.last_run_at
+              ? new Date(last.last_run_at as string).getTime()
               : 0;
             if (Date.now() - lastAt > 20 * 3_600_000) {
               const { sweepCardOnFile } = await import(
