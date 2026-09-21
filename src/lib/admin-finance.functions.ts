@@ -419,23 +419,27 @@ export const forceRecoveryAttemptAll = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);
-    const { triggerRecoveryNow } = await import(
+    const { triggerRecoveryNow, forceChargeNow } = await import(
       "@/lib/billing/recovery/engine.server"
     );
     const unique = Array.from(new Set(data.userIds));
     let queued = 0;
     let failed = 0;
+    let chargedNow = 0;
     for (const userId of unique) {
       try {
         await triggerRecoveryNow(userId, "admin_manual");
         queued += 1;
+        // Cobrança imediata, sem esperar pelo calendário.
+        const forced = await forceChargeNow(userId);
+        if (forced.charged) chargedNow += 1;
       } catch {
         failed += 1;
       }
     }
     const { drainQueue } = await import("@/lib/queue/worker.server");
     await drainQueue(Math.min(200, unique.length * 3));
-    return { queued, failed };
+    return { queued, failed, chargedNow };
   });
 
 /** Avisa os membros com cobrança falhada para atualizarem o método. */
