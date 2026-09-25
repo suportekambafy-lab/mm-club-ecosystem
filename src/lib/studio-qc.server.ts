@@ -3,7 +3,7 @@
 import type { ConsistencyLock } from "./studio-consistency";
 
 const TEXT_MODEL = "google/gemini-3.1-flash-lite";
-const GEMINI_QC_MODEL = "gemini-2.5-flash";
+const GEMINI_QC_MODEL = "google/gemini-3.6-flash";
 const MAX_QC_BYTES = 18 * 1024 * 1024; // acima disto salta-se o QC visual
 
 // ---------------------------------------------------------------- lock
@@ -191,7 +191,7 @@ export async function runVideoQc(
     if (!valid) badSegments.push(i);
   }
 
-  const key = process.env.GEMINI_API_KEY;
+  const key = process.env.LOVABLE_API_KEY;
   const first = bytesList.find((b) => b && b.byteLength < MAX_QC_BYTES) ?? null;
 
   if (!key || !first) {
@@ -241,30 +241,26 @@ async function analyseWithGemini(
   ].join(" ");
 
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_QC_MODEL}:generateContent`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [
-                { inlineData: { mimeType: "video/mp4", data: toB64(bytes) } },
-                { text: question },
-              ],
-            },
-          ],
-          generationConfig: { responseMimeType: "application/json", temperature: 0 },
-        }),
-      },
-    );
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Lovable-API-Key": key, Authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model: GEMINI_QC_MODEL,
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "video_url", video_url: { url: `data:video/mp4;base64,${toB64(bytes)}` } },
+              { type: "text", text: question },
+            ],
+          },
+        ],
+        response_format: { type: "json_object" },
+      }),
+    });
     if (!res.ok) return null;
-    const json = (await res.json()) as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-    };
-    const raw = json.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
+    const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    const raw = json.choices?.[0]?.message?.content ?? "";
     if (!raw) return null;
     const r = JSON.parse(stripFences(raw)) as Record<string, unknown>;
     const conf = typeof r.confidence === "number" ? Math.min(1, Math.max(0, r.confidence)) : 0.6;
