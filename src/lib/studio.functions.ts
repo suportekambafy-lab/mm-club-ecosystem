@@ -114,7 +114,7 @@ const GenerateImagesSchema = z.object({
   count: z.number().int().min(1).max(4).default(4),
 });
 
-const OPENAI_IMAGE_MODEL = "gpt-image-2";
+const OPENAI_IMAGE_MODEL = "openai/gpt-image-2";
 const OPENAI_IMAGE_QUALITY = "high";
 
 const MAX_REF_BYTES = 15 * 1024 * 1024;
@@ -251,12 +251,15 @@ async function callGeminiImageModel(
   return b64;
 }
 
+const LOVABLE_IMAGES = "https://ai.gateway.lovable.dev/v1/images";
+
 async function callOpenAiImage(
   key: string,
   prompt: string,
   size: string,
   refs: { bytes: Uint8Array; mime: string }[],
 ): Promise<Response> {
+  const auth = { "Lovable-API-Key": key, Authorization: `Bearer ${key}` };
   if (refs.length > 0) {
     // Image edit — usa o produto como referência real (mantém identidade).
     const form = new FormData();
@@ -270,18 +273,11 @@ async function callOpenAiImage(
       const blob = new Blob([r.bytes as unknown as BlobPart], { type: r.mime });
       form.append("image[]", blob, `ref-${i}.${ext}`);
     });
-    return fetch("https://api.openai.com/v1/images/edits", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${key}` },
-      body: form,
-    });
+    return fetch(`${LOVABLE_IMAGES}/edits`, { method: "POST", headers: auth, body: form });
   }
-  return fetch("https://api.openai.com/v1/images/generations", {
+  return fetch(`${LOVABLE_IMAGES}/generations`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
+    headers: { ...auth, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: OPENAI_IMAGE_MODEL,
       prompt,
@@ -297,49 +293,23 @@ async function callImageModel(
   size: string,
   refs: { bytes: Uint8Array; mime: string }[] = [],
 ): Promise<string> {
-  // Cadeia de contas OpenAI: quando a primeira fica sem crédito/limite, passa à
-  // seguinte; se todas falharem por faturação, o motor alternativo assume.
-  const keys = [process.env.OPENAI_API_KEY, process.env.OPENAI_API_KEY_FALLBACK].filter(
-    (k): k is string => Boolean(k),
-  );
-  if (keys.length === 0) {
-    throw new Error("OPENAI_API_KEY não configurada. Adiciona a chave nos secrets do backend.");
-  }
+  // Tudo via Lovable AI: GPT Image primeiro; se recusar/falhar, Gemini Image.
+  const key = process.env.LOVABLE_API_KEY;
+  if (!key) throw new Error("Serviço de IA indisponível de momento.");
 
-  let lastBilling = false;
-  let lastError = "";
-  let lastStatus = 0;
-
-  for (const key of keys) {
-    const res = await callOpenAiImage(key, prompt, size, refs);
-
-    if (res.ok) {
-      const json = (await res.json()) as { data?: { b64_json?: string }[] };
-      const b64 = json.data?.[0]?.b64_json;
-      if (!b64) throw new Error("Resposta inesperada da OpenAI.");
-      return b64;
-    }
-
-    const text = await res.text().catch(() => "");
-    if (isModerationError(res.status, text)) {
-      // Moda/biquíni/fitness: a OpenAI bloqueia, o Gemini gera.
-      return callGeminiImageModel(prompt, refs);
-    }
-
-    lastStatus = res.status;
-    lastError = text;
-    lastBilling = isBillingError(res.status, text) || res.status === 401;
-    if (!lastBilling) break; // erro real do pedido: não vale tentar outra conta
-  }
-
-  if (lastBilling) {
-    // Todas as contas OpenAI sem crédito: motor alternativo (Lovable AI).
+  const res = await callOpenAiImage(key, prompt, size, refs);
+  if (res.ok) {
+    const json = (await res.json()) as { data?: { b64_json?: string }[] };
+    const b64 = json.data?.[0]?.b64_json;
+    if (b64) return b64;
     return callGeminiImageModel(prompt, refs);
   }
-  if (lastStatus === 429) {
-    throw new Error("OpenAI recusou o pedido (rate limit). Tenta novamente daqui a pouco.");
-  }
-  throw new Error(`OpenAI ${lastStatus}: ${lastError.slice(0, 240)}`);
+  const text = await res.text().catch(() => "");
+  if (res.status === 402) throw new Error("Créditos de IA esgotados de momento. Tenta mais tarde.");
+  if (res.status === 429) throw new Error("Muitos pedidos ao mesmo tempo. Tenta daqui a pouco.");
+  console.error("[studio] image gen failed", res.status, text.slice(0, 300));
+  // Moderação ou outra falha: motor alternativo.
+  return callGeminiImageModel(prompt, refs);
 }
 
 
