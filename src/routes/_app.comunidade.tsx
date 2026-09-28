@@ -24,6 +24,7 @@ import {
   SmilePlus,
   Pencil,
   Paperclip,
+  FileText,
   Check,
   Pin,
   PinOff,
@@ -1000,7 +1001,14 @@ function Composer({
           />
           {imageUrl && (
             <div className="relative mt-2 flex justify-center overflow-hidden rounded-xl border border-border bg-surface-2">
-              <img loading="lazy" decoding="async" src={imageUrl} alt="Pré-visualização" className="max-h-72 w-auto max-w-full object-contain sm:max-w-[520px]" />
+              {isPdfUrl(imageUrl) ? (
+                <div className="flex w-full items-center gap-3 px-4 py-3">
+                  <FileText className="h-5 w-5 shrink-0 text-primary" />
+                  <span className="truncate text-sm text-foreground">Documento PDF anexado</span>
+                </div>
+              ) : (
+                <img loading="lazy" decoding="async" src={imageUrl} alt="Pré-visualização" className="max-h-72 w-auto max-w-full object-contain sm:max-w-[520px]" />
+              )}
               <button
                 onClick={() => setImageUrl("")}
                 className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-background/80 text-foreground backdrop-blur transition hover:bg-background"
@@ -1544,15 +1552,19 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
       )}
 
       {post.image_url && !editing && (
-        <div className="mt-3 flex justify-center overflow-hidden rounded-xl border border-border bg-surface-2">
-          <img
-            loading="lazy"
-            decoding="async"
-            src={post.image_url}
-            alt=""
-            className="max-h-[560px] w-auto max-w-full object-contain sm:max-w-[560px]"
-          />
-        </div>
+        isPdfUrl(post.image_url) ? (
+          <PdfAttachment url={post.image_url} />
+        ) : (
+          <div className="mt-3 flex justify-center overflow-hidden rounded-xl border border-border bg-surface-2">
+            <img
+              loading="lazy"
+              decoding="async"
+              src={post.image_url}
+              alt=""
+              className="max-h-[560px] w-auto max-w-full object-contain sm:max-w-[560px]"
+            />
+          </div>
+        )
       )}
 
       <div className="mt-4 flex items-center gap-2 border-t border-border pt-3">
