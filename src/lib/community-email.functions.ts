@@ -25,6 +25,19 @@ export const notifyCommunityPostByEmail = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!post || post.author_id !== context.userId) throw new Error("Forbidden");
 
+    // Só anuncia depois de a moderação aprovar com veredicto claro.
+    const { data: verdict } = await context.supabase
+      .from("moderation_actions" as never)
+      .select("action,category")
+      .eq("target_id", data.postId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const v = verdict as { action?: string; category?: string } | null;
+    if (!v || v.action !== "allow" || v.category === "erro") {
+      return { sent: 0, skipped: 0, reason: "not_moderated" };
+    }
+
     const { sendCommunityPostEmails } = await import("./community-email.server");
     return await sendCommunityPostEmails(data.postId);
   });

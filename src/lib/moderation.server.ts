@@ -87,6 +87,9 @@ function parseVerdict(raw: string): ModerationVerdict {
 }
 
 
+const MONEY_COMPLAINT =
+  /(cobran[çc]a|cobrad[oa]|cobraram|retirad[oa] o valor|tiraram|descontad[oa]|reembols|devolu[çc][ãa]o|devolver (o )?(meu )?dinheiro|chargeback|fatura|factura|iban|mensalidade|cancelei|quero cancelar|j[áa] tinha cancelado|burla|golpe|roubo)/i;
+
 /** Classifica texto (e opcionalmente uma imagem) com o agente de moderação. */
 export async function classifyContent(args: {
   kind: ModerationKind;
@@ -111,17 +114,34 @@ export async function classifyContent(args: {
     content.push({ type: "image", image: new URL(args.imageUrl) });
   }
 
-  try {
-    const result = await generateText({
-      model: gateway("google/gemini-3.7-flash"),
-      system: RULES,
-      messages: [{ role: "user", content: content as never }],
-    });
-    return parseVerdict(result.text ?? "");
-  } catch (err) {
-    console.error("[moderation] classify failed", err);
-    return { ...base, action: "allow", category: "erro", reason: "Falha do agente de moderação." };
+  // Tenta dois modelos: uma falha pontual do primeiro não pode deixar passar nada.
+  for (const modelId of ["google/gemini-3.7-flash", "google/gemini-3.5-flash"]) {
+    try {
+      const result = await generateText({
+        model: gateway(modelId),
+        system: RULES,
+        messages: [{ role: "user", content: content as never }],
+      });
+      const raw = result.text ?? "";
+      if (!/\{[\s\S]*\}/.test(raw)) throw new Error("empty verdict");
+      return parseVerdict(raw);
+    } catch (err) {
+      console.error("[moderation] classify failed", modelId, err);
+    }
   }
+
+  // Rede de segurança sem IA: reclamações de dinheiro óbvias saem mesmo assim.
+  if (MONEY_COMPLAINT.test(text)) {
+    return {
+      action: "remove",
+      category: "dinheiro",
+      severity: "leve",
+      rule: "Reclamações de pagamentos vão para o suporte",
+      reason:
+        "Assuntos de pagamentos, cobranças ou cancelamentos são tratados pelo suporte, não na comunidade.",
+    };
+  }
+  return { ...base, action: "allow", category: "erro", reason: "Falha do agente de moderação." };
 }
 
 type TargetConfig = {
