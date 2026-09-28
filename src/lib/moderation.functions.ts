@@ -28,7 +28,9 @@ export const moderateContent = createServerFn({ method: "POST" })
     const { moderateTarget } = await import("./moderation.server");
     const result = await moderateTarget(data);
 
-    if (data.kind === "community_post" && !result.removed) {
+    // Sem veredicto claro (agente em falha) não há email: a verificação
+    // periódica volta a avaliar e só então anuncia.
+    if (data.kind === "community_post" && !result.removed && result.category !== "erro") {
       try {
         const { sendCommunityPostEmails } = await import("./community-email.server");
         await sendCommunityPostEmails(data.id);

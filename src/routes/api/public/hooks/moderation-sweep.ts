@@ -30,9 +30,14 @@ export const Route = createFileRoute("/api/public/hooks/moderation-sweep")({
 
           const { data: seen } = await (supabaseAdmin as any)
             .from("moderation_actions")
-            .select("target_id")
+            .select("target_id, category")
             .gte("created_at", since);
-          const done = new Set<string>((seen ?? []).map((r: { target_id: string }) => r.target_id));
+          // Avaliações que falharam ("erro") voltam a ser analisadas.
+          const done = new Set<string>(
+            (seen ?? [])
+              .filter((r: { category: string | null }) => r.category !== "erro")
+              .map((r: { target_id: string }) => r.target_id),
+          );
 
           let checked = 0;
           let removed = 0;
@@ -48,6 +53,15 @@ export const Route = createFileRoute("/api/public/hooks/moderation-sweep")({
               checked += 1;
               const res = await moderateTarget({ kind: src.kind, id: row.id });
               if (res.removed) removed += 1;
+              else if (src.kind === "community_post" && res.category !== "erro") {
+                // Anúncio adiado: só agora, com veredicto limpo (dedupe no email_log).
+                try {
+                  const { sendCommunityPostEmails } = await import("@/lib/community-email.server");
+                  await sendCommunityPostEmails(row.id);
+                } catch (err) {
+                  console.error("[moderation-sweep] announce failed", err);
+                }
+              }
             }
           }
 
