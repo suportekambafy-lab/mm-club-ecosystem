@@ -1071,6 +1071,28 @@ function Composer({
   );
 }
 
+/** Deteta anexos PDF (o URL assinado traz query string depois da extensão). */
+function isPdfUrl(url: string) {
+  return /\.pdf(\?|$)/i.test(url);
+}
+
+function PdfAttachment({ url }: { url: string }) {
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      className="mt-3 flex items-center gap-3 rounded-xl border border-border bg-surface-2 px-4 py-3 transition hover:border-primary/40"
+    >
+      <FileText className="h-5 w-5 shrink-0 text-primary" />
+      <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+        Documento PDF
+      </span>
+      <span className="shrink-0 text-xs text-muted-foreground">Abrir</span>
+    </a>
+  );
+}
+
 /* ---------------- Reaction bar ---------------- */
 function ReactionBar({
   target,
