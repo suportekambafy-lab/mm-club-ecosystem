@@ -854,13 +854,14 @@ function Composer({
 
 
   const handleFile = async (file: File) => {
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Ficheiro demasiado grande (máx. 10 MB).");
+    const maxMb = file.type === "application/pdf" ? 25 : 10;
+    if (file.size > maxMb * 1024 * 1024) {
+      toast.error(`Ficheiro demasiado grande (máx. ${maxMb} MB).`);
       return;
     }
     setUploading(true);
     try {
-      assertUploadAllowed(file, "media");
+      assertUploadAllowed(file, file.type === "application/pdf" ? "document" : "media");
       const ext = file.name.split(".").pop() || "bin";
       const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const { error: upErr } = await supabase.storage
