@@ -29,6 +29,8 @@ import {
   Pin,
   PinOff,
   Eye,
+  Download,
+  ExternalLink,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -1086,18 +1088,36 @@ function isPdfUrl(url: string) {
 
 function PdfAttachment({ url }: { url: string }) {
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noreferrer"
-      className="mt-3 flex items-center gap-3 rounded-xl border border-border bg-surface-2 px-4 py-3 transition hover:border-primary/40"
-    >
-      <FileText className="h-5 w-5 shrink-0 text-primary" />
-      <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-        Documento PDF
-      </span>
-      <span className="shrink-0 text-xs text-muted-foreground">Abrir</span>
-    </a>
+    <div className="mt-3 overflow-hidden rounded-xl border border-border bg-surface-2">
+      <iframe
+        src={`${url}#toolbar=0&navpanes=0`}
+        title="Pré-visualização do documento PDF"
+        className="h-[420px] w-full bg-background sm:h-[560px]"
+      />
+      <div className="flex flex-wrap items-center gap-2 border-t border-border px-3 py-3">
+        <FileText className="h-5 w-5 shrink-0 text-primary" />
+        <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+          Documento PDF
+        </span>
+        <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground transition hover:border-primary/40"
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+          Abrir
+        </a>
+        <a
+          href={url}
+          download
+          className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition hover:bg-gold-soft"
+        >
+          <Download className="h-3.5 w-3.5" />
+          Descarregar
+        </a>
+      </div>
+    </div>
   );
 }
 
