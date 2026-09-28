@@ -24,6 +24,7 @@ import {
   SmilePlus,
   Pencil,
   Paperclip,
+  FileText,
   Check,
   Pin,
   PinOff,
@@ -854,13 +855,14 @@ function Composer({
 
 
   const handleFile = async (file: File) => {
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Ficheiro demasiado grande (máx. 10 MB).");
+    const maxMb = file.type === "application/pdf" ? 25 : 10;
+    if (file.size > maxMb * 1024 * 1024) {
+      toast.error(`Ficheiro demasiado grande (máx. ${maxMb} MB).`);
       return;
     }
     setUploading(true);
     try {
-      assertUploadAllowed(file, "media");
+      assertUploadAllowed(file, file.type === "application/pdf" ? "document" : "media");
       const ext = file.name.split(".").pop() || "bin";
       const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const { error: upErr } = await supabase.storage
@@ -967,7 +969,7 @@ function Composer({
         <input
           ref={fileRef}
           type="file"
-          accept="image/*"
+          accept="image/*,video/*,application/pdf"
           className="hidden"
           onChange={(e) => {
             const f = e.target.files?.[0];
@@ -999,7 +1001,14 @@ function Composer({
           />
           {imageUrl && (
             <div className="relative mt-2 flex justify-center overflow-hidden rounded-xl border border-border bg-surface-2">
-              <img loading="lazy" decoding="async" src={imageUrl} alt="Pré-visualização" className="max-h-72 w-auto max-w-full object-contain sm:max-w-[520px]" />
+              {isPdfUrl(imageUrl) ? (
+                <div className="flex w-full items-center gap-3 px-4 py-3">
+                  <FileText className="h-5 w-5 shrink-0 text-primary" />
+                  <span className="truncate text-sm text-foreground">Documento PDF anexado</span>
+                </div>
+              ) : (
+                <img loading="lazy" decoding="async" src={imageUrl} alt="Pré-visualização" className="max-h-72 w-auto max-w-full object-contain sm:max-w-[520px]" />
+              )}
               <button
                 onClick={() => setImageUrl("")}
                 className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-background/80 text-foreground backdrop-blur transition hover:bg-background"
@@ -1018,7 +1027,7 @@ function Composer({
       <input
         ref={fileRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*,application/pdf"
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];
@@ -1067,6 +1076,28 @@ function Composer({
         </button>
       </div>
     </div>
+  );
+}
+
+/** Deteta anexos PDF (o URL assinado traz query string depois da extensão). */
+function isPdfUrl(url: string) {
+  return /\.pdf(\?|$)/i.test(url);
+}
+
+function PdfAttachment({ url }: { url: string }) {
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      className="mt-3 flex items-center gap-3 rounded-xl border border-border bg-surface-2 px-4 py-3 transition hover:border-primary/40"
+    >
+      <FileText className="h-5 w-5 shrink-0 text-primary" />
+      <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+        Documento PDF
+      </span>
+      <span className="shrink-0 text-xs text-muted-foreground">Abrir</span>
+    </a>
   );
 }
 
@@ -1521,15 +1552,19 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
       )}
 
       {post.image_url && !editing && (
-        <div className="mt-3 flex justify-center overflow-hidden rounded-xl border border-border bg-surface-2">
-          <img
-            loading="lazy"
-            decoding="async"
-            src={post.image_url}
-            alt=""
-            className="max-h-[560px] w-auto max-w-full object-contain sm:max-w-[560px]"
-          />
-        </div>
+        isPdfUrl(post.image_url) ? (
+          <PdfAttachment url={post.image_url} />
+        ) : (
+          <div className="mt-3 flex justify-center overflow-hidden rounded-xl border border-border bg-surface-2">
+            <img
+              loading="lazy"
+              decoding="async"
+              src={post.image_url}
+              alt=""
+              className="max-h-[560px] w-auto max-w-full object-contain sm:max-w-[560px]"
+            />
+          </div>
+        )
       )}
 
       <div className="mt-4 flex items-center gap-2 border-t border-border pt-3">
