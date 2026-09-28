@@ -968,7 +968,7 @@ function Composer({
         <input
           ref={fileRef}
           type="file"
-          accept="image/*"
+          accept="image/*,video/*,application/pdf"
           className="hidden"
           onChange={(e) => {
             const f = e.target.files?.[0];
@@ -1019,7 +1019,7 @@ function Composer({
       <input
         ref={fileRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*,application/pdf"
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];
