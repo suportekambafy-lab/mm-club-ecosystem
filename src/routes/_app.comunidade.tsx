@@ -1009,7 +1009,11 @@ function Composer({
                   <span className="truncate text-sm text-foreground">Documento PDF anexado</span>
                 </div>
               ) : (
-                <img loading="lazy" decoding="async" src={imageUrl} alt="Pré-visualização" className="max-h-72 w-auto max-w-full object-contain sm:max-w-[520px]" />
+                isVideoUrl(imageUrl) ? (
+                  <video src={imageUrl} controls playsInline preload="metadata" className="max-h-72 w-auto max-w-full sm:max-w-[520px]" />
+                ) : (
+                  <img loading="lazy" decoding="async" src={imageUrl} alt="Pré-visualização" className="max-h-72 w-auto max-w-full object-contain sm:max-w-[520px]" />
+                )
               )}
               <button
                 onClick={() => setImageUrl("")}
@@ -1082,6 +1086,10 @@ function Composer({
 }
 
 /** Deteta anexos PDF (o URL assinado traz query string depois da extensão). */
+function isVideoUrl(url: string) {
+  return /\.(mp4|mov|webm|m4v)(\?|$)/i.test(url);
+}
+
 function isPdfUrl(url: string) {
   return /\.pdf(\?|$)/i.test(url);
 }
@@ -1569,13 +1577,23 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
           <PdfAttachment url={post.image_url} />
         ) : (
           <div className="mt-3 flex justify-center overflow-hidden rounded-xl border border-border bg-surface-2">
-            <img
-              loading="lazy"
-              decoding="async"
-              src={post.image_url}
-              alt=""
-              className="max-h-[560px] w-auto max-w-full object-contain sm:max-w-[560px]"
-            />
+            {isVideoUrl(post.image_url) ? (
+              <video
+                src={post.image_url}
+                controls
+                playsInline
+                preload="metadata"
+                className="max-h-[560px] w-auto max-w-full sm:max-w-[560px]"
+              />
+            ) : (
+              <img
+                loading="lazy"
+                decoding="async"
+                src={post.image_url}
+                alt=""
+                className="max-h-[560px] w-auto max-w-full object-contain sm:max-w-[560px]"
+              />
+            )}
           </div>
         )
       )}
