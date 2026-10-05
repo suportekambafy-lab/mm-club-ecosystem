@@ -74,21 +74,32 @@ export const Route = createFileRoute("/_app")({
 
     const userId = data.session.user.id;
 
-    // Admins bypass the access gate
-    const { data: isAdmin } = await supabase.rpc("has_role", {
-      _user_id: userId,
-      _role: "admin",
-    });
+    // Sessão expirada em silêncio: as funções correm como anónimo e falham.
+    // Renovamos a sessão e repetimos antes de decidir o acesso.
+    let roleRes = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
+    if (roleRes.error) {
+      await supabase.auth.refreshSession().catch(() => null);
+      roleRes = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
+    }
+    const isAdmin = roleRes.data;
 
     let hasAccess = true;
 
     if (!isAdmin) {
       // Access is decided by Entitlements, never by a payment status.
-      const { data: access } = await supabase.rpc("has_feature", {
+      let accessRes = await supabase.rpc("has_feature", {
         _user_id: userId,
         _feature: "academy.access",
       });
-      hasAccess = Boolean(access);
+      if (accessRes.error) {
+        await supabase.auth.refreshSession().catch(() => null);
+        accessRes = await supabase.rpc("has_feature", {
+          _user_id: userId,
+          _feature: "academy.access",
+        });
+      }
+      // Erro persistente ≠ sem acesso: não mandamos um membro para o checkout.
+      hasAccess = accessRes.error ? true : Boolean(accessRes.data);
 
       if (!hasAccess) {
         // Quem já foi membro entra sempre — só com o conteúdo trancado.
@@ -265,11 +276,13 @@ function AppLayout() {
       if (!code || cancelled) return;
       const { claimPartnerReferral } = await import("@/lib/partners.functions");
       try {
-        await claimPartnerReferral({ data: { code, source: "link" } });
+        const res = await claimPartnerReferral({ data: { code, source: "link" } });
+        // Só apaga o código quando ficou ligado; senão tenta na próxima visita
+        // (ex.: parceiro ainda à espera de aprovação).
+        if ((res as { ok?: boolean } | null)?.ok) ref.clearPartnerRef();
       } catch {
         /* tenta de novo numa próxima visita */
       }
-      ref.clearPartnerRef();
     })();
     return () => {
       cancelled = true;

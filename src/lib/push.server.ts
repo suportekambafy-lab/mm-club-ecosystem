@@ -1,5 +1,5 @@
 import { createECDH, createHash } from "node:crypto";
-import * as webPushNamespace from "web-push";
+import { sendWebPush } from "@/lib/webpush-edge.server";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
@@ -44,18 +44,14 @@ type PushSubscriptionRow = {
   failure_count: number;
 };
 
-const webPush =
-  (webPushNamespace as unknown as { default?: typeof webPushNamespace }).default ??
-  webPushNamespace;
 
 let cachedVapid: VapidKeys | undefined;
 
-function toBase64Url(bytes: Buffer): string {
-  return bytes
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/g, "");
+function toBase64Url(input: Uint8Array): string {
+  const bytes = new Uint8Array(input);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 1) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
 function getVapidKeys(): VapidKeys {
@@ -84,9 +80,7 @@ function getVapidKeys(): VapidKeys {
 }
 
 function configureWebPush() {
-  const keys = getVapidKeys();
-  webPush.setVapidDetails("mailto:geral@mmclub.pt", keys.publicKey, keys.privateKey);
-  return keys;
+  return getVapidKeys();
 }
 
 export function getWebPushPublicKeyValue(): string {
@@ -218,7 +212,7 @@ async function markSubscriptionFailure(row: PushSubscriptionRow, statusCode?: nu
 export async function deliverPushNotification(
   notificationId: string,
 ): Promise<{ delivered: number; failed: number; skipped: boolean }> {
-  configureWebPush();
+  const vapid = configureWebPush();
 
   const { data: notification } = await supabaseAdmin
     .from("notifications")
@@ -270,14 +264,17 @@ export async function deliverPushNotification(
   let failed = 0;
   for (const sub of subscriptions) {
     try {
-      await webPush.sendNotification(
-        {
-          endpoint: sub.endpoint,
-          keys: { p256dh: sub.p256dh, auth: sub.auth },
-        },
+      await sendWebPush({
+        endpoint: sub.endpoint,
+        p256dh: sub.p256dh,
+        auth: sub.auth,
         payload,
-        { TTL: 86_400, urgency: "normal" },
-      );
+        ttl: 86_400,
+        urgency: "normal",
+        subject: "mailto:geral@mmclub.pt",
+        publicKey: vapid.publicKey,
+        privateKey: vapid.privateKey,
+      });
       delivered += 1;
       await supabaseAdmin
         .from("push_subscriptions")

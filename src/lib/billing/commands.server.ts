@@ -583,21 +583,34 @@ async function activateSubscription(args: {
     const unique = `${args.description} · ${new Date()
       .toISOString()
       .slice(0, 10)} ${args.payment.id.slice(-8)}`;
-    try {
-      const gwSub = await gw.createSubscription({
-        customerId: args.payment.customerId,
-        mandateId: args.payment.mandateId,
+    const create = (description: string) =>
+      gw.createSubscription({
+        customerId: args.payment.customerId!,
+        mandateId: args.payment.mandateId!,
         amountCents: args.amountCents,
         currency: args.currency,
         interval: args.gatewayIntervalStr,
-        description: unique,
+        description,
         webhookUrl: `${(args.payment.metadata.origin as string) ?? ""}/api/public/payments/gateway-webhook`,
         startDate: end.toISOString().slice(0, 10),
         metadata: { userId: args.userId, priceId: args.priceId },
       });
-      gatewaySubscriptionId = gwSub.id;
+    try {
+      gatewaySubscriptionId = (await create(unique)).id;
     } catch (err) {
-      console.error("[billing] createSubscription failed", err);
+      // Mesmo pagamento processado duas vezes (webhook + página de retorno):
+      // a Mollie recusa a descrição repetida. Tentamos com sufixo único.
+      if (/same description/i.test(String(err))) {
+        try {
+          gatewaySubscriptionId = (
+            await create(`${unique} ${Date.now().toString(36)}`)
+          ).id;
+        } catch (err2) {
+          console.error("[billing] createSubscription retry failed", err2);
+        }
+      } else {
+        console.error("[billing] createSubscription failed", err);
+      }
     }
   }
 

@@ -2,7 +2,7 @@
 // Usado nos envios em massa para trocar o email pela versão "regulariza pagamento".
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const LAPSED_STATUSES = ["suspended", "expired", "cancelled", "past_due"] as const;
+const LAPSED_STATUSES = ["suspended", "past_due"] as const;
 
 /**
  * IDs de membros que devem receber a versão bloqueada dos emails:
