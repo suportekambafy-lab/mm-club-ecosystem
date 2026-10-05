@@ -3,7 +3,7 @@
 
 const enc = new TextEncoder();
 
-function b64urlToBytes(s: string): Uint8Array {
+function b64urlToBytes(s: string): Uint8Array<ArrayBuffer> {
   const pad = "=".repeat((4 - (s.length % 4)) % 4);
   const b64 = (s + pad).replace(/-/g, "+").replace(/_/g, "/");
   const bin = atob(b64);
@@ -12,13 +12,13 @@ function b64urlToBytes(s: string): Uint8Array {
   return out;
 }
 
-function bytesToB64url(bytes: Uint8Array): string {
+function bytesToB64url(bytes: Uint8Array<ArrayBuffer>): string {
   let bin = "";
   for (let i = 0; i < bytes.length; i += 1) bin += String.fromCharCode(bytes[i]);
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-function concat(...parts: Uint8Array[]): Uint8Array {
+function concat(...parts: Uint8Array<ArrayBuffer>[]): Uint8Array<ArrayBuffer> {
   const len = parts.reduce((n, p) => n + p.length, 0);
   const out = new Uint8Array(len);
   let o = 0;
@@ -29,7 +29,7 @@ function concat(...parts: Uint8Array[]): Uint8Array {
   return out;
 }
 
-async function hkdf(salt: Uint8Array, ikm: Uint8Array, info: Uint8Array, bits: number) {
+async function hkdf(salt: Uint8Array<ArrayBuffer>, ikm: Uint8Array<ArrayBuffer>, info: Uint8Array<ArrayBuffer>, bits: number) {
   const key = await crypto.subtle.importKey("raw", ikm, "HKDF", false, ["deriveBits"]);
   return new Uint8Array(
     await crypto.subtle.deriveBits({ name: "HKDF", hash: "SHA-256", salt, info }, key, bits),
