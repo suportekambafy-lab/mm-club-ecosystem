@@ -57,20 +57,26 @@ export const Route = createFileRoute("/api/public/hooks/billing-tick")({
             const { supabaseAdmin } = await import(
               "@/integrations/supabase/client.server"
             );
+            // Em lotes pequenos (40 membros por tick de hora) para nunca
+            // atrasar a fila de cobranças nem exceder o tempo do pedido.
             const { data: last } = await supabaseAdmin
               .from("ops_heartbeats")
-              .select("last_run_at")
+              .select("last_run_at, detail")
               .eq("key", "card-health")
               .limit(1)
               .maybeSingle();
             const lastAt = last?.last_run_at
               ? new Date(last.last_run_at as string).getTime()
               : 0;
-            if (Date.now() - lastAt > 20 * 3_600_000) {
+            if (Date.now() - lastAt > 3_600_000) {
+              const prevOffset = Number(
+                (last?.detail as { nextOffset?: number } | null)?.nextOffset ?? 0,
+              );
+              const BATCH = 40;
               const { sweepCardOnFile } = await import(
                 "@/lib/billing/card-health.server"
               );
-              const card = await sweepCardOnFile(500);
+              const card = await sweepCardOnFile(BATCH, prevOffset);
               await recordHeartbeat({
                 key: "card-health",
                 ok: true,
@@ -79,6 +85,7 @@ export const Route = createFileRoute("/api/public/hooks/billing-tick")({
                   checked: card.checked,
                   withoutCard: card.withoutCard,
                   nudged: card.nudged,
+                  nextOffset: card.checked < BATCH ? 0 : prevOffset + BATCH,
                 },
               });
             }

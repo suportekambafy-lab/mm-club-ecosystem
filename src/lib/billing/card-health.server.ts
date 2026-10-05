@@ -58,7 +58,7 @@ export async function ensureCardOnFile(userId: string): Promise<CardHealth> {
     .from("billing_payment_methods")
     .select("id")
     .eq("user_id", userId)
-    .eq("status", "active")
+    .in("status", ["active", "pending"])
     .limit(1);
 
   const hasCard = (methods ?? []).length > 0;
@@ -82,7 +82,7 @@ export async function ensureCardOnFile(userId: string): Promise<CardHealth> {
  * Chamado pelo tick de faturação — é aqui que se apanha um cartão revogado
  * antes de a renovação falhar.
  */
-export async function sweepCardOnFile(limit = 500): Promise<{
+export async function sweepCardOnFile(limit = 500, offset = 0): Promise<{
   checked: number;
   withoutCard: number;
   nudged: number;
@@ -92,7 +92,8 @@ export async function sweepCardOnFile(limit = 500): Promise<{
     .from("billing_subscriptions")
     .select("user_id, status")
     .in("status", [...BILLABLE_STATUSES])
-    .limit(limit);
+    .order("user_id")
+    .range(offset, offset + limit - 1);
 
   const userIds = Array.from(new Set((subs ?? []).map((s) => s.user_id as string)));
   let withoutCard = 0;

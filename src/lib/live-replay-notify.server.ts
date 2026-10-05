@@ -36,8 +36,6 @@ export async function notifyReplayReady(liveId: string): Promise<{ sent: boolean
         "grace_period",
         "past_due",
         "suspended",
-        "expired",
-        "cancelled",
       ]);
     const allowed = new Set((subs ?? []).map((s) => s.user_id as string));
     if (allowed.size === 0) return { sent: true };

@@ -34,8 +34,6 @@ export async function notifyLiveRescheduled(args: {
       "grace_period",
       "past_due",
       "suspended",
-      "expired",
-      "cancelled",
     ]);
   const allowed = new Set((subs ?? []).map((s) => s.user_id as string));
   if (allowed.size === 0) return { sent: 0, skipped: 0, failed: 0 };

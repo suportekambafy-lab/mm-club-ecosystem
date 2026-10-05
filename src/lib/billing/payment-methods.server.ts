@@ -44,6 +44,7 @@ export async function syncPaymentMethods(userId: string): Promise<void> {
   );
 
   let first = true;
+  let defaultTaken = hasDefault;
   for (const m of mandates) {
     // A mandate still settling is kept as "pending": it exists, so we never
     // treat the member as "no card on file", but it is not charged yet.
@@ -57,8 +58,10 @@ export async function syncPaymentMethods(userId: string): Promise<void> {
           brand: m.brand,
           last4: m.last4,
           status,
+          ...(!defaultTaken && status === "active" ? { is_default: true } : {}),
         })
         .eq("id", existing.id);
+      if (status === "active") defaultTaken = true;
     } else {
       // Upsert (not insert): concurrent syncs would otherwise duplicate the
       // same mandate. The unique index on (user_id, gateway_mandate_id) makes
@@ -72,11 +75,12 @@ export async function syncPaymentMethods(userId: string): Promise<void> {
           method: m.method,
           brand: m.brand,
           last4: m.last4,
-          is_default: !hasDefault && first && status === "active",
+          is_default: !defaultTaken && status === "active",
           status,
         },
         { onConflict: "user_id,gateway_mandate_id" },
       );
+      if (status === "active") defaultTaken = true;
     }
 
     first = false;
