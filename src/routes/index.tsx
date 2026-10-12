@@ -37,6 +37,10 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "MM Club — Ecossistema privado da Marca Milionária" },
+      { property: "og:title", content: "MM Club — Ecossistema privado da Marca Milionária" },
+      { property: "og:description", content: "Academia, MM Inteligence, comunidade, lives e ferramentas para empreendedores portugueses." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       {
         name: "description",
         content:
