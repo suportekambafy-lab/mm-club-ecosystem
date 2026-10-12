@@ -66,3 +66,12 @@ export function participantInitials(name: string): string {
     .map((w) => w[0]?.toUpperCase() ?? "")
     .join("");
 }
+
+/** Fit the entire shared display without cropping or stretching its text. */
+export function screenContainRect(sourceWidth: number, sourceHeight: number, width: number, height: number) {
+  if (sourceWidth <= 0 || sourceHeight <= 0 || width <= 0 || height <= 0) return null;
+  const scale = Math.min(width / sourceWidth, height / sourceHeight);
+  const drawWidth = sourceWidth * scale;
+  const drawHeight = sourceHeight * scale;
+  return { x: (width - drawWidth) / 2, y: (height - drawHeight) / 2, width: drawWidth, height: drawHeight };
+}

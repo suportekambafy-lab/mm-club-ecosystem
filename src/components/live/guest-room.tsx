@@ -21,7 +21,7 @@ import {
 import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, Hand, Volume2, MessagesSquare, X, MonitorUp, MonitorOff } from "lucide-react";
 import { toast } from "sonner";
 import { GuestChat } from "@/components/live/guest-chat";
-import { HQ_ROOM_OPTIONS } from "@/lib/livekit-quality";
+import { HQ_ROOM_OPTIONS, HQ_SCREEN_SHARE, HQ_SCREEN_PUBLISH } from "@/lib/livekit-quality";
 import { cameraErrorMessage } from "@/lib/live-media";
 import { cn } from "@/lib/utils";
 import { guestSync, guestLeave } from "@/lib/live-guest.functions";
@@ -422,12 +422,12 @@ export function GuestRoom({
     }
     const attempt = async () => {
       try {
-        await lp.setScreenShareEnabled(true, { audio: true });
+        await lp.setScreenShareEnabled(true, HQ_SCREEN_SHARE, HQ_SCREEN_PUBLISH);
         return null;
       } catch (err) {
         // Alguns browsers falham quando pedimos áudio do ecrã: tenta só vídeo.
         try {
-          await lp.setScreenShareEnabled(true, { audio: false });
+          await lp.setScreenShareEnabled(true, { ...HQ_SCREEN_SHARE, audio: false }, HQ_SCREEN_PUBLISH);
           return null;
         } catch {
           return err;

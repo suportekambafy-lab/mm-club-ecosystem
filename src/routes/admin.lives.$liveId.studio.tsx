@@ -17,6 +17,7 @@ import {
 import { SectionHeading } from "@/components/mm/section-heading";
 import { LiveChat } from "@/components/mm/live-chat";
 import { supabase } from "@/integrations/supabase/client";
+import { screenContainRect } from "@/lib/live-media";
 import {
   adminAttachReplayRecording,
   adminCreateReplayUpload,
@@ -26,6 +27,14 @@ import {
 
 export const Route = createFileRoute("/admin/lives/$liveId/studio")({
   component: LiveStudio,
+  head: () => ({ meta: [
+    { title: "Estúdio de transmissão — MM Club" },
+    { name: "description", content: "Estúdio de lives do MM Club com câmara, partilha de ecrã e gravação." },
+    { property: "og:title", content: "Estúdio de transmissão — MM Club" },
+    { property: "og:description", content: "Estúdio de lives do MM Club com câmara, partilha de ecrã e gravação." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
 });
 
 type Status = "idle" | "requesting-media" | "ready" | "connecting" | "live" | "ending" | "ended" | "error";
@@ -434,7 +443,7 @@ function LiveStudio() {
         clearSourceVideo(screenSourceVideoRef);
         throw new Error("Para a live não travar, partilha o ecrã inteiro ou uma janela. Não uses partilha de aba do browser.");
       }
-      // Hint the encoder to keep framerate over resolution.
+      // Screen content must retain readable text when bandwidth drops.
       applyVideoTrackHint(screenTrack);
 
       // Send a canvas-composited track (screen + camera PiP) so the presenter
@@ -484,6 +493,8 @@ function LiveStudio() {
     }
     if (pipRef.current) pipRef.current.srcObject = null;
     sharingRef.current = false;
+    if (camTrack) applyVideoTrackHint(camTrack);
+    if (videoSenderRef.current) applyVideoSenderParams(videoSenderRef.current);
     setSharing(false);
   }
 
@@ -557,8 +568,8 @@ function LiveStudio() {
 
     try {
       const canvas = document.createElement("canvas");
-      canvas.width = 1280;
-      canvas.height = 720;
+      canvas.width = 1920;
+      canvas.height = 1080;
       recordingCanvasRef.current = canvas;
       const canvasStream = canvas.captureStream(0);
       recordingCanvasTrackRef.current = canvasStream.getVideoTracks()[0] ?? null;
@@ -577,7 +588,7 @@ function LiveStudio() {
       ]);
 
       recordedChunksRef.current = [];
-      const recorder = new MediaRecorder(mixedStream, { mimeType, videoBitsPerSecond: 4_500_000 });
+      const recorder = new MediaRecorder(mixedStream, { mimeType, videoBitsPerSecond: 7_000_000 });
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) recordedChunksRef.current.push(event.data);
       };
@@ -632,7 +643,9 @@ function LiveStudio() {
 
   function applyVideoTrackHint(track: MediaStreamTrack) {
     try {
-      const isScreen = screenStreamRef.current?.getVideoTracks()[0] === track;
+      const isScreen = Boolean(screenStreamRef.current) && (
+        screenStreamRef.current?.getVideoTracks()[0] === track || liveCompositeTrackRef.current === track
+      );
       (track as MediaStreamTrack & { contentHint?: string }).contentHint = isScreen ? "detail" : "motion";
     } catch {}
   }
@@ -640,7 +653,7 @@ function LiveStudio() {
   function applyVideoSenderParams(sender: RTCRtpSender) {
     try {
       const params = sender.getParameters();
-      params.degradationPreference = "maintain-framerate";
+      params.degradationPreference = screenStreamRef.current ? "maintain-resolution" : "maintain-framerate";
       void sender.setParameters(params).catch(() => {});
     } catch {}
   }
@@ -679,7 +692,8 @@ function LiveStudio() {
       ? screenSourceVideoRef.current ?? videoRef.current
       : cameraSourceVideoRef.current ?? videoRef.current;
     if (mainVideo && mainVideo.videoWidth > 0 && mainVideo.videoHeight > 0) {
-      drawCover(ctx, mainVideo, 0, 0, canvas.width, canvas.height);
+      if (sharingRef.current) drawScreen(ctx, mainVideo, canvas.width, canvas.height);
+      else drawCover(ctx, mainVideo, 0, 0, canvas.width, canvas.height);
     }
     const cameraVideo = cameraSourceVideoRef.current ?? pipRef.current;
     if (sharingRef.current && cameraVideo && cameraVideo.videoWidth > 0 && cameraVideo.videoHeight > 0) {
@@ -702,8 +716,8 @@ function LiveStudio() {
     if (!screenStreamRef.current) return null;
 
     const canvas = document.createElement("canvas");
-    canvas.width = 1280;
-    canvas.height = 720;
+    canvas.width = 1920;
+    canvas.height = 1080;
     if (typeof canvas.captureStream !== "function") return null;
 
     liveCompositeCanvasRef.current = canvas;
@@ -766,7 +780,7 @@ function LiveStudio() {
 
     const screenVideo = screenSourceVideoRef.current ?? videoRef.current;
     if (screenVideo && screenVideo.videoWidth > 0 && screenVideo.videoHeight > 0) {
-      drawCover(ctx, screenVideo, 0, 0, canvas.width, canvas.height);
+      drawScreen(ctx, screenVideo, canvas.width, canvas.height);
     }
 
     const cameraVideo = cameraSourceVideoRef.current ?? pipRef.current;
@@ -1123,6 +1137,12 @@ function LiveStudio() {
       </div>
     </div>
   );
+}
+
+function drawScreen(ctx: CanvasRenderingContext2D, source: HTMLVideoElement, width: number, height: number) {
+  const rect = screenContainRect(source.videoWidth, source.videoHeight, width, height);
+  if (!rect) return;
+  ctx.drawImage(source, rect.x, rect.y, rect.width, rect.height);
 }
 
 function drawCover(

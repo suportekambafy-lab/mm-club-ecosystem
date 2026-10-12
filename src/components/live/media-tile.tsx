@@ -119,7 +119,7 @@ function MediaTileBase({ participant, actions, className, preferScreen, showName
 
       {audioTrack && <audio ref={audioRef} autoPlay playsInline />}
 
-      {showName && (
+      {showName && !isScreen && (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/70 to-transparent p-2.5">
           <div className="flex min-w-0 items-center gap-1.5 rounded-md bg-black/40 px-2 py-1 text-xs font-medium text-white backdrop-blur-sm">
             <span className="truncate">{participant.displayName}</span>
