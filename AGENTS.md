@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep screen-share capture and publication settings separate from camera defaults in the shared live quality module, so text clarity survives camera codec and frame-rate changes.

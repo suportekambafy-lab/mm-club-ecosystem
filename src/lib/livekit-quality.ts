@@ -44,6 +44,18 @@ export const HQ_ROOM_OPTIONS: RoomOptions = {
 export const HQ_SCREEN_SHARE: ScreenShareCaptureOptions = {
   audio: true,
   selfBrowserSurface: "include",
-  resolution: ScreenSharePresets.h1080fps30.resolution,
+  // Preserve the display's native pixels (especially text on Retina/4K screens).
+  resolution: ScreenSharePresets.original.resolution,
   contentHint: "detail",
+};
+
+/** Separate from camera defaults: VP9/SVC forces LiveKit's screen contentHint
+ * to `motion`, which sacrifices text clarity. Publish one full-resolution VP8
+ * screen stream and let congestion reduce frame rate rather than resolution. */
+export const HQ_SCREEN_PUBLISH: TrackPublishDefaults = {
+  videoCodec: "vp8",
+  backupCodec: false,
+  simulcast: false,
+  screenShareEncoding: ScreenSharePresets.original.encoding,
+  degradationPreference: "maintain-resolution",
 };

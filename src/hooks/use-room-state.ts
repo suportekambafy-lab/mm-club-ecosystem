@@ -26,7 +26,7 @@ import {
   type ConnectionQuality as LKConnectionQuality,
   type ConnectionState,
 } from "livekit-client";
-import { HQ_ROOM_OPTIONS, HQ_SCREEN_SHARE } from "@/lib/livekit-quality";
+import { HQ_ROOM_OPTIONS, HQ_SCREEN_SHARE, HQ_SCREEN_PUBLISH } from "@/lib/livekit-quality";
 import { syncStudioProcessors } from "@/lib/studio-processors";
 import { subscribeStudio } from "@/lib/studio-filters";
 import { supabase } from "@/integrations/supabase/client";
@@ -708,7 +708,7 @@ export function useRoomState({
     const lp = roomRef.current?.localParticipant;
     if (!lp) return;
     try {
-      await lp.setScreenShareEnabled(true, HQ_SCREEN_SHARE);
+      await lp.setScreenShareEnabled(true, HQ_SCREEN_SHARE, HQ_SCREEN_PUBLISH);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       // NotAllowedError => user cancelled the OS picker; anything else is a real failure.
