@@ -114,8 +114,10 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
       const inDebt = ["past_due", "grace_period", "suspended", "expired"].includes(
         String(live.status),
       );
-      // Migração Mollie → Paddle: quem está em dívida paga já; quem já pagou o
-      // período atual só é cobrado no fim desse período.
+      // Migração Mollie → Paddle: TODOS verificam o cartão com 0 € no checkout.
+      // Quem já pagou o período atual só é cobrado no fim desse período
+      // (trial = dias já pagos). Quem está em dívida é cobrado automaticamente
+      // pelo Paddle ~1 dia depois de o cartão ser verificado (trial de 1 dia).
       const migrating =
         !inDebt && String(live.gateway ?? "") === "mollie" && getGateway().name !== "mollie";
       if (!inDebt && !migrating) {
@@ -125,6 +127,8 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
       }
       settlingSubscriptionId = live.id as string;
       if (migrating) prepaidDays = migrationPrepaidDays(live.current_period_end as string | null);
+      // Em dívida: verificação a 0 €, cobrança automática no dia seguinte.
+      if (inDebt) prepaidDays = 1;
     }
   }
 
