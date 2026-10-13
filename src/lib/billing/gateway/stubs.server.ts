@@ -25,5 +25,4 @@ function stub(name: string): PaymentGateway {
 }
 
 export const stripeGateway = stub("stripe");
-export const paddleGateway = stub("paddle");
 export const adyenGateway = stub("adyen");

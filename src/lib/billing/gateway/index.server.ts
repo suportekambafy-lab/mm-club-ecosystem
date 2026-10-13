@@ -1,5 +1,6 @@
 import { mollieGateway } from "./mollie.server";
-import { adyenGateway, paddleGateway, stripeGateway } from "./stubs.server";
+import { paddleGateway } from "./paddle.server";
+import { adyenGateway, stripeGateway } from "./stubs.server";
 import type { PaymentGateway } from "./types";
 
 const GATEWAYS: Record<string, PaymentGateway> = {
@@ -9,8 +10,11 @@ const GATEWAYS: Record<string, PaymentGateway> = {
   adyen: adyenGateway,
 };
 
-/** The gateway the engine transacts with today. Swappable without touching the domain. */
-export const DEFAULT_GATEWAY = "mollie";
+/**
+ * The gateway new checkouts use. Existing rows keep their own gateway name
+ * (e.g. old Mollie subscriptions) and are resolved with getGateway(row.gateway).
+ */
+export const DEFAULT_GATEWAY = "paddle";
 
 export function getGateway(name: string = DEFAULT_GATEWAY): PaymentGateway {
   const gw = GATEWAYS[name];
