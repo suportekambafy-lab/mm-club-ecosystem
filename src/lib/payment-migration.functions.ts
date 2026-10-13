@@ -121,3 +121,50 @@ export const sendPaymentMigrationEmails = createServerFn({ method: "POST" })
     }
     return { total: targets.length, sent, skipped, failed };
   });
+
+/** Admin: relatório de quem já passou o cartão para o Paddle e quem falta. */
+export const getPaymentMigrationReport = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await supabaseAdmin
+      .from("billing_subscriptions")
+      .select("user_id, gateway, status, current_period_end, updated_at, created_at")
+      .order("created_at", { ascending: false });
+    const latest = new Map<string, NonNullable<typeof rows>[number]>();
+    for (const r of rows ?? []) if (!latest.has(r.user_id as string)) latest.set(r.user_id as string, r);
+    const relevant = [...latest.values()].filter(
+      (s) => s.gateway === "paddle" || (s.gateway === "mollie" && OPEN_STATUSES.includes(String(s.status))),
+    );
+    const ids = relevant.map((s) => s.user_id as string);
+    const { data: profs } = ids.length
+      ? await supabaseAdmin.from("profiles").select("id, display_name").in("id", ids)
+      : { data: [] as { id: string; display_name: string | null }[] };
+    const names = new Map((profs ?? []).map((p) => [p.id, p.display_name]));
+    const now = Date.now();
+    const members = relevant.map((s) => {
+      const end = s.current_period_end as string | null;
+      const paddle = s.gateway === "paddle";
+      const overdue = !end || new Date(end).getTime() <= now || ["past_due", "grace_period"].includes(String(s.status));
+      return {
+        userId: s.user_id as string,
+        name: names.get(s.user_id as string) ?? "Membro",
+        state: paddle ? "updated" : overdue ? "pending_overdue" : "pending_paid",
+        status: String(s.status),
+        periodEnd: end,
+        updatedAt: s.updated_at as string | null,
+      };
+    });
+    const count = (k: string) => members.filter((m) => m.state === k).length;
+    return {
+      updated: count("updated"),
+      pendingPaid: count("pending_paid"),
+      pendingOverdue: count("pending_overdue"),
+      members,
+    };
+  });

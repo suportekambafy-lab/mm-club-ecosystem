@@ -11,7 +11,7 @@ import {
   STATUS_LABEL,
 } from "@/components/admin/finance-ui";
 import { getFinanceOverview } from "@/lib/admin-finance.functions";
-import { sendPaymentMigrationEmails } from "@/lib/payment-migration.functions";
+import { getPaymentMigrationReport, sendPaymentMigrationEmails } from "@/lib/payment-migration.functions";
 import type { FinanceRange } from "@/lib/admin/finance-types";
 import type { SubscriptionStatus } from "@/lib/billing/types";
 
@@ -94,6 +94,7 @@ function OverviewPage() {
   return (
     <div className="space-y-6">
       <MigrationEmailCard />
+      <MigrationReport />
       <RangeFilter value={range} onChange={setRange} />
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -271,5 +272,44 @@ function MigrationEmailCard() {
         {busy ? "A enviar…" : "Enviar comunicado"}
       </button>
     </section>
+  );
+}
+
+const STATE_LABEL: Record<string, string> = {
+  updated: "Já atualizou (Paddle)",
+  pending_paid: "Falta · já pagou, cobra no fim do período",
+  pending_overdue: "Falta · cobra ao atualizar",
+};
+
+function MigrationReport() {
+  const fetchReport = useServerFn(getPaymentMigrationReport);
+  const [filter, setFilter] = useState<string>("all");
+  const q = useQuery({ queryKey: ["payment-migration-report"], queryFn: () => fetchReport(), refetchInterval: 60_000 });
+  const r = q.data;
+  const list = (r?.members ?? []).filter((m) => filter === "all" || m.state === filter);
+  return (
+    <Panel title="Migração de cartões · relatório">
+      {!r ? (
+        <div className="text-sm text-muted-foreground">{q.isError ? "Não foi possível carregar." : "A carregar…"}</div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap gap-2 text-sm">
+            {[["all", `Todos (${r.members.length})`], ["updated", `Atualizaram (${r.updated})`], ["pending_paid", `Faltam · em dia (${r.pendingPaid})`], ["pending_overdue", `Faltam · em atraso (${r.pendingOverdue})`]].map(([k, l]) => (
+              <button key={k} type="button" onClick={() => setFilter(k)} className={`rounded-full border px-3 py-1 ${filter === k ? "border-primary bg-primary/10" : "border-border"}`}>{l}</button>
+            ))}
+          </div>
+          <div className="max-h-96 overflow-auto text-sm">
+            {list.map((m) => (
+              <div key={m.userId} className="flex justify-between gap-3 border-b border-border py-1.5">
+                <Link to="/admin/financeiro/cliente/$userId" params={{ userId: m.userId }} className="hover:underline">{m.name}</Link>
+                <span className="text-muted-foreground">
+                  {STATE_LABEL[m.state]}{m.periodEnd ? ` · até ${new Date(m.periodEnd).toLocaleDateString("pt-PT")}` : ""}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </Panel>
   );
 }
