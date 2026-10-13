@@ -30,7 +30,8 @@ export type EmailKind =
   | "partner_pending"
   | "partner_approved"
   | "partner_rejected"
-  | "winback";
+  | "winback"
+  | "payment_method_update";
 
 type SendOpts = {
   to: string;
@@ -1183,6 +1184,23 @@ export const emailTemplates = {
          ${reason}
          <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 26px;">Podes voltar a candidatar-te mais à frente. Se tiveres dúvidas, fala com a equipa no MM Suporte.</p>
          <p style="margin:0 0 8px;">${btn("Falar com o suporte →", `${APP_URL}/ajuda`)}</p>`,
+      ),
+    };
+  },
+
+  paymentMethodUpdate(opts: { name: string }) {
+    const safe = escapeHtml(opts.name || "membro");
+    return {
+      subject: "[Ação necessária] Atualiza o teu método de pagamento no MM Club",
+      html: layout(
+        "Nova plataforma de faturação, mais segura e rápida.",
+        `<div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">Atualização de sistema</div>
+         <h1 style="font-size:26px;color:#ffffff;margin:0 0 14px;font-weight:600;line-height:1.25;">Olá ${safe}, confirma o teu pagamento</h1>
+         <p style="font-size:16px;line-height:1.7;color:#d4d4d4;margin:0 0 18px;">Estamos a atualizar a infraestrutura de pagamentos do MM Club para uma experiência mais rápida, estável e segura — com suporte a mais métodos de pagamento.</p>
+         <p style="font-size:16px;line-height:1.7;color:#d4d4d4;margin:0 0 18px;">Para que o teu acesso às aulas, às lives e à comunidade não seja interrompido na próxima mensalidade, confirma o teu método de pagamento na nova plataforma. Demora 1 minuto.</p>
+         <p style="margin:0 0 24px;">${btn("Confirmar método de pagamento →", `${APP_URL}/subscricao`)}</p>
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 8px;">O teu progresso, notas, certificados e histórico continuam guardados exatamente como estão.</p>
+         <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0;">Dúvidas? Fala connosco no Centro de Ajuda.</p>`,
       ),
     };
   },
