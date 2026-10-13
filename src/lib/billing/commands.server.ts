@@ -128,7 +128,7 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
       settlingSubscriptionId = live.id as string;
       if (migrating) prepaidDays = migrationPrepaidDays(live.current_period_end as string | null);
       // Em dívida: verificação a 0 €, cobrança automática no dia seguinte.
-      if (inDebt) prepaidDays = 1;
+      if (inDebt) prepaidDays = MIGRATION_DEBT_VERIFY_DAYS;
     }
   }
 
