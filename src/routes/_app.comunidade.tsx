@@ -1504,8 +1504,9 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
             {isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
           </button>
         )}
-        {isOwner && !editing && (
+        {(isOwner || viewerIsAdmin) && !editing && (
           <div className="flex items-center gap-1">
+            {isOwner && (
             <button
               onClick={() => setEditing(true)}
               className="rounded-full p-2 text-muted-foreground transition hover:bg-surface-2 hover:text-foreground"
