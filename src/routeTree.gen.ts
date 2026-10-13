@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as PagamentoRouteImport } from './routes/pagamento'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as ReembolsosRouteImport } from './routes/reembolsos'
@@ -131,6 +132,7 @@ import { Route as ApiPublicHooksWeeklySummaryRouteImport } from './routes/api/pu
 import { Route as ApiPublicHooksWinbackIntelligenceRouteImport } from './routes/api/public/hooks/winback-intelligence'
 import { Route as ApiPublicPartnersClickRouteImport } from './routes/api/public/partners/click'
 import { Route as ApiPublicPaymentsGatewayWebhookRouteImport } from './routes/api/public/payments/gateway-webhook'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -155,6 +157,11 @@ const AdminRoute = AdminRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagamentoRoute = PagamentoRouteImport.update({
+  id: '/pagamento',
+  path: '/pagamento',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
@@ -790,6 +797,12 @@ const ApiPublicPaymentsGatewayWebhookRoute =
     path: '/api/public/payments/gateway-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -829,6 +842,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
+  '/pagamento': typeof PagamentoRoute
   '/privacidade': typeof PrivacidadeRoute
   '/quiz': typeof QuizRoute
   '/reembolsos': typeof ReembolsosRoute
@@ -944,6 +958,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/winback-intelligence': typeof ApiPublicHooksWinbackIntelligenceRoute
   '/api/public/partners/click': typeof ApiPublicPartnersClickRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -957,6 +972,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/pagamento': typeof PagamentoRoute
   '/privacidade': typeof PrivacidadeRoute
   '/quiz': typeof QuizRoute
   '/reembolsos': typeof ReembolsosRoute
@@ -1065,6 +1081,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/winback-intelligence': typeof ApiPublicHooksWinbackIntelligenceRoute
   '/api/public/partners/click': typeof ApiPublicPartnersClickRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -1081,6 +1098,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
+  '/pagamento': typeof PagamentoRoute
   '/privacidade': typeof PrivacidadeRoute
   '/quiz': typeof QuizRoute
   '/reembolsos': typeof ReembolsosRoute
@@ -1196,6 +1214,7 @@ export interface FileRoutesById {
   '/api/public/hooks/winback-intelligence': typeof ApiPublicHooksWinbackIntelligenceRoute
   '/api/public/partners/click': typeof ApiPublicPartnersClickRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -1212,6 +1231,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/pagamento'
     | '/privacidade'
     | '/quiz'
     | '/reembolsos'
@@ -1327,6 +1347,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/winback-intelligence'
     | '/api/public/partners/click'
     | '/api/public/payments/gateway-webhook'
+    | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -1340,6 +1361,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/pagamento'
     | '/privacidade'
     | '/quiz'
     | '/reembolsos'
@@ -1448,6 +1470,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/winback-intelligence'
     | '/api/public/partners/click'
     | '/api/public/payments/gateway-webhook'
+    | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -1463,6 +1486,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/admin'
     | '/auth'
+    | '/pagamento'
     | '/privacidade'
     | '/quiz'
     | '/reembolsos'
@@ -1578,6 +1602,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/winback-intelligence'
     | '/api/public/partners/click'
     | '/api/public/payments/gateway-webhook'
+    | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -1594,6 +1619,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
+  PagamentoRoute: typeof PagamentoRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   QuizRoute: typeof QuizRoute
   ReembolsosRoute: typeof ReembolsosRoute
@@ -1639,6 +1665,7 @@ export interface RootRouteChildren {
   ApiPublicHooksWinbackIntelligenceRoute: typeof ApiPublicHooksWinbackIntelligenceRoute
   ApiPublicPartnersClickRoute: typeof ApiPublicPartnersClickRoute
   ApiPublicPaymentsGatewayWebhookRoute: typeof ApiPublicPaymentsGatewayWebhookRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -1674,6 +1701,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pagamento': {
+      id: '/pagamento'
+      path: '/pagamento'
+      fullPath: '/pagamento'
+      preLoaderRoute: typeof PagamentoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacidade': {
@@ -2502,6 +2536,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsGatewayWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -2794,6 +2835,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
+  PagamentoRoute: PagamentoRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   QuizRoute: QuizRoute,
   ReembolsosRoute: ReembolsosRoute,
@@ -2842,6 +2884,7 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPublicHooksWinbackIntelligenceRoute,
   ApiPublicPartnersClickRoute: ApiPublicPartnersClickRoute,
   ApiPublicPaymentsGatewayWebhookRoute: ApiPublicPaymentsGatewayWebhookRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
