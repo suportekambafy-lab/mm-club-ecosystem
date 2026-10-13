@@ -14,6 +14,7 @@ import { assertTransition } from "./state-machine";
 import type { SubscriptionStatus } from "./types";
 import { buildCheckoutDescription } from "./description";
 import { TRIAL_VERIFICATION_CENTS } from "./types";
+import { migrationPrepaidDays } from "./migration-rules";
 
 // ---------------------------------------------------------------- customers
 
@@ -97,10 +98,12 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
   const subscriptionLike =
     price.interval !== "one_time" && price.interval !== "lifetime";
   let settlingSubscriptionId: string | null = null;
+  // Migração: dias já pagos na Mollie que o Paddle não deve voltar a cobrar.
+  let prepaidDays = 0;
   if (subscriptionLike) {
     const { data: live } = await supabaseAdmin
       .from("billing_subscriptions")
-      .select("id, status, gateway")
+      .select("id, status, gateway, current_period_end")
       .eq("user_id", input.userId)
       .eq("product_id", price.product.id)
       .in("status", ["trialing", "active", "past_due", "grace_period", "suspended", "expired"])
@@ -111,9 +114,8 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
       const inDebt = ["past_due", "grace_period", "suspended", "expired"].includes(
         String(live.status),
       );
-      // Migração Mollie → Paddle: uma subscrição ativa na Mollie já não consegue
-      // renovar (conta desativada). O novo checkout no Paddle substitui-a:
-      // cobra a mensalidade cheia e adota a subscrição existente.
+      // Migração Mollie → Paddle: quem está em dívida paga já; quem já pagou o
+      // período atual só é cobrado no fim desse período.
       const migrating =
         !inDebt && String(live.gateway ?? "") === "mollie" && getGateway().name !== "mollie";
       if (!inDebt && !migrating) {
@@ -122,6 +124,7 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
         );
       }
       settlingSubscriptionId = live.id as string;
+      if (migrating) prepaidDays = migrationPrepaidDays(live.current_period_end as string | null);
     }
   }
 
@@ -157,9 +160,11 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
   // Quem está a regularizar paga a mensalidade cheia: o desconto de
   // verificação de 1,00 € é só para quem entra em trial pela primeira vez.
   const chargeCents =
-    !settlingSubscriptionId && price.trialDays > 0
-      ? TRIAL_VERIFICATION_CENTS
-      : price.amountCents;
+    prepaidDays > 0
+      ? 0
+      : !settlingSubscriptionId && price.trialDays > 0
+        ? TRIAL_VERIFICATION_CENTS
+        : price.amountCents;
 
   const payment = await gw.createCharge({
     amountCents: chargeCents,
@@ -176,7 +181,7 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
       ? {
           interval: price.interval as "day" | "week" | "month" | "year",
           frequency: price.intervalCount || 1,
-          trialDays: settlingSubscriptionId ? 0 : price.trialDays,
+          trialDays: prepaidDays > 0 ? prepaidDays : settlingSubscriptionId ? 0 : price.trialDays,
           amountCents: price.amountCents,
           productName: `MM Club — ${price.product.name}`,
         }
