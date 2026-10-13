@@ -46,6 +46,7 @@ import { NotificationsPrompt } from "@/components/mm/notifications-prompt";
 import { isLockedPath } from "@/lib/member-access";
 import { DebtBanner } from "@/components/mm/debt-banner";
 import { CancelBanner } from "@/components/mm/cancel-banner";
+import { PaymentMigrationBanner } from "@/components/mm/payment-migration-banner";
 import { ViewAsBar } from "@/components/admin/view-as-bar";
 import { useViewAs } from "@/hooks/use-view-as";
 
@@ -826,7 +827,10 @@ function AppLayout() {
           {!hasAccess && authUser ? (
             <DebtBanner userId={viewAs ? viewAs.userId : authUser.id} />
           ) : authUser ? (
-            <CancelBanner />
+            <>
+              <PaymentMigrationBanner />
+              <CancelBanner />
+            </>
           ) : null}
           {authUser ? <Outlet /> : <div className="min-h-[60vh]" />}
         </main>

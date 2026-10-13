@@ -47,8 +47,12 @@ export type ReconcileResult = {
   details: Array<{ subscriptionId: string; adopted: string; periodEnd: string }>;
 };
 
-/** Dias de tolerância antes de assumir que a subscrição caiu de facto. */
-const LAPSE_GRACE_DAYS = 2;
+/**
+ * Dias de tolerância antes de assumir que a subscrição caiu de facto.
+ * Alargado durante a migração Mollie → Paddle para dar tempo aos membros
+ * de confirmarem o cartão na nova plataforma.
+ */
+const LAPSE_GRACE_DAYS = 14;
 
 export async function reconcileLapsedSubscriptions(
   limit = 25,
