@@ -13,4 +13,7 @@ describe("migrationPrepaidDays", () => {
   it("sem data → cobra logo", () => {
     expect(migrationPrepaidDays(null, now)).toBe(0);
   });
+  it("quem está em dívida verifica o cartão a 0 € e é cobrado no dia seguinte", () => {
+    expect(MIGRATION_DEBT_VERIFY_DAYS).toBe(1);
+  });
 });
