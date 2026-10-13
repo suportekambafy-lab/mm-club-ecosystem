@@ -21,6 +21,52 @@ export const getPaymentMigrationStatus = createServerFn({ method: "GET" })
     return { needsUpdate };
   });
 
+/**
+ * Abre o checkout do Paddle direto para o plano atual do membro, substituindo
+ * a subscrição Mollie. Usado pelo botão "Atualizar em 1 minuto" do aviso.
+ */
+export const startMigrationCheckout = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => {
+    const i = (input ?? {}) as { origin?: string };
+    if (typeof i.origin !== "string" || !/^https?:\/\//.test(i.origin))
+      throw new Error("Invalid origin");
+    return { origin: i.origin };
+  })
+  .handler(async ({ context, data }) => {
+    const { data: sub } = await context.supabase
+      .from("billing_subscriptions")
+      .select("id, gateway, status, price_id")
+      .eq("user_id", context.userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (
+      !sub ||
+      sub.gateway !== "mollie" ||
+      !OPEN_STATUSES.includes(String(sub.status))
+    )
+      throw new Error("A tua subscrição já está atualizada.");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: price } = await supabaseAdmin
+      .from("catalog_prices")
+      .select("slug")
+      .eq("id", sub.price_id)
+      .maybeSingle();
+    if (!price?.slug) throw new Error("Não encontrei o teu plano. Fala com o suporte.");
+
+    const { startCheckout: cmd } = await import("@/lib/billing/commands.server");
+    const { checkoutUrl } = await cmd({
+      userId: context.userId,
+      email: (context.claims as { email?: string } | null)?.email ?? null,
+      priceSlug: price.slug,
+      origin: data.origin,
+      successPath: "/dashboard?checkout=success",
+    });
+    return { checkoutUrl };
+  });
+
 /** Admin: envia o comunicado (uma vez por membro) a quem ainda está na Mollie. */
 export const sendPaymentMigrationEmails = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

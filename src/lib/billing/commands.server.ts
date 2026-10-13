@@ -100,7 +100,7 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
   if (subscriptionLike) {
     const { data: live } = await supabaseAdmin
       .from("billing_subscriptions")
-      .select("id, status")
+      .select("id, status, gateway")
       .eq("user_id", input.userId)
       .eq("product_id", price.product.id)
       .in("status", ["trialing", "active", "past_due", "grace_period", "suspended", "expired"])
@@ -111,7 +111,12 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
       const inDebt = ["past_due", "grace_period", "suspended", "expired"].includes(
         String(live.status),
       );
-      if (!inDebt) {
+      // Migração Mollie → Paddle: uma subscrição ativa na Mollie já não consegue
+      // renovar (conta desativada). O novo checkout no Paddle substitui-a:
+      // cobra a mensalidade cheia e adota a subscrição existente.
+      const migrating =
+        !inDebt && String(live.gateway ?? "") === "mollie" && getGateway().name !== "mollie";
+      if (!inDebt && !migrating) {
         throw new Error(
           "Já tens uma subscrição deste plano. Gere-a em /subscricao para mudares de plano.",
         );
