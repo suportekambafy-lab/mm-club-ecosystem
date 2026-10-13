@@ -14,6 +14,7 @@ import { assertTransition } from "./state-machine";
 import type { SubscriptionStatus } from "./types";
 import { buildCheckoutDescription } from "./description";
 import { TRIAL_VERIFICATION_CENTS } from "./types";
+import { migrationPrepaidDays } from "./migration-rules";
 
 // ---------------------------------------------------------------- customers
 
