@@ -1842,6 +1842,7 @@ function CommentItem({
                 >
                   <Pencil className="h-3 w-3" />
                 </button>
+                )}
                 <button
                   onClick={onDelete}
                   className="text-muted-foreground hover:text-destructive"
