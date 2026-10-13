@@ -11,6 +11,7 @@ import {
   STATUS_LABEL,
 } from "@/components/admin/finance-ui";
 import { getFinanceOverview } from "@/lib/admin-finance.functions";
+import { sendPaymentMigrationEmails } from "@/lib/payment-migration.functions";
 import type { FinanceRange } from "@/lib/admin/finance-types";
 import type { SubscriptionStatus } from "@/lib/billing/types";
 
@@ -236,5 +237,39 @@ function OverviewPage() {
         Atualizado em {new Date(data.generatedAt).toLocaleString("pt-PT")}.
       </p>
     </div>
+  );
+}
+
+function MigrationEmailCard() {
+  const send = useServerFn(sendPaymentMigrationEmails);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  return (
+    <section className="flex flex-col gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center">
+      <div className="flex-1 text-sm">
+        <strong>Migração para o Paddle.</strong> Envia o email "Atualiza o teu método de
+        pagamento" a todos os membros que ainda estão na Mollie (cada pessoa recebe só uma vez).
+        {msg ? <div className="mt-1 text-muted-foreground">{msg}</div> : null}
+      </div>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={async () => {
+          if (!confirm("Enviar o email a todos os membros ainda na Mollie?")) return;
+          setBusy(true);
+          try {
+            const r = await send();
+            setMsg(`Enviados ${r.sent} de ${r.total} · já recebidos/sem email ${r.skipped} · falhas ${r.failed}`);
+          } catch {
+            setMsg("Não foi possível enviar agora. Tenta de novo.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+        className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+      >
+        {busy ? "A enviar…" : "Enviar comunicado"}
+      </button>
+    </section>
   );
 }
