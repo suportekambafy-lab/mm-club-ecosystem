@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { migrationPrepaidDays } from "./migration-rules";
+import { MIGRATION_DEBT_VERIFY_DAYS, migrationPrepaidDays } from "./migration-rules";
 
 const now = Date.parse("2026-10-13T12:00:00Z");
 
