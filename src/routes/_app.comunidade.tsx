@@ -1832,8 +1832,9 @@ function CommentItem({
               {authorIsAdmin && <VerifiedBadge size={12} />}
               <RankBadge rank={ranks.get(comment.author_id)} userId={comment.author_id} name={comment.author?.display_name ?? null} maxRank={3} compact />
             </p>
-            {isOwner && !editing && (
+            {canDelete && !editing && (
               <div className="flex items-center gap-1">
+                {isOwner && (
                 <button
                   onClick={() => setEditing(true)}
                   className="text-muted-foreground hover:text-foreground"
