@@ -482,11 +482,11 @@ async function onPaymentPaid(args: {
     if (subscriptionId) {
       // Paying through a gateway that bills recurring itself (Paddle) moves
       // the subscription onto that gateway: future cycles are charged there.
-      if (payment.subscriptionId && !payment.subscriptionId.startsWith("sub_") === false) {
+      if (payment.subscriptionId && payment.id.startsWith("txn_")) {
         await supabaseAdmin
           .from("billing_subscriptions")
           .update({
-            gateway: getGateway(DEFAULT_GATEWAY).name,
+            gateway: "paddle",
             gateway_subscription_id: payment.subscriptionId,
           })
           .eq("id", subscriptionId);
@@ -605,7 +605,7 @@ async function activateSubscription(args: {
   // Ask the gateway to charge the following cycles automatically.
   // Paddle already created the subscription during checkout.
   let gatewaySubscriptionId: string | null = args.payment.subscriptionId ?? null;
-  if (args.payment.customerId && args.payment.mandateId) {
+  if (!gatewaySubscriptionId && args.payment.customerId && args.payment.mandateId) {
     // A Mollie exige descrições únicas por cliente: uma subscrição antiga
     // (mesmo cancelada) com a mesma descrição fazia o webhook falhar em 422 e
     // o pagamento ficava sem subscrição. Tornamos a descrição sempre única e,
