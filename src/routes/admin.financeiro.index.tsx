@@ -92,6 +92,7 @@ function OverviewPage() {
 
   return (
     <div className="space-y-6">
+      <MigrationEmailCard />
       <RangeFilter value={range} onChange={setRange} />
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
