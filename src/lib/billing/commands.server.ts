@@ -22,17 +22,18 @@ export async function ensureCustomer(input: {
   email?: string | null;
   name?: string | null;
 }): Promise<{ id: string; gatewayCustomerId: string | null }> {
+  const gw = getGateway();
   const { data: existing } = await supabaseAdmin
     .from("billing_customers")
-    .select("id, gateway_customer_id")
+    .select("id, gateway, gateway_customer_id")
     .eq("user_id", input.userId)
     .maybeSingle();
 
-  if (existing?.gateway_customer_id) {
+  // A customer id from another gateway (e.g. old Mollie cst_…) is useless here.
+  if (existing?.gateway_customer_id && (existing.gateway ?? gw.name) === gw.name) {
     return { id: existing.id, gatewayCustomerId: existing.gateway_customer_id };
   }
 
-  const gw = getGateway();
   const gwCustomer = await gw.createCustomer({
     email: input.email,
     name: input.name,
@@ -166,6 +167,15 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
     customerId: customer.gatewayCustomerId,
     customerEmail: input.email,
     setupRecurring: recurring,
+    recurring: recurring
+      ? {
+          interval: price.interval as "day" | "week" | "month" | "year",
+          frequency: price.intervalCount || 1,
+          trialDays: settlingSubscriptionId ? 0 : price.trialDays,
+          amountCents: price.amountCents,
+          productName: `MM Club — ${price.product.name}`,
+        }
+      : undefined,
     metadata: {
       userId: input.userId,
       priceId: price.id,
@@ -245,6 +255,15 @@ export async function handleGatewayPayment(
       gw.name,
       payment.id,
     );
+  }
+  // Renewals charged by the gateway itself may not echo our metadata back.
+  if (!userId && payment.subscriptionId) {
+    const { data: subOwner } = await supabaseAdmin
+      .from("billing_subscriptions")
+      .select("user_id")
+      .eq("gateway_subscription_id", payment.subscriptionId)
+      .maybeSingle();
+    userId = (subOwner?.user_id as string | undefined) ?? null;
   }
   if (!userId) return;
 
