@@ -1789,6 +1789,7 @@ function CommentItem({
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
   const isOwner = currentUserId === comment.author_id;
+  const canDelete = isOwner || (currentUserId ? adminIds.has(currentUserId) : false);
   const adminIds = useAdminIds();
   const ranks = useCommunityRanks();
   const authorIsAdmin = adminIds.has(comment.author_id);
