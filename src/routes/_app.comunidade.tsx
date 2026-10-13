@@ -1504,8 +1504,9 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
             {isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
           </button>
         )}
-        {isOwner && !editing && (
+        {(isOwner || viewerIsAdmin) && !editing && (
           <div className="flex items-center gap-1">
+            {isOwner && (
             <button
               onClick={() => setEditing(true)}
               className="rounded-full p-2 text-muted-foreground transition hover:bg-surface-2 hover:text-foreground"
@@ -1513,6 +1514,7 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
             >
               <Pencil className="h-4 w-4" />
             </button>
+            )}
             <button
               onClick={async () => {
                 const ok = await askConfirm({
@@ -1788,6 +1790,7 @@ function CommentItem({
   const [editContent, setEditContent] = useState(comment.content);
   const isOwner = currentUserId === comment.author_id;
   const adminIds = useAdminIds();
+  const canDelete = isOwner || (currentUserId ? adminIds.has(currentUserId) : false);
   const ranks = useCommunityRanks();
   const authorIsAdmin = adminIds.has(comment.author_id);
 
@@ -1829,8 +1832,9 @@ function CommentItem({
               {authorIsAdmin && <VerifiedBadge size={12} />}
               <RankBadge rank={ranks.get(comment.author_id)} userId={comment.author_id} name={comment.author?.display_name ?? null} maxRank={3} compact />
             </p>
-            {isOwner && !editing && (
+            {canDelete && !editing && (
               <div className="flex items-center gap-1">
+                {isOwner && (
                 <button
                   onClick={() => setEditing(true)}
                   className="text-muted-foreground hover:text-foreground"
@@ -1838,6 +1842,7 @@ function CommentItem({
                 >
                   <Pencil className="h-3 w-3" />
                 </button>
+                )}
                 <button
                   onClick={onDelete}
                   className="text-muted-foreground hover:text-destructive"
