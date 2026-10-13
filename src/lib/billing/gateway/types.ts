@@ -54,6 +54,15 @@ export type CreateChargeInput = {
   customerEmail?: string | null;
   /** true → collect a reusable mandate for future recurring charges */
   setupRecurring?: boolean;
+  /** Gateways that run their own recurring billing (Paddle) need the cycle. */
+  recurring?: {
+    interval: "day" | "week" | "month" | "year";
+    frequency: number;
+    trialDays: number;
+    /** Full price per cycle (the first charge may differ, e.g. trial). */
+    amountCents: number;
+    productName: string;
+  };
 };
 
 export type CreateSubscriptionInput = {
