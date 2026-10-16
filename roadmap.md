@@ -6,5 +6,5 @@
 - [x] Testar permissões e atribuição de acesso na área comercial: 25 testes passaram, entrada sem sessão bloqueada, aplicações abertas e acesso de 3 meses atribuído pela UI e confirmado; ainda não há uma conta SDR/closer designada para testar esse perfil autenticado.
 - [x] Organizar a área comercial com página inicial, navegação própria e página de equipa com Guadalupe Costa, apresentada como Closer sem alterar permissões de contas.
 - [x] Verificar fotografia, navegação e apresentação em computador e telemóvel; sessão admin, menu recolhível, páginas de utilizadores/aplicações e fotografia carregados sem erros; 9 testes comerciais passaram.
-- [ ] Retirar funções comerciais da lista de membros e acrescentar criação, edição de nome/email e eliminação protegida.
-- [ ] Testar gestão de uma conta fictícia e confirmar salvaguardas.
+- [x] Retirar funções comerciais da lista de membros e acrescentar criação por convite, edição de nome/email e eliminação protegida, reservadas a administradores.
+- [x] Testar gestão de uma conta fictícia: convite criado, nome/email corrigidos e relidos na UI, confirmação de eliminação obrigatória, conta eliminada e ausente na pesquisa; 16 testes passaram e sem erros no navegador.
