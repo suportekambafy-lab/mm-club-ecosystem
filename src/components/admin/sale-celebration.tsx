@@ -32,11 +32,11 @@ export function useSaleBell() {
   return { prepare, ring };
 }
 
-export function SaleCelebration({ amount, onDismiss }: { amount: number; onDismiss: () => void }) {
+export function SaleCelebration({ amount, closer, onDismiss }: { amount: number; closer?: string; onDismiss: () => void }) {
   useEffect(() => { const timer = setTimeout(onDismiss, 5000); return () => clearTimeout(timer); }, [onDismiss]);
   return <div role="status" aria-live="polite" className="sale-celebration fixed inset-x-4 bottom-6 z-[80] mx-auto flex max-w-md items-center gap-5 rounded-lg border border-border bg-card p-6 text-card-foreground shadow-xl">
     <div className="sale-bell flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"><Bell className="h-10 w-10" strokeWidth={1.7} /></div>
-    <div className="min-w-0 flex-1"><p className="text-sm font-medium text-muted-foreground">Venda realizada</p><p className="mt-1 text-2xl font-semibold tabular-nums">{formatSaleAmount(amount)}</p></div>
+    <div className="min-w-0 flex-1"><p className="text-sm font-medium text-muted-foreground">Venda realizada</p><p className="mt-1 text-2xl font-semibold tabular-nums">{formatSaleAmount(amount)}</p>{closer && <p className="mt-1 truncate text-sm text-muted-foreground">Fechado por: {closer}</p>}</div>
     <Button variant="ghost" size="icon" aria-label="Fechar celebração" onClick={onDismiss}>×</Button>
   </div>;
 }

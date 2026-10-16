@@ -92,7 +92,12 @@ export const updateLead = createServerFn({ method: "POST" })
     const { data: updated, error } = await q.select("*").maybeSingle();
     if (error) throw new Error("Não foi possível atualizar.");
     if (!updated) throw new Error("O lead não foi atualizado. Volta a abrir a aplicação.");
-    return { ok: true, lead: updated };
+    let closerName: string | null = null;
+    if (data.status === "fechou") {
+      const { data: p } = await db.from("profiles").select("display_name").eq("id", context.userId).maybeSingle();
+      closerName = p?.display_name ?? "Equipa";
+    }
+    return { ok: true, lead: updated, closerName };
   });
 
 export const saveSettings = createServerFn({ method: "POST" })

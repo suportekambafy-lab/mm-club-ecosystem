@@ -8,6 +8,7 @@ import { listLeads, updateLead, saveSettings } from "@/lib/aplicacao/aplicacao.f
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { SaleCelebration, useSaleBell } from "./sale-celebration";
+import { broadcastSale } from "./sale-broadcast";
 import { formatSaleAmount, parseSaleAmount } from "@/lib/aplicacao/sale-rules";
 
 const STATUS: Record<string, string> = {
@@ -163,7 +164,7 @@ function Detail({ lead, me, agenda, onClose, onChanged, commercial }: { lead: Le
   const [busy, setBusy] = useState(false);
   const [closing, setClosing] = useState(false);
   const [amount, setAmount] = useState("");
-  const [celebration, setCelebration] = useState<number | null>(null);
+  const [celebration, setCelebration] = useState<{ amount: number; closer?: string } | null>(null);
   const dismissCelebration = useCallback(() => setCelebration(null), []);
   const bell = useSaleBell();
   const locked = !!lead.responsavel_id && lead.responsavel_id !== me;
@@ -175,7 +176,8 @@ function Detail({ lead, me, agenda, onClose, onChanged, commercial }: { lead: Le
       const result = await upd({ data: { id: lead.id, ...patch } });
       onChanged(result.lead);
       if (patch.status === "fechou" && patch.saleAmountCents !== undefined) {
-        setClosing(false); setCelebration(patch.saleAmountCents); void bell.ring();
+        setClosing(false); setCelebration({ amount: patch.saleAmountCents, closer: result.closerName ?? undefined }); void bell.ring();
+        broadcastSale({ amount: patch.saleAmountCents, closer: result.closerName ?? "Equipa", lead: String(result.lead.nome ?? "") });
       } else toast.success("Lead atualizado.");
     }
     catch (e) { toast.error(e instanceof Error ? e.message : "Erro."); }
@@ -220,7 +222,7 @@ function Detail({ lead, me, agenda, onClose, onChanged, commercial }: { lead: Le
         <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={()=>setClosing(false)} className="btn-dialog-ghost">Cancelar</Button><Button type="submit" disabled={busy}>{busy && <Loader2 className="h-4 w-4 animate-spin" />}Confirmar venda</Button></div>
       </form>
     </DialogContent></Dialog>
-    {celebration !== null && <SaleCelebration amount={celebration} onDismiss={dismissCelebration} />}</>
+    {celebration !== null && <SaleCelebration amount={celebration.amount} closer={celebration.closer} onDismiss={dismissCelebration} />}</>
   );
 }
 
