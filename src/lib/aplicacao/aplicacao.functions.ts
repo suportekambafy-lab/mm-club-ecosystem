@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { classificar, lisbonToUtc, proximosDiasUteis } from "./config";
+import { classificar } from "./config";
 
 const s = (max = 200) => z.string().trim().max(max).optional().nullable();
 
