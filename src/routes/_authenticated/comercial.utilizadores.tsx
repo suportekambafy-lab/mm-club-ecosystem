@@ -10,10 +10,12 @@ import { MemberAccountDialog, type AccountDialogState } from "@/components/comme
 import { toast } from "sonner";
 import { manualAccessSchema, type AccessDuration } from "@/lib/commercial/rules";
 import { AccessDurationPicker } from "@/components/commercial/access-duration-picker";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 
 const options = queryOptions({ queryKey: ["commercial-members"], queryFn: () => commercialMembers({ data: { search: "" } }) });
 export const Route = createFileRoute("/_authenticated/comercial/utilizadores")({
   loader: ({ context }) => context.queryClient.ensureQueryData(options),
+  pendingComponent: PageSkeleton,
   head: () => ({ meta: [
     { title:"Utilizadores — Comercial MM Club" }, {name:"description",content:"Utilizadores e acessos manuais da equipa comercial MM Club."},
     {property:"og:title",content:"Utilizadores — Comercial MM Club"},{property:"og:description",content:"Utilizadores e acessos da equipa SDR e closer."},

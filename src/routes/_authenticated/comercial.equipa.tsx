@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { TeamProfile } from "@/components/commercial/team-profile";
+import { TeamSkeleton } from "@/components/ui/page-skeleton";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { commercialMembersOptions } from "@/lib/commercial/queries";
 
@@ -7,6 +8,7 @@ export const Route = createFileRoute("/_authenticated/comercial/equipa")({
   loader: ({ context }) => context.queryClient.ensureQueryData(commercialMembersOptions),
   head: () => ({ meta: [{ title: "Equipa — Comercial MM Club" }, { name: "description", content: "Conhece a equipa SDR e Closer do MM Club, incluindo Guadalupe Costa." }, { property: "og:title", content: "Equipa — Comercial MM Club" }, { property: "og:description", content: "As pessoas da equipa comercial MM Club." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex,nofollow" }] }),
   component: CommercialTeam,
+  pendingComponent: TeamSkeleton,
 });
 
 function CommercialTeam() {

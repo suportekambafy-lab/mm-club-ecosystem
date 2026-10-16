@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { myCallsOptions } from "@/lib/commercial/queries";
 import { callCountdown, callReminderStage, type ScheduledCall } from "@/lib/aplicacao/call-rules";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 function useClock() {
@@ -23,11 +24,11 @@ export function UpcomingCalls() {
   const now = useClock();
   return <section aria-label="As minhas próximas calls" className="border-b border-border pb-8"><div className="mb-5 flex items-center justify-between"><h2 className="text-xl font-semibold">As minhas próximas calls</h2><CalendarDays className="h-5 w-5 text-muted-foreground" /></div>
     {data?.calls.map(call => <CallRow key={call.id} call={call} now={now} commercial />)}
-    {!data?.calls.length && <p className="py-5 text-sm text-muted-foreground">{isPending ? "A consultar calls…" : isError ? "Não foi possível consultar as calls." : "Não tens calls marcadas."}</p>}
+    {isPending ? <CallsSkeleton /> : !data?.calls.length && <p className="py-5 text-sm text-muted-foreground">{isError ? "Não foi possível consultar as calls." : "Não tens calls marcadas."}</p>}
   </section>;
 }
 export function CallNotificationBell({ commercial = false }: { commercial?: boolean }) {
-  const { data, isError } = useQuery(myCallsOptions);
+  const { data, isError, isPending } = useQuery(myCallsOptions);
   const now = useClock();
   const seen = useRef(new Set<string>());
   useEffect(() => {
@@ -43,5 +44,9 @@ export function CallNotificationBell({ commercial = false }: { commercial?: bool
     }
   }, [data, now]);
   const calls = data?.calls ?? [];
-  return <Popover><PopoverTrigger asChild><Button variant="ghost" size="icon" className="relative shrink-0" aria-label="Notificações de calls" title="Notificações de calls"><Bell className="h-5 w-5" />{calls.length > 0 && <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground">{calls.length}</span>}</Button></PopoverTrigger><PopoverContent align="end" className={`admin-shell ${commercial ? "commercial-shell" : ""} max-h-[70vh] w-80 max-w-[calc(100vw-32px)] overflow-y-auto bg-popover text-popover-foreground`}><h2 className="font-semibold">Notificações · Calls</h2><p className="mt-1 text-xs text-muted-foreground">As tuas próximas calls</p>{calls.map(call => <CallRow key={call.id} call={call} now={now} commercial={commercial} />)}{!calls.length && <p className="py-6 text-sm text-muted-foreground">{isError ? "Não foi possível consultar as calls." : "Sem calls marcadas."}</p>}</PopoverContent></Popover>;
+  return <Popover><PopoverTrigger asChild><Button variant="ghost" size="icon" className="relative shrink-0" aria-label="Notificações de calls" title="Notificações de calls"><Bell className="h-5 w-5" />{calls.length > 0 && <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground">{calls.length}</span>}</Button></PopoverTrigger><PopoverContent align="end" className={`admin-shell ${commercial ? "commercial-shell" : ""} max-h-[70vh] w-80 max-w-[calc(100vw-32px)] overflow-y-auto bg-popover text-popover-foreground`}><h2 className="font-semibold">Notificações · Calls</h2><p className="mt-1 text-xs text-muted-foreground">As tuas próximas calls</p>{calls.map(call => <CallRow key={call.id} call={call} now={now} commercial={commercial} />)}{isPending ? <CallsSkeleton /> : !calls.length && <p className="py-6 text-sm text-muted-foreground">{isError ? "Não foi possível consultar as calls." : "Sem calls marcadas."}</p>}</PopoverContent></Popover>;
+}
+
+function CallsSkeleton() {
+  return <div role="status" aria-label="A carregar calls" aria-busy="true" className="motion-reduce:[&_*]:animate-none">{[0, 1].map(i => <div key={i} aria-hidden="true" className="flex items-center gap-3 border-b border-border py-4 last:border-0"><Skeleton className="h-5 w-5 shrink-0" /><div className="flex-1 space-y-3"><Skeleton className="h-4 w-40 max-w-full" /><Skeleton className="h-3 w-28" /><Skeleton className="h-4 w-24" /></div></div>)}</div>;
 }
