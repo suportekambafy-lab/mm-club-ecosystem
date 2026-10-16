@@ -6,7 +6,7 @@ export const createPlatformMember = createServerFn({ method: "POST" }).middlewar
   const { data: allowed, error } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
   if (error || !canManageMemberAccounts(Boolean(allowed))) throw new Error("Só administradores podem gerir contas.");
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-  const result = await db.auth.admin.inviteUserByEmail(data.email, { data: { display_name: data.name }, redirectTo: "https://mmclub.pt/auth" });
+  const result = await db.auth.admin.inviteUserByEmail(data.email, { data: { display_name: data.name }, redirectTo: "https://mmclub.pt/reset-password" });
   if (result.error || !result.data.user) throw new Error("Não foi possível criar o utilizador. Verifica se o email já está registado.");
   const id = result.data.user.id;
   const profile = await db.from("profiles").update({ display_name: data.name }).eq("id", id);

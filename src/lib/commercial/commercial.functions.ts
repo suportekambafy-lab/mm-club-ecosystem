@@ -16,14 +16,16 @@ export const commercialMembers = createServerFn({ method: "GET" }).middleware([r
     const { data: allowed } = await context.supabase.rpc("has_commercial_access", { _user_id: context.userId });
     if (!allowed) throw new Error("Sem permissão.");
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-    const [profiles, customers, roles, grants] = await Promise.all([
+    const [profiles, customers, roles, grants, accounts] = await Promise.all([
       db.from("profiles").select("id, display_name, avatar_url, created_at").order("created_at", { ascending: false }).limit(2000),
       db.from("billing_customers").select("user_id, email"),
       db.from("user_roles").select("user_id, role").in("role", ["sdr", "closer"]),
       db.from("entitlement_grants").select("user_id, expires_at, source").eq("feature_key", "academy.access").is("revoked_at", null),
+      db.auth.admin.listUsers({page:1,perPage:2000}),
     ]);
-    if (profiles.error || customers.error || roles.error || grants.error) throw new Error("Não foi possível consultar os utilizadores.");
+    if (profiles.error || customers.error || roles.error || grants.error || accounts.error) throw new Error("Não foi possível consultar os utilizadores.");
     const emailMap = new Map((customers.data ?? []).map(c => [c.user_id, c.email]));
+    for (const user of accounts.data.users) { if (user.email) emailMap.set(user.id, user.email); }
     const roleMap = new Map((roles.data ?? []).map(r => [r.user_id, r.role]));
     const term = data.search.toLocaleLowerCase();
     return (profiles.data ?? []).map(p => {
