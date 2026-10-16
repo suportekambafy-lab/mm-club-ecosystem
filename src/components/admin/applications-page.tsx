@@ -1,10 +1,14 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Download, Loader2, MessageCircle, Phone, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { listLeads, updateLead, saveSettings } from "@/lib/aplicacao/aplicacao.functions";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { SaleCelebration, useSaleBell } from "./sale-celebration";
+import { formatSaleAmount, parseSaleAmount } from "@/lib/aplicacao/sale-rules";
 
 const STATUS: Record<string, string> = {
   novo: "Novo", incompleto: "Incompleto", em_contato: "Em contacto",
@@ -59,7 +63,7 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
     .map((a: any) => ({ ...a, lead: leads.find((l) => l.id === a.lead_id) }));
 
   function exportCsv() {
-    const cols = ["created_at","nome","whatsapp","email","instagram","pais","idade","ocupacao","experiencia","o_que_travou","tempo_dia","verba_anuncios","investimento","decisao","classificacao","status","responsavel","utm_source","utm_medium","utm_campaign","utm_content"];
+    const cols = ["created_at","nome","whatsapp","email","instagram","pais","idade","ocupacao","experiencia","o_que_travou","tempo_dia","verba_anuncios","investimento","decisao","classificacao","status","sale_amount_cents","responsavel","utm_source","utm_medium","utm_campaign","utm_content"];
     const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const csv = [cols.join(";"), ...filtered.map((l) => cols.map((c) => esc(l[c])).join(";"))].join("\n");
     const a = document.createElement("a");
@@ -140,7 +144,7 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
               <tr key={l.id} onClick={() => setOpen(l)} className="cursor-pointer border-t border-border hover:bg-surface-1">
                 <td className="p-3">{l.classificacao ? <span className={cn("rounded px-2 py-0.5 text-xs font-semibold", CLS_STYLE[l.classificacao])}>{l.classificacao}</span> : "—"}</td>
                 <td className="p-3">{l.nome ?? "—"}</td><td className="p-3">{l.whatsapp}</td>
-                <td className="p-3">{STATUS[l.status] ?? l.status}</td><td className="p-3">{l.responsavel ?? "—"}</td>
+                <td className="p-3">{STATUS[l.status] ?? l.status}{l.status === "fechou" && l.sale_amount_cents != null && <p className="mt-1 text-xs text-primary">{formatSaleAmount(l.sale_amount_cents)}</p>}</td><td className="p-3">{l.responsavel ?? "—"}</td>
                 <td className="p-3 text-muted-foreground">{new Date(l.created_at).toLocaleString("pt-PT")}</td>
               </tr>
             ))}
@@ -149,33 +153,44 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
         </table>
       </div>
       </>}
-      {open && <Detail lead={open} me={data?.me ?? ""} agenda={agByLead.get(open.id) as string | undefined} onClose={() => setOpen(null)} onChanged={(l) => { setOpen(l); refresh(); }} />}
+      {open && <Detail commercial={commercial} lead={open} me={data?.me ?? ""} agenda={agByLead.get(open.id) as string | undefined} onClose={() => setOpen(null)} onChanged={(l) => { setOpen(l); refresh(); qc.invalidateQueries({queryKey:["commercial-applications"]}); }} />}
     </div>
   );
 }
 
-function Detail({ lead, me, agenda, onClose, onChanged }: { lead: Lead; me: string; agenda?: string; onClose: () => void; onChanged: (l: Lead) => void }) {
+function Detail({ lead, me, agenda, onClose, onChanged, commercial }: { lead: Lead; me: string; agenda?: string; onClose: () => void; onChanged: (l: Lead) => void; commercial: boolean }) {
   const upd = useServerFn(updateLead);
   const [busy, setBusy] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [celebration, setCelebration] = useState<number | null>(null);
+  const dismissCelebration = useCallback(() => setCelebration(null), []);
+  const bell = useSaleBell();
   const locked = !!lead.responsavel_id && lead.responsavel_id !== me;
   const first = String(lead.nome ?? "").split(" ")[0];
   const wa = `https://wa.me/${String(lead.whatsapp ?? "").replace(/\D/g, "")}?text=${encodeURIComponent(`Olá ${first}, tudo bem? Aqui é da equipa do MM Club, vi a tua aplicação.`)}`;
-  async function run(patch: { status?: string; assumir?: boolean }) {
+  async function run(patch: { status?: "novo" | "incompleto" | "em_contato" | "call_marcada" | "fechou" | "perdido"; assumir?: boolean; saleAmountCents?: number }) {
     setBusy(true);
-    try { await upd({ data: { id: lead.id, ...(patch as any) } }); onChanged({ ...lead, ...(patch.status ? { status: patch.status } : {}), ...(patch.assumir ? { responsavel_id: me, responsavel: "Tu" } : {}) }); toast.success("Lead atualizado."); }
+    try {
+      const result = await upd({ data: { id: lead.id, ...patch } });
+      onChanged(result.lead);
+      if (patch.status === "fechou" && patch.saleAmountCents !== undefined) {
+        setClosing(false); setCelebration(patch.saleAmountCents); void bell.ring();
+      } else toast.success("Lead atualizado.");
+    }
     catch (e) { toast.error(e instanceof Error ? e.message : "Erro."); }
     finally { setBusy(false); }
   }
   const rows: [string, string][] = [["Email","email"],["Instagram","instagram"],["País","pais"],["Idade","idade"],["Ocupação","ocupacao"],["Experiência","experiencia"],["Tempo por dia","tempo_dia"],["Verba 90 dias","verba_anuncios"],["Investimento","investimento"],["Decisão","decisao"],["Origem","utm_source"],["Campanha","utm_campaign"],["Meio","utm_medium"],["Conteúdo","utm_content"]];
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-background/70" onClick={onClose}>
+    <><div className="fixed inset-0 z-50 flex justify-end bg-background/70" onClick={() => { if (!busy && !closing) onClose(); }}>
       <aside className="h-full w-full max-w-lg overflow-y-auto bg-background p-6 ring-1 ring-border" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="font-display text-xl">{lead.nome ?? "Sem nome"}</h2>
             <p className="text-sm text-muted-foreground">{lead.whatsapp}</p>
           </div>
-          <button onClick={onClose} aria-label="Fechar"><X className="h-5 w-5" /></button>
+          <Button variant="ghost" size="icon" disabled={busy} onClick={onClose} aria-label="Fechar"><X className="h-5 w-5" /></Button>
         </div>
         {agenda && <p className="mt-4 rounded-lg p-3 text-sm ring-1 ring-primary/50">Call: {new Date(agenda).toLocaleString("pt-PT", { timeZone: "Europe/Lisbon" })} (Lisboa)</p>}
         <div className="mt-4 flex flex-wrap gap-2">
@@ -185,10 +200,11 @@ function Detail({ lead, me, agenda, onClose, onChanged }: { lead: Lead; me: stri
         </div>
         {lead.responsavel && <p className="mt-3 text-xs text-muted-foreground">Responsável: {lead.responsavel}{locked && " · bloqueado para ti"}</p>}
         <label className="mt-4 block text-xs text-muted-foreground">Estado
-          <select disabled={busy || locked} value={lead.status} onChange={(e) => run({ status: e.target.value })} className="mt-1 block w-full rounded-lg bg-surface-1 px-3 py-2 text-sm text-foreground ring-1 ring-border">
+          <select disabled={busy || locked} value={lead.status} onChange={(e) => { const status = e.target.value as Parameters<typeof run>[0]["status"]; if (status === "fechou") { setAmount(lead.sale_amount_cents != null ? String(lead.sale_amount_cents / 100) : ""); setClosing(true); } else void run({status}); }} className="mt-1 block w-full rounded-lg bg-surface-1 px-3 py-2 text-sm text-foreground ring-1 ring-border">
             {Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
         </label>
+        {lead.status === "fechou" && lead.sale_amount_cents != null && <p className="mt-3 text-sm font-medium text-primary">Valor fechado: {formatSaleAmount(lead.sale_amount_cents)}</p>}
         <div className="mt-6 rounded-xl p-4 ring-1 ring-primary/60">
           <p className="text-xs uppercase tracking-wider text-primary">O que te travou</p>
           <p className="mt-2 whitespace-pre-wrap text-sm">{lead.o_que_travou || "Sem resposta."}</p>
@@ -198,6 +214,13 @@ function Detail({ lead, me, agenda, onClose, onChanged }: { lead: Lead; me: stri
         </dl>
       </aside>
     </div>
+    <Dialog open={closing} onOpenChange={value => { if (!busy) setClosing(value); }}><DialogContent className={cn("admin-shell max-w-md", commercial && "commercial-shell")}><DialogTitle>Qual foi o valor da venda?</DialogTitle><DialogDescription>Fechar a aplicação de {lead.nome || "este lead"}.</DialogDescription>
+      <form className="mt-4 space-y-5" onSubmit={e => { e.preventDefault(); const cents = parseSaleAmount(amount); if (cents === null) return toast.error("Indica um valor superior a zero, com até duas casas decimais."); bell.prepare(); void run({status:"fechou",saleAmountCents:cents}); }}>
+        <label className="block text-sm">Valor da venda (€)<input autoFocus required inputMode="decimal" aria-label="Valor da venda (€)" value={amount} disabled={busy} onChange={e=>setAmount(e.target.value)} placeholder="0,00" className="mt-2 h-12 w-full rounded-md border border-border bg-muted px-3 text-lg tabular-nums" /></label>
+        <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={()=>setClosing(false)}>Cancelar</Button><Button type="submit" disabled={busy}>{busy && <Loader2 className="h-4 w-4 animate-spin" />}Confirmar venda</Button></div>
+      </form>
+    </DialogContent></Dialog>
+    {celebration !== null && <SaleCelebration amount={celebration} onDismiss={dismissCelebration} />}</>
   );
 }
 

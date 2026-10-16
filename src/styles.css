@@ -623,3 +623,16 @@ html[data-live-immersive="1"] [data-mobile-tabbar] { display: none !important; }
   .commercial-page-heading { font-size: 28px; }
 }
 @media (prefers-reduced-motion: reduce) { .commercial-enter, .commercial-stagger > * { animation: none; } }
+
+@keyframes sale-bell-ring {
+  0%, 100% { transform: rotate(0); }
+  12%, 36% { transform: rotate(20deg); }
+  24%, 48% { transform: rotate(-18deg); }
+  60% { transform: rotate(12deg); }
+  72% { transform: rotate(-8deg); }
+  84% { transform: rotate(4deg); }
+}
+@keyframes sale-celebration-enter { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.sale-bell svg { transform-origin: top center; animation: sale-bell-ring 1.2s ease-in-out 2; }
+.sale-celebration { animation: sale-celebration-enter 220ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .sale-bell svg, .sale-celebration { animation: none; } }
