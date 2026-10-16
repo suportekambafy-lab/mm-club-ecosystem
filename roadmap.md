@@ -1,4 +1,4 @@
-- [ ] Substituir carregamento de navegação e páginas comerciais por skeletons e verificar navegação autenticada.
+- [x] Substituir carregamento de navegação e páginas comerciais por skeletons; navegador autenticado confirmou skeleton visível, menu preservado e páginas de utilizadores/aplicações carregadas sem erros. Não publicado.
 - [x] Corrigir renovação na verificação Paddle de 0 €: associa cobrança futura sem receita, recuperação de dívida nem alteração do período; processamento simulado e testes passaram. Pagamento real não disparado; sete verificações históricas exigem reconciliação antes de alterar acessos existentes.
 - [ ] Cloudflare Stream devolve 403 Authorization Failure no teste atual; depende de autorização válida da conta com Stream Read/Edit para recuperar segmentos e verificar quota atual.
 - [x] Bloquear novo ingest quando quota cheia é confirmada, preservar gravação já ativa e mostrar motivo ao anfitrião; quota real não verificável até corrigir autorização Cloudflare.
