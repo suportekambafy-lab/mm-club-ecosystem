@@ -4,3 +4,5 @@
 - [x] Criar área comercial restrita para SDR e closers, com utilizadores e aplicações.
 - [x] Permitir acessos manuais de 3, 6 ou 12 meses e gestão administrativa da equipa.
 - [x] Testar permissões e atribuição de acesso na área comercial: 25 testes passaram, entrada sem sessão bloqueada, aplicações abertas e acesso de 3 meses atribuído pela UI e confirmado; ainda não há uma conta SDR/closer designada para testar esse perfil autenticado.
+- [ ] Organizar a área comercial com página inicial, navegação própria e página de equipa com Guadalupe Costa.
+- [ ] Verificar fotografia, navegação e apresentação em computador e telemóvel.
