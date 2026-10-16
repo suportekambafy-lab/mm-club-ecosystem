@@ -8,14 +8,15 @@ import {
   APLICACAO_LINKS, OPCOES, PAISES_TEL, classificar, validarTelefone,
 } from "@/lib/aplicacao/config";
 import { saveLead } from "@/lib/aplicacao/aplicacao.functions";
+import { firstMissingApplicationField } from "@/lib/aplicacao/validation";
 
 export const Route = createFileRoute("/aplicacao")({
   head: () => ({
     meta: [
       { title: "Aplicação MM Club — mentoria de lojas online" },
-      { name: "description", content: "Responde a 12 perguntas rápidas. A nossa equipa entra em contacto contigo no WhatsApp." },
+      { name: "description", content: "Responde a 13 perguntas rápidas. A nossa equipa entra em contacto contigo no WhatsApp." },
       { property: "og:title", content: "Aplicação MM Club" },
-      { property: "og:description", content: "12 perguntas, 2 minutos. A nossa equipa entra em contacto contigo." },
+      { property: "og:description", content: "13 perguntas, 2 minutos. A nossa equipa entra em contacto contigo." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -25,7 +26,7 @@ export const Route = createFileRoute("/aplicacao")({
 
 type Ans = Record<string, string>;
 type Q =
-  | { key: string; title: string; kind: "text" | "email" | "insta" | "phone" | "long"; optional?: boolean; placeholder?: string }
+  | { key: string; title: string; kind: "text" | "email" | "insta" | "phone" | "long"; placeholder?: string }
   | { key: keyof typeof OPCOES; title: string; kind: "choice" };
 
 const QUESTIONS: Q[] = [
@@ -37,13 +38,13 @@ const QUESTIONS: Q[] = [
   { key: "idade", title: "Qual é a tua idade?", kind: "choice" },
   { key: "ocupacao", title: "O que fazes hoje?", kind: "choice" },
   { key: "experiencia", title: "Qual é a tua experiência com loja online?", kind: "choice" },
-  { key: "o_que_travou", title: "Se já tentaste antes, o que te travou?", kind: "long", optional: true, placeholder: "Ex.: não encontrei produto, o anúncio não vendia, faltou dinheiro para testar..." },
+  { key: "o_que_travou", title: "O que te travou até agora?", kind: "long", placeholder: "Se nunca tentaste, conta o que te impediu de começar." },
   { key: "tempo_dia", title: "Quanto tempo por dia consegues dedicar à tua loja?", kind: "choice" },
   { key: "verba_anuncios", title: "Quanto tens disponível para anúncios e testes de produto nos próximos 90 dias? (sem contar o acompanhamento)", kind: "choice" },
   { key: "investimento", title: "Se fizer sentido para ti, consegues investir num acompanhamento agora?", kind: "choice" },
   { key: "decisao", title: "Se a conversa fizer sentido, decides sozinho?", kind: "choice" },
 ];
-const REQUIRED = QUESTIONS.filter((q) => !("optional" in q && q.optional));
+const REQUIRED = QUESTIONS;
 const STORE = "mm.aplicacao.v1";
 
 function track(ev: string) { try { (window as any).fbq?.("track", ev); } catch { /* noop */ } }
@@ -65,7 +66,11 @@ function AplicacaoPage() {
       const raw = localStorage.getItem(STORE);
       if (raw) {
         const s = JSON.parse(raw);
-        setStep(s.step ?? -1); setAns(s.ans ?? {}); setLeadId(s.leadId ?? null);
+        const restored = s.ans ?? {};
+        const missing = firstMissingApplicationField(restored);
+        const missingStep = QUESTIONS.findIndex((question) => question.key === missing);
+        setStep(!s.cls && missingStep >= 0 && s.step > missingStep ? missingStep : s.step ?? -1);
+        setAns(restored); setLeadId(s.leadId ?? null);
         setCls(s.cls ?? null); setUtm(s.utm ?? {}); setPhoneCountry(s.pc ?? "PT");
       }
     } catch { /* noop */ }
@@ -109,8 +114,14 @@ function AplicacaoPage() {
 
   async function advance(next: Ans) {
     setErr(null);
+    if (q && !next[q.key]?.trim()) return setErr("Responde a esta pergunta para continuar.");
     setAns(next);
     if (step === QUESTIONS.length - 1) {
+      const missing = firstMissingApplicationField(next);
+      if (missing) {
+        setStep(QUESTIONS.findIndex((question) => question.key === missing));
+        return setErr("Responde a esta pergunta para continuar.");
+      }
       setBusy(true);
       try {
         const c = (await persist(next, true)) ?? classificar(next);
@@ -126,13 +137,15 @@ function AplicacaoPage() {
   function submitText(value: string) {
     if (!q) return;
     const v = value.trim();
+    if (!v) return setErr("Responde a esta pergunta para continuar.");
     if (q.kind === "text" && v.length < 3) return setErr("Escreve o teu nome completo.");
     if (q.kind === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return setErr("Esse email não parece válido.");
     if (q.kind === "insta" && !/^[A-Za-z0-9._]{1,30}$/.test(v.replace(/^@/, ""))) return setErr("Escreve só o teu utilizador do Instagram.");
     if (q.kind === "phone") {
       const e = validarTelefone(phoneCountry, v);
       if (e) return setErr(e);
-      const p = PAISES_TEL.find((x) => x.code === phoneCountry)!;
+      const p = PAISES_TEL.find((x) => x.code === phoneCountry);
+      if (!p) return setErr("Escolhe o país.");
       return advance({ ...ans, whatsapp: `+${p.dial}${v.replace(/\D/g, "")}`, whatsapp_local: v });
     }
     advance({ ...ans, [q.key]: q.kind === "insta" ? v.replace(/^@/, "") : v });
@@ -151,7 +164,7 @@ function AplicacaoPage() {
               <button type="button" onClick={() => { setErr(null); setStep(step - 1); }} className="inline-flex min-h-11 items-center gap-1 transition hover:text-foreground">
                 <ArrowLeft className="h-3.5 w-3.5" /> Voltar
               </button>
-              <span>{progressIndex >= 0 ? `Pergunta ${progressIndex + 1} de ${REQUIRED.length}` : "Pergunta opcional"}</span>
+              <span>{`Pergunta ${progressIndex + 1} de ${REQUIRED.length}`}</span>
             </div>
             <div className="h-1 overflow-hidden rounded-full bg-surface-2">
               <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${(answeredRequired / REQUIRED.length) * 100}%` }} />
@@ -168,7 +181,7 @@ function AplicacaoPage() {
           {q && q.kind !== "choice" && (
             <TextQ q={q} initial={q.kind === "phone" ? ans.whatsapp_local ?? "" : ans[q.key] ?? ""} busy={busy}
               country={phoneCountry} setCountry={setPhoneCountry}
-              onSubmit={(v) => (q.optional && !v.trim() ? advance({ ...ans, [q.key]: "" }) : submitText(v))} />
+              onSubmit={submitText} />
           )}
           {err && <p role="alert" className="mt-4 text-sm text-destructive">{err}</p>}
           {step === QUESTIONS.length && cls === "A" && (
@@ -198,7 +211,7 @@ function Intro({ onStart }: { onStart: () => void }) {
         Aplicação <span className="text-primary">MM Club</span>
       </h1>
       <p className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
-        Responde a 12 perguntas rápidas. Leva 2 minutos. Se tiveres perfil, a nossa equipa fala contigo no WhatsApp.
+        Responde a 13 perguntas rápidas. Leva 2 minutos. A nossa equipa fala contigo no WhatsApp.
       </p>
       <button type="button" onClick={onStart} className="mt-10 w-full max-w-sm rounded-full bg-primary px-6 py-4 text-base font-semibold text-primary-foreground transition hover:bg-gold-soft">
         Começar aplicação
@@ -238,7 +251,6 @@ function TextQ({ q, initial, onSubmit, busy, country, setCountry }: {
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSubmit(v); }}>
       <h2 className="font-display text-2xl leading-snug md:text-3xl">{q.title}</h2>
-      {q.optional && <p className="mt-2 text-sm text-muted-foreground">Opcional.</p>}
       <div className="mt-8">
         {q.kind === "long" ? (
           <textarea autoFocus rows={5} maxLength={2000} value={v} onChange={(e) => setV(e.target.value)} placeholder={q.placeholder} className={field} />
@@ -259,7 +271,7 @@ function TextQ({ q, initial, onSubmit, busy, country, setCountry }: {
         )}
       </div>
       <button type="submit" disabled={busy} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-4 text-base font-semibold text-primary-foreground transition hover:bg-gold-soft disabled:opacity-60">
-        {busy && <Loader2 className="h-4 w-4 animate-spin" />} {q.optional && !v.trim() ? "Saltar" : "Continuar"}
+        {busy && <Loader2 className="h-4 w-4 animate-spin" />} Continuar
       </button>
     </form>
   );

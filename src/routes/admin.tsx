@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import mmIcon from "@/assets/mm-icon.png.asset.json";
+import { ApplicationNotifications } from "@/components/admin/application-notifications";
 // Ensure admin overrides are applied
 import "@/data/admin-store";
 
@@ -66,6 +67,10 @@ export const Route = createFileRoute("/admin")({
     meta: [
       { title: "Admin — MM Club" },
       { name: "description", content: "Painel de administração do MM Club." },
+      { property: "og:title", content: "Admin — MM Club" },
+      { property: "og:description", content: "Painel de administração do MM Club." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
@@ -228,6 +233,7 @@ function AdminLayout() {
 
   return (
     <div className={cn("admin-shell min-h-screen bg-admin-bg text-admin-fg", theme === "light" && "admin-light")}>
+      <ApplicationNotifications />
 
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[236px] flex-col bg-admin-sidebar lg:flex">
