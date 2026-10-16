@@ -37,6 +37,7 @@ import { cn } from "@/lib/utils";
 import mmIcon from "@/assets/mm-icon.png.asset.json";
 import { ApplicationNotifications } from "@/components/admin/application-notifications";
 import { SaleBroadcastListener } from "@/components/admin/sale-broadcast";
+import { CallNotificationBell } from "@/components/commercial/scheduled-calls";
 // Ensure admin overrides are applied
 import "@/data/admin-store";
 
@@ -306,6 +307,7 @@ function AdminLayout() {
             </span>
           </div>
           <div className="flex-1" />
+          <CallNotificationBell />
           <button
             type="button"
             onClick={toggleTheme}
