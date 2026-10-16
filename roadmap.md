@@ -14,6 +14,8 @@
 - [x] Pedir e guardar valor ao fechar lead; 20 testes passaram; venda fictícia de 149,90 € guardada e relida após recarregar, cancelar mantém estado, zero rejeitado e gravação real do sino reproduzida uma vez; janela verificada no telemóvel e aplicação fictícia removida.
 - [x] Repetir o som completo do sino três vezes, com uma pequena pausa entre toques.
 - [x] Sincronizar a animação com cada reprodução do sino, na celebração local e da equipa; navegador confirmou três reproduções, três reinícios da animação e paragem entre toques; 3 testes passaram.
+- [ ] Adicionar menu Minhas vendas, com todas as vendas próprias, faturamento EUR, contagem e comissões BRL por venda.
+- [ ] Guardar autoria do fecho e comissão; testar valores, isolamento e página autenticada.
 - [x] Pedir data e hora ao marcar call e guardar para o responsável.
 - [x] Mostrar próximas calls e contagem na Home, com avisos 15 minutos antes e à hora da call, e sino no header comercial e admin.
 - [x] Testar marcação, leitura na Home após recarregar, contagem e aviso no navegador autenticado; 8 testes passaram; aplicações fictícias removidas.
