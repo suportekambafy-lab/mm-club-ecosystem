@@ -4,7 +4,8 @@ import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-
 import { useServerFn } from "@tanstack/react-start";
 import { commercialMembers, giveCommercialAccess } from "@/lib/commercial/commercial.functions";
 import { Button } from "@/components/ui/button";
-import { KeyRound, Search, X, Loader2, Pencil, Trash2, UserPlus } from "lucide-react";
+import { KeyRound, Search, Loader2, Pencil, Trash2, UserPlus } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { MemberAccountDialog, type AccountDialogState } from "@/components/commercial/member-account-dialog";
 import { toast } from "sonner";
 import { manualAccessSchema } from "@/lib/commercial/rules";
@@ -66,15 +67,15 @@ function CommercialMembers() {
       </tr>)}{!members.length && <tr><td colSpan={3} className="p-8 text-center text-admin-muted">Nenhum utilizador encontrado.</td></tr>}</tbody></table>
     </div>
     {accountDialog && <MemberAccountDialog state={accountDialog} onClose={()=>setAccountDialog(null)} onSaved={refreshMembers} />}
-    {selected && <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4"><section role="dialog" aria-modal="true" aria-labelledby="manual-access-title" className="w-full max-w-md rounded-lg border border-admin-border bg-admin-bg p-6">
-      <div className="flex items-center justify-between gap-3"><h2 id="manual-access-title" className="text-xl font-semibold">Dar acesso ao MM Club</h2><Button variant="ghost" size="icon" aria-label="Fechar" disabled={busy} onClick={()=>setSelected(null)}><X/></Button></div>
-      <p className="mt-2 text-sm text-admin-muted">{selected.display_name} · {selected.email}</p>
+    {selected && <Dialog open onOpenChange={open => { if (!open && !busy) setSelected(null); }}><DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md overflow-y-auto rounded-lg border-admin-border bg-admin-bg text-foreground">
+      <DialogTitle className="pr-6 text-xl font-semibold">Dar acesso ao MM Club</DialogTitle>
+      <DialogDescription className="mt-2 break-words text-sm text-admin-muted">{selected.display_name} · {selected.email}</DialogDescription>
       <form onSubmit={grant} className="mt-6 space-y-5">
         <fieldset><legend className="mb-2 text-sm">Duração</legend><div className="grid grid-cols-3 gap-2">{([3,6,12] as const).map(m=><Button key={m} type="button" variant={m===months ? "default":"outline"} aria-pressed={m===months} onClick={()=>setMonths(m)}>{m} meses</Button>)}</div></fieldset>
         <label className="block text-sm">Motivo<textarea required minLength={3} maxLength={500} value={reason} onChange={e=>setReason(e.target.value)} className="mt-2 min-h-24 w-full rounded-md border border-admin-border bg-admin-panel p-3" /></label>
         <p className="text-xs text-admin-muted">Acesso até {date(new Date(new Date().setMonth(new Date().getMonth()+months)).toISOString())}. Não cria cobranças nem altera a subscrição existente.</p>
         <Button type="submit" disabled={busy} className="w-full">{busy ? <Loader2 className="animate-spin"/>:<KeyRound/>}Confirmar acesso</Button>
       </form>
-    </section></div>}
+    </DialogContent></Dialog>}
   </div>;
 }
