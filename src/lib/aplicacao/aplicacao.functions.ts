@@ -78,18 +78,19 @@ export const updateLead = createServerFn({ method: "POST" })
     }).parse(i))
   .handler(async ({ context, data }) => {
     await assertCommercial(context);
-    const { data: lead } = await context.supabase.from("leads").select("responsavel_id").eq("id", data.id).maybeSingle();
+    const db = await admin();
+    const { data: lead } = await db.from("leads").select("responsavel_id").eq("id", data.id).maybeSingle();
     if (!lead) throw new Error("Lead não encontrado.");
     if (lead.responsavel_id && lead.responsavel_id !== context.userId)
       throw new Error("Este lead já foi assumido por outra pessoa.");
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (data.status) patch.status = data.status;
     if (data.assumir) {
-      const { data: p } = await context.supabase.from("profiles").select("display_name").eq("id", context.userId).maybeSingle();
+      const { data: p } = await db.from("profiles").select("display_name").eq("id", context.userId).maybeSingle();
       patch.responsavel = p?.display_name ?? "Equipa";
       patch.responsavel_id = context.userId;
     }
-    let q = context.supabase.from("leads").update(patch as never).eq("id", data.id);
+    let q = db.from("leads").update(patch as never).eq("id", data.id);
     if (data.assumir) q = q.is("responsavel_id", null);
     const { error } = await q;
     if (error) throw new Error("Não foi possível atualizar.");
