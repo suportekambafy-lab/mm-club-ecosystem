@@ -831,7 +831,7 @@ function AppLayout() {
           {authUser && accessState?.manual && <AccessExpiryBanner expired={accessState.expired} expiresAt={accessState.expiresAt} />}
           {!hasAccess && authUser && !accessState?.expired ? (
             <DebtBanner userId={viewAs ? viewAs.userId : authUser.id} />
-          ) : authUser ? (
+          ) : authUser && hasAccess ? (
             <>
               <PaymentMigrationBanner />
               <CancelBanner />
