@@ -9,11 +9,11 @@ import { toast } from "sonner";
 import { manualAccessSchema } from "@/lib/commercial/rules";
 
 const options = queryOptions({ queryKey: ["commercial-members"], queryFn: () => commercialMembers({ data: { search: "" } }) });
-export const Route = createFileRoute("/_authenticated/comercial/")({
+export const Route = createFileRoute("/_authenticated/comercial/utilizadores")({
   loader: ({ context }) => context.queryClient.ensureQueryData(options),
   head: () => ({ meta: [
-    { title:"Equipa comercial — MM Club" }, {name:"description",content:"Utilizadores e acessos manuais da equipa comercial MM Club."},
-    {property:"og:title",content:"Equipa comercial — MM Club"},{property:"og:description",content:"Utilizadores e acessos da equipa SDR e closer."},
+    { title:"Utilizadores — Comercial MM Club" }, {name:"description",content:"Utilizadores e acessos manuais da equipa comercial MM Club."},
+    {property:"og:title",content:"Utilizadores — Comercial MM Club"},{property:"og:description",content:"Utilizadores e acessos da equipa SDR e closer."},
     {property:"og:type",content:"website"},{name:"twitter:card",content:"summary"},{name:"robots",content:"noindex,nofollow"},
   ] }), component: CommercialMembers,
 });
