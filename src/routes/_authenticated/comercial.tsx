@@ -6,6 +6,7 @@ import { commercialSession } from "@/lib/commercial/commercial.functions";
 import { ApplicationNotifications } from "@/components/admin/application-notifications";
 import { SaleBroadcastListener } from "@/components/admin/sale-broadcast";
 import { CallNotificationBell } from "@/components/commercial/scheduled-calls";
+import { AccountMenu } from "@/components/commercial/account-menu";
 import mmIcon from "@/assets/mm-icon.png.asset.json";
 import { LogOut, Users, UserPlus, LayoutGrid, BriefcaseBusiness, PanelLeftClose, PanelLeftOpen, Receipt } from "lucide-react";
 import { useState } from "react";
