@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch, redirect as routeRedirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { AlertCircle, ArrowRight, ArrowLeft, Mail, Lock } from "lucide-react";
@@ -13,6 +13,11 @@ import { reportAuthFailure } from "@/lib/security.functions";
 type Search = { redirect?: string };
 
 export const Route = createFileRoute("/auth")({
+  beforeLoad: ({ search }) => {
+    if (search.redirect === "/comercial" || search.redirect?.startsWith("/comercial/")) {
+      throw routeRedirect({ to: "/comercial-login", search: { redirect: search.redirect }, replace: true });
+    }
+  },
   validateSearch: (s: Record<string, unknown>): Search => ({
     redirect: typeof s.redirect === "string" ? s.redirect : undefined,
   }),
@@ -20,6 +25,10 @@ export const Route = createFileRoute("/auth")({
     meta: [
       { title: "Entrar — MM Club" },
       { name: "description", content: "Entra no ecossistema privado da Marca Milionária." },
+      { property: "og:title", content: "Entrar — MM Club" },
+      { property: "og:description", content: "Entra no ecossistema privado da Marca Milionária." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AuthPage,
