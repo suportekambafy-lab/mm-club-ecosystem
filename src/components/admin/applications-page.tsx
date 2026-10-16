@@ -222,7 +222,7 @@ function Detail({ lead, me, agenda, onClose, onChanged, commercial }: { lead: Le
         <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={()=>setClosing(false)} className="btn-dialog-ghost">Cancelar</Button><Button type="submit" disabled={busy}>{busy && <Loader2 className="h-4 w-4 animate-spin" />}Confirmar venda</Button></div>
       </form>
     </DialogContent></Dialog>
-    {celebration !== null && <SaleCelebration amount={celebration.amount} closer={celebration.closer} onDismiss={dismissCelebration} />}</>
+    {celebration !== null && <SaleCelebration amount={celebration.amount} closer={celebration.closer} strike={bell.strike} isRinging={bell.isRinging} onDismiss={dismissCelebration} />}</>
   );
 }
 

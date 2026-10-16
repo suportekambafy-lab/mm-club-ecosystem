@@ -21,3 +21,4 @@
 - Commercial member dialogs use the shared portalled Dialog component so animated page transforms cannot position overlays outside the viewport.
 - Commercial presentation remaps semantic admin tokens within its shell and portalled dialog contents; shared admin palette changes stay in global CSS so business logic and permission boundaries remain unchanged.
 - Lead closure shares amount validation between UI and server and persists EUR cents; sale celebration and recorded bell playback occur only after the server returns the saved lead.
+- Sale bell animation follows actual audio playback state and restarts for each repetition, so local and team celebrations stay synchronized without independent animation timers.
