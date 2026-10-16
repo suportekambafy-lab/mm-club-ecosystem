@@ -1,3 +1,5 @@
+- [ ] Criar entrada comercial própria com contas existentes, recuperação de palavra-passe e verificação de permissões.
+- [ ] Verificar entrada pública, continuação autenticada e encaminhamento para o comercial.
 - [x] Tornar todas as respostas obrigatórias, com validação e testes (25 testes passaram; campos vazios bloqueados no navegador).
 - [x] Avisar novas aplicações com toast e som em qualquer página do admin.
 - [x] Confirmar chegada real de uma aplicação com toast e som: aplicação completa enviada pelo formulário, toast visível no admin autenticado, dois tons iniciados com áudio ativo, detalhe lido no painel e ausência de avisos duplicados confirmada.

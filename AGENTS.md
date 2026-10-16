@@ -14,6 +14,7 @@
 - Application notifications mount once per admin or commercial layout and poll an authenticated narrow projection; a silent initial baseline and completed-ID tracker prevent historical or duplicate alerts.
 - The shared applications view lives outside route modules so both admin and commercial routes reuse it safely under route code splitting.
 - Commercial staff use a separate authenticated commercial layout; server checks allow only admin/SDR/closer, and only admins assign commercial roles.
+- Commercial login is a public entry using existing accounts, with server-validated commercial access before navigation; the standard auth entry forwards commercial return destinations without modifying the managed authenticated gate.
 - Manual commercial access is granted atomically through an authenticated database function using catalog feature mappings and an audit entry, independent of billing.
 - Commercial creation and manual grants share duration validation; lifetime uses NULL expiry. Club UI rechecks own grants and unmounts protected content at effective expiry, while has_feature enforces timestamps on every authorization and preserves independent valid grants.
 - Commercial home, members, applications and team use separate leaf routes within the commercial shell; shared query options and team presentation live outside routes to preserve code splitting and existing permission boundaries.
