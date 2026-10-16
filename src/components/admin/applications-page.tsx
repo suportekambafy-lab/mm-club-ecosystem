@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { listLeads, updateLead, saveSettings } from "@/lib/aplicacao/aplicacao.functions";
 import { Button } from "@/components/ui/button";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { SaleCelebration, useSaleBell } from "./sale-celebration";
 import { broadcastSale } from "./sale-broadcast";
@@ -94,7 +95,7 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
     a.download = `aplicacoes-${today}.csv`; a.click();
   }
 
-  if (isLoading) return <div className="flex justify-center p-10"><Loader2 className="h-5 w-5 animate-spin" /></div>;
+  if (isLoading) return <PageSkeleton />;
   const max = Math.max(1, ...stats.days.map((d) => d.n));
   const sel = "rounded-lg bg-surface-1 px-3 py-2 text-sm ring-1 ring-border";
 

@@ -1,6 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
+import { RouteSkeleton } from "@/components/ui/page-skeleton";
 import "@/data/admin-store";
 
 export const getRouter = () => {
@@ -33,6 +34,9 @@ export const getRouter = () => {
     defaultPreloadDelay: 60,
     defaultPreloadStaleTime: 30_000,
     defaultStaleTime: 30_000,
+    defaultPendingComponent: RouteSkeleton,
+    defaultPendingMs: 150,
+    defaultPendingMinMs: 200,
   });
 
   return router;

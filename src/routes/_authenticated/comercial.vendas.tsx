@@ -5,6 +5,7 @@ import { mySalesOptions } from "@/lib/commercial/queries";
 import { formatCommission } from "@/lib/commercial/sales-rules";
 import { formatSaleAmount } from "@/lib/aplicacao/sale-rules";
 import { Button } from "@/components/ui/button";
+import { SalesSkeleton } from "@/components/ui/page-skeleton";
 
 export const Route = createFileRoute("/_authenticated/comercial/vendas")({
   loader: ({ context }) => context.queryClient.ensureQueryData(mySalesOptions),
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/_authenticated/comercial/vendas")({
     { name: "robots", content: "noindex,nofollow" },
   ] }),
   component: MySales,
+  pendingComponent: SalesSkeleton,
 });
 
 function MySales() {

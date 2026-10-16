@@ -4,12 +4,14 @@ import { commercialApplicationsOptions } from "@/lib/commercial/queries";
 import { TeamProfile } from "@/components/commercial/team-profile";
 import { UpcomingCalls } from "@/components/commercial/scheduled-calls";
 import { Button } from "@/components/ui/button";
+import { HomeSkeleton } from "@/components/ui/page-skeleton";
 import { ArrowUpRight, ArrowRight, Users, Inbox, Target, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/comercial/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(commercialApplicationsOptions),
   head: () => ({ meta: [{ title: "Início — Comercial MM Club" }, { name: "description", content: "Visão geral das aplicações e da equipa comercial MM Club." }, { property: "og:title", content: "Início — Comercial MM Club" }, { property: "og:description", content: "Aplicações, contactos e equipa comercial num só lugar." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex,nofollow" }] }),
   component: CommercialHome,
+  pendingComponent: HomeSkeleton,
 });
 
 function CommercialHome() {

@@ -10,6 +10,7 @@ import mmIcon from "@/assets/mm-icon.png.asset.json";
 import { LogOut, Users, UserPlus, LayoutGrid, BriefcaseBusiness, PanelLeftClose, PanelLeftOpen, Receipt } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { CommercialShellSkeleton } from "@/components/ui/page-skeleton";
 
 export const Route = createFileRoute("/_authenticated/comercial")({
   beforeLoad: async () => {
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/_authenticated/comercial")({
     catch { throw redirect({ to: "/", replace: true }); }
   },
   component: CommercialLayout,
+  pendingComponent: CommercialShellSkeleton,
 });
 function CommercialLayout() {
   const { isAdmin } = Route.useRouteContext();
