@@ -32,7 +32,7 @@ function CommercialLayout() {
       queryClient.clear();
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      await navigate({ to: "/comercial-login", replace: true });
+      await navigate({ to: "/comercial-login", search: { redirect: "/comercial" }, replace: true });
     } catch {
       toast.error("Não foi possível sair. Tenta novamente.");
       setSigningOut(false);
