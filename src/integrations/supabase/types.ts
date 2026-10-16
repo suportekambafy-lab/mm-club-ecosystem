@@ -1937,6 +1937,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          call_scheduled_at: string | null
           classificacao: string | null
           created_at: string
           decisao: string | null
@@ -1964,6 +1965,7 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          call_scheduled_at?: string | null
           classificacao?: string | null
           created_at?: string
           decisao?: string | null
@@ -1991,6 +1993,7 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          call_scheduled_at?: string | null
           classificacao?: string | null
           created_at?: string
           decisao?: string | null
