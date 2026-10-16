@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Check, Loader2 } from "lucide-react";
@@ -7,15 +7,15 @@ import { cn } from "@/lib/utils";
 import {
   APLICACAO_LINKS, OPCOES, PAISES_TEL, classificar, validarTelefone,
 } from "@/lib/aplicacao/config";
-import { saveLead, getSlots, bookSlot } from "@/lib/aplicacao/aplicacao.functions";
+import { saveLead } from "@/lib/aplicacao/aplicacao.functions";
 
 export const Route = createFileRoute("/aplicacao")({
   head: () => ({
     meta: [
       { title: "Aplicação MM Club — mentoria de lojas online" },
-      { name: "description", content: "Responde a 12 perguntas rápidas e, se tiveres perfil, marca já a tua conversa com a equipa do MM Club." },
+      { name: "description", content: "Responde a 12 perguntas rápidas. A nossa equipa entra em contacto contigo no WhatsApp." },
       { property: "og:title", content: "Aplicação MM Club" },
-      { property: "og:description", content: "12 perguntas, 2 minutos. Marca a tua conversa com a equipa do MM Club." },
+      { property: "og:description", content: "12 perguntas, 2 minutos. A nossa equipa entra em contacto contigo." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -171,8 +171,8 @@ function AplicacaoPage() {
               onSubmit={(v) => (q.optional && !v.trim() ? advance({ ...ans, [q.key]: "" }) : submitText(v))} />
           )}
           {err && <p role="alert" className="mt-4 text-sm text-destructive">{err}</p>}
-          {step === QUESTIONS.length && cls === "A" && leadId && (
-            <FinalA leadId={leadId} whatsapp={ans.whatsapp} socio={ans.decisao?.startsWith("Preciso")} />
+          {step === QUESTIONS.length && cls === "A" && (
+            <FinalA nome={ans.nome} whatsapp={ans.whatsapp} socio={ans.decisao?.startsWith("Preciso")} />
           )}
           {step === QUESTIONS.length && cls === "B" && (
             <Final title="Recebemos a tua aplicação." text="Alguém da nossa equipa vai falar contigo no WhatsApp nas próximas horas para perceber melhor o teu momento." cta="Seguir o MM Club no Instagram" />
@@ -198,7 +198,7 @@ function Intro({ onStart }: { onStart: () => void }) {
         Aplicação <span className="text-primary">MM Club</span>
       </h1>
       <p className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
-        Responde a 12 perguntas rápidas. Leva 2 minutos. Se tiveres perfil, escolhes já o horário da tua conversa com a nossa equipa.
+        Responde a 12 perguntas rápidas. Leva 2 minutos. Se tiveres perfil, a nossa equipa fala contigo no WhatsApp.
       </p>
       <button type="button" onClick={onStart} className="mt-10 w-full max-w-sm rounded-full bg-primary px-6 py-4 text-base font-semibold text-primary-foreground transition hover:bg-gold-soft">
         Começar aplicação
