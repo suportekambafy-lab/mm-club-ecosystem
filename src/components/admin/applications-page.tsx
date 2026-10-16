@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Download, Loader2, MessageCircle, Phone, X } from "lucide-react";
 import { toast } from "sonner";
@@ -33,6 +34,20 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
   const [open, setOpen] = useState<Lead | null>(null);
   const [tab, setTab] = useState<"leads" | "config">("leads");
   const refresh = () => qc.invalidateQueries({ queryKey: ["aplicacao-leads"] });
+
+  const router = useRouter();
+  const rawSearch = router.state.location.search as unknown;
+  const leadParam = typeof rawSearch === "object" && rawSearch !== null && "lead" in rawSearch ? String((rawSearch as Record<string, unknown>).lead ?? "") : "";
+  useEffect(() => {
+    if (!leadParam || isLoading || open) return;
+    const found = leads.find((l) => l.id === leadParam);
+    if (found) setOpen(found);
+  }, [leadParam, isLoading, leads, open]);
+  const closeDetail = () => {
+    setOpen(null);
+    if (leadParam) router.navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, lead: undefined }), replace: true });
+  };
+
 
   const leads: Lead[] = (data?.leads as Lead[]) ?? [];
   const agByLead = useMemo(() => new Map((data?.agendamentos ?? []).map((a: any) => [a.lead_id, a.data_hora])), [data]);
