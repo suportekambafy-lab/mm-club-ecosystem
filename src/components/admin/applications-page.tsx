@@ -35,6 +35,9 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
   const [tab, setTab] = useState<"leads" | "config">("leads");
   const refresh = () => qc.invalidateQueries({ queryKey: ["aplicacao-leads"] });
 
+  const leads: Lead[] = (data?.leads as Lead[]) ?? [];
+  const agByLead = useMemo(() => new Map((data?.agendamentos ?? []).map((a: any) => [a.lead_id, a.data_hora])), [data]);
+
   const router = useRouter();
   const rawSearch = router.state.location.search as unknown;
   const leadParam = typeof rawSearch === "object" && rawSearch !== null && "lead" in rawSearch ? String((rawSearch as Record<string, unknown>).lead ?? "") : "";
@@ -45,12 +48,9 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
   }, [leadParam, isLoading, leads, open]);
   const closeDetail = () => {
     setOpen(null);
-    if (leadParam) router.navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, lead: undefined }), replace: true });
+    if (leadParam) router.navigate({ search: (prev: any) => { const { lead: _drop, ...rest } = prev as Record<string, unknown>; return rest; }, replace: true });
   };
 
-
-  const leads: Lead[] = (data?.leads as Lead[]) ?? [];
-  const agByLead = useMemo(() => new Map((data?.agendamentos ?? []).map((a: any) => [a.lead_id, a.data_hora])), [data]);
 
   const stats = useMemo(() => {
     const today = dayKey(new Date()); const yest = dayKey(new Date(Date.now() - 86400_000));
