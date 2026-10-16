@@ -229,6 +229,7 @@ export const goLive = createServerFn({ method: "POST" })
     // replay pipeline is identical to broadcast lives. Non-blocking failure:
     // the live still goes on air even if egress fails to spin up (and every
     // subsequent join retries via ensureLiveRecording).
+    let recordingWarning: string | null = null;
     try {
       const { livekitRoomName } = await import("./livekit.server");
       const { stopAllRoomEgress } = await import("./live-egress.server");
@@ -242,8 +243,12 @@ export const goLive = createServerFn({ method: "POST" })
         await new Promise((r) => setTimeout(r, 1500));
         result = await ensureLiveRecording(data.liveId);
       }
-      if (!result.ok) console.error("[goLive] recording NOT started:", result.reason);
+      if (!result.ok) {
+        recordingWarning = result.reason ?? "Não foi possível iniciar a gravação. A live continua sem gravação confirmada.";
+        console.error("[goLive] recording NOT started:", result.reason);
+      }
     } catch (err) {
+      recordingWarning = "Não foi possível iniciar a gravação. A live continua sem gravação confirmada.";
       console.warn("[goLive] recording start failed", err);
     }
 
@@ -256,7 +261,7 @@ export const goLive = createServerFn({ method: "POST" })
     }
 
     await logEvent(supabase, { liveId: data.liveId, actorId: userId, kind: "go_live" });
-    return { ok: true };
+    return { ok: true, recordingWarning };
   });
 
 export const endLive = createServerFn({ method: "POST" })

@@ -10,6 +10,7 @@
  */
 import { livekitRoomName } from "./livekit.server";
 import { startLiveRecording, getRecordingStatus } from "./live-egress.server";
+import { recordingStorageBlock } from "./recording-rules";
 
 export async function ensureLiveRecording(liveId: string): Promise<{
   ok: boolean;
@@ -29,20 +30,6 @@ export async function ensureLiveRecording(liveId: string): Promise<{
 
     const roomName = livekitRoomName(liveId, "main");
 
-    // Cloudflare recusa qualquer ingest quando o armazenamento está cheio —
-    // a live correria "gravada" e o ficheiro nunca apareceria.
-    try {
-      const { getStorageUsage } = await import("@/lib/cloudflare-stream.server");
-      const usage = await getStorageUsage();
-      if (usage.full) {
-        console.error(
-          `[live-recording] Cloudflare Stream storage cheio (${usage.usedMinutes}/${usage.limitMinutes} min) — a gravação vai falhar.`,
-        );
-      }
-    } catch {
-      /* diagnóstico apenas */
-    }
-
     // Already recording?
     try {
       const active = await getRecordingStatus({ roomName });
@@ -60,6 +47,17 @@ export async function ensureLiveRecording(liveId: string): Promise<{
       }
     } catch {
       /* fall through and try to start */
+    }
+
+    // Never start an ingest known to be rejected. Check after already-running
+    // egress so existing recordings are not interrupted by this admission guard.
+    try {
+      const { getStorageUsage } = await import("@/lib/cloudflare-stream.server");
+      const reason = recordingStorageBlock(await getStorageUsage());
+      if (reason) return { ok: false, egressId: null, reason };
+    } catch {
+      // Existing RTMP credentials/S3 fallback may still work when read access
+      // to the storage endpoint is unavailable; preserve that fallback.
     }
 
     // Provision a Cloudflare live input if the row lacks one.
