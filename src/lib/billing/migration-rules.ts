@@ -5,6 +5,10 @@
 // Quem está em dívida também verifica o cartão com 0 € no checkout: usamos
 // um trial de 1 dia, e o Paddle cobra automaticamente no dia seguinte.
 export const MIGRATION_DEBT_VERIFY_DAYS = 1;
+/** Verification attaches Paddle billing, but is not revenue or debt recovery. */
+export function isPaddleCardVerification(gateway: string, amountCents: number, subscriptionId: string | null): boolean {
+  return gateway === "paddle" && amountCents === 0 && subscriptionId !== null;
+}
 export function migrationPrepaidDays(periodEnd: string | null, now = Date.now()): number {
   if (!periodEnd) return 0;
   const ms = new Date(periodEnd).getTime() - now;

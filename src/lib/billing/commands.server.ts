@@ -14,7 +14,7 @@ import { assertTransition } from "./state-machine";
 import type { SubscriptionStatus } from "./types";
 import { buildCheckoutDescription } from "./description";
 import { TRIAL_VERIFICATION_CENTS } from "./types";
-import { MIGRATION_DEBT_VERIFY_DAYS, migrationPrepaidDays } from "./migration-rules";
+import { MIGRATION_DEBT_VERIFY_DAYS, migrationPrepaidDays, isPaddleCardVerification } from "./migration-rules";
 
 // ---------------------------------------------------------------- customers
 
@@ -343,6 +343,17 @@ export async function handleGatewayPayment(
       await syncPaymentMethods(userId);
     } catch (err) {
       console.error("[billing] syncPaymentMethods after payment", err);
+    }
+    // A completed 0 € Paddle migration is only card setup. Keep the paid
+    // period, debt state and grants untouched until a real charge succeeds.
+    if (isPaddleCardVerification(gw.name, payment.amountCents, subscriptionId)) {
+      if (payment.subscriptionId && subscriptionId) {
+        const { error } = await supabaseAdmin.from("billing_subscriptions")
+          .update({ gateway: "paddle", gateway_subscription_id: payment.subscriptionId })
+          .eq("id", subscriptionId);
+        if (error) throw new Error(error.message);
+      }
+      return;
     }
     await onPaymentPaid({ payment, userId, priceId, paymentRowId, customerId: customer?.id ?? null, subscriptionId });
     await resolveRecoveryForPayment({
