@@ -22,3 +22,4 @@
 - Commercial presentation remaps semantic admin tokens within its shell and portalled dialog contents; shared admin palette changes stay in global CSS so business logic and permission boundaries remain unchanged.
 - Lead closure shares amount validation between UI and server and persists EUR cents; sale celebration and recorded bell playback occur only after the server returns the saved lead.
 - Sale bell animation follows actual audio playback state and restarts for each repetition, so local and team celebrations stay synchronized without independent animation timers.
+- Staff call schedules live on the lead and update atomically with status and ownership; the shared authenticated own-calls query feeds home and header reminders independently of the applications history window.

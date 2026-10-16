@@ -5,7 +5,12 @@ export const leadUpdateSchema = z.object({
   status: z.enum(["novo", "incompleto", "em_contato", "call_marcada", "fechou", "perdido"]).optional(),
   assumir: z.boolean().optional(),
   saleAmountCents: z.number().int().positive().max(Number.MAX_SAFE_INTEGER).optional(),
+  callScheduledAt: z.string().datetime().optional(),
 }).superRefine((value, ctx) => {
+  if (value.status === "call_marcada" && !value.callScheduledAt)
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["callScheduledAt"], message: "Indica a data e hora da call." });
+  if (value.status !== "call_marcada" && value.callScheduledAt !== undefined)
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["callScheduledAt"], message: "A data só pode ser registada ao marcar a call." });
   if (value.status === "fechou" && value.saleAmountCents === undefined)
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["saleAmountCents"], message: "Indica o valor da venda." });
   if (value.status !== "fechou" && value.saleAmountCents !== undefined)
