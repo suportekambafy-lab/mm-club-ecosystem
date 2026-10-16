@@ -15,3 +15,4 @@
 - The shared applications view lives outside route modules so both admin and commercial routes reuse it safely under route code splitting.
 - Commercial staff use a separate authenticated commercial layout; server checks allow only admin/SDR/closer, and only admins assign commercial roles.
 - Manual commercial access is granted atomically through an authenticated database function using catalog feature mappings and an audit entry, independent of billing.
+- Commercial home, members, applications and team use separate leaf routes within the commercial shell; shared query options and team presentation live outside routes to preserve code splitting and existing permission boundaries.
