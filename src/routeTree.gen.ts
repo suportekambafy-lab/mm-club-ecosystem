@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AplicacaoRouteImport } from './routes/aplicacao'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PagamentoRouteImport } from './routes/pagamento'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
@@ -37,6 +38,7 @@ import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
 import { Route as AppShortsRouteImport } from './routes/_app.shorts'
 import { Route as AppSubscricaoRouteImport } from './routes/_app.subscricao'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAplicacoesRouteImport } from './routes/admin.aplicacoes'
 import { Route as AdminAulasRouteImport } from './routes/admin.aulas'
 import { Route as AdminCertificadosRouteImport } from './routes/admin.certificados'
 import { Route as AdminComunicacaoRouteImport } from './routes/admin.comunicacao'
@@ -152,6 +154,11 @@ const AppRoute = AppRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AplicacaoRoute = AplicacaoRouteImport.update({
+  id: '/aplicacao',
+  path: '/aplicacao',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -277,6 +284,11 @@ const AppSubscricaoRoute = AppSubscricaoRouteImport.update({
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAplicacoesRoute = AdminAplicacoesRouteImport.update({
+  id: '/aplicacoes',
+  path: '/aplicacoes',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAulasRoute = AdminAulasRouteImport.update({
@@ -841,6 +853,7 @@ const ApiPublicLivesLiveIdCoverSvgRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/aplicacao': typeof AplicacaoRoute
   '/auth': typeof AuthRoute
   '/pagamento': typeof PagamentoRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -865,6 +878,7 @@ export interface FileRoutesByFullPath {
   '/perfil': typeof AppPerfilRoute
   '/shorts': typeof AppShortsRoute
   '/subscricao': typeof AppSubscricaoRoute
+  '/admin/aplicacoes': typeof AdminAplicacoesRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/certificados': typeof AdminCertificadosRoute
   '/admin/comunicacao': typeof AdminComunicacaoRoute
@@ -971,6 +985,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/aplicacao': typeof AplicacaoRoute
   '/auth': typeof AuthRoute
   '/pagamento': typeof PagamentoRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -992,6 +1007,7 @@ export interface FileRoutesByTo {
   '/perfil': typeof AppPerfilRoute
   '/shorts': typeof AppShortsRoute
   '/subscricao': typeof AppSubscricaoRoute
+  '/admin/aplicacoes': typeof AdminAplicacoesRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/certificados': typeof AdminCertificadosRoute
   '/admin/comunicacao': typeof AdminComunicacaoRoute
@@ -1097,6 +1113,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
+  '/aplicacao': typeof AplicacaoRoute
   '/auth': typeof AuthRoute
   '/pagamento': typeof PagamentoRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -1121,6 +1138,7 @@ export interface FileRoutesById {
   '/_app/perfil': typeof AppPerfilRoute
   '/_app/shorts': typeof AppShortsRoute
   '/_app/subscricao': typeof AppSubscricaoRoute
+  '/admin/aplicacoes': typeof AdminAplicacoesRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/certificados': typeof AdminCertificadosRoute
   '/admin/comunicacao': typeof AdminComunicacaoRoute
@@ -1230,6 +1248,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/aplicacao'
     | '/auth'
     | '/pagamento'
     | '/privacidade'
@@ -1254,6 +1273,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/shorts'
     | '/subscricao'
+    | '/admin/aplicacoes'
     | '/admin/aulas'
     | '/admin/certificados'
     | '/admin/comunicacao'
@@ -1360,6 +1380,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/aplicacao'
     | '/auth'
     | '/pagamento'
     | '/privacidade'
@@ -1381,6 +1402,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/shorts'
     | '/subscricao'
+    | '/admin/aplicacoes'
     | '/admin/aulas'
     | '/admin/certificados'
     | '/admin/comunicacao'
@@ -1485,6 +1507,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/admin'
+    | '/aplicacao'
     | '/auth'
     | '/pagamento'
     | '/privacidade'
@@ -1509,6 +1532,7 @@ export interface FileRouteTypes {
     | '/_app/perfil'
     | '/_app/shorts'
     | '/_app/subscricao'
+    | '/admin/aplicacoes'
     | '/admin/aulas'
     | '/admin/certificados'
     | '/admin/comunicacao'
@@ -1618,6 +1642,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
+  AplicacaoRoute: typeof AplicacaoRoute
   AuthRoute: typeof AuthRoute
   PagamentoRoute: typeof PagamentoRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
@@ -1694,6 +1719,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aplicacao': {
+      id: '/aplicacao'
+      path: '/aplicacao'
+      fullPath: '/aplicacao'
+      preLoaderRoute: typeof AplicacaoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -1869,6 +1901,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/aplicacoes': {
+      id: '/admin/aplicacoes'
+      path: '/aplicacoes'
+      fullPath: '/admin/aplicacoes'
+      preLoaderRoute: typeof AdminAplicacoesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/aulas': {
@@ -2785,6 +2824,7 @@ const AdminLivesRouteWithChildren = AdminLivesRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
+  AdminAplicacoesRoute: typeof AdminAplicacoesRoute
   AdminAulasRoute: typeof AdminAulasRoute
   AdminCertificadosRoute: typeof AdminCertificadosRoute
   AdminComunicacaoRoute: typeof AdminComunicacaoRoute
@@ -2807,6 +2847,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAplicacoesRoute: AdminAplicacoesRoute,
   AdminAulasRoute: AdminAulasRoute,
   AdminCertificadosRoute: AdminCertificadosRoute,
   AdminComunicacaoRoute: AdminComunicacaoRoute,
@@ -2834,6 +2875,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
+  AplicacaoRoute: AplicacaoRoute,
   AuthRoute: AuthRoute,
   PagamentoRoute: PagamentoRoute,
   PrivacidadeRoute: PrivacidadeRoute,

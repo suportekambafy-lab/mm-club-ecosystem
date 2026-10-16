@@ -91,6 +91,7 @@ type AdminTo =
   | "/admin/ferramentas"
   | "/admin/parcerias"
   | "/admin/partners-leads"
+  | "/admin/aplicacoes"
   | "/admin/partners-pedidos"
   | "/admin/comunicacao"
   | "/admin/seguranca"
@@ -116,6 +117,7 @@ const nav: Array<{ label: string; items: NavItem[] }> = [
       { to: "/admin/saude", label: "Saúde do billing", icon: HeartPulse },
       { to: "/admin/comunicacao", label: "Comunicação", icon: Mail },
       { to: "/admin/parcerias", label: "Parcerias & Créditos", icon: Coins },
+      { to: "/admin/aplicacoes", label: "Aplicações", icon: UserPlus },
       { to: "/admin/partners-leads", label: "Leads do MM Partners", icon: UserPlus },
       { to: "/admin/partners-pedidos", label: "Pedidos do MM Partners", icon: UserPlus },
 
@@ -156,6 +158,7 @@ const CRUMBS: Record<string, string> = {
   "/admin/saude": "Saúde do billing",
   "/admin/comunicacao": "Comunicação",
   "/admin/parcerias": "Parcerias & Créditos",
+  "/admin/aplicacoes": "Aplicações",
   "/admin/partners-leads": "Leads do MM Partners",
   "/admin/partners-pedidos": "Pedidos do MM Partners",
   "/admin/cursos": "Cursos",
