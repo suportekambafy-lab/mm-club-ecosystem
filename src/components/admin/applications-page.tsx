@@ -214,10 +214,10 @@ function Detail({ lead, me, agenda, onClose, onChanged, commercial }: { lead: Le
         </dl>
       </aside>
     </div>
-    <Dialog open={closing} onOpenChange={value => { if (!busy) setClosing(value); }}><DialogContent className={cn("admin-shell max-w-md text-foreground", commercial && "commercial-shell")}><DialogTitle>Qual foi o valor da venda?</DialogTitle><DialogDescription>Fechar a aplicação de {lead.nome || "este lead"}.</DialogDescription>
+    <Dialog open={closing} onOpenChange={value => { if (!busy) setClosing(value); }}><DialogContent className={cn("admin-shell max-w-md text-foreground", commercial && "commercial-shell sale-dialog-dark")}><DialogTitle className="font-display text-xl">Qual foi o valor da venda?</DialogTitle><DialogDescription>Fechar a aplicação de {lead.nome || "este lead"}.</DialogDescription>
       <form className="mt-4 space-y-5" onSubmit={e => { e.preventDefault(); const cents = parseSaleAmount(amount); if (cents === null) return toast.error("Indica um valor superior a zero, com até duas casas decimais."); bell.prepare(); void run({status:"fechou",saleAmountCents:cents}); }}>
         <label className="block text-sm">Valor da venda (€)<input autoFocus required inputMode="decimal" aria-label="Valor da venda (€)" value={amount} disabled={busy} onChange={e=>setAmount(e.target.value)} placeholder="0,00" className="mt-2 h-12 w-full rounded-md border border-border bg-muted px-3 text-lg tabular-nums" /></label>
-        <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={()=>setClosing(false)}>Cancelar</Button><Button type="submit" disabled={busy}>{busy && <Loader2 className="h-4 w-4 animate-spin" />}Confirmar venda</Button></div>
+        <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={()=>setClosing(false)} className="btn-dialog-ghost">Cancelar</Button><Button type="submit" disabled={busy}>{busy && <Loader2 className="h-4 w-4 animate-spin" />}Confirmar venda</Button></div>
       </form>
     </DialogContent></Dialog>
     {celebration !== null && <SaleCelebration amount={celebration} onDismiss={dismissCelebration} />}</>

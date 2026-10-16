@@ -636,3 +636,24 @@ html[data-live-immersive="1"] [data-mobile-tabbar] { display: none !important; }
 .sale-bell svg { transform-origin: top center; animation: sale-bell-ring 1.2s ease-in-out 2; }
 .sale-celebration { animation: sale-celebration-enter 220ms ease-out; }
 @media (prefers-reduced-motion: reduce) { .sale-bell svg, .sale-celebration { animation: none; } }
+
+/* Janela do valor da venda — painel escuro na área comercial */
+.sale-dialog-dark {
+  background: var(--commercial-nav-background);
+  color: var(--commercial-nav-foreground);
+  border: 1px solid oklch(1 0 0 / 10%);
+  border-radius: 14px;
+  box-shadow: 0 24px 64px oklch(0.08 0.02 165 / 0.5);
+}
+.sale-dialog-dark .text-muted-foreground { color: var(--commercial-nav-muted); }
+.sale-dialog-dark input {
+  background: oklch(0.27 0.02 165);
+  border-color: oklch(1 0 0 / 14%);
+  color: var(--commercial-nav-foreground);
+}
+.sale-dialog-dark .btn-dialog-ghost {
+  border-color: oklch(1 0 0 / 16%);
+  background: transparent;
+  color: var(--commercial-nav-foreground);
+}
+.sale-dialog-dark .btn-dialog-ghost:hover { background: oklch(1 0 0 / 8%); }
