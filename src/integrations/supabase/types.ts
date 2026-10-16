@@ -86,6 +86,35 @@ export type Database = {
         }
         Relationships: []
       }
+      agendamentos: {
+        Row: {
+          created_at: string
+          data_hora: string
+          id: string
+          lead_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_hora: string
+          id?: string
+          lead_id: string
+        }
+        Update: {
+          created_at?: string
+          data_hora?: string
+          id?: string
+          lead_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agendamentos_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_messages: {
         Row: {
           client_id: string
@@ -145,6 +174,27 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      aplicacao_settings: {
+        Row: {
+          blocked_days: string[]
+          id: number
+          slots: string[]
+          updated_at: string
+        }
+        Insert: {
+          blocked_days?: string[]
+          id?: number
+          slots?: string[]
+          updated_at?: string
+        }
+        Update: {
+          blocked_days?: string[]
+          id?: number
+          slots?: string[]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1884,6 +1934,87 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      leads: {
+        Row: {
+          classificacao: string | null
+          created_at: string
+          decisao: string | null
+          email: string | null
+          experiencia: string | null
+          id: string
+          idade: string | null
+          instagram: string | null
+          investimento: string | null
+          nome: string | null
+          o_que_travou: string | null
+          ocupacao: string | null
+          pais: string | null
+          responsavel: string | null
+          responsavel_id: string | null
+          status: string
+          tempo_dia: string | null
+          updated_at: string
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          verba_anuncios: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          classificacao?: string | null
+          created_at?: string
+          decisao?: string | null
+          email?: string | null
+          experiencia?: string | null
+          id?: string
+          idade?: string | null
+          instagram?: string | null
+          investimento?: string | null
+          nome?: string | null
+          o_que_travou?: string | null
+          ocupacao?: string | null
+          pais?: string | null
+          responsavel?: string | null
+          responsavel_id?: string | null
+          status?: string
+          tempo_dia?: string | null
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          verba_anuncios?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          classificacao?: string | null
+          created_at?: string
+          decisao?: string | null
+          email?: string | null
+          experiencia?: string | null
+          id?: string
+          idade?: string | null
+          instagram?: string | null
+          investimento?: string | null
+          nome?: string | null
+          o_que_travou?: string | null
+          ocupacao?: string | null
+          pais?: string | null
+          responsavel?: string | null
+          responsavel_id?: string | null
+          status?: string
+          tempo_dia?: string | null
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          verba_anuncios?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
       }
       learning_activity: {
         Row: {
