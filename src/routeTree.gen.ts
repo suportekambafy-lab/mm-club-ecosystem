@@ -81,8 +81,8 @@ import { Route as AppJadeIndexRouteImport } from './routes/_app.jade.index'
 import { Route as AppJadeThreadIdRouteImport } from './routes/_app.jade.$threadId'
 import { Route as AppLivesIndexRouteImport } from './routes/_app.lives.index'
 import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
-import { Route as AuthenticatedComercialIndexRouteImport } from './routes/_authenticated/comercial.index'
 import { Route as AuthenticatedComercialAplicacoesRouteImport } from './routes/_authenticated/comercial.aplicacoes'
+import { Route as AuthenticatedComercialUtilizadoresRouteImport } from './routes/_authenticated/comercial.utilizadores'
 import { Route as AdminFinanceiroIndexRouteImport } from './routes/admin.financeiro.index'
 import { Route as AdminFinanceiroCatalogoRouteImport } from './routes/admin.financeiro.catalogo'
 import { Route as AdminFinanceiroCobrancasRouteImport } from './routes/admin.financeiro.cobrancas'
@@ -506,16 +506,16 @@ const AppLivesLiveIdRoute = AppLivesLiveIdRouteImport.update({
   path: '/$liveId',
   getParentRoute: () => AppLivesRoute,
 } as any)
-const AuthenticatedComercialIndexRoute =
-  AuthenticatedComercialIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedComercialRoute,
-  } as any)
 const AuthenticatedComercialAplicacoesRoute =
   AuthenticatedComercialAplicacoesRouteImport.update({
     id: '/aplicacoes',
     path: '/aplicacoes',
+    getParentRoute: () => AuthenticatedComercialRoute,
+  } as any)
+const AuthenticatedComercialUtilizadoresRoute =
+  AuthenticatedComercialUtilizadoresRouteImport.update({
+    id: '/utilizadores',
+    path: '/utilizadores',
     getParentRoute: () => AuthenticatedComercialRoute,
   } as any)
 const AdminFinanceiroIndexRoute = AdminFinanceiroIndexRouteImport.update({
@@ -943,6 +943,7 @@ export interface FileRoutesByFullPath {
   '/jade/$threadId': typeof AppJadeThreadIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
+  '/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cobrancas': typeof AdminFinanceiroCobrancasRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
@@ -958,7 +959,6 @@ export interface FileRoutesByFullPath {
   '/ajuda/': typeof AppAjudaIndexRoute
   '/jade/': typeof AppJadeIndexRoute
   '/lives/': typeof AppLivesIndexRoute
-  '/comercial/': typeof AuthenticatedComercialIndexRoute
   '/admin/financeiro/': typeof AdminFinanceiroIndexRoute
   '/admin/lives/': typeof AdminLivesIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
@@ -1035,6 +1035,7 @@ export interface FileRoutesByTo {
   '/perfil': typeof AppPerfilRoute
   '/shorts': typeof AppShortsRoute
   '/subscricao': typeof AppSubscricaoRoute
+  '/comercial': typeof AuthenticatedComercialRouteWithChildren
   '/admin/aplicacoes': typeof AdminAplicacoesRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/certificados': typeof AdminCertificadosRoute
@@ -1070,6 +1071,7 @@ export interface FileRoutesByTo {
   '/jade/$threadId': typeof AppJadeThreadIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
+  '/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cobrancas': typeof AdminFinanceiroCobrancasRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
@@ -1085,7 +1087,6 @@ export interface FileRoutesByTo {
   '/ajuda': typeof AppAjudaIndexRoute
   '/jade': typeof AppJadeIndexRoute
   '/lives': typeof AppLivesIndexRoute
-  '/comercial': typeof AuthenticatedComercialIndexRoute
   '/admin/financeiro': typeof AdminFinanceiroIndexRoute
   '/admin/lives': typeof AdminLivesIndexRoute
   '/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
@@ -1209,6 +1210,7 @@ export interface FileRoutesById {
   '/_app/jade/$threadId': typeof AppJadeThreadIdRoute
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
   '/_authenticated/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
+  '/_authenticated/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cobrancas': typeof AdminFinanceiroCobrancasRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
@@ -1224,7 +1226,6 @@ export interface FileRoutesById {
   '/_app/ajuda/': typeof AppAjudaIndexRoute
   '/_app/jade/': typeof AppJadeIndexRoute
   '/_app/lives/': typeof AppLivesIndexRoute
-  '/_authenticated/comercial/': typeof AuthenticatedComercialIndexRoute
   '/admin/financeiro/': typeof AdminFinanceiroIndexRoute
   '/admin/lives/': typeof AdminLivesIndexRoute
   '/_app/academia/$courseId/$lessonId': typeof AppAcademiaCourseIdLessonIdRoute
@@ -1347,6 +1348,7 @@ export interface FileRouteTypes {
     | '/jade/$threadId'
     | '/lives/$liveId'
     | '/comercial/aplicacoes'
+    | '/comercial/utilizadores'
     | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cobrancas'
     | '/admin/financeiro/cupoes'
@@ -1362,7 +1364,6 @@ export interface FileRouteTypes {
     | '/ajuda/'
     | '/jade/'
     | '/lives/'
-    | '/comercial/'
     | '/admin/financeiro/'
     | '/admin/lives/'
     | '/academia/$courseId/$lessonId'
@@ -1439,6 +1440,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/shorts'
     | '/subscricao'
+    | '/comercial'
     | '/admin/aplicacoes'
     | '/admin/aulas'
     | '/admin/certificados'
@@ -1474,6 +1476,7 @@ export interface FileRouteTypes {
     | '/jade/$threadId'
     | '/lives/$liveId'
     | '/comercial/aplicacoes'
+    | '/comercial/utilizadores'
     | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cobrancas'
     | '/admin/financeiro/cupoes'
@@ -1489,7 +1492,6 @@ export interface FileRouteTypes {
     | '/ajuda'
     | '/jade'
     | '/lives'
-    | '/comercial'
     | '/admin/financeiro'
     | '/admin/lives'
     | '/academia/$courseId/$lessonId'
@@ -1612,6 +1614,7 @@ export interface FileRouteTypes {
     | '/_app/jade/$threadId'
     | '/_app/lives/$liveId'
     | '/_authenticated/comercial/aplicacoes'
+    | '/_authenticated/comercial/utilizadores'
     | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cobrancas'
     | '/admin/financeiro/cupoes'
@@ -1627,7 +1630,6 @@ export interface FileRouteTypes {
     | '/_app/ajuda/'
     | '/_app/jade/'
     | '/_app/lives/'
-    | '/_authenticated/comercial/'
     | '/admin/financeiro/'
     | '/admin/lives/'
     | '/_app/academia/$courseId/$lessonId'
@@ -2248,18 +2250,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLivesLiveIdRouteImport
       parentRoute: typeof AppLivesRoute
     }
-    '/_authenticated/comercial/': {
-      id: '/_authenticated/comercial/'
-      path: '/'
-      fullPath: '/comercial/'
-      preLoaderRoute: typeof AuthenticatedComercialIndexRouteImport
-      parentRoute: typeof AuthenticatedComercialRoute
-    }
     '/_authenticated/comercial/aplicacoes': {
       id: '/_authenticated/comercial/aplicacoes'
       path: '/aplicacoes'
       fullPath: '/comercial/aplicacoes'
       preLoaderRoute: typeof AuthenticatedComercialAplicacoesRouteImport
+      parentRoute: typeof AuthenticatedComercialRoute
+    }
+    '/_authenticated/comercial/utilizadores': {
+      id: '/_authenticated/comercial/utilizadores'
+      path: '/utilizadores'
+      fullPath: '/comercial/utilizadores'
+      preLoaderRoute: typeof AuthenticatedComercialUtilizadoresRouteImport
       parentRoute: typeof AuthenticatedComercialRoute
     }
     '/admin/financeiro/': {
@@ -2701,14 +2703,15 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedComercialRouteChildren {
   AuthenticatedComercialAplicacoesRoute: typeof AuthenticatedComercialAplicacoesRoute
-  AuthenticatedComercialIndexRoute: typeof AuthenticatedComercialIndexRoute
+  AuthenticatedComercialUtilizadoresRoute: typeof AuthenticatedComercialUtilizadoresRoute
 }
 
 const AuthenticatedComercialRouteChildren: AuthenticatedComercialRouteChildren =
   {
     AuthenticatedComercialAplicacoesRoute:
       AuthenticatedComercialAplicacoesRoute,
-    AuthenticatedComercialIndexRoute: AuthenticatedComercialIndexRoute,
+    AuthenticatedComercialUtilizadoresRoute:
+      AuthenticatedComercialUtilizadoresRoute,
   }
 
 const AuthenticatedComercialRouteWithChildren =
