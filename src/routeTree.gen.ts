@@ -38,6 +38,7 @@ import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
 import { Route as AppShortsRouteImport } from './routes/_app.shorts'
 import { Route as AppSubscricaoRouteImport } from './routes/_app.subscricao'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAplicacoesRouteImport } from './routes/admin.aplicacoes'
 import { Route as AdminAulasRouteImport } from './routes/admin.aulas'
 import { Route as AdminCertificadosRouteImport } from './routes/admin.certificados'
 import { Route as AdminComunicacaoRouteImport } from './routes/admin.comunicacao'
@@ -283,6 +284,11 @@ const AppSubscricaoRoute = AppSubscricaoRouteImport.update({
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAplicacoesRoute = AdminAplicacoesRouteImport.update({
+  id: '/aplicacoes',
+  path: '/aplicacoes',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAulasRoute = AdminAulasRouteImport.update({
@@ -872,6 +878,7 @@ export interface FileRoutesByFullPath {
   '/perfil': typeof AppPerfilRoute
   '/shorts': typeof AppShortsRoute
   '/subscricao': typeof AppSubscricaoRoute
+  '/admin/aplicacoes': typeof AdminAplicacoesRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/certificados': typeof AdminCertificadosRoute
   '/admin/comunicacao': typeof AdminComunicacaoRoute
@@ -1000,6 +1007,7 @@ export interface FileRoutesByTo {
   '/perfil': typeof AppPerfilRoute
   '/shorts': typeof AppShortsRoute
   '/subscricao': typeof AppSubscricaoRoute
+  '/admin/aplicacoes': typeof AdminAplicacoesRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/certificados': typeof AdminCertificadosRoute
   '/admin/comunicacao': typeof AdminComunicacaoRoute
@@ -1130,6 +1138,7 @@ export interface FileRoutesById {
   '/_app/perfil': typeof AppPerfilRoute
   '/_app/shorts': typeof AppShortsRoute
   '/_app/subscricao': typeof AppSubscricaoRoute
+  '/admin/aplicacoes': typeof AdminAplicacoesRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/certificados': typeof AdminCertificadosRoute
   '/admin/comunicacao': typeof AdminComunicacaoRoute
@@ -1264,6 +1273,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/shorts'
     | '/subscricao'
+    | '/admin/aplicacoes'
     | '/admin/aulas'
     | '/admin/certificados'
     | '/admin/comunicacao'
@@ -1392,6 +1402,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/shorts'
     | '/subscricao'
+    | '/admin/aplicacoes'
     | '/admin/aulas'
     | '/admin/certificados'
     | '/admin/comunicacao'
@@ -1521,6 +1532,7 @@ export interface FileRouteTypes {
     | '/_app/perfil'
     | '/_app/shorts'
     | '/_app/subscricao'
+    | '/admin/aplicacoes'
     | '/admin/aulas'
     | '/admin/certificados'
     | '/admin/comunicacao'
@@ -1889,6 +1901,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/aplicacoes': {
+      id: '/admin/aplicacoes'
+      path: '/aplicacoes'
+      fullPath: '/admin/aplicacoes'
+      preLoaderRoute: typeof AdminAplicacoesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/aulas': {
@@ -2805,6 +2824,7 @@ const AdminLivesRouteWithChildren = AdminLivesRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
+  AdminAplicacoesRoute: typeof AdminAplicacoesRoute
   AdminAulasRoute: typeof AdminAulasRoute
   AdminCertificadosRoute: typeof AdminCertificadosRoute
   AdminComunicacaoRoute: typeof AdminComunicacaoRoute
@@ -2827,6 +2847,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAplicacoesRoute: AdminAplicacoesRoute,
   AdminAulasRoute: AdminAulasRoute,
   AdminCertificadosRoute: AdminCertificadosRoute,
   AdminComunicacaoRoute: AdminComunicacaoRoute,

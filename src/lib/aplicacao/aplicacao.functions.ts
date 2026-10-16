@@ -26,18 +26,18 @@ export const saveLead = createServerFn({ method: "POST" })
     const { id, final, ...fields } = data;
     const row: Record<string, unknown> = { ...fields, updated_at: new Date().toISOString() };
     if (final) {
-      row.classificacao = classificar(fields);
+      row.classificacao = classificar(fields as Record<string, string | undefined>);
       row.status = "novo";
     }
     if (id) {
       const { data: ex } = await db.from("leads").select("id, status").eq("id", id).maybeSingle();
       if (ex) {
         if (!final && ex.status !== "incompleto") delete row.status;
-        await db.from("leads").update(row).eq("id", id);
+        await db.from("leads").update(row as never).eq("id", id);
         return { id, classificacao: (row.classificacao as string) ?? null };
       }
     }
-    const { data: ins, error } = await db.from("leads").insert({ ...row, status: final ? "novo" : "incompleto" }).select("id").single();
+    const { data: ins, error } = await db.from("leads").insert({ ...row, status: final ? "novo" : "incompleto" } as never).select("id").single();
     if (error) throw new Error("Não foi possível guardar.");
     return { id: ins.id as string, classificacao: (row.classificacao as string) ?? null };
   });
@@ -121,7 +121,7 @@ export const updateLead = createServerFn({ method: "POST" })
       patch.responsavel = p?.display_name ?? "Equipa";
       patch.responsavel_id = context.userId;
     }
-    let q = context.supabase.from("leads").update(patch).eq("id", data.id);
+    let q = context.supabase.from("leads").update(patch as never).eq("id", data.id);
     if (data.assumir) q = q.is("responsavel_id", null);
     const { error } = await q;
     if (error) throw new Error("Não foi possível atualizar.");

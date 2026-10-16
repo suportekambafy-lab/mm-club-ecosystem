@@ -46,8 +46,7 @@ const QUESTIONS: Q[] = [
 const REQUIRED = QUESTIONS.filter((q) => !("optional" in q && q.optional));
 const STORE = "mm.aplicacao.v1";
 
-declare global { interface Window { fbq?: (...a: unknown[]) => void } }
-function track(ev: string) { try { window.fbq?.("track", ev); } catch { /* noop */ } }
+function track(ev: string) { try { (window as any).fbq?.("track", ev); } catch { /* noop */ } }
 
 function AplicacaoPage() {
   const save = useServerFn(saveLead);
@@ -81,11 +80,11 @@ function AplicacaoPage() {
     if (id && id !== "PIXEL_ID" && !window.fbq) {
       const f = function (...a: unknown[]) { (f as any).queue.push(a); } as any;
       f.queue = []; f.loaded = true; f.version = "2.0"; f.callMethod = undefined;
-      window.fbq = f;
+      (window as any).fbq = f;
       const sc = document.createElement("script");
       sc.async = true; sc.src = "https://connect.facebook.net/en_US/fbevents.js";
       document.head.appendChild(sc);
-      window.fbq("init", id); window.fbq("track", "PageView");
+      f("init", id); f("track", "PageView");
     }
     setHydrated(true);
   }, []);
