@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { classificar } from "./config";
 import { leadSchema } from "./validation";
+import { leadUpdateSchema } from "./sale-rules";
 
 async function admin() {
   return (await import("@/integrations/supabase/client.server")).supabaseAdmin;
@@ -70,12 +71,7 @@ export const listLeads = createServerFn({ method: "GET" })
 
 export const updateLead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) =>
-    z.object({
-      id: z.string().uuid(),
-      status: z.enum(["novo", "incompleto", "em_contato", "call_marcada", "fechou", "perdido"]).optional(),
-      assumir: z.boolean().optional(),
-    }).parse(i))
+  .inputValidator((i: unknown) => leadUpdateSchema.parse(i))
   .handler(async ({ context, data }) => {
     await assertCommercial(context);
     const db = await admin();
@@ -85,6 +81,7 @@ export const updateLead = createServerFn({ method: "POST" })
       throw new Error("Este lead já foi assumido por outra pessoa.");
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (data.status) patch.status = data.status;
+    if (data.status === "fechou") patch.sale_amount_cents = data.saleAmountCents;
     if (data.assumir) {
       const { data: p } = await db.from("profiles").select("display_name").eq("id", context.userId).maybeSingle();
       patch.responsavel = p?.display_name ?? "Equipa";
@@ -92,9 +89,10 @@ export const updateLead = createServerFn({ method: "POST" })
     }
     let q = db.from("leads").update(patch as never).eq("id", data.id);
     if (data.assumir) q = q.is("responsavel_id", null);
-    const { error } = await q;
+    const { data: updated, error } = await q.select("*").maybeSingle();
     if (error) throw new Error("Não foi possível atualizar.");
-    return { ok: true };
+    if (!updated) throw new Error("O lead não foi atualizado. Volta a abrir a aplicação.");
+    return { ok: true, lead: updated };
   });
 
 export const saveSettings = createServerFn({ method: "POST" })
