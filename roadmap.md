@@ -12,5 +12,5 @@
 - [x] Garantir bloqueio e aviso após expiração, preservando outros acessos válidos: 32 testes passaram; conta fictícia criada com vitalício, acesso de 1 mês atribuído, aula aberta bloqueada automaticamente ao expirar com aviso e vídeo removido, conta fictícia eliminada.
 - [x] Refinar visual comercial e cores do admin, sem alterar funcionalidades; páginas comerciais, fotografia, menu recolhível e janela de criação verificados com sessão admin; computador e telemóvel sem sobreposição ou erros.
 - [x] Pedir e guardar valor ao fechar lead; 20 testes passaram; venda fictícia de 149,90 € guardada e relida após recarregar, cancelar mantém estado, zero rejeitado e gravação real do sino reproduzida uma vez; janela verificada no telemóvel e aplicação fictícia removida.
-- [x] Sino de venda a tocar 3 vezes por venda fechada; 9 testes passaram; no navegador contados 3 inícios de áudio espaçados 1,4 s (0,11 s, 1,51 s, 2,91 s) e celebração com "Venda realizada", 149,90 € e "Fechado por: Guadalupe".
-- [x] Sino em três batidas separadas por silêncio; 9 testes passaram; simulação do áudio com picos em 0,15 s, 1,20 s e 2,25 s e volume zero entre eles, e no navegador 3 inícios (0,09 s, 1,14 s, 2,19 s) com cada batida cortada em 0,8 s.
+- [x] Repetir o som completo do sino três vezes, com uma pequena pausa entre toques.
+- [x] Sincronizar a animação com cada reprodução do sino, na celebração local e da equipa; navegador confirmou três reproduções, três reinícios da animação e paragem entre toques; 3 testes passaram.

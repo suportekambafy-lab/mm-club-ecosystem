@@ -633,7 +633,8 @@ html[data-live-immersive="1"] [data-mobile-tabbar] { display: none !important; }
   84% { transform: rotate(4deg); }
 }
 @keyframes sale-celebration-enter { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-.sale-bell svg { transform-origin: top center; animation: sale-bell-ring 1.2s ease-in-out 2; }
+.sale-bell svg { transform-origin: top center; }
+.sale-bell[data-ringing="true"] svg { animation: sale-bell-ring 1.2s ease-in-out infinite; }
 .sale-celebration { animation: sale-celebration-enter 220ms ease-out; }
 @media (prefers-reduced-motion: reduce) { .sale-bell svg, .sale-celebration { animation: none; } }
 

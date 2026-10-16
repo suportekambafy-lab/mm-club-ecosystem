@@ -36,5 +36,5 @@ export function SaleBroadcastListener() {
     return () => { void supabase.removeChannel(channel); };
   }, []);
   if (!sale) return null;
-  return <SaleCelebration amount={sale.amount} closer={sale.closer} onDismiss={dismiss} />;
+  return <SaleCelebration amount={sale.amount} closer={sale.closer} strike={bell.strike} isRinging={bell.isRinging} onDismiss={dismiss} />;
 }
