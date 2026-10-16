@@ -13,4 +13,4 @@
 - [x] Refinar visual comercial e cores do admin, sem alterar funcionalidades; páginas comerciais, fotografia, menu recolhível e janela de criação verificados com sessão admin; computador e telemóvel sem sobreposição ou erros.
 - [x] Pedir e guardar valor ao fechar lead; 20 testes passaram; venda fictícia de 149,90 € guardada e relida após recarregar, cancelar mantém estado, zero rejeitado e gravação real do sino reproduzida uma vez; janela verificada no telemóvel e aplicação fictícia removida.
 - [x] Repetir o som completo do sino três vezes, com uma pequena pausa entre toques.
-- [ ] Sincronizar e verificar a animação com cada reprodução do sino, na celebração local e da equipa.
+- [x] Sincronizar a animação com cada reprodução do sino, na celebração local e da equipa; navegador confirmou três reproduções, três reinícios da animação e paragem entre toques; 3 testes passaram.
