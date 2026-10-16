@@ -19,3 +19,4 @@
 - Commercial home, members, applications and team use separate leaf routes within the commercial shell; shared query options and team presentation live outside routes to preserve code splitting and existing permission boundaries.
 - Platform account CRUD uses separate admin-authorized server functions, invites without auto-confirming email, auth email as the canonical address and server-side self/staff/ongoing-billing deletion guards; commercial access grants remain available to SDR/closers separately.
 - Commercial member dialogs use the shared portalled Dialog component so animated page transforms cannot position overlays outside the viewport.
+- Commercial presentation remaps semantic admin tokens within its shell; shared admin palette changes stay in global CSS so business logic and permission boundaries remain unchanged.

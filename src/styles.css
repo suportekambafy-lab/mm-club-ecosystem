@@ -455,16 +455,16 @@ html[data-live-immersive="1"] [data-mobile-tabbar] { display: none !important; }
  * MM Admin — Stripe-like neutral dark surface (scoped to /admin)
  * --------------------------------------------------------------- */
 :root {
-  --admin-bg: oklch(0.145 0 0);
-  --admin-sidebar: oklch(0.115 0 0);
-  --admin-panel: oklch(0.165 0 0);
-  --admin-panel-2: oklch(0.2 0 0);
-  --admin-hover: oklch(0.225 0 0);
-  --admin-border: oklch(1 0 0 / 8%);
+  --admin-bg: oklch(0.175 0.006 165);
+  --admin-sidebar: oklch(0.145 0.006 165);
+  --admin-panel: oklch(0.205 0.006 165);
+  --admin-panel-2: oklch(0.24 0.006 165);
+  --admin-hover: oklch(0.275 0.007 165);
+  --admin-border: oklch(1 0 0 / 11%);
   --admin-fg: oklch(0.975 0 0);
   --admin-muted: oklch(0.72 0 0);
   --admin-faint: oklch(0.58 0 0);
-  --admin-accent: oklch(0.55 0.23 264);
+  --admin-accent: oklch(0.66 0.13 165);
   --admin-grid: oklch(1 0 0 / 7%);
 }
 
@@ -485,7 +485,7 @@ html[data-live-immersive="1"] [data-mobile-tabbar] { display: none !important; }
 .admin-shell {
   font-family: var(--font-admin);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-  letter-spacing: -0.005em;
+  letter-spacing: 0;
 }
 .admin-shell h1, .admin-shell h2, .admin-shell h3 { font-family: var(--font-admin); }
 
@@ -537,11 +537,11 @@ html[data-live-immersive="1"] [data-mobile-tabbar] { display: none !important; }
   --admin-fg: oklch(0.2 0 0);
   --admin-muted: oklch(0.45 0 0);
   --admin-faint: oklch(0.58 0 0);
-  --admin-accent: oklch(0.53 0.23 264);
+  --admin-accent: oklch(0.46 0.095 165);
   --admin-grid: oklch(0 0 0 / 8%);
   --input: oklch(0 0 0 / 12%);
 }
-.admin-shell .font-display { font-family: var(--font-admin); letter-spacing: -0.02em; }
+.admin-shell .font-display { font-family: var(--font-admin); letter-spacing: 0; }
 .admin-shell, .admin-shell h1, .admin-shell h2, .admin-shell h3,
 .admin-shell h4, .admin-shell h5, .admin-shell h6, .admin-shell .font-display {
   font-family: var(--font-admin) !important;
@@ -555,36 +555,63 @@ html[data-live-immersive="1"] [data-mobile-tabbar] { display: none !important; }
 }
 
 @theme inline {
-  --color-commercial-gold: var(--commercial-gold);
-  --color-commercial-mint: var(--commercial-mint);
+  --color-commercial-accent: var(--commercial-accent);
+  --color-commercial-success: var(--commercial-success);
 }
 .commercial-shell {
-  --commercial-gold: oklch(0.81 0.11 85);
-  --commercial-mint: oklch(0.78 0.12 165);
-  --admin-accent: var(--commercial-gold);
-  --primary: var(--commercial-gold);
-  --primary-foreground: var(--admin-bg);
+  color-scheme: light;
+  --commercial-accent: oklch(0.45 0.09 165);
+  --commercial-success: oklch(0.55 0.11 165);
+  --commercial-nav-background: oklch(0.19 0.012 165);
+  --commercial-nav-foreground: oklch(0.96 0.005 165);
+  --commercial-nav-muted: oklch(0.73 0.012 165);
+  --commercial-nav-active: oklch(0.3 0.025 165);
+  --admin-bg: oklch(0.985 0.002 165);
+  --admin-panel: oklch(1 0 0);
+  --admin-panel-2: oklch(0.95 0.004 165);
+  --admin-hover: oklch(0.935 0.008 165);
+  --admin-border: oklch(0.89 0.006 165);
+  --admin-fg: oklch(0.25 0.012 165);
+  --admin-muted: oklch(0.51 0.012 165);
+  --admin-faint: oklch(0.59 0.008 165);
+  --admin-accent: var(--commercial-accent);
+  --primary: var(--commercial-accent);
+  --primary-foreground: oklch(1 0 0);
+  --input: var(--admin-border);
   letter-spacing: 0;
 }
 .commercial-shell h1, .commercial-shell h2, .commercial-shell h3, .commercial-shell .font-display { letter-spacing: 0; }
-.commercial-sidebar { width: 236px; position: fixed; inset: 0 auto 0 0; padding: 24px 16px; background: var(--admin-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 20; transition: width 280ms ease; }
-.commercial-sidebar-bottom { margin-top: auto; border-top: 1px solid var(--border); padding-top: 20px; }
-.commercial-workspace { margin-left: 236px; transition: margin-left 280ms ease; }
-.commercial-nav-item { height: 46px; gap: 14px; color: var(--muted-foreground); border: 1px solid transparent; }
-.commercial-nav-item[data-active] { color: var(--commercial-gold); background: color-mix(in oklch, var(--commercial-gold) 8%, transparent); border-color: color-mix(in oklch, var(--commercial-gold) 18%, transparent); }
+.commercial-sidebar { width: 244px; position: fixed; inset: 0 auto 0 0; padding: 24px 16px; background: var(--commercial-nav-background); color: var(--commercial-nav-foreground); display: flex; flex-direction: column; z-index: 20; transition: width 220ms ease; }
+.commercial-sidebar .text-muted-foreground { color: var(--commercial-nav-muted); }
+.commercial-sidebar-bottom { margin-top: auto; border-top: 1px solid var(--commercial-nav-active); padding-top: 20px; }
+.commercial-workspace { margin-left: 244px; transition: margin-left 220ms ease; }
+.commercial-topbar { background: var(--card); }
+.commercial-nav-item { height: 46px; gap: 14px; color: var(--commercial-nav-muted); border: 1px solid transparent; border-radius: 6px; }
+.commercial-sidebar a:hover { color: var(--commercial-nav-foreground); background: var(--commercial-nav-active); }
+.commercial-nav-item[data-active] { color: var(--commercial-nav-foreground); background: var(--commercial-nav-active); border-color: transparent; }
+.commercial-page-heading { font-size: 32px; line-height: 1.2; font-weight: 600; }
+.commercial-team-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 56px; align-items: start; }
+.commercial-team-intro { padding-top: 12px; }
+.commercial-person { transition: border-color 200ms ease; }
+.commercial-person:hover { border-color: var(--commercial-accent); }
+.commercial-person-photo { aspect-ratio: 4 / 5; }
+.commercial-person-photo img { object-position: center 25%; }
+.commercial-stat { border-left: 2px solid var(--border); padding-left: 20px; }
+.commercial-stat:first-child { border-left-color: var(--commercial-accent); }
+.commercial-shell table { background: var(--card); }
+.commercial-shell thead { background: var(--muted); }
+.commercial-shell tbody tr:hover { background: var(--accent); }
+.commercial-shell th { font-size: 12px; font-weight: 500; }
 .commercial-collapsed .commercial-sidebar { width: 84px; }
 .commercial-collapsed .commercial-workspace { margin-left: 84px; }
 .commercial-collapsed .commercial-nav-label { display: none; }
 .commercial-collapsed .commercial-nav { margin-top: 48px; }
 .commercial-collapsed .commercial-nav-item { justify-content: center; padding: 0; }
-.commercial-lead { transition: background 200ms ease, padding 200ms ease; }
-.commercial-lead:hover { background: var(--admin-panel); padding-inline: 12px; }
-@keyframes commercial-reveal { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-.commercial-enter { animation: commercial-reveal 550ms ease both; }
-.commercial-stagger > * { animation: commercial-reveal 650ms ease both; }
-.commercial-stagger > :nth-child(2) { animation-delay: 80ms; }
-.commercial-stagger > :nth-child(3) { animation-delay: 160ms; }
-.commercial-stagger > :nth-child(4) { animation-delay: 240ms; }
+.commercial-lead { transition: background 180ms ease; }
+.commercial-lead:hover { background: var(--accent); }
+@keyframes commercial-reveal { from { opacity: 0; } to { opacity: 1; } }
+.commercial-enter { animation: commercial-reveal 250ms ease both; }
+.commercial-stagger > * { animation: commercial-reveal 300ms ease both; }
 @media (max-width: 767px) {
   .commercial-sidebar, .commercial-collapsed .commercial-sidebar { position: static; width: 100%; padding: 12px 16px; border-right: 0; border-bottom: 1px solid var(--border); }
   .commercial-sidebar > p, .commercial-sidebar-bottom { display: none; }
@@ -592,5 +619,7 @@ html[data-live-immersive="1"] [data-mobile-tabbar] { display: none !important; }
   .commercial-nav-item { height: 56px; gap: 6px; padding-inline: 2px; font-size: 11px; flex-direction: column; justify-content: center; }
   .commercial-collapsed .commercial-nav-label { display: block; }
   .commercial-workspace, .commercial-collapsed .commercial-workspace { margin-left: 0; }
+  .commercial-team-layout { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .commercial-page-heading { font-size: 28px; }
 }
 @media (prefers-reduced-motion: reduce) { .commercial-enter, .commercial-stagger > * { animation: none; } }
