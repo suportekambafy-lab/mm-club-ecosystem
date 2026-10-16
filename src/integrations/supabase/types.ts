@@ -1954,6 +1954,9 @@ export type Database = {
           responsavel: string | null
           responsavel_id: string | null
           sale_amount_cents: number | null
+          sale_closed_at: string | null
+          sale_closed_by: string | null
+          sale_commission_brl_cents: number | null
           status: string
           tempo_dia: string | null
           updated_at: string
@@ -1982,6 +1985,9 @@ export type Database = {
           responsavel?: string | null
           responsavel_id?: string | null
           sale_amount_cents?: number | null
+          sale_closed_at?: string | null
+          sale_closed_by?: string | null
+          sale_commission_brl_cents?: number | null
           status?: string
           tempo_dia?: string | null
           updated_at?: string
@@ -2010,6 +2016,9 @@ export type Database = {
           responsavel?: string | null
           responsavel_id?: string | null
           sale_amount_cents?: number | null
+          sale_closed_at?: string | null
+          sale_closed_by?: string | null
+          sale_commission_brl_cents?: number | null
           status?: string
           tempo_dia?: string | null
           updated_at?: string
