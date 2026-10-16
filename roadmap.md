@@ -1,3 +1,3 @@
 - [x] Tornar todas as respostas obrigatórias, com validação e testes (25 testes passaram; campos vazios bloqueados no navegador).
 - [x] Avisar novas aplicações com toast e som em qualquer página do admin.
-- [ ] Confirmar chegada real de uma aplicação com toast e som: aguarda sessão do utilizador no admin da pré-visualização.
+- [x] Confirmar chegada real de uma aplicação com toast e som: aplicação completa enviada pelo formulário, toast visível no admin autenticado, dois tons iniciados com áudio ativo, detalhe lido no painel e ausência de avisos duplicados confirmada.
