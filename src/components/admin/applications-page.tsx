@@ -200,7 +200,7 @@ function Detail({ lead, me, agenda, onClose, onChanged, commercial }: { lead: Le
         </div>
         {lead.responsavel && <p className="mt-3 text-xs text-muted-foreground">Responsável: {lead.responsavel}{locked && " · bloqueado para ti"}</p>}
         <label className="mt-4 block text-xs text-muted-foreground">Estado
-          <select disabled={busy || locked} value={lead.status} onChange={(e) => { const status = e.target.value as Parameters<typeof run>[0]["status"]; if (status === "fechou") { setAmount(lead.sale_amount_cents != null ? String(lead.sale_amount_cents / 100) : ""); setClosing(true); } else void run({status}); }} className="mt-1 block w-full rounded-lg bg-surface-1 px-3 py-2 text-sm text-foreground ring-1 ring-border">
+          <select aria-label="Estado" disabled={busy || locked} value={lead.status} onChange={(e) => { const status = e.target.value as Parameters<typeof run>[0]["status"]; e.target.value = lead.status; if (status === "fechou") { setAmount(lead.sale_amount_cents != null ? String(lead.sale_amount_cents / 100) : ""); setClosing(true); } else void run({status}); }} className="mt-1 block w-full rounded-lg bg-surface-1 px-3 py-2 text-sm text-foreground ring-1 ring-border">
             {Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
         </label>
