@@ -1,8 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { canDeleteMemberAccount, canManageMemberAccounts, deleteMemberSchema, memberDetailsSchema, updateMemberSchema } from "./member-rules";
+import { canDeleteMemberAccount, canManageMemberAccounts, deleteMemberSchema, createMemberSchema, updateMemberSchema } from "./member-rules";
 
-export const createPlatformMember = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((input: unknown) => memberDetailsSchema.parse(input)).handler(async ({ context, data }) => {
+export const createPlatformMember = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((input: unknown) => createMemberSchema.parse(input)).handler(async ({ context, data }) => {
   const { data: allowed, error } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
   if (error || !canManageMemberAccounts(Boolean(allowed))) throw new Error("Só administradores podem gerir contas.");
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
@@ -11,8 +11,10 @@ export const createPlatformMember = createServerFn({ method: "POST" }).middlewar
   const id = result.data.user.id;
   const profile = await db.from("profiles").update({ display_name: data.name }).eq("id", id);
   if (profile.error) throw new Error("O convite foi criado, mas não foi possível atualizar o nome.");
-  await db.from("admin_action_log").insert({ actor_id: context.userId, action: "member.create", entity_type: "user", entity_id: id, after: { name: data.name, email: data.email } });
-  return { id };
+  const { data: expiresAt, error: accessError } = await context.supabase.rpc("grant_commercial_club_access", { _user_id: id, _months: data.months === "lifetime" ? 0 : data.months, _reason: "Acesso atribuído na criação da conta" });
+  if (accessError) throw new Error("O convite foi enviado, mas o acesso não foi atribuído. Procura o utilizador e usa Dar acesso; não voltes a criar a conta.");
+  await db.from("admin_action_log").insert({ actor_id: context.userId, action: "member.create", entity_type: "user", entity_id: id, after: { name: data.name, email: data.email, months: data.months, expires_at: expiresAt } });
+  return { id, expiresAt };
 });
 
 export const updatePlatformMember = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((input: unknown) => updateMemberSchema.parse(input)).handler(async ({ context, data }) => {

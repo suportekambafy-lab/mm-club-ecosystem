@@ -46,6 +46,7 @@ import { NotificationsPrompt } from "@/components/mm/notifications-prompt";
 import { isLockedPath } from "@/lib/member-access";
 import { DebtBanner } from "@/components/mm/debt-banner";
 import { CancelBanner } from "@/components/mm/cancel-banner";
+import { AccessExpiryBanner, useClubAccessExpiry } from "@/components/mm/access-expiry";
 import { PaymentMigrationBanner } from "@/components/mm/payment-migration-banner";
 import { ViewAsBar } from "@/components/admin/view-as-bar";
 import { useViewAs } from "@/hooks/use-view-as";
@@ -109,7 +110,8 @@ export const Route = createFileRoute("/_app")({
           .select("id")
           .eq("user_id", userId)
           .limit(1);
-        const wasMember = (subs ?? []).length > 0;
+        const { data: previousGrants } = await supabase.from("entitlement_grants").select("id").eq("user_id",userId).eq("feature_key","academy.access").limit(1);
+        const wasMember = (subs ?? []).length > 0 || (previousGrants ?? []).length > 0;
 
         if (!wasMember) {
           // Nunca subscreveu: segue para o plano que já tinha escolhido.
@@ -254,7 +256,9 @@ function AppLayout() {
   // Modo admin "ver como cliente": o acesso passa a ser o do membro escolhido.
   const viewAs = useViewAs();
   // Em modo cliente a sessão já é do membro, logo o acesso real é o dele.
-  const hasAccess = ownAccess;
+  const accessState = useClubAccessExpiry(initialAuthUser.id);
+  const hasAccess = accessState?.hasAccess ?? ownAccess;
+  const contentLocked = !hasAccess && (isLockedPath(pathname) || /^\/academia\/[^/]+\/(?!$)/.test(pathname));
   const { theme, toggle: toggleTheme, mounted: themeMounted } = useTheme();
   const codeAccepted = initialCodeAccepted;
   const [authUser, setAuthUser] = useState<User | null>(initialAuthUser);
@@ -824,15 +828,16 @@ function AppLayout() {
           />
           )}
           {viewAs ? <ViewAsBar target={viewAs} /> : null}
-          {!hasAccess && authUser ? (
+          {authUser && accessState?.manual && <AccessExpiryBanner expired={accessState.expired} expiresAt={accessState.expiresAt} />}
+          {!hasAccess && authUser && !accessState?.expired ? (
             <DebtBanner userId={viewAs ? viewAs.userId : authUser.id} />
-          ) : authUser ? (
+          ) : authUser && hasAccess ? (
             <>
               <PaymentMigrationBanner />
               <CancelBanner />
             </>
           ) : null}
-          {authUser ? <Outlet /> : <div className="min-h-[60vh]" />}
+          {authUser ? contentLocked ? <div className="py-12 text-center"><GraduationCap className="mx-auto mb-4 h-8 w-8 text-muted-foreground"/><h1 className="text-2xl font-semibold">Acesso aos conteúdos bloqueado</h1><Link to="/subscricao" className="mt-4 inline-block text-primary underline underline-offset-4">Renovar acesso</Link></div> : <Outlet /> : <div className="min-h-[60vh]" />}
         </main>
       </div>
 

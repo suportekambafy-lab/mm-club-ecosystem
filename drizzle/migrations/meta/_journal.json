@@ -50,6 +50,20 @@
       "when": 1792186795590,
       "tag": "0006_commercial_access_permissions",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792188092271,
+      "tag": "0007_commercial_access_durations",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792188247699,
+      "tag": "0008_commercial_lifetime_and_live_expiry",
+      "breakpoints": true
     }
   ]
 }

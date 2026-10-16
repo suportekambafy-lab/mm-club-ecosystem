@@ -8,7 +8,8 @@ import { KeyRound, Search, Loader2, Pencil, Trash2, UserPlus } from "lucide-reac
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { MemberAccountDialog, type AccountDialogState } from "@/components/commercial/member-account-dialog";
 import { toast } from "sonner";
-import { manualAccessSchema } from "@/lib/commercial/rules";
+import { manualAccessSchema, type AccessDuration } from "@/lib/commercial/rules";
+import { AccessDurationPicker } from "@/components/commercial/access-duration-picker";
 
 const options = queryOptions({ queryKey: ["commercial-members"], queryFn: () => commercialMembers({ data: { search: "" } }) });
 export const Route = createFileRoute("/_authenticated/comercial/utilizadores")({
@@ -30,7 +31,7 @@ function CommercialMembers() {
   const [search,setSearch] = useState("");
   const [results,setResults] = useState<Member[] | null>(null);
   const [selected,setSelected] = useState<Member | null>(null);
-  const [months,setMonths] = useState<3|6|12>(6);
+  const [months,setMonths] = useState<AccessDuration>(1);
   const [reason,setReason] = useState("");
   const [busy,setBusy] = useState(false);
   const [accountDialog,setAccountDialog] = useState<AccountDialogState | null>(null);
@@ -47,7 +48,7 @@ function CommercialMembers() {
     setBusy(true);
     try {
       const result = await give({data:parsed.data});
-      toast.success(`Acesso atribuído até ${date(result.expiresAt)}`);
+      toast.success(result.expiresAt ? `Acesso atribuído até ${date(result.expiresAt)}` : "Acesso vitalício atribuído.");
       setSelected(null); setReason(""); setResults(null); setSearch("");
       await qc.invalidateQueries({queryKey:["commercial-members"]});
     } catch(e) { toast.error(e instanceof Error ? e.message : "Não foi possível atribuir acesso."); } finally { setBusy(false); }
@@ -71,9 +72,9 @@ function CommercialMembers() {
       <DialogTitle className="pr-6 text-xl font-semibold">Dar acesso ao MM Club</DialogTitle>
       <DialogDescription className="mt-2 break-words text-sm text-admin-muted">{selected.display_name} · {selected.email}</DialogDescription>
       <form onSubmit={grant} className="mt-6 space-y-5">
-        <fieldset><legend className="mb-2 text-sm">Duração</legend><div className="grid grid-cols-3 gap-2">{([3,6,12] as const).map(m=><Button key={m} type="button" variant={m===months ? "default":"outline"} aria-pressed={m===months} onClick={()=>setMonths(m)}>{m} meses</Button>)}</div></fieldset>
+        <AccessDurationPicker value={months} onChange={setMonths} disabled={busy} />
         <label className="block text-sm">Motivo<textarea required minLength={3} maxLength={500} value={reason} onChange={e=>setReason(e.target.value)} className="mt-2 min-h-24 w-full rounded-md border border-admin-border bg-admin-panel p-3" /></label>
-        <p className="text-xs text-admin-muted">Acesso até {date(new Date(new Date().setMonth(new Date().getMonth()+months)).toISOString())}. Não cria cobranças nem altera a subscrição existente.</p>
+        <p className="text-xs text-admin-muted">{months === "lifetime" ? "Acesso vitalício, sem data de fim." : `Acesso durante ${months === 1 ? "1 mês" : `${months} meses`} a partir de agora, com bloqueio automático no fim.`} Não cria cobranças nem altera a subscrição existente.</p>
         <Button type="submit" disabled={busy} className="w-full">{busy ? <Loader2 className="animate-spin"/>:<KeyRound/>}Confirmar acesso</Button>
       </form>
     </DialogContent></Dialog>}
