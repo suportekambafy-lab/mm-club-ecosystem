@@ -1,4 +1,5 @@
-- [ ] Investigar fechos ausentes em Minhas vendas, corrigir autoria e verificar leitura autenticada sem atribuir vendas por suposição.
+- [x] Investigar fechos ausentes: seis vendas guardadas sem autor nem responsável; consulta autenticada e permissões verificadas, página mostra zero corretamente para a conta atual.
+- [ ] Recuperar autoria dos seis fechos e confirmar valores em Minhas vendas — aguarda confirmação do utilizador sobre quais fechou; não há autor nos registos de auditoria.
 - [x] Criar entrada comercial própria com contas existentes, recuperação de palavra-passe e verificação de permissões.
 - [x] Verificar entrada pública, rejeição de dados incorretos, continuação autenticada e encaminhamento para vendas; 3 testes passaram e navegador sem erros. Envio real de recuperação não foi disparado.
 - [x] Tornar todas as respostas obrigatórias, com validação e testes (25 testes passaram; campos vazios bloqueados no navegador).
