@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AplicacaoRouteImport } from './routes/aplicacao'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PagamentoRouteImport } from './routes/pagamento'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
@@ -152,6 +153,11 @@ const AppRoute = AppRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AplicacaoRoute = AplicacaoRouteImport.update({
+  id: '/aplicacao',
+  path: '/aplicacao',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -841,6 +847,7 @@ const ApiPublicLivesLiveIdCoverSvgRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/aplicacao': typeof AplicacaoRoute
   '/auth': typeof AuthRoute
   '/pagamento': typeof PagamentoRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -971,6 +978,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/aplicacao': typeof AplicacaoRoute
   '/auth': typeof AuthRoute
   '/pagamento': typeof PagamentoRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -1097,6 +1105,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
+  '/aplicacao': typeof AplicacaoRoute
   '/auth': typeof AuthRoute
   '/pagamento': typeof PagamentoRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -1230,6 +1239,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/aplicacao'
     | '/auth'
     | '/pagamento'
     | '/privacidade'
@@ -1360,6 +1370,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/aplicacao'
     | '/auth'
     | '/pagamento'
     | '/privacidade'
@@ -1485,6 +1496,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/admin'
+    | '/aplicacao'
     | '/auth'
     | '/pagamento'
     | '/privacidade'
@@ -1618,6 +1630,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
+  AplicacaoRoute: typeof AplicacaoRoute
   AuthRoute: typeof AuthRoute
   PagamentoRoute: typeof PagamentoRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
@@ -1694,6 +1707,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aplicacao': {
+      id: '/aplicacao'
+      path: '/aplicacao'
+      fullPath: '/aplicacao'
+      preLoaderRoute: typeof AplicacaoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -2834,6 +2854,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
+  AplicacaoRoute: AplicacaoRoute,
   AuthRoute: AuthRoute,
   PagamentoRoute: PagamentoRoute,
   PrivacidadeRoute: PrivacidadeRoute,
