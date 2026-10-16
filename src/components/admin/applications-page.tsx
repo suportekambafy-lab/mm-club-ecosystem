@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { SaleCelebration, useSaleBell } from "./sale-celebration";
 import { broadcastSale } from "./sale-broadcast";
+import { parseCallDateTime } from "@/lib/aplicacao/call-rules";
 import { formatSaleAmount, parseSaleAmount } from "@/lib/aplicacao/sale-rules";
 
 const STATUS: Record<string, string> = {
@@ -161,8 +162,11 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
 
 function Detail({ lead, me, agenda, onClose, onChanged, commercial }: { lead: Lead; me: string; agenda?: string; onClose: () => void; onChanged: (l: Lead) => void; commercial: boolean }) {
   const upd = useServerFn(updateLead);
+  const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [scheduling, setScheduling] = useState(false);
+  const [callTime, setCallTime] = useState("");
   const [amount, setAmount] = useState("");
   const [celebration, setCelebration] = useState<{ amount: number; closer?: string } | null>(null);
   const dismissCelebration = useCallback(() => setCelebration(null), []);
@@ -170,11 +174,13 @@ function Detail({ lead, me, agenda, onClose, onChanged, commercial }: { lead: Le
   const locked = !!lead.responsavel_id && lead.responsavel_id !== me;
   const first = String(lead.nome ?? "").split(" ")[0];
   const wa = `https://wa.me/${String(lead.whatsapp ?? "").replace(/\D/g, "")}?text=${encodeURIComponent(`Olá ${first}, tudo bem? Aqui é da equipa do MM Club, vi a tua aplicação.`)}`;
-  async function run(patch: { status?: "novo" | "incompleto" | "em_contato" | "call_marcada" | "fechou" | "perdido"; assumir?: boolean; saleAmountCents?: number }) {
+  async function run(patch: { status?: "novo" | "incompleto" | "em_contato" | "call_marcada" | "fechou" | "perdido"; assumir?: boolean; saleAmountCents?: number; callScheduledAt?: string }) {
     setBusy(true);
     try {
       const result = await upd({ data: { id: lead.id, ...patch } });
       onChanged(result.lead);
+      setScheduling(false);
+      void qc.invalidateQueries({ queryKey: ["commercial-my-calls"] });
       if (patch.status === "fechou" && patch.saleAmountCents !== undefined) {
         setClosing(false); setCelebration({ amount: patch.saleAmountCents, closer: result.closerName ?? undefined }); void bell.ring();
         broadcastSale({ amount: patch.saleAmountCents, closer: result.closerName ?? "Equipa", lead: String(result.lead.nome ?? "") });
@@ -185,7 +191,7 @@ function Detail({ lead, me, agenda, onClose, onChanged, commercial }: { lead: Le
   }
   const rows: [string, string][] = [["Email","email"],["Instagram","instagram"],["País","pais"],["Idade","idade"],["Ocupação","ocupacao"],["Experiência","experiencia"],["Tempo por dia","tempo_dia"],["Verba 90 dias","verba_anuncios"],["Investimento","investimento"],["Decisão","decisao"],["Origem","utm_source"],["Campanha","utm_campaign"],["Meio","utm_medium"],["Conteúdo","utm_content"]];
   return (
-    <><div className="fixed inset-0 z-50 flex justify-end bg-background/70" onClick={() => { if (!busy && !closing) onClose(); }}>
+    <><div className="fixed inset-0 z-50 flex justify-end bg-background/70" onClick={() => { if (!busy && !closing && !scheduling) onClose(); }}>
       <aside className="h-full w-full max-w-lg overflow-y-auto bg-background p-6 ring-1 ring-border" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -194,7 +200,7 @@ function Detail({ lead, me, agenda, onClose, onChanged, commercial }: { lead: Le
           </div>
           <Button variant="ghost" size="icon" disabled={busy} onClick={onClose} aria-label="Fechar"><X className="h-5 w-5" /></Button>
         </div>
-        {agenda && <p className="mt-4 rounded-lg p-3 text-sm ring-1 ring-primary/50">Call: {new Date(agenda).toLocaleString("pt-PT", { timeZone: "Europe/Lisbon" })} (Lisboa)</p>}
+        {(lead.call_scheduled_at || agenda) && lead.status === "call_marcada" && <p className="mt-4 rounded-lg p-3 text-sm ring-1 ring-primary/50">Call: {new Date(lead.call_scheduled_at || agenda).toLocaleString("pt-PT", { timeZone: "Europe/Lisbon" })} (Lisboa) <Button variant="ghost" size="sm" disabled={locked || busy} onClick={() => { setCallTime(""); setScheduling(true); }}>Alterar</Button></p>}
         <div className="mt-4 flex flex-wrap gap-2">
           <a href={wa} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"><MessageCircle className="h-4 w-4" /> WhatsApp</a>
           <a href={`tel:${lead.whatsapp}`} className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm ring-1 ring-border"><Phone className="h-4 w-4" /> Ligar</a>
@@ -202,7 +208,7 @@ function Detail({ lead, me, agenda, onClose, onChanged, commercial }: { lead: Le
         </div>
         {lead.responsavel && <p className="mt-3 text-xs text-muted-foreground">Responsável: {lead.responsavel}{locked && " · bloqueado para ti"}</p>}
         <label className="mt-4 block text-xs text-muted-foreground">Estado
-          <select key={`${lead.status}-${closing}-${busy}`} aria-label="Estado" disabled={busy || locked} value={lead.status} onChange={(e) => { const status = e.target.value as Parameters<typeof run>[0]["status"]; if (status === "fechou") { setAmount(lead.sale_amount_cents != null ? String(lead.sale_amount_cents / 100) : ""); setClosing(true); } else void run({status}); }} className="mt-1 block w-full rounded-lg bg-surface-1 px-3 py-2 text-sm text-foreground ring-1 ring-border">
+          <select key={`${lead.status}-${closing}-${scheduling}-${busy}`} aria-label="Estado" disabled={busy || locked} value={lead.status} onChange={(e) => { const status = e.target.value as Parameters<typeof run>[0]["status"]; if (status === "call_marcada") { setCallTime(""); setScheduling(true); } else if (status === "fechou") { setAmount(lead.sale_amount_cents != null ? String(lead.sale_amount_cents / 100) : ""); setClosing(true); } else void run({status}); }} className="mt-1 block w-full rounded-lg bg-surface-1 px-3 py-2 text-sm text-foreground ring-1 ring-border">
             {Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
         </label>
@@ -216,6 +222,13 @@ function Detail({ lead, me, agenda, onClose, onChanged, commercial }: { lead: Le
         </dl>
       </aside>
     </div>
+    <Dialog open={scheduling} onOpenChange={value => { if (!busy) setScheduling(value); }}><DialogContent className={cn("admin-shell max-w-md text-foreground", commercial && "commercial-shell sale-dialog-dark")}><DialogTitle>Marcar call</DialogTitle><DialogDescription>Call com {lead.nome || "este contacto"} · horário de Lisboa.</DialogDescription>
+      <form className="mt-4 space-y-5" onSubmit={e => { e.preventDefault(); const at = parseCallDateTime(callTime); if (!at || Date.parse(at) <= Date.now()) return toast.error("Escolhe uma data e hora futuras."); void run({ status: "call_marcada", callScheduledAt: at }); }}>
+        <label className="block text-sm">Data e hora (Lisboa)<input type="datetime-local" required autoFocus aria-label="Data e hora da call" value={callTime} disabled={busy} onChange={e => setCallTime(e.target.value)} className="mt-2 h-12 w-full min-w-0 rounded-md border border-border bg-muted px-3 text-foreground" /></label>
+        {!lead.responsavel_id && <p className="text-sm text-muted-foreground">Esta call ficará atribuída a ti.</p>}
+        <div className="flex justify-end gap-2"><Button type="button" variant="outline" className="btn-dialog-ghost" disabled={busy} onClick={() => setScheduling(false)}>Cancelar</Button><Button type="submit" disabled={busy}>{busy && <Loader2 className="h-4 w-4 animate-spin" />}Confirmar call</Button></div>
+      </form>
+    </DialogContent></Dialog>
     <Dialog open={closing} onOpenChange={value => { if (!busy) setClosing(value); }}><DialogContent className={cn("admin-shell max-w-md text-foreground", commercial && "commercial-shell sale-dialog-dark")}><DialogTitle className="font-display text-xl">Qual foi o valor da venda?</DialogTitle><DialogDescription>Fechar a aplicação de {lead.nome || "este lead"}.</DialogDescription>
       <form className="mt-4 space-y-5" onSubmit={e => { e.preventDefault(); const cents = parseSaleAmount(amount); if (cents === null) return toast.error("Indica um valor superior a zero, com até duas casas decimais."); bell.prepare(); void run({status:"fechou",saleAmountCents:cents}); }}>
         <label className="block text-sm">Valor da venda (€)<input autoFocus required inputMode="decimal" aria-label="Valor da venda (€)" value={amount} disabled={busy} onChange={e=>setAmount(e.target.value)} placeholder="0,00" className="mt-2 h-12 w-full rounded-md border border-border bg-muted px-3 text-lg tabular-nums" /></label>

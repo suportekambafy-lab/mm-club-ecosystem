@@ -81,14 +81,18 @@ export const updateLead = createServerFn({ method: "POST" })
       throw new Error("Este lead já foi assumido por outra pessoa.");
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (data.status) patch.status = data.status;
+    if (data.status === "call_marcada") {
+      if (!data.callScheduledAt || Date.parse(data.callScheduledAt) <= Date.now()) throw new Error("Escolhe uma data e hora futuras.");
+      patch.call_scheduled_at = data.callScheduledAt;
+    } else if (data.status) patch.call_scheduled_at = null;
     if (data.status === "fechou") patch.sale_amount_cents = data.saleAmountCents;
-    if (data.assumir) {
+    if (data.assumir || (data.status === "call_marcada" && !lead.responsavel_id)) {
       const { data: p } = await db.from("profiles").select("display_name").eq("id", context.userId).maybeSingle();
       patch.responsavel = p?.display_name ?? "Equipa";
       patch.responsavel_id = context.userId;
     }
     let q = db.from("leads").update(patch as never).eq("id", data.id);
-    if (data.assumir) q = q.is("responsavel_id", null);
+    q = lead.responsavel_id ? q.eq("responsavel_id", context.userId) : q.is("responsavel_id", null);
     const { data: updated, error } = await q.select("*").maybeSingle();
     if (error) throw new Error("Não foi possível atualizar.");
     if (!updated) throw new Error("O lead não foi atualizado. Volta a abrir a aplicação.");
@@ -98,6 +102,20 @@ export const updateLead = createServerFn({ method: "POST" })
       closerName = p?.display_name ?? "Equipa";
     }
     return { ok: true, lead: updated, closerName };
+  });
+
+export const listMyCalls = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertCommercial(context);
+    const { data, error } = await context.supabase.from("leads")
+      .select("id, nome, whatsapp, call_scheduled_at")
+      .eq("responsavel_id", context.userId).eq("status", "call_marcada")
+      .not("call_scheduled_at", "is", null)
+      .gte("call_scheduled_at", new Date(Date.now() - 5 * 60_000).toISOString())
+      .order("call_scheduled_at", { ascending: true }).limit(100);
+    if (error) throw new Error("Não foi possível consultar as calls.");
+    return { me: context.userId, calls: (data ?? []).flatMap(call => call.call_scheduled_at ? [{ ...call, call_scheduled_at: call.call_scheduled_at }] : []) };
   });
 
 export const saveSettings = createServerFn({ method: "POST" })
