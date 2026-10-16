@@ -32,8 +32,10 @@ describe("sale bell", () => {
   });
 
   it("cuts each hit short instead of ringing for the whole sample", () => {
+    const strikeLength = Math.min(SALE_BELL_STRIKE_DECAY, SALE_BELL_STRIKE_GAP * 0.8);
     const ends = saleBellStrikeEnds(saleBellStrikeTimes(), 5);
-    expect(ends[0]).toBeCloseTo(SALE_BELL_STRIKE_GAP * 0.8, 5);
+    expect(ends[0]).toBeCloseTo(strikeLength, 5);
+    expect(ends[1]).toBeCloseTo(SALE_BELL_STRIKE_GAP + strikeLength, 5);
     expect(ends[2]).toBeCloseTo(SALE_BELL_STRIKE_GAP * 2 + SALE_BELL_STRIKE_DECAY, 5);
     expect(saleBellStrikeEnds([0], 0.5)[0]).toBeCloseTo(0.5, 5);
   });
