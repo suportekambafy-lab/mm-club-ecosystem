@@ -1,3 +1,8 @@
+- [ ] Verificar e corrigir renovação indevida na verificação Paddle de 0 €.
+- [ ] Verificar autorização Cloudflare Stream e indicar bloqueio externo se confirmado.
+- [ ] Verificar armazenamento cheio e proteção/aviso ao iniciar gravação.
+- [ ] Verificar rejeições do chat de lives sem enfraquecer acessos e sanções.
+- [ ] Verificar modelos de IA antigos, migrar apenas os descontinuados e testar; não publicar.
 - [x] Investigar fechos ausentes: seis vendas guardadas sem autor nem responsável; consulta autenticada e permissões verificadas, página mostra zero corretamente para a conta atual.
 - [x] Recuperar autoria dos seis fechos de teste após confirmação do utilizador; histórico administrativo registado, página autenticada confirmou 6 vendas, 5.982 € e R$590, com comissão de 1.997 € por definir; 4 testes passaram.
 - [x] Criar entrada comercial própria com contas existentes, recuperação de palavra-passe e verificação de permissões.
