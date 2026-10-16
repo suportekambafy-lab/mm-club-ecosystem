@@ -11,4 +11,4 @@
 - [x] Escolher acesso de 1, 3, 6, 12 meses ou vitalício ao criar utilizadores e atribuir acesso.
 - [x] Garantir bloqueio e aviso após expiração, preservando outros acessos válidos: 32 testes passaram; conta fictícia criada com vitalício, acesso de 1 mês atribuído, aula aberta bloqueada automaticamente ao expirar com aviso e vídeo removido, conta fictícia eliminada.
 - [x] Refinar visual comercial e cores do admin, sem alterar funcionalidades; páginas comerciais, fotografia, menu recolhível e janela de criação verificados com sessão admin; computador e telemóvel sem sobreposição ou erros.
-- [ ] Pedir e guardar valor ao fechar lead; celebrar só após sucesso com sino animado e som real; testar fluxo e cancelar sem alterar lead.
+- [x] Pedir e guardar valor ao fechar lead; 20 testes passaram; venda fictícia de 149,90 € guardada e relida após recarregar, cancelar mantém estado, zero rejeitado e gravação real do sino reproduzida uma vez; janela verificada no telemóvel e aplicação fictícia removida.
