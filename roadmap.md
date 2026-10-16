@@ -1,0 +1,3 @@
+- [ ] Tornar todas as respostas obrigatórias, com validação e testes.
+- [ ] Avisar novas aplicações com toast e som em qualquer página do admin.
+- [ ] Verificar o formulário e a chegada de uma aplicação no admin.

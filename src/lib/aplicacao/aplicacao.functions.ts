@@ -2,17 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { classificar } from "./config";
-
-const s = (max = 200) => z.string().trim().max(max).optional().nullable();
-
-const leadSchema = z.object({
-  id: z.string().uuid().optional().nullable(),
-  final: z.boolean().optional(),
-  nome: s(120), whatsapp: s(30), email: z.string().trim().email().max(255).optional().nullable(),
-  instagram: s(60), pais: s(), idade: s(), ocupacao: s(), experiencia: s(),
-  o_que_travou: s(2000), tempo_dia: s(), verba_anuncios: s(), investimento: s(), decisao: s(),
-  utm_source: s(), utm_medium: s(), utm_campaign: s(), utm_content: s(),
-});
+import { leadSchema } from "./validation";
 
 async function admin() {
   return (await import("@/integrations/supabase/client.server")).supabaseAdmin;
@@ -33,7 +23,8 @@ export const saveLead = createServerFn({ method: "POST" })
       const { data: ex } = await db.from("leads").select("id, status").eq("id", id).maybeSingle();
       if (ex) {
         if (!final && ex.status !== "incompleto") delete row.status;
-        await db.from("leads").update(row as never).eq("id", id);
+        const { error } = await db.from("leads").update(row as never).eq("id", id);
+        if (error) throw new Error("Não foi possível guardar.");
         return { id, classificacao: (row.classificacao as string) ?? null };
       }
     }
