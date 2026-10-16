@@ -39,6 +39,17 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
   if (!data) throw new Error("Forbidden");
 }
 
+export const listApplicationNotifications = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { data, error } = await context.supabase.from("leads")
+      .select("id, nome, classificacao").not("classificacao", "is", null)
+      .order("updated_at", { ascending: false }).limit(2000);
+    if (error) throw new Error("Não foi possível consultar as aplicações.");
+    return data ?? [];
+  });
+
 export const listLeads = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
