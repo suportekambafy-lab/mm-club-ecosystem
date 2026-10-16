@@ -38,9 +38,9 @@ export const commercialMembers = createServerFn({ method: "GET" }).middleware([r
 
 export const giveCommercialAccess = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => manualAccessSchema.parse(input)).handler(async ({ context, data }) => {
-    const { data: expiresAt, error } = await context.supabase.rpc("grant_commercial_club_access", { _user_id: data.userId, _months: data.months, _reason: data.reason });
+    const { data: expiresAt, error } = await context.supabase.rpc("grant_commercial_club_access", { _user_id: data.userId, _months: data.months === "lifetime" ? null : data.months, _reason: data.reason });
     if (error) throw new Error("Não foi possível atribuir o acesso. Confirma a tua permissão e tenta novamente.");
-    return { expiresAt };
+    return { expiresAt: data.months === "lifetime" ? null : expiresAt };
   });
 
 export const changeCommercialRole = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
