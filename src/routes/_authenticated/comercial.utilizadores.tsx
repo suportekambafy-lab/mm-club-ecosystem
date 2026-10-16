@@ -68,7 +68,7 @@ function CommercialMembers() {
       </tr>)}{!members.length && <tr><td colSpan={3} className="p-8 text-center text-admin-muted">Nenhum utilizador encontrado.</td></tr>}</tbody></table>
     </div>
     {accountDialog && <MemberAccountDialog state={accountDialog} onClose={()=>setAccountDialog(null)} onSaved={refreshMembers} />}
-    {selected && <Dialog open onOpenChange={open => { if (!open && !busy) setSelected(null); }}><DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md overflow-y-auto rounded-lg border-admin-border bg-admin-bg text-foreground">
+    {selected && <Dialog open onOpenChange={open => { if (!open && !busy) setSelected(null); }}><DialogContent className="admin-shell commercial-shell max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md overflow-y-auto rounded-lg border-admin-border bg-admin-bg text-foreground">
       <DialogTitle className="pr-6 text-xl font-semibold">Dar acesso ao MM Club</DialogTitle>
       <DialogDescription className="mt-2 break-words text-sm text-admin-muted">{selected.display_name} · {selected.email}</DialogDescription>
       <form onSubmit={grant} className="mt-6 space-y-5">
