@@ -36,6 +36,7 @@ import {
 import { cn } from "@/lib/utils";
 import mmIcon from "@/assets/mm-icon.png.asset.json";
 import { ApplicationNotifications } from "@/components/admin/application-notifications";
+import { SaleBroadcastListener } from "@/components/admin/sale-broadcast";
 // Ensure admin overrides are applied
 import "@/data/admin-store";
 
@@ -234,6 +235,7 @@ function AdminLayout() {
   return (
     <div className={cn("admin-shell min-h-screen bg-admin-bg text-admin-fg", theme === "light" && "admin-light")}>
       <ApplicationNotifications />
+      <SaleBroadcastListener />
 
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[236px] flex-col bg-admin-sidebar lg:flex">

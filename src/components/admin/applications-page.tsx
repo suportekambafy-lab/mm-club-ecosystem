@@ -8,6 +8,7 @@ import { listLeads, updateLead, saveSettings } from "@/lib/aplicacao/aplicacao.f
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { SaleCelebration, useSaleBell } from "./sale-celebration";
+import { broadcastSale } from "./sale-broadcast";
 import { formatSaleAmount, parseSaleAmount } from "@/lib/aplicacao/sale-rules";
 
 const STATUS: Record<string, string> = {
@@ -176,6 +177,7 @@ function Detail({ lead, me, agenda, onClose, onChanged, commercial }: { lead: Le
       onChanged(result.lead);
       if (patch.status === "fechou" && patch.saleAmountCents !== undefined) {
         setClosing(false); setCelebration(patch.saleAmountCents); void bell.ring();
+        broadcastSale({ amount: patch.saleAmountCents, closer: result.closerName ?? "Equipa", lead: String(result.lead.nome ?? "") });
       } else toast.success("Lead atualizado.");
     }
     catch (e) { toast.error(e instanceof Error ? e.message : "Erro."); }

@@ -1,6 +1,7 @@
 import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router";
 import { commercialSession } from "@/lib/commercial/commercial.functions";
 import { ApplicationNotifications } from "@/components/admin/application-notifications";
+import { SaleBroadcastListener } from "@/components/admin/sale-broadcast";
 import mmIcon from "@/assets/mm-icon.png.asset.json";
 import { ArrowLeft, Users, UserPlus, LayoutGrid, BriefcaseBusiness, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useState } from "react";
@@ -19,6 +20,7 @@ function CommercialLayout() {
   const items = [{ to: "/comercial", label: "Início", icon: LayoutGrid }, { to: "/comercial/aplicacoes", label: "Aplicações", icon: UserPlus }, { to: "/comercial/utilizadores", label: "Utilizadores", icon: Users }, { to: "/comercial/equipa", label: "Equipa", icon: BriefcaseBusiness }] as const;
   return <div className={`admin-shell commercial-shell min-h-screen bg-background text-foreground ${collapsed ? "commercial-collapsed" : ""}`}>
     <ApplicationNotifications commercial />
+    <SaleBroadcastListener />
     <aside className="commercial-sidebar">
       <Link to="/comercial" className="flex items-center gap-3 px-3 py-3"><img src={mmIcon.url} alt="MM Club" className="h-9 w-9 shrink-0" /><div className="commercial-nav-label"><p className="text-lg font-semibold">MM Club</p><p className="text-xs text-muted-foreground">Comercial</p></div></Link>
       <p className="commercial-nav-label mb-3 mt-12 px-3 text-xs text-muted-foreground">ÁREA DE TRABALHO</p>
