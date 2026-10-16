@@ -64,6 +64,13 @@
       "when": 1792188247699,
       "tag": "0008_commercial_lifetime_and_live_expiry",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792188963703,
+      "tag": "0009_lead_sale_amount",
+      "breakpoints": true
     }
   ]
 }

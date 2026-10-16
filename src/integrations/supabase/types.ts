@@ -1952,6 +1952,7 @@ export type Database = {
           pais: string | null
           responsavel: string | null
           responsavel_id: string | null
+          sale_amount_cents: number | null
           status: string
           tempo_dia: string | null
           updated_at: string
@@ -1978,6 +1979,7 @@ export type Database = {
           pais?: string | null
           responsavel?: string | null
           responsavel_id?: string | null
+          sale_amount_cents?: number | null
           status?: string
           tempo_dia?: string | null
           updated_at?: string
@@ -2004,6 +2006,7 @@ export type Database = {
           pais?: string | null
           responsavel?: string | null
           responsavel_id?: string | null
+          sale_amount_cents?: number | null
           status?: string
           tempo_dia?: string | null
           updated_at?: string

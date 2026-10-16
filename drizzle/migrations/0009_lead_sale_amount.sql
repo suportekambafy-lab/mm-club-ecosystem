@@ -1,0 +1,2 @@
+ALTER TABLE public.leads ADD COLUMN sale_amount_cents bigint;
+COMMENT ON COLUMN public.leads.sale_amount_cents IS 'Value agreed when a commercial lead is closed, stored in EUR cents; NULL for historical closures.';
