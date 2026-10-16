@@ -181,6 +181,7 @@ function Detail({ lead, me, agenda, onClose, onChanged, commercial }: { lead: Le
       onChanged(result.lead);
       setScheduling(false);
       void qc.invalidateQueries({ queryKey: ["commercial-my-calls"] });
+      void qc.invalidateQueries({ queryKey: ["commercial-my-sales"] });
       if (patch.status === "fechou" && patch.saleAmountCents !== undefined) {
         setClosing(false); setCelebration({ amount: patch.saleAmountCents, closer: result.closerName ?? undefined }); void bell.ring();
         broadcastSale({ amount: patch.saleAmountCents, closer: result.closerName ?? "Equipa", lead: String(result.lead.nome ?? "") });

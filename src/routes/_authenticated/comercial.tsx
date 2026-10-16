@@ -4,7 +4,7 @@ import { ApplicationNotifications } from "@/components/admin/application-notific
 import { SaleBroadcastListener } from "@/components/admin/sale-broadcast";
 import { CallNotificationBell } from "@/components/commercial/scheduled-calls";
 import mmIcon from "@/assets/mm-icon.png.asset.json";
-import { ArrowLeft, Users, UserPlus, LayoutGrid, BriefcaseBusiness, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ArrowLeft, Users, UserPlus, LayoutGrid, BriefcaseBusiness, PanelLeftClose, PanelLeftOpen, Receipt } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/comercial")({
 function CommercialLayout() {
   const { isAdmin } = Route.useRouteContext();
   const [collapsed, setCollapsed] = useState(false);
-  const items = [{ to: "/comercial", label: "Início", icon: LayoutGrid }, { to: "/comercial/aplicacoes", label: "Aplicações", icon: UserPlus }, { to: "/comercial/utilizadores", label: "Utilizadores", icon: Users }, { to: "/comercial/equipa", label: "Equipa", icon: BriefcaseBusiness }] as const;
+  const items = [{ to: "/comercial", label: "Início", icon: LayoutGrid }, { to: "/comercial/aplicacoes", label: "Aplicações", icon: UserPlus }, { to: "/comercial/vendas", label: "Minhas vendas", icon: Receipt }, { to: "/comercial/utilizadores", label: "Utilizadores", icon: Users }, { to: "/comercial/equipa", label: "Equipa", icon: BriefcaseBusiness }] as const;
   return <div className={`admin-shell commercial-shell min-h-screen bg-background text-foreground ${collapsed ? "commercial-collapsed" : ""}`}>
     <ApplicationNotifications commercial />
     <SaleBroadcastListener />

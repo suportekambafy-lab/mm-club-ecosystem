@@ -85,6 +85,7 @@ import { Route as AuthenticatedComercialIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedComercialAplicacoesRouteImport } from './routes/_authenticated/comercial.aplicacoes'
 import { Route as AuthenticatedComercialEquipaRouteImport } from './routes/_authenticated/comercial.equipa'
 import { Route as AuthenticatedComercialUtilizadoresRouteImport } from './routes/_authenticated/comercial.utilizadores'
+import { Route as AuthenticatedComercialVendasRouteImport } from './routes/_authenticated/comercial.vendas'
 import { Route as AdminFinanceiroIndexRouteImport } from './routes/admin.financeiro.index'
 import { Route as AdminFinanceiroCatalogoRouteImport } from './routes/admin.financeiro.catalogo'
 import { Route as AdminFinanceiroCobrancasRouteImport } from './routes/admin.financeiro.cobrancas'
@@ -532,6 +533,12 @@ const AuthenticatedComercialUtilizadoresRoute =
     path: '/utilizadores',
     getParentRoute: () => AuthenticatedComercialRoute,
   } as any)
+const AuthenticatedComercialVendasRoute =
+  AuthenticatedComercialVendasRouteImport.update({
+    id: '/vendas',
+    path: '/vendas',
+    getParentRoute: () => AuthenticatedComercialRoute,
+  } as any)
 const AdminFinanceiroIndexRoute = AdminFinanceiroIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -959,6 +966,7 @@ export interface FileRoutesByFullPath {
   '/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
   '/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
   '/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
+  '/comercial/vendas': typeof AuthenticatedComercialVendasRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cobrancas': typeof AdminFinanceiroCobrancasRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
@@ -1088,6 +1096,7 @@ export interface FileRoutesByTo {
   '/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
   '/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
   '/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
+  '/comercial/vendas': typeof AuthenticatedComercialVendasRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cobrancas': typeof AdminFinanceiroCobrancasRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
@@ -1229,6 +1238,7 @@ export interface FileRoutesById {
   '/_authenticated/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
   '/_authenticated/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
   '/_authenticated/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
+  '/_authenticated/comercial/vendas': typeof AuthenticatedComercialVendasRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
   '/admin/financeiro/cobrancas': typeof AdminFinanceiroCobrancasRoute
   '/admin/financeiro/cupoes': typeof AdminFinanceiroCupoesRoute
@@ -1369,6 +1379,7 @@ export interface FileRouteTypes {
     | '/comercial/aplicacoes'
     | '/comercial/equipa'
     | '/comercial/utilizadores'
+    | '/comercial/vendas'
     | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cobrancas'
     | '/admin/financeiro/cupoes'
@@ -1498,6 +1509,7 @@ export interface FileRouteTypes {
     | '/comercial/aplicacoes'
     | '/comercial/equipa'
     | '/comercial/utilizadores'
+    | '/comercial/vendas'
     | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cobrancas'
     | '/admin/financeiro/cupoes'
@@ -1638,6 +1650,7 @@ export interface FileRouteTypes {
     | '/_authenticated/comercial/aplicacoes'
     | '/_authenticated/comercial/equipa'
     | '/_authenticated/comercial/utilizadores'
+    | '/_authenticated/comercial/vendas'
     | '/admin/financeiro/catalogo'
     | '/admin/financeiro/cobrancas'
     | '/admin/financeiro/cupoes'
@@ -2302,6 +2315,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedComercialUtilizadoresRouteImport
       parentRoute: typeof AuthenticatedComercialRoute
     }
+    '/_authenticated/comercial/vendas': {
+      id: '/_authenticated/comercial/vendas'
+      path: '/vendas'
+      fullPath: '/comercial/vendas'
+      preLoaderRoute: typeof AuthenticatedComercialVendasRouteImport
+      parentRoute: typeof AuthenticatedComercialRoute
+    }
     '/admin/financeiro/': {
       id: '/admin/financeiro/'
       path: '/'
@@ -2743,6 +2763,7 @@ interface AuthenticatedComercialRouteChildren {
   AuthenticatedComercialAplicacoesRoute: typeof AuthenticatedComercialAplicacoesRoute
   AuthenticatedComercialEquipaRoute: typeof AuthenticatedComercialEquipaRoute
   AuthenticatedComercialUtilizadoresRoute: typeof AuthenticatedComercialUtilizadoresRoute
+  AuthenticatedComercialVendasRoute: typeof AuthenticatedComercialVendasRoute
   AuthenticatedComercialIndexRoute: typeof AuthenticatedComercialIndexRoute
 }
 
@@ -2753,6 +2774,7 @@ const AuthenticatedComercialRouteChildren: AuthenticatedComercialRouteChildren =
     AuthenticatedComercialEquipaRoute: AuthenticatedComercialEquipaRoute,
     AuthenticatedComercialUtilizadoresRoute:
       AuthenticatedComercialUtilizadoresRoute,
+    AuthenticatedComercialVendasRoute: AuthenticatedComercialVendasRoute,
     AuthenticatedComercialIndexRoute: AuthenticatedComercialIndexRoute,
   }
 
