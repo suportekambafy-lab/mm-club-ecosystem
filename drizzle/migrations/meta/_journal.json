@@ -43,6 +43,13 @@
       "when": 1792186762900,
       "tag": "0005_commercial_roles",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792186795590,
+      "tag": "0006_commercial_access_permissions",
+      "breakpoints": true
     }
   ]
 }

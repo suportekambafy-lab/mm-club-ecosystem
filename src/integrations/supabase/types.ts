@@ -4802,6 +4802,11 @@ export type Database = {
       }
       cron_hook_headers: { Args: never; Returns: Json }
       extract_mention_user_ids: { Args: { _text: string }; Returns: string[] }
+      grant_commercial_club_access: {
+        Args: { _months: number; _reason: string; _user_id: string }
+        Returns: string
+      }
+      has_commercial_access: { Args: { _user_id: string }; Returns: boolean }
       has_feature: {
         Args: { _feature: string; _user_id: string }
         Returns: boolean
@@ -4949,6 +4954,10 @@ export type Database = {
         Returns: number
       }
       security_posture_report: { Args: never; Returns: Json }
+      set_commercial_role: {
+        Args: { _role: string; _user_id: string }
+        Returns: undefined
+      }
       verify_certificate: {
         Args: { _code: string }
         Returns: {
