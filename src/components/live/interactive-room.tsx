@@ -19,6 +19,7 @@ import { Hand, Radio, X, UserPlus, Users, UserMinus, Volume2, ShieldCheck, Shiel
 import { MemberAvatar } from "@/components/mm/member-avatar";
 import { useAdminIds } from "@/hooks/use-admin-ids";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 import {
   goLive,
@@ -88,7 +89,8 @@ export function InteractiveRoom({ liveId, localUserId, token, url, target, onLea
         await layoutFn({ data: { liveId, layout } });
       },
       goLive: async () => {
-        await goLiveFn({ data: { liveId } });
+        const result = await goLiveFn({ data: { liveId } });
+        if (result.recordingWarning) toast.error("Gravação indisponível", { description: result.recordingWarning, duration: 12000 });
       },
       endLive: async () => {
         await endLiveFn({ data: { liveId } });

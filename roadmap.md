@@ -1,3 +1,8 @@
+- [x] Corrigir renovação na verificação Paddle de 0 €: associa cobrança futura sem receita, recuperação de dívida nem alteração do período; processamento simulado e testes passaram. Pagamento real não disparado; sete verificações históricas exigem reconciliação antes de alterar acessos existentes.
+- [ ] Cloudflare Stream devolve 403 Authorization Failure no teste atual; depende de autorização válida da conta com Stream Read/Edit para recuperar segmentos e verificar quota atual.
+- [x] Bloquear novo ingest quando quota cheia é confirmada, preservar gravação já ativa e mostrar motivo ao anfitrião; quota real não verificável até corrigir autorização Cloudflare.
+- [ ] Rejeições do chat não reproduzidas com membro afetado; leitura/join e chat usam can_access_live, e mensagem amigável já existe. Não alargar RLS com participantes auto-registáveis; aguarda identificação de live/membro afetados.
+- [ ] Migração IA confirmada como ampla: modelos Gemini 2.5/3.5/3.6/3.7 e 3.1 Flash Image descontinuados em múltiplos fluxos; requer aprovação do plano de migração por funcionalidades e validação real. Não publicar.
 - [x] Investigar fechos ausentes: seis vendas guardadas sem autor nem responsável; consulta autenticada e permissões verificadas, página mostra zero corretamente para a conta atual.
 - [x] Recuperar autoria dos seis fechos de teste após confirmação do utilizador; histórico administrativo registado, página autenticada confirmou 6 vendas, 5.982 € e R$590, com comissão de 1.997 € por definir; 4 testes passaram.
 - [x] Criar entrada comercial própria com contas existentes, recuperação de palavra-passe e verificação de permissões.

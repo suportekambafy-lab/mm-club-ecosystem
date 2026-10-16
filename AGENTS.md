@@ -25,3 +25,5 @@
 - Sale bell animation follows actual audio playback state and restarts for each repetition, so local and team celebrations stay synchronized without independent animation timers.
 - Staff call schedules live on the lead and update atomically with status and ownership; the shared authenticated own-calls query feeds home and header reminders independently of the applications history window.
 - Own sales use persisted closure author and timestamp, not current lead ownership; a database trigger snapshots BRL commission from EUR sale amounts, and the authenticated paginated query scopes results to the caller independently of application history limits. Historical sales use the recorded responsible person when closure authorship was unavailable.
+- Paddle zero-value verification for an existing subscription only links gateway billing; it must not emit payment/recovery events or extend access because verification is not revenue.
+- Recording admission checks storage after checking active egress and returns host-visible warnings when full; preserve existing credential-independent fallbacks when storage reads fail.

@@ -246,7 +246,7 @@ function RecordButton({ liveId, isLive }: { liveId: string; isLive: boolean }) {
           toast.success("A gravar", { description: "A sessão está a ser gravada para replay." });
         } else {
           toast.error("Não foi possível iniciar a gravação", {
-            description: "Tenta novamente em alguns segundos.",
+            description: r?.reason ?? "Tenta novamente em alguns segundos.",
           });
         }
       }
