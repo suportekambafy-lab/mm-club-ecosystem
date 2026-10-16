@@ -2,9 +2,10 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { commercialMembers, changeCommercialRole, giveCommercialAccess } from "@/lib/commercial/commercial.functions";
+import { commercialMembers, giveCommercialAccess } from "@/lib/commercial/commercial.functions";
 import { Button } from "@/components/ui/button";
-import { KeyRound, Search, X, Loader2 } from "lucide-react";
+import { KeyRound, Search, X, Loader2, Pencil, Trash2, UserPlus } from "lucide-react";
+import { MemberAccountDialog, type AccountDialogState } from "@/components/commercial/member-account-dialog";
 import { toast } from "sonner";
 import { manualAccessSchema } from "@/lib/commercial/rules";
 
@@ -25,14 +26,14 @@ function CommercialMembers() {
   const qc = useQueryClient();
   const find = useServerFn(commercialMembers);
   const give = useServerFn(giveCommercialAccess);
-  const changeRole = useServerFn(changeCommercialRole);
   const [search,setSearch] = useState("");
   const [results,setResults] = useState<Member[] | null>(null);
   const [selected,setSelected] = useState<Member | null>(null);
   const [months,setMonths] = useState<3|6|12>(6);
   const [reason,setReason] = useState("");
   const [busy,setBusy] = useState(false);
-  const [roleBusy,setRoleBusy] = useState<string | null>(null);
+  const [accountDialog,setAccountDialog] = useState<AccountDialogState | null>(null);
+  async function refreshMembers() { setResults(null); setSearch(""); await qc.invalidateQueries({queryKey:["commercial-members"]}); }
   const members = results ?? data;
   async function searchMembers(e: React.FormEvent) {
     e.preventDefault(); setBusy(true);
@@ -50,26 +51,21 @@ function CommercialMembers() {
       await qc.invalidateQueries({queryKey:["commercial-members"]});
     } catch(e) { toast.error(e instanceof Error ? e.message : "Não foi possível atribuir acesso."); } finally { setBusy(false); }
   }
-  async function assign(member: Member, role: "sdr"|"closer"|"none") {
-    setRoleBusy(member.id);
-    try { await changeRole({data:{userId:member.id,role}}); toast.success("Permissão da equipa atualizada."); setResults(null); await qc.invalidateQueries({queryKey:["commercial-members"]}); }
-    catch(e) { toast.error(e instanceof Error ? e.message : "Não foi possível alterar a equipa."); } finally {setRoleBusy(null);}
-  }
-  return <div className="space-y-6">
-    <div><h1 className="font-display text-3xl">Utilizadores</h1><p className="mt-2 text-sm text-admin-muted">MM Club · SDR & Closer</p></div>
+  return <div className="commercial-enter space-y-6">
+    <div className="flex flex-wrap items-center justify-between gap-4"><div><h1 className="font-display text-3xl">Utilizadores</h1><p className="mt-2 text-sm text-admin-muted">Membros da plataforma MM Club</p></div>{isAdmin && <Button onClick={()=>setAccountDialog({mode:"create"})}><UserPlus />Novo utilizador</Button>}</div>
     <form onSubmit={searchMembers} className="flex max-w-2xl gap-2">
       <label className="relative flex-1"><Search className="absolute left-3 top-3 h-4 w-4 text-admin-muted"/><input aria-label="Pesquisar utilizadores" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Nome ou email" className="h-10 w-full rounded-md border border-admin-border bg-admin-panel pl-10 pr-3 text-sm" /></label>
       <Button type="submit" disabled={busy} variant="outline">{busy ? <Loader2 className="animate-spin"/> : <Search/>}Pesquisar</Button>
     </form>
     <div className="overflow-x-auto rounded-lg border border-admin-border">
-      <table className="w-full text-left text-sm"><thead className="bg-admin-panel text-admin-muted"><tr><th className="p-4">Utilizador</th><th className="p-4">Acesso ao clube</th>{isAdmin && <th className="p-4">Equipa</th>}<th className="p-4">Ações</th></tr></thead>
+      <table className="w-full text-left text-sm"><thead className="bg-admin-panel text-admin-muted"><tr><th className="p-4">Utilizador</th><th className="p-4">Acesso ao clube</th><th className="p-4">Ações</th></tr></thead>
       <tbody>{members.map(member=><tr key={member.id} className="border-t border-admin-border">
         <td className="p-4"><p className="font-medium">{member.display_name || "Membro MM"}</p><p className="mt-1 text-xs text-admin-muted">{member.email || "—"}</p></td>
         <td className="p-4"><p className={member.hasAccess ? "text-primary" : "text-admin-muted"}>{member.hasAccess ? "Ativo" : "Sem acesso"}</p>{member.hasAccess && <p className="mt-1 text-xs text-admin-muted">{member.expiresAt ? `Até ${date(member.expiresAt)}` : "Sem data de fim"}</p>}</td>
-        {isAdmin && <td className="p-4"><select aria-label={`Função de ${member.display_name || member.id}`} value={member.role ?? "none"} disabled={roleBusy === member.id} onChange={e=>void assign(member,e.target.value as "sdr"|"closer"|"none")} className="rounded-md border border-admin-border bg-admin-panel p-2"><option value="none">Sem função comercial</option><option value="sdr">SDR</option><option value="closer">Closer</option></select></td>}
-        <td className="p-4"><Button variant="outline" onClick={()=>{setSelected(member);setReason("");}}><KeyRound/>Dar acesso</Button></td>
-      </tr>)}{!members.length && <tr><td colSpan={isAdmin ? 4:3} className="p-8 text-center text-admin-muted">Nenhum utilizador encontrado.</td></tr>}</tbody></table>
+        <td className="p-4"><div className="flex items-center gap-2"><Button variant="outline" onClick={()=>{setSelected(member);setReason("");}}><KeyRound/>Dar acesso</Button>{isAdmin && <><Button variant="ghost" size="icon" title="Corrigir nome ou email" aria-label={`Corrigir ${member.display_name || member.id}`} onClick={()=>setAccountDialog({mode:"edit",member})}><Pencil /></Button><Button variant="ghost" size="icon" className="text-destructive" title="Eliminar utilizador" aria-label={`Eliminar ${member.display_name || member.id}`} onClick={()=>setAccountDialog({mode:"delete",member})}><Trash2 /></Button></>}</div></td>
+      </tr>)}{!members.length && <tr><td colSpan={3} className="p-8 text-center text-admin-muted">Nenhum utilizador encontrado.</td></tr>}</tbody></table>
     </div>
+    {accountDialog && <MemberAccountDialog state={accountDialog} onClose={()=>setAccountDialog(null)} onSaved={refreshMembers} />}
     {selected && <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4"><section role="dialog" aria-modal="true" aria-labelledby="manual-access-title" className="w-full max-w-md rounded-lg border border-admin-border bg-admin-bg p-6">
       <div className="flex items-center justify-between gap-3"><h2 id="manual-access-title" className="text-xl font-semibold">Dar acesso ao MM Club</h2><Button variant="ghost" size="icon" aria-label="Fechar" disabled={busy} onClick={()=>setSelected(null)}><X/></Button></div>
       <p className="mt-2 text-sm text-admin-muted">{selected.display_name} · {selected.email}</p>
