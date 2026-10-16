@@ -1,6 +1,6 @@
 - [x] Tornar todas as respostas obrigatórias, com validação e testes (25 testes passaram; campos vazios bloqueados no navegador).
 - [x] Avisar novas aplicações com toast e som em qualquer página do admin.
 - [x] Confirmar chegada real de uma aplicação com toast e som: aplicação completa enviada pelo formulário, toast visível no admin autenticado, dois tons iniciados com áudio ativo, detalhe lido no painel e ausência de avisos duplicados confirmada.
-- [ ] Criar área comercial restrita para SDR e closers, com utilizadores e aplicações.
-- [ ] Permitir acessos manuais de 3, 6 ou 12 meses e gestão administrativa da equipa.
-- [ ] Testar permissões e atribuição de acesso na área comercial.
+- [x] Criar área comercial restrita para SDR e closers, com utilizadores e aplicações.
+- [x] Permitir acessos manuais de 3, 6 ou 12 meses e gestão administrativa da equipa.
+- [x] Testar permissões e atribuição de acesso na área comercial: 25 testes passaram, entrada sem sessão bloqueada, aplicações abertas e acesso de 3 meses atribuído pela UI e confirmado; ainda não há uma conta SDR/closer designada para testar esse perfil autenticado.
