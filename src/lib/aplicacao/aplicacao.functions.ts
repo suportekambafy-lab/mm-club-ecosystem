@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { classificar, lisbonToUtc, proximosDiasUteis } from "./config";
+import { classificar } from "./config";
 
 const s = (max = 200) => z.string().trim().max(max).optional().nullable();
 
@@ -40,45 +40,6 @@ export const saveLead = createServerFn({ method: "POST" })
     const { data: ins, error } = await db.from("leads").insert({ ...row, status: final ? "novo" : "incompleto" } as never).select("id").single();
     if (error) throw new Error("Não foi possível guardar.");
     return { id: ins.id as string, classificacao: (row.classificacao as string) ?? null };
-  });
-
-/** Público: grelha de horários (só datas/horas, nada de dados pessoais). */
-export const getSlots = createServerFn({ method: "GET" }).handler(async () => {
-  const db = await admin();
-  const { data: cfg } = await db.from("aplicacao_settings").select("slots, blocked_days").eq("id", 1).maybeSingle();
-  const blocked = new Set<string>((cfg?.blocked_days as string[]) ?? []);
-  const days = proximosDiasUteis(7).filter((d) => !blocked.has(d));
-  const times = ((cfg?.slots as string[]) ?? []).slice().sort();
-  const from = lisbonToUtc(days[0] ?? "2000-01-01", "00:00");
-  const { data: booked } = await db.from("agendamentos").select("data_hora").gte("data_hora", from);
-  const taken = new Set((booked ?? []).map((b) => new Date(b.data_hora as string).toISOString()));
-  const now = Date.now();
-  return days.map((date) => ({
-    date,
-    slots: times.map((t) => {
-      const iso = lisbonToUtc(date, t);
-      return { time: t, iso, free: !taken.has(iso) && new Date(iso).getTime() > now };
-    }),
-  }));
-});
-
-export const bookSlot = createServerFn({ method: "POST" })
-  .inputValidator((i: unknown) => z.object({ leadId: z.string().uuid(), iso: z.string().datetime() }).parse(i))
-  .handler(async ({ data }) => {
-    const db = await admin();
-    const { data: lead } = await db.from("leads").select("id, classificacao").eq("id", data.leadId).maybeSingle();
-    if (!lead || lead.classificacao !== "A") throw new Error("Aplicação não encontrada.");
-    const { data: cfg } = await db.from("aplicacao_settings").select("slots, blocked_days").eq("id", 1).maybeSingle();
-    const valid = proximosDiasUteis(7)
-      .filter((d) => !((cfg?.blocked_days as string[]) ?? []).includes(d))
-      .flatMap((d) => ((cfg?.slots as string[]) ?? []).map((t) => lisbonToUtc(d, t)));
-    const iso = new Date(data.iso).toISOString();
-    if (!valid.includes(iso)) throw new Error("Esse horário já não está disponível.");
-    await db.from("agendamentos").delete().eq("lead_id", data.leadId);
-    const { error } = await db.from("agendamentos").insert({ lead_id: data.leadId, data_hora: iso });
-    if (error) throw new Error("Esse horário acabou de ser ocupado. Escolhe outro.");
-    await db.from("leads").update({ status: "call_marcada" }).eq("id", data.leadId);
-    return { ok: true };
   });
 
 // ---------- Admin ----------

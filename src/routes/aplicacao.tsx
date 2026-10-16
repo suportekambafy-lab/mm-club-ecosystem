@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Check, Loader2 } from "lucide-react";
@@ -7,15 +7,15 @@ import { cn } from "@/lib/utils";
 import {
   APLICACAO_LINKS, OPCOES, PAISES_TEL, classificar, validarTelefone,
 } from "@/lib/aplicacao/config";
-import { saveLead, getSlots, bookSlot } from "@/lib/aplicacao/aplicacao.functions";
+import { saveLead } from "@/lib/aplicacao/aplicacao.functions";
 
 export const Route = createFileRoute("/aplicacao")({
   head: () => ({
     meta: [
       { title: "Aplicação MM Club — mentoria de lojas online" },
-      { name: "description", content: "Responde a 12 perguntas rápidas e, se tiveres perfil, marca já a tua conversa com a equipa do MM Club." },
+      { name: "description", content: "Responde a 12 perguntas rápidas. A nossa equipa entra em contacto contigo no WhatsApp." },
       { property: "og:title", content: "Aplicação MM Club" },
-      { property: "og:description", content: "12 perguntas, 2 minutos. Marca a tua conversa com a equipa do MM Club." },
+      { property: "og:description", content: "12 perguntas, 2 minutos. A nossa equipa entra em contacto contigo." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -171,8 +171,8 @@ function AplicacaoPage() {
               onSubmit={(v) => (q.optional && !v.trim() ? advance({ ...ans, [q.key]: "" }) : submitText(v))} />
           )}
           {err && <p role="alert" className="mt-4 text-sm text-destructive">{err}</p>}
-          {step === QUESTIONS.length && cls === "A" && leadId && (
-            <FinalA leadId={leadId} whatsapp={ans.whatsapp} socio={ans.decisao?.startsWith("Preciso")} />
+          {step === QUESTIONS.length && cls === "A" && (
+            <FinalA nome={ans.nome} whatsapp={ans.whatsapp} socio={ans.decisao?.startsWith("Preciso")} />
           )}
           {step === QUESTIONS.length && cls === "B" && (
             <Final title="Recebemos a tua aplicação." text="Alguém da nossa equipa vai falar contigo no WhatsApp nas próximas horas para perceber melhor o teu momento." cta="Seguir o MM Club no Instagram" />
@@ -198,7 +198,7 @@ function Intro({ onStart }: { onStart: () => void }) {
         Aplicação <span className="text-primary">MM Club</span>
       </h1>
       <p className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
-        Responde a 12 perguntas rápidas. Leva 2 minutos. Se tiveres perfil, escolhes já o horário da tua conversa com a nossa equipa.
+        Responde a 12 perguntas rápidas. Leva 2 minutos. Se tiveres perfil, a nossa equipa fala contigo no WhatsApp.
       </p>
       <button type="button" onClick={onStart} className="mt-10 w-full max-w-sm rounded-full bg-primary px-6 py-4 text-base font-semibold text-primary-foreground transition hover:bg-gold-soft">
         Começar aplicação
@@ -283,98 +283,22 @@ function Final({ title, text, video, cta }: { title: string; text?: string; vide
   );
 }
 
-const fmtDay = (d: string) => new Intl.DateTimeFormat("pt-PT", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${d}T12:00:00Z`));
-const fmtLocal = (iso: string, tz?: string) => new Intl.DateTimeFormat("pt-PT", { hour: "2-digit", minute: "2-digit", timeZone: tz }).format(new Date(iso));
-
-function FinalA({ leadId, whatsapp, socio }: { leadId: string; whatsapp?: string; socio?: boolean }) {
-  const fetchSlots = useServerFn(getSlots);
-  const book = useServerFn(bookSlot);
-  const [days, setDays] = useState<Awaited<ReturnType<typeof getSlots>> | null>(null);
-  const [day, setDay] = useState(0);
-  const [pick, setPick] = useState<{ date: string; time: string; iso: string } | null>(null);
-  const [done, setDone] = useState<{ date: string; time: string; iso: string } | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  const tz = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
-  const diffTz = useMemo(() => fmtLocal("2026-01-15T12:00:00Z", tz) !== fmtLocal("2026-01-15T12:00:00Z", "Europe/Lisbon"), [tz]);
-
-  const load = () => fetchSlots().then(setDays).catch(() => setErr("Não foi possível carregar os horários. Tenta novamente."));
-  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function confirm() {
-    if (!pick) return;
-    setBusy(true); setErr(null);
-    try { await book({ data: { leadId, iso: pick.iso } }); track("Schedule"); setDone(pick); setPick(null); }
-    catch (e) { setErr(e instanceof Error ? e.message : "Erro."); setPick(null); load(); }
-    finally { setBusy(false); }
-  }
-
-  if (done) {
-    return (
-      <div className="flex flex-1 flex-col justify-center text-center">
-        <Check className="mx-auto h-10 w-10 text-primary" />
-        <h1 className="mt-6 font-display text-3xl md:text-4xl">Conversa confirmada</h1>
-        <div className="mt-6 rounded-[14px] bg-surface-1 p-5 text-left text-sm ring-1 ring-border">
-          <p><span className="text-muted-foreground">Dia:</span> {fmtDay(done.date)}</p>
-          <p className="mt-1"><span className="text-muted-foreground">Hora:</span> {done.time} (Lisboa){diffTz && ` · ${fmtLocal(done.iso, tz)} na tua hora`}</p>
-          <p className="mt-1"><span className="text-muted-foreground">WhatsApp:</span> {whatsapp}</p>
-        </div>
-        <p className="mt-6 text-base text-muted-foreground">Vamos falar contigo no WhatsApp antes da call para confirmar.</p>
-        {socio && <p className="mt-4 rounded-[14px] p-4 text-sm ring-1 ring-primary/50">Traz a pessoa com quem decides para a call. Assim tiram as dúvidas juntos.</p>}
-      </div>
-    );
-  }
-
-  const cur = days?.[day];
+function FinalA({ nome, whatsapp, socio }: { nome?: string; whatsapp?: string; socio?: boolean }) {
   return (
-    <div>
-      <h1 className="font-display text-3xl leading-tight md:text-4xl">Tens perfil para o <span className="text-primary">MM Club</span>.</h1>
-      <p className="mt-3 text-base text-muted-foreground">Escolhe o melhor dia e horário para a tua conversa com a nossa equipa.</p>
-      {err && <p role="alert" className="mt-4 text-sm text-destructive">{err}</p>}
-      {!days ? (
-        <div className="mt-8 h-64 animate-pulse rounded-[14px] bg-surface-1" />
-      ) : days.length === 0 ? (
-        <p className="mt-8 text-sm text-muted-foreground">Sem horários nos próximos dias. A nossa equipa vai falar contigo no WhatsApp.</p>
-      ) : (
-        <>
-          <div className="-mx-5 mt-8 flex gap-2 overflow-x-auto px-5 pb-2">
-            {days.map((d, i) => (
-              <button key={d.date} type="button" onClick={() => setDay(i)}
-                className={cn("min-h-12 shrink-0 rounded-[14px] bg-surface-1 px-4 text-sm capitalize transition", i === day ? "ring-2 ring-primary" : "ring-1 ring-border hover:ring-primary")}>
-                {fmtDay(d.date)}
-              </button>
-            ))}
-          </div>
-          <p className="mt-4 text-xs text-muted-foreground">Hora de Lisboa{diffTz && " · por baixo, a tua hora local"}</p>
-          <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
-            {cur?.slots.map((s) => (
-              <button key={s.iso} type="button" disabled={!s.free} onClick={() => setPick({ date: cur.date, time: s.time, iso: s.iso })}
-                className="min-h-12 rounded-[14px] bg-surface-1 px-2 py-2 text-sm ring-1 ring-border transition hover:ring-primary disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:ring-border">
-                {s.time}
-                {diffTz && <span className="block text-[10px] text-muted-foreground">{fmtLocal(s.iso, tz)}</span>}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-      {pick && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 p-4 sm:items-center" role="dialog" aria-modal="true">
-          <div className="w-full max-w-sm rounded-[14px] bg-surface-1 p-6 ring-1 ring-border">
-            <h2 className="font-display text-xl">Confirmar conversa</h2>
-            <div className="mt-4 space-y-1 text-sm">
-              <p><span className="text-muted-foreground">Dia:</span> <span className="capitalize">{fmtDay(pick.date)}</span></p>
-              <p><span className="text-muted-foreground">Hora:</span> {pick.time} (Lisboa){diffTz && ` · ${fmtLocal(pick.iso, tz)} na tua hora`}</p>
-              <p><span className="text-muted-foreground">WhatsApp:</span> {whatsapp}</p>
-            </div>
-            <div className="mt-6 flex gap-2">
-              <button type="button" onClick={() => setPick(null)} className="min-h-12 flex-1 rounded-full text-sm ring-1 ring-border">Cancelar</button>
-              <button type="button" disabled={busy} onClick={confirm} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                {busy && <Loader2 className="h-4 w-4 animate-spin" />} Confirmar
-              </button>
-            </div>
-          </div>
+    <div className="flex flex-1 flex-col justify-center text-center">
+      <Check className="mx-auto h-10 w-10 text-primary" />
+      <h1 className="mt-6 font-display text-3xl leading-tight md:text-4xl">
+        Tens perfil para o <span className="text-primary">MM Club</span>.
+      </h1>
+      <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+        Recebemos a tua aplicação{nome ? `, ${nome.split(" ")[0]}` : ""}. A nossa equipa entra em contacto contigo no WhatsApp nas próximas horas para agendar a tua conversa.
+      </p>
+      {whatsapp && (
+        <div className="mt-6 rounded-[14px] bg-surface-1 p-5 text-left text-sm ring-1 ring-border">
+          <p><span className="text-muted-foreground">WhatsApp:</span> {whatsapp}</p>
         </div>
       )}
+      {socio && <p className="mt-4 rounded-[14px] p-4 text-sm ring-1 ring-primary/50">Traz a pessoa com quem decides para a conversa. Assim tiram as dúvidas juntos.</p>}
     </div>
   );
 }
