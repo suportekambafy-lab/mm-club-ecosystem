@@ -14,3 +14,6 @@
 - [x] Pedir e guardar valor ao fechar lead; 20 testes passaram; venda fictícia de 149,90 € guardada e relida após recarregar, cancelar mantém estado, zero rejeitado e gravação real do sino reproduzida uma vez; janela verificada no telemóvel e aplicação fictícia removida.
 - [x] Repetir o som completo do sino três vezes, com uma pequena pausa entre toques.
 - [x] Sincronizar a animação com cada reprodução do sino, na celebração local e da equipa; navegador confirmou três reproduções, três reinícios da animação e paragem entre toques; 3 testes passaram.
+- [ ] Pedir data e hora ao marcar call e guardar para o responsável.
+- [ ] Mostrar próximas calls e contagem na Home, com avisos e sino no header.
+- [ ] Testar marcação, leitura na Home e avisos.
