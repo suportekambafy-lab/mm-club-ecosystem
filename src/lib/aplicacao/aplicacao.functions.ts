@@ -75,7 +75,7 @@ export const updateLead = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertCommercial(context);
     const db = await admin();
-    const { data: lead } = await db.from("leads").select("responsavel_id").eq("id", data.id).maybeSingle();
+    const { data: lead } = await db.from("leads").select("responsavel_id, status, sale_closed_by, sale_closed_at").eq("id", data.id).maybeSingle();
     if (!lead) throw new Error("Lead não encontrado.");
     if (lead.responsavel_id && lead.responsavel_id !== context.userId)
       throw new Error("Este lead já foi assumido por outra pessoa.");
@@ -85,8 +85,12 @@ export const updateLead = createServerFn({ method: "POST" })
       if (!data.callScheduledAt || Date.parse(data.callScheduledAt) <= Date.now()) throw new Error("Escolhe uma data e hora futuras.");
       patch.call_scheduled_at = data.callScheduledAt;
     } else if (data.status) patch.call_scheduled_at = null;
-    if (data.status === "fechou") patch.sale_amount_cents = data.saleAmountCents;
-    if (data.assumir || (data.status === "call_marcada" && !lead.responsavel_id)) {
+    if (data.status === "fechou") {
+      patch.sale_amount_cents = data.saleAmountCents;
+      patch.sale_closed_by = lead.status === "fechou" && lead.sale_closed_by ? lead.sale_closed_by : context.userId;
+      patch.sale_closed_at = lead.status === "fechou" && lead.sale_closed_at ? lead.sale_closed_at : new Date().toISOString();
+    }
+    if (data.assumir || ((data.status === "call_marcada" || data.status === "fechou") && !lead.responsavel_id)) {
       const { data: p } = await db.from("profiles").select("display_name").eq("id", context.userId).maybeSingle();
       patch.responsavel = p?.display_name ?? "Equipa";
       patch.responsavel_id = context.userId;
