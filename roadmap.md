@@ -10,3 +10,4 @@
 - [x] Testar gestão de uma conta fictícia: convite criado, nome/email corrigidos e relidos na UI, confirmação de eliminação obrigatória, conta eliminada e ausente na pesquisa; 16 testes passaram e sem erros no navegador.
 - [x] Escolher acesso de 1, 3, 6, 12 meses ou vitalício ao criar utilizadores e atribuir acesso.
 - [x] Garantir bloqueio e aviso após expiração, preservando outros acessos válidos: 32 testes passaram; conta fictícia criada com vitalício, acesso de 1 mês atribuído, aula aberta bloqueada automaticamente ao expirar com aviso e vídeo removido, conta fictícia eliminada.
+- [ ] Refinar visual comercial e cores do admin, sem alterar funcionalidades; verificar navegação e janelas em computador e telemóvel.
