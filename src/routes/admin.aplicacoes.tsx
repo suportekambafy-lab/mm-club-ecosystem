@@ -35,7 +35,7 @@ const CLS_STYLE: Record<string, string> = {
 type Lead = Record<string, any>;
 const dayKey = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Lisbon" }).format(d);
 
-function AplicacoesPage() {
+export function AplicacoesPage({ commercial = false }: { commercial?: boolean }) {
   const fetchFn = useServerFn(listLeads);
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ["aplicacao-leads"], queryFn: () => fetchFn() });
@@ -92,13 +92,13 @@ function AplicacoesPage() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl">Aplicações</h1>
-        <div className="flex gap-2">
+        {!commercial && <div className="flex gap-2">
           {(["leads", "config"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)} className={cn("rounded-full px-4 py-2 text-sm ring-1", tab === t ? "bg-primary text-primary-foreground ring-primary" : "ring-border")}>
               {t === "leads" ? "Leads" : "Horários"}
             </button>
           ))}
-        </div>
+        </div>}
       </div>
 
       {tab === "config" ? <Settings initial={data?.settings} onSaved={refresh} /> : <>

@@ -39,10 +39,15 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
   if (!data) throw new Error("Forbidden");
 }
 
+async function assertCommercial(ctx: { supabase: any; userId: string }) {
+  const { data, error } = await ctx.supabase.rpc("has_commercial_access", { _user_id: ctx.userId });
+  if (error || !data) throw new Error("Forbidden");
+}
+
 export const listApplicationNotifications = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context);
+    await assertCommercial(context);
     const { data, error } = await context.supabase.from("leads")
       .select("id, nome, classificacao").not("classificacao", "is", null)
       .order("updated_at", { ascending: false }).limit(2000);
@@ -53,7 +58,7 @@ export const listApplicationNotifications = createServerFn({ method: "GET" })
 export const listLeads = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context);
+    await assertCommercial(context);
     const since = new Date(Date.now() - 90 * 86400_000).toISOString();
     const [{ data: leads }, { data: ag }, { data: cfg }] = await Promise.all([
       context.supabase.from("leads").select("*").gte("created_at", since).order("created_at", { ascending: false }).limit(2000),
@@ -72,7 +77,7 @@ export const updateLead = createServerFn({ method: "POST" })
       assumir: z.boolean().optional(),
     }).parse(i))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context);
+    await assertCommercial(context);
     const { data: lead } = await context.supabase.from("leads").select("responsavel_id").eq("id", data.id).maybeSingle();
     if (!lead) throw new Error("Lead não encontrado.");
     if (lead.responsavel_id && lead.responsavel_id !== context.userId)

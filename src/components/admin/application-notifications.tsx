@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { listApplicationNotifications } from "@/lib/aplicacao/aplicacao.functions";
 import { createApplicationTracker } from "@/lib/aplicacao/notification-tracker";
 
-export function ApplicationNotifications() {
+export function ApplicationNotifications({ commercial = false }: { commercial?: boolean }) {
   const fetchNotices = useServerFn(listApplicationNotifications);
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -41,7 +41,7 @@ export function ApplicationNotifications() {
     if (!fresh.length) return;
     for (const lead of fresh) toast.success("Nova aplicação recebida", {
       id: `application-${lead.id}`, description: `${lead.nome || "Novo contacto"} · Lead ${lead.classificacao}`,
-      duration: 10_000, action: { label: "Ver aplicações", onClick: () => { void navigate({ to: "/admin/aplicacoes" }); } },
+      duration: 10_000, action: { label: "Ver aplicações", onClick: () => { void navigate({ to: commercial ? "/comercial/aplicacoes" : "/admin/aplicacoes" }); } },
     });
     void qc.invalidateQueries({ queryKey: ["aplicacao-leads"] });
     try {
@@ -60,6 +60,6 @@ export function ApplicationNotifications() {
         oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
       });
     } catch { /* Audio failure must not prevent the notification. */ }
-  }, [data, navigate, qc]);
+  }, [data, navigate, qc, commercial]);
   return null;
 }
