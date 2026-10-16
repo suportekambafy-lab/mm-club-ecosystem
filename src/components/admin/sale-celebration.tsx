@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatSaleAmount } from "@/lib/aplicacao/sale-rules";
+import { saleBellStrikeEnds, saleBellStrikeTimes } from "@/lib/aplicacao/sale-bell";
 import bellAsset from "@/assets/sale-bell.mp3.asset.json";
 
 // Counter Bell #3, Joseph Sardin / BigSoundBank, CC0.
