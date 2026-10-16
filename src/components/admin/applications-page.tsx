@@ -170,7 +170,7 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
         </table>
       </div>
       </>}
-      {open && <Detail commercial={commercial} lead={open} me={data?.me ?? ""} agenda={agByLead.get(open.id) as string | undefined} onClose={() => setOpen(null)} onChanged={(l) => { setOpen(l); refresh(); qc.invalidateQueries({queryKey:["commercial-home-applications"]}); }} />}
+      {open && <Detail commercial={commercial} lead={open} me={data?.me ?? ""} agenda={agByLead.get(open.id) as string | undefined} onClose={closeDetail} onChanged={(l) => { setOpen(l); refresh(); qc.invalidateQueries({queryKey:["commercial-home-applications"]}); }} />}
     </div>
   );
 }

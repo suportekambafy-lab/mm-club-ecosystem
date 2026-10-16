@@ -14,7 +14,7 @@ function useClock() {
   return now;
 }
 function CallRow({ call, now, commercial }: { call: ScheduledCall; now: number; commercial: boolean }) {
-  return <Link to={commercial ? "/comercial/aplicacoes" : "/admin/aplicacoes"} className="flex items-center gap-3 border-b border-border py-4 last:border-0">
+  return <Link to={commercial ? "/comercial/aplicacoes" : "/admin/aplicacoes"} search={{ lead: call.id }} className="flex items-center gap-3 border-b border-border py-4 last:border-0">
     <CalendarDays className="h-5 w-5 shrink-0 text-primary" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{call.nome || "Contacto"}</p><p className="mt-1 text-xs text-muted-foreground">{new Date(call.call_scheduled_at).toLocaleString("pt-PT", { timeZone: "Europe/Lisbon", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })} · Lisboa</p><p className="mt-2 text-sm font-semibold tabular-nums text-primary">{now ? callCountdown(call.call_scheduled_at, now) : "—"}</p></div><ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground" />
   </Link>;
 }
