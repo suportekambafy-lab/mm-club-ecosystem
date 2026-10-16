@@ -48,7 +48,13 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
   }, [leadParam, isLoading, leads, open]);
   const closeDetail = () => {
     setOpen(null);
-    if (leadParam) router.navigate({ search: (prev: any) => { const { lead: _drop, ...rest } = prev as Record<string, unknown>; return rest; }, replace: true });
+    if (leadParam) {
+      const loc = router.state.location;
+      const params = new URLSearchParams(loc.searchStr);
+      params.delete("lead");
+      const qs = params.toString();
+      router.history.replace(`${loc.pathname}${qs ? `?${qs}` : ""}${loc.hash}`);
+    }
   };
 
 
