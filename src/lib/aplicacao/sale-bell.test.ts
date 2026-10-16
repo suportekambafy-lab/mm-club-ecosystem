@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  SALE_BELL_STRIKE_DECAY,
   SALE_BELL_STRIKE_GAP,
   SALE_BELL_STRIKES,
-  SALE_BELL_TAIL,
   saleBellStrikeEnds,
+  saleBellStrikePause,
   saleBellStrikeTimes,
 } from "./sale-bell";
 
@@ -21,19 +22,20 @@ describe("sale bell", () => {
     expect(times.every((t, i) => i === 0 || t > times[i - 1])).toBe(true);
   });
 
-  it("stops each strike before the next one starts", () => {
+  it("ends every strike before the next one starts, leaving a pause", () => {
     const times = saleBellStrikeTimes();
     const ends = saleBellStrikeEnds(times, 5);
-    expect(ends[0]).toBeCloseTo(SALE_BELL_STRIKE_GAP, 5);
-    expect(ends[1]).toBeCloseTo(SALE_BELL_STRIKE_GAP * 2, 5);
-    expect(ends.every((end, i) => end > times[i])).toBe(true);
+    expect(ends[0]).toBeLessThan(times[1]);
+    expect(ends[1]).toBeLessThan(times[2]);
+    expect(saleBellStrikePause()).toBeGreaterThan(0.2);
+    expect(SALE_BELL_STRIKE_DECAY).toBeLessThan(SALE_BELL_STRIKE_GAP);
   });
 
-  it("lets only the last strike ring out, capped at the tail", () => {
-    const times = saleBellStrikeTimes();
-    const ends = saleBellStrikeEnds(times, 5);
-    expect(ends[2]).toBeCloseTo(SALE_BELL_STRIKE_GAP * 2 + SALE_BELL_TAIL, 5);
-    expect(saleBellStrikeEnds([0], 1)[0]).toBeCloseTo(1, 5);
+  it("cuts each hit short instead of ringing for the whole sample", () => {
+    const ends = saleBellStrikeEnds(saleBellStrikeTimes(), 5);
+    expect(ends[0]).toBeCloseTo(SALE_BELL_STRIKE_GAP * 0.8, 5);
+    expect(ends[2]).toBeCloseTo(SALE_BELL_STRIKE_GAP * 2 + SALE_BELL_STRIKE_DECAY, 5);
+    expect(saleBellStrikeEnds([0], 0.5)[0]).toBeCloseTo(0.5, 5);
   });
 
   it("falls back to a single strike when asked for an invalid count", () => {

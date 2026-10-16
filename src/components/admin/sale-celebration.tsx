@@ -31,14 +31,13 @@ export function useSaleBell() {
       times.forEach((offset, i) => {
         const source = audio.createBufferSource();
         source.buffer = hit;
-        // Fade each strike out just before the next one, so the three hits stay distinct.
+        // Each hit fades to silence on its own, so the three land as separate strikes.
         const gain = audio.createGain();
         const start = first + offset;
         const end = ends[i];
-        const fadeFrom = Math.max(start, end - 0.25);
         gain.gain.setValueAtTime(1, start);
-        gain.gain.setValueAtTime(1, fadeFrom);
-        gain.gain.linearRampToValueAtTime(0.0001, end);
+        gain.gain.setValueAtTime(1, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, end);
         source.connect(gain).connect(audio.destination);
         source.start(start);
         source.stop(end);
