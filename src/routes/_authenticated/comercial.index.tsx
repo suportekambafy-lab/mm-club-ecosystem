@@ -18,7 +18,7 @@ function CommercialHome() {
     { label: "Aplicações recebidas", value: completed.length, icon: Inbox },
     { label: "Perfil A", value: completed.filter(lead => lead.classificacao === "A").length, icon: Target },
     { label: "Por concluir", value: data.leads.length - completed.length, icon: Users },
-    { label: "Convertidos", value: data.leads.filter(lead => lead.status === "convertido").length, icon: CheckCircle2 },
+    { label: "Convertidos", value: data.leads.filter(lead => lead.status === "fechou").length, icon: CheckCircle2 },
   ];
   return <div className="commercial-enter space-y-9">
     <section className="flex flex-wrap items-end justify-between gap-6 border-b border-border pb-8">
