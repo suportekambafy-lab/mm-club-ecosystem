@@ -36,6 +36,20 @@
       "when": 1792115404734,
       "tag": "0004_aplicacao_leads",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792186762900,
+      "tag": "0005_commercial_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792186795590,
+      "tag": "0006_commercial_access_permissions",
+      "breakpoints": true
     }
   ]
 }

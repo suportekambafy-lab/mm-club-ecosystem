@@ -356,6 +356,7 @@ function AdminLayout() {
         </nav>
 
         <main className="px-3 pb-12 md:px-5">
+          <Link to="/comercial" className="mb-4 inline-flex items-center gap-2 text-sm text-admin-muted hover:text-admin-fg"><UserPlus className="h-4 w-4" />Equipa comercial · SDR & Closer</Link>
           <Outlet />
         </main>
       </div>
