@@ -24,10 +24,25 @@ export function useSaleBell() {
     const audio = context.current;
     if (!audio || !buffer.current) return;
     try {
-      const source = audio.createBufferSource();
-      source.buffer = await buffer.current;
-      source.connect(audio.destination);
-      source.start();
+      const hit = await buffer.current;
+      const times = saleBellStrikeTimes();
+      const ends = saleBellStrikeEnds(times, hit.duration);
+      const first = audio.currentTime + 0.02;
+      times.forEach((offset, i) => {
+        const source = audio.createBufferSource();
+        source.buffer = hit;
+        // Fade each strike out just before the next one, so the three hits stay distinct.
+        const gain = audio.createGain();
+        const start = first + offset;
+        const end = ends[i];
+        const fadeFrom = Math.max(start, end - 0.25);
+        gain.gain.setValueAtTime(1, start);
+        gain.gain.setValueAtTime(1, fadeFrom);
+        gain.gain.linearRampToValueAtTime(0.0001, end);
+        source.connect(gain).connect(audio.destination);
+        source.start(start);
+        source.stop(end);
+      });
     } catch { /* The recorded sale remains valid if audio is unavailable. */ }
   }
   return { prepare, ring };
