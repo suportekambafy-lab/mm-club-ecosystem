@@ -2,49 +2,45 @@ import { useEffect, useRef } from "react";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatSaleAmount } from "@/lib/aplicacao/sale-rules";
-import { saleBellStrikeEnds, saleBellStrikeTimes } from "@/lib/aplicacao/sale-bell";
+import { SALE_BELL_STRIKES, SALE_BELL_STRIKE_GAP_MS, SALE_BELL_STRIKE_TIMEOUT_MS } from "@/lib/aplicacao/sale-bell";
 import bellAsset from "@/assets/sale-bell.mp3.asset.json";
 
 // Counter Bell #3, Joseph Sardin / BigSoundBank, CC0.
 export function useSaleBell() {
-  const context = useRef<AudioContext | null>(null);
-  const buffer = useRef<Promise<AudioBuffer> | null>(null);
-  useEffect(() => () => { void context.current?.close(); }, []);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => () => { audioRef.current?.pause(); }, []);
   function prepare() {
-    const audio = context.current ?? new AudioContext();
-    context.current = audio;
-    void audio.resume().catch(() => undefined);
-    buffer.current ??= fetch(bellAsset.url).then(r => {
-      if (!r.ok) throw new Error("Bell unavailable");
-      return r.arrayBuffer();
-    }).then(bytes => audio.decodeAudioData(bytes));
-    void buffer.current.catch(() => undefined);
+    const audio = audioRef.current ?? new Audio(bellAsset.url);
+    audioRef.current = audio;
+    audio.preload = "auto";
+    audio.load();
   }
+  // Simply plays the bell sound from the start, waits for it to end, and repeats — three times.
   async function ring() {
-    const audio = context.current;
-    if (!audio || !buffer.current) return;
-    try {
-      const hit = await buffer.current;
-      const times = saleBellStrikeTimes();
-      const ends = saleBellStrikeEnds(times, hit.duration);
-      const first = audio.currentTime + 0.02;
-      times.forEach((offset, i) => {
-        const source = audio.createBufferSource();
-        source.buffer = hit;
-        // Each hit fades to silence on its own, so the three land as separate strikes.
-        const gain = audio.createGain();
-        const start = first + offset;
-        const end = ends[i];
-        gain.gain.setValueAtTime(1, start);
-        gain.gain.setValueAtTime(1, start + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, end);
-        source.connect(gain).connect(audio.destination);
-        source.start(start);
-        source.stop(end);
-      });
-    } catch { /* The recorded sale remains valid if audio is unavailable. */ }
+    const audio = audioRef.current;
+    if (!audio) return;
+    for (let strike = 0; strike < SALE_BELL_STRIKES; strike++) {
+      try {
+        audio.currentTime = 0;
+        await audio.play();
+        await waitEnded(audio);
+        if (strike < SALE_BELL_STRIKES - 1) await wait(SALE_BELL_STRIKE_GAP_MS);
+      } catch { break; }
+    }
   }
   return { prepare, ring };
+}
+
+function wait(ms: number) {
+  return new Promise<void>(resolve => setTimeout(resolve, ms));
+}
+
+function waitEnded(audio: HTMLAudioElement) {
+  return new Promise<void>(resolve => {
+    const done = () => { audio.removeEventListener("ended", done); clearTimeout(timer); resolve(); };
+    const timer = setTimeout(done, SALE_BELL_STRIKE_TIMEOUT_MS);
+    audio.addEventListener("ended", done);
+  });
 }
 
 export function SaleCelebration({ amount, closer, onDismiss }: { amount: number; closer?: string; onDismiss: () => void }) {
