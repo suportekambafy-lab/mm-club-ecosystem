@@ -93,7 +93,13 @@ export const Route = createFileRoute('/api/public/cron/call-reminders')({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const secret = process.env.CRON_SECRET
+        const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+        const { data: cfg } = await supabaseAdmin
+          .from('cron_secrets')
+          .select('secret')
+          .eq('name', 'call-reminders')
+          .maybeSingle()
+        const secret = cfg?.secret as string | undefined
         if (!secret) return Response.json({ error: 'missing_cron_secret' }, { status: 500 })
         const provided = (request.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '')
         if (!provided || !timingSafeEqual(provided, secret)) {
