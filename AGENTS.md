@@ -31,3 +31,4 @@
 
 - Commercial email confirmation is an admin-authorized server function restricted to existing SDR/closer accounts and audited; global signup confirmation remains unchanged.
 - The shared avatar resolver treats Lovable asset URLs as directly renderable, not private avatar-bucket paths, so team photographs work in account avatars.
+- Automated tests must never leave rows in the live lead/application tables; use a rolled-back transaction or a throwaway row deleted in the same test, because staff read that list as real business pipeline.
