@@ -596,7 +596,10 @@ html[data-live-immersive="1"] [data-mobile-tabbar] { display: none !important; }
 .commercial-person:hover { border-color: var(--commercial-accent); }
 .commercial-person-photo { aspect-ratio: 4 / 5; }
 .commercial-person-photo img { object-position: center 25%; }
-.commercial-home-team .commercial-person-photo { aspect-ratio: auto; height: 210px; }
+/* Fotos de destaque: moldura quadrada, imagem inteira visível, fundo desfocado da própria foto. */
+.team-photo-full { position: relative; aspect-ratio: 1 / 1; }
+.team-photo-full::before { content: ""; position: absolute; inset: -32px; background-image: var(--photo); background-size: cover; background-position: center 25%; filter: blur(22px); opacity: 0.55; }
+.team-photo-full img { position: relative; height: 100%; object-fit: contain; object-position: center; }
 .commercial-stat { border-left: 2px solid var(--border); padding-left: 20px; }
 .commercial-stat:first-child { border-left-color: var(--commercial-accent); }
 .commercial-shell table { background: var(--card); }
