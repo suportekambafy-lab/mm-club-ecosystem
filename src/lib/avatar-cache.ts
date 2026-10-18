@@ -46,7 +46,7 @@ function persist() {
 /** URL já conhecido para este caminho (sincronamente), ou null. */
 export function cachedAvatarUrl(path: string | null | undefined): string | null {
   if (!path) return null;
-  if (/^https?:\/\//i.test(path) || path.startsWith("data:")) return path;
+  if (/^https?:\/\//i.test(path) || path.startsWith("data:") || path.startsWith("/__l5e/assets-v1/")) return path;
   const entry = store()[path];
   if (!entry || entry.exp <= Date.now()) return null;
   return entry.url;
@@ -55,7 +55,7 @@ export function cachedAvatarUrl(path: string | null | undefined): string | null 
 /** Resolve (e memoriza) o signed URL do avatar. */
 export function resolveAvatarUrl(path: string | null | undefined): Promise<string | null> {
   if (!path) return Promise.resolve(null);
-  if (/^https?:\/\//i.test(path) || path.startsWith("data:")) return Promise.resolve(path);
+  if (/^https?:\/\//i.test(path) || path.startsWith("data:") || path.startsWith("/__l5e/assets-v1/")) return Promise.resolve(path);
 
   const entry = store()[path];
   const fresh = entry && entry.exp - REFRESH_BEFORE_MS > Date.now();

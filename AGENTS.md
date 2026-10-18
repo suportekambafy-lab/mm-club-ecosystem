@@ -30,3 +30,4 @@
 - Recording admission checks storage after checking active egress and returns host-visible warnings when full; preserve existing credential-independent fallbacks when storage reads fail.
 
 - Commercial email confirmation is an admin-authorized server function restricted to existing SDR/closer accounts and audited; global signup confirmation remains unchanged.
+- The shared avatar resolver treats Lovable asset URLs as directly renderable, not private avatar-bucket paths, so team photographs work in account avatars.
