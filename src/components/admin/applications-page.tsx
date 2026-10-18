@@ -13,6 +13,8 @@ import { SaleCelebration, useSaleBell } from "./sale-celebration";
 import { broadcastSale } from "./sale-broadcast";
 import { parseCallDateTime } from "@/lib/aplicacao/call-rules";
 import { formatSaleAmount, parseSaleAmount } from "@/lib/aplicacao/sale-rules";
+import { isLeadLocked, leadAttribution } from "@/lib/aplicacao/lead-presentation";
+import { supabase } from "@/integrations/supabase/client";
 
 const STATUS: Record<string, string> = {
   novo: "Novo", incompleto: "Incompleto", em_contato: "Em contacto",
@@ -29,7 +31,7 @@ const dayKey = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe
 export function AplicacoesPage({ commercial = false }: { commercial?: boolean }) {
   const fetchFn = useServerFn(listLeads);
   const qc = useQueryClient();
-  const { data, isLoading } = useQuery({ queryKey: ["aplicacao-leads"], queryFn: () => fetchFn() });
+  const { data, isLoading } = useQuery({ queryKey: ["aplicacao-leads"], queryFn: () => fetchFn(), refetchInterval: 15_000 });
   const [fCls, setFCls] = useState(""); const [fStatus, setFStatus] = useState("");
   const [fFrom, setFFrom] = useState(""); const [search, setSearch] = useState("");
   const [open, setOpen] = useState<Lead | null>(null);
@@ -37,6 +39,19 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
   const refresh = () => qc.invalidateQueries({ queryKey: ["aplicacao-leads"] });
 
   const leads: Lead[] = (data?.leads as Lead[]) ?? [];
+  const closerIds = [...new Set(leads.filter(l => l.status === "fechou" && l.sale_closed_by && l.sale_closed_by !== l.responsavel_id).map(l => String(l.sale_closed_by)))].sort();
+  const { data: actorNames = {} } = useQuery({
+    queryKey: ["application-closer-names", closerIds],
+    enabled: closerIds.length > 0,
+    queryFn: async () => {
+      const { data: profiles, error } = await supabase.from("profiles").select("id, display_name").in("id", closerIds);
+      if (error) throw error;
+      return Object.fromEntries((profiles ?? []).flatMap(p => p.display_name ? [[p.id, p.display_name]] : [])) as Record<string, string>;
+    },
+  });
+  useEffect(() => {
+    setOpen(current => current ? leads.find(l => l.id === current.id) ?? null : null);
+  }, [data?.leads]);
   const agByLead = useMemo(() => new Map((data?.agendamentos ?? []).map((a: any) => [a.lead_id, a.data_hora])), [data]);
 
   const router = useRouter();
@@ -168,7 +183,7 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
               <tr key={l.id} onClick={() => setOpen(l)} className="cursor-pointer border-t border-border hover:bg-surface-1">
                 <td className="p-3">{l.classificacao ? <span className={cn("rounded px-2 py-0.5 text-xs font-semibold", CLS_STYLE[l.classificacao])}>{l.classificacao}</span> : "—"}</td>
                 <td className="p-3">{l.nome ?? "—"}</td><td className="p-3">{l.whatsapp}</td>
-                <td className="p-3">{STATUS[l.status] ?? l.status}{l.status === "fechou" && l.sale_amount_cents != null && <p className="mt-1 text-xs text-primary">{formatSaleAmount(l.sale_amount_cents)}</p>}</td><td className="p-3">{l.responsavel ?? "—"}</td>
+                <td className="p-3">{STATUS[l.status] ?? l.status}<Attribution lead={l} names={actorNames} />{l.status === "fechou" && l.sale_amount_cents != null && <p className="mt-1 text-xs text-primary">{formatSaleAmount(l.sale_amount_cents)}</p>}</td><td className="p-3">{l.responsavel ?? "—"}</td>
                 <td className="p-3 text-muted-foreground">{new Date(l.created_at).toLocaleString("pt-PT")}</td>
               </tr>
             ))}
@@ -177,12 +192,18 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
         </table>
       </div>
       </>}
-      {open && <Detail commercial={commercial} lead={open} me={data?.me ?? ""} agenda={agByLead.get(open.id) as string | undefined} onClose={closeDetail} onChanged={(l) => { setOpen(l); refresh(); qc.invalidateQueries({queryKey:["commercial-home-applications"]}); }} />}
+      {open && <Detail commercial={commercial} lead={open} actorNames={actorNames} me={data?.me ?? ""} agenda={agByLead.get(open.id) as string | undefined} onClose={closeDetail} onChanged={(l) => { setOpen(l); refresh(); qc.invalidateQueries({queryKey:["commercial-home-applications"]}); }} />}
     </div>
   );
 }
 
-function Detail({ lead, me, agenda, onClose, onChanged, commercial }: { lead: Lead; me: string; agenda?: string; onClose: () => void; onChanged: (l: Lead) => void; commercial: boolean }) {
+function Attribution({ lead, names }: { lead: Lead; names: Record<string, string> }) {
+  const attribution = leadAttribution(lead, names);
+  if (!attribution) return null;
+  return <p className="mt-1 text-xs text-muted-foreground">{attribution.kind === "sale" ? "Fechado por" : "Marcado por"}: {attribution.name}</p>;
+}
+
+function Detail({ lead, actorNames, me, agenda, onClose, onChanged, commercial }: { lead: Lead; actorNames: Record<string, string>; me: string; agenda?: string; onClose: () => void; onChanged: (l: Lead) => void; commercial: boolean }) {
   const upd = useServerFn(updateLead);
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
@@ -193,10 +214,11 @@ function Detail({ lead, me, agenda, onClose, onChanged, commercial }: { lead: Le
   const [celebration, setCelebration] = useState<{ amount: number; closer?: string } | null>(null);
   const dismissCelebration = useCallback(() => setCelebration(null), []);
   const bell = useSaleBell();
-  const locked = !!lead.responsavel_id && lead.responsavel_id !== me;
+  const locked = isLeadLocked(lead, me);
   const first = String(lead.nome ?? "").split(" ")[0];
   const wa = `https://wa.me/${String(lead.whatsapp ?? "").replace(/\D/g, "")}?text=${encodeURIComponent(`Olá ${first}, tudo bem? Aqui é da equipa do MM Club, vi a tua aplicação.`)}`;
   async function run(patch: { status?: "novo" | "incompleto" | "em_contato" | "call_marcada" | "fechou" | "perdido"; assumir?: boolean; saleAmountCents?: number; callScheduledAt?: string }) {
+    if (locked || busy) return;
     setBusy(true);
     try {
       const result = await upd({ data: { id: lead.id, ...patch } });
@@ -225,16 +247,22 @@ function Detail({ lead, me, agenda, onClose, onChanged, commercial }: { lead: Le
         </div>
         {(lead.call_scheduled_at || agenda) && lead.status === "call_marcada" && <p className="mt-4 rounded-lg p-3 text-sm ring-1 ring-primary/50">Call: {new Date(lead.call_scheduled_at || agenda).toLocaleString("pt-PT", { timeZone: "Europe/Lisbon" })} (Lisboa) <Button variant="ghost" size="sm" disabled={locked || busy} onClick={() => { setCallTime(""); setScheduling(true); }}>Alterar</Button></p>}
         <div className="mt-4 flex flex-wrap gap-2">
-          <a href={wa} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"><MessageCircle className="h-4 w-4" /> WhatsApp</a>
-          <a href={`tel:${lead.whatsapp}`} className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm ring-1 ring-border"><Phone className="h-4 w-4" /> Ligar</a>
-          {!lead.responsavel_id && <button disabled={busy} onClick={() => run({ assumir: true })} className="rounded-full px-4 py-2 text-sm ring-1 ring-border hover:ring-primary">Assumir lead</button>}
+          {locked || busy ? <>
+            <Button disabled><MessageCircle /> WhatsApp</Button>
+            <Button variant="outline" disabled><Phone /> Ligar</Button>
+          </> : <>
+            <Button asChild><a href={wa} target="_blank" rel="noreferrer"><MessageCircle /> WhatsApp</a></Button>
+            <Button variant="outline" asChild><a href={`tel:${lead.whatsapp}`}><Phone /> Ligar</a></Button>
+          </>}
+          {!lead.responsavel_id && <Button variant="outline" disabled={busy} onClick={() => run({ assumir: true })}>Assumir lead</Button>}
         </div>
         {lead.responsavel && <p className="mt-3 text-xs text-muted-foreground">Responsável: {lead.responsavel}{locked && " · bloqueado para ti"}</p>}
         <label className="mt-4 block text-xs text-muted-foreground">Estado
-          <select key={`${lead.status}-${closing}-${scheduling}-${busy}`} aria-label="Estado" disabled={busy || locked} value={lead.status} onChange={(e) => { const status = e.target.value as Parameters<typeof run>[0]["status"]; if (status === "call_marcada") { setCallTime(""); setScheduling(true); } else if (status === "fechou") { setAmount(lead.sale_amount_cents != null ? String(lead.sale_amount_cents / 100) : ""); setClosing(true); } else void run({status}); }} className="mt-1 block w-full rounded-lg bg-surface-1 px-3 py-2 text-sm text-foreground ring-1 ring-border">
+          <select key={`${lead.status}-${closing}-${scheduling}-${busy}`} aria-label="Estado" disabled={busy || locked} value={lead.status} onChange={(e) => { const status = e.target.value as Parameters<typeof run>[0]["status"]; if (status === "call_marcada") { setCallTime(""); setScheduling(true); } else if (status === "fechou") { setAmount(lead.sale_amount_cents != null ? String(lead.sale_amount_cents / 100) : ""); setClosing(true); } else void run({status}); }} className="mt-1 block w-full rounded-lg bg-surface-1 px-3 py-2 text-sm text-foreground ring-1 ring-border disabled:cursor-not-allowed disabled:opacity-50">
             {Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
         </label>
+        <Attribution lead={lead} names={actorNames} />
         {lead.status === "fechou" && lead.sale_amount_cents != null && <p className="mt-3 text-sm font-medium text-primary">Valor fechado: {formatSaleAmount(lead.sale_amount_cents)}</p>}
         <div className="mt-6 rounded-xl p-4 ring-1 ring-primary/60">
           <p className="text-xs uppercase tracking-wider text-primary">O que te travou</p>
