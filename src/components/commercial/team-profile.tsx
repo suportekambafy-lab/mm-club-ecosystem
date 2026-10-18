@@ -1,5 +1,6 @@
 import guadalupe from "@/assets/guadalupe-costa.jpg.asset.json";
 import victor from "@/assets/victor-muabi.jpg.asset.json";
+import elizangela from "@/assets/elizangela-dos-santos.png.asset.json";
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 export const FEATURED_TEAM = [
   { name: "Victor Muabi", title: "Fundador", photo: victor.url, match: "victor" },
   { name: "Guadalupe Costa", title: "Closer", photo: guadalupe.url, match: "guadalupe" },
+  { name: "Elizângela dos Santos", title: "SDR", photo: elizangela.url, match: "elizângela" },
 ];
 
 export function TeamProfile({ link = false }: { link?: boolean }) {
