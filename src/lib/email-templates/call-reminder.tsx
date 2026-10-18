@@ -8,7 +8,7 @@ interface Props {
   closerName?: string
   leadName?: string
   whenLabel?: string
-  kind?: 'day' | 'hour'
+  kind?: 'confirm' | 'day' | 'hour'
 }
 
 const highlight: React.CSSProperties = {
