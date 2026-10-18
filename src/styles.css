@@ -596,6 +596,7 @@ html[data-live-immersive="1"] [data-mobile-tabbar] { display: none !important; }
 .commercial-person:hover { border-color: var(--commercial-accent); }
 .commercial-person-photo { aspect-ratio: 4 / 5; }
 .commercial-person-photo img { object-position: center 25%; }
+.commercial-home-team .commercial-person-photo { aspect-ratio: auto; height: 210px; }
 .commercial-stat { border-left: 2px solid var(--border); padding-left: 20px; }
 .commercial-stat:first-child { border-left-color: var(--commercial-accent); }
 .commercial-shell table { background: var(--card); }
