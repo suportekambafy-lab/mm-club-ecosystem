@@ -1694,6 +1694,24 @@ export type Database = {
         }
         Relationships: []
       }
+      cron_secrets: {
+        Row: {
+          created_at: string
+          name: string
+          secret: string
+        }
+        Insert: {
+          created_at?: string
+          name: string
+          secret: string
+        }
+        Update: {
+          created_at?: string
+          name?: string
+          secret?: string
+        }
+        Relationships: []
+      }
       domain_events: {
         Row: {
           actor_id: string | null
@@ -1937,6 +1955,8 @@ export type Database = {
       }
       leads: {
         Row: {
+          call_reminder_day_sent_at: string | null
+          call_reminder_hour_sent_at: string | null
           call_scheduled_at: string | null
           classificacao: string | null
           created_at: string
@@ -1968,6 +1988,8 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          call_reminder_day_sent_at?: string | null
+          call_reminder_hour_sent_at?: string | null
           call_scheduled_at?: string | null
           classificacao?: string | null
           created_at?: string
@@ -1999,6 +2021,8 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          call_reminder_day_sent_at?: string | null
+          call_reminder_hour_sent_at?: string | null
           call_scheduled_at?: string | null
           classificacao?: string | null
           created_at?: string

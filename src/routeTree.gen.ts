@@ -116,6 +116,7 @@ import { Route as AdminFinanceiroClienteUserIdRouteImport } from './routes/admin
 import { Route as AdminLivesLiveIdEditorRouteImport } from './routes/admin.lives.$liveId.editor'
 import { Route as AdminLivesLiveIdStudioRouteImport } from './routes/admin.lives.$liveId.studio'
 import { Route as ApiPublicCloudflareStreamWebhookRouteImport } from './routes/api/public/cloudflare-stream/webhook'
+import { Route as ApiPublicCronCallRemindersRouteImport } from './routes/api/public/cron/call-reminders'
 import { Route as ApiPublicHooksAutoTranscribeRouteImport } from './routes/api/public/hooks/auto-transcribe'
 import { Route as ApiPublicHooksBillingTickRouteImport } from './routes/api/public/hooks/billing-tick'
 import { Route as ApiPublicHooksCourseReleasedRouteImport } from './routes/api/public/hooks/course-released'
@@ -706,6 +707,12 @@ const ApiPublicCloudflareStreamWebhookRoute =
     path: '/api/public/cloudflare-stream/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCronCallRemindersRoute =
+  ApiPublicCronCallRemindersRouteImport.update({
+    id: '/api/public/cron/call-reminders',
+    path: '/api/public/cron/call-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksAutoTranscribeRoute =
   ApiPublicHooksAutoTranscribeRouteImport.update({
     id: '/api/public/hooks/auto-transcribe',
@@ -1005,6 +1012,7 @@ export interface FileRoutesByFullPath {
   '/admin/lives/$liveId/editor': typeof AdminLivesLiveIdEditorRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
+  '/api/public/cron/call-reminders': typeof ApiPublicCronCallRemindersRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
   '/api/public/hooks/course-released': typeof ApiPublicHooksCourseReleasedRoute
@@ -1136,6 +1144,7 @@ export interface FileRoutesByTo {
   '/admin/lives/$liveId/editor': typeof AdminLivesLiveIdEditorRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
+  '/api/public/cron/call-reminders': typeof ApiPublicCronCallRemindersRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
   '/api/public/hooks/course-released': typeof ApiPublicHooksCourseReleasedRoute
@@ -1279,6 +1288,7 @@ export interface FileRoutesById {
   '/admin/lives/$liveId/editor': typeof AdminLivesLiveIdEditorRoute
   '/admin/lives/$liveId/studio': typeof AdminLivesLiveIdStudioRoute
   '/api/public/cloudflare-stream/webhook': typeof ApiPublicCloudflareStreamWebhookRoute
+  '/api/public/cron/call-reminders': typeof ApiPublicCronCallRemindersRoute
   '/api/public/hooks/auto-transcribe': typeof ApiPublicHooksAutoTranscribeRoute
   '/api/public/hooks/billing-tick': typeof ApiPublicHooksBillingTickRoute
   '/api/public/hooks/course-released': typeof ApiPublicHooksCourseReleasedRoute
@@ -1421,6 +1431,7 @@ export interface FileRouteTypes {
     | '/admin/lives/$liveId/editor'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
+    | '/api/public/cron/call-reminders'
     | '/api/public/hooks/auto-transcribe'
     | '/api/public/hooks/billing-tick'
     | '/api/public/hooks/course-released'
@@ -1552,6 +1563,7 @@ export interface FileRouteTypes {
     | '/admin/lives/$liveId/editor'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
+    | '/api/public/cron/call-reminders'
     | '/api/public/hooks/auto-transcribe'
     | '/api/public/hooks/billing-tick'
     | '/api/public/hooks/course-released'
@@ -1694,6 +1706,7 @@ export interface FileRouteTypes {
     | '/admin/lives/$liveId/editor'
     | '/admin/lives/$liveId/studio'
     | '/api/public/cloudflare-stream/webhook'
+    | '/api/public/cron/call-reminders'
     | '/api/public/hooks/auto-transcribe'
     | '/api/public/hooks/billing-tick'
     | '/api/public/hooks/course-released'
@@ -1760,6 +1773,7 @@ export interface RootRouteChildren {
   ApiKnowledgeSearchRoute: typeof ApiKnowledgeSearchRoute
   ApiRealtimeSessionRoute: typeof ApiRealtimeSessionRoute
   ApiPublicCloudflareStreamWebhookRoute: typeof ApiPublicCloudflareStreamWebhookRoute
+  ApiPublicCronCallRemindersRoute: typeof ApiPublicCronCallRemindersRoute
   ApiPublicHooksAutoTranscribeRoute: typeof ApiPublicHooksAutoTranscribeRoute
   ApiPublicHooksBillingTickRoute: typeof ApiPublicHooksBillingTickRoute
   ApiPublicHooksCourseReleasedRoute: typeof ApiPublicHooksCourseReleasedRoute
@@ -2545,6 +2559,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCloudflareStreamWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/call-reminders': {
+      id: '/api/public/cron/call-reminders'
+      path: '/api/public/cron/call-reminders'
+      fullPath: '/api/public/cron/call-reminders'
+      preLoaderRoute: typeof ApiPublicCronCallRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/auto-transcribe': {
       id: '/api/public/hooks/auto-transcribe'
       path: '/api/public/hooks/auto-transcribe'
@@ -3086,6 +3107,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiKnowledgeSearchRoute: ApiKnowledgeSearchRoute,
   ApiRealtimeSessionRoute: ApiRealtimeSessionRoute,
   ApiPublicCloudflareStreamWebhookRoute: ApiPublicCloudflareStreamWebhookRoute,
+  ApiPublicCronCallRemindersRoute: ApiPublicCronCallRemindersRoute,
   ApiPublicHooksAutoTranscribeRoute: ApiPublicHooksAutoTranscribeRoute,
   ApiPublicHooksBillingTickRoute: ApiPublicHooksBillingTickRoute,
   ApiPublicHooksCourseReleasedRoute: ApiPublicHooksCourseReleasedRoute,
