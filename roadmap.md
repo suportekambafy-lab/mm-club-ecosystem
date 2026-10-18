@@ -30,3 +30,4 @@
 - [x] Mostrar próximas calls e contagem na Home, com avisos 15 minutos antes e à hora da call, e sino no header comercial e admin.
 - [x] Testar marcação, leitura na Home após recarregar, contagem e aviso no navegador autenticado; 8 testes passaram; aplicações fictícias removidas.
 - [x] Confirmar apenas os emails de Guadalupe e Elizângela a pedido do dono; entrada real das duas contas e avatares verificados, dois testes de proteção passaram, confirmação global mantida.
+- [ ] Desativar contactos e estado de leads de outro responsável e mostrar autoria de calls e fechos; verificar sem criar dados de teste no pipeline.
