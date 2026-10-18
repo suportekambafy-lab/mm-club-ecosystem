@@ -596,7 +596,10 @@ html[data-live-immersive="1"] [data-mobile-tabbar] { display: none !important; }
 .commercial-person:hover { border-color: var(--commercial-accent); }
 .commercial-person-photo { aspect-ratio: 4 / 5; }
 .commercial-person-photo img { object-position: center 25%; }
-.commercial-home-team .commercial-person-photo { aspect-ratio: auto; height: 210px; }
+/* Fotos de destaque: foto inteira visível, centrada sobre um fundo desfocado da própria foto. */
+.team-photo-full { position: relative; display: flex; align-items: center; justify-content: center; aspect-ratio: 1 / 1; padding: 14px; }
+.team-photo-full::before { content: ""; position: absolute; inset: -30px; background-image: linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), var(--photo); background-size: cover; background-position: center 25%; filter: blur(26px) saturate(1.05); }
+.team-photo-full img { position: relative; width: auto; height: auto; max-width: 100%; max-height: 100%; border-radius: 10px; box-shadow: 0 10px 26px -14px rgb(15 23 42 / 0.35); }
 .commercial-stat { border-left: 2px solid var(--border); padding-left: 20px; }
 .commercial-stat:first-child { border-left-color: var(--commercial-accent); }
 .commercial-shell table { background: var(--card); }
