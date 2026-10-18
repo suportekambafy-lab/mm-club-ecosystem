@@ -105,6 +105,33 @@ export const updateLead = createServerFn({ method: "POST" })
       const { data: p } = await db.from("profiles").select("display_name").eq("id", context.userId).maybeSingle();
       closerName = p?.display_name ?? "Equipa";
     }
+    if (data.status === "call_marcada" && patch.call_scheduled_at) {
+      // Confirmação imediata ao responsável (os lembretes de dia/hora ficam com o agendador).
+      try {
+        const responsavelId = (patch.responsavel_id as string | undefined) ?? lead.responsavel_id ?? context.userId;
+        const { data: userRes } = await db.auth.admin.getUserById(responsavelId);
+        const email = userRes?.user?.email;
+        if (email) {
+          const { data: p } = await db.from("profiles").select("display_name").eq("id", responsavelId).maybeSingle();
+          const whenLabel = new Intl.DateTimeFormat("pt-PT", {
+            timeZone: "Europe/Lisbon", weekday: "long", day: "numeric", month: "long",
+            hour: "2-digit", minute: "2-digit",
+          }).format(new Date(patch.call_scheduled_at as string));
+          const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+          await sendTemplateEmail("call-reminder", email, {
+            templateData: {
+              closerName: p?.display_name ?? "Equipa",
+              leadName: (updated as Record<string, unknown>).nome ?? "o lead",
+              whenLabel: `${whenLabel} (Lisboa)`,
+              kind: "confirm",
+            },
+            idempotencyKey: `call-reminder-confirm-${data.id}-${patch.call_scheduled_at}`,
+          });
+        }
+      } catch (e) {
+        console.error("[updateLead] call confirmation email failed:", e);
+      }
+    }
     return { ok: true, lead: updated, closerName };
   });
 
