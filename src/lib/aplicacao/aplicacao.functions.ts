@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { classificar } from "./config";
 import { leadSchema } from "./validation";
 import { leadUpdateSchema } from "./sale-rules";
+import { canScheduleCall } from "./lead-presentation";
 
 async function admin() {
   return (await import("@/integrations/supabase/client.server")).supabaseAdmin;
@@ -49,6 +50,8 @@ export const listApplicationNotifications = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertCommercial(context);
+    const { data: roleRows } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
+    if (!canScheduleCall((roleRows ?? []).map((r: { role: string }) => r.role))) return [];
     const { data, error } = await context.supabase.from("leads")
       .select("id, nome, classificacao").not("classificacao", "is", null)
       .order("updated_at", { ascending: false }).limit(2000);
@@ -69,10 +72,13 @@ export const listLeads = createServerFn({ method: "GET" })
       db.from("user_roles").select("user_id, role").in("role", ["admin", "sdr", "closer"]),
     ]);
     const myRoles = (roleRows ?? []).filter(r => r.user_id === context.userId).map(r => r.role as string);
+    const closerOnly = !canScheduleCall(myRoles);
+    const visibleLeads = closerOnly ? (leads ?? []).filter(l => l.responsavel_id === context.userId) : (leads ?? []);
+    const visibleIds = new Set(visibleLeads.map(l => l.id));
     const closerIds = [...new Set((roleRows ?? []).filter(r => r.role === "closer").map(r => r.user_id))];
     const { data: closerProfiles } = closerIds.length ? await db.from("profiles").select("id, display_name").in("id", closerIds) : { data: [] };
     const closers = (closerProfiles ?? []).map(p => ({ id: p.id, name: p.display_name ?? "Closer" })).sort((a, b) => a.name.localeCompare(b.name));
-    return { leads: leads ?? [], agendamentos: ag ?? [], settings: cfg, me: context.userId, myRoles, closers };
+    return { leads: visibleLeads, agendamentos: (ag ?? []).filter(a => !closerOnly || visibleIds.has(a.lead_id)), settings: cfg, me: context.userId, myRoles, closers };
   });
 
 export const updateLead = createServerFn({ method: "POST" })
