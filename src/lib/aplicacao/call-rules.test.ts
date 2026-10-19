@@ -5,7 +5,7 @@ const id = "00000000-0000-4000-8000-000000000001";
 describe("scheduled calls", () => {
   it("requires date and time when marking a call", () => {
     expect(leadUpdateSchema.safeParse({ id, status: "call_marcada" }).success).toBe(false);
-    expect(leadUpdateSchema.safeParse({ id, status: "call_marcada", callScheduledAt: "2026-12-01T10:00:00.000Z" }).success).toBe(true);
+    expect(leadUpdateSchema.safeParse({ id, status: "call_marcada", closerId: id, callScheduledAt: "2026-12-01T10:00:00.000Z" }).success).toBe(true);
   });
   it("uses Lisbon time in summer and winter", () => {
     expect(parseCallDateTime("2026-10-17T10:00")).toBe("2026-10-17T09:00:00.000Z");

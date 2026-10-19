@@ -61,12 +61,18 @@ export const listLeads = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertCommercial(context);
     const since = new Date(Date.now() - 90 * 86400_000).toISOString();
-    const [{ data: leads }, { data: ag }, { data: cfg }] = await Promise.all([
+    const db = await admin();
+    const [{ data: leads }, { data: ag }, { data: cfg }, { data: roleRows }] = await Promise.all([
       context.supabase.from("leads").select("*").gte("created_at", since).order("created_at", { ascending: false }).limit(2000),
       context.supabase.from("agendamentos").select("lead_id, data_hora"),
       context.supabase.from("aplicacao_settings").select("slots, blocked_days").eq("id", 1).maybeSingle(),
+      db.from("user_roles").select("user_id, role").in("role", ["admin", "sdr", "closer"]),
     ]);
-    return { leads: leads ?? [], agendamentos: ag ?? [], settings: cfg, me: context.userId };
+    const myRoles = (roleRows ?? []).filter(r => r.user_id === context.userId).map(r => r.role as string);
+    const closerIds = [...new Set((roleRows ?? []).filter(r => r.role === "closer").map(r => r.user_id))];
+    const { data: closerProfiles } = closerIds.length ? await db.from("profiles").select("id, display_name").in("id", closerIds) : { data: [] };
+    const closers = (closerProfiles ?? []).map(p => ({ id: p.id, name: p.display_name ?? "Closer" })).sort((a, b) => a.name.localeCompare(b.name));
+    return { leads: leads ?? [], agendamentos: ag ?? [], settings: cfg, me: context.userId, myRoles, closers };
   });
 
 export const updateLead = createServerFn({ method: "POST" })
@@ -75,28 +81,41 @@ export const updateLead = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertCommercial(context);
     const db = await admin();
-    const { data: lead } = await db.from("leads").select("responsavel_id, status, sale_closed_by, sale_closed_at").eq("id", data.id).maybeSingle();
+    const { data: lead } = await db.from("leads").select("responsavel_id, status, sale_closed_by, sale_closed_at, call_scheduled_by").eq("id", data.id).maybeSingle();
     if (!lead) throw new Error("Lead não encontrado.");
-    if (lead.responsavel_id && lead.responsavel_id !== context.userId)
+    const reschedulingOwnCall = data.status === "call_marcada" && lead.status === "call_marcada" && lead.call_scheduled_by === context.userId;
+    if (lead.responsavel_id && lead.responsavel_id !== context.userId && !reschedulingOwnCall)
       throw new Error("Este lead já foi assumido por outra pessoa.");
+    let closerProfileName: string | null = null;
+    if (data.status === "call_marcada") {
+      const { data: roles } = await db.from("user_roles").select("user_id, role").in("user_id", [context.userId, data.closerId!]);
+      const mine = (roles ?? []).filter(r => r.user_id === context.userId).map(r => r.role as string);
+      if (!mine.includes("admin") && !mine.includes("sdr")) throw new Error("Só o SDR pode marcar calls.");
+      if (!(roles ?? []).some(r => r.user_id === data.closerId && r.role === "closer")) throw new Error("Escolhe um closer válido.");
+      const { data: cp } = await db.from("profiles").select("display_name").eq("id", data.closerId!).maybeSingle();
+      closerProfileName = cp?.display_name ?? "Closer";
+    }
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (data.status) patch.status = data.status;
     if (data.status === "call_marcada") {
       if (!data.callScheduledAt || Date.parse(data.callScheduledAt) <= Date.now()) throw new Error("Escolhe uma data e hora futuras.");
       patch.call_scheduled_at = data.callScheduledAt;
+      patch.call_scheduled_by = context.userId;
+      patch.responsavel_id = data.closerId;
+      patch.responsavel = closerProfileName;
     } else if (data.status) patch.call_scheduled_at = null;
     if (data.status === "fechou") {
       patch.sale_amount_cents = data.saleAmountCents;
       patch.sale_closed_by = lead.status === "fechou" && lead.sale_closed_by ? lead.sale_closed_by : context.userId;
       patch.sale_closed_at = lead.status === "fechou" && lead.sale_closed_at ? lead.sale_closed_at : new Date().toISOString();
     }
-    if (data.assumir || ((data.status === "call_marcada" || data.status === "fechou") && !lead.responsavel_id)) {
+    if (data.assumir || (data.status === "fechou" && !lead.responsavel_id)) {
       const { data: p } = await db.from("profiles").select("display_name").eq("id", context.userId).maybeSingle();
       patch.responsavel = p?.display_name ?? "Equipa";
       patch.responsavel_id = context.userId;
     }
     let q = db.from("leads").update(patch as never).eq("id", data.id);
-    q = lead.responsavel_id ? q.eq("responsavel_id", context.userId) : q.is("responsavel_id", null);
+    q = reschedulingOwnCall ? q.eq("call_scheduled_by", context.userId) : lead.responsavel_id ? q.eq("responsavel_id", lead.responsavel_id) : q.is("responsavel_id", null);
     const { data: updated, error } = await q.select("*").maybeSingle();
     if (error) throw new Error("Não foi possível atualizar.");
     if (!updated) throw new Error("O lead não foi atualizado. Volta a abrir a aplicação.");
