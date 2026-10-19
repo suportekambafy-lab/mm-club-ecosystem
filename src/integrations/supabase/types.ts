@@ -1958,6 +1958,7 @@ export type Database = {
           call_reminder_day_sent_at: string | null
           call_reminder_hour_sent_at: string | null
           call_scheduled_at: string | null
+          call_scheduled_by: string | null
           classificacao: string | null
           created_at: string
           decisao: string | null
@@ -1991,6 +1992,7 @@ export type Database = {
           call_reminder_day_sent_at?: string | null
           call_reminder_hour_sent_at?: string | null
           call_scheduled_at?: string | null
+          call_scheduled_by?: string | null
           classificacao?: string | null
           created_at?: string
           decisao?: string | null
@@ -2024,6 +2026,7 @@ export type Database = {
           call_reminder_day_sent_at?: string | null
           call_reminder_hour_sent_at?: string | null
           call_scheduled_at?: string | null
+          call_scheduled_by?: string | null
           classificacao?: string | null
           created_at?: string
           decisao?: string | null
