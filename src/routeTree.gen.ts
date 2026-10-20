@@ -68,6 +68,7 @@ import { Route as CheckoutIndexRouteImport } from './routes/checkout.index'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ConvidadoLiveIdRouteImport } from './routes/convidado.$liveId'
 import { Route as EgressCompositeRouteImport } from './routes/egress.composite'
+import { Route as PagarCodeRouteImport } from './routes/pagar.$code'
 import { Route as UpsellTrial14RouteImport } from './routes/upsell.trial14'
 import { Route as AppAcademiaIndexRouteImport } from './routes/_app.academia.index'
 import { Route as AppAcademiaCourseIdRouteImport } from './routes/_app.academia.$courseId'
@@ -85,6 +86,7 @@ import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
 import { Route as AuthenticatedComercialIndexRouteImport } from './routes/_authenticated/comercial.index'
 import { Route as AuthenticatedComercialAplicacoesRouteImport } from './routes/_authenticated/comercial.aplicacoes'
 import { Route as AuthenticatedComercialEquipaRouteImport } from './routes/_authenticated/comercial.equipa'
+import { Route as AuthenticatedComercialMmpayRouteImport } from './routes/_authenticated/comercial.mmpay'
 import { Route as AuthenticatedComercialUtilizadoresRouteImport } from './routes/_authenticated/comercial.utilizadores'
 import { Route as AuthenticatedComercialVendasRouteImport } from './routes/_authenticated/comercial.vendas'
 import { Route as AdminFinanceiroIndexRouteImport } from './routes/admin.financeiro.index'
@@ -444,6 +446,11 @@ const EgressCompositeRoute = EgressCompositeRouteImport.update({
   path: '/egress/composite',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PagarCodeRoute = PagarCodeRouteImport.update({
+  id: '/pagar/$code',
+  path: '/pagar/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UpsellTrial14Route = UpsellTrial14RouteImport.update({
   id: '/upsell/trial14',
   path: '/upsell/trial14',
@@ -532,6 +539,12 @@ const AuthenticatedComercialEquipaRoute =
   AuthenticatedComercialEquipaRouteImport.update({
     id: '/equipa',
     path: '/equipa',
+    getParentRoute: () => AuthenticatedComercialRoute,
+  } as any)
+const AuthenticatedComercialMmpayRoute =
+  AuthenticatedComercialMmpayRouteImport.update({
+    id: '/mmpay',
+    path: '/mmpay',
     getParentRoute: () => AuthenticatedComercialRoute,
   } as any)
 const AuthenticatedComercialUtilizadoresRoute =
@@ -965,6 +978,7 @@ export interface FileRoutesByFullPath {
   '/checkout/return': typeof CheckoutReturnRoute
   '/convidado/$liveId': typeof ConvidadoLiveIdRoute
   '/egress/composite': typeof EgressCompositeRoute
+  '/pagar/$code': typeof PagarCodeRoute
   '/upsell/trial14': typeof UpsellTrial14Route
   '/admin/': typeof AdminIndexRoute
   '/checkout/': typeof CheckoutIndexRoute
@@ -979,6 +993,7 @@ export interface FileRoutesByFullPath {
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
   '/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
+  '/comercial/mmpay': typeof AuthenticatedComercialMmpayRoute
   '/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
   '/comercial/vendas': typeof AuthenticatedComercialVendasRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
@@ -1099,6 +1114,7 @@ export interface FileRoutesByTo {
   '/checkout/return': typeof CheckoutReturnRoute
   '/convidado/$liveId': typeof ConvidadoLiveIdRoute
   '/egress/composite': typeof EgressCompositeRoute
+  '/pagar/$code': typeof PagarCodeRoute
   '/upsell/trial14': typeof UpsellTrial14Route
   '/admin': typeof AdminIndexRoute
   '/checkout': typeof CheckoutIndexRoute
@@ -1111,6 +1127,7 @@ export interface FileRoutesByTo {
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
   '/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
+  '/comercial/mmpay': typeof AuthenticatedComercialMmpayRoute
   '/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
   '/comercial/vendas': typeof AuthenticatedComercialVendasRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
@@ -1241,6 +1258,7 @@ export interface FileRoutesById {
   '/checkout/return': typeof CheckoutReturnRoute
   '/convidado/$liveId': typeof ConvidadoLiveIdRoute
   '/egress/composite': typeof EgressCompositeRoute
+  '/pagar/$code': typeof PagarCodeRoute
   '/upsell/trial14': typeof UpsellTrial14Route
   '/admin/': typeof AdminIndexRoute
   '/checkout/': typeof CheckoutIndexRoute
@@ -1255,6 +1273,7 @@ export interface FileRoutesById {
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
   '/_authenticated/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
   '/_authenticated/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
+  '/_authenticated/comercial/mmpay': typeof AuthenticatedComercialMmpayRoute
   '/_authenticated/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
   '/_authenticated/comercial/vendas': typeof AuthenticatedComercialVendasRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
@@ -1384,6 +1403,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/convidado/$liveId'
     | '/egress/composite'
+    | '/pagar/$code'
     | '/upsell/trial14'
     | '/admin/'
     | '/checkout/'
@@ -1398,6 +1418,7 @@ export interface FileRouteTypes {
     | '/lives/$liveId'
     | '/comercial/aplicacoes'
     | '/comercial/equipa'
+    | '/comercial/mmpay'
     | '/comercial/utilizadores'
     | '/comercial/vendas'
     | '/admin/financeiro/catalogo'
@@ -1518,6 +1539,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/convidado/$liveId'
     | '/egress/composite'
+    | '/pagar/$code'
     | '/upsell/trial14'
     | '/admin'
     | '/checkout'
@@ -1530,6 +1552,7 @@ export interface FileRouteTypes {
     | '/lives/$liveId'
     | '/comercial/aplicacoes'
     | '/comercial/equipa'
+    | '/comercial/mmpay'
     | '/comercial/utilizadores'
     | '/comercial/vendas'
     | '/admin/financeiro/catalogo'
@@ -1659,6 +1682,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/convidado/$liveId'
     | '/egress/composite'
+    | '/pagar/$code'
     | '/upsell/trial14'
     | '/admin/'
     | '/checkout/'
@@ -1673,6 +1697,7 @@ export interface FileRouteTypes {
     | '/_app/lives/$liveId'
     | '/_authenticated/comercial/aplicacoes'
     | '/_authenticated/comercial/equipa'
+    | '/_authenticated/comercial/mmpay'
     | '/_authenticated/comercial/utilizadores'
     | '/_authenticated/comercial/vendas'
     | '/admin/financeiro/catalogo'
@@ -1768,6 +1793,7 @@ export interface RootRouteChildren {
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ConvidadoLiveIdRoute: typeof ConvidadoLiveIdRoute
   EgressCompositeRoute: typeof EgressCompositeRoute
+  PagarCodeRoute: typeof PagarCodeRoute
   UpsellTrial14Route: typeof UpsellTrial14Route
   CheckoutIndexRoute: typeof CheckoutIndexRoute
   ApiKnowledgeSearchRoute: typeof ApiKnowledgeSearchRoute
@@ -2223,6 +2249,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EgressCompositeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pagar/$code': {
+      id: '/pagar/$code'
+      path: '/pagar/$code'
+      fullPath: '/pagar/$code'
+      preLoaderRoute: typeof PagarCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/upsell/trial14': {
       id: '/upsell/trial14'
       path: '/upsell/trial14'
@@ -2340,6 +2373,13 @@ declare module '@tanstack/react-router' {
       path: '/equipa'
       fullPath: '/comercial/equipa'
       preLoaderRoute: typeof AuthenticatedComercialEquipaRouteImport
+      parentRoute: typeof AuthenticatedComercialRoute
+    }
+    '/_authenticated/comercial/mmpay': {
+      id: '/_authenticated/comercial/mmpay'
+      path: '/mmpay'
+      fullPath: '/comercial/mmpay'
+      preLoaderRoute: typeof AuthenticatedComercialMmpayRouteImport
       parentRoute: typeof AuthenticatedComercialRoute
     }
     '/_authenticated/comercial/utilizadores': {
@@ -2803,6 +2843,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedComercialRouteChildren {
   AuthenticatedComercialAplicacoesRoute: typeof AuthenticatedComercialAplicacoesRoute
   AuthenticatedComercialEquipaRoute: typeof AuthenticatedComercialEquipaRoute
+  AuthenticatedComercialMmpayRoute: typeof AuthenticatedComercialMmpayRoute
   AuthenticatedComercialUtilizadoresRoute: typeof AuthenticatedComercialUtilizadoresRoute
   AuthenticatedComercialVendasRoute: typeof AuthenticatedComercialVendasRoute
   AuthenticatedComercialIndexRoute: typeof AuthenticatedComercialIndexRoute
@@ -2813,6 +2854,7 @@ const AuthenticatedComercialRouteChildren: AuthenticatedComercialRouteChildren =
     AuthenticatedComercialAplicacoesRoute:
       AuthenticatedComercialAplicacoesRoute,
     AuthenticatedComercialEquipaRoute: AuthenticatedComercialEquipaRoute,
+    AuthenticatedComercialMmpayRoute: AuthenticatedComercialMmpayRoute,
     AuthenticatedComercialUtilizadoresRoute:
       AuthenticatedComercialUtilizadoresRoute,
     AuthenticatedComercialVendasRoute: AuthenticatedComercialVendasRoute,
@@ -3102,6 +3144,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutReturnRoute: CheckoutReturnRoute,
   ConvidadoLiveIdRoute: ConvidadoLiveIdRoute,
   EgressCompositeRoute: EgressCompositeRoute,
+  PagarCodeRoute: PagarCodeRoute,
   UpsellTrial14Route: UpsellTrial14Route,
   CheckoutIndexRoute: CheckoutIndexRoute,
   ApiKnowledgeSearchRoute: ApiKnowledgeSearchRoute,
