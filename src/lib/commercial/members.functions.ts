@@ -3,8 +3,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { canDeleteMemberAccount, canManageMemberAccounts, deleteMemberSchema, createMemberSchema, updateMemberSchema } from "./member-rules";
 
 export const createPlatformMember = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((input: unknown) => createMemberSchema.parse(input)).handler(async ({ context, data }) => {
-  const { data: allowed, error } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
-  if (error || !canManageMemberAccounts(Boolean(allowed))) throw new Error("Só administradores podem gerir contas.");
+  const { data: allowed, error } = await context.supabase.rpc("has_commercial_access", { _user_id: context.userId });
+  if (error || !canManageMemberAccounts(Boolean(allowed))) throw new Error("Sem permissão para gerir contas.");
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
   const result = await db.auth.admin.inviteUserByEmail(data.email, { data: { display_name: data.name }, redirectTo: "https://mmclub.pt/reset-password" });
   if (result.error || !result.data.user) throw new Error("Não foi possível criar o utilizador. Verifica se o email já está registado.");
@@ -18,8 +18,8 @@ export const createPlatformMember = createServerFn({ method: "POST" }).middlewar
 });
 
 export const updatePlatformMember = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((input: unknown) => updateMemberSchema.parse(input)).handler(async ({ context, data }) => {
-  const { data: allowed, error } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
-  if (error || !canManageMemberAccounts(Boolean(allowed))) throw new Error("Só administradores podem gerir contas.");
+  const { data: allowed, error } = await context.supabase.rpc("has_commercial_access", { _user_id: context.userId });
+  if (error || !canManageMemberAccounts(Boolean(allowed))) throw new Error("Sem permissão para gerir contas.");
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
   const original = await db.auth.admin.getUserById(data.userId);
   if (original.error || !original.data.user) throw new Error("Utilizador não encontrado.");
@@ -34,8 +34,8 @@ export const updatePlatformMember = createServerFn({ method: "POST" }).middlewar
 });
 
 export const deletePlatformMember = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((input: unknown) => deleteMemberSchema.parse(input)).handler(async ({ context, data }) => {
-  const { data: allowed, error } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
-  if (error || !canManageMemberAccounts(Boolean(allowed))) throw new Error("Só administradores podem gerir contas.");
+  const { data: allowed, error } = await context.supabase.rpc("has_commercial_access", { _user_id: context.userId });
+  if (error || !canManageMemberAccounts(Boolean(allowed))) throw new Error("Sem permissão para gerir contas.");
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
   const [roles, subscriptions, payments] = await Promise.all([
     db.from("user_roles").select("role").eq("user_id", data.userId),
