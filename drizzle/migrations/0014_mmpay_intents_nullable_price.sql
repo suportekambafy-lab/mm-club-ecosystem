@@ -1,0 +1,1 @@
+ALTER TABLE public.billing_checkout_intents ALTER COLUMN price_id DROP NOT NULL;

@@ -246,7 +246,7 @@ export type Database = {
           id: string
           metadata: Json
           name: string | null
-          price_id: string
+          price_id: string | null
           status: string
           updated_at: string
           user_id: string | null
@@ -262,7 +262,7 @@ export type Database = {
           id?: string
           metadata?: Json
           name?: string | null
-          price_id: string
+          price_id?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
@@ -278,7 +278,7 @@ export type Database = {
           id?: string
           metadata?: Json
           name?: string | null
-          price_id?: string
+          price_id?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
