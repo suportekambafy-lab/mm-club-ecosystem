@@ -3356,6 +3356,50 @@ export type Database = {
         }
         Relationships: []
       }
+      mmpay_links: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          created_by: string | null
+          custom_amount_cents: number | null
+          custom_description: string | null
+          id: string
+          price_id: string | null
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          created_by?: string | null
+          custom_amount_cents?: number | null
+          custom_description?: string | null
+          id?: string
+          price_id?: string | null
+          title: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          custom_amount_cents?: number | null
+          custom_description?: string | null
+          id?: string
+          price_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mmpay_links_price_id_fkey"
+            columns: ["price_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_prices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       moderation_actions: {
         Row: {
           action: string
