@@ -193,7 +193,6 @@ export async function startMmpayCheckout(input: {
     .insert({
       email,
       name: input.name ?? null,
-      price_id: null,
       status: "pending",
       metadata: { mmpay: true, mmpayLinkId: link.id, customAmountCents: amountCents } as never,
     })
