@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/comercial/utilizadores")({
 type Member = Awaited<ReturnType<typeof commercialMembers>>[number];
 const date = (value: string) => new Date(value).toLocaleDateString("pt-PT");
 function CommercialMembers() {
-  const { isAdmin } = Route.useRouteContext();
+  
   const { data } = useSuspenseQuery(options);
   const qc = useQueryClient();
   const find = useServerFn(commercialMembers);
@@ -56,7 +56,7 @@ function CommercialMembers() {
     } catch(e) { toast.error(e instanceof Error ? e.message : "Não foi possível atribuir acesso."); } finally { setBusy(false); }
   }
   return <div className="commercial-enter space-y-6">
-    <div className="flex flex-wrap items-center justify-between gap-4"><div><h1 className="font-display text-3xl">Utilizadores</h1><p className="mt-2 text-sm text-admin-muted">Membros da plataforma MM Club</p></div>{isAdmin && <Button onClick={()=>setAccountDialog({mode:"create"})}><UserPlus />Novo utilizador</Button>}</div>
+    <div className="flex flex-wrap items-center justify-between gap-4"><div><h1 className="font-display text-3xl">Utilizadores</h1><p className="mt-2 text-sm text-admin-muted">Membros da plataforma MM Club</p></div><Button onClick={()=>setAccountDialog({mode:"create"})}><UserPlus />Novo utilizador</Button></div>
     <form onSubmit={searchMembers} className="flex max-w-2xl gap-2">
       <label className="relative flex-1"><Search className="absolute left-3 top-3 h-4 w-4 text-admin-muted"/><input aria-label="Pesquisar utilizadores" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Nome ou email" className="h-10 w-full rounded-md border border-admin-border bg-admin-panel pl-10 pr-3 text-sm" /></label>
       <Button type="submit" disabled={busy} variant="outline">{busy ? <Loader2 className="animate-spin"/> : <Search/>}Pesquisar</Button>
@@ -66,7 +66,7 @@ function CommercialMembers() {
       <tbody>{members.map(member=><tr key={member.id} className="border-t border-admin-border">
         <td className="p-4"><p className="font-medium">{member.display_name || "Membro MM"}</p><p className="mt-1 text-xs text-admin-muted">{member.email || "—"}</p></td>
         <td className="p-4"><p className={member.hasAccess ? "text-primary" : "text-admin-muted"}>{member.hasAccess ? "Ativo" : "Sem acesso"}</p>{member.hasAccess && <p className="mt-1 text-xs text-admin-muted">{member.expiresAt ? `Até ${date(member.expiresAt)}` : "Sem data de fim"}</p>}</td>
-        <td className="p-4"><div className="flex items-center gap-2"><Button variant="outline" onClick={()=>{setSelected(member);setReason("");}}><KeyRound/>Dar acesso</Button>{isAdmin && <><Button variant="ghost" size="icon" title="Corrigir nome ou email" aria-label={`Corrigir ${member.display_name || member.id}`} onClick={()=>setAccountDialog({mode:"edit",member})}><Pencil /></Button><Button variant="ghost" size="icon" className="text-destructive" title="Eliminar utilizador" aria-label={`Eliminar ${member.display_name || member.id}`} onClick={()=>setAccountDialog({mode:"delete",member})}><Trash2 /></Button></>}</div></td>
+        <td className="p-4"><div className="flex items-center gap-2"><Button variant="outline" onClick={()=>{setSelected(member);setReason("");}}><KeyRound/>Dar acesso</Button><><Button variant="ghost" size="icon" title="Corrigir nome ou email" aria-label={`Corrigir ${member.display_name || member.id}`} onClick={()=>setAccountDialog({mode:"edit",member})}><Pencil /></Button><Button variant="ghost" size="icon" className="text-destructive" title="Eliminar utilizador" aria-label={`Eliminar ${member.display_name || member.id}`} onClick={()=>setAccountDialog({mode:"delete",member})}><Trash2 /></Button></></div></td>
       </tr>)}{!members.length && <tr><td colSpan={3} className="p-8 text-center text-admin-muted">Nenhum utilizador encontrado.</td></tr>}</tbody></table>
     </div>
     {accountDialog && <MemberAccountDialog state={accountDialog} onClose={()=>setAccountDialog(null)} onSaved={refreshMembers} />}
