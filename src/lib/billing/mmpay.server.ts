@@ -295,7 +295,7 @@ export async function confirmKlarnaMmpayOrder(input: {
     .eq("stripe_session_id", input.sessionRef)
     .eq("link_id", link.id)
     .maybeSingle();
-  if (!payment) return { paid: false };
+  if (!payment || !payment.email) return { paid: false };
   if (payment.status === "paid") return { paid: true };
 
   const { placeKlarnaOrder } = await import("./klarna.server");
