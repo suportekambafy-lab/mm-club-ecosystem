@@ -78,6 +78,23 @@ function MmpayPage() {
 
   const link = data?.found ? data.link : null;
 
+  // Carrega o widget só depois de o contentor existir no DOM.
+  useEffect(() => {
+    if (!klarna) return;
+    const Klarna = (window as any).Klarna;
+    if (!Klarna) return;
+    Klarna.Payments.load(
+      { container: "#klarna-widget", payment_method_category: "pay_later" },
+      {},
+      (res: { show_form?: boolean; error?: unknown }) => {
+        if (res && res.show_form === false) {
+          setError("O Klarna não está disponível para este pagamento. Experimenta cartão ou MB WAY.");
+          setKlarna(null);
+        }
+      },
+    );
+  }, [klarna]);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPending(true);
