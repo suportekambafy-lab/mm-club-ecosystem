@@ -22,7 +22,7 @@ function encode(params: Params, prefix = "", out: string[] = []): string[] {
 }
 
 export async function stripeRequest<T = any>(
-  method: "GET" | "POST",
+  method: "GET" | "POST" | "DELETE",
   path: string,
   params?: Params,
 ): Promise<T> {
