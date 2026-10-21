@@ -17,6 +17,8 @@ import { MMLogo } from "@/components/mm/logo";
 import { BigTypeHero } from "@/components/mm/big-type-hero";
 import cover from "@/assets/marca-milionaria-cover.png.asset.json";
 import legacyCover from "@/assets/marca-milionaria-legacy-hero.jpg.asset.json";
+import homeAula from "@/assets/home-mentor-aula.jpg";
+import homeLive from "@/assets/home-live.jpg";
 import lessonL1 from "@/assets/lesson-l1.jpg";
 import lessonL2 from "@/assets/lesson-l2.jpg";
 import lessonL3 from "@/assets/lesson-l3.jpg";
@@ -488,9 +490,9 @@ function FeatureAcademia() {
         <Mockup>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {[
-              { t: "Fundamentos", n: "12 aulas", tone: "from-primary/40 to-primary/10", img: lessonL1 },
-              { t: "Posicionamento", n: "8 aulas", tone: "from-violet/40 to-violet/10", img: lessonL2 },
-              { t: "Oferta Milionária", n: "10 aulas", tone: "from-gold-soft/50 to-gold-soft/10", img: lessonL3 },
+              { t: "Fundamentos", n: "12 aulas", tone: "from-primary/40 to-primary/10", img: homeAula },
+              { t: "Posicionamento", n: "8 aulas", tone: "from-violet/40 to-violet/10", img: homeLive },
+              { t: "Oferta Milionária", n: "10 aulas", tone: "from-gold-soft/50 to-gold-soft/10", img: legacyCover.url },
             ].map((c) => (
               <div key={c.t} className="rounded-2xl border border-border bg-surface-2/40 p-4">
                 <div className={`aspect-video rounded-xl bg-gradient-to-br ${c.tone} mb-4 relative overflow-hidden`}>
@@ -603,18 +605,26 @@ function FeatureComunidade() {
       eyebrow="Comunidade"
       title={
         <>
-          Uma rede privada de<br />
-          <span className="text-primary">empreendedores portugueses</span>.
+          A comunidade da<br />
+          <span className="text-primary">Marca Milionária</span>.
         </>
       }
-      description="Não é um grupo de WhatsApp. É um espaço curado onde partilhas vitórias, pedes feedback e crias parcerias reais."
+      description="O espaço privado de quem segue a Marca Milionária. Partilhas vitórias, pedes feedback ao fundador e aos mentores MM e crias parcerias reais."
       bullets={[
         "Feed segmentado por tópicos e níveis",
         "Perfis verificados, sem ruído",
-        "Encontros presenciais em Lisboa e Porto",
+        "Mentores MM presentes: Brenda, Edmar, Dieisy e mais",
       ]}
       visual={
         <Mockup>
+          <div className="mb-4 flex items-center gap-3 rounded-xl border border-primary/25 bg-primary/5 p-3">
+            <img src={homeAula} alt="Victor Muabi, fundador da Marca Milionária" loading="lazy" className="h-11 w-11 rounded-full object-cover object-top" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold">Comunidade Marca Milionária</p>
+              <p className="truncate text-[10px] text-muted-foreground">Com Victor Muabi · Brenda · Edmar · Dieisy · Sofia</p>
+            </div>
+            <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary">Privada</span>
+          </div>
           <div className="space-y-3">
             {[
               {
@@ -677,11 +687,11 @@ function FeatureLives() {
       reverse
       title={
         <>
-          Sessões ao vivo com<br />
-          <span className="text-primary">especialistas convidados</span>.
+          Lives com o fundador e<br />
+          <span className="text-primary">outros mentores MM</span>.
         </>
       }
-      description="Todas as semanas, uma live com um especialista diferente. Perguntas em direto, gravações disponíveis para sempre."
+      description="Todas as semanas, o Victor e mentores convidados — Meta Ads, agências com IA, e-commerce e copy. Perguntas em direto, gravações disponíveis para sempre."
       bullets={[
         "Calendário integrado com lembretes",
         "Q&A com prioridade para membros",
@@ -690,7 +700,7 @@ function FeatureLives() {
       visual={
         <Mockup tint="radial-gradient(60% 60% at 50% 50%, oklch(0.82 0.13 82 / 0.28), transparent 70%)">
           <div className="relative aspect-video overflow-hidden rounded-xl bg-gradient-to-br from-primary/40 via-violet/20 to-transparent">
-            <img src={lessonL4} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+            <img src={homeLive} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
             <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-destructive/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
               <Circle className="h-1.5 w-1.5 fill-current" /> Ao vivo
@@ -710,9 +720,9 @@ function FeatureLives() {
           </div>
           <div className="mt-4 space-y-2">
             {[
-              { d: "Ter 21h", t: "Storytelling de marca", w: "Rita F.", img: lessonL5 },
-              { d: "Qui 21h", t: "Copy que vende", w: "Miguel A.", img: lessonL6 },
-              { d: "Sáb 11h", t: "Q&A aberto", w: "Equipa MM", img: lessonL2 },
+              { d: "Ter 21h", t: "Meta Ads que escalam", w: "Brenda", img: homeAula },
+              { d: "Qui 21h", t: "Agência com IA", w: "Edmar", img: legacyCover.url },
+              { d: "Sáb 11h", t: "Dropshipping LATAM", w: "Dieisy", img: homeLive },
             ].map(({ d, t, w, img }) => (
               <div key={t} className="flex items-center gap-3 rounded-lg border border-border bg-surface-2/40 px-3 py-2">
                 <div className="relative h-10 w-14 shrink-0 overflow-hidden rounded-md">
