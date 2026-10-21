@@ -213,6 +213,7 @@ export async function startMmpayCheckout(input: {
     successUrl: `${origin}/pagar/${link.code}?session_id={CHECKOUT_SESSION_ID}`,
     cancelUrl: `${origin}/pagar/${link.code}`,
     metadata: { mmpay_link_id: link.id, mmpay_code: link.code, name: input.name ?? "" },
+    methods: [input.method ?? "card"],
   });
 
   await supabaseAdmin.from("mmpay_payments").insert({
