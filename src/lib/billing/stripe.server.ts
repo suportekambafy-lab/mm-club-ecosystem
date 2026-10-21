@@ -2,7 +2,9 @@
  * Cliente mínimo da API Stripe (fetch + form-encoding) — compatível com Workers.
  * Usa a chave da conta Stripe própria do MM Club (STRIPE_SECRET_KEY).
  */
-type Params = Record<string, string | number | boolean | null | undefined | Params | Array<string | Params>>;
+interface Params {
+  [key: string]: string | number | boolean | null | undefined | Params | Array<string | Params>;
+}
 
 function encode(params: Params, prefix = "", out: string[] = []): string[] {
   for (const [k, v] of Object.entries(params)) {
