@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { CheckCircle2, CreditCard, Loader2, Lock, ShieldCheck, Smartphone } from "lucide-react";
+import { CheckCircle2, Loader2, Lock, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
@@ -13,7 +13,7 @@ import {
 } from "@/lib/mmpay.functions";
 import { formatMoney } from "@/lib/billing/types";
 import { MMLogo } from "@/components/mm/logo";
-import { PaymentLogosRow } from "@/components/mmpay/payment-logos";
+import { CardBrandsLogo, KlarnaLogo, MbWayLogo } from "@/components/mmpay/payment-logos";
 
 export const Route = createFileRoute("/pagar/$code")({
   validateSearch: z.object({ session_id: z.string().optional() }),
@@ -33,10 +33,10 @@ export const Route = createFileRoute("/pagar/$code")({
 
 type PayMethod = "card" | "mb_way" | "klarna";
 
-const METHOD_OPTIONS: Array<{ id: PayMethod; label: string; hint: string; icon: typeof CreditCard }> = [
-  { id: "card", label: "Cartão", hint: "Visa, Mastercard, Apple Pay, Google Pay", icon: CreditCard },
-  { id: "mb_way", label: "MB WAY", hint: "Confirma na app MB WAY", icon: Smartphone },
-  { id: "klarna", label: "Klarna", hint: "Paga em 3 vezes sem juros", icon: ShieldCheck },
+const METHOD_OPTIONS: Array<{ id: PayMethod; label: string; hint: string; Logo: () => React.ReactNode }> = [
+  { id: "card", label: "Cartão", hint: "Visa, Mastercard, Apple Pay e Google Pay", Logo: CardBrandsLogo },
+  { id: "mb_way", label: "MB WAY", hint: "Confirma na app MB WAY", Logo: MbWayLogo },
+  { id: "klarna", label: "Klarna", hint: "Paga em 3 vezes sem juros", Logo: KlarnaLogo },
 ];
 
 async function loadKlarnaSdk(): Promise<any> {
@@ -254,7 +254,7 @@ function MmpayPage() {
               </p>
               <div className="mt-2 grid grid-cols-3 gap-2">
                 {METHOD_OPTIONS.map((opt) => {
-                  const Icon = opt.icon;
+                  const Logo = opt.Logo;
                   const selected = method === opt.id;
                   return (
                     <button
@@ -266,13 +266,13 @@ function MmpayPage() {
                         setError(null);
                       }}
                       title={opt.hint}
-                      className={`flex flex-col items-center gap-1.5 rounded-2xl px-2 py-3 text-xs font-semibold ring-1 transition ${
+                      className={`flex flex-col items-center gap-2 rounded-2xl px-2 py-3.5 text-xs font-semibold ring-1 transition ${
                         selected
                           ? "bg-primary/10 text-primary ring-primary"
                           : "bg-background text-muted-foreground ring-border hover:text-foreground"
                       }`}
                     >
-                      <Icon className="h-4 w-4" />
+                      <Logo />
                       {opt.label}
                     </button>
                   );
@@ -327,11 +327,7 @@ function MmpayPage() {
               )}
 
               <div className="mt-6 border-t border-border pt-5">
-                <p className="mb-3 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  Métodos aceites
-                </p>
-                <PaymentLogosRow />
-                <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
+                <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
                   <ShieldCheck className="h-3.5 w-3.5 text-primary" />
                   Pagamento seguro processado pela Stripe ou Klarna. O MM Club nunca vê os dados do teu cartão.
                 </p>
