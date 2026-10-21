@@ -153,7 +153,7 @@ function MmpayPage() {
 
         {isLoading || (session_id && confirmQuery.isLoading) ? (
           <div className="h-96 animate-pulse rounded-3xl bg-surface-1 ring-1 ring-border" />
-        ) : session_id && confirmQuery.data?.paid ? (
+        ) : klarnaPaid || (session_id && confirmQuery.data?.paid) ? (
           <div className="rounded-3xl bg-surface-1 p-8 text-center ring-1 ring-border">
             <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
             <h1 className="mt-4 font-display text-2xl tracking-tight text-foreground">Pagamento confirmado</h1>
@@ -224,27 +224,82 @@ function MmpayPage() {
                 className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary"
               />
 
+              <p className="mt-6 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                Método de pagamento
+              </p>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {METHOD_OPTIONS.map((opt) => {
+                  const Icon = opt.icon;
+                  const selected = method === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => {
+                        setMethod(opt.id);
+                        setKlarna(null);
+                        setError(null);
+                      }}
+                      title={opt.hint}
+                      className={`flex flex-col items-center gap-1.5 rounded-2xl px-2 py-3 text-xs font-semibold ring-1 transition ${
+                        selected
+                          ? "bg-primary/10 text-primary ring-primary"
+                          : "bg-background text-muted-foreground ring-border hover:text-foreground"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-center text-[11px] text-muted-foreground">
+                {METHOD_OPTIONS.find((o) => o.id === method)?.hint}
+              </p>
+
               {error ? (
                 <p className="mt-4 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
                   {error}
                 </p>
               ) : null}
 
-              <button
-                type="submit"
-                disabled={pending}
-                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft disabled:opacity-60"
-              >
-                {pending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> A abrir pagamento…
-                  </>
-                ) : (
-                  <>
-                    <Lock className="h-4 w-4" /> Pagar com segurança
-                  </>
-                )}
-              </button>
+              {klarna ? (
+                <>
+                  <div id="klarna-widget" className="mt-6 overflow-hidden rounded-2xl bg-white" />
+                  <button
+                    type="button"
+                    onClick={authorizeKlarna}
+                    disabled={pending}
+                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft disabled:opacity-60"
+                  >
+                    {pending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> A confirmar com o Klarna…
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="h-4 w-4" /> Concluir com Klarna
+                      </>
+                    )}
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={pending}
+                  className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft disabled:opacity-60"
+                >
+                  {pending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> A abrir pagamento…
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-4 w-4" /> Pagar com segurança
+                    </>
+                  )}
+                </button>
+              )}
 
               <div className="mt-4 flex flex-wrap justify-center gap-1.5">
                 {METHODS.map((m) => (
