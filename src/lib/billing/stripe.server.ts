@@ -59,8 +59,8 @@ export async function createStripeProduct(input: {
   return { productId: product.id, priceId: product.default_price };
 }
 
-/** Cartão (inclui Apple Pay e Google Pay automaticamente) + MB WAY. */
-export const MMPAY_PAYMENT_METHODS = ["card", "mb_way"];
+/** Cartão (inclui Apple Pay e Google Pay automaticamente) + MB WAY + Klarna. */
+export const MMPAY_PAYMENT_METHODS = ["card", "mb_way", "klarna"];
 
 export async function createStripeCheckout(input: {
   priceId: string;
