@@ -73,6 +73,23 @@ export const setMmpayLinkActive = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const deleteMmpayLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    await requireCommercial(context);
+    const { deleteMmpayLink: del } = await import("@/lib/billing/mmpay.server");
+    await del(data.id);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("admin_action_log").insert({
+      actor_id: context.userId,
+      action: "mmpay.delete_link",
+      entity_type: "mmpay_link",
+      entity_id: data.id,
+    });
+    return { ok: true };
+  });
+
 /** Vista pública de um link (página /pagar/:code). */
 export const getMmpayLink = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => z.object({ code: z.string().min(8).max(8) }).parse(input))
