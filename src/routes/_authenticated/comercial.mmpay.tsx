@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Copy, CopyPlus, ImagePlus, Link2, Plus, Trash2, X } from "lucide-react";
+import { Check, Copy, CopyPlus, ImagePlus, Link2, Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { createMmpayLink, deleteMmpayLink, listMmpayLinks, setMmpayLinkActive, uploadMmpayCover } from "@/lib/mmpay.functions";
+import { createMmpayLink, deleteMmpayLink, listMmpayLinks, setMmpayLinkActive, updateMmpayLink, uploadMmpayCover } from "@/lib/mmpay.functions";
 import { COVER_MIME_TYPES, MAX_COVER_BYTES, MAX_DESCRIPTION_LENGTH } from "@/lib/mmpay/rules";
 import { formatMoney } from "@/lib/billing/types";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,15 @@ function MmpayAdminPage() {
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const resetForm = () => {
+    setEditingId(null);
+    setTitle("");
+    setAmountEur("");
+    setDescription("");
+    setCoverUrl(null);
+  };
 
   const linksQuery = useQuery({ queryKey: ["mmpay-links"], queryFn: () => listMmpayLinks() });
   const amountCents = Math.round(Number(amountEur.replace(",", ".")) * 100);
@@ -89,6 +98,19 @@ function MmpayAdminPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const updateMutation = useMutation({
+    mutationFn: () => {
+      if (!editingId) throw new Error("Seleciona um produto para editar.");
+      return updateMmpayLink({ data: { id: editingId, title: title.trim(), description: description.trim() || null, amountCents, coverUrl } });
+    },
+    onSuccess: () => {
+      toast.success("Produto atualizado.");
+      resetForm();
+      void qc.invalidateQueries({ queryKey: ["mmpay-links"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteMmpayLink({ data: { id } }),
@@ -111,7 +133,18 @@ function MmpayAdminPage() {
     }
   };
 
+  const edit = (link: { id: string; title: string; description: string | null; coverUrl: string | null; amountCents: number }) => {
+    setEditingId(link.id);
+    setTitle(link.title);
+    setDescription(link.description ?? "");
+    setCoverUrl(link.coverUrl);
+    setAmountEur(String(link.amountCents / 100).replace(".", ","));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    document.getElementById("mmpay-title")?.focus({ preventScroll: true });
+  };
+
   const duplicate = (link: { title: string; description: string | null; coverUrl: string | null; amountCents: number }) => {
+    setEditingId(null);
     setTitle(`${link.title} (cópia)`);
     setDescription(link.description ?? "");
     setCoverUrl(link.coverUrl);
@@ -134,9 +167,10 @@ function MmpayAdminPage() {
         </p>
       </section>
 
-      <section aria-label="Criar link de pagamento" className="rounded-2xl border border-border bg-surface-1 p-6">
+      <section aria-label={editingId ? "Editar produto" : "Criar link de pagamento"} className="rounded-2xl border border-border bg-surface-1 p-6">
         <h2 className="mb-5 flex items-center gap-2 text-lg font-semibold">
-          <Plus className="h-4 w-4" /> Novo link de venda
+          {editingId ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          {editingId ? "Editar produto" : "Novo link de venda"}
         </h2>
 
         <div className="grid gap-5 md:grid-cols-[260px_1fr]">
@@ -189,9 +223,13 @@ function MmpayAdminPage() {
           </div>
         </div>
 
-        <Button className="mt-6" disabled={!canSubmit || createMutation.isPending} onClick={() => createMutation.mutate()}>
-          {createMutation.isPending ? "A criar…" : "Criar link de pagamento"}
-        </Button>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Button disabled={!canSubmit || createMutation.isPending || updateMutation.isPending} onClick={() => editingId ? updateMutation.mutate() : createMutation.mutate()}>
+            {editingId ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+            {editingId ? (updateMutation.isPending ? "A guardar…" : "Guardar alterações") : (createMutation.isPending ? "A criar…" : "Criar link de pagamento")}
+          </Button>
+          {editingId ? <Button variant="outline" disabled={updateMutation.isPending || uploading} onClick={resetForm}><X className="h-4 w-4" /> Cancelar</Button> : null}
+        </div>
       </section>
 
       <section aria-label="Links de pagamento criados">
@@ -228,7 +266,10 @@ function MmpayAdminPage() {
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">mmclub.pt/pagar/{link.code}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button variant="outline" size="sm" aria-label={`Editar produto ${link.title}`} disabled={updateMutation.isPending || uploading} onClick={() => edit(link)}>
+                    <Pencil className="h-4 w-4" /> Editar
+                  </Button>
                   <Button variant="outline" size="sm" onClick={() => duplicate(link)}>
                     <CopyPlus className="h-4 w-4" /> Duplicar
                   </Button>

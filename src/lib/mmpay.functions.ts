@@ -13,6 +13,7 @@ import {
   startKlarnaPaymentSchema,
   startMmpayCheckoutSchema,
   uploadMmpayCoverSchema,
+  updateMmpayLinkSchema,
 } from "@/lib/mmpay/rules";
 
 async function requireCommercial(context: { supabase: any; userId: string }) {
@@ -56,6 +57,24 @@ export const createMmpayLink = createServerFn({ method: "POST" })
     await supabaseAdmin.from("admin_action_log").insert({
       actor_id: context.userId,
       action: "mmpay.create_link",
+      entity_type: "mmpay_link",
+      entity_id: link.id,
+      after: { code: link.code, title: link.title, amountCents: link.amountCents },
+    });
+    return link;
+  });
+
+export const updateMmpayLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => updateMmpayLinkSchema.parse(input))
+  .handler(async ({ context, data }) => {
+    await requireCommercial(context);
+    const { updateMmpayLink: update } = await import("@/lib/billing/mmpay.server");
+    const link = await update({ ...data, description: data.description ?? null, coverUrl: data.coverUrl ?? null });
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("admin_action_log").insert({
+      actor_id: context.userId,
+      action: "mmpay.update_link",
       entity_type: "mmpay_link",
       entity_id: link.id,
       after: { code: link.code, title: link.title, amountCents: link.amountCents },
