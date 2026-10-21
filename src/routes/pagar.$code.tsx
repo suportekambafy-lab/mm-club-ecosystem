@@ -13,6 +13,7 @@ import {
 } from "@/lib/mmpay.functions";
 import { formatMoney } from "@/lib/billing/types";
 import { MMLogo } from "@/components/mm/logo";
+import { PaymentLogosRow } from "@/components/mmpay/payment-logos";
 
 export const Route = createFileRoute("/pagar/$code")({
   validateSearch: z.object({ session_id: z.string().optional() }),
@@ -29,8 +30,6 @@ export const Route = createFileRoute("/pagar/$code")({
   }),
   component: MmpayPage,
 });
-
-const METHODS = ["Cartão", "Apple Pay", "Google Pay", "MB WAY", "Klarna"];
 
 type PayMethod = "card" | "mb_way" | "klarna";
 
