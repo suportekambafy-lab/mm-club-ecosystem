@@ -144,7 +144,7 @@ function MmpayPage() {
   };
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-4 py-12">
+    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-4 py-5 sm:py-5">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 -top-24 h-[420px] bg-[radial-gradient(ellipse_at_top,oklch(0.82_0.13_82_/_0.16),transparent_60%)]"
@@ -155,8 +155,8 @@ function MmpayPage() {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="relative w-full max-w-md"
       >
-        <div className="mb-8 flex justify-center">
-          <MMLogo size={44} />
+        <div className="mb-3 flex justify-center sm:mb-3">
+          <MMLogo size={36} />
         </div>
 
         {isLoading || (session_id && confirmQuery.isLoading) ? (
@@ -186,19 +186,19 @@ function MmpayPage() {
         ) : (
           <form onSubmit={submit} className="overflow-hidden rounded-3xl bg-surface-1 ring-1 ring-border">
             {link.coverUrl ? (
-              <img src={link.coverUrl} alt={link.title} className="aspect-[16/9] w-full object-cover" />
+              <img src={link.coverUrl} alt={link.title} className="aspect-[3/1] w-full object-cover sm:aspect-[7/2]" />
             ) : null}
-            <div className="p-7 md:p-8">
+            <div className="p-4 sm:p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Pagamento MM Club</p>
-              <h1 className="mt-3 font-display text-2xl leading-tight tracking-tight text-foreground">{link.title}</h1>
+              <h1 className="mt-2 font-display text-xl leading-tight tracking-tight text-foreground sm:text-2xl">{link.title}</h1>
               {link.description ? (
-                <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+                <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-muted-foreground sm:text-sm">
                   {link.description}
                 </p>
               ) : null}
 
-              <div className="mt-6 flex items-baseline gap-2 rounded-2xl bg-background px-5 py-4 ring-1 ring-border">
-                <span className="font-display text-4xl leading-none tracking-tight text-foreground">
+              <div className="mt-4 flex items-baseline gap-2 rounded-2xl bg-background px-4 py-2.5 ring-1 ring-border">
+                <span className="font-display text-3xl leading-none tracking-tight text-foreground sm:text-4xl">
                   {formatMoney(link.amountCents, link.currency)}
                 </span>
                 <span className="text-sm text-muted-foreground">pagamento único</span>
@@ -210,7 +210,7 @@ function MmpayPage() {
                 </p>
               ) : null}
 
-              <label className="mt-6 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Email
               </label>
               <input
@@ -219,9 +219,9 @@ function MmpayPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@exemplo.com"
-                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary"
+                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary"
               />
-              <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <label className="mt-3 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Nome
               </label>
               <input
@@ -231,9 +231,9 @@ function MmpayPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="O teu nome"
-                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary"
+                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary"
               />
-              <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <label className="mt-3 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Telemóvel
               </label>
               <input
@@ -242,10 +242,10 @@ function MmpayPage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+351 912 345 678"
-                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary"
+                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary"
               />
 
-              <p className="mt-6 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Método de pagamento
               </p>
               <div className="mt-2 grid grid-cols-3 gap-2">
@@ -267,7 +267,7 @@ function MmpayPage() {
                         setError(null);
                       }}
                       title={opt.hint}
-                      className={`relative flex aspect-[5/6] flex-col items-center sm:aspect-square overflow-hidden rounded-xl p-1.5 ring-1 transition-colors ${
+                      className={`relative flex aspect-square flex-col items-center overflow-hidden rounded-xl p-1.5 ring-1 transition-colors ${
                         selected
                           ? "text-primary ring-primary"
                           : "bg-background text-muted-foreground ring-border hover:text-foreground"
@@ -287,10 +287,10 @@ function MmpayPage() {
                       >
                         <Logo className="h-full w-full" />
                       </motion.span>
-                      <span className="relative mt-1.5 flex min-h-[2.25rem] w-full flex-col items-center justify-end gap-1">
+                      <span className="relative mt-1 flex min-h-[1.75rem] w-full flex-col items-center justify-end gap-0.5 sm:mt-1.5 sm:min-h-[2.25rem] sm:gap-1">
                         {opt.id === "klarna" && link ? (
                           <motion.span
-                            className="rounded-full bg-[#FFB3C7] px-2 py-0.5 text-[10px] font-bold text-[#17120F]"
+                            className="rounded-full bg-[#FFB3C7] px-1.5 py-0.5 text-[9px] font-bold text-[#17120F] sm:px-2 sm:text-[10px]"
                             animate={{ scale: [1, 1.08, 1] }}
                             transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                           >
@@ -335,7 +335,7 @@ function MmpayPage() {
                 <button
                   type="submit"
                   disabled={pending}
-                  className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft disabled:opacity-60"
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft disabled:opacity-60 sm:py-3.5"
                 >
                   {pending ? (
                     <>
@@ -349,7 +349,7 @@ function MmpayPage() {
                 </button>
               )}
 
-              <div className="mt-6 border-t border-border pt-5">
+              <div className="mt-4 border-t border-border pt-3">
                 <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
                   <ShieldCheck className="h-3.5 w-3.5 text-primary" />
                   Pagamento seguro processado pela Stripe ou Klarna. O MM Club nunca vê os dados do teu cartão.
@@ -359,7 +359,7 @@ function MmpayPage() {
           </form>
         )}
 
-        <footer className="mt-8 text-center text-xs text-muted-foreground">
+        <footer className="mt-5 text-center text-xs text-muted-foreground sm:mt-6">
           <nav className="flex flex-wrap justify-center gap-x-5 gap-y-2">
             <Link to="/termos" className="underline hover:text-foreground">Termos</Link>
             <Link to="/privacidade" className="underline hover:text-foreground">Privacidade</Link>
