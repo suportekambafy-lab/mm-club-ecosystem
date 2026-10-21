@@ -248,7 +248,7 @@ function MmpayPage() {
               <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Método de pagamento
               </p>
-              <div className="mt-2 grid grid-cols-3 gap-2">
+              <div className="mx-auto mt-2 grid w-full max-w-[17rem] grid-cols-3 gap-2">
                 {METHOD_OPTIONS.map((opt, i) => {
                   const Logo = opt.Logo;
                   const selected = method === opt.id;
@@ -267,7 +267,7 @@ function MmpayPage() {
                         setError(null);
                       }}
                       title={opt.hint}
-                      className={`relative flex aspect-square flex-col items-center overflow-hidden rounded-xl p-1.5 ring-1 transition-colors ${
+                      className={`relative flex h-[5.5rem] flex-col items-center justify-center overflow-hidden rounded-xl p-1.5 ring-1 transition-colors ${
                         selected
                           ? "text-primary ring-primary"
                           : "bg-background text-muted-foreground ring-border hover:text-foreground"
@@ -281,25 +281,26 @@ function MmpayPage() {
                         />
                       ) : null}
                       <motion.span
-                        className="relative flex w-full min-h-0 flex-1 items-center justify-center"
+                        className="relative flex w-full items-center justify-center"
                         animate={selected ? { scale: [1, 1.08, 1] } : { scale: 1 }}
                         transition={{ duration: 0.4 }}
                       >
-                        <Logo className="h-full w-full" />
+                        <Logo className="h-9 w-full" />
                       </motion.span>
-                      <span className="relative mt-1 flex min-h-[1.75rem] w-full flex-col items-center justify-end gap-0.5 sm:mt-1.5 sm:min-h-[2.25rem] sm:gap-1">
+                      <span className="relative mt-1 flex h-[2.1rem] w-full flex-col items-center justify-center gap-0.5">
                         {opt.id === "klarna" && link ? (
                           <motion.span
-                            className="rounded-full bg-[#FFB3C7] px-1.5 py-0.5 text-[9px] font-bold text-[#17120F] sm:px-2 sm:text-[10px]"
+                            className="rounded-full bg-[#FFB3C7] px-1.5 py-0.5 text-[10px] font-bold text-[#17120F]"
                             animate={{ scale: [1, 1.08, 1] }}
                             transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                           >
                             3x {formatMoney(Math.ceil(link.amountCents / 3), link.currency)}
                           </motion.span>
-                        ) : null}
-                        <span className="w-full truncate text-center text-[11px] font-semibold leading-tight">
-                          {opt.label}
-                        </span>
+                        ) : (
+                          <span className="w-full truncate text-center text-[11px] font-semibold leading-tight">
+                            {opt.label}
+                          </span>
+                        )}
                       </span>
                     </motion.button>
                   );

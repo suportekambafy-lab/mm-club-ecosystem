@@ -18,7 +18,7 @@ function LogoTile({
     <span
       title={label}
       aria-label={label}
-      className={`flex items-center justify-center overflow-hidden rounded-xl p-1.5 ring-1 ring-black/10 ${
+      className={`flex items-center justify-center overflow-hidden rounded-xl p-2 ring-1 ring-black/10 ${
         tone === "pink" ? "bg-[#FFB3C7]" : "bg-white"
       } ${className}`}
     >
@@ -30,7 +30,7 @@ function LogoTile({
 export function CardBrandsLogo({ className }: LogoProps) {
   return (
     <LogoTile label="Visa e Mastercard" className={className}>
-      <svg viewBox="0 0 74 18" className="h-full w-full" aria-hidden>
+      <svg viewBox="0 0 74 18" className="h-auto w-[76%]" aria-hidden>
         <text
           x="16"
           y="14"
@@ -56,7 +56,7 @@ export function MbWayLogo({ className }: LogoProps) {
   return (
     <LogoTile label="MB WAY" className={className}>
       {/* Logótipo oficial do MB WAY (SIBS), versão positiva. */}
-      <svg viewBox="0 0 143.2 69.57" className="h-full w-full" aria-hidden>
+      <svg viewBox="0 0 143.2 69.57" className="h-auto w-[76%]" aria-hidden>
         <defs>
           <style>{".cls-mb1{fill:#e30613;}.cls-mb2{fill:#1d1d1b;}"}</style>
         </defs>
@@ -76,7 +76,7 @@ export function MbWayLogo({ className }: LogoProps) {
 export function KlarnaLogo({ className }: LogoProps) {
   return (
     <LogoTile label="Klarna" tone="pink" className={className}>
-      <svg viewBox="0 0 46 16" className="h-full w-full" aria-hidden>
+      <svg viewBox="0 0 46 16" className="h-auto w-[76%]" aria-hidden>
         <text
           x="23"
           y="12.5"
