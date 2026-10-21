@@ -296,7 +296,7 @@ export async function confirmKlarnaMmpayOrder(input: {
   if (!link) return { paid: false };
   const { data: payment } = await supabaseAdmin
     .from("mmpay_payments")
-    .select("id,email,amount_cents,status")
+    .select("id,email,phone,amount_cents,status")
     .eq("stripe_session_id", input.sessionRef)
     .eq("link_id", link.id)
     .maybeSingle();
@@ -308,6 +308,7 @@ export async function confirmKlarnaMmpayOrder(input: {
     amountCents: payment.amount_cents,
     title: link.title,
     email: payment.email,
+    phone: payment.phone ?? undefined,
     reference: link.code,
   });
   await supabaseAdmin
