@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
+import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { commercialMembers, giveCommercialAccess } from "@/lib/commercial/commercial.functions";
+import { commercialMembersOptions } from "@/lib/commercial/members-query";
 import { Button } from "@/components/ui/button";
 import { KeyRound, Search, Loader2, Pencil, Trash2, UserPlus } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
