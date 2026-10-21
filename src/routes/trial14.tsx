@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { redirect as hideRedirect } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -9,6 +10,8 @@ import { startCheckout, startGuestCheckout } from "@/lib/billing.functions";
 const PRICE_SLUG = "mm_club_trial14";
 
 export const Route = createFileRoute("/trial14")({
+  // Planos ocultos temporariamente: adesão é feita manualmente pela equipa.
+  beforeLoad: () => { throw hideRedirect({ to: "/" }); },
   head: () => ({
     meta: [
       { title: "14 dias grátis no MM Club — experimenta sem compromisso" },

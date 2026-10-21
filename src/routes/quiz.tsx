@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { redirect as hideRedirect } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -29,6 +30,8 @@ import proofVendas from "@/assets/depoimento-vendas.jpg.asset.json";
 import proofShopify from "@/assets/depoimento-shopify.jpg.asset.json";
 
 export const Route = createFileRoute("/quiz")({
+  // Planos ocultos temporariamente: adesão é feita manualmente pela equipa.
+  beforeLoad: () => { throw hideRedirect({ to: "/" }); },
   ssr: false,
   head: () => ({
     meta: [

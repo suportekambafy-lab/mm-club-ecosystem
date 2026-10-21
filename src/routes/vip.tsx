@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { redirect as hideRedirect } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -8,6 +9,8 @@ import { startCheckout, startGuestCheckout } from "@/lib/billing.functions";
 
 
 export const Route = createFileRoute("/vip")({
+  // Planos ocultos temporariamente: adesão é feita manualmente pela equipa.
+  beforeLoad: () => { throw hideRedirect({ to: "/" }); },
   head: () => ({
     meta: [
       { title: "Acesso VIP — 3 meses grátis no MM Club" },
