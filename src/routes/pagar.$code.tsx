@@ -287,7 +287,7 @@ function MmpayPage() {
                       >
                         <Logo className="h-9 w-full" />
                       </motion.span>
-                      <span className="relative mt-1 flex min-h-[1.75rem] w-full flex-col items-center justify-end gap-0.5 sm:mt-1.5 sm:min-h-[2.25rem] sm:gap-1">
+                      <span className="relative mt-1 flex min-h-[1.75rem] w-full flex-col items-center justify-center gap-0.5">
                         {opt.id === "klarna" && link ? (
                           <motion.span
                             className="rounded-full bg-[#FFB3C7] px-1.5 py-0.5 text-[9px] font-bold text-[#17120F] sm:px-2 sm:text-[10px]"
