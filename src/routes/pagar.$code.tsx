@@ -2,7 +2,7 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { CheckCircle2, CreditCard, Loader2, Lock, ShieldCheck, Smartphone } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
   confirmKlarnaMmpayOrder,
@@ -91,11 +91,6 @@ function MmpayPage() {
         Klarna.Payments.init({ client_token: res.clientToken });
         setKlarna(res);
         setPending(false);
-        Klarna.Payments.load(
-          { container: "#klarna-widget", payment_method_category: "pay_later" },
-          {},
-          () => {},
-        );
         return;
       }
       const res = await startMmpayCheckout({
