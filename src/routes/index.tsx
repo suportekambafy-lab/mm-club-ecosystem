@@ -422,7 +422,7 @@ function FeatureSection({
               to="/aplicacao"
               className="group inline-flex items-center gap-1.5 text-sm font-semibold text-foreground border-b border-hairline pb-1 hover:border-primary transition-colors"
             >
-              Começar diagnóstico
+              Enviar aplicação
               <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
           </div>

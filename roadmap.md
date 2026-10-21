@@ -32,3 +32,4 @@
 - [x] Confirmar apenas os emails de Guadalupe e Elizângela a pedido do dono; entrada real das duas contas e avatares verificados, dois testes de proteção passaram, confirmação global mantida.
 - [x] Desativar contactos e estado de leads de outro responsável e mostrar autoria de calls e fechos; 11 testes passaram, sessão comercial confirmou botões inativos no lead de Victor e ativos num lead livre, sem criar dados de teste. Autoria validada por testes porque não existem fechos/calls reais atuais; não publicado.
 - [x] Criar MMpay: links de pagamento com identidade MM Club (/pagar/:code), criados na área comercial (/comercial/mmpay) com preço do catálogo ou valor personalizado; 8 testes de validação passaram.
+- [x] Planos ocultos ao público (/trial14, /vip, /quiz redirecionam para início; botões levam a /aplicacao); dados Kambafy no rodapé
