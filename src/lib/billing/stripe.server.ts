@@ -61,6 +61,34 @@ export async function createStripeProduct(input: {
   return { productId: product.id, priceId: product.default_price };
 }
 
+/** Prices are immutable; existing checkout sessions retain their original price. */
+export async function updateStripeProduct(input: {
+  productId: string;
+  priceId: string;
+  name: string;
+  description: string | null;
+  imageUrl: string | null;
+  amountCents: number;
+  previousAmountCents: number;
+}): Promise<{ productId: string; priceId: string }> {
+  let priceId = input.priceId;
+  if (input.amountCents !== input.previousAmountCents) {
+    const price = await stripeRequest<{ id: string }>("POST", "/prices", {
+      product: input.productId,
+      currency: "eur",
+      unit_amount: input.amountCents,
+    });
+    priceId = price.id;
+  }
+  await stripeRequest("POST", `/products/${input.productId}`, {
+    name: input.name,
+    description: input.description ?? "",
+    images: input.imageUrl ? [input.imageUrl] : "",
+    default_price: priceId,
+  });
+  return { productId: input.productId, priceId };
+}
+
 /** Apaga o produto (e o preço predefinido) criado por um link MMpay. */
 export async function deleteStripeProduct(productId: string): Promise<void> {
   try {

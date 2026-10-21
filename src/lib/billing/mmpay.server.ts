@@ -6,7 +6,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { generateMmpayCode, validateMmpayLinkInput } from "@/lib/mmpay/rules";
 import { getPriceById } from "./catalog.server";
-import { createStripeCheckout, createStripeProduct, deleteStripeProduct, getStripeCheckout } from "./stripe.server";
+import { createStripeCheckout, createStripeProduct, deleteStripeProduct, getStripeCheckout, updateStripeProduct } from "./stripe.server";
 
 export type MmpayLinkRow = {
   id: string;
@@ -139,6 +139,42 @@ export async function createMmpayLink(input: {
     throw new Error(`Stripe recusou o produto: ${err instanceof Error ? err.message : "erro"}`);
   }
   return (await toView([row]))[0];
+}
+
+export async function updateMmpayLink(input: {
+  id: string;
+  title: string;
+  description: string | null;
+  amountCents: number;
+  coverUrl: string | null;
+}): Promise<MmpayLinkView> {
+  const validationError = validateMmpayLinkInput(input);
+  if (validationError) throw new Error(validationError);
+  const { data, error } = await supabaseAdmin.from("mmpay_links").select("*").eq("id", input.id).maybeSingle();
+  if (error) throw new Error(error.message);
+  const row = data as MmpayLinkRow | null;
+  if (!row) throw new Error("Este link já não existe.");
+  const previous = (await toView([row]))[0];
+  const productInput = {
+    name: input.title.trim(),
+    description: input.description?.trim() || null,
+    imageUrl: input.coverUrl,
+    amountCents: input.amountCents,
+  };
+  const stripe = row.stripe_product_id && row.stripe_price_id
+    ? await updateStripeProduct({ ...productInput, productId: row.stripe_product_id, priceId: row.stripe_price_id, previousAmountCents: previous.amountCents })
+    : await createStripeProduct({ ...productInput, linkId: row.id });
+  const { data: updated, error: updateError } = await supabaseAdmin.from("mmpay_links").update({
+    title: productInput.name,
+    description: productInput.description,
+    custom_description: productInput.description,
+    custom_amount_cents: input.amountCents,
+    cover_url: input.coverUrl,
+    stripe_product_id: stripe.productId,
+    stripe_price_id: stripe.priceId,
+  }).eq("id", input.id).select("*").single();
+  if (updateError) throw new Error(updateError.message);
+  return (await toView([updated as MmpayLinkRow], true))[0];
 }
 
 export async function setMmpayLinkActive(id: string, active: boolean): Promise<void> {

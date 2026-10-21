@@ -54,6 +54,8 @@ export const createMmpayLinkSchema = z
   })
   .strict();
 
+export const updateMmpayLinkSchema = createMmpayLinkSchema.extend({ id: z.string().uuid() });
+
 const codeSchema = z.string().min(CODE_LENGTH).max(CODE_LENGTH).regex(/^[a-z2-9]+$/);
 
 const nameSchema = z.string().trim().min(2, "O nome é obrigatório.").max(120);
