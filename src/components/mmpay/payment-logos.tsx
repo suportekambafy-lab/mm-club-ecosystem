@@ -42,7 +42,7 @@ export function MbWayLogo() {
   return (
     <LogoPill label="MB WAY">
       {/* Logótipo oficial do MB WAY (SIBS), versão positiva. */}
-      <svg viewBox="0 0 143.2 69.57" className="h-4 w-auto" aria-hidden>
+      <svg viewBox="0 0 143.2 69.57" className="h-5 w-auto" aria-hidden>
         <defs>
           <style>{".cls-mb1{fill:#e30613;}.cls-mb2{fill:#1d1d1b;}"}</style>
         </defs>
