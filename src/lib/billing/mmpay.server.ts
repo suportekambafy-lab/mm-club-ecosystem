@@ -179,6 +179,7 @@ export async function startMmpayCheckout(input: {
   code: string;
   email: string;
   name?: string | null;
+  phone?: string | null;
   origin: string;
   method?: "card" | "mb_way";
 }): Promise<{ checkoutUrl: string }> {

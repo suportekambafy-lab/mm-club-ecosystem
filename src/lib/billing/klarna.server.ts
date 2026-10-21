@@ -99,7 +99,7 @@ export async function createKlarnaSession(input: {
 /** Converte o authorization_token do widget numa ordem capturada (pagamento concluído). */
 export async function placeKlarnaOrder(
   authorizationToken: string,
-  input: { amountCents: number; title: string; email: string; reference: string },
+  input: { amountCents: number; title: string; email: string; phone?: string; reference: string },
 ): Promise<{ orderId: string }> {
   const order = await klarnaRequest<{ order_id: string }>(
     "POST",
