@@ -62,6 +62,23 @@ export const startMmpayCheckoutSchema = z
     email: z.string().email().max(200),
     name: z.string().max(120).nullish(),
     origin: z.string().url(),
+    method: z.enum(["card", "mb_way"]).default("card"),
+  })
+  .strict();
+
+export const startKlarnaPaymentSchema = z
+  .object({
+    code: codeSchema,
+    email: z.string().email().max(200),
+    name: z.string().max(120).nullish(),
+  })
+  .strict();
+
+export const confirmKlarnaOrderSchema = z
+  .object({
+    code: codeSchema,
+    sessionRef: z.string().regex(/^kps_[A-Za-z0-9-]+$/).max(200),
+    authorizationToken: z.string().min(10).max(200),
   })
   .strict();
 
