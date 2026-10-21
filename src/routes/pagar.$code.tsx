@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, Loader2, Lock, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
@@ -253,34 +253,76 @@ function MmpayPage() {
                 Método de pagamento
               </p>
               <div className="mt-2 grid grid-cols-3 gap-2">
-                {METHOD_OPTIONS.map((opt) => {
+                {METHOD_OPTIONS.map((opt, i) => {
                   const Logo = opt.Logo;
                   const selected = method === opt.id;
                   return (
-                    <button
+                    <motion.button
                       key={opt.id}
                       type="button"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15 + i * 0.08, duration: 0.35 }}
+                      whileHover={{ y: -3 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => {
                         setMethod(opt.id);
                         setKlarna(null);
                         setError(null);
                       }}
                       title={opt.hint}
-                      className={`flex flex-col items-center gap-2 rounded-2xl px-2 py-3.5 text-xs font-semibold ring-1 transition ${
+                      className={`relative flex flex-col items-center gap-2 overflow-hidden rounded-2xl px-2 py-3.5 text-xs font-semibold ring-1 transition-colors ${
                         selected
-                          ? "bg-primary/10 text-primary ring-primary"
+                          ? "text-primary ring-primary"
                           : "bg-background text-muted-foreground ring-border hover:text-foreground"
                       }`}
                     >
-                      <Logo />
-                      {opt.label}
-                    </button>
+                      {selected ? (
+                        <motion.span
+                          layoutId="mmpay-method-bg"
+                          className="absolute inset-0 bg-primary/10"
+                          transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                        />
+                      ) : null}
+                      <motion.span
+                        className="relative"
+                        animate={selected ? { scale: [1, 1.12, 1] } : { scale: 1 }}
+                        transition={{ duration: 0.4 }}
+                      >
+                        <Logo />
+                      </motion.span>
+                      <span className="relative">{opt.label}</span>
+                      {opt.id === "klarna" && link ? (
+                        <motion.span
+                          className="relative -mb-1 rounded-full bg-[#FFB3C7] px-2 py-0.5 text-[10px] font-bold text-[#17120F]"
+                          animate={{ scale: [1, 1.08, 1] }}
+                          transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                          3x {formatMoney(Math.ceil(link.amountCents / 3), link.currency)}
+                        </motion.span>
+                      ) : null}
+                    </motion.button>
                   );
                 })}
               </div>
-              <p className="mt-2 text-center text-[11px] text-muted-foreground">
-                {METHOD_OPTIONS.find((o) => o.id === method)?.hint}
-              </p>
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={method}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.25 }}
+                  className="mt-3 text-center text-xs text-muted-foreground"
+                >
+                  {method === "klarna" && link ? (
+                    <>
+                      Paga em <span className="font-semibold text-foreground">3x de {formatMoney(Math.ceil(link.amountCents / 3), link.currency)}</span> sem juros com Klarna
+                    </>
+                  ) : (
+                    METHOD_OPTIONS.find((o) => o.id === method)?.hint
+                  )}
+                </motion.p>
+              </AnimatePresence>
 
               {error ? (
                 <p className="mt-4 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
