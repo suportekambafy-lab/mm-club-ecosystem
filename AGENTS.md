@@ -30,7 +30,7 @@
 - Recording admission checks storage after checking active egress and returns host-visible warnings when full; preserve existing credential-independent fallbacks when storage reads fail.
 
 - Staff credential updates and email confirmation require admin authorization, existing SDR/closer roles and password-free audits; preserve avatars, roles and global signup settings.
-- The shared avatar resolver treats Lovable asset URLs as directly renderable, not private avatar-bucket paths, so team photographs work in account avatars.
+- Resolve Lovable avatar asset URLs directly, never as private bucket paths.
 - Automated tests must never leave rows in the live lead/application tables; use a rolled-back transaction or a throwaway row deleted in the same test, because staff read that list as real business pipeline.
 - Lead presentation shares an ownership predicate for inactive contact/status actions and resolves sale attribution from the recorded closer, falling back to the responsible person only for legacy rows; this keeps admin/commercial presentation consistent without changing server authorization.
 - Only SDR/admin schedule calls and must pick a closer; the lead ownership moves to that closer while the scheduler is stored separately, so closers get the agenda/reminders and "Marcado por" stays accurate.
