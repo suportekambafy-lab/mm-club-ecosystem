@@ -269,6 +269,7 @@ export async function startKlarnaMmpayPayment(input: {
     amountCents: view.amountCents,
     title: link.title,
     email,
+    phone: input.phone ?? undefined,
     reference: link.code,
   });
   const sessionRef = `kps_${session.sessionId}`;
@@ -277,6 +278,7 @@ export async function startKlarnaMmpayPayment(input: {
     stripe_session_id: sessionRef,
     email,
     name: input.name ?? null,
+    phone: input.phone ?? null,
     amount_cents: view.amountCents,
     status: "pending",
     payment_method: "klarna",
