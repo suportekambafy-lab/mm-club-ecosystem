@@ -82,7 +82,7 @@ function MmpayAdminPage() {
   });
 
   const copyLink = async (id: string, code: string) => {
-    const url = `${window.location.origin}/pagar/${code}`;
+    const url = `https://mmclub.pt/pagar/${code}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopiedId(id);
