@@ -45,7 +45,7 @@ async function loadKlarnaSdk(): Promise<any> {
   if (w.Klarna) return w.Klarna;
   await new Promise<void>((resolve, reject) => {
     const s = document.createElement("script");
-    s.src = "https://x.klarnacdn.com/kp/lib/v1/api.js";
+    s.src = "https://x.klarnacdn.net/kp/lib/v1/api.js";
     s.onload = () => resolve();
     s.onerror = () => reject(new Error("Não foi possível carregar o Klarna. Tenta novamente."));
     document.head.appendChild(s);
