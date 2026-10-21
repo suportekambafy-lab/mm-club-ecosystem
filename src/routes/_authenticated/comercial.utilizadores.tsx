@@ -13,9 +13,8 @@ import { manualAccessSchema, type AccessDuration } from "@/lib/commercial/rules"
 import { AccessDurationPicker } from "@/components/commercial/access-duration-picker";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 
-const options = queryOptions({ queryKey: ["commercial-members"], queryFn: () => commercialMembers({ data: { search: "" } }) });
 export const Route = createFileRoute("/_authenticated/comercial/utilizadores")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(options),
+  loader: ({ context }) => context.queryClient.ensureQueryData(commercialMembersOptions),
   pendingComponent: PageSkeleton,
   head: () => ({ meta: [
     { title:"Utilizadores — Comercial MM Club" }, {name:"description",content:"Utilizadores e acessos manuais da equipa comercial MM Club."},
