@@ -267,7 +267,7 @@ function MmpayPage() {
                         setError(null);
                       }}
                       title={opt.hint}
-                      className={`relative flex h-[5rem] flex-col items-center justify-center overflow-hidden rounded-xl p-1.5 ring-1 transition-colors ${
+                      className={`relative flex h-[5.5rem] flex-col items-center justify-center overflow-hidden rounded-xl p-1.5 ring-1 transition-colors ${
                         selected
                           ? "text-primary ring-primary"
                           : "bg-background text-muted-foreground ring-border hover:text-foreground"
