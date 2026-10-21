@@ -77,23 +77,6 @@ function MmpayPage() {
 
   const link = data?.found ? data.link : null;
 
-  // Carrega o widget só depois de o contentor existir no DOM.
-  useEffect(() => {
-    if (!klarna) return;
-    const Klarna = (window as any).Klarna;
-    if (!Klarna) return;
-    Klarna.Payments.load(
-      { container: "#klarna-widget", payment_method_category: "pay_later" },
-      {},
-      (res: { show_form?: boolean; error?: unknown }) => {
-        if (res && res.show_form === false) {
-          setError("O Klarna não está disponível para este pagamento. Experimenta cartão ou MB WAY.");
-          setKlarna(null);
-        }
-      },
-    );
-  }, [klarna]);
-
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPending(true);
@@ -106,7 +89,18 @@ function MmpayPage() {
         const Klarna = await loadKlarnaSdk();
         Klarna.Payments.init({ client_token: res.clientToken });
         setKlarna(res);
-        setPending(false);
+        Klarna.Payments.load(
+          { container: "#klarna-widget", payment_method_category: "pay_later" },
+          {},
+          (r: { show_form?: boolean }) => {
+            if (r && r.show_form === false) {
+              setError("O Klarna não está disponível para este pagamento. Experimenta cartão ou MB WAY.");
+              setPending(false);
+              return;
+            }
+            authorizeKlarna(res);
+          },
+        );
         return;
       }
       const res = await startMmpayCheckout({
@@ -119,10 +113,7 @@ function MmpayPage() {
     }
   };
 
-  const authorizeKlarna = () => {
-    if (!klarna) return;
-    setPending(true);
-    setError(null);
+  const authorizeKlarna = (klarna: { clientToken: string; sessionRef: string }) => {
     const Klarna = (window as any).Klarna;
     Klarna.Payments.authorize(
       { payment_method_category: "pay_later" },
@@ -330,27 +321,8 @@ function MmpayPage() {
                 </p>
               ) : null}
 
-              {klarna ? (
-                <>
-                  <div id="klarna-widget" className="mt-6 overflow-hidden rounded-2xl bg-white" />
-                  <button
-                    type="button"
-                    onClick={authorizeKlarna}
-                    disabled={pending}
-                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft disabled:opacity-60"
-                  >
-                    {pending ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" /> A confirmar com o Klarna…
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="h-4 w-4" /> Concluir com Klarna
-                      </>
-                    )}
-                  </button>
-                </>
-              ) : (
+              <div id="klarna-widget" aria-hidden className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0" />
+              {(
                 <button
                   type="submit"
                   disabled={pending}
