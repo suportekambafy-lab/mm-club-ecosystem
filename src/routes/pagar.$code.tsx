@@ -2,7 +2,7 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { CheckCircle2, CreditCard, Loader2, Lock, ShieldCheck, Smartphone } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
   confirmKlarnaMmpayOrder,
@@ -45,7 +45,7 @@ async function loadKlarnaSdk(): Promise<any> {
   if (w.Klarna) return w.Klarna;
   await new Promise<void>((resolve, reject) => {
     const s = document.createElement("script");
-    s.src = "https://x.klarnacdn.com/kp/lib/v1/api.js";
+    s.src = "https://x.klarnacdn.net/kp/lib/v1/api.js";
     s.onload = () => resolve();
     s.onerror = () => reject(new Error("Não foi possível carregar o Klarna. Tenta novamente."));
     document.head.appendChild(s);
@@ -78,6 +78,23 @@ function MmpayPage() {
 
   const link = data?.found ? data.link : null;
 
+  // Carrega o widget só depois de o contentor existir no DOM.
+  useEffect(() => {
+    if (!klarna) return;
+    const Klarna = (window as any).Klarna;
+    if (!Klarna) return;
+    Klarna.Payments.load(
+      { container: "#klarna-widget", payment_method_category: "pay_later" },
+      {},
+      (res: { show_form?: boolean; error?: unknown }) => {
+        if (res && res.show_form === false) {
+          setError("O Klarna não está disponível para este pagamento. Experimenta cartão ou MB WAY.");
+          setKlarna(null);
+        }
+      },
+    );
+  }, [klarna]);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPending(true);
@@ -91,11 +108,6 @@ function MmpayPage() {
         Klarna.Payments.init({ client_token: res.clientToken });
         setKlarna(res);
         setPending(false);
-        Klarna.Payments.load(
-          { container: "#klarna-widget", payment_method_category: "pay_later" },
-          {},
-          () => {},
-        );
         return;
       }
       const res = await startMmpayCheckout({
