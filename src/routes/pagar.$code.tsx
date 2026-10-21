@@ -144,7 +144,7 @@ function MmpayPage() {
   };
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-4 py-5 sm:py-12">
+    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-4 py-5 sm:py-5">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 -top-24 h-[420px] bg-[radial-gradient(ellipse_at_top,oklch(0.82_0.13_82_/_0.16),transparent_60%)]"
@@ -155,7 +155,7 @@ function MmpayPage() {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="relative w-full max-w-md"
       >
-        <div className="mb-3 flex justify-center sm:mb-5">
+        <div className="mb-3 flex justify-center sm:mb-3">
           <MMLogo size={36} />
         </div>
 
@@ -186,9 +186,9 @@ function MmpayPage() {
         ) : (
           <form onSubmit={submit} className="overflow-hidden rounded-3xl bg-surface-1 ring-1 ring-border">
             {link.coverUrl ? (
-              <img src={link.coverUrl} alt={link.title} className="aspect-[3/1] w-full object-cover sm:aspect-[5/2]" />
+              <img src={link.coverUrl} alt={link.title} className="aspect-[3/1] w-full object-cover sm:aspect-[3/1]" />
             ) : null}
-            <div className="p-4 sm:p-7">
+            <div className="p-4 sm:p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Pagamento MM Club</p>
               <h1 className="mt-2 font-display text-xl leading-tight tracking-tight text-foreground sm:text-2xl">{link.title}</h1>
               {link.description ? (
@@ -359,7 +359,7 @@ function MmpayPage() {
           </form>
         )}
 
-        <footer className="mt-5 text-center text-xs text-muted-foreground sm:mt-8">
+        <footer className="mt-5 text-center text-xs text-muted-foreground sm:mt-6">
           <nav className="flex flex-wrap justify-center gap-x-5 gap-y-2">
             <Link to="/termos" className="underline hover:text-foreground">Termos</Link>
             <Link to="/privacidade" className="underline hover:text-foreground">Privacidade</Link>
