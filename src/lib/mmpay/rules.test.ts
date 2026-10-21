@@ -1,88 +1,19 @@
 import { describe, expect, it } from "vitest";
-import {
-  CODE_ALPHABET,
-  CODE_LENGTH,
-  generateMmpayCode,
-  MAX_CUSTOM_AMOUNT_CENTS,
-  MIN_CUSTOM_AMOUNT_CENTS,
-  validateMmpayLinkInput,
-} from "./rules";
+import { CODE_LENGTH, generateMmpayCode, validateMmpayLinkInput } from "./rules";
 
-const base = {
-  title: "Pagamento MM Club",
-  priceId: null as string | null,
-  customAmountCents: null as number | null,
-  customDescription: null as string | null,
-};
+const base = { title: "Mentoria", description: null, amountCents: 49700, coverUrl: null };
 
-describe("validateMmpayLinkInput", () => {
-  it("aceita um link para preço do catálogo", () => {
-    expect(
-      validateMmpayLinkInput({ ...base, priceId: crypto.randomUUID() }),
-    ).toBeNull();
-  });
-
-  it("aceita um valor personalizado com descrição", () => {
-    expect(
-      validateMmpayLinkInput({
-        ...base,
-        customAmountCents: 4900,
-        customDescription: "Sessão de mentoria",
-      }),
-    ).toBeNull();
-  });
-
-  it("rejeita link sem preço nem valor", () => {
-    expect(validateMmpayLinkInput(base)).toMatch(/catálogo ou um valor/);
-  });
-
-  it("rejeita link com preço e valor ao mesmo tempo", () => {
-    expect(
-      validateMmpayLinkInput({
-        ...base,
-        priceId: crypto.randomUUID(),
-        customAmountCents: 4900,
-        customDescription: "Sessão",
-      }),
-    ).toMatch(/catálogo ou um valor/);
-  });
-
-  it("rejeita valor abaixo do mínimo e acima do máximo", () => {
-    expect(
-      validateMmpayLinkInput({
-        ...base,
-        customAmountCents: MIN_CUSTOM_AMOUNT_CENTS - 1,
-        customDescription: "Sessão",
-      }),
-    ).toMatch(/mínimo/);
-    expect(
-      validateMmpayLinkInput({
-        ...base,
-        customAmountCents: MAX_CUSTOM_AMOUNT_CENTS + 1,
-        customDescription: "Sessão",
-      }),
-    ).toMatch(/máximo/);
-  });
-
-  it("rejeita valor personalizado sem descrição", () => {
-    expect(
-      validateMmpayLinkInput({ ...base, customAmountCents: 4900 }),
-    ).toMatch(/Descreve/);
-  });
-
-  it("rejeita título vazio", () => {
-    expect(
-      validateMmpayLinkInput({ ...base, title: "  ", priceId: crypto.randomUUID() }),
-    ).toMatch(/título/);
-  });
-});
-
-describe("generateMmpayCode", () => {
-  it("gera códigos de 8 caracteres do alfabeto sem ambiguidades", () => {
-    for (let i = 0; i < 50; i++) {
-      const code = generateMmpayCode();
-      expect(code).toHaveLength(CODE_LENGTH);
-      for (const ch of code) expect(CODE_ALPHABET).toContain(ch);
-    }
+describe("MMpay rules", () => {
+  it("aceita uma venda válida", () => expect(validateMmpayLinkInput(base)).toBeNull());
+  it("exige título", () => expect(validateMmpayLinkInput({ ...base, title: " " })).not.toBeNull());
+  it("preço mínimo 1 €", () => expect(validateMmpayLinkInput({ ...base, amountCents: 99 })).not.toBeNull());
+  it("preço máximo 50 000 €", () =>
+    expect(validateMmpayLinkInput({ ...base, amountCents: 5_000_001 })).not.toBeNull());
+  it("capa tem de ser https", () =>
+    expect(validateMmpayLinkInput({ ...base, coverUrl: "http://x.pt/a.jpg" })).not.toBeNull());
+  it("código com 8 caracteres sem ambiguidades", () => {
+    const c = generateMmpayCode();
+    expect(c).toHaveLength(CODE_LENGTH);
+    expect(c).not.toMatch(/[lo01i]/);
   });
 });

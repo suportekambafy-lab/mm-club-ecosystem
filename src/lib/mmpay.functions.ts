@@ -1,12 +1,17 @@
 /**
  * MMpay — superfície de API para a área comercial (criar/gerir links) e para
- * a página pública de pagamento (/pagar/:code).
+ * a página pública de pagamento (/pagar/:code). Pagamentos via Stripe.
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { secured } from "@/lib/security/gate";
-import { createMmpayLinkSchema, startMmpayCheckoutSchema } from "@/lib/mmpay/rules";
+import {
+  confirmMmpayPaymentSchema,
+  createMmpayLinkSchema,
+  startMmpayCheckoutSchema,
+  uploadMmpayCoverSchema,
+} from "@/lib/mmpay/rules";
 
 async function requireCommercial(context: { supabase: any; userId: string }) {
   const { data: allowed, error } = await context.supabase.rpc("has_commercial_access", {
@@ -23,6 +28,15 @@ export const listMmpayLinks = createServerFn({ method: "GET" })
     return list();
   });
 
+export const uploadMmpayCover = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => uploadMmpayCoverSchema.parse(input))
+  .handler(async ({ context, data }) => {
+    await requireCommercial(context);
+    const { uploadMmpayCover: upload } = await import("@/lib/billing/mmpay.server");
+    return { url: await upload(data.mime, data.base64) };
+  });
+
 export const createMmpayLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => createMmpayLinkSchema.parse(input))
@@ -32,9 +46,9 @@ export const createMmpayLink = createServerFn({ method: "POST" })
     const link = await create({
       createdBy: context.userId,
       title: data.title,
-      priceId: data.priceId ?? null,
-      customAmountCents: data.customAmountCents ?? null,
-      customDescription: data.customDescription ?? null,
+      description: data.description ?? null,
+      amountCents: data.amountCents,
+      coverUrl: data.coverUrl ?? null,
     });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("admin_action_log").insert({
@@ -61,9 +75,7 @@ export const setMmpayLinkActive = createServerFn({ method: "POST" })
 
 /** Vista pública de um link (página /pagar/:code). */
 export const getMmpayLink = createServerFn({ method: "GET" })
-  .inputValidator((input: unknown) =>
-    z.object({ code: z.string().min(8).max(8) }).parse(input),
-  )
+  .inputValidator((input: unknown) => z.object({ code: z.string().min(8).max(8) }).parse(input))
   .handler(async ({ data }) => {
     const { getPublicMmpayLink } = await import("@/lib/billing/mmpay.server");
     const link = await getPublicMmpayLink(data.code);
@@ -88,10 +100,13 @@ export const startMmpayCheckout = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => startMmpayCheckoutSchema.parse(input))
   .handler(async ({ data }) => {
     const { startMmpayCheckout: start } = await import("@/lib/billing/mmpay.server");
-    return start({
-      code: data.code,
-      email: data.email,
-      name: data.name ?? null,
-      origin: data.origin,
-    });
+    return start({ code: data.code, email: data.email, name: data.name ?? null, origin: data.origin });
+  });
+
+/** Confirma o pagamento quando o cliente regressa do Stripe. */
+export const confirmMmpayPayment = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => confirmMmpayPaymentSchema.parse(input))
+  .handler(async ({ data }) => {
+    const { confirmMmpayPayment: confirm } = await import("@/lib/billing/mmpay.server");
+    return confirm(data.code, data.sessionId);
   });
