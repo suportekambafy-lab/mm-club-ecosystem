@@ -13,6 +13,7 @@ import {
 } from "@/lib/mmpay.functions";
 import { formatMoney } from "@/lib/billing/types";
 import { MMLogo } from "@/components/mm/logo";
+import { PaymentLogosRow } from "@/components/mmpay/payment-logos";
 
 export const Route = createFileRoute("/pagar/$code")({
   validateSearch: z.object({ session_id: z.string().optional() }),
@@ -29,8 +30,6 @@ export const Route = createFileRoute("/pagar/$code")({
   }),
   component: MmpayPage,
 });
-
-const METHODS = ["Cartão", "Apple Pay", "Google Pay", "MB WAY", "Klarna"];
 
 type PayMethod = "card" | "mb_way" | "klarna";
 
@@ -327,17 +326,16 @@ function MmpayPage() {
                 </button>
               )}
 
-              <div className="mt-4 flex flex-wrap justify-center gap-1.5">
-                {METHODS.map((m) => (
-                  <span key={m} className="rounded-full bg-background px-2.5 py-1 text-[11px] text-muted-foreground ring-1 ring-border">
-                    {m}
-                  </span>
-                ))}
+              <div className="mt-6 border-t border-border pt-5">
+                <p className="mb-3 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Métodos aceites
+                </p>
+                <PaymentLogosRow />
+                <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
+                  <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                  Pagamento seguro processado pela Stripe ou Klarna. O MM Club nunca vê os dados do teu cartão.
+                </p>
               </div>
-              <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
-                <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                Pagamento processado pela Stripe ou Klarna. O MM Club nunca vê os dados do teu cartão.
-              </p>
             </div>
           </form>
         )}
