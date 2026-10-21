@@ -255,7 +255,7 @@ function Hero() {
 
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <Link
-              to="/quiz"
+              to="/aplicacao"
               className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_10px_40px_-10px_oklch(0.82_0.13_82_/_0.6)] hover:bg-gold-soft transition-all"
             >
               Fazer diagnóstico
@@ -419,7 +419,7 @@ function FeatureSection({
           </ul>
           <div className="mt-9">
             <Link
-              to="/quiz"
+              to="/aplicacao"
               className="group inline-flex items-center gap-1.5 text-sm font-semibold text-foreground border-b border-hairline pb-1 hover:border-primary transition-colors"
             >
               Começar diagnóstico
