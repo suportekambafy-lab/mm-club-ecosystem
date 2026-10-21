@@ -267,7 +267,7 @@ function MmpayPage() {
                         setError(null);
                       }}
                       title={opt.hint}
-                      className={`relative flex aspect-square min-h-[120px] flex-col items-center overflow-hidden rounded-xl p-1.5 ring-1 transition-colors ${
+                      className={`relative flex aspect-[5/6] flex-col items-center sm:aspect-square overflow-hidden rounded-xl p-1.5 ring-1 transition-colors ${
                         selected
                           ? "text-primary ring-primary"
                           : "bg-background text-muted-foreground ring-border hover:text-foreground"
