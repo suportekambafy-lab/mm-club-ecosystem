@@ -213,7 +213,7 @@ export async function startMmpayCheckout(input: {
     email,
     successUrl: `${origin}/pagar/${link.code}?session_id={CHECKOUT_SESSION_ID}`,
     cancelUrl: `${origin}/pagar/${link.code}`,
-    metadata: { mmpay_link_id: link.id, mmpay_code: link.code, name: input.name ?? "" },
+    metadata: { mmpay_link_id: link.id, mmpay_code: link.code, name: input.name ?? "", phone: input.phone ?? "" },
     methods: [input.method ?? "card"],
   });
 
@@ -222,6 +222,7 @@ export async function startMmpayCheckout(input: {
     stripe_session_id: session.id,
     email,
     name: input.name ?? null,
+    phone: input.phone ?? null,
     amount_cents: link.custom_amount_cents ?? 0,
     status: "pending",
   });
@@ -255,6 +256,7 @@ export async function startKlarnaMmpayPayment(input: {
   code: string;
   email: string;
   name?: string | null;
+  phone?: string | null;
 }): Promise<{ clientToken: string; sessionRef: string }> {
   const link = await getRow(input.code);
   if (!link || !link.active) throw new Error("Este link de pagamento já não está disponível.");
