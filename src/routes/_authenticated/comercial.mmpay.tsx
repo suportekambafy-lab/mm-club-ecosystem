@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Copy, ImagePlus, Link2, Plus, Trash2, X } from "lucide-react";
+import { Check, Copy, CopyPlus, ImagePlus, Link2, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { createMmpayLink, deleteMmpayLink, listMmpayLinks, setMmpayLinkActive, uploadMmpayCover } from "@/lib/mmpay.functions";
@@ -111,6 +111,16 @@ function MmpayAdminPage() {
     }
   };
 
+  const duplicate = (link: { title: string; description: string | null; coverUrl: string | null; amountCents: number }) => {
+    setTitle(`${link.title} (cópia)`);
+    setDescription(link.description ?? "");
+    setCoverUrl(link.coverUrl);
+    setAmountEur(String(link.amountCents / 100).replace(".", ","));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setTimeout(() => document.getElementById("mmpay-price")?.focus(), 300);
+    toast.info("Link duplicado no formulário — muda o preço e cria.");
+  };
+
   const canSubmit = title.trim().length > 0 && amountCents >= 100 && !uploading;
 
   return (
@@ -219,6 +229,9 @@ function MmpayAdminPage() {
                   <p className="mt-1 text-xs text-muted-foreground">mmclub.pt/pagar/{link.code}</p>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => duplicate(link)}>
+                    <CopyPlus className="h-4 w-4" /> Duplicar
+                  </Button>
                   <Button variant="outline" size="sm" onClick={() => void copyLink(link.id, link.code)}>
                     {copiedId === link.id ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                     {copiedId === link.id ? "Copiado" : "Copiar link"}
