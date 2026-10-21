@@ -155,8 +155,8 @@ function MmpayPage() {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="relative w-full max-w-md"
       >
-        <div className="mb-4 flex justify-center sm:mb-6">
-          <MMLogo size={44} />
+        <div className="mb-3 flex justify-center sm:mb-5">
+          <MMLogo size={36} />
         </div>
 
         {isLoading || (session_id && confirmQuery.isLoading) ? (
@@ -186,9 +186,9 @@ function MmpayPage() {
         ) : (
           <form onSubmit={submit} className="overflow-hidden rounded-3xl bg-surface-1 ring-1 ring-border">
             {link.coverUrl ? (
-              <img src={link.coverUrl} alt={link.title} className="aspect-[2/1] w-full object-cover sm:aspect-[16/9]" />
+              <img src={link.coverUrl} alt={link.title} className="aspect-[3/1] w-full object-cover sm:aspect-[16/9]" />
             ) : null}
-            <div className="p-5 sm:p-7">
+            <div className="p-4 sm:p-7">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Pagamento MM Club</p>
               <h1 className="mt-2 font-display text-xl leading-tight tracking-tight text-foreground sm:text-2xl">{link.title}</h1>
               {link.description ? (
@@ -197,7 +197,7 @@ function MmpayPage() {
                 </p>
               ) : null}
 
-              <div className="mt-4 flex items-baseline gap-2 rounded-2xl bg-background px-4 py-3 ring-1 ring-border">
+              <div className="mt-4 flex items-baseline gap-2 rounded-2xl bg-background px-4 py-2.5 ring-1 ring-border">
                 <span className="font-display text-3xl leading-none tracking-tight text-foreground sm:text-4xl">
                   {formatMoney(link.amountCents, link.currency)}
                 </span>
@@ -219,7 +219,7 @@ function MmpayPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@exemplo.com"
-                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary"
+                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary"
               />
               <label className="mt-3 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Nome
@@ -231,7 +231,7 @@ function MmpayPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="O teu nome"
-                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary"
+                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary"
               />
               <label className="mt-3 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Telemóvel
@@ -242,7 +242,7 @@ function MmpayPage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+351 912 345 678"
-                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary"
+                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary"
               />
 
               <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
