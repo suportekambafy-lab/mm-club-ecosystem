@@ -27,11 +27,11 @@ function TermsPage() {
           <h2 className="font-display text-xl">1. Identificação do vendedor</h2>
           <p className="mt-2">
             Este website e o serviço MM Club (o &ldquo;Serviço&rdquo;) são operados
-            por <strong>Snowcountry, Lda.</strong> (&ldquo;MM Club&rdquo;, &ldquo;nós&rdquo;, &ldquo;nosso&rdquo;),
-            sociedade constituída em Portugal, NIPC <strong>517 449 234</strong>,
+            por <strong>Kambafy, LLC</strong> (&ldquo;MM Club&rdquo;, &ldquo;nós&rdquo;, &ldquo;nosso&rdquo;),
+            sociedade de responsabilidade limitada registada no Wyoming (EUA), EIN <strong>38-4416614</strong>, com morada em 7345 W Sand Lake Rd, Ste 210, Office 1331, Orlando, FL 32819, United States,
             contactável através de{" "}
             <a className="underline" href="mailto:geral@mmclub.pt">geral@mmclub.pt</a>.
-            Ao utilizares o Serviço, contratas diretamente com a Snowcountry, Lda.
+            Ao utilizares o Serviço, contratas diretamente com a Kambafy, LLC.
           </p>
         </section>
 

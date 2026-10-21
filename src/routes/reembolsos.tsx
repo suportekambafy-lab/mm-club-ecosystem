@@ -26,7 +26,7 @@ function RefundsPage() {
         <section>
           <h2 className="font-display text-xl">Garantia de 30 dias</h2>
           <p className="mt-2">
-            A <strong>Snowcountry, Lda.</strong> (NIPC 517 449 234), operadora do MM Club,
+            A <strong>Kambafy, LLC</strong> (EIN 38-4416614), operadora do MM Club,
             oferece uma garantia de satisfação de <strong>30 dias</strong>. Se não estiveres
             satisfeito com a tua subscrição no MM Club, podes pedir um reembolso integral no
             prazo de 30 dias após a data da compra.

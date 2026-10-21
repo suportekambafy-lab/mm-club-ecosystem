@@ -7,10 +7,10 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const SELLER = {
-  name: "Snowcountry Lda",
+  name: "Kambafy, LLC",
   brand: "MM Club",
-  vat: "517449234",
-  address: "Portugal",
+  vat: "38-4416614",
+  address: "7345 W Sand Lake Rd, Ste 210, Office 1331, Orlando, FL 32819, United States",
   email: "geral@mmclub.pt",
   site: "mmclub.pt",
 };

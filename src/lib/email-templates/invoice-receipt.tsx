@@ -71,7 +71,7 @@ const Email = ({
     </Section>
 
     <Text style={styles.muted}>
-      Snowcountry Lda · NIF 517449234 · Portugal
+      Kambafy, LLC · EIN 38-4416614 · Orlando, FL, United States
     </Text>
   </Shell>
 )

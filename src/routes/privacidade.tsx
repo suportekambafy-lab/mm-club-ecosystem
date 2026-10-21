@@ -27,8 +27,8 @@ function PrivacyPage() {
           <h2 className="font-display text-xl">1. Responsável pelo tratamento</h2>
           <p className="mt-2">
             O responsável pelo tratamento dos teus dados pessoais é{" "}
-            <strong>Snowcountry, Lda.</strong>, sociedade constituída em Portugal,
-            NIPC <strong>517 449 234</strong>, que opera o serviço MM Club.
+            <strong>Kambafy, LLC</strong>, sociedade registada no Wyoming (EUA),
+            EIN <strong>38-4416614</strong>, com morada em 7345 W Sand Lake Rd, Ste 210, Office 1331, Orlando, FL 32819, United States, que opera o serviço MM Club.
             Contacto:{" "}
             <a className="underline" href="mailto:geral@mmclub.pt">geral@mmclub.pt</a>.
           </p>
