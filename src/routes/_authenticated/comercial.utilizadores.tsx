@@ -26,7 +26,7 @@ type Member = Awaited<ReturnType<typeof commercialMembers>>[number];
 const date = (value: string) => new Date(value).toLocaleDateString("pt-PT");
 function CommercialMembers() {
   
-  const { data } = useSuspenseQuery(options);
+  const { data } = useSuspenseQuery(commercialMembersOptions);
   const qc = useQueryClient();
   const find = useServerFn(commercialMembers);
   const give = useServerFn(giveCommercialAccess);
