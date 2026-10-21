@@ -61,6 +61,15 @@ export async function createStripeProduct(input: {
   return { productId: product.id, priceId: product.default_price };
 }
 
+/** Apaga o produto (e o preço predefinido) criado por um link MMpay. */
+export async function deleteStripeProduct(productId: string): Promise<void> {
+  try {
+    await stripeRequest("DELETE", `/products/${productId}`);
+  } catch (err) {
+    console.warn("[mmpay] Stripe recusou apagar o produto:", err);
+  }
+}
+
 /** Cartão (inclui Apple Pay e Google Pay automaticamente) + MB WAY + Klarna. */
 export const MMPAY_PAYMENT_METHODS = ["card", "mb_way", "klarna"];
 
