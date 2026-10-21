@@ -34,3 +34,6 @@
 - [x] Criar MMpay: links de pagamento com identidade MM Club (/pagar/:code), criados na área comercial (/comercial/mmpay) com preço do catálogo ou valor personalizado; 8 testes de validação passaram.
 - [x] Planos ocultos ao público (/trial14, /vip, /quiz redirecionam para início; botões levam a /aplicacao); dados Kambafy no rodapé
 - [ ] MMpay Klarna: código pronto; falta ativar Klarna no painel Stripe (utilizador)
+
+## Em curso
+- Apontar KLARNA_API_BASE para produção (api.klarnacdn.com) — credenciais do utilizador são do portal real
