@@ -179,7 +179,7 @@ function MmpayPage() {
             <Link to="/privacidade" className="underline hover:text-foreground">Privacidade</Link>
             <Link to="/reembolsos" className="underline hover:text-foreground">Reembolsos</Link>
           </nav>
-          <p className="mt-3">© {new Date().getFullYear()} MM Club · Snowcountry, Lda.</p>
+          <p className="mt-3">© {new Date().getFullYear()} MM Club · Kambafy, LLC</p>
         </footer>
       </motion.div>
     </main>

@@ -365,7 +365,7 @@ function PlansPage() {
             </a>
           </nav>
           <p className="mt-4">
-            © {new Date().getFullYear()} MM Club · Snowcountry, Lda.
+            © {new Date().getFullYear()} MM Club · Kambafy, LLC
           </p>
         </footer>
       </div>

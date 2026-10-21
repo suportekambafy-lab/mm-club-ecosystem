@@ -154,7 +154,7 @@ export function renderTemplate(
     secondaryUrl,
     footerNote:
       def.category === "billing" || def.category === "recovery"
-        ? `${vars.company ?? "Snowcountry Lda"} · NIF ${vars.vat ?? "517449234"}`
+        ? `${vars.company ?? "Kambafy, LLC"} · EIN ${vars.vat ?? "38-4416614"}`
         : undefined,
   });
 

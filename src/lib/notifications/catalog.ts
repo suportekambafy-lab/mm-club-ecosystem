@@ -41,8 +41,8 @@ export const VARIABLE_CATALOG: { key: string; label: string; sample: string }[] 
   { key: "invoiceUrl", label: "Link da fatura PDF", sample: `${APP_URL}/subscricao` },
   { key: "billingUrl", label: "Área de faturação", sample: `${APP_URL}/subscricao` },
   { key: "loginUrl", label: "Link de login", sample: `${APP_URL}/auth` },
-  { key: "company", label: "Empresa", sample: "Snowcountry Lda" },
-  { key: "vat", label: "NIF / IVA", sample: "517449234" },
+  { key: "company", label: "Empresa", sample: "Kambafy, LLC" },
+  { key: "vat", label: "EIN", sample: "38-4416614" },
   { key: "supportEmail", label: "Email de suporte", sample: "geral@mmclub.pt" },
 ];
 
