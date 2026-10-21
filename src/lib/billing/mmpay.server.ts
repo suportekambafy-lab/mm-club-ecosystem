@@ -179,6 +179,7 @@ export async function startMmpayCheckout(input: {
   code: string;
   email: string;
   name?: string | null;
+  phone?: string | null;
   origin: string;
   method?: "card" | "mb_way";
 }): Promise<{ checkoutUrl: string }> {
@@ -212,7 +213,7 @@ export async function startMmpayCheckout(input: {
     email,
     successUrl: `${origin}/pagar/${link.code}?session_id={CHECKOUT_SESSION_ID}`,
     cancelUrl: `${origin}/pagar/${link.code}`,
-    metadata: { mmpay_link_id: link.id, mmpay_code: link.code, name: input.name ?? "" },
+    metadata: { mmpay_link_id: link.id, mmpay_code: link.code, name: input.name ?? "", phone: input.phone ?? "" },
     methods: [input.method ?? "card"],
   });
 
@@ -221,6 +222,7 @@ export async function startMmpayCheckout(input: {
     stripe_session_id: session.id,
     email,
     name: input.name ?? null,
+    phone: input.phone ?? null,
     amount_cents: link.custom_amount_cents ?? 0,
     status: "pending",
   });
@@ -254,6 +256,7 @@ export async function startKlarnaMmpayPayment(input: {
   code: string;
   email: string;
   name?: string | null;
+  phone?: string | null;
 }): Promise<{ clientToken: string; sessionRef: string }> {
   const link = await getRow(input.code);
   if (!link || !link.active) throw new Error("Este link de pagamento já não está disponível.");
@@ -266,6 +269,7 @@ export async function startKlarnaMmpayPayment(input: {
     amountCents: view.amountCents,
     title: link.title,
     email,
+    phone: input.phone ?? undefined,
     reference: link.code,
   });
   const sessionRef = `kps_${session.sessionId}`;
@@ -274,6 +278,7 @@ export async function startKlarnaMmpayPayment(input: {
     stripe_session_id: sessionRef,
     email,
     name: input.name ?? null,
+    phone: input.phone ?? null,
     amount_cents: view.amountCents,
     status: "pending",
     payment_method: "klarna",
@@ -291,7 +296,7 @@ export async function confirmKlarnaMmpayOrder(input: {
   if (!link) return { paid: false };
   const { data: payment } = await supabaseAdmin
     .from("mmpay_payments")
-    .select("id,email,amount_cents,status")
+    .select("id,email,phone,amount_cents,status")
     .eq("stripe_session_id", input.sessionRef)
     .eq("link_id", link.id)
     .maybeSingle();
@@ -303,6 +308,7 @@ export async function confirmKlarnaMmpayOrder(input: {
     amountCents: payment.amount_cents,
     title: link.title,
     email: payment.email,
+    phone: payment.phone ?? undefined,
     reference: link.code,
   });
   await supabaseAdmin

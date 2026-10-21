@@ -58,6 +58,7 @@ function MmpayPage() {
   const { session_id } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [method, setMethod] = useState<PayMethod>("card");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +85,7 @@ function MmpayPage() {
     try {
       if (method === "klarna") {
         const res = await startKlarnaMmpayPayment({
-          data: { code, email: email.trim(), name: name.trim() || null },
+          data: { code, email: email.trim(), name: name.trim(), phone: phone.trim() },
         });
         const Klarna = await loadKlarnaSdk();
         Klarna.Payments.init({ client_token: res.clientToken });
@@ -98,7 +99,7 @@ function MmpayPage() {
         return;
       }
       const res = await startMmpayCheckout({
-        data: { code, email: email.trim(), name: name.trim() || null, origin: window.location.origin, method },
+        data: { code, email: email.trim(), name: name.trim(), phone: phone.trim(), origin: window.location.origin, method },
       });
       window.location.href = res.checkoutUrl;
     } catch (err) {
@@ -214,13 +215,26 @@ function MmpayPage() {
                 className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary"
               />
               <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                Nome (opcional)
+                Nome
               </label>
               <input
                 type="text"
+                required
+                minLength={2}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="O teu nome"
+                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary"
+              />
+              <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                Telemóvel
+              </label>
+              <input
+                type="tel"
+                required
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+351 912 345 678"
                 className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary"
               />
 
@@ -310,7 +324,7 @@ function MmpayPage() {
               </div>
               <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
                 <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                Pagamento processado pela Stripe. O MM Club nunca vê os dados do teu cartão.
+                Pagamento processado pela Stripe ou Klarna. O MM Club nunca vê os dados do teu cartão.
               </p>
             </div>
           </form>

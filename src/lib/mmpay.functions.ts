@@ -122,7 +122,8 @@ export const startMmpayCheckout = createServerFn({ method: "POST" })
     return start({
       code: data.code,
       email: data.email,
-      name: data.name ?? null,
+      name: data.name,
+      phone: data.phone,
       origin: data.origin,
       method: data.method,
     });
@@ -145,7 +146,7 @@ export const startKlarnaMmpayPayment = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => startKlarnaPaymentSchema.parse(input))
   .handler(async ({ data }) => {
     const { startKlarnaMmpayPayment: start } = await import("@/lib/billing/mmpay.server");
-    return start({ code: data.code, email: data.email, name: data.name ?? null });
+    return start({ code: data.code, email: data.email, name: data.name, phone: data.phone });
   });
 
 /** Conclui o pagamento Klarna com o authorization_token do widget. */
