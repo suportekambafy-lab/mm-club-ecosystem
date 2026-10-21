@@ -29,9 +29,9 @@
 - Paddle zero-value verification for an existing subscription only links gateway billing; it must not emit payment/recovery events or extend access because verification is not revenue.
 - Recording admission checks storage after checking active egress and returns host-visible warnings when full; preserve existing credential-independent fallbacks when storage reads fail.
 
-- Commercial email confirmation is an admin-authorized server function restricted to existing SDR/closer accounts and audited; global signup confirmation remains unchanged.
-- The shared avatar resolver treats Lovable asset URLs as directly renderable, not private avatar-bucket paths, so team photographs work in account avatars.
+- Staff credential updates and email confirmation require admin authorization, existing SDR/closer roles and password-free audits; preserve avatars, roles and global signup settings.
+- Resolve Lovable avatar asset URLs directly, never as private bucket paths.
 - Automated tests must never leave rows in the live lead/application tables; use a rolled-back transaction or a throwaway row deleted in the same test, because staff read that list as real business pipeline.
 - Lead presentation shares an ownership predicate for inactive contact/status actions and resolves sale attribution from the recorded closer, falling back to the responsible person only for legacy rows; this keeps admin/commercial presentation consistent without changing server authorization.
 - Only SDR/admin schedule calls and must pick a closer; the lead ownership moves to that closer while the scheduler is stored separately, so closers get the agenda/reminders and "Marcado por" stays accurate.
-- MMpay payment links live in public.mmpay_links and reuse the guest checkout pipeline: catalog-price links delegate to startGuestCheckout (account + entitlements), custom-amount links create a billing_checkout_intents row without price_id (payment/ledger/invoice recorded, no entitlements); management is commercial-authorized via has_commercial_access.
+- MMpay links use public.mmpay_links and has_commercial_access. Catalog links delegate to startGuestCheckout; custom amounts use nullable-price checkout intents and record payments/ledger/invoices without entitlements.
