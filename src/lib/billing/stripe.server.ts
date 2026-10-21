@@ -2,7 +2,9 @@
  * Cliente mínimo da API Stripe (fetch + form-encoding) — compatível com Workers.
  * Usa a chave da conta Stripe própria do MM Club (STRIPE_SECRET_KEY).
  */
-type Params = Record<string, string | number | boolean | null | undefined | Params | Array<string | Params>>;
+interface Params {
+  [key: string]: string | number | boolean | null | undefined | Params | Array<string | Params>;
+}
 
 function encode(params: Params, prefix = "", out: string[] = []): string[] {
   for (const [k, v] of Object.entries(params)) {
@@ -59,8 +61,8 @@ export async function createStripeProduct(input: {
   return { productId: product.id, priceId: product.default_price };
 }
 
-/** Cartão (inclui Apple Pay e Google Pay automaticamente) + MB WAY. */
-export const MMPAY_PAYMENT_METHODS = ["card", "mb_way"];
+/** Cartão (inclui Apple Pay e Google Pay automaticamente) + MB WAY + Klarna. */
+export const MMPAY_PAYMENT_METHODS = ["card", "mb_way", "klarna"];
 
 export async function createStripeCheckout(input: {
   priceId: string;

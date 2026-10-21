@@ -24,7 +24,7 @@ export const Route = createFileRoute("/pagar/$code")({
   component: MmpayPage,
 });
 
-const METHODS = ["Cartão", "Apple Pay", "Google Pay", "MB WAY"];
+const METHODS = ["Cartão", "Apple Pay", "Google Pay", "MB WAY", "Klarna"];
 
 function MmpayPage() {
   const { code } = useParams({ from: "/pagar/$code" });
