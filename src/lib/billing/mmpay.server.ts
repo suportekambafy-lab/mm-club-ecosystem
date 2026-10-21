@@ -6,7 +6,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { generateMmpayCode, validateMmpayLinkInput } from "@/lib/mmpay/rules";
 import { getPriceById } from "./catalog.server";
-import { createStripeCheckout, createStripeProduct, getStripeCheckout } from "./stripe.server";
+import { createStripeCheckout, createStripeProduct, deleteStripeProduct, getStripeCheckout } from "./stripe.server";
 
 export type MmpayLinkRow = {
   id: string;
