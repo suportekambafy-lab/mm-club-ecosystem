@@ -1,10 +1,16 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { CheckCircle2, Loader2, Lock, ShieldCheck } from "lucide-react";
+import { CheckCircle2, CreditCard, Loader2, Lock, ShieldCheck, Smartphone } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
-import { confirmMmpayPayment, getMmpayLink, startMmpayCheckout } from "@/lib/mmpay.functions";
+import {
+  confirmKlarnaMmpayOrder,
+  confirmMmpayPayment,
+  getMmpayLink,
+  startKlarnaMmpayPayment,
+  startMmpayCheckout,
+} from "@/lib/mmpay.functions";
 import { formatMoney } from "@/lib/billing/types";
 import { MMLogo } from "@/components/mm/logo";
 
@@ -26,13 +32,37 @@ export const Route = createFileRoute("/pagar/$code")({
 
 const METHODS = ["Cartão", "Apple Pay", "Google Pay", "MB WAY", "Klarna"];
 
+type PayMethod = "card" | "mb_way" | "klarna";
+
+const METHOD_OPTIONS: Array<{ id: PayMethod; label: string; hint: string; icon: typeof CreditCard }> = [
+  { id: "card", label: "Cartão", hint: "Visa, Mastercard, Apple Pay, Google Pay", icon: CreditCard },
+  { id: "mb_way", label: "MB WAY", hint: "Confirma na app MB WAY", icon: Smartphone },
+  { id: "klarna", label: "Klarna", hint: "Paga em 3 vezes sem juros", icon: ShieldCheck },
+];
+
+async function loadKlarnaSdk(): Promise<any> {
+  const w = window as any;
+  if (w.Klarna) return w.Klarna;
+  await new Promise<void>((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://x.klarnacdn.com/kp/lib/v1/api.js";
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error("Não foi possível carregar o Klarna. Tenta novamente."));
+    document.head.appendChild(s);
+  });
+  return (window as any).Klarna;
+}
+
 function MmpayPage() {
   const { code } = useParams({ from: "/pagar/$code" });
   const { session_id } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [method, setMethod] = useState<PayMethod>("card");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [klarna, setKlarna] = useState<{ clientToken: string; sessionRef: string } | null>(null);
+  const [klarnaPaid, setKlarnaPaid] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["mmpay-link", code],
@@ -52,14 +82,57 @@ function MmpayPage() {
     setPending(true);
     setError(null);
     try {
+      if (method === "klarna") {
+        const res = await startKlarnaMmpayPayment({
+          data: { code, email: email.trim(), name: name.trim() || null },
+        });
+        const Klarna = await loadKlarnaSdk();
+        Klarna.Payments.init({ client_token: res.clientToken });
+        setKlarna(res);
+        setPending(false);
+        Klarna.Payments.load(
+          { container: "#klarna-widget", payment_method_category: "pay_later" },
+          {},
+          () => {},
+        );
+        return;
+      }
       const res = await startMmpayCheckout({
-        data: { code, email: email.trim(), name: name.trim() || null, origin: window.location.origin },
+        data: { code, email: email.trim(), name: name.trim() || null, origin: window.location.origin, method },
       });
       window.location.href = res.checkoutUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível abrir o pagamento. Tenta novamente.");
       setPending(false);
     }
+  };
+
+  const authorizeKlarna = () => {
+    if (!klarna) return;
+    setPending(true);
+    setError(null);
+    const Klarna = (window as any).Klarna;
+    Klarna.Payments.authorize(
+      { payment_method_category: "pay_later" },
+      {},
+      async (res: { approved?: boolean; authorization_token?: string }) => {
+        if (!res.approved || !res.authorization_token) {
+          setError("O Klarna não aprovou este pagamento. Experimenta outro método.");
+          setPending(false);
+          return;
+        }
+        try {
+          const done = await confirmKlarnaMmpayOrder({
+            data: { code, sessionRef: klarna.sessionRef, authorizationToken: res.authorization_token },
+          });
+          if (done.paid) setKlarnaPaid(true);
+          else setError("Não foi possível concluir o pagamento. Fala com a equipa MM Club.");
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Não foi possível concluir o pagamento.");
+        }
+        setPending(false);
+      },
+    );
   };
 
   return (
@@ -80,7 +153,7 @@ function MmpayPage() {
 
         {isLoading || (session_id && confirmQuery.isLoading) ? (
           <div className="h-96 animate-pulse rounded-3xl bg-surface-1 ring-1 ring-border" />
-        ) : session_id && confirmQuery.data?.paid ? (
+        ) : klarnaPaid || (session_id && confirmQuery.data?.paid) ? (
           <div className="rounded-3xl bg-surface-1 p-8 text-center ring-1 ring-border">
             <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
             <h1 className="mt-4 font-display text-2xl tracking-tight text-foreground">Pagamento confirmado</h1>
@@ -151,27 +224,82 @@ function MmpayPage() {
                 className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary"
               />
 
+              <p className="mt-6 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                Método de pagamento
+              </p>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {METHOD_OPTIONS.map((opt) => {
+                  const Icon = opt.icon;
+                  const selected = method === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => {
+                        setMethod(opt.id);
+                        setKlarna(null);
+                        setError(null);
+                      }}
+                      title={opt.hint}
+                      className={`flex flex-col items-center gap-1.5 rounded-2xl px-2 py-3 text-xs font-semibold ring-1 transition ${
+                        selected
+                          ? "bg-primary/10 text-primary ring-primary"
+                          : "bg-background text-muted-foreground ring-border hover:text-foreground"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-center text-[11px] text-muted-foreground">
+                {METHOD_OPTIONS.find((o) => o.id === method)?.hint}
+              </p>
+
               {error ? (
                 <p className="mt-4 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
                   {error}
                 </p>
               ) : null}
 
-              <button
-                type="submit"
-                disabled={pending}
-                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft disabled:opacity-60"
-              >
-                {pending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> A abrir pagamento…
-                  </>
-                ) : (
-                  <>
-                    <Lock className="h-4 w-4" /> Pagar com segurança
-                  </>
-                )}
-              </button>
+              {klarna ? (
+                <>
+                  <div id="klarna-widget" className="mt-6 overflow-hidden rounded-2xl bg-white" />
+                  <button
+                    type="button"
+                    onClick={authorizeKlarna}
+                    disabled={pending}
+                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft disabled:opacity-60"
+                  >
+                    {pending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> A confirmar com o Klarna…
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="h-4 w-4" /> Concluir com Klarna
+                      </>
+                    )}
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={pending}
+                  className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft disabled:opacity-60"
+                >
+                  {pending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> A abrir pagamento…
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-4 w-4" /> Pagar com segurança
+                    </>
+                  )}
+                </button>
+              )}
 
               <div className="mt-4 flex flex-wrap justify-center gap-1.5">
                 {METHODS.map((m) => (
