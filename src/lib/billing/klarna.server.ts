@@ -48,7 +48,7 @@ type KlarnaOrderBody = {
     total_amount: number;
     total_tax_amount: 0;
   }>;
-  customer: { email: string };
+  customer: { email: string; phone?: string };
   merchant_reference1?: string;
 };
 
@@ -56,6 +56,7 @@ function orderBody(input: {
   amountCents: number;
   title: string;
   email: string;
+  phone?: string;
   reference?: string;
 }): KlarnaOrderBody {
   return {
@@ -74,7 +75,7 @@ function orderBody(input: {
         total_tax_amount: 0,
       },
     ],
-    customer: { email: input.email },
+    customer: { email: input.email, phone: input.phone },
     merchant_reference1: input.reference,
   };
 }
@@ -84,6 +85,7 @@ export async function createKlarnaSession(input: {
   amountCents: number;
   title: string;
   email: string;
+  phone?: string;
   reference: string;
 }): Promise<{ sessionId: string; clientToken: string }> {
   const session = await klarnaRequest<{ session_id: string; client_token: string }>(
