@@ -129,8 +129,8 @@ function MmpayAdminPage() {
         <p className="mb-4 text-xs font-medium text-commercial-accent">PAGAMENTOS</p>
         <h1 className="commercial-page-heading">MMpay</h1>
         <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-          Cria um link de venda com título, capa, descrição e preço. O cliente paga com cartão, Apple Pay,
-          Google Pay ou MB WAY numa página com a nossa marca.
+          Cria um link de venda com título, capa, descrição e preço. O cliente escolhe como pagar: cartão
+          (com Apple Pay e Google Pay), MB WAY ou Klarna em 3 vezes — numa página com a nossa marca.
         </p>
       </section>
 
