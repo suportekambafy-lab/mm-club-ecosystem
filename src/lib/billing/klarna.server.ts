@@ -4,7 +4,7 @@
  * Endpoint por omissão: produção UE. Para testes, definir KLARNA_API_BASE=https://api.playground.klarna.com
  */
 function baseUrl(): string {
-  return (process.env.KLARNA_API_BASE ?? "https://api.klarnacdn.com").replace(/\/$/, "");
+  return (process.env.KLARNA_API_BASE ?? "https://api.klarna.com").replace(/\/$/, "");
 }
 
 function authHeader(): string {

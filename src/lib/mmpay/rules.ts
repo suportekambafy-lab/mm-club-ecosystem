@@ -56,11 +56,18 @@ export const createMmpayLinkSchema = z
 
 const codeSchema = z.string().min(CODE_LENGTH).max(CODE_LENGTH).regex(/^[a-z2-9]+$/);
 
+const nameSchema = z.string().trim().min(2, "O nome é obrigatório.").max(120);
+const phoneSchema = z
+  .string()
+  .trim()
+  .regex(/^\+?[0-9\s().-]{7,20}$/, "Indica um número de telefone válido.");
+
 export const startMmpayCheckoutSchema = z
   .object({
     code: codeSchema,
     email: z.string().email().max(200),
-    name: z.string().max(120).nullish(),
+    name: nameSchema,
+    phone: phoneSchema,
     origin: z.string().url(),
     method: z.enum(["card", "mb_way"]).default("card"),
   })
@@ -70,7 +77,8 @@ export const startKlarnaPaymentSchema = z
   .object({
     code: codeSchema,
     email: z.string().email().max(200),
-    name: z.string().max(120).nullish(),
+    name: nameSchema,
+    phone: phoneSchema,
   })
   .strict();
 
