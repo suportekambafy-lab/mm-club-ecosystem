@@ -3360,34 +3360,46 @@ export type Database = {
         Row: {
           active: boolean
           code: string
+          cover_url: string | null
           created_at: string
           created_by: string | null
           custom_amount_cents: number | null
           custom_description: string | null
+          description: string | null
           id: string
           price_id: string | null
+          stripe_price_id: string | null
+          stripe_product_id: string | null
           title: string
         }
         Insert: {
           active?: boolean
           code: string
+          cover_url?: string | null
           created_at?: string
           created_by?: string | null
           custom_amount_cents?: number | null
           custom_description?: string | null
+          description?: string | null
           id?: string
           price_id?: string | null
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
           title: string
         }
         Update: {
           active?: boolean
           code?: string
+          cover_url?: string | null
           created_at?: string
           created_by?: string | null
           custom_amount_cents?: number | null
           custom_description?: string | null
+          description?: string | null
           id?: string
           price_id?: string | null
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
           title?: string
         }
         Relationships: [
@@ -3396,6 +3408,56 @@ export type Database = {
             columns: ["price_id"]
             isOneToOne: false
             referencedRelation: "catalog_prices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mmpay_payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          email: string | null
+          id: string
+          link_id: string
+          name: string | null
+          paid_at: string | null
+          payment_method: string | null
+          status: string
+          stripe_session_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          currency?: string
+          email?: string | null
+          id?: string
+          link_id: string
+          name?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: string
+          stripe_session_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          email?: string | null
+          id?: string
+          link_id?: string
+          name?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: string
+          stripe_session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mmpay_payments_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "mmpay_links"
             referencedColumns: ["id"]
           },
         ]
