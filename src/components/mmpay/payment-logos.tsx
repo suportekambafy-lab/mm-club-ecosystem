@@ -18,7 +18,7 @@ function LogoTile({
     <span
       title={label}
       aria-label={label}
-      className={`flex items-center justify-center overflow-hidden rounded-xl px-2 ring-1 ring-black/10 ${
+      className={`flex items-center justify-center overflow-hidden rounded-xl p-1.5 ring-1 ring-black/10 ${
         tone === "pink" ? "bg-[#FFB3C7]" : "bg-white"
       } ${className}`}
     >

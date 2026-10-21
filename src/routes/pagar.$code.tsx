@@ -267,7 +267,7 @@ function MmpayPage() {
                         setError(null);
                       }}
                       title={opt.hint}
-                      className={`relative flex aspect-square flex-col items-center overflow-hidden rounded-xl p-2 ring-1 transition-colors ${
+                      className={`relative flex aspect-square min-h-[120px] flex-col items-center overflow-hidden rounded-xl p-2 ring-1 transition-colors ${
                         selected
                           ? "text-primary ring-primary"
                           : "bg-background text-muted-foreground ring-border hover:text-foreground"
@@ -287,10 +287,7 @@ function MmpayPage() {
                       >
                         <Logo className="h-full w-full" />
                       </motion.span>
-                      <span className="relative mt-2 flex min-h-[2.4rem] w-full flex-col items-center gap-1">
-                        <span className="w-full truncate text-center text-[11px] font-semibold leading-tight">
-                          {opt.label}
-                        </span>
+                      <span className="relative mt-2 flex min-h-[2.25rem] w-full flex-col items-center justify-end gap-1">
                         {opt.id === "klarna" && link ? (
                           <motion.span
                             className="rounded-full bg-[#FFB3C7] px-2 py-0.5 text-[10px] font-bold text-[#17120F]"
@@ -300,6 +297,9 @@ function MmpayPage() {
                             3x {formatMoney(Math.ceil(link.amountCents / 3), link.currency)}
                           </motion.span>
                         ) : null}
+                        <span className="w-full truncate text-center text-[11px] font-semibold leading-tight">
+                          {opt.label}
+                        </span>
                       </span>
                     </motion.button>
                   );
