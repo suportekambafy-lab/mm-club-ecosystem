@@ -3423,6 +3423,7 @@ export type Database = {
           name: string | null
           paid_at: string | null
           payment_method: string | null
+          phone: string | null
           status: string
           stripe_session_id: string
         }
@@ -3436,6 +3437,7 @@ export type Database = {
           name?: string | null
           paid_at?: string | null
           payment_method?: string | null
+          phone?: string | null
           status?: string
           stripe_session_id: string
         }
@@ -3449,6 +3451,7 @@ export type Database = {
           name?: string | null
           paid_at?: string | null
           payment_method?: string | null
+          phone?: string | null
           status?: string
           stripe_session_id?: string
         }
