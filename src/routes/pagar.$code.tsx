@@ -290,16 +290,17 @@ function MmpayPage() {
                       <span className="relative mt-1 flex h-[2.1rem] w-full flex-col items-center justify-center gap-0.5">
                         {opt.id === "klarna" && link ? (
                           <motion.span
-                            className="rounded-full bg-[#FFB3C7] px-1.5 py-0.5 text-[9px] font-bold text-[#17120F] sm:px-2 sm:text-[10px]"
+                            className="rounded-full bg-[#FFB3C7] px-1.5 py-0.5 text-[10px] font-bold text-[#17120F]"
                             animate={{ scale: [1, 1.08, 1] }}
                             transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                           >
                             3x {formatMoney(Math.ceil(link.amountCents / 3), link.currency)}
                           </motion.span>
-                        ) : null}
-                        <span className="w-full truncate text-center text-[11px] font-semibold leading-tight">
-                          {opt.label}
-                        </span>
+                        ) : (
+                          <span className="w-full truncate text-center text-[11px] font-semibold leading-tight">
+                            {opt.label}
+                          </span>
+                        )}
                       </span>
                     </motion.button>
                   );
