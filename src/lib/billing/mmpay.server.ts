@@ -146,6 +146,23 @@ export async function setMmpayLinkActive(id: string, active: boolean): Promise<v
   if (error) throw new Error(error.message);
 }
 
+/** Elimina um link (e os seus pagamentos registados) e o produto Stripe associado. */
+export async function deleteMmpayLink(id: string): Promise<void> {
+  const { data, error } = await supabaseAdmin.from("mmpay_links").select("*").eq("id", id).maybeSingle();
+  if (error) throw new Error(error.message);
+  const row = data as MmpayLinkRow | null;
+  if (!row) throw new Error("Este link já não existe.");
+
+  if (row.stripe_product_id) await deleteStripeProduct(row.stripe_product_id);
+  if (row.cover_url) {
+    const path = row.cover_url.split("/mmpay-covers/")[1]?.split("?")[0];
+    if (path) await supabaseAdmin.storage.from("mmpay-covers").remove([decodeURIComponent(path)]);
+  }
+
+  const { error: delError } = await supabaseAdmin.from("mmpay_links").delete().eq("id", id);
+  if (delError) throw new Error(delError.message);
+}
+
 async function getRow(code: string): Promise<MmpayLinkRow | null> {
   const { data, error } = await supabaseAdmin.from("mmpay_links").select("*").eq("code", code).maybeSingle();
   if (error) throw new Error(error.message);
