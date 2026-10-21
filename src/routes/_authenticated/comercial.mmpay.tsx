@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Copy, ImagePlus, Link2, Plus, X } from "lucide-react";
+import { Check, Copy, ImagePlus, Link2, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { createMmpayLink, listMmpayLinks, setMmpayLinkActive, uploadMmpayCover } from "@/lib/mmpay.functions";
+import { createMmpayLink, deleteMmpayLink, listMmpayLinks, setMmpayLinkActive, uploadMmpayCover } from "@/lib/mmpay.functions";
 import { COVER_MIME_TYPES, MAX_COVER_BYTES, MAX_DESCRIPTION_LENGTH } from "@/lib/mmpay/rules";
 import { formatMoney } from "@/lib/billing/types";
 import { Button } from "@/components/ui/button";
@@ -86,6 +86,17 @@ function MmpayAdminPage() {
   const toggleMutation = useMutation({
     mutationFn: (i: { id: string; active: boolean }) => setMmpayLinkActive({ data: i }),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["mmpay-links"] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteMmpayLink({ data: { id } }),
+    onSuccess: () => {
+      setConfirmDeleteId(null);
+      toast.success("Link eliminado.");
+      void qc.invalidateQueries({ queryKey: ["mmpay-links"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -222,6 +233,35 @@ function MmpayAdminPage() {
                   >
                     {link.active ? "Ativo" : "Inativo"}
                   </button>
+                  {confirmDeleteId === link.id ? (
+                    <span className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        disabled={deleteMutation.isPending}
+                        onClick={() => deleteMutation.mutate(link.id)}
+                        className="rounded-full bg-destructive/15 px-3 py-1.5 text-xs font-medium text-destructive ring-1 ring-destructive/30 disabled:opacity-60"
+                      >
+                        {deleteMutation.isPending ? "A eliminar…" : "Confirmar"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteId(null)}
+                        aria-label="Cancelar eliminação"
+                        className="rounded-full p-1.5 text-muted-foreground ring-1 ring-border"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteId(link.id)}
+                      aria-label={`Eliminar link ${link.title}`}
+                      className="rounded-full p-1.5 text-muted-foreground ring-1 ring-border hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
