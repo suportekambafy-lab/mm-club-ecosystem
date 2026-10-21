@@ -7,8 +7,10 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { secured } from "@/lib/security/gate";
 import {
+  confirmKlarnaOrderSchema,
   confirmMmpayPaymentSchema,
   createMmpayLinkSchema,
+  startKlarnaPaymentSchema,
   startMmpayCheckoutSchema,
   uploadMmpayCoverSchema,
 } from "@/lib/mmpay/rules";
@@ -117,7 +119,41 @@ export const startMmpayCheckout = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => startMmpayCheckoutSchema.parse(input))
   .handler(async ({ data }) => {
     const { startMmpayCheckout: start } = await import("@/lib/billing/mmpay.server");
-    return start({ code: data.code, email: data.email, name: data.name ?? null, origin: data.origin });
+    return start({
+      code: data.code,
+      email: data.email,
+      name: data.name ?? null,
+      origin: data.origin,
+      method: data.method,
+    });
+  });
+
+/** Inicia um pagamento Klarna direto (visitante, sem conta). */
+export const startKlarnaMmpayPayment = createServerFn({ method: "POST" })
+  .middleware([
+    ...secured({
+      name: "mmpay.startKlarna",
+      write: true,
+      auth: false,
+      emergency: "block",
+      limit: [
+        { bucket: "mmpay-checkout", max: 6, windowSeconds: 3600, scope: "ip" },
+        { bucket: "mmpay-checkout-day", max: 20, windowSeconds: 86400, scope: "ip" },
+      ],
+    }),
+  ])
+  .inputValidator((input: unknown) => startKlarnaPaymentSchema.parse(input))
+  .handler(async ({ data }) => {
+    const { startKlarnaMmpayPayment: start } = await import("@/lib/billing/mmpay.server");
+    return start({ code: data.code, email: data.email, name: data.name ?? null });
+  });
+
+/** Conclui o pagamento Klarna com o authorization_token do widget. */
+export const confirmKlarnaMmpayOrder = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => confirmKlarnaOrderSchema.parse(input))
+  .handler(async ({ data }) => {
+    const { confirmKlarnaMmpayOrder: confirm } = await import("@/lib/billing/mmpay.server");
+    return confirm(data);
   });
 
 /** Confirma o pagamento quando o cliente regressa do Stripe. */
