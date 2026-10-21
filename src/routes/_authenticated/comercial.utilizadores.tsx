@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
+import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { commercialMembers, giveCommercialAccess } from "@/lib/commercial/commercial.functions";
+import { commercialMembersOptions } from "@/lib/commercial/members-query";
 import { Button } from "@/components/ui/button";
 import { KeyRound, Search, Loader2, Pencil, Trash2, UserPlus } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -12,9 +13,8 @@ import { manualAccessSchema, type AccessDuration } from "@/lib/commercial/rules"
 import { AccessDurationPicker } from "@/components/commercial/access-duration-picker";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 
-const options = queryOptions({ queryKey: ["commercial-members"], queryFn: () => commercialMembers({ data: { search: "" } }) });
 export const Route = createFileRoute("/_authenticated/comercial/utilizadores")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(options),
+  loader: ({ context }) => context.queryClient.ensureQueryData(commercialMembersOptions),
   pendingComponent: PageSkeleton,
   head: () => ({ meta: [
     { title:"Utilizadores — Comercial MM Club" }, {name:"description",content:"Utilizadores e acessos manuais da equipa comercial MM Club."},
@@ -26,7 +26,7 @@ type Member = Awaited<ReturnType<typeof commercialMembers>>[number];
 const date = (value: string) => new Date(value).toLocaleDateString("pt-PT");
 function CommercialMembers() {
   
-  const { data } = useSuspenseQuery(options);
+  const { data } = useSuspenseQuery(commercialMembersOptions);
   const qc = useQueryClient();
   const find = useServerFn(commercialMembers);
   const give = useServerFn(giveCommercialAccess);
