@@ -248,7 +248,7 @@ function MmpayPage() {
               <p className="mt-6 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Método de pagamento
               </p>
-              <div className="mt-2 grid grid-cols-3 gap-2.5">
+              <div className="mt-2 grid grid-cols-3 gap-2">
                 {METHOD_OPTIONS.map((opt, i) => {
                   const Logo = opt.Logo;
                   const selected = method === opt.id;
@@ -267,7 +267,7 @@ function MmpayPage() {
                         setError(null);
                       }}
                       title={opt.hint}
-                      className={`relative flex aspect-square min-h-[120px] flex-col items-center overflow-hidden rounded-xl p-2 ring-1 transition-colors ${
+                      className={`relative flex aspect-square min-h-[120px] flex-col items-center overflow-hidden rounded-xl p-1.5 ring-1 transition-colors ${
                         selected
                           ? "text-primary ring-primary"
                           : "bg-background text-muted-foreground ring-border hover:text-foreground"
@@ -287,7 +287,7 @@ function MmpayPage() {
                       >
                         <Logo className="h-full w-full" />
                       </motion.span>
-                      <span className="relative mt-2 flex min-h-[2.25rem] w-full flex-col items-center justify-end gap-1">
+                      <span className="relative mt-1.5 flex min-h-[2.25rem] w-full flex-col items-center justify-end gap-1">
                         {opt.id === "klarna" && link ? (
                           <motion.span
                             className="rounded-full bg-[#FFB3C7] px-2 py-0.5 text-[10px] font-bold text-[#17120F]"
