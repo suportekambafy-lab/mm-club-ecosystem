@@ -248,7 +248,7 @@ function MmpayPage() {
               <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Método de pagamento
               </p>
-              <div className="mt-2 grid grid-cols-3 gap-2">
+              <div className="mx-auto mt-2 grid w-full max-w-[19rem] grid-cols-3 gap-2">
                 {METHOD_OPTIONS.map((opt, i) => {
                   const Logo = opt.Logo;
                   const selected = method === opt.id;
