@@ -1,10 +1,16 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { CheckCircle2, Loader2, Lock, ShieldCheck } from "lucide-react";
+import { CheckCircle2, CreditCard, Loader2, Lock, ShieldCheck, Smartphone } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
-import { confirmMmpayPayment, getMmpayLink, startMmpayCheckout } from "@/lib/mmpay.functions";
+import {
+  confirmKlarnaMmpayOrder,
+  confirmMmpayPayment,
+  getMmpayLink,
+  startKlarnaMmpayPayment,
+  startMmpayCheckout,
+} from "@/lib/mmpay.functions";
 import { formatMoney } from "@/lib/billing/types";
 import { MMLogo } from "@/components/mm/logo";
 
