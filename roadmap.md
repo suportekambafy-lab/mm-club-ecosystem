@@ -36,4 +36,4 @@
 - [ ] MMpay Klarna: código pronto; falta ativar Klarna no painel Stripe (utilizador)
 
 ## Em curso
-- Apontar KLARNA_API_BASE para produção (api.klarnacdn.com) — credenciais do utilizador são do portal real
+- [x] KLARNA_API_BASE em produção; falta teste real de pagamento Klarna (sandbox não alcança api.klarnacdn.com)
