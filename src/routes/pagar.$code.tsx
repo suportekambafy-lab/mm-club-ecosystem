@@ -248,7 +248,7 @@ function MmpayPage() {
               <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Método de pagamento
               </p>
-              <div className="mx-auto mt-2 grid w-full max-w-[16rem] grid-cols-3 gap-2">
+              <div className="mx-auto mt-2 grid w-full max-w-[17rem] grid-cols-3 gap-2">
                 {METHOD_OPTIONS.map((opt, i) => {
                   const Logo = opt.Logo;
                   const selected = method === opt.id;
@@ -281,7 +281,7 @@ function MmpayPage() {
                         />
                       ) : null}
                       <motion.span
-                        className="relative flex w-full min-h-0 flex-1 items-center justify-center"
+                        className="relative flex w-full min-h-0 flex-1 items-stretch justify-center"
                         animate={selected ? { scale: [1, 1.08, 1] } : { scale: 1 }}
                         transition={{ duration: 0.4 }}
                       >
