@@ -332,39 +332,13 @@ function AuthPage() {
 
 
 
-            {!activeEmail && (
-            <div className="mt-6 flex items-center justify-between text-xs">
-              {joinIntent?.from === "vip" ? (
-                <Link to="/vip" className="text-muted-foreground transition hover:text-foreground">
-                  Ainda sem assinatura? Continuar pagamento →
-                </Link>
-              ) : (
-                <Link
-                  to="/checkout"
-                  search={joinIntent?.slug ? { plan: joinIntent.slug } : undefined}
-                  className="text-muted-foreground transition hover:text-foreground"
-                >
-                  Ainda sem assinatura? Continuar pagamento →
-                </Link>
-              )}
-              <Link
-                to="/quiz"
-                className="text-primary hover:underline"
-              >
-                Fazer diagnóstico
-              </Link>
-            </div>
-            )}
-
             <footer className="mt-12 text-center text-[11px] text-muted-foreground">
               <nav className="flex flex-wrap justify-center gap-x-4 gap-y-1.5">
                 <Link to="/" className="hover:text-foreground">Início</Link>
-                <Link to="/quiz" className="hover:text-foreground">Diagnóstico</Link>
-                <Link to="/checkout" className="hover:text-foreground">Planos</Link>
                 <Link to="/termos" className="hover:text-foreground">Termos</Link>
                 <Link to="/privacidade" className="hover:text-foreground">Privacidade</Link>
               </nav>
-              <p className="mt-3">© {new Date().getFullYear()} MM Club · Marca Milionária</p>
+              <p className="mt-3">© {new Date().getFullYear()} MM Club · Marca Milionária · Kambafy, LLC</p>
             </footer>
           </div>
         </section>

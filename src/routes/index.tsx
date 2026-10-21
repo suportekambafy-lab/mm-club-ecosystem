@@ -107,7 +107,6 @@ function Nav({ scrolled }: { scrolled: boolean }) {
             ["MM Inteligence", "jade"],
             ["Comunidade", "comunidade"],
             ["Lives", "lives"],
-            ["Planos", "planos"],
           ].map(([label, id]) => (
             <a
               key={id}
@@ -127,10 +126,10 @@ function Nav({ scrolled }: { scrolled: boolean }) {
           </Link>
 
           <Link
-            to="/quiz"
+            to="/aplicacao"
             className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-gold-soft transition-colors"
           >
-            Aderir <ArrowRight className="h-3.5 w-3.5" />
+            Aplicar <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       </div>
@@ -872,11 +871,11 @@ function Manifesto() {
   );
 }
 
-/* ---------- FINAL CTA / PRICING ---------- */
+/* ---------- FINAL CTA ---------- */
 
 function FinalCTA() {
   return (
-    <section id="planos" className="relative py-24">
+    <section id="aderir" className="relative py-24">
       <div className="mx-auto max-w-5xl px-6">
         <div
           className="relative overflow-hidden rounded-[32px] border border-hairline p-10 sm:p-16"
@@ -888,15 +887,14 @@ function FinalCTA() {
           <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-end">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-primary">
-                Adere ao MM Club
+                Comunidade Marca Milionária
               </p>
               <h2 className="mt-5 font-display text-4xl leading-[1.05] tracking-tight sm:text-5xl">
                 Um único acesso.<br />
                 Todo o ecossistema.
               </h2>
               <p className="mt-5 max-w-lg text-muted-foreground">
-                Cancela quando quiseres. Garantia de 30 dias, sem perguntas.
-                Pagamento seguro pela Paddle.
+                Envia a tua aplicação. A nossa equipa analisa o teu perfil e entra em contacto contigo.
               </p>
               <ul className="mt-7 grid gap-2 text-sm sm:grid-cols-2">
                 {[
@@ -915,17 +913,11 @@ function FinalCTA() {
               </ul>
             </div>
             <div className="flex flex-col items-start gap-4 lg:items-end">
-              <div className="text-left lg:text-right">
-                <p className="text-xs uppercase tracking-widest text-muted-foreground">A partir de</p>
-                <p className="mt-1 font-display text-5xl">
-                  €29,90<span className="text-lg text-muted-foreground">/mês</span>
-                </p>
-              </div>
               <Link
-                to="/checkout"
+                to="/aplicacao"
                 className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-4 text-sm font-semibold text-primary-foreground shadow-[0_20px_60px_-20px_oklch(0.82_0.13_82_/_0.7)] hover:bg-gold-soft transition-all"
               >
-                Escolher plano
+                Enviar aplicação
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <Link
@@ -951,14 +943,21 @@ function Footer() {
         <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
           <MMLogo />
           <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
-            <Link to="/checkout" className="hover:text-foreground">Planos</Link>
             <Link to="/termos" className="hover:text-foreground">Termos</Link>
             <Link to="/privacidade" className="hover:text-foreground">Privacidade</Link>
             <Link to="/reembolsos" className="hover:text-foreground">Reembolsos</Link>
             <a href="mailto:geral@mmclub.pt" className="hover:text-foreground">Contacto</a>
           </nav>
         </div>
-        <p className="mt-8 text-center text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+        <div className="mt-8 border-t border-border pt-6 text-center text-xs leading-relaxed text-muted-foreground">
+          <p className="font-medium text-foreground">Kambafy, LLC</p>
+          <p>EIN 38-4416614</p>
+          <p>7345 W Sand Lake Rd, Ste 210, Office 1331, Orlando, FL 32819, United States</p>
+          <p>
+            <a href="mailto:geral@mmclub.pt" className="hover:text-foreground">geral@mmclub.pt</a>
+          </p>
+        </div>
+        <p className="mt-6 text-center text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
           © {new Date().getFullYear()} MM Club · Marca Milionária
         </p>
       </div>
