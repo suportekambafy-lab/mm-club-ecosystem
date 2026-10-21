@@ -248,3 +248,71 @@ export async function confirmMmpayPayment(code: string, sessionId: string): Prom
     .neq("status", "paid");
   return { paid };
 }
+
+/** Inicia um pagamento Klarna direto: cria a sessão e regista o pagamento pendente. */
+export async function startKlarnaMmpayPayment(input: {
+  code: string;
+  email: string;
+  name?: string | null;
+}): Promise<{ clientToken: string; sessionRef: string }> {
+  const link = await getRow(input.code);
+  if (!link || !link.active) throw new Error("Este link de pagamento já não está disponível.");
+  const email = input.email.trim().toLowerCase();
+  const view = (await toView([link]))[0];
+  if (view.amountCents < 100) throw new Error("Este link não tem preço válido.");
+
+  const { createKlarnaSession } = await import("./klarna.server");
+  const session = await createKlarnaSession({
+    amountCents: view.amountCents,
+    title: link.title,
+    email,
+    reference: link.code,
+  });
+  const sessionRef = `kps_${session.sessionId}`;
+  await supabaseAdmin.from("mmpay_payments").insert({
+    link_id: link.id,
+    stripe_session_id: sessionRef,
+    email,
+    name: input.name ?? null,
+    amount_cents: view.amountCents,
+    status: "pending",
+    payment_method: "klarna",
+  });
+  return { clientToken: session.clientToken, sessionRef };
+}
+
+/** Conclui o pagamento Klarna após a autorização no widget (cria a ordem capturada). */
+export async function confirmKlarnaMmpayOrder(input: {
+  code: string;
+  sessionRef: string;
+  authorizationToken: string;
+}): Promise<{ paid: boolean }> {
+  const link = await getRow(input.code);
+  if (!link) return { paid: false };
+  const { data: payment } = await supabaseAdmin
+    .from("mmpay_payments")
+    .select("id,email,amount_cents,status")
+    .eq("stripe_session_id", input.sessionRef)
+    .eq("link_id", link.id)
+    .maybeSingle();
+  if (!payment) return { paid: false };
+  if (payment.status === "paid") return { paid: true };
+
+  const { placeKlarnaOrder } = await import("./klarna.server");
+  const order = await placeKlarnaOrder(input.authorizationToken, {
+    amountCents: payment.amount_cents,
+    title: link.title,
+    email: payment.email,
+    reference: link.code,
+  });
+  await supabaseAdmin
+    .from("mmpay_payments")
+    .update({
+      status: "paid",
+      payment_method: "klarna",
+      paid_at: new Date().toISOString(),
+      stripe_session_id: `klo_${order.orderId}`,
+    })
+    .eq("id", payment.id);
+  return { paid: true };
+}
