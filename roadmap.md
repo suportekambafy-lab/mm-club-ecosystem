@@ -36,4 +36,5 @@
 - [ ] MMpay Klarna: código pronto; falta ativar Klarna no painel Stripe (utilizador)
 
 ## Em curso
+- [ ] Corrigir eliminação de capas partilhadas no MMpay e verificar duplicação/eliminação; as capas atuais já foram apagadas e precisam de novo envio da imagem original.
 - [x] Klarna: endpoint corrigido para api.klarna.com, sessão criada com sucesso com credenciais live; nome+telefone obrigatórios; widget não testável no sandbox (x.klarnacdn.com bloqueado) — falta teste real do utilizador

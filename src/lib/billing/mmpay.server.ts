@@ -190,10 +190,7 @@ export async function deleteMmpayLink(id: string): Promise<void> {
   if (!row) throw new Error("Este link já não existe.");
 
   if (row.stripe_product_id) await deleteStripeProduct(row.stripe_product_id);
-  if (row.cover_url) {
-    const path = row.cover_url.split("/mmpay-covers/")[1]?.split("?")[0];
-    if (path) await supabaseAdmin.storage.from("mmpay-covers").remove([decodeURIComponent(path)]);
-  }
+  // Duplicated links share cover URLs. Link deletion must not delete their image.
 
   const { error: delError } = await supabaseAdmin.from("mmpay_links").delete().eq("id", id);
   if (delError) throw new Error(delError.message);
