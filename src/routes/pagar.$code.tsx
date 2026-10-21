@@ -267,7 +267,7 @@ function MmpayPage() {
                         setError(null);
                       }}
                       title={opt.hint}
-                      className={`relative flex h-[5.25rem] flex-col items-center overflow-hidden rounded-xl p-1.5 ring-1 transition-colors ${
+                      className={`relative flex h-[5rem] flex-col items-center overflow-hidden rounded-xl p-1.5 ring-1 transition-colors ${
                         selected
                           ? "text-primary ring-primary"
                           : "bg-background text-muted-foreground ring-border hover:text-foreground"
@@ -285,7 +285,7 @@ function MmpayPage() {
                         animate={selected ? { scale: [1, 1.08, 1] } : { scale: 1 }}
                         transition={{ duration: 0.4 }}
                       >
-                        <Logo className="h-full w-full" />
+                        <Logo className="h-9 w-full" />
                       </motion.span>
                       <span className="relative mt-1 flex min-h-[1.75rem] w-full flex-col items-center justify-end gap-0.5 sm:mt-1.5 sm:min-h-[2.25rem] sm:gap-1">
                         {opt.id === "klarna" && link ? (
