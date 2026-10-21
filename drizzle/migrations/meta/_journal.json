@@ -113,6 +113,13 @@
       "when": 1792593123114,
       "tag": "0015_mmpay_stripe_products",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1792599619829,
+      "tag": "0016_mmpay_payments_phone",
+      "breakpoints": true
     }
   ]
 }
