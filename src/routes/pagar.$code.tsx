@@ -32,13 +32,37 @@ export const Route = createFileRoute("/pagar/$code")({
 
 const METHODS = ["Cartão", "Apple Pay", "Google Pay", "MB WAY", "Klarna"];
 
+type PayMethod = "card" | "mb_way" | "klarna";
+
+const METHOD_OPTIONS: Array<{ id: PayMethod; label: string; hint: string; icon: typeof CreditCard }> = [
+  { id: "card", label: "Cartão", hint: "Visa, Mastercard, Apple Pay, Google Pay", icon: CreditCard },
+  { id: "mb_way", label: "MB WAY", hint: "Confirma na app MB WAY", icon: Smartphone },
+  { id: "klarna", label: "Klarna", hint: "Paga em 3 vezes sem juros", icon: ShieldCheck },
+];
+
+async function loadKlarnaSdk(): Promise<any> {
+  const w = window as any;
+  if (w.Klarna) return w.Klarna;
+  await new Promise<void>((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://x.klarnacdn.com/kp/lib/v1/api.js";
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error("Não foi possível carregar o Klarna. Tenta novamente."));
+    document.head.appendChild(s);
+  });
+  return (window as any).Klarna;
+}
+
 function MmpayPage() {
   const { code } = useParams({ from: "/pagar/$code" });
   const { session_id } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [method, setMethod] = useState<PayMethod>("card");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [klarna, setKlarna] = useState<{ clientToken: string; sessionRef: string } | null>(null);
+  const [klarnaPaid, setKlarnaPaid] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["mmpay-link", code],
