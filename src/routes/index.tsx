@@ -258,7 +258,7 @@ function Hero() {
               to="/aplicacao"
               className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_10px_40px_-10px_oklch(0.82_0.13_82_/_0.6)] hover:bg-gold-soft transition-all"
             >
-              Fazer diagnóstico
+              Enviar aplicação
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <a
