@@ -110,10 +110,6 @@ export const startMmpayCheckout = createServerFn({ method: "POST" })
       write: true,
       auth: false,
       emergency: "block",
-      limit: [
-        { bucket: "mmpay-checkout", max: 6, windowSeconds: 3600, scope: "ip" },
-        { bucket: "mmpay-checkout-day", max: 20, windowSeconds: 86400, scope: "ip" },
-      ],
     }),
   ])
   .inputValidator((input: unknown) => startMmpayCheckoutSchema.parse(input))
@@ -137,10 +133,6 @@ export const startKlarnaMmpayPayment = createServerFn({ method: "POST" })
       write: true,
       auth: false,
       emergency: "block",
-      limit: [
-        { bucket: "mmpay-checkout", max: 6, windowSeconds: 3600, scope: "ip" },
-        { bucket: "mmpay-checkout-day", max: 20, windowSeconds: 86400, scope: "ip" },
-      ],
     }),
   ])
   .inputValidator((input: unknown) => startKlarnaPaymentSchema.parse(input))
