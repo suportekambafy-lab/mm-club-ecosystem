@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { CheckCircle2, CreditCard, Loader2, Lock, ShieldCheck, Smartphone } from "lucide-react";
+import { CheckCircle2, Loader2, Lock, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
@@ -13,7 +13,7 @@ import {
 } from "@/lib/mmpay.functions";
 import { formatMoney } from "@/lib/billing/types";
 import { MMLogo } from "@/components/mm/logo";
-import { PaymentLogosRow } from "@/components/mmpay/payment-logos";
+import { CardBrandsLogo, KlarnaLogo, MbWayLogo } from "@/components/mmpay/payment-logos";
 
 export const Route = createFileRoute("/pagar/$code")({
   validateSearch: z.object({ session_id: z.string().optional() }),
@@ -33,10 +33,10 @@ export const Route = createFileRoute("/pagar/$code")({
 
 type PayMethod = "card" | "mb_way" | "klarna";
 
-const METHOD_OPTIONS: Array<{ id: PayMethod; label: string; hint: string; icon: typeof CreditCard }> = [
-  { id: "card", label: "Cartão", hint: "Visa, Mastercard, Apple Pay, Google Pay", icon: CreditCard },
-  { id: "mb_way", label: "MB WAY", hint: "Confirma na app MB WAY", icon: Smartphone },
-  { id: "klarna", label: "Klarna", hint: "Paga em 3 vezes sem juros", icon: ShieldCheck },
+const METHOD_OPTIONS: Array<{ id: PayMethod; label: string; hint: string; Logo: () => React.ReactNode }> = [
+  { id: "card", label: "Cartão", hint: "Visa, Mastercard, Apple Pay e Google Pay", Logo: CardBrandsLogo },
+  { id: "mb_way", label: "MB WAY", hint: "Confirma na app MB WAY", Logo: MbWayLogo },
+  { id: "klarna", label: "Klarna", hint: "Paga em 3 vezes sem juros", Logo: KlarnaLogo },
 ];
 
 async function loadKlarnaSdk(): Promise<any> {
