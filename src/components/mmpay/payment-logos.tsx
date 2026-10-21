@@ -9,7 +9,11 @@ function LogoTile({
   tone = "light",
   className = "h-12",
   children,
-}: LogoProps & { label: string; tone?: "light" | "pink" }) {
+}: LogoProps & {
+  label: string;
+  tone?: "light" | "pink";
+  children: React.ReactNode;
+}) {
   return (
     <span
       title={label}
