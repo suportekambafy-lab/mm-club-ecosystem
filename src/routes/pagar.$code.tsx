@@ -33,7 +33,12 @@ export const Route = createFileRoute("/pagar/$code")({
 
 type PayMethod = "card" | "mb_way" | "klarna";
 
-const METHOD_OPTIONS: Array<{ id: PayMethod; label: string; hint: string; Logo: () => React.ReactNode }> = [
+const METHOD_OPTIONS: Array<{
+  id: PayMethod;
+  label: string;
+  hint: string;
+  Logo: (props: { className?: string }) => React.ReactNode;
+}> = [
   { id: "card", label: "Cartão", hint: "Visa, Mastercard, Apple Pay e Google Pay", Logo: CardBrandsLogo },
   { id: "mb_way", label: "MB WAY", hint: "Confirma na app MB WAY", Logo: MbWayLogo },
   { id: "klarna", label: "Klarna", hint: "Paga em 3 vezes sem juros", Logo: KlarnaLogo },
@@ -243,7 +248,7 @@ function MmpayPage() {
               <p className="mt-6 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Método de pagamento
               </p>
-              <div className="mt-2 grid grid-cols-3 gap-2">
+                            <div className="mt-2 grid grid-cols-3 gap-2.5">
                 {METHOD_OPTIONS.map((opt, i) => {
                   const Logo = opt.Logo;
                   const selected = method === opt.id;
@@ -255,14 +260,14 @@ function MmpayPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.15 + i * 0.08, duration: 0.35 }}
                       whileHover={{ y: -3 }}
-                      whileTap={{ scale: 0.95 }}
+                      whileTap={{ scale: 0.96 }}
                       onClick={() => {
                         setMethod(opt.id);
                         setKlarna(null);
                         setError(null);
                       }}
                       title={opt.hint}
-                      className={`relative flex flex-col items-center gap-2 overflow-hidden rounded-2xl px-2 py-3.5 text-xs font-semibold ring-1 transition-colors ${
+                      className={`relative flex aspect-square flex-col items-center overflow-hidden rounded-xl p-2 ring-1 transition-colors ${
                         selected
                           ? "text-primary ring-primary"
                           : "bg-background text-muted-foreground ring-border hover:text-foreground"
@@ -276,22 +281,26 @@ function MmpayPage() {
                         />
                       ) : null}
                       <motion.span
-                        className="relative"
-                        animate={selected ? { scale: [1, 1.12, 1] } : { scale: 1 }}
+                        className="relative flex w-full min-h-0 flex-1 items-center justify-center"
+                        animate={selected ? { scale: [1, 1.08, 1] } : { scale: 1 }}
                         transition={{ duration: 0.4 }}
                       >
-                        <Logo />
+                        <Logo className="h-full w-full" />
                       </motion.span>
-                      <span className="relative">{opt.label}</span>
-                      {opt.id === "klarna" && link ? (
-                        <motion.span
-                          className="relative -mb-1 rounded-full bg-[#FFB3C7] px-2 py-0.5 text-[10px] font-bold text-[#17120F]"
-                          animate={{ scale: [1, 1.08, 1] }}
-                          transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                        >
-                          3x {formatMoney(Math.ceil(link.amountCents / 3), link.currency)}
-                        </motion.span>
-                      ) : null}
+                      <span className="relative mt-2 flex min-h-[2.4rem] w-full flex-col items-center gap-1">
+                        <span className="w-full truncate text-center text-[11px] font-semibold leading-tight">
+                          {opt.label}
+                        </span>
+                        {opt.id === "klarna" && link ? (
+                          <motion.span
+                            className="rounded-full bg-[#FFB3C7] px-2 py-0.5 text-[10px] font-bold text-[#17120F]"
+                            animate={{ scale: [1, 1.08, 1] }}
+                            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                          >
+                            3x {formatMoney(Math.ceil(link.amountCents / 3), link.currency)}
+                          </motion.span>
+                        ) : null}
+                      </span>
                     </motion.button>
                   );
                 })}

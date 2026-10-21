@@ -1,22 +1,32 @@
 // Logótipos oficiais dos métodos de pagamento, em SVG inline.
-// Usados no seletor de métodos do checkout MMpay.
+// Usados no seletor de métodos do checkout MMpay — cada logótipo preenche o
+// contentor quadrado que o recebe.
 
-function LogoPill({ label, children }: { label: string; children: React.ReactNode }) {
+export type LogoProps = { className?: string };
+
+function LogoTile({
+  label,
+  tone = "light",
+  className = "h-12",
+  children,
+}: LogoProps & { label: string; tone?: "light" | "pink" }) {
   return (
     <span
       title={label}
       aria-label={label}
-      className="flex h-8 items-center justify-center rounded-lg bg-white px-3 ring-1 ring-black/10"
+      className={`flex items-center justify-center overflow-hidden rounded-xl px-2 ring-1 ring-black/10 ${
+        tone === "pink" ? "bg-[#FFB3C7]" : "bg-white"
+      } ${className}`}
     >
       {children}
     </span>
   );
 }
 
-export function CardBrandsLogo() {
+export function CardBrandsLogo({ className }: LogoProps) {
   return (
-    <LogoPill label="Visa e Mastercard">
-      <svg viewBox="0 0 74 18" className="h-4 w-auto" aria-hidden>
+    <LogoTile label="Visa e Mastercard" className={className}>
+      <svg viewBox="0 0 74 18" className="h-full w-full" aria-hidden>
         <text
           x="16"
           y="14"
@@ -34,15 +44,15 @@ export function CardBrandsLogo() {
         <circle cx="54" cy="9" r="7" fill="#F79E1B" fillOpacity="0.92" />
         <path d="M50 3.3a7 7 0 0 1 0 11.4 7 7 0 0 1 0-11.4Z" fill="#FF5F00" />
       </svg>
-    </LogoPill>
+    </LogoTile>
   );
 }
 
-export function MbWayLogo() {
+export function MbWayLogo({ className }: LogoProps) {
   return (
-    <LogoPill label="MB WAY">
+    <LogoTile label="MB WAY" className={className}>
       {/* Logótipo oficial do MB WAY (SIBS), versão positiva. */}
-      <svg viewBox="0 0 143.2 69.57" className="h-5 w-auto" aria-hidden>
+      <svg viewBox="0 0 143.2 69.57" className="h-full w-full" aria-hidden>
         <defs>
           <style>{".cls-mb1{fill:#e30613;}.cls-mb2{fill:#1d1d1b;}"}</style>
         </defs>
@@ -55,18 +65,14 @@ export function MbWayLogo() {
         <path className="cls-mb2" d="M116.69,40.3c-.34,1.08-.64,2.08-.89,3s-.51,1.67-.73,2.26a1.51,1.51,0,0,1-3-.4,1.31,1.31,0,0,1,.07-.44l.42-1.39c.24-.78.55-1.75.93-2.93s.81-2.44,1.27-3.83.94-2.77,1.43-4.13,1-2.63,1.46-3.8A23.07,23.07,0,0,1,119,25.78a1.56,1.56,0,0,1,.73-.77,3.11,3.11,0,0,1,1.24-.2,3.25,3.25,0,0,1,1.27.23,1.4,1.4,0,0,1,.72.81c.32.67.7,1.58,1.13,2.71s.91,2.36,1.39,3.68,1,2.66,1.44,4,.91,2.64,1.3,3.82.73,2.19,1,3,.46,1.37.52,1.62a1.31,1.31,0,0,1,.07.44,1.26,1.26,0,0,1-.41,1,1.56,1.56,0,0,1-1.17.39,1.24,1.24,0,0,1-.87-.25,1.66,1.66,0,0,1-.45-.72c-.23-.59-.49-1.34-.8-2.26s-.63-1.92-1-3h-8.45m7.5-2.93c-.48-1.46-.92-2.8-1.35-4S122,31,121.52,29.86c-.11-.25-.23-.53-.35-.87s-.2-.51-.22-.57a2.55,2.55,0,0,0-.22.54c-.13.36-.24.65-.36.9-.45,1.1-.88,2.26-1.3,3.49s-.86,2.56-1.33,4Z" transform="translate(-1.5 -1.16)" />
         <path className="cls-mb2" d="M135.65,38.05a2.92,2.92,0,0,1-.32-.38l-.33-.46c-.32-.45-.65-1-1-1.64s-.75-1.32-1.12-2-.73-1.45-1.07-2.18-.68-1.41-.95-2-.53-1.18-.73-1.64a6.56,6.56,0,0,1-.37-1,1.34,1.34,0,0,1-.09-.26s0-.13,0-.25a1.38,1.38,0,0,1,.42-1,1.58,1.58,0,0,1,1.17-.41,1.24,1.24,0,0,1,1,.34,2.2,2.2,0,0,1,.41.67l.33.74c.17.38.38.85.62,1.41s.53,1.18.85,1.86.63,1.33,1,2l.95,1.87a14.31,14.31,0,0,0,.86,1.46,24.85,24.85,0,0,0,1.39-2.47c.49-1,1-1.95,1.41-2.92s.84-1.82,1.18-2.55l.59-1.39a2.23,2.23,0,0,1,.42-.67,1.16,1.16,0,0,1,1-.34,1.56,1.56,0,0,1,1.17.41,1.31,1.31,0,0,1,.42,1,1,1,0,0,1,0,.25l-.08.26-.39,1c-.19.47-.43,1-.72,1.64s-.59,1.31-.93,2-.72,1.45-1.09,2.18-.74,1.4-1.11,2-.72,1.21-1,1.65a5.38,5.38,0,0,1-.65.78v7a1.49,1.49,0,0,1-.42,1.11,1.53,1.53,0,0,1-2.15,0,1.55,1.55,0,0,1-.47-1.15v-7" transform="translate(-1.5 -1.16)" />
       </svg>
-    </LogoPill>
+    </LogoTile>
   );
 }
 
-export function KlarnaLogo() {
+export function KlarnaLogo({ className }: LogoProps) {
   return (
-    <span
-      title="Klarna"
-      aria-label="Klarna"
-      className="flex h-8 items-center justify-center rounded-lg bg-[#FFB3C7] px-3 ring-1 ring-black/10"
-    >
-      <svg viewBox="0 0 46 16" className="h-3.5 w-auto" aria-hidden>
+    <LogoTile label="Klarna" tone="pink" className={className}>
+      <svg viewBox="0 0 46 16" className="h-full w-full" aria-hidden>
         <text
           x="23"
           y="12.5"
@@ -80,6 +86,6 @@ export function KlarnaLogo() {
           Klarna.
         </text>
       </svg>
-    </span>
+    </LogoTile>
   );
 }
