@@ -37,5 +37,5 @@
 
 ## Em curso
 - [x] Corrigir eliminação de capas partilhadas no MMpay; 9 testes passaram e navegador confirmou capa no produto original e checkout após eliminar a cópia; produtos temporários removidos.
-- [ ] Restaurar as capas dos cinco produtos existentes — a imagem original já foi apagada do armazenamento e precisa de novo envio pelo utilizador.
+- [x] Restaurar a imagem original enviada pelo utilizador no mesmo endereço dos cinco produtos; navegador confirmou todas as capas e o checkout real, sem alterar links ou preços.
 - [x] Klarna: endpoint corrigido para api.klarna.com, sessão criada com sucesso com credenciais live; nome+telefone obrigatórios; widget não testável no sandbox (x.klarnacdn.com bloqueado) — falta teste real do utilizador
