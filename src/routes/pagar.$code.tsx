@@ -186,9 +186,9 @@ function MmpayPage() {
         ) : (
           <form onSubmit={submit} className="overflow-hidden rounded-3xl bg-surface-1 ring-1 ring-border">
             {link.coverUrl ? (
-              <img src={link.coverUrl} alt={link.title} className="aspect-[3/1] w-full object-cover sm:aspect-[3/1]" />
+              <img src={link.coverUrl} alt={link.title} className="aspect-[3/1] w-full object-cover sm:aspect-[7/2]" />
             ) : null}
-            <div className="p-4 sm:p-6">
+            <div className="p-4 sm:p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Pagamento MM Club</p>
               <h1 className="mt-2 font-display text-xl leading-tight tracking-tight text-foreground sm:text-2xl">{link.title}</h1>
               {link.description ? (
