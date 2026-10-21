@@ -174,12 +174,13 @@ export async function getPublicMmpayLink(code: string): Promise<MmpayLinkView | 
   return row ? (await toView([row]))[0] : null;
 }
 
-/** Abre o checkout Stripe (cartão, Apple Pay, Google Pay, MB WAY). */
+/** Abre o checkout Stripe com o método escolhido (cartão inclui Apple Pay e Google Pay). */
 export async function startMmpayCheckout(input: {
   code: string;
   email: string;
   name?: string | null;
   origin: string;
+  method?: "card" | "mb_way";
 }): Promise<{ checkoutUrl: string }> {
   let link = await getRow(input.code);
   if (!link || !link.active) throw new Error("Este link de pagamento já não está disponível.");

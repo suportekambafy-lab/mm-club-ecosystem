@@ -79,6 +79,8 @@ export async function createStripeCheckout(input: {
   successUrl: string;
   cancelUrl: string;
   metadata: Record<string, string>;
+  /** Quando definido, a sessão mostra apenas estes métodos (ex.: ["mb_way"]). */
+  methods?: string[];
 }): Promise<{ id: string; url: string }> {
   const base = {
     mode: "payment",
@@ -90,15 +92,19 @@ export async function createStripeCheckout(input: {
     metadata: input.metadata,
     payment_intent_data: { metadata: input.metadata },
   } as Params;
+  const methods = input.methods ?? MMPAY_PAYMENT_METHODS;
   try {
     return await stripeRequest("POST", "/checkout/sessions", {
       ...base,
-      payment_method_types: MMPAY_PAYMENT_METHODS,
+      payment_method_types: methods,
     });
   } catch (err) {
-    // MB WAY ainda não ativo na conta → segue só com cartão/carteiras.
-    console.warn("[mmpay] MB WAY indisponível, a usar só cartão:", err);
-    return await stripeRequest("POST", "/checkout/sessions", { ...base, payment_method_types: ["card"] });
+    // Método indisponível na conta → segue só com cartão/carteiras.
+    if (methods.length > 1) {
+      console.warn("[mmpay] método indisponível, a usar só cartão:", err);
+      return await stripeRequest("POST", "/checkout/sessions", { ...base, payment_method_types: ["card"] });
+    }
+    throw err;
   }
 }
 
