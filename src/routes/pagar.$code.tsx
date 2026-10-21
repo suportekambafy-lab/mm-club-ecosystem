@@ -82,14 +82,57 @@ function MmpayPage() {
     setPending(true);
     setError(null);
     try {
+      if (method === "klarna") {
+        const res = await startKlarnaMmpayPayment({
+          data: { code, email: email.trim(), name: name.trim() || null },
+        });
+        const Klarna = await loadKlarnaSdk();
+        Klarna.Payments.init({ client_token: res.clientToken });
+        setKlarna(res);
+        setPending(false);
+        Klarna.Payments.load(
+          { container: "#klarna-widget", payment_method_category: "pay_later" },
+          {},
+          () => {},
+        );
+        return;
+      }
       const res = await startMmpayCheckout({
-        data: { code, email: email.trim(), name: name.trim() || null, origin: window.location.origin },
+        data: { code, email: email.trim(), name: name.trim() || null, origin: window.location.origin, method },
       });
       window.location.href = res.checkoutUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível abrir o pagamento. Tenta novamente.");
       setPending(false);
     }
+  };
+
+  const authorizeKlarna = () => {
+    if (!klarna) return;
+    setPending(true);
+    setError(null);
+    const Klarna = (window as any).Klarna;
+    Klarna.Payments.authorize(
+      { payment_method_category: "pay_later" },
+      {},
+      async (res: { approved?: boolean; authorization_token?: string }) => {
+        if (!res.approved || !res.authorization_token) {
+          setError("O Klarna não aprovou este pagamento. Experimenta outro método.");
+          setPending(false);
+          return;
+        }
+        try {
+          const done = await confirmKlarnaMmpayOrder({
+            data: { code, sessionRef: klarna.sessionRef, authorizationToken: res.authorization_token },
+          });
+          if (done.paid) setKlarnaPaid(true);
+          else setError("Não foi possível concluir o pagamento. Fala com a equipa MM Club.");
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Não foi possível concluir o pagamento.");
+        }
+        setPending(false);
+      },
+    );
   };
 
   return (
