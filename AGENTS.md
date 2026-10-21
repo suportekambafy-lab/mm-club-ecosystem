@@ -34,4 +34,4 @@
 - Automated tests must never leave rows in the live lead/application tables; use a rolled-back transaction or a throwaway row deleted in the same test, because staff read that list as real business pipeline.
 - Lead presentation shares an ownership predicate for inactive contact/status actions and resolves sale attribution from the recorded closer, falling back to the responsible person only for legacy rows; this keeps admin/commercial presentation consistent without changing server authorization.
 - Only SDR/admin schedule calls and must pick a closer; the lead ownership moves to that closer while the scheduler is stored separately, so closers get the agenda/reminders and "Marcado por" stays accurate.
-- MMpay links use public.mmpay_links and has_commercial_access. Catalog links delegate to startGuestCheckout; custom amounts use nullable-price checkout intents and record payments/ledger/invoices without entitlements.
+- MMpay links are one-off Stripe sales (own key, REST via fetch): one Stripe product+price per link, card/wallets + MB WAY, payments confirmed on return into mmpay_payments, no entitlements.
