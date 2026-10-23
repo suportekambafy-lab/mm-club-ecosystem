@@ -10,6 +10,8 @@ import {
 import { trackMeta } from "@/lib/meta/pixel";
 import { saveLead } from "@/lib/aplicacao/aplicacao.functions";
 import { firstMissingApplicationField } from "@/lib/aplicacao/validation";
+import depoVendas from "@/assets/depoimento-vendas.jpg.asset.json";
+import depoShopify from "@/assets/depoimento-shopify.jpg.asset.json";
 
 export const Route = createFileRoute("/aplicacao")({
   head: () => ({
@@ -221,6 +223,19 @@ function Intro({ onStart }: { onStart: () => void }) {
         Começar aplicação
       </button>
       <p className="mt-4 text-xs text-muted-foreground">As vagas de acompanhamento são limitadas por mês.</p>
+      <SocialProof />
+    </div>
+  );
+}
+
+function SocialProof() {
+  return (
+    <div className="mt-10 grid w-full max-w-md gap-3">
+      <p className="text-xs uppercase tracking-widest text-muted-foreground">Resultados de alunos MM Club</p>
+      <div className="grid grid-cols-2 gap-3">
+        <img src={depoVendas.url} alt="Resultado de vendas de um aluno MM Club" loading="lazy" className="aspect-[4/5] w-full rounded-[14px] object-cover ring-1 ring-border" />
+        <img src={depoShopify.url} alt="Painel Shopify de um aluno MM Club" loading="lazy" className="aspect-[4/5] w-full rounded-[14px] object-cover ring-1 ring-border" />
+      </div>
     </div>
   );
 }
