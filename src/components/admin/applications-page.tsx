@@ -184,7 +184,7 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
               <tr key={l.id} onClick={() => setOpen(l)} className="cursor-pointer border-t border-border hover:bg-surface-1">
                 <td className="p-3">{l.classificacao ? <span className={cn("rounded px-2 py-0.5 text-xs font-semibold", CLS_STYLE[l.classificacao])}>{l.classificacao}</span> : "—"}</td>
                 <td className="p-3">{l.nome ?? "—"}</td><td className="p-3">{l.whatsapp}</td>
-                <td className="p-3">{STATUS[l.status] ?? l.status}<Attribution lead={l} names={actorNames} />{l.status === "fechou" && l.sale_amount_cents != null && <p className="mt-1 text-xs text-primary">{formatSaleAmount(l.sale_amount_cents)}</p>}</td><td className="p-3">{l.responsavel ?? "—"}</td>
+                <td className="p-3">{STATUS[l.status] ?? l.status}<Attribution lead={l} names={actorNames} />{l.contact_outcome && <p className="mt-1 text-xs text-muted-foreground">{OUTCOME[l.contact_outcome] ?? l.contact_outcome}{l.last_contact_at ? ` · ${new Date(l.last_contact_at).toLocaleDateString("pt-PT")}` : ""}</p>}{l.status === "fechou" && l.sale_amount_cents != null && <p className="mt-1 text-xs text-primary">{formatSaleAmount(l.sale_amount_cents)}</p>}</td><td className="p-3">{l.responsavel ?? "—"}</td>
                 <td className="p-3 text-muted-foreground">{new Date(l.created_at).toLocaleString("pt-PT")}</td>
               </tr>
             ))}
