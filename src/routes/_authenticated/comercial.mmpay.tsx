@@ -54,6 +54,7 @@ function MmpayAdminPage() {
   const [intervalCount, setIntervalCount] = useState("");
   const [durationKind, setDurationKind] = useState<"" | "indefinite" | "fixed">("");
   const [cycles, setCycles] = useState("");
+  const [tab, setTab] = useState<"one_time" | "subscription">("one_time");
 
   const resetForm = () => {
     setEditingId(null);
@@ -113,9 +114,7 @@ function MmpayAdminPage() {
       }),
     onSuccess: (link) => {
       toast.success(`Link criado: /pagar/${link.code}`);
-      setTitle("");
-      setAmountEur("");
-      setDescription("");
+      setTab(link.billing.type === "subscription" ? "subscription" : "one_time");
       resetForm();
       void qc.invalidateQueries({ queryKey: ["mmpay-links"] });
     },
@@ -218,6 +217,10 @@ function MmpayAdminPage() {
   };
 
   const canSubmit = title.trim().length > 0 && amountCents >= 100 && !uploading && (billingType === "one_time" || subscriptionValid);
+
+  const visibleLinks = (linksQuery.data ?? []).filter(
+    (l) => (l.billing.type === "subscription") === (tab === "subscription"),
+  );
 
   return (
     <div className="commercial-enter space-y-9">
@@ -348,9 +351,28 @@ function MmpayAdminPage() {
       </section>
 
       <section aria-label="Links de pagamento criados">
-        <div className="mb-5 flex items-center justify-between">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-xl font-semibold">Links criados</h2>
-          <span className="text-sm text-muted-foreground">{linksQuery.data?.length ?? 0} links</span>
+          <div role="tablist" aria-label="Tipo de link" className="flex rounded-full border border-border bg-surface-1 p-1">
+            {([["one_time", "Vendas avulsas"], ["subscription", "Assinaturas"]] as const).map(([v, l]) => {
+              const count = (linksQuery.data ?? []).filter((x) => (x.billing.type === "subscription") === (v === "subscription")).length;
+              return (
+                <button
+                  key={v}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === v}
+                  onClick={() => setTab(v)}
+                  className={cn(
+                    "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+                    tab === v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {l} · {count}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {linksQuery.isLoading ? (
@@ -359,21 +381,35 @@ function MmpayAdminPage() {
               <div key={i} className="h-20 animate-pulse rounded-2xl border border-border bg-surface-1" />
             ))}
           </div>
-        ) : (linksQuery.data ?? []).length === 0 ? (
+        ) : visibleLinks.length === 0 ? (
           <div className="border-y border-border py-16 text-center">
             <Link2 className="mx-auto mb-4 h-8 w-8 text-muted-foreground" />
-            <p className="font-medium">Ainda não criaste nenhum link.</p>
+            <p className="font-medium">
+              {tab === "one_time" ? "Ainda não criaste nenhuma venda avulsa." : "Ainda não criaste nenhuma assinatura."}
+            </p>
             <p className="mt-1 text-sm text-muted-foreground">Cria o primeiro acima e partilha com um cliente.</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {(linksQuery.data ?? []).map((link) => (
+            {visibleLinks.map((link) => (
               <div key={link.id} className="flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-surface-1 px-5 py-4">
                 {link.coverUrl ? (
                   <img src={link.coverUrl} alt="" className="h-14 w-24 rounded-lg object-cover ring-1 ring-border" />
                 ) : null}
                 <div className="min-w-0 flex-1">
-                  <p className="break-words font-medium">{link.title}</p>
+                  <p className="flex flex-wrap items-center gap-2 break-words font-medium">
+                    {link.title}
+                    <span
+                      className={cn(
+                        "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ring-1",
+                        link.billing.type === "subscription"
+                          ? "bg-primary/10 text-primary ring-primary/30"
+                          : "bg-muted text-muted-foreground ring-border",
+                      )}
+                    >
+                      {link.billing.type === "subscription" ? "Assinatura" : "Avulso"}
+                    </span>
+                  </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {link.billing.type === "subscription" && link.billing.totalCycles && link.billing.totalCents
                       ? `${formatMoney(link.billing.totalCents, link.currency)} · ${link.billing.totalCycles}x de ${formatMoney(splitInstallments(link.billing.totalCents, link.billing.totalCycles)[0], link.currency)} ${intervalLabel(link.billing.interval, link.billing.intervalCount)}`
