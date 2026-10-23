@@ -4,7 +4,7 @@ import { Check, Copy, CopyPlus, ImagePlus, Link2, Pencil, Plus, Save, Trash2, X 
 import { useState } from "react";
 import { toast } from "sonner";
 import { MmpaySubscriptions } from "@/components/mmpay/subscriptions-panel";
-import { intervalLabel, type BillingInterval } from "@/lib/mmpay/subscription-rules";
+import { intervalLabel, splitInstallments, type BillingInterval } from "@/lib/mmpay/subscription-rules";
 import { createMmpayLink, deleteMmpayLink, listMmpayLinks, setMmpayLinkActive, updateMmpayLink, uploadMmpayCover } from "@/lib/mmpay.functions";
 import { COVER_MIME_TYPES, MAX_COVER_BYTES, MAX_DESCRIPTION_LENGTH } from "@/lib/mmpay/rules";
 import { formatMoney } from "@/lib/billing/types";
@@ -72,12 +72,21 @@ function MmpayAdminPage() {
   const amountCents = Math.round(Number(amountEur.replace(",", ".")) * 100);
   const countNum = Number(intervalCount);
   const cyclesNum = Number(cycles);
+  const isFixedPlan = billingType === "subscription" && durationKind === "fixed";
   const subscriptionValid =
     interval !== "" && Number.isInteger(countNum) && countNum >= 1 && countNum <= 24 &&
-    (durationKind === "indefinite" || (durationKind === "fixed" && Number.isInteger(cyclesNum) && cyclesNum >= 1 && cyclesNum <= 600));
+    (durationKind === "indefinite" || (isFixedPlan && Number.isInteger(cyclesNum) && cyclesNum >= 1 && cyclesNum <= 600));
+  // Com prestações, o campo de valor é o TOTAL da venda; o sistema divide em prestações exatas.
+  const installments = isFixedPlan && subscriptionValid ? splitInstallments(amountCents, cyclesNum) : null;
   const billing =
     billingType === "subscription" && subscriptionValid
-      ? { type: "subscription" as const, interval: interval as BillingInterval, intervalCount: countNum, totalCycles: durationKind === "fixed" ? cyclesNum : null }
+      ? {
+          type: "subscription" as const,
+          interval: interval as BillingInterval,
+          intervalCount: countNum,
+          totalCycles: durationKind === "fixed" ? cyclesNum : null,
+          totalCents: isFixedPlan ? amountCents : null,
+        }
       : { type: "one_time" as const };
 
   const onCover = async (file: File | undefined) => {
@@ -260,9 +269,19 @@ function MmpayAdminPage() {
                 placeholder="Ex.: Mentoria individual E-commerce" maxLength={120} className={inputCls} />
             </div>
             <div>
-              <label className={labelCls} htmlFor="mmpay-price">{billingType === "subscription" ? "Valor por cobrança (EUR)" : "Preço (EUR)"}</label>
+              <label className={labelCls} htmlFor="mmpay-price">
+                {isFixedPlan ? "Valor total (EUR)" : billingType === "subscription" ? "Valor por cobrança (EUR)" : "Preço (EUR)"}
+              </label>
               <input id="mmpay-price" type="text" inputMode="decimal" value={amountEur}
-                onChange={(e) => setAmountEur(e.target.value)} placeholder="Ex.: 497" className={inputCls} />
+                onChange={(e) => setAmountEur(e.target.value)} placeholder={isFixedPlan ? "Ex.: 1997" : "Ex.: 497"} className={inputCls} />
+              {installments && amountCents >= 100 ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {cyclesNum}x de {formatMoney(installments[0], "EUR")} {intervalLabel(interval as BillingInterval, countNum)}
+                  {installments[0] !== installments[installments.length - 1]
+                    ? ` (última: ${formatMoney(installments[installments.length - 1], "EUR")})`
+                    : ""}
+                </p>
+              ) : null}
             </div>
             {billingType === "subscription" ? (
               <div className="grid gap-4 md:col-span-2 md:grid-cols-3">
