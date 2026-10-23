@@ -423,7 +423,11 @@ function MmpayAdminPage() {
           <div className="border-y border-border py-16 text-center">
             <Link2 className="mx-auto mb-4 h-8 w-8 text-muted-foreground" />
             <p className="font-medium">
-              {tab === "one_time" ? "Ainda não criaste nenhuma venda avulsa." : "Ainda não criaste nenhuma assinatura."}
+              {tab === "subscription"
+                ? "Ainda não criaste nenhuma assinatura."
+                : productFilter === "all" || !(linksQuery.data ?? []).some((x) => x.billing.type !== "subscription")
+                  ? "Ainda não criaste nenhuma venda avulsa."
+                  : "Nenhuma venda avulsa deste produto."}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">Cria o primeiro acima e partilha com um cliente.</p>
           </div>
