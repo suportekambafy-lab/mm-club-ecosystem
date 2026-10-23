@@ -367,7 +367,7 @@ function MmpayPage() {
               <div className="mt-4 border-t border-border pt-3">
                 <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
                   <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                  Pagamento seguro processado pela Stripe ou Klarna. O MM Club nunca vê os dados do teu cartão.
+                  Pagamento seguro processado pela Viva.com ou Klarna. O MM Club nunca vê os dados do teu cartão.
                 </p>
               </div>
             </div>

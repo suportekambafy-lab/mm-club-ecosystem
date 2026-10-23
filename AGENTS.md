@@ -35,3 +35,4 @@
 - Lead presentation shares an ownership predicate for inactive contact/status actions and resolves sale attribution from the recorded closer, falling back to the responsible person only for legacy rows; this keeps admin/commercial presentation consistent without changing server authorization.
 - Only SDR/admin schedule calls and must pick a closer; the lead ownership moves to that closer while the scheduler is stored separately, so closers get the agenda/reminders and "Marcado por" stays accurate.
 - MMpay uses one-off Stripe sales via fetch, no entitlements; edits retain link/code/product and prior payments, creating prices only on amount changes. Deletion retains covers shared by duplicates.
+- MMpay card/MB WAY checkout goes through Viva.com Smart Checkout (order refs stored as vvo_<orderCode>); payment status is always re-checked against Viva, never trusted from the browser or webhook body.
