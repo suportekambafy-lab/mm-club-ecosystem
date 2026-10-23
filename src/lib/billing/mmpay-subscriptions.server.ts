@@ -172,7 +172,7 @@ export async function runDueSubscriptionCharges(limit = 20) {
 export async function listSubscriptions() {
   const { data, error } = await supabaseAdmin
     .from("mmpay_subscriptions")
-    .select("id,product_title,customer_email,customer_name,customer_phone,amount_cents,currency,billing_interval,billing_interval_count,total_cycles,charges_count,status,started_at,next_charge_at,last_charge_at,completed_at,cancelled_at,cancel_reason")
+    .select("id,product_title,customer_email,customer_name,customer_phone,amount_cents,currency,billing_interval,billing_interval_count,total_cycles,total_amount_cents,charges_count,status,started_at,next_charge_at,last_charge_at,completed_at,cancelled_at,cancel_reason")
     .order("created_at", { ascending: false })
     .limit(300);
   if (error) throw new Error(error.message);
