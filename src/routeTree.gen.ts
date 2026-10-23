@@ -132,6 +132,7 @@ import { Route as ApiPublicHooksLiveTestEmailRouteImport } from './routes/api/pu
 import { Route as ApiPublicHooksLivesAnnounceCatchupRouteImport } from './routes/api/public/hooks/lives-announce-catchup'
 import { Route as ApiPublicHooksLivesEgressGuardRouteImport } from './routes/api/public/hooks/lives-egress-guard'
 import { Route as ApiPublicHooksLivesRecordingCheckRouteImport } from './routes/api/public/hooks/lives-recording-check'
+import { Route as ApiPublicHooksMmpaySubscriptionsRouteImport } from './routes/api/public/hooks/mmpay-subscriptions'
 import { Route as ApiPublicHooksModerationSweepRouteImport } from './routes/api/public/hooks/moderation-sweep'
 import { Route as ApiPublicHooksNovidadesEmailRouteImport } from './routes/api/public/hooks/novidades-email'
 import { Route as ApiPublicHooksPushNotificationsRouteImport } from './routes/api/public/hooks/push-notifications'
@@ -805,6 +806,12 @@ const ApiPublicHooksLivesRecordingCheckRoute =
     path: '/api/public/hooks/lives-recording-check',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksMmpaySubscriptionsRoute =
+  ApiPublicHooksMmpaySubscriptionsRouteImport.update({
+    id: '/api/public/hooks/mmpay-subscriptions',
+    path: '/api/public/hooks/mmpay-subscriptions',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksModerationSweepRoute =
   ApiPublicHooksModerationSweepRouteImport.update({
     id: '/api/public/hooks/moderation-sweep',
@@ -1054,6 +1061,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-egress-guard': typeof ApiPublicHooksLivesEgressGuardRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
+  '/api/public/hooks/mmpay-subscriptions': typeof ApiPublicHooksMmpaySubscriptionsRoute
   '/api/public/hooks/moderation-sweep': typeof ApiPublicHooksModerationSweepRoute
   '/api/public/hooks/novidades-email': typeof ApiPublicHooksNovidadesEmailRoute
   '/api/public/hooks/push-notifications': typeof ApiPublicHooksPushNotificationsRoute
@@ -1190,6 +1198,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-egress-guard': typeof ApiPublicHooksLivesEgressGuardRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
+  '/api/public/hooks/mmpay-subscriptions': typeof ApiPublicHooksMmpaySubscriptionsRoute
   '/api/public/hooks/moderation-sweep': typeof ApiPublicHooksModerationSweepRoute
   '/api/public/hooks/novidades-email': typeof ApiPublicHooksNovidadesEmailRoute
   '/api/public/hooks/push-notifications': typeof ApiPublicHooksPushNotificationsRoute
@@ -1338,6 +1347,7 @@ export interface FileRoutesById {
   '/api/public/hooks/lives-announce-catchup': typeof ApiPublicHooksLivesAnnounceCatchupRoute
   '/api/public/hooks/lives-egress-guard': typeof ApiPublicHooksLivesEgressGuardRoute
   '/api/public/hooks/lives-recording-check': typeof ApiPublicHooksLivesRecordingCheckRoute
+  '/api/public/hooks/mmpay-subscriptions': typeof ApiPublicHooksMmpaySubscriptionsRoute
   '/api/public/hooks/moderation-sweep': typeof ApiPublicHooksModerationSweepRoute
   '/api/public/hooks/novidades-email': typeof ApiPublicHooksNovidadesEmailRoute
   '/api/public/hooks/push-notifications': typeof ApiPublicHooksPushNotificationsRoute
@@ -1485,6 +1495,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-egress-guard'
     | '/api/public/hooks/lives-recording-check'
+    | '/api/public/hooks/mmpay-subscriptions'
     | '/api/public/hooks/moderation-sweep'
     | '/api/public/hooks/novidades-email'
     | '/api/public/hooks/push-notifications'
@@ -1621,6 +1632,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-egress-guard'
     | '/api/public/hooks/lives-recording-check'
+    | '/api/public/hooks/mmpay-subscriptions'
     | '/api/public/hooks/moderation-sweep'
     | '/api/public/hooks/novidades-email'
     | '/api/public/hooks/push-notifications'
@@ -1768,6 +1780,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/lives-announce-catchup'
     | '/api/public/hooks/lives-egress-guard'
     | '/api/public/hooks/lives-recording-check'
+    | '/api/public/hooks/mmpay-subscriptions'
     | '/api/public/hooks/moderation-sweep'
     | '/api/public/hooks/novidades-email'
     | '/api/public/hooks/push-notifications'
@@ -1838,6 +1851,7 @@ export interface RootRouteChildren {
   ApiPublicHooksLivesAnnounceCatchupRoute: typeof ApiPublicHooksLivesAnnounceCatchupRoute
   ApiPublicHooksLivesEgressGuardRoute: typeof ApiPublicHooksLivesEgressGuardRoute
   ApiPublicHooksLivesRecordingCheckRoute: typeof ApiPublicHooksLivesRecordingCheckRoute
+  ApiPublicHooksMmpaySubscriptionsRoute: typeof ApiPublicHooksMmpaySubscriptionsRoute
   ApiPublicHooksModerationSweepRoute: typeof ApiPublicHooksModerationSweepRoute
   ApiPublicHooksNovidadesEmailRoute: typeof ApiPublicHooksNovidadesEmailRoute
   ApiPublicHooksPushNotificationsRoute: typeof ApiPublicHooksPushNotificationsRoute
@@ -2724,6 +2738,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksLivesRecordingCheckRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/mmpay-subscriptions': {
+      id: '/api/public/hooks/mmpay-subscriptions'
+      path: '/api/public/hooks/mmpay-subscriptions'
+      fullPath: '/api/public/hooks/mmpay-subscriptions'
+      preLoaderRoute: typeof ApiPublicHooksMmpaySubscriptionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/moderation-sweep': {
       id: '/api/public/hooks/moderation-sweep'
       path: '/api/public/hooks/moderation-sweep'
@@ -3207,6 +3228,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksLivesEgressGuardRoute: ApiPublicHooksLivesEgressGuardRoute,
   ApiPublicHooksLivesRecordingCheckRoute:
     ApiPublicHooksLivesRecordingCheckRoute,
+  ApiPublicHooksMmpaySubscriptionsRoute: ApiPublicHooksMmpaySubscriptionsRoute,
   ApiPublicHooksModerationSweepRoute: ApiPublicHooksModerationSweepRoute,
   ApiPublicHooksNovidadesEmailRoute: ApiPublicHooksNovidadesEmailRoute,
   ApiPublicHooksPushNotificationsRoute: ApiPublicHooksPushNotificationsRoute,
