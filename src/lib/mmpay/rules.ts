@@ -93,7 +93,7 @@ export const confirmKlarnaOrderSchema = z
   .strict();
 
 export const confirmMmpayPaymentSchema = z
-  .object({ code: codeSchema, sessionId: z.string().regex(/^cs_[A-Za-z0-9_]+$/).max(200) })
+  .object({ code: codeSchema, sessionId: z.string().regex(/^(cs_[A-Za-z0-9_]+|vvo_[0-9]{8,24})$/).max(200) })
   .strict();
 
 export const uploadMmpayCoverSchema = z
@@ -102,3 +102,5 @@ export const uploadMmpayCoverSchema = z
     base64: z.string().max(Math.ceil((MAX_COVER_BYTES * 4) / 3) + 8),
   })
   .strict();
+
+export const vivaOrderCodeSchema = z.string().regex(/^[0-9]{8,24}$/);
