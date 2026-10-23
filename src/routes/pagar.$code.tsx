@@ -267,7 +267,7 @@ function MmpayPage() {
               <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Método de pagamento
               </p>
-              <div className={`mx-auto mt-2 grid w-full max-w-[17rem] gap-2 ${link?.billing.type === "subscription" ? "grid-cols-2" : "grid-cols-3"}">
+              <div className={`mx-auto mt-2 grid w-full max-w-[17rem] gap-2 ${link?.billing.type === "subscription" ? "grid-cols-2" : "grid-cols-3"}`}>
                 {METHOD_OPTIONS.filter((o) => !(o.id === "klarna" && link?.billing.type === "subscription")).map((opt, i) => {
                   const Logo = opt.Logo;
                   const selected = method === opt.id;

@@ -36,3 +36,4 @@
 - Only SDR/admin schedule calls and must pick a closer; the lead ownership moves to that closer while the scheduler is stored separately, so closers get the agenda/reminders and "Marcado por" stays accurate.
 - MMpay uses one-off Stripe sales via fetch, no entitlements; edits retain link/code/product and prior payments, creating prices only on amount changes. Deletion retains covers shared by duplicates.
 - MMpay card/MB WAY checkout goes through Viva.com Smart Checkout (order refs stored as vvo_<orderCode>); payment status is always re-checked against Viva, never trusted from the browser or webhook body.
+- MMpay subscriptions are managed by MM Club (mmpay_subscriptions + per-attempt mmpay_subscription_charges); Viva only processes charges via the first payment's recurring transaction. Duplicate protection: unique initial order code, atomic claim RPC with locked_until, and one processing/paid charge per cycle.
