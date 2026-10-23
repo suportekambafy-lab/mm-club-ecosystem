@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import {
   APLICACAO_LINKS, OPCOES, PAISES_TEL, classificar, validarTelefone,
 } from "@/lib/aplicacao/config";
+import { trackMeta } from "@/lib/meta/pixel";
 import { saveLead } from "@/lib/aplicacao/aplicacao.functions";
 import { firstMissingApplicationField } from "@/lib/aplicacao/validation";
 
@@ -47,7 +48,10 @@ const QUESTIONS: Q[] = [
 const REQUIRED = QUESTIONS;
 const STORE = "mm.aplicacao.v1";
 
-function track(ev: string) { try { (window as any).fbq?.("track", ev); } catch { /* noop */ } }
+function track(ev: "Lead" | "ViewContent", a: Record<string, any> = {}) {
+  const full = String(a.nome ?? "").trim().split(/\s+/);
+  void trackMeta(ev, { content_name: "Aplicação MM Club" }, { email: a.email ?? null, phone: a.whatsapp ?? null, firstName: full[0] || null, lastName: full.length > 1 ? full[full.length - 1] : null });
+}
 
 function AplicacaoPage() {
   const save = useServerFn(saveLead);
@@ -125,7 +129,7 @@ function AplicacaoPage() {
       setBusy(true);
       try {
         const c = (await persist(next, true)) ?? classificar(next);
-        setCls(c); track("Lead"); setStep(QUESTIONS.length);
+        setCls(c); track("Lead", next as Record<string, any>); setStep(QUESTIONS.length);
       } catch { setErr("Não foi possível enviar. Tenta novamente."); }
       finally { setBusy(false); }
       return;
@@ -173,7 +177,7 @@ function AplicacaoPage() {
         )}
 
         <div key={step} className="flex flex-1 flex-col animate-[aplFade_.35s_ease-out] motion-reduce:animate-none">
-          {step === -1 && <Intro onStart={() => setStep(0)} />}
+          {step === -1 && <Intro onStart={() => { track("ViewContent"); setStep(0); }} />}
           {q && q.kind === "choice" && (
             <Choice title={q.title} options={OPCOES[q.key] as readonly string[]} value={ans[q.key]} disabled={busy}
               onPick={(v) => { const next = { ...ans, [q.key]: v }; setAns(next); setTimeout(() => advance(next), 300); }} />
