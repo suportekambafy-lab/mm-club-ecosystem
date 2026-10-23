@@ -50,7 +50,7 @@ function MmpayAdminPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [billingType, setBillingType] = useState<"one_time" | "subscription">("one_time");
-  const [interval, setInterval] = useState<BillingInterval | "">("");
+  const [interval, setBillingInterval] = useState<BillingInterval | "">("");
   const [intervalCount, setIntervalCount] = useState("");
   const [durationKind, setDurationKind] = useState<"" | "indefinite" | "fixed">("");
   const [cycles, setCycles] = useState("");
@@ -62,7 +62,7 @@ function MmpayAdminPage() {
     setDescription("");
     setCoverUrl(null);
     setBillingType("one_time");
-    setInterval("");
+    setBillingInterval("");
     setIntervalCount("");
     setDurationKind("");
     setCycles("");
@@ -157,13 +157,13 @@ function MmpayAdminPage() {
   const loadBilling = (b: { type: string; interval?: BillingInterval; intervalCount?: number; totalCycles?: number | null }) => {
     if (b.type === "subscription" && b.interval) {
       setBillingType("subscription");
-      setInterval(b.interval);
+      setBillingInterval(b.interval);
       setIntervalCount(String(b.intervalCount ?? ""));
       setDurationKind(b.totalCycles ? "fixed" : "indefinite");
       setCycles(b.totalCycles ? String(b.totalCycles) : "");
     } else {
       setBillingType("one_time");
-      setInterval("");
+      setBillingInterval("");
       setIntervalCount("");
       setDurationKind("");
       setCycles("");
@@ -272,7 +272,7 @@ function MmpayAdminPage() {
                 </div>
                 <div>
                   <label className={labelCls} htmlFor="mmpay-interval">Periodicidade</label>
-                  <select id="mmpay-interval" value={interval} onChange={(e) => setInterval(e.target.value as BillingInterval)} className={inputCls}>
+                  <select id="mmpay-interval" value={interval} onChange={(e) => setBillingInterval(e.target.value as BillingInterval)} className={inputCls}>
                     <option value="" disabled>Escolher</option>
                     <option value="week">Semana(s)</option>
                     <option value="month">Mês(es)</option>
