@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { SaleCelebration, useSaleBell } from "./sale-celebration";
 import { broadcastSale } from "./sale-broadcast";
 import { parseCallDateTime } from "@/lib/aplicacao/call-rules";
-import { formatSaleAmount, parseSaleAmount } from "@/lib/aplicacao/sale-rules";
+import { formatSaleAmount, parseSaleAmount, type ContactOutcome } from "@/lib/aplicacao/sale-rules";
 import { canScheduleCall, isLeadLocked, leadAttribution } from "@/lib/aplicacao/lead-presentation";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -20,6 +20,7 @@ const STATUS: Record<string, string> = {
   novo: "Novo", incompleto: "Incompleto", em_contato: "Em contacto",
   call_marcada: "Call marcada", fechou: "Fechou", perdido: "Perdido",
 };
+const OUTCOME: Record<string, string> = { contactei: "Contactei", atendeu: "Atendeu", nao_atendeu: "Não atendeu" };
 const CLS_STYLE: Record<string, string> = {
   A: "bg-primary text-primary-foreground",
   B: "bg-muted-foreground/30 text-foreground",
@@ -219,7 +220,7 @@ function Detail({ lead, actorNames, me, canSchedule, closers, agenda, onClose, o
   const canReschedule = canSchedule && lead.status === "call_marcada" && (!locked || lead.call_scheduled_by === me);
   const first = String(lead.nome ?? "").split(" ")[0];
   const wa = `https://wa.me/${String(lead.whatsapp ?? "").replace(/\D/g, "")}?text=${encodeURIComponent(`Olá ${first}, tudo bem? Aqui é da equipa do MM Club, vi a tua aplicação.`)}`;
-  async function run(patch: { status?: "novo" | "incompleto" | "em_contato" | "call_marcada" | "fechou" | "perdido"; assumir?: boolean; saleAmountCents?: number; callScheduledAt?: string; closerId?: string }) {
+  async function run(patch: { status?: "novo" | "incompleto" | "em_contato" | "call_marcada" | "fechou" | "perdido"; contactOutcome?: ContactOutcome; assumir?: boolean; saleAmountCents?: number; callScheduledAt?: string; closerId?: string }) {
     if ((locked && !(patch.status === "call_marcada" && canReschedule)) || busy) return;
     setBusy(true);
     try {
@@ -258,6 +259,12 @@ function Detail({ lead, actorNames, me, canSchedule, closers, agenda, onClose, o
           </>}
           {!lead.responsavel_id && <Button variant="outline" disabled={busy} onClick={() => run({ assumir: true })}>Assumir lead</Button>}
         </div>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {(["contactei", "atendeu", "nao_atendeu"] as const).map((o) => (
+            <Button key={o} variant="outline" size="sm" disabled={locked || busy} onClick={() => run({ contactOutcome: o })}>{OUTCOME[o]}</Button>
+          ))}
+        </div>
+        {lead.contact_outcome && <p className="mt-2 text-xs text-muted-foreground">Último contacto: {OUTCOME[lead.contact_outcome] ?? lead.contact_outcome} · {lead.last_contact_at ? new Date(lead.last_contact_at).toLocaleString("pt-PT") : "—"}</p>}
         {lead.responsavel && <p className="mt-3 text-xs text-muted-foreground">Responsável: {lead.responsavel}{locked && " · bloqueado para ti"}</p>}
         <label className="mt-4 block text-xs text-muted-foreground">Estado
           <select key={`${lead.status}-${closing}-${scheduling}-${busy}`} aria-label="Estado" disabled={busy || locked} value={lead.status} onChange={(e) => { const status = e.target.value as Parameters<typeof run>[0]["status"]; if (status === "call_marcada") { setCallTime(""); setCloserId(""); setScheduling(true); } else if (status === "fechou") { setAmount(lead.sale_amount_cents != null ? String(lead.sale_amount_cents / 100) : ""); setClosing(true); } else void run({status}); }} className="mt-1 block w-full rounded-lg bg-surface-1 px-3 py-2 text-sm text-foreground ring-1 ring-border disabled:cursor-not-allowed disabled:opacity-50">
