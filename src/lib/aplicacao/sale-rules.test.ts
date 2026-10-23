@@ -1,6 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { leadUpdateSchema, parseSaleAmount } from "./sale-rules";
+import { contactOutcomeStatusPatch, leadUpdateSchema, parseSaleAmount } from "./sale-rules";
 const id = "a5c4a520-daa8-4a32-b639-783c5ca0bc67";
+describe("contact outcome", () => {
+  it("accepts each outcome on its own", () => {
+    for (const contactOutcome of ["contactei", "atendeu", "nao_atendeu"] as const)
+      expect(leadUpdateSchema.safeParse({ id, contactOutcome }).success).toBe(true);
+  });
+  it("rejects an outcome combined with a status or sale change", () => {
+    expect(leadUpdateSchema.safeParse({ id, contactOutcome: "atendeu", status: "em_contato" }).success).toBe(false);
+    expect(leadUpdateSchema.safeParse({ id, contactOutcome: "atendeu", saleAmountCents: 14990 }).success).toBe(false);
+  });
+  it("promotes only new leads to in contact", () => {
+    expect(contactOutcomeStatusPatch("novo", "contactei")).toBe("em_contato");
+    expect(contactOutcomeStatusPatch(null, "atendeu")).toBe("em_contato");
+    expect(contactOutcomeStatusPatch("call_marcada", "nao_atendeu")).toBeUndefined();
+    expect(contactOutcomeStatusPatch("novo", undefined)).toBeUndefined();
+  });
+});
 describe("sale closure", () => {
   it("requires a value when marking a lead closed", () => {
     expect(leadUpdateSchema.safeParse({ id, status: "fechou" }).success).toBe(false);

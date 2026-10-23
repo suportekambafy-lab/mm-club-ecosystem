@@ -3,11 +3,14 @@ import { z } from "zod";
 export const leadUpdateSchema = z.object({
   id: z.string().uuid(),
   status: z.enum(["novo", "incompleto", "em_contato", "call_marcada", "fechou", "perdido"]).optional(),
+  contactOutcome: z.enum(["contactei", "atendeu", "nao_atendeu"]).optional(),
   assumir: z.boolean().optional(),
   saleAmountCents: z.number().int().positive().max(Number.MAX_SAFE_INTEGER).optional(),
   callScheduledAt: z.string().datetime().optional(),
   closerId: z.string().uuid().optional(),
 }).superRefine((value, ctx) => {
+  if (value.contactOutcome !== undefined && (value.status !== undefined || value.assumir !== undefined || value.saleAmountCents !== undefined || value.callScheduledAt !== undefined || value.closerId !== undefined))
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contactOutcome"], message: "O resultado do contacto é registado sozinho." });
   if (value.status === "call_marcada" && !value.callScheduledAt)
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["callScheduledAt"], message: "Indica a data e hora da call." });
   if (value.status === "call_marcada" && !value.closerId)
@@ -30,3 +33,11 @@ export function parseSaleAmount(value: string): number | null {
 }
 
 export const formatSaleAmount = (cents: number) => new Intl.NumberFormat("pt-PT", { style: "currency", currency: "EUR" }).format(cents / 100);
+
+export type ContactOutcome = "contactei" | "atendeu" | "nao_atendeu";
+
+/** Registar um contacto promove um lead ainda "novo" para "em_contato". */
+export function contactOutcomeStatusPatch(currentStatus: string | null | undefined, outcome: ContactOutcome | undefined): "em_contato" | undefined {
+  if (!outcome) return undefined;
+  return (currentStatus ?? "novo") === "novo" ? "em_contato" : undefined;
+}
