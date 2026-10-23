@@ -219,9 +219,16 @@ function MmpayAdminPage() {
 
   const canSubmit = title.trim().length > 0 && amountCents >= 100 && !uploading && (billingType === "one_time" || subscriptionValid);
 
-  const visibleLinks = (linksQuery.data ?? []).filter(
-    (l) => (l.billing.type === "subscription") === (tab === "subscription"),
-  );
+  // Normaliza para comparar produtos independentemente de acentos ou maiúsculas.
+  const normalizeTitle = (s: string) =>
+    s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const matchesProduct = (title: string) =>
+    productFilter === "all" ||
+    (productFilter === "adesao" && normalizeTitle(title).includes("adesao")) ||
+    (productFilter === "mentoria" && normalizeTitle(title).includes("mentoria"));
+  const visibleLinks = (linksQuery.data ?? [])
+    .filter((l) => (l.billing.type === "subscription") === (tab === "subscription"))
+    .filter((l) => tab === "one_time" ? matchesProduct(l.title) : true);
 
   return (
     <div className="commercial-enter space-y-9">
