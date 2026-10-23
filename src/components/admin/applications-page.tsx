@@ -4,6 +4,7 @@ import { useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Download, Loader2, MessageCircle, Phone, X } from "lucide-react";
 import { toast } from "sonner";
+import { addLeadNote, listLeadNotes } from "@/lib/aplicacao/aplicacao.functions";
 import { cn } from "@/lib/utils";
 import { listLeads, updateLead, saveSettings } from "@/lib/aplicacao/aplicacao.functions";
 import { Button } from "@/components/ui/button";
@@ -219,6 +220,32 @@ function QuickOutcome({ lead, me, onDone }: { lead: Lead; me: string; onDone: ()
   </div>;
 }
 
+function LeadNotes({ leadId }: { leadId: string }) {
+  const listFn = useServerFn(listLeadNotes);
+  const addFn = useServerFn(addLeadNote);
+  const qc = useQueryClient();
+  const [text, setText] = useState("");
+  const [saving, setSaving] = useState(false);
+  const { data: notes = [], isLoading } = useQuery({ queryKey: ["lead-notes", leadId], queryFn: () => listFn({ data: { leadId } }) });
+  async function save() {
+    if (!text.trim() || saving) return;
+    setSaving(true);
+    try { await addFn({ data: { leadId, body: text } }); setText(""); toast.success("Nota guardada."); void qc.invalidateQueries({ queryKey: ["lead-notes", leadId] }); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Não foi possível guardar a nota."); }
+    finally { setSaving(false); }
+  }
+  return <div className="mt-4 rounded-lg p-3 ring-1 ring-border">
+    <p className="text-xs font-medium text-muted-foreground">Notas</p>
+    <textarea value={text} onChange={(e) => setText(e.target.value)} maxLength={2000} rows={2} placeholder="Escreve uma nota sobre este lead…" className="mt-2 block w-full rounded-lg bg-surface-1 px-3 py-2 text-sm text-foreground ring-1 ring-border" />
+    <div className="mt-2 flex justify-end"><Button size="sm" disabled={!text.trim() || saving} onClick={save}>{saving ? "A guardar…" : "Guardar nota"}</Button></div>
+    <ul className="mt-2 max-h-56 space-y-2 overflow-y-auto">
+      {isLoading && <li className="h-10 animate-pulse rounded bg-surface-1" />}
+      {notes.map((n) => <li key={n.id} className="rounded-lg bg-surface-1 p-2 text-sm"><p className="whitespace-pre-wrap">{n.body}</p><p className="mt-1 text-xs text-muted-foreground">{n.author} · {new Date(n.created_at).toLocaleString("pt-PT")}</p></li>)}
+      {!isLoading && notes.length === 0 && <li className="text-xs text-muted-foreground">Ainda sem notas.</li>}
+    </ul>
+  </div>;
+}
+
 function Attribution({ lead, names }: { lead: Lead; names: Record<string, string> }) {
   const attribution = leadAttribution(lead, names);
   if (!attribution) return null;
@@ -286,6 +313,7 @@ function Detail({ lead, actorNames, me, canSchedule, closers, agenda, onClose, o
           ))}
         </div>
         {lead.contact_outcome && <p className="mt-2 text-xs text-muted-foreground">Último contacto: {OUTCOME[lead.contact_outcome] ?? lead.contact_outcome} · {lead.last_contact_at ? new Date(lead.last_contact_at).toLocaleString("pt-PT") : "—"}</p>}
+        <LeadNotes leadId={lead.id} />
         {lead.responsavel && <p className="mt-3 text-xs text-muted-foreground">Responsável: {lead.responsavel}{locked && " · bloqueado para ti"}</p>}
         <label className="mt-4 block text-xs text-muted-foreground">Estado
           <select key={`${lead.status}-${closing}-${scheduling}-${busy}`} aria-label="Estado" disabled={busy || locked} value={lead.status} onChange={(e) => { const status = e.target.value as Parameters<typeof run>[0]["status"]; if (status === "call_marcada") { setCallTime(""); setCloserId(""); setScheduling(true); } else if (status === "fechou") { setAmount(lead.sale_amount_cents != null ? String(lead.sale_amount_cents / 100) : ""); setClosing(true); } else void run({status}); }} className="mt-1 block w-full rounded-lg bg-surface-1 px-3 py-2 text-sm text-foreground ring-1 ring-border disabled:cursor-not-allowed disabled:opacity-50">
