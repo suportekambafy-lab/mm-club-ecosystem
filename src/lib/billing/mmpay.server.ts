@@ -213,7 +213,7 @@ export async function updateMmpayLink(input: {
     title: productInput.name,
     description: productInput.description,
     custom_description: productInput.description,
-    custom_amount_cents: input.amountCents,
+    custom_amount_cents: chargeCents,
     cover_url: input.coverUrl,
     stripe_product_id: stripe.productId,
     stripe_price_id: stripe.priceId,

@@ -9,6 +9,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   afterFailedCharge,
   afterPaidCharge,
+  splitInstallments,
   type BillingInterval,
 } from "@/lib/mmpay/subscription-rules";
 import type { MmpayLinkRow } from "./mmpay.server";
@@ -39,6 +40,7 @@ export async function activateSubscriptionFromFirstPayment(input: {
       billing_interval: interval,
       billing_interval_count: count,
       total_cycles: link.total_cycles,
+      total_amount_cents: link.total_amount_cents,
       charges_count: 1,
       status: next.status,
       started_at: now.toISOString(),
@@ -73,6 +75,7 @@ type SubRow = {
   billing_interval: string;
   billing_interval_count: number;
   total_cycles: number | null;
+  total_amount_cents: number | null;
   charges_count: number;
   status: string;
   failed_attempts: number;
@@ -99,10 +102,17 @@ async function chargeOne(sub: SubRow): Promise<"paid" | "failed" | "skipped"> {
     return "failed";
   }
 
+  // Valor deste ciclo: com total + prestações, cada ciclo cobra a sua fatia exata
+  // (os cêntimos que sobram da divisão ficam nas primeiras prestações).
+  const cycleCents =
+    sub.total_amount_cents && sub.total_cycles
+      ? splitInstallments(sub.total_amount_cents, sub.total_cycles)[cycle - 1] ?? sub.amount_cents
+      : sub.amount_cents;
+
   // Reserva o ciclo antes de falar com a Viva. Se já há cobrança paga/em curso, não repete.
   const { data: charge, error: claimErr } = await supabaseAdmin
     .from("mmpay_subscription_charges")
-    .insert({ subscription_id: sub.id, cycle_number: cycle, attempt, amount_cents: sub.amount_cents, status: "processing" })
+    .insert({ subscription_id: sub.id, cycle_number: cycle, attempt, amount_cents: cycleCents, status: "processing" })
     .select("id")
     .single();
   if (claimErr) {
@@ -113,7 +123,7 @@ async function chargeOne(sub: SubRow): Promise<"paid" | "failed" | "skipped"> {
   const { chargeVivaRecurring } = await import("./viva.server");
   const res = await chargeVivaRecurring({
     initialTransactionId: sub.viva_initial_transaction_id,
-    amountCents: sub.amount_cents,
+    amountCents: cycleCents,
     description: `${sub.product_title} — cobrança ${cycle}`,
   });
   const now = new Date();
