@@ -103,14 +103,18 @@ export const updateLead = createServerFn({ method: "POST" })
       closerProfileName = cp?.display_name ?? "Closer";
     }
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    if (data.status) patch.status = data.status;
+    if (effectiveStatus) patch.status = effectiveStatus;
+    if (data.contactOutcome) {
+      patch.contact_outcome = data.contactOutcome;
+      patch.last_contact_at = new Date().toISOString();
+    }
     if (data.status === "call_marcada") {
       if (!data.callScheduledAt || Date.parse(data.callScheduledAt) <= Date.now()) throw new Error("Escolhe uma data e hora futuras.");
       patch.call_scheduled_at = data.callScheduledAt;
       patch.call_scheduled_by = context.userId;
       patch.responsavel_id = data.closerId;
       patch.responsavel = closerProfileName;
-    } else if (data.status) patch.call_scheduled_at = null;
+    } else if (effectiveStatus) patch.call_scheduled_at = null;
     if (data.status === "fechou") {
       patch.sale_amount_cents = data.saleAmountCents;
       patch.sale_closed_by = lead.status === "fechou" && lead.sale_closed_by ? lead.sale_closed_by : context.userId;
