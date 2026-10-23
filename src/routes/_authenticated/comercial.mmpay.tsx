@@ -381,6 +381,36 @@ function MmpayAdminPage() {
               );
             })}
           </div>
+          {tab === "one_time" ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Produto</span>
+              {([["all", "Todos"], ["adesao", "Adesão ao MM Club"], ["mentoria", "Mentoria individual"]] as const).map(([v, l]) => {
+                const count = (linksQuery.data ?? [])
+                  .filter((x) => x.billing.type !== "subscription")
+                  .filter((x) =>
+                    v === "all" ||
+                    (v === "adesao" && normalizeTitle(x.title).includes("adesao")) ||
+                    (v === "mentoria" && normalizeTitle(x.title).includes("mentoria")),
+                  ).length;
+                return (
+                  <button
+                    key={v}
+                    type="button"
+                    aria-pressed={productFilter === v}
+                    onClick={() => setProductFilter(v)}
+                    className={cn(
+                      "rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition-colors",
+                      productFilter === v
+                        ? "bg-primary/10 text-primary ring-primary/40"
+                        : "text-muted-foreground ring-border hover:text-foreground",
+                    )}
+                  >
+                    {l} · {count}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
         </div>
 
         {linksQuery.isLoading ? (
