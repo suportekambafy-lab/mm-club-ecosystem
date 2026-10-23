@@ -261,7 +261,7 @@ export async function settleVivaOrder(orderCode: string): Promise<{ paid: boolea
   const { getVivaOrderStatus } = await import("./viva.server");
   const status = await getVivaOrderStatus(orderCode);
   if (!status.paid) return { paid: false };
-  const update: Record<string, unknown> = {
+  const update: { status: string; payment_method: string | null; paid_at: string; amount_cents?: number } = {
     status: "paid",
     payment_method: status.method,
     paid_at: new Date().toISOString(),

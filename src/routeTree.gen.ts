@@ -69,6 +69,7 @@ import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ConvidadoLiveIdRouteImport } from './routes/convidado.$liveId'
 import { Route as EgressCompositeRouteImport } from './routes/egress.composite'
 import { Route as PagarCodeRouteImport } from './routes/pagar.$code'
+import { Route as PagarRetornoRouteImport } from './routes/pagar.retorno'
 import { Route as UpsellTrial14RouteImport } from './routes/upsell.trial14'
 import { Route as AppAcademiaIndexRouteImport } from './routes/_app.academia.index'
 import { Route as AppAcademiaCourseIdRouteImport } from './routes/_app.academia.$courseId'
@@ -145,6 +146,7 @@ import { Route as ApiPublicHooksWeeklySummaryRouteImport } from './routes/api/pu
 import { Route as ApiPublicHooksWinbackIntelligenceRouteImport } from './routes/api/public/hooks/winback-intelligence'
 import { Route as ApiPublicPartnersClickRouteImport } from './routes/api/public/partners/click'
 import { Route as ApiPublicPaymentsGatewayWebhookRouteImport } from './routes/api/public/payments/gateway-webhook'
+import { Route as ApiPublicPaymentsVivaWebhookRouteImport } from './routes/api/public/payments/viva-webhook'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -449,6 +451,11 @@ const EgressCompositeRoute = EgressCompositeRouteImport.update({
 const PagarCodeRoute = PagarCodeRouteImport.update({
   id: '/pagar/$code',
   path: '/pagar/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagarRetornoRoute = PagarRetornoRouteImport.update({
+  id: '/pagar/retorno',
+  path: '/pagar/retorno',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UpsellTrial14Route = UpsellTrial14RouteImport.update({
@@ -881,6 +888,12 @@ const ApiPublicPaymentsGatewayWebhookRoute =
     path: '/api/public/payments/gateway-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPaymentsVivaWebhookRoute =
+  ApiPublicPaymentsVivaWebhookRouteImport.update({
+    id: '/api/public/payments/viva-webhook',
+    path: '/api/public/payments/viva-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -979,6 +992,7 @@ export interface FileRoutesByFullPath {
   '/convidado/$liveId': typeof ConvidadoLiveIdRoute
   '/egress/composite': typeof EgressCompositeRoute
   '/pagar/$code': typeof PagarCodeRoute
+  '/pagar/retorno': typeof PagarRetornoRoute
   '/upsell/trial14': typeof UpsellTrial14Route
   '/admin/': typeof AdminIndexRoute
   '/checkout/': typeof CheckoutIndexRoute
@@ -1054,6 +1068,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/winback-intelligence': typeof ApiPublicHooksWinbackIntelligenceRoute
   '/api/public/partners/click': typeof ApiPublicPartnersClickRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
+  '/api/public/payments/viva-webhook': typeof ApiPublicPaymentsVivaWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -1115,6 +1130,7 @@ export interface FileRoutesByTo {
   '/convidado/$liveId': typeof ConvidadoLiveIdRoute
   '/egress/composite': typeof EgressCompositeRoute
   '/pagar/$code': typeof PagarCodeRoute
+  '/pagar/retorno': typeof PagarRetornoRoute
   '/upsell/trial14': typeof UpsellTrial14Route
   '/admin': typeof AdminIndexRoute
   '/checkout': typeof CheckoutIndexRoute
@@ -1188,6 +1204,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/winback-intelligence': typeof ApiPublicHooksWinbackIntelligenceRoute
   '/api/public/partners/click': typeof ApiPublicPartnersClickRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
+  '/api/public/payments/viva-webhook': typeof ApiPublicPaymentsVivaWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -1259,6 +1276,7 @@ export interface FileRoutesById {
   '/convidado/$liveId': typeof ConvidadoLiveIdRoute
   '/egress/composite': typeof EgressCompositeRoute
   '/pagar/$code': typeof PagarCodeRoute
+  '/pagar/retorno': typeof PagarRetornoRoute
   '/upsell/trial14': typeof UpsellTrial14Route
   '/admin/': typeof AdminIndexRoute
   '/checkout/': typeof CheckoutIndexRoute
@@ -1334,6 +1352,7 @@ export interface FileRoutesById {
   '/api/public/hooks/winback-intelligence': typeof ApiPublicHooksWinbackIntelligenceRoute
   '/api/public/partners/click': typeof ApiPublicPartnersClickRoute
   '/api/public/payments/gateway-webhook': typeof ApiPublicPaymentsGatewayWebhookRoute
+  '/api/public/payments/viva-webhook': typeof ApiPublicPaymentsVivaWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -1404,6 +1423,7 @@ export interface FileRouteTypes {
     | '/convidado/$liveId'
     | '/egress/composite'
     | '/pagar/$code'
+    | '/pagar/retorno'
     | '/upsell/trial14'
     | '/admin/'
     | '/checkout/'
@@ -1479,6 +1499,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/winback-intelligence'
     | '/api/public/partners/click'
     | '/api/public/payments/gateway-webhook'
+    | '/api/public/payments/viva-webhook'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1540,6 +1561,7 @@ export interface FileRouteTypes {
     | '/convidado/$liveId'
     | '/egress/composite'
     | '/pagar/$code'
+    | '/pagar/retorno'
     | '/upsell/trial14'
     | '/admin'
     | '/checkout'
@@ -1613,6 +1635,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/winback-intelligence'
     | '/api/public/partners/click'
     | '/api/public/payments/gateway-webhook'
+    | '/api/public/payments/viva-webhook'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1683,6 +1706,7 @@ export interface FileRouteTypes {
     | '/convidado/$liveId'
     | '/egress/composite'
     | '/pagar/$code'
+    | '/pagar/retorno'
     | '/upsell/trial14'
     | '/admin/'
     | '/checkout/'
@@ -1758,6 +1782,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/winback-intelligence'
     | '/api/public/partners/click'
     | '/api/public/payments/gateway-webhook'
+    | '/api/public/payments/viva-webhook'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1794,6 +1819,7 @@ export interface RootRouteChildren {
   ConvidadoLiveIdRoute: typeof ConvidadoLiveIdRoute
   EgressCompositeRoute: typeof EgressCompositeRoute
   PagarCodeRoute: typeof PagarCodeRoute
+  PagarRetornoRoute: typeof PagarRetornoRoute
   UpsellTrial14Route: typeof UpsellTrial14Route
   CheckoutIndexRoute: typeof CheckoutIndexRoute
   ApiKnowledgeSearchRoute: typeof ApiKnowledgeSearchRoute
@@ -1826,6 +1852,7 @@ export interface RootRouteChildren {
   ApiPublicHooksWinbackIntelligenceRoute: typeof ApiPublicHooksWinbackIntelligenceRoute
   ApiPublicPartnersClickRoute: typeof ApiPublicPartnersClickRoute
   ApiPublicPaymentsGatewayWebhookRoute: typeof ApiPublicPaymentsGatewayWebhookRoute
+  ApiPublicPaymentsVivaWebhookRoute: typeof ApiPublicPaymentsVivaWebhookRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -2254,6 +2281,13 @@ declare module '@tanstack/react-router' {
       path: '/pagar/$code'
       fullPath: '/pagar/$code'
       preLoaderRoute: typeof PagarCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pagar/retorno': {
+      id: '/pagar/retorno'
+      path: '/pagar/retorno'
+      fullPath: '/pagar/retorno'
+      preLoaderRoute: typeof PagarRetornoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/upsell/trial14': {
@@ -2788,6 +2822,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsGatewayWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/viva-webhook': {
+      id: '/api/public/payments/viva-webhook'
+      path: '/api/public/payments/viva-webhook'
+      fullPath: '/api/public/payments/viva-webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsVivaWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -3145,6 +3186,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConvidadoLiveIdRoute: ConvidadoLiveIdRoute,
   EgressCompositeRoute: EgressCompositeRoute,
   PagarCodeRoute: PagarCodeRoute,
+  PagarRetornoRoute: PagarRetornoRoute,
   UpsellTrial14Route: UpsellTrial14Route,
   CheckoutIndexRoute: CheckoutIndexRoute,
   ApiKnowledgeSearchRoute: ApiKnowledgeSearchRoute,
@@ -3180,6 +3222,7 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPublicHooksWinbackIntelligenceRoute,
   ApiPublicPartnersClickRoute: ApiPublicPartnersClickRoute,
   ApiPublicPaymentsGatewayWebhookRoute: ApiPublicPaymentsGatewayWebhookRoute,
+  ApiPublicPaymentsVivaWebhookRoute: ApiPublicPaymentsVivaWebhookRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
