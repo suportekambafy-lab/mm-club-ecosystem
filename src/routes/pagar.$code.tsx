@@ -12,6 +12,7 @@ import {
   startMmpayCheckout,
 } from "@/lib/mmpay.functions";
 import { formatMoney } from "@/lib/billing/types";
+import { trackMeta } from "@/lib/meta/pixel";
 import { MMLogo } from "@/components/mm/logo";
 import { CardBrandsLogo, KlarnaLogo, MbWayLogo } from "@/components/mmpay/payment-logos";
 
@@ -81,11 +82,24 @@ function MmpayPage() {
   });
 
   const link = data?.found ? data.link : null;
+  const metaData = link ? { value: link.amountCents / 100, currency: (link.currency || "eur").toUpperCase(), content_name: link.title, content_ids: [code], content_type: "product" } : null;
+  const isPaid = klarnaPaid || Boolean(session_id && confirmQuery.data?.paid);
+  useEffect(() => { if (metaData && !session_id) void trackMeta("ViewContent", metaData); }, [link?.title]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!isPaid || !metaData) return;
+    const key = `mm.purchase.${session_id ?? code + "-klarna"}`;
+    try { if (localStorage.getItem(key)) return; localStorage.setItem(key, "1"); } catch { /* noop */ }
+    void trackMeta("Purchase", metaData, { email: email || null, phone: phone || null });
+  }, [isPaid, link?.title]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPending(true);
     setError(null);
+    if (metaData) {
+      const [fn, ...rest] = name.trim().split(/\s+/);
+      void trackMeta("InitiateCheckout", metaData, { email: email.trim(), phone: phone.trim(), firstName: fn || null, lastName: rest.pop() ?? null });
+    }
     try {
       if (method === "klarna") {
         const res = await startKlarnaMmpayPayment({

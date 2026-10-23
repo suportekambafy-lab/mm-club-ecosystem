@@ -4,7 +4,7 @@
 export const APLICACAO_LINKS = {
   instagram: "https://instagram.com/SEU_INSTAGRAM",
   youtubeVideoId: "VIDEO_ID",
-  metaPixelId: "PIXEL_ID",
+  metaPixelId: "993683323010678",
 };
 
 export const OPCOES = {
