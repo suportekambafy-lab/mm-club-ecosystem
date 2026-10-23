@@ -36,6 +36,18 @@ export function addBillingInterval(from: Date, interval: BillingInterval, count:
   return d;
 }
 
+/**
+ * Divide um valor total em `n` prestações inteiras (cêntimos). Os cêntimos que
+ * sobram da divisão ficam nas primeiras prestações: 10 000 em 3 → [3334, 3333, 3333].
+ * A soma das prestações é sempre exatamente o total.
+ */
+export function splitInstallments(totalCents: number, installments: number): number[] {
+  const n = Math.max(1, Math.floor(installments));
+  const base = Math.floor(totalCents / n);
+  const extra = totalCents - base * n;
+  return Array.from({ length: n }, (_, i) => base + (i < extra ? 1 : 0));
+}
+
 /** Depois de `chargesDone` cobranças pagas, a assinatura terminou? */
 export function isSubscriptionComplete(chargesDone: number, totalCycles: number | null): boolean {
   return totalCycles != null && chargesDone >= totalCycles;
