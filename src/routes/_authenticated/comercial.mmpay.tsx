@@ -220,6 +220,10 @@ function MmpayAdminPage() {
 
   const canSubmit = title.trim().length > 0 && amountCents >= 100 && !uploading && (billingType === "one_time" || subscriptionValid);
 
+  const visibleLinks = (linksQuery.data ?? []).filter(
+    (l) => (l.billing.type === "subscription") === (tab === "subscription"),
+  );
+
   return (
     <div className="commercial-enter space-y-9">
       <section className="border-b border-border pb-8">
@@ -395,7 +399,19 @@ function MmpayAdminPage() {
                   <img src={link.coverUrl} alt="" className="h-14 w-24 rounded-lg object-cover ring-1 ring-border" />
                 ) : null}
                 <div className="min-w-0 flex-1">
-                  <p className="break-words font-medium">{link.title}</p>
+                  <p className="flex flex-wrap items-center gap-2 break-words font-medium">
+                    {link.title}
+                    <span
+                      className={cn(
+                        "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ring-1",
+                        link.billing.type === "subscription"
+                          ? "bg-primary/10 text-primary ring-primary/30"
+                          : "bg-muted text-muted-foreground ring-border",
+                      )}
+                    >
+                      {link.billing.type === "subscription" ? "Assinatura" : "Avulso"}
+                    </span>
+                  </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {link.billing.type === "subscription" && link.billing.totalCycles && link.billing.totalCents
                       ? `${formatMoney(link.billing.totalCents, link.currency)} · ${link.billing.totalCycles}x de ${formatMoney(splitInstallments(link.billing.totalCents, link.billing.totalCycles)[0], link.currency)} ${intervalLabel(link.billing.interval, link.billing.intervalCount)}`
