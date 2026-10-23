@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Copy, CopyPlus, ImagePlus, Link2, Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { MmpaySubscriptions } from "@/components/mmpay/subscriptions-panel";
+import { intervalLabel, type BillingInterval } from "@/lib/mmpay/subscription-rules";
 import { createMmpayLink, deleteMmpayLink, listMmpayLinks, setMmpayLinkActive, updateMmpayLink, uploadMmpayCover } from "@/lib/mmpay.functions";
 import { COVER_MIME_TYPES, MAX_COVER_BYTES, MAX_DESCRIPTION_LENGTH } from "@/lib/mmpay/rules";
 import { formatMoney } from "@/lib/billing/types";
@@ -47,6 +49,11 @@ function MmpayAdminPage() {
   const [uploading, setUploading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [billingType, setBillingType] = useState<"one_time" | "subscription">("one_time");
+  const [interval, setInterval] = useState<BillingInterval | "">("");
+  const [intervalCount, setIntervalCount] = useState("");
+  const [durationKind, setDurationKind] = useState<"" | "indefinite" | "fixed">("");
+  const [cycles, setCycles] = useState("");
 
   const resetForm = () => {
     setEditingId(null);
@@ -54,10 +61,24 @@ function MmpayAdminPage() {
     setAmountEur("");
     setDescription("");
     setCoverUrl(null);
+    setBillingType("one_time");
+    setInterval("");
+    setIntervalCount("");
+    setDurationKind("");
+    setCycles("");
   };
 
   const linksQuery = useQuery({ queryKey: ["mmpay-links"], queryFn: () => listMmpayLinks() });
   const amountCents = Math.round(Number(amountEur.replace(",", ".")) * 100);
+  const countNum = Number(intervalCount);
+  const cyclesNum = Number(cycles);
+  const subscriptionValid =
+    interval !== "" && Number.isInteger(countNum) && countNum >= 1 && countNum <= 24 &&
+    (durationKind === "indefinite" || (durationKind === "fixed" && Number.isInteger(cyclesNum) && cyclesNum >= 1 && cyclesNum <= 600));
+  const billing =
+    billingType === "subscription" && subscriptionValid
+      ? { type: "subscription" as const, interval: interval as BillingInterval, intervalCount: countNum, totalCycles: durationKind === "fixed" ? cyclesNum : null }
+      : { type: "one_time" as const };
 
   const onCover = async (file: File | undefined) => {
     if (!file) return;
@@ -79,14 +100,14 @@ function MmpayAdminPage() {
   const createMutation = useMutation({
     mutationFn: () =>
       createMmpayLink({
-        data: { title: title.trim(), description: description.trim() || null, amountCents, coverUrl },
+        data: { title: title.trim(), description: description.trim() || null, amountCents, coverUrl, billing },
       }),
     onSuccess: (link) => {
       toast.success(`Link criado: /pagar/${link.code}`);
       setTitle("");
       setAmountEur("");
       setDescription("");
-      setCoverUrl(null);
+      resetForm();
       void qc.invalidateQueries({ queryKey: ["mmpay-links"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -101,7 +122,7 @@ function MmpayAdminPage() {
   const updateMutation = useMutation({
     mutationFn: () => {
       if (!editingId) throw new Error("Seleciona um produto para editar.");
-      return updateMmpayLink({ data: { id: editingId, title: title.trim(), description: description.trim() || null, amountCents, coverUrl } });
+      return updateMmpayLink({ data: { id: editingId, title: title.trim(), description: description.trim() || null, amountCents, coverUrl, billing } });
     },
     onSuccess: () => {
       toast.success("Produto atualizado.");
@@ -133,8 +154,25 @@ function MmpayAdminPage() {
     }
   };
 
-  const edit = (link: { id: string; title: string; description: string | null; coverUrl: string | null; amountCents: number }) => {
+  const loadBilling = (b: { type: string; interval?: BillingInterval; intervalCount?: number; totalCycles?: number | null }) => {
+    if (b.type === "subscription" && b.interval) {
+      setBillingType("subscription");
+      setInterval(b.interval);
+      setIntervalCount(String(b.intervalCount ?? ""));
+      setDurationKind(b.totalCycles ? "fixed" : "indefinite");
+      setCycles(b.totalCycles ? String(b.totalCycles) : "");
+    } else {
+      setBillingType("one_time");
+      setInterval("");
+      setIntervalCount("");
+      setDurationKind("");
+      setCycles("");
+    }
+  };
+
+  const edit = (link: { id: string; title: string; description: string | null; coverUrl: string | null; amountCents: number; billing: { type: string } }) => {
     setEditingId(link.id);
+    loadBilling(link.billing as never);
     setTitle(link.title);
     setDescription(link.description ?? "");
     setCoverUrl(link.coverUrl);
@@ -143,8 +181,9 @@ function MmpayAdminPage() {
     document.getElementById("mmpay-title")?.focus({ preventScroll: true });
   };
 
-  const duplicate = (link: { title: string; description: string | null; coverUrl: string | null; amountCents: number }) => {
+  const duplicate = (link: { title: string; description: string | null; coverUrl: string | null; amountCents: number; billing: { type: string } }) => {
     setEditingId(null);
+    loadBilling(link.billing as never);
     setTitle(`${link.title} (cópia)`);
     setDescription(link.description ?? "");
     setCoverUrl(link.coverUrl);
@@ -154,7 +193,7 @@ function MmpayAdminPage() {
     toast.info("Link duplicado no formulário — muda o preço e cria.");
   };
 
-  const canSubmit = title.trim().length > 0 && amountCents >= 100 && !uploading;
+  const canSubmit = title.trim().length > 0 && amountCents >= 100 && !uploading && (billingType === "one_time" || subscriptionValid);
 
   return (
     <div className="commercial-enter space-y-9">
@@ -204,16 +243,58 @@ function MmpayAdminPage() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-[1fr_180px]">
+            <div className="md:col-span-2">
+              <span className={labelCls}>Tipo de pagamento</span>
+              <div className="mt-2 grid grid-cols-2 gap-2" role="radiogroup" aria-label="Tipo de pagamento">
+                {([["one_time", "Pagamento único"], ["subscription", "Assinatura"]] as const).map(([v, l]) => (
+                  <button key={v} type="button" role="radio" aria-checked={billingType === v} onClick={() => setBillingType(v)}
+                    className={cn("rounded-xl border px-4 py-3 text-sm font-medium", billingType === v ? "border-primary bg-primary/10 text-foreground" : "border-border bg-background text-muted-foreground")}>
+                    {l}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div>
               <label className={labelCls} htmlFor="mmpay-title">Título</label>
               <input id="mmpay-title" type="text" value={title} onChange={(e) => setTitle(e.target.value)}
                 placeholder="Ex.: Mentoria individual E-commerce" maxLength={120} className={inputCls} />
             </div>
             <div>
-              <label className={labelCls} htmlFor="mmpay-price">Preço (EUR)</label>
+              <label className={labelCls} htmlFor="mmpay-price">{billingType === "subscription" ? "Valor por cobrança (EUR)" : "Preço (EUR)"}</label>
               <input id="mmpay-price" type="text" inputMode="decimal" value={amountEur}
                 onChange={(e) => setAmountEur(e.target.value)} placeholder="Ex.: 497" className={inputCls} />
             </div>
+            {billingType === "subscription" ? (
+              <div className="grid gap-4 md:col-span-2 md:grid-cols-3">
+                <div>
+                  <label className={labelCls} htmlFor="mmpay-every">Cobrar a cada</label>
+                  <input id="mmpay-every" type="number" min={1} max={24} value={intervalCount} onChange={(e) => setIntervalCount(e.target.value)} className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls} htmlFor="mmpay-interval">Periodicidade</label>
+                  <select id="mmpay-interval" value={interval} onChange={(e) => setInterval(e.target.value as BillingInterval)} className={inputCls}>
+                    <option value="" disabled>Escolher</option>
+                    <option value="week">Semana(s)</option>
+                    <option value="month">Mês(es)</option>
+                    <option value="year">Ano(s)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls} htmlFor="mmpay-duration">Duração</label>
+                  <select id="mmpay-duration" value={durationKind} onChange={(e) => setDurationKind(e.target.value as "indefinite" | "fixed")} className={inputCls}>
+                    <option value="" disabled>Escolher</option>
+                    <option value="indefinite">Tempo indeterminado</option>
+                    <option value="fixed">Número de cobranças</option>
+                  </select>
+                </div>
+                {durationKind === "fixed" ? (
+                  <div>
+                    <label className={labelCls} htmlFor="mmpay-cycles">Total de cobranças</label>
+                    <input id="mmpay-cycles" type="number" min={1} max={600} value={cycles} onChange={(e) => setCycles(e.target.value)} className={inputCls} />
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
             <div className="md:col-span-2">
               <label className={labelCls} htmlFor="mmpay-desc">Descrição</label>
               <textarea id="mmpay-desc" value={description} onChange={(e) => setDescription(e.target.value)}
@@ -260,7 +341,10 @@ function MmpayAdminPage() {
                 <div className="min-w-0 flex-1">
                   <p className="break-words font-medium">{link.title}</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {formatMoney(link.amountCents, link.currency)} · {link.paidCount}{" "}
+                    {formatMoney(link.amountCents, link.currency)}
+                    {link.billing.type === "subscription"
+                      ? ` ${intervalLabel(link.billing.interval, link.billing.intervalCount)} · ${link.billing.totalCycles ? `${link.billing.totalCycles} cobranças` : "sem fim"}`
+                      : ""}{" "}· {link.paidCount}{" "}
                     {link.paidCount === 1 ? "venda paga" : "vendas pagas"} ·{" "}
                     {new Date(link.createdAt).toLocaleDateString("pt-PT", { timeZone: "Europe/Lisbon" })}
                   </p>
@@ -322,6 +406,8 @@ function MmpayAdminPage() {
           </div>
         )}
       </section>
+
+      <MmpaySubscriptions />
     </div>
   );
 }
