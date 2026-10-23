@@ -179,24 +179,39 @@ function MmpayAdminPage() {
     }
   };
 
-  const edit = (link: { id: string; title: string; description: string | null; coverUrl: string | null; amountCents: number; billing: { type: string } }) => {
+  type LinkLike = {
+    id?: string;
+    title: string;
+    description: string | null;
+    coverUrl: string | null;
+    amountCents: number;
+    totalCents?: number;
+    billing: { type: string; totalCycles?: number | null; totalCents?: number | null };
+  };
+  /** Com prestações, o formulário edita o valor total; sem prestações, o valor por cobrança. */
+  const formAmount = (link: LinkLike) =>
+    link.billing.type === "subscription" && link.billing.totalCycles && link.billing.totalCents
+      ? link.billing.totalCents
+      : link.amountCents;
+
+  const edit = (link: LinkLike & { id: string }) => {
     setEditingId(link.id);
     loadBilling(link.billing as never);
     setTitle(link.title);
     setDescription(link.description ?? "");
     setCoverUrl(link.coverUrl);
-    setAmountEur(String(link.amountCents / 100).replace(".", ","));
+    setAmountEur(String(formAmount(link) / 100).replace(".", ","));
     window.scrollTo({ top: 0, behavior: "smooth" });
     document.getElementById("mmpay-title")?.focus({ preventScroll: true });
   };
 
-  const duplicate = (link: { title: string; description: string | null; coverUrl: string | null; amountCents: number; billing: { type: string } }) => {
+  const duplicate = (link: LinkLike) => {
     setEditingId(null);
     loadBilling(link.billing as never);
     setTitle(`${link.title} (cópia)`);
     setDescription(link.description ?? "");
     setCoverUrl(link.coverUrl);
-    setAmountEur(String(link.amountCents / 100).replace(".", ","));
+    setAmountEur(String(formAmount(link) / 100).replace(".", ","));
     window.scrollTo({ top: 0, behavior: "smooth" });
     setTimeout(() => document.getElementById("mmpay-price")?.focus(), 300);
     toast.info("Link duplicado no formulário — muda o preço e cria.");
@@ -360,10 +375,9 @@ function MmpayAdminPage() {
                 <div className="min-w-0 flex-1">
                   <p className="break-words font-medium">{link.title}</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {formatMoney(link.amountCents, link.currency)}
-                    {link.billing.type === "subscription"
-                      ? ` ${intervalLabel(link.billing.interval, link.billing.intervalCount)} · ${link.billing.totalCycles ? `${link.billing.totalCycles} cobranças` : "sem fim"}`
-                      : ""}{" "}· {link.paidCount}{" "}
+                    {link.billing.type === "subscription" && link.billing.totalCycles && link.billing.totalCents
+                      ? `${formatMoney(link.billing.totalCents, link.currency)} · ${link.billing.totalCycles}x de ${formatMoney(splitInstallments(link.billing.totalCents, link.billing.totalCycles)[0], link.currency)} ${intervalLabel(link.billing.interval, link.billing.intervalCount)}`
+                      : `${formatMoney(link.amountCents, link.currency)}${link.billing.type === "subscription" ? ` ${intervalLabel(link.billing.interval, link.billing.intervalCount)} · sem fim` : ""}`}{" "}· {link.paidCount}{" "}
                     {link.paidCount === 1 ? "venda paga" : "vendas pagas"} ·{" "}
                     {new Date(link.createdAt).toLocaleDateString("pt-PT", { timeZone: "Europe/Lisbon" })}
                   </p>
