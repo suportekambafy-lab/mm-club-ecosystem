@@ -91,7 +91,7 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
   }, [leads]);
 
   const filtered = leads.filter((l) =>
-    (!fCls || l.classificacao === fCls) && (!fStatus || l.status === fStatus) &&
+    (!fCls || l.classificacao === fCls) && (fStatus ? l.status === fStatus : l.status !== "incompleto") &&
     (!fFrom || dayKey(new Date(l.created_at)) >= fFrom) &&
     (!search || `${l.nome ?? ""} ${l.whatsapp ?? ""}`.toLowerCase().includes(search.toLowerCase())));
 
@@ -168,7 +168,7 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
       <div className="flex flex-wrap gap-2">
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Pesquisar nome ou telefone" className={cn(sel, "min-w-48 flex-1")} />
         <select value={fCls} onChange={(e) => setFCls(e.target.value)} className={sel}><option value="">Todas</option><option>A</option><option>B</option><option>C</option></select>
-        <select value={fStatus} onChange={(e) => setFStatus(e.target.value)} className={sel}><option value="">Todos os estados</option>{Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+        <select value={fStatus} onChange={(e) => setFStatus(e.target.value)} className={sel}><option value="">Completas (sem incompletas)</option>{Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}{k === "incompleto" ? ` · ${leads.filter(l => l.status === "incompleto").length}` : ""}</option>)}</select>
         <input type="date" value={fFrom} onChange={(e) => setFFrom(e.target.value)} className={sel} aria-label="Desde" />
         <button onClick={exportCsv} className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm ring-1 ring-border hover:ring-primary"><Download className="h-4 w-4" /> Exportar CSV</button>
       </div>
