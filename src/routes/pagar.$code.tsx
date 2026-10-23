@@ -11,6 +11,7 @@ import {
   startKlarnaMmpayPayment,
   startMmpayCheckout,
 } from "@/lib/mmpay.functions";
+import { intervalLabel } from "@/lib/mmpay/subscription-rules";
 import { formatMoney } from "@/lib/billing/types";
 import { trackMeta } from "@/lib/meta/pixel";
 import { MMLogo } from "@/components/mm/logo";
@@ -215,7 +216,11 @@ function MmpayPage() {
                 <span className="font-display text-3xl leading-none tracking-tight text-foreground sm:text-4xl">
                   {formatMoney(link.amountCents, link.currency)}
                 </span>
-                <span className="text-sm text-muted-foreground">pagamento único</span>
+                <span className="text-sm text-muted-foreground">
+                  {link.billing.type === "subscription"
+                    ? `${intervalLabel(link.billing.interval, link.billing.intervalCount)}${link.billing.totalCycles ? ` · ${link.billing.totalCycles} cobranças` : ""}`
+                    : "pagamento único"}
+                </span>
               </div>
 
               {session_id && confirmQuery.data && !confirmQuery.data.paid ? (
@@ -262,8 +267,8 @@ function MmpayPage() {
               <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Método de pagamento
               </p>
-              <div className="mx-auto mt-2 grid w-full max-w-[17rem] grid-cols-3 gap-2">
-                {METHOD_OPTIONS.map((opt, i) => {
+              <div className={`mx-auto mt-2 grid w-full max-w-[17rem] gap-2 ${link?.billing.type === "subscription" ? "grid-cols-2" : "grid-cols-3"}">
+                {METHOD_OPTIONS.filter((o) => !(o.id === "klarna" && link?.billing.type === "subscription")).map((opt, i) => {
                   const Logo = opt.Logo;
                   const selected = method === opt.id;
                   return (
