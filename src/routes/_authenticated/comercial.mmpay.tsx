@@ -55,6 +55,7 @@ function MmpayAdminPage() {
   const [durationKind, setDurationKind] = useState<"" | "indefinite" | "fixed">("");
   const [cycles, setCycles] = useState("");
   const [tab, setTab] = useState<"one_time" | "subscription">("one_time");
+  const [productFilter, setProductFilter] = useState<"all" | "adesao" | "mentoria">("all");
 
   const resetForm = () => {
     setEditingId(null);
@@ -218,9 +219,16 @@ function MmpayAdminPage() {
 
   const canSubmit = title.trim().length > 0 && amountCents >= 100 && !uploading && (billingType === "one_time" || subscriptionValid);
 
-  const visibleLinks = (linksQuery.data ?? []).filter(
-    (l) => (l.billing.type === "subscription") === (tab === "subscription"),
-  );
+  // Normaliza para comparar produtos independentemente de acentos ou maiúsculas.
+  const normalizeTitle = (s: string) =>
+    s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const matchesProduct = (title: string) =>
+    productFilter === "all" ||
+    (productFilter === "adesao" && normalizeTitle(title).includes("adesao")) ||
+    (productFilter === "mentoria" && normalizeTitle(title).includes("mentoria"));
+  const visibleLinks = (linksQuery.data ?? [])
+    .filter((l) => (l.billing.type === "subscription") === (tab === "subscription"))
+    .filter((l) => tab === "one_time" ? matchesProduct(l.title) : true);
 
   return (
     <div className="commercial-enter space-y-9">
@@ -373,6 +381,36 @@ function MmpayAdminPage() {
               );
             })}
           </div>
+          {tab === "one_time" ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Produto</span>
+              {([["all", "Todos"], ["adesao", "Adesão ao MM Club"], ["mentoria", "Mentoria individual"]] as const).map(([v, l]) => {
+                const count = (linksQuery.data ?? [])
+                  .filter((x) => x.billing.type !== "subscription")
+                  .filter((x) =>
+                    v === "all" ||
+                    (v === "adesao" && normalizeTitle(x.title).includes("adesao")) ||
+                    (v === "mentoria" && normalizeTitle(x.title).includes("mentoria")),
+                  ).length;
+                return (
+                  <button
+                    key={v}
+                    type="button"
+                    aria-pressed={productFilter === v}
+                    onClick={() => setProductFilter(v)}
+                    className={cn(
+                      "rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition-colors",
+                      productFilter === v
+                        ? "bg-primary/10 text-primary ring-primary/40"
+                        : "text-muted-foreground ring-border hover:text-foreground",
+                    )}
+                  >
+                    {l} · {count}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
         </div>
 
         {linksQuery.isLoading ? (
@@ -385,7 +423,11 @@ function MmpayAdminPage() {
           <div className="border-y border-border py-16 text-center">
             <Link2 className="mx-auto mb-4 h-8 w-8 text-muted-foreground" />
             <p className="font-medium">
-              {tab === "one_time" ? "Ainda não criaste nenhuma venda avulsa." : "Ainda não criaste nenhuma assinatura."}
+              {tab === "subscription"
+                ? "Ainda não criaste nenhuma assinatura."
+                : productFilter === "all" || !(linksQuery.data ?? []).some((x) => x.billing.type !== "subscription")
+                  ? "Ainda não criaste nenhuma venda avulsa."
+                  : "Nenhuma venda avulsa deste produto."}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">Cria o primeiro acima e partilha com um cliente.</p>
           </div>
