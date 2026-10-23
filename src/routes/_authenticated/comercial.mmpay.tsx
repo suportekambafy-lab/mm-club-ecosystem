@@ -114,9 +114,7 @@ function MmpayAdminPage() {
       }),
     onSuccess: (link) => {
       toast.success(`Link criado: /pagar/${link.code}`);
-      setTitle("");
-      setAmountEur("");
-      setDescription("");
+      setTab(link.billing.type === "subscription" ? "subscription" : "one_time");
       resetForm();
       void qc.invalidateQueries({ queryKey: ["mmpay-links"] });
     },
