@@ -99,6 +99,7 @@ async function toView(rows: MmpayLinkRow[], withStats = false): Promise<MmpayLin
       coverUrl: r.cover_url,
       paidCount: paid.get(r.id) ?? 0,
       billing: billingOf(r),
+      totalCents: r.total_amount_cents ?? amount,
     });
   }
   return out;
@@ -134,6 +135,8 @@ export async function createMmpayLink(input: {
 }): Promise<MmpayLinkView> {
   const validationError = validateMmpayLinkInput(input);
   if (validationError) throw new Error(validationError);
+  const chargeCents = perChargeCents(input.amountCents, input.billing);
+  if (chargeCents < 100) throw new Error("Cada prestação tem de ser de pelo menos 1,00 €.");
 
   let row: MmpayLinkRow | null = null;
   for (let attempt = 0; attempt < 5 && !row; attempt++) {
@@ -142,7 +145,7 @@ export async function createMmpayLink(input: {
       .insert({
         code: generateMmpayCode(),
         title: input.title.trim(),
-        custom_amount_cents: input.amountCents,
+        custom_amount_cents: chargeCents,
         description: input.description?.trim() || null,
         cover_url: input.coverUrl,
         created_by: input.createdBy,
