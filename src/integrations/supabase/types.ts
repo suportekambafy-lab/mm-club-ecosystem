@@ -3359,6 +3359,9 @@ export type Database = {
       mmpay_links: {
         Row: {
           active: boolean
+          billing_interval: string | null
+          billing_interval_count: number | null
+          billing_type: string
           code: string
           cover_url: string | null
           created_at: string
@@ -3371,9 +3374,13 @@ export type Database = {
           stripe_price_id: string | null
           stripe_product_id: string | null
           title: string
+          total_cycles: number | null
         }
         Insert: {
           active?: boolean
+          billing_interval?: string | null
+          billing_interval_count?: number | null
+          billing_type?: string
           code: string
           cover_url?: string | null
           created_at?: string
@@ -3386,9 +3393,13 @@ export type Database = {
           stripe_price_id?: string | null
           stripe_product_id?: string | null
           title: string
+          total_cycles?: number | null
         }
         Update: {
           active?: boolean
+          billing_interval?: string | null
+          billing_interval_count?: number | null
+          billing_type?: string
           code?: string
           cover_url?: string | null
           created_at?: string
@@ -3401,6 +3412,7 @@ export type Database = {
           stripe_price_id?: string | null
           stripe_product_id?: string | null
           title?: string
+          total_cycles?: number | null
         }
         Relationships: [
           {
@@ -3458,6 +3470,148 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "mmpay_payments_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "mmpay_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mmpay_subscription_charges: {
+        Row: {
+          amount_cents: number
+          attempt: number
+          created_at: string
+          cycle_number: number
+          error: string | null
+          finished_at: string | null
+          id: string
+          status: string
+          subscription_id: string
+          viva_order_code: string | null
+          viva_transaction_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          attempt?: number
+          created_at?: string
+          cycle_number: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          status: string
+          subscription_id: string
+          viva_order_code?: string | null
+          viva_transaction_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          attempt?: number
+          created_at?: string
+          cycle_number?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          status?: string
+          subscription_id?: string
+          viva_order_code?: string | null
+          viva_transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mmpay_subscription_charges_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "mmpay_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mmpay_subscriptions: {
+        Row: {
+          amount_cents: number
+          billing_interval: string
+          billing_interval_count: number
+          cancel_reason: string | null
+          cancelled_at: string | null
+          charges_count: number
+          completed_at: string | null
+          created_at: string
+          currency: string
+          customer_email: string
+          customer_name: string | null
+          customer_phone: string | null
+          failed_attempts: number
+          id: string
+          last_charge_at: string | null
+          link_id: string | null
+          locked_until: string | null
+          next_charge_at: string | null
+          product_title: string
+          started_at: string | null
+          status: string
+          total_cycles: number | null
+          updated_at: string
+          viva_initial_order_code: string
+          viva_initial_transaction_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          billing_interval: string
+          billing_interval_count: number
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          charges_count?: number
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          customer_email: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          failed_attempts?: number
+          id?: string
+          last_charge_at?: string | null
+          link_id?: string | null
+          locked_until?: string | null
+          next_charge_at?: string | null
+          product_title: string
+          started_at?: string | null
+          status?: string
+          total_cycles?: number | null
+          updated_at?: string
+          viva_initial_order_code: string
+          viva_initial_transaction_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          billing_interval?: string
+          billing_interval_count?: number
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          charges_count?: number
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          customer_email?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          failed_attempts?: number
+          id?: string
+          last_charge_at?: string | null
+          link_id?: string | null
+          locked_until?: string | null
+          next_charge_at?: string | null
+          product_title?: string
+          started_at?: string | null
+          status?: string
+          total_cycles?: number | null
+          updated_at?: string
+          viva_initial_order_code?: string
+          viva_initial_transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mmpay_subscriptions_link_id_fkey"
             columns: ["link_id"]
             isOneToOne: false
             referencedRelation: "mmpay_links"
@@ -5051,6 +5205,42 @@ export type Database = {
           _user_id: string
         }
         Returns: number
+      }
+      mmpay_claim_due_subscriptions: {
+        Args: { _limit: number }
+        Returns: {
+          amount_cents: number
+          billing_interval: string
+          billing_interval_count: number
+          cancel_reason: string | null
+          cancelled_at: string | null
+          charges_count: number
+          completed_at: string | null
+          created_at: string
+          currency: string
+          customer_email: string
+          customer_name: string | null
+          customer_phone: string | null
+          failed_attempts: number
+          id: string
+          last_charge_at: string | null
+          link_id: string | null
+          locked_until: string | null
+          next_charge_at: string | null
+          product_title: string
+          started_at: string | null
+          status: string
+          total_cycles: number | null
+          updated_at: string
+          viva_initial_order_code: string
+          viva_initial_transaction_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "mmpay_subscriptions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       my_community_sanction: {
         Args: never
