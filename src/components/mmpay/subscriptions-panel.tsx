@@ -67,7 +67,16 @@ export function MmpaySubscriptions() {
                 <tr key={s.id} onClick={() => setOpenId(s.id)} className="cursor-pointer border-t border-border hover:bg-muted/40">
                   <td className="px-4 py-3"><p className="font-medium">{s.customer_name ?? "—"}</p><p className="text-xs text-muted-foreground">{s.customer_email}</p></td>
                   <td className="px-4 py-3">{s.product_title}</td>
-                  <td className="px-4 py-3">{formatMoney(s.amount_cents, s.currency)}</td>
+                  <td className="px-4 py-3">
+                    {s.total_amount_cents && s.total_cycles ? (
+                      <>
+                        <p>{formatMoney(s.total_amount_cents, s.currency)}</p>
+                        <p className="text-xs text-muted-foreground">{s.total_cycles}x de {formatMoney(s.amount_cents, s.currency)}</p>
+                      </>
+                    ) : (
+                      formatMoney(s.amount_cents, s.currency)
+                    )}
+                  </td>
                   <td className="px-4 py-3">{intervalLabel(s.billing_interval as BillingInterval, s.billing_interval_count)}</td>
                   <td className="px-4 py-3">{date(s.next_charge_at)}</td>
                   <td className="px-4 py-3">{s.charges_count}{s.total_cycles ? ` / ${s.total_cycles}` : ""}</td>

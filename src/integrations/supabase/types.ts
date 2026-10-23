@@ -3374,6 +3374,7 @@ export type Database = {
           stripe_price_id: string | null
           stripe_product_id: string | null
           title: string
+          total_amount_cents: number | null
           total_cycles: number | null
         }
         Insert: {
@@ -3393,6 +3394,7 @@ export type Database = {
           stripe_price_id?: string | null
           stripe_product_id?: string | null
           title: string
+          total_amount_cents?: number | null
           total_cycles?: number | null
         }
         Update: {
@@ -3412,6 +3414,7 @@ export type Database = {
           stripe_price_id?: string | null
           stripe_product_id?: string | null
           title?: string
+          total_amount_cents?: number | null
           total_cycles?: number | null
         }
         Relationships: [
@@ -3550,6 +3553,7 @@ export type Database = {
           product_title: string
           started_at: string | null
           status: string
+          total_amount_cents: number | null
           total_cycles: number | null
           updated_at: string
           viva_initial_order_code: string
@@ -3577,6 +3581,7 @@ export type Database = {
           product_title: string
           started_at?: string | null
           status?: string
+          total_amount_cents?: number | null
           total_cycles?: number | null
           updated_at?: string
           viva_initial_order_code: string
@@ -3604,6 +3609,7 @@ export type Database = {
           product_title?: string
           started_at?: string | null
           status?: string
+          total_amount_cents?: number | null
           total_cycles?: number | null
           updated_at?: string
           viva_initial_order_code?: string
@@ -5230,6 +5236,7 @@ export type Database = {
           product_title: string
           started_at: string | null
           status: string
+          total_amount_cents: number | null
           total_cycles: number | null
           updated_at: string
           viva_initial_order_code: string

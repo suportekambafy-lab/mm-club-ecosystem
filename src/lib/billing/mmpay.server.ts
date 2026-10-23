@@ -6,7 +6,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { generateMmpayCode, validateMmpayLinkInput } from "@/lib/mmpay/rules";
 import { getPriceById } from "./catalog.server";
-import type { BillingInterval } from "@/lib/mmpay/subscription-rules";
+import { splitInstallments, type BillingInterval } from "@/lib/mmpay/subscription-rules";
 import { createStripeProduct, deleteStripeProduct, getStripeCheckout, updateStripeProduct } from "./stripe.server";
 
 export type MmpayLinkRow = {
@@ -27,22 +27,34 @@ export type MmpayLinkRow = {
   billing_interval: string | null;
   billing_interval_count: number | null;
   total_cycles: number | null;
+  total_amount_cents: number | null;
 };
 
 export type MmpayBilling =
   | { type: "one_time" }
-  | { type: "subscription"; interval: BillingInterval; intervalCount: number; totalCycles: number | null };
+  | { type: "subscription"; interval: BillingInterval; intervalCount: number; totalCycles: number | null; totalCents?: number | null };
 
 function billingOf(r: MmpayLinkRow): MmpayBilling {
   if (r.billing_type === "subscription" && r.billing_interval && r.billing_interval_count) {
-    return { type: "subscription", interval: r.billing_interval as BillingInterval, intervalCount: r.billing_interval_count, totalCycles: r.total_cycles };
+    return { type: "subscription", interval: r.billing_interval as BillingInterval, intervalCount: r.billing_interval_count, totalCycles: r.total_cycles, totalCents: r.total_amount_cents };
   }
   return { type: "one_time" };
 }
 
 function billingColumns(b: MmpayBilling | undefined) {
-  if (!b || b.type === "one_time") return { billing_type: "one_time", billing_interval: null, billing_interval_count: null, total_cycles: null };
-  return { billing_type: "subscription", billing_interval: b.interval, billing_interval_count: b.intervalCount, total_cycles: b.totalCycles };
+  if (!b || b.type === "one_time") return { billing_type: "one_time", billing_interval: null, billing_interval_count: null, total_cycles: null, total_amount_cents: null };
+  return { billing_type: "subscription", billing_interval: b.interval, billing_interval_count: b.intervalCount, total_cycles: b.totalCycles, total_amount_cents: b.totalCents ?? null };
+}
+
+/**
+ * Valor de cada cobrança. Com total + número de prestações, a 1.ª prestação
+ * (a que o cliente paga hoje) é a primeira fatia da divisão exata do total.
+ */
+export function perChargeCents(amountCents: number, billing?: MmpayBilling): number {
+  if (billing?.type === "subscription" && billing.totalCycles && billing.totalCents) {
+    return splitInstallments(billing.totalCents, billing.totalCycles)[0];
+  }
+  return amountCents;
 }
 
 export type MmpayLinkView = {
@@ -57,6 +69,8 @@ export type MmpayLinkView = {
   coverUrl: string | null;
   paidCount: number;
   billing: MmpayBilling;
+  /** Valor total da venda (assinaturas com prestações); igual a amountCents nas vendas únicas. */
+  totalCents: number;
 };
 
 async function toView(rows: MmpayLinkRow[], withStats = false): Promise<MmpayLinkView[]> {
@@ -85,6 +99,7 @@ async function toView(rows: MmpayLinkRow[], withStats = false): Promise<MmpayLin
       coverUrl: r.cover_url,
       paidCount: paid.get(r.id) ?? 0,
       billing: billingOf(r),
+      totalCents: r.total_amount_cents ?? amount,
     });
   }
   return out;
@@ -120,6 +135,8 @@ export async function createMmpayLink(input: {
 }): Promise<MmpayLinkView> {
   const validationError = validateMmpayLinkInput(input);
   if (validationError) throw new Error(validationError);
+  const chargeCents = perChargeCents(input.amountCents, input.billing);
+  if (chargeCents < 100) throw new Error("Cada prestação tem de ser de pelo menos 1,00 €.");
 
   let row: MmpayLinkRow | null = null;
   for (let attempt = 0; attempt < 5 && !row; attempt++) {
@@ -128,7 +145,7 @@ export async function createMmpayLink(input: {
       .insert({
         code: generateMmpayCode(),
         title: input.title.trim(),
-        custom_amount_cents: input.amountCents,
+        custom_amount_cents: chargeCents,
         description: input.description?.trim() || null,
         cover_url: input.coverUrl,
         created_by: input.createdBy,
@@ -149,7 +166,7 @@ export async function createMmpayLink(input: {
       name: row.title,
       description: row.description,
       imageUrl: row.cover_url,
-      amountCents: input.amountCents,
+      amountCents: chargeCents,
       linkId: row.id,
     });
     const { data } = await supabaseAdmin
@@ -181,11 +198,13 @@ export async function updateMmpayLink(input: {
   const row = data as MmpayLinkRow | null;
   if (!row) throw new Error("Este link já não existe.");
   const previous = (await toView([row]))[0];
+  const chargeCents = perChargeCents(input.amountCents, input.billing);
+  if (chargeCents < 100) throw new Error("Cada prestação tem de ser de pelo menos 1,00 €.");
   const productInput = {
     name: input.title.trim(),
     description: input.description?.trim() || null,
     imageUrl: input.coverUrl,
-    amountCents: input.amountCents,
+    amountCents: chargeCents,
   };
   const stripe = row.stripe_product_id && row.stripe_price_id
     ? await updateStripeProduct({ ...productInput, productId: row.stripe_product_id, priceId: row.stripe_price_id, previousAmountCents: previous.amountCents })
@@ -194,7 +213,7 @@ export async function updateMmpayLink(input: {
     title: productInput.name,
     description: productInput.description,
     custom_description: productInput.description,
-    custom_amount_cents: input.amountCents,
+    custom_amount_cents: chargeCents,
     cover_url: input.coverUrl,
     stripe_product_id: stripe.productId,
     stripe_price_id: stripe.priceId,
