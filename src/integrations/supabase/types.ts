@@ -1960,6 +1960,7 @@ export type Database = {
           call_scheduled_at: string | null
           call_scheduled_by: string | null
           classificacao: string | null
+          contact_outcome: string | null
           created_at: string
           decisao: string | null
           email: string | null
@@ -1968,6 +1969,7 @@ export type Database = {
           idade: string | null
           instagram: string | null
           investimento: string | null
+          last_contact_at: string | null
           nome: string | null
           o_que_travou: string | null
           ocupacao: string | null
@@ -1994,6 +1996,7 @@ export type Database = {
           call_scheduled_at?: string | null
           call_scheduled_by?: string | null
           classificacao?: string | null
+          contact_outcome?: string | null
           created_at?: string
           decisao?: string | null
           email?: string | null
@@ -2002,6 +2005,7 @@ export type Database = {
           idade?: string | null
           instagram?: string | null
           investimento?: string | null
+          last_contact_at?: string | null
           nome?: string | null
           o_que_travou?: string | null
           ocupacao?: string | null
@@ -2028,6 +2032,7 @@ export type Database = {
           call_scheduled_at?: string | null
           call_scheduled_by?: string | null
           classificacao?: string | null
+          contact_outcome?: string | null
           created_at?: string
           decisao?: string | null
           email?: string | null
@@ -2036,6 +2041,7 @@ export type Database = {
           idade?: string | null
           instagram?: string | null
           investimento?: string | null
+          last_contact_at?: string | null
           nome?: string | null
           o_que_travou?: string | null
           ocupacao?: string | null
