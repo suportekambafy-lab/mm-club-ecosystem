@@ -6,6 +6,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { generateMmpayCode, validateMmpayLinkInput } from "@/lib/mmpay/rules";
 import { getPriceById } from "./catalog.server";
+import type { BillingInterval } from "@/lib/mmpay/subscription-rules";
 import { createStripeProduct, deleteStripeProduct, getStripeCheckout, updateStripeProduct } from "./stripe.server";
 
 export type MmpayLinkRow = {
@@ -22,7 +23,27 @@ export type MmpayLinkRow = {
   created_by: string | null;
   active: boolean;
   created_at: string;
+  billing_type: string;
+  billing_interval: string | null;
+  billing_interval_count: number | null;
+  total_cycles: number | null;
 };
+
+export type MmpayBilling =
+  | { type: "one_time" }
+  | { type: "subscription"; interval: BillingInterval; intervalCount: number; totalCycles: number | null };
+
+function billingOf(r: MmpayLinkRow): MmpayBilling {
+  if (r.billing_type === "subscription" && r.billing_interval && r.billing_interval_count) {
+    return { type: "subscription", interval: r.billing_interval as BillingInterval, intervalCount: r.billing_interval_count, totalCycles: r.total_cycles };
+  }
+  return { type: "one_time" };
+}
+
+function billingColumns(b: MmpayBilling | undefined) {
+  if (!b || b.type === "one_time") return { billing_type: "one_time", billing_interval: null, billing_interval_count: null, total_cycles: null };
+  return { billing_type: "subscription", billing_interval: b.interval, billing_interval_count: b.intervalCount, total_cycles: b.totalCycles };
+}
 
 export type MmpayLinkView = {
   id: string;
@@ -35,6 +56,7 @@ export type MmpayLinkView = {
   description: string | null;
   coverUrl: string | null;
   paidCount: number;
+  billing: MmpayBilling;
 };
 
 async function toView(rows: MmpayLinkRow[], withStats = false): Promise<MmpayLinkView[]> {
@@ -62,6 +84,7 @@ async function toView(rows: MmpayLinkRow[], withStats = false): Promise<MmpayLin
       description: r.description ?? r.custom_description,
       coverUrl: r.cover_url,
       paidCount: paid.get(r.id) ?? 0,
+      billing: billingOf(r),
     });
   }
   return out;
@@ -93,6 +116,7 @@ export async function createMmpayLink(input: {
   description: string | null;
   amountCents: number;
   coverUrl: string | null;
+  billing?: MmpayBilling;
 }): Promise<MmpayLinkView> {
   const validationError = validateMmpayLinkInput(input);
   if (validationError) throw new Error(validationError);
@@ -108,6 +132,7 @@ export async function createMmpayLink(input: {
         description: input.description?.trim() || null,
         cover_url: input.coverUrl,
         created_by: input.createdBy,
+        ...billingColumns(input.billing),
       })
       .select("*")
       .single();
@@ -147,6 +172,7 @@ export async function updateMmpayLink(input: {
   description: string | null;
   amountCents: number;
   coverUrl: string | null;
+  billing?: MmpayBilling;
 }): Promise<MmpayLinkView> {
   const validationError = validateMmpayLinkInput(input);
   if (validationError) throw new Error(validationError);
@@ -172,6 +198,7 @@ export async function updateMmpayLink(input: {
     cover_url: input.coverUrl,
     stripe_product_id: stripe.productId,
     stripe_price_id: stripe.priceId,
+    ...billingColumns(input.billing),
   }).eq("id", input.id).select("*").single();
   if (updateError) throw new Error(updateError.message);
   return (await toView([updated as MmpayLinkRow], true))[0];
@@ -230,6 +257,7 @@ export async function startMmpayCheckout(input: {
     name: input.name,
     phone: input.phone,
     reference: link.code,
+    allowRecurring: link.billing_type === "subscription",
   });
 
   await supabaseAdmin.from("mmpay_payments").insert({
@@ -272,6 +300,27 @@ export async function settleVivaOrder(orderCode: string): Promise<{ paid: boolea
     .update(update)
     .eq("stripe_session_id", `vvo_${orderCode}`)
     .neq("status", "paid");
+
+  const { data: payment } = await supabaseAdmin
+    .from("mmpay_payments")
+    .select("link_id,email,name,phone,amount_cents")
+    .eq("stripe_session_id", `vvo_${orderCode}`)
+    .maybeSingle();
+  if (payment) {
+    const { data: link } = await supabaseAdmin.from("mmpay_links").select("*").eq("id", payment.link_id).maybeSingle();
+    if (link && (link as MmpayLinkRow).billing_type === "subscription") {
+      const { activateSubscriptionFromFirstPayment } = await import("./mmpay-subscriptions.server");
+      await activateSubscriptionFromFirstPayment({
+        link: link as MmpayLinkRow,
+        orderCode,
+        transactionId: status.transactionId,
+        email: payment.email ?? "",
+        name: payment.name,
+        phone: payment.phone,
+        amountCents: status.amountCents ?? payment.amount_cents,
+      });
+    }
+  }
   return { paid: true };
 }
 
@@ -317,6 +366,7 @@ export async function startKlarnaMmpayPayment(input: {
   const link = await getRow(input.code);
   if (!link || !link.active) throw new Error("Este link de pagamento já não está disponível.");
   const email = input.email.trim().toLowerCase();
+  if (link.billing_type === "subscription") throw new Error("Assinaturas não podem ser pagas com Klarna.");
   const view = (await toView([link]))[0];
   if (view.amountCents < 100) throw new Error("Este link não tem preço válido.");
 
