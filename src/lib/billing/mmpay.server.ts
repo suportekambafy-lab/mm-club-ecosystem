@@ -6,7 +6,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { generateMmpayCode, validateMmpayLinkInput } from "@/lib/mmpay/rules";
 import { getPriceById } from "./catalog.server";
-import { createStripeCheckout, createStripeProduct, deleteStripeProduct, getStripeCheckout, updateStripeProduct } from "./stripe.server";
+import { createStripeProduct, deleteStripeProduct, getStripeCheckout, updateStripeProduct } from "./stripe.server";
 
 export type MmpayLinkRow = {
   id: string;
@@ -207,7 +207,7 @@ export async function getPublicMmpayLink(code: string): Promise<MmpayLinkView | 
   return row ? (await toView([row]))[0] : null;
 }
 
-/** Abre o checkout Stripe com o método escolhido (cartão inclui Apple Pay e Google Pay). */
+/** Abre o checkout Viva.com (cartão, MB WAY, Apple Pay e Google Pay). */
 export async function startMmpayCheckout(input: {
   code: string;
   email: string;
@@ -216,56 +216,79 @@ export async function startMmpayCheckout(input: {
   origin: string;
   method?: "card" | "mb_way";
 }): Promise<{ checkoutUrl: string }> {
-  let link = await getRow(input.code);
+  const link = await getRow(input.code);
   if (!link || !link.active) throw new Error("Este link de pagamento já não está disponível.");
   const email = input.email.trim().toLowerCase();
-  const origin = input.origin.replace(/\/$/, "");
+  const view = (await toView([link]))[0];
+  if (view.amountCents < 100) throw new Error("Este link não tem preço válido.");
 
-  if (!link.stripe_price_id) {
-    // Link antigo: cria o produto Stripe na primeira utilização.
-    const view = (await toView([link]))[0];
-    if (view.amountCents < 100) throw new Error("Este link não tem preço válido.");
-    const stripe = await createStripeProduct({
-      name: link.title,
-      description: view.description,
-      imageUrl: link.cover_url,
-      amountCents: view.amountCents,
-      linkId: link.id,
-    });
-    const { data } = await supabaseAdmin
-      .from("mmpay_links")
-      .update({ stripe_product_id: stripe.productId, stripe_price_id: stripe.priceId, custom_amount_cents: view.amountCents })
-      .eq("id", link.id)
-      .select("*")
-      .single();
-    link = data as MmpayLinkRow;
-  }
-
-  const session = await createStripeCheckout({
-    priceId: link.stripe_price_id!,
+  const { createVivaOrder } = await import("./viva.server");
+  const order = await createVivaOrder({
+    amountCents: view.amountCents,
+    title: link.title,
     email,
-    successUrl: `${origin}/pagar/${link.code}?session_id={CHECKOUT_SESSION_ID}`,
-    cancelUrl: `${origin}/pagar/${link.code}`,
-    metadata: { mmpay_link_id: link.id, mmpay_code: link.code, name: input.name ?? "", phone: input.phone ?? "" },
-    methods: [input.method ?? "card"],
+    name: input.name,
+    phone: input.phone,
+    reference: link.code,
   });
 
   await supabaseAdmin.from("mmpay_payments").insert({
     link_id: link.id,
-    stripe_session_id: session.id,
+    stripe_session_id: `vvo_${order.orderCode}`,
     email,
     name: input.name ?? null,
     phone: input.phone ?? null,
-    amount_cents: link.custom_amount_cents ?? 0,
+    amount_cents: view.amountCents,
     status: "pending",
   });
-  return { checkoutUrl: session.url };
+  return { checkoutUrl: order.checkoutUrl };
 }
 
-/** Confirma o pagamento ao regressar do Stripe (sem webhooks). */
+/** Descobre a que link pertence uma ordem Viva (página de retorno). */
+export async function resolveVivaReturn(orderCode: string): Promise<{ code: string | null }> {
+  const { data } = await supabaseAdmin
+    .from("mmpay_payments")
+    .select("link_id")
+    .eq("stripe_session_id", `vvo_${orderCode}`)
+    .maybeSingle();
+  if (!data) return { code: null };
+  const { data: link } = await supabaseAdmin.from("mmpay_links").select("code").eq("id", data.link_id).maybeSingle();
+  return { code: link?.code ?? null };
+}
+
+/** Marca uma ordem Viva como paga depois de confirmar na própria Viva. Idempotente. */
+export async function settleVivaOrder(orderCode: string): Promise<{ paid: boolean }> {
+  const { getVivaOrderStatus } = await import("./viva.server");
+  const status = await getVivaOrderStatus(orderCode);
+  if (!status.paid) return { paid: false };
+  const update: Record<string, unknown> = {
+    status: "paid",
+    payment_method: status.method,
+    paid_at: new Date().toISOString(),
+  };
+  if (status.amountCents) update.amount_cents = status.amountCents;
+  await supabaseAdmin
+    .from("mmpay_payments")
+    .update(update)
+    .eq("stripe_session_id", `vvo_${orderCode}`)
+    .neq("status", "paid");
+  return { paid: true };
+}
+
+/** Confirma o pagamento ao regressar do checkout (Viva vvo_ ou Stripe cs_ antigos). */
 export async function confirmMmpayPayment(code: string, sessionId: string): Promise<{ paid: boolean }> {
   const link = await getRow(code);
   if (!link) return { paid: false };
+  if (sessionId.startsWith("vvo_")) {
+    const { data } = await supabaseAdmin
+      .from("mmpay_payments")
+      .select("id")
+      .eq("stripe_session_id", sessionId)
+      .eq("link_id", link.id)
+      .maybeSingle();
+    if (!data) return { paid: false };
+    return settleVivaOrder(sessionId.slice(4));
+  }
   const session = await getStripeCheckout(sessionId);
   if (session.metadata?.mmpay_link_id !== link.id) return { paid: false };
   const paid = session.payment_status === "paid";

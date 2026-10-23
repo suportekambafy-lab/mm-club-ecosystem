@@ -14,6 +14,7 @@ import {
   startMmpayCheckoutSchema,
   uploadMmpayCoverSchema,
   updateMmpayLinkSchema,
+  vivaOrderCodeSchema,
 } from "@/lib/mmpay/rules";
 
 async function requireCommercial(context: { supabase: any; userId: string }) {
@@ -174,4 +175,12 @@ export const confirmMmpayPayment = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { confirmMmpayPayment: confirm } = await import("@/lib/billing/mmpay.server");
     return confirm(data.code, data.sessionId);
+  });
+
+/** Página de retorno da Viva: descobre o link da ordem. */
+export const resolveVivaReturn = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => z.object({ orderCode: vivaOrderCodeSchema }).parse(input))
+  .handler(async ({ data }) => {
+    const { resolveVivaReturn: resolve } = await import("@/lib/billing/mmpay.server");
+    return resolve(data.orderCode);
   });
