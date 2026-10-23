@@ -193,3 +193,29 @@ export const saveSettings = createServerFn({ method: "POST" })
     if (error) throw new Error("Não foi possível guardar.");
     return { ok: true };
   });
+
+export const listLeadNotes = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ leadId: z.string().uuid() }).parse(i))
+  .handler(async ({ context, data }) => {
+    await assertCommercial(context);
+    const { data: rows, error } = await context.supabase.from("lead_notes")
+      .select("id, body, created_at, author_id").eq("lead_id", data.leadId)
+      .order("created_at", { ascending: false }).limit(200);
+    if (error) throw new Error("Não foi possível carregar as notas.");
+    const ids = [...new Set((rows ?? []).map((r: { author_id: string }) => r.author_id))];
+    const db = await admin();
+    const { data: profs } = ids.length ? await db.from("profiles").select("id, display_name").in("id", ids) : { data: [] };
+    const names = new Map((profs ?? []).map(p => [p.id, p.display_name ?? "Equipa"]));
+    return (rows ?? []).map((r: { id: string; body: string; created_at: string; author_id: string }) => ({ ...r, author: names.get(r.author_id) ?? "Equipa" }));
+  });
+
+export const addLeadNote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ leadId: z.string().uuid(), body: z.string().trim().min(1).max(2000) }).parse(i))
+  .handler(async ({ context, data }) => {
+    await assertCommercial(context);
+    const { error } = await context.supabase.from("lead_notes").insert({ lead_id: data.leadId, body: data.body, author_id: context.userId });
+    if (error) throw new Error("Não foi possível guardar a nota.");
+    return { ok: true };
+  });
