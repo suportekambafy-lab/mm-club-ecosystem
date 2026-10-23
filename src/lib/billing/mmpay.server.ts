@@ -166,7 +166,7 @@ export async function createMmpayLink(input: {
       name: row.title,
       description: row.description,
       imageUrl: row.cover_url,
-      amountCents: input.amountCents,
+      amountCents: chargeCents,
       linkId: row.id,
     });
     const { data } = await supabaseAdmin
@@ -198,11 +198,13 @@ export async function updateMmpayLink(input: {
   const row = data as MmpayLinkRow | null;
   if (!row) throw new Error("Este link já não existe.");
   const previous = (await toView([row]))[0];
+  const chargeCents = perChargeCents(input.amountCents, input.billing);
+  if (chargeCents < 100) throw new Error("Cada prestação tem de ser de pelo menos 1,00 €.");
   const productInput = {
     name: input.title.trim(),
     description: input.description?.trim() || null,
     imageUrl: input.coverUrl,
-    amountCents: input.amountCents,
+    amountCents: chargeCents,
   };
   const stripe = row.stripe_product_id && row.stripe_price_id
     ? await updateStripeProduct({ ...productInput, productId: row.stripe_product_id, priceId: row.stripe_price_id, previousAmountCents: previous.amountCents })
