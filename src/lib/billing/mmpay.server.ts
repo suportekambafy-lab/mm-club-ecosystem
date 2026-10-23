@@ -6,7 +6,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { generateMmpayCode, validateMmpayLinkInput } from "@/lib/mmpay/rules";
 import { getPriceById } from "./catalog.server";
-import type { BillingInterval } from "@/lib/mmpay/subscription-rules";
+import { splitInstallments, type BillingInterval } from "@/lib/mmpay/subscription-rules";
 import { createStripeProduct, deleteStripeProduct, getStripeCheckout, updateStripeProduct } from "./stripe.server";
 
 export type MmpayLinkRow = {
@@ -27,22 +27,34 @@ export type MmpayLinkRow = {
   billing_interval: string | null;
   billing_interval_count: number | null;
   total_cycles: number | null;
+  total_amount_cents: number | null;
 };
 
 export type MmpayBilling =
   | { type: "one_time" }
-  | { type: "subscription"; interval: BillingInterval; intervalCount: number; totalCycles: number | null };
+  | { type: "subscription"; interval: BillingInterval; intervalCount: number; totalCycles: number | null; totalCents?: number | null };
 
 function billingOf(r: MmpayLinkRow): MmpayBilling {
   if (r.billing_type === "subscription" && r.billing_interval && r.billing_interval_count) {
-    return { type: "subscription", interval: r.billing_interval as BillingInterval, intervalCount: r.billing_interval_count, totalCycles: r.total_cycles };
+    return { type: "subscription", interval: r.billing_interval as BillingInterval, intervalCount: r.billing_interval_count, totalCycles: r.total_cycles, totalCents: r.total_amount_cents };
   }
   return { type: "one_time" };
 }
 
 function billingColumns(b: MmpayBilling | undefined) {
-  if (!b || b.type === "one_time") return { billing_type: "one_time", billing_interval: null, billing_interval_count: null, total_cycles: null };
-  return { billing_type: "subscription", billing_interval: b.interval, billing_interval_count: b.intervalCount, total_cycles: b.totalCycles };
+  if (!b || b.type === "one_time") return { billing_type: "one_time", billing_interval: null, billing_interval_count: null, total_cycles: null, total_amount_cents: null };
+  return { billing_type: "subscription", billing_interval: b.interval, billing_interval_count: b.intervalCount, total_cycles: b.totalCycles, total_amount_cents: b.totalCents ?? null };
+}
+
+/**
+ * Valor de cada cobrança. Com total + número de prestações, a 1.ª prestação
+ * (a que o cliente paga hoje) é a primeira fatia da divisão exata do total.
+ */
+export function perChargeCents(amountCents: number, billing?: MmpayBilling): number {
+  if (billing?.type === "subscription" && billing.totalCycles && billing.totalCents) {
+    return splitInstallments(billing.totalCents, billing.totalCycles)[0];
+  }
+  return amountCents;
 }
 
 export type MmpayLinkView = {
@@ -57,6 +69,8 @@ export type MmpayLinkView = {
   coverUrl: string | null;
   paidCount: number;
   billing: MmpayBilling;
+  /** Valor total da venda (assinaturas com prestações); igual a amountCents nas vendas únicas. */
+  totalCents: number;
 };
 
 async function toView(rows: MmpayLinkRow[], withStats = false): Promise<MmpayLinkView[]> {
