@@ -177,18 +177,18 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
       <div className="overflow-x-auto rounded-xl ring-1 ring-border">
         <table className="w-full text-sm">
           <thead className="bg-surface-1 text-left text-xs text-muted-foreground">
-            <tr><th className="p-3">Lead</th><th className="p-3">Nome</th><th className="p-3">WhatsApp</th><th className="p-3">Estado</th><th className="p-3">Responsável</th><th className="p-3">Data</th></tr>
+            <tr><th className="p-3">Lead</th><th className="p-3">Nome</th><th className="p-3">WhatsApp</th><th className="p-3">Estado</th><th className="p-3">Contacto</th><th className="p-3">Responsável</th><th className="p-3">Data</th></tr>
           </thead>
           <tbody>
             {filtered.map((l) => (
               <tr key={l.id} onClick={() => setOpen(l)} className="cursor-pointer border-t border-border hover:bg-surface-1">
                 <td className="p-3">{l.classificacao ? <span className={cn("rounded px-2 py-0.5 text-xs font-semibold", CLS_STYLE[l.classificacao])}>{l.classificacao}</span> : "—"}</td>
                 <td className="p-3">{l.nome ?? "—"}</td><td className="p-3">{l.whatsapp}</td>
-                <td className="p-3">{STATUS[l.status] ?? l.status}<Attribution lead={l} names={actorNames} />{l.contact_outcome && <p className="mt-1 text-xs text-muted-foreground">{OUTCOME[l.contact_outcome] ?? l.contact_outcome}{l.last_contact_at ? ` · ${new Date(l.last_contact_at).toLocaleDateString("pt-PT")}` : ""}</p>}{l.status === "fechou" && l.sale_amount_cents != null && <p className="mt-1 text-xs text-primary">{formatSaleAmount(l.sale_amount_cents)}</p>}</td><td className="p-3">{l.responsavel ?? "—"}</td>
+                <td className="p-3">{STATUS[l.status] ?? l.status}<Attribution lead={l} names={actorNames} />{l.contact_outcome && <p className="mt-1 text-xs text-muted-foreground">{OUTCOME[l.contact_outcome] ?? l.contact_outcome}{l.last_contact_at ? ` · ${new Date(l.last_contact_at).toLocaleDateString("pt-PT")}` : ""}</p>}{l.status === "fechou" && l.sale_amount_cents != null && <p className="mt-1 text-xs text-primary">{formatSaleAmount(l.sale_amount_cents)}</p>}</td><td className="p-3" onClick={(e) => e.stopPropagation()}><QuickOutcome lead={l} me={data?.me ?? ""} onDone={() => { refresh(); qc.invalidateQueries({queryKey:["commercial-home-applications"]}); }} /></td><td className="p-3">{l.responsavel ?? "—"}</td>
                 <td className="p-3 text-muted-foreground">{new Date(l.created_at).toLocaleString("pt-PT")}</td>
               </tr>
             ))}
-            {filtered.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">Ainda sem aplicações.</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Ainda sem aplicações.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -196,6 +196,27 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
       {open && <Detail commercial={commercial} lead={open} actorNames={actorNames} me={data?.me ?? ""} canSchedule={canScheduleCall((data as any)?.myRoles ?? [])} closers={((data as any)?.closers ?? []) as { id: string; name: string }[]} agenda={agByLead.get(open.id) as string | undefined} onClose={closeDetail} onChanged={(l) => { setOpen(l); refresh(); qc.invalidateQueries({queryKey:["commercial-home-applications"]}); }} />}
     </div>
   );
+}
+
+const OUTCOME_STYLE: Record<string, string> = { contactei: "ring-border", atendeu: "ring-primary/60 text-primary", nao_atendeu: "ring-destructive/60 text-destructive" };
+
+function QuickOutcome({ lead, me, onDone }: { lead: Lead; me: string; onDone: () => void }) {
+  const upd = useServerFn(updateLead);
+  const [busy, setBusy] = useState<string | null>(null);
+  const locked = isLeadLocked(lead, me);
+  if (locked) return <span className="text-xs text-muted-foreground">{lead.contact_outcome ? OUTCOME[lead.contact_outcome] : "—"}</span>;
+  return <div className="flex flex-wrap gap-1">
+    {(["contactei", "atendeu", "nao_atendeu"] as const).map((o) => (
+      <button key={o} type="button" disabled={!!busy} onClick={async () => {
+        setBusy(o);
+        try { await upd({ data: { id: lead.id, contactOutcome: o } }); toast.success(`Registado: ${OUTCOME[o]}`); onDone(); }
+        catch (e) { toast.error(e instanceof Error ? e.message : "Não foi possível registar."); }
+        finally { setBusy(null); }
+      }} className={cn("whitespace-nowrap rounded-full px-2.5 py-1 text-xs ring-1 transition hover:bg-surface-1 disabled:opacity-50", lead.contact_outcome === o ? cn(OUTCOME_STYLE[o], "bg-surface-1 font-semibold") : "ring-border text-muted-foreground")}>
+        {busy === o ? "…" : OUTCOME[o]}
+      </button>
+    ))}
+  </div>;
 }
 
 function Attribution({ lead, names }: { lead: Lead; names: Record<string, string> }) {
@@ -261,7 +282,7 @@ function Detail({ lead, actorNames, me, canSchedule, closers, agenda, onClose, o
         </div>
         <div className="mt-2 flex flex-wrap gap-2">
           {(["contactei", "atendeu", "nao_atendeu"] as const).map((o) => (
-            <Button key={o} variant="outline" size="sm" disabled={locked || busy} onClick={() => run({ contactOutcome: o })}>{OUTCOME[o]}</Button>
+            <Button key={o} variant={lead.contact_outcome === o ? "default" : "outline"} size="sm" disabled={locked || busy} onClick={() => run({ contactOutcome: o })}>{OUTCOME[o]}</Button>
           ))}
         </div>
         {lead.contact_outcome && <p className="mt-2 text-xs text-muted-foreground">Último contacto: {OUTCOME[lead.contact_outcome] ?? lead.contact_outcome} · {lead.last_contact_at ? new Date(lead.last_contact_at).toLocaleString("pt-PT") : "—"}</p>}
