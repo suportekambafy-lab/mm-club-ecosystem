@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { classificar } from "./config";
 import { leadSchema } from "./validation";
-import { leadUpdateSchema } from "./sale-rules";
+import { contactOutcomeStatusPatch, leadUpdateSchema } from "./sale-rules";
 import { canScheduleCall } from "./lead-presentation";
 
 async function admin() {
@@ -89,6 +89,7 @@ export const updateLead = createServerFn({ method: "POST" })
     const db = await admin();
     const { data: lead } = await db.from("leads").select("responsavel_id, status, sale_closed_by, sale_closed_at, call_scheduled_by").eq("id", data.id).maybeSingle();
     if (!lead) throw new Error("Lead não encontrado.");
+    const effectiveStatus = data.status ?? contactOutcomeStatusPatch(lead.status, data.contactOutcome);
     const reschedulingOwnCall = data.status === "call_marcada" && lead.status === "call_marcada" && lead.call_scheduled_by === context.userId;
     if (lead.responsavel_id && lead.responsavel_id !== context.userId && !reschedulingOwnCall)
       throw new Error("Este lead já foi assumido por outra pessoa.");
