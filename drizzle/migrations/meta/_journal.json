@@ -134,6 +134,13 @@
       "when": 1792766696432,
       "tag": "0018_lead_contact_outcome",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792773465867,
+      "tag": "0019_lead_notes",
+      "breakpoints": true
     }
   ]
 }
