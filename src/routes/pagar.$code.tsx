@@ -11,7 +11,7 @@ import {
   startKlarnaMmpayPayment,
   startMmpayCheckout,
 } from "@/lib/mmpay.functions";
-import { intervalLabel } from "@/lib/mmpay/subscription-rules";
+import { intervalLabel, splitInstallments } from "@/lib/mmpay/subscription-rules";
 import { formatMoney } from "@/lib/billing/types";
 import { trackMeta } from "@/lib/meta/pixel";
 import { MMLogo } from "@/components/mm/logo";
@@ -212,16 +212,35 @@ function MmpayPage() {
                 </p>
               ) : null}
 
-              <div className="mt-4 flex items-baseline gap-2 rounded-2xl bg-background px-4 py-2.5 ring-1 ring-border">
-                <span className="font-display text-3xl leading-none tracking-tight text-foreground sm:text-4xl">
-                  {formatMoney(link.amountCents, link.currency)}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  {link.billing.type === "subscription"
-                    ? `${intervalLabel(link.billing.interval, link.billing.intervalCount)}${link.billing.totalCycles ? ` · ${link.billing.totalCycles} cobranças` : ""}`
-                    : "pagamento único"}
-                </span>
-              </div>
+              {link.billing.type === "subscription" && link.billing.totalCycles && link.billing.totalCents ? (
+                <div className="mt-4 rounded-2xl bg-background px-4 py-3 ring-1 ring-border">
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-display text-3xl leading-none tracking-tight text-foreground sm:text-4xl">
+                      {formatMoney(link.billing.totalCents, link.currency)}
+                    </span>
+                    <span className="text-sm text-muted-foreground">total</span>
+                  </div>
+                  <p className="mt-1.5 text-sm font-medium text-foreground">
+                    {link.billing.totalCycles}x de{" "}
+                    {formatMoney(splitInstallments(link.billing.totalCents, link.billing.totalCycles)[0], link.currency)}{" "}
+                    {intervalLabel(link.billing.interval, link.billing.intervalCount)}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    1.ª prestação cobrada hoje; as restantes são debitadas automaticamente no mesmo cartão.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-4 flex items-baseline gap-2 rounded-2xl bg-background px-4 py-2.5 ring-1 ring-border">
+                  <span className="font-display text-3xl leading-none tracking-tight text-foreground sm:text-4xl">
+                    {formatMoney(link.amountCents, link.currency)}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {link.billing.type === "subscription"
+                      ? intervalLabel(link.billing.interval, link.billing.intervalCount)
+                      : "pagamento único"}
+                  </span>
+                </div>
+              )}
 
               {session_id && confirmQuery.data && !confirmQuery.data.paid ? (
                 <p className="mt-4 rounded-xl border border-border bg-background px-3 py-2 text-xs text-muted-foreground">
@@ -267,8 +286,8 @@ function MmpayPage() {
               <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Método de pagamento
               </p>
-              <div className={`mx-auto mt-2 grid w-full max-w-[17rem] gap-2 ${link?.billing.type === "subscription" ? "grid-cols-2" : "grid-cols-3"}`}>
-                {METHOD_OPTIONS.filter((o) => !(o.id === "klarna" && link?.billing.type === "subscription")).map((opt, i) => {
+              <div className={`mx-auto mt-2 grid w-full max-w-[17rem] gap-2 ${link?.billing.type === "subscription" ? "grid-cols-1" : "grid-cols-3"}`}>
+                {METHOD_OPTIONS.filter((o) => !(link?.billing.type === "subscription" && (o.id === "klarna" || o.id === "mb_way"))).map((opt, i) => {
                   const Logo = opt.Logo;
                   const selected = method === opt.id;
                   return (
