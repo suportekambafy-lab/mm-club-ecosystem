@@ -1,11 +1,9 @@
 /**
- * Cliente mínimo da Viva.com (Smart Checkout) — fetch puro, compatível com Workers.
- * Credenciais: VIVA_CLIENT_ID / VIVA_CLIENT_SECRET (OAuth Smart Checkout),
- * VIVA_MERCHANT_ID / VIVA_API_KEY (consulta de transações e webhooks),
- * VIVA_SOURCE_CODE (fonte de pagamento com o URL de retorno /pagar/retorno).
+ * Cliente mínimo da Viva.com (API clássica de ordens) — fetch puro, compatível com Workers.
+ * Autenticação Basic VIVA_MERCHANT_ID:VIVA_API_KEY; VIVA_SOURCE_CODE é a fonte de pagamento
+ * cujo URL de retorno aponta para /pagar/retorno. Recorrência: a ordem inicial é criada com
+ * AllowRecurring e as cobranças seguintes usam o TransactionId do primeiro pagamento.
  */
-const ACCOUNTS = "https://accounts.vivapayments.com";
-const API = "https://api.vivapayments.com";
 const WWW = "https://www.vivapayments.com";
 
 function env(name: string): string {
@@ -14,25 +12,25 @@ function env(name: string): string {
   return v;
 }
 
-async function accessToken(): Promise<string> {
-  const res = await fetch(`${ACCOUNTS}/connect/token`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${btoa(`${env("VIVA_CLIENT_ID")}:${env("VIVA_CLIENT_SECRET")}`)}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: "grant_type=client_credentials",
-  });
-  const json: any = await res.json().catch(() => null);
-  if (!res.ok || !json?.access_token) throw new Error(`Viva.com recusou as credenciais (${res.status}).`);
-  return json.access_token;
-}
-
 function merchantAuth(): string {
   return `Basic ${btoa(`${env("VIVA_MERCHANT_ID")}:${env("VIVA_API_KEY")}`)}`;
 }
 
-/** Cria uma ordem de pagamento e devolve o URL do checkout Viva. */
+async function viva(method: "GET" | "POST", path: string, body?: unknown): Promise<any> {
+  const res = await fetch(`${WWW}${path}`, {
+    method,
+    headers: { Authorization: merchantAuth(), "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const json: any = await res.json().catch(() => null);
+  if (!res.ok || (json && json.ErrorCode && json.ErrorCode !== 0)) {
+    console.error("[viva]", method, path.split("?")[0], res.status, json?.ErrorText);
+    throw new Error(json?.ErrorText || `Viva.com ${res.status}`);
+  }
+  return json;
+}
+
+/** Cria uma ordem e devolve o URL do checkout Viva. */
 export async function createVivaOrder(input: {
   amountCents: number;
   title: string;
@@ -40,31 +38,21 @@ export async function createVivaOrder(input: {
   name?: string | null;
   phone?: string | null;
   reference: string;
+  allowRecurring?: boolean;
 }): Promise<{ orderCode: string; checkoutUrl: string }> {
-  const token = await accessToken();
-  const res = await fetch(`${API}/checkout/v2/orders`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      amount: input.amountCents,
-      customerTrns: input.title.slice(0, 2048),
-      merchantTrns: input.reference,
-      sourceCode: env("VIVA_SOURCE_CODE"),
-      paymentTimeout: 1800,
-      customer: {
-        email: input.email,
-        fullName: input.name ?? undefined,
-        phone: input.phone ?? undefined,
-        requestLang: "pt-PT",
-      },
-    }),
+  const json = await viva("POST", "/api/orders", {
+    Amount: input.amountCents,
+    CustomerTrns: input.title.slice(0, 2048),
+    MerchantTrns: input.reference,
+    SourceCode: env("VIVA_SOURCE_CODE"),
+    PaymentTimeout: 1800,
+    Email: input.email,
+    FullName: input.name ?? undefined,
+    Phone: input.phone ?? undefined,
+    RequestLang: "pt-PT",
+    AllowRecurring: input.allowRecurring ?? false,
   });
-  const json: any = await res.json().catch(() => null);
-  if (!res.ok || !json?.orderCode) {
-    console.error("[viva] create order", res.status, json);
-    throw new Error("Não foi possível iniciar o pagamento. Tenta novamente.");
-  }
-  const orderCode = String(json.orderCode);
+  const orderCode = String(json.OrderCode);
   return { orderCode, checkoutUrl: `${WWW}/web/checkout?ref=${orderCode}` };
 }
 
@@ -73,23 +61,42 @@ export async function getVivaOrderStatus(orderCode: string): Promise<{
   paid: boolean;
   amountCents: number | null;
   method: string | null;
+  transactionId: string | null;
 }> {
-  const res = await fetch(`${WWW}/api/transactions?ordercode=${encodeURIComponent(orderCode)}`, {
-    headers: { Authorization: merchantAuth() },
-  });
-  const json: any = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(`Viva.com ${res.status}`);
+  const json = await viva("GET", `/api/transactions?ordercode=${encodeURIComponent(orderCode)}`);
   const txs: any[] = json?.Transactions ?? [];
   const ok = txs.find((t) => t?.StatusId === "F");
-  if (!ok) return { paid: false, amountCents: null, method: null };
-  const method = ok.PaymentMethodId === 31 || /mbway/i.test(JSON.stringify(ok)) ? "mb_way" : "card";
-  return { paid: true, amountCents: Math.round(Number(ok.Amount) * 100), method };
+  if (!ok) return { paid: false, amountCents: null, method: null, transactionId: null };
+  const method = /mbway|mb way/i.test(JSON.stringify(ok.PaymentMethod ?? ok.CardType ?? "")) ? "mb_way" : "card";
+  return {
+    paid: true,
+    amountCents: Math.round(Number(ok.Amount) * 100),
+    method,
+    transactionId: ok.TransactionId ? String(ok.TransactionId) : null,
+  };
+}
+
+/** Cobrança recorrente sobre a transação inicial autorizada (cliente ausente). */
+export async function chargeVivaRecurring(input: {
+  initialTransactionId: string;
+  amountCents: number;
+  description: string;
+}): Promise<{ ok: true; transactionId: string | null } | { ok: false; error: string }> {
+  try {
+    const json = await viva("POST", `/api/transactions/${encodeURIComponent(input.initialTransactionId)}`, {
+      Amount: input.amountCents,
+      CustomerTrns: input.description.slice(0, 2048),
+    });
+    if (json?.StatusId && json.StatusId !== "F") return { ok: false, error: `Estado ${json.StatusId}` };
+    return { ok: true, transactionId: json?.TransactionId ? String(json.TransactionId) : null };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message.slice(0, 300) : "erro" };
+  }
 }
 
 /** Chave de verificação pedida pela Viva ao registar o webhook. */
 export async function getVivaWebhookKey(): Promise<string> {
-  const res = await fetch(`${WWW}/api/messages/config/token`, { headers: { Authorization: merchantAuth() } });
-  const json: any = await res.json().catch(() => null);
-  if (!res.ok || !json?.Key) throw new Error(`Viva.com ${res.status}`);
+  const json = await viva("GET", "/api/messages/config/token");
+  if (!json?.Key) throw new Error("Viva.com sem chave");
   return json.Key;
 }
