@@ -33,3 +33,11 @@ export function parseSaleAmount(value: string): number | null {
 }
 
 export const formatSaleAmount = (cents: number) => new Intl.NumberFormat("pt-PT", { style: "currency", currency: "EUR" }).format(cents / 100);
+
+export type ContactOutcome = "contactei" | "atendeu" | "nao_atendeu";
+
+/** Registar um contacto promove um lead ainda "novo" para "em_contato". */
+export function contactOutcomeStatusPatch(currentStatus: string | null | undefined, outcome: ContactOutcome | undefined): "em_contato" | undefined {
+  if (!outcome) return undefined;
+  return (currentStatus ?? "novo") === "novo" ? "em_contato" : undefined;
+}
