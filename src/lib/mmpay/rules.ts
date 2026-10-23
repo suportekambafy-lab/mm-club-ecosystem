@@ -45,8 +45,21 @@ export function generateMmpayCode(random: () => number = Math.random): string {
   return code;
 }
 
+const billingSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("one_time") }).strict(),
+  z
+    .object({
+      type: z.literal("subscription"),
+      interval: z.enum(["week", "month", "year"]),
+      intervalCount: z.number().int().min(1).max(24),
+      totalCycles: z.number().int().min(1).max(600).nullable(),
+    })
+    .strict(),
+]);
+
 export const createMmpayLinkSchema = z
   .object({
+    billing: billingSchema.optional(),
     title: z.string().max(120),
     description: z.string().max(MAX_DESCRIPTION_LENGTH).nullish(),
     amountCents: z.number().int(),

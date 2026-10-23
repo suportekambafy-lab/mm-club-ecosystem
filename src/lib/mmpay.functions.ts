@@ -53,6 +53,7 @@ export const createMmpayLink = createServerFn({ method: "POST" })
       description: data.description ?? null,
       amountCents: data.amountCents,
       coverUrl: data.coverUrl ?? null,
+      billing: data.billing,
     });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("admin_action_log").insert({
@@ -183,4 +184,41 @@ export const resolveVivaReturn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { resolveVivaReturn: resolve } = await import("@/lib/billing/mmpay.server");
     return resolve(data.orderCode);
+  });
+
+export const listMmpaySubscriptions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireCommercial(context);
+    const { listSubscriptions } = await import("@/lib/billing/mmpay-subscriptions.server");
+    return listSubscriptions();
+  });
+
+export const listMmpaySubscriptionCharges = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    await requireCommercial(context);
+    const { listSubscriptionCharges } = await import("@/lib/billing/mmpay-subscriptions.server");
+    return listSubscriptionCharges(data.id);
+  });
+
+export const cancelMmpaySubscription = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ id: z.string().uuid(), reason: z.string().trim().max(300).nullable() }).parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    await requireCommercial(context);
+    const { cancelSubscription } = await import("@/lib/billing/mmpay-subscriptions.server");
+    await cancelSubscription(data.id, data.reason || null);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("admin_action_log").insert({
+      actor_id: context.userId,
+      action: "mmpay.cancel_subscription",
+      entity_type: "mmpay_subscription",
+      entity_id: data.id,
+      after: { reason: data.reason },
+    });
+    return { ok: true };
   });
