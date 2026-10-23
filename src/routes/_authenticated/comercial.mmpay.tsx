@@ -7,6 +7,7 @@ import { MmpaySubscriptions } from "@/components/mmpay/subscriptions-panel";
 import { intervalLabel, splitInstallments, type BillingInterval } from "@/lib/mmpay/subscription-rules";
 import { createMmpayLink, deleteMmpayLink, listMmpayLinks, setMmpayLinkActive, updateMmpayLink, uploadMmpayCover } from "@/lib/mmpay.functions";
 import { COVER_MIME_TYPES, MAX_COVER_BYTES, MAX_DESCRIPTION_LENGTH } from "@/lib/mmpay/rules";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatMoney } from "@/lib/billing/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -55,6 +56,7 @@ function MmpayAdminPage() {
   const [durationKind, setDurationKind] = useState<"" | "indefinite" | "fixed">("");
   const [cycles, setCycles] = useState("");
   const [tab, setTab] = useState<"one_time" | "subscription">("one_time");
+  const [formOpen, setFormOpen] = useState(false);
   const [productFilter, setProductFilter] = useState<"all" | "adesao" | "mentoria">("all");
 
   const resetForm = () => {
@@ -117,6 +119,7 @@ function MmpayAdminPage() {
       toast.success(`Link criado: /pagar/${link.code}`);
       setTab(link.billing.type === "subscription" ? "subscription" : "one_time");
       resetForm();
+      setFormOpen(false);
       void qc.invalidateQueries({ queryKey: ["mmpay-links"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -136,6 +139,7 @@ function MmpayAdminPage() {
     onSuccess: () => {
       toast.success("Produto atualizado.");
       resetForm();
+      setFormOpen(false);
       void qc.invalidateQueries({ queryKey: ["mmpay-links"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -201,8 +205,8 @@ function MmpayAdminPage() {
     setDescription(link.description ?? "");
     setCoverUrl(link.coverUrl);
     setAmountEur(String(formAmount(link) / 100).replace(".", ","));
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    document.getElementById("mmpay-title")?.focus({ preventScroll: true });
+    setFormOpen(true);
+    setTimeout(() => document.getElementById("mmpay-title")?.focus({ preventScroll: true }), 300);
   };
 
   const duplicate = (link: LinkLike) => {
@@ -212,9 +216,9 @@ function MmpayAdminPage() {
     setDescription(link.description ?? "");
     setCoverUrl(link.coverUrl);
     setAmountEur(String(formAmount(link) / 100).replace(".", ","));
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setFormOpen(true);
     setTimeout(() => document.getElementById("mmpay-price")?.focus(), 300);
-    toast.info("Link duplicado no formulário — muda o preço e cria.");
+    toast.info("Link duplicado — muda o preço e cria.");
   };
 
   const canSubmit = title.trim().length > 0 && amountCents >= 100 && !uploading && (billingType === "one_time" || subscriptionValid);
@@ -232,20 +236,34 @@ function MmpayAdminPage() {
 
   return (
     <div className="commercial-enter space-y-9">
-      <section className="border-b border-border pb-8">
-        <p className="mb-4 text-xs font-medium text-commercial-accent">PAGAMENTOS</p>
-        <h1 className="commercial-page-heading">MMpay</h1>
-        <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-          Cria um link de venda com título, capa, descrição e preço. O cliente escolhe como pagar: cartão
-          (com Apple Pay e Google Pay), MB WAY ou Klarna em 3 vezes — numa página com a nossa marca.
-        </p>
+      <section className="flex items-start justify-between gap-4 border-b border-border pb-8">
+        <div>
+          <p className="mb-4 text-xs font-medium text-commercial-accent">PAGAMENTOS</p>
+          <h1 className="commercial-page-heading">MMpay</h1>
+          <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
+            Cria um link de venda com título, capa, descrição e preço. O cliente escolhe como pagar: cartão
+            (com Apple Pay e Google Pay), MB WAY ou Klarna em 3 vezes — numa página com a nossa marca.
+          </p>
+        </div>
+        <Button
+          type="button"
+          size="icon"
+          aria-label="Novo link de venda"
+          onClick={() => {
+            resetForm();
+            setFormOpen(true);
+          }}
+          className="mt-1 h-11 w-11 shrink-0 rounded-full"
+        >
+          <Plus className="h-5 w-5" />
+        </Button>
       </section>
 
-      <section aria-label={editingId ? "Editar produto" : "Criar link de pagamento"} className="rounded-2xl border border-border bg-surface-1 p-6">
-        <h2 className="mb-5 flex items-center gap-2 text-lg font-semibold">
-          {editingId ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-          {editingId ? "Editar produto" : "Novo link de venda"}
-        </h2>
+      <Dialog open={formOpen} onOpenChange={(open) => { setFormOpen(open); if (!open && editingId) resetForm(); }}>
+        <DialogContent aria-describedby={undefined} className="commercial-shell max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-lg text-foreground">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold">{editingId ? "Editar produto" : "Novo link de venda"}</DialogTitle>
+          </DialogHeader>
 
         <div className="grid gap-5 md:grid-cols-[260px_1fr]">
           <div>
@@ -356,7 +374,8 @@ function MmpayAdminPage() {
           </Button>
           {editingId ? <Button variant="outline" disabled={updateMutation.isPending || uploading} onClick={resetForm}><X className="h-4 w-4" /> Cancelar</Button> : null}
         </div>
-      </section>
+        </DialogContent>
+      </Dialog>
 
       <section aria-label="Links de pagamento criados">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -429,7 +448,7 @@ function MmpayAdminPage() {
                   ? "Ainda não criaste nenhuma venda avulsa."
                   : "Nenhuma venda avulsa deste produto."}
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">Cria o primeiro acima e partilha com um cliente.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Cria o primeiro com o botão + e partilha com um cliente.</p>
           </div>
         ) : (
           <div className="space-y-3">
