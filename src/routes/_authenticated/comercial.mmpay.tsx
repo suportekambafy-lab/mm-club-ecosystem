@@ -55,6 +55,7 @@ function MmpayAdminPage() {
   const [durationKind, setDurationKind] = useState<"" | "indefinite" | "fixed">("");
   const [cycles, setCycles] = useState("");
   const [tab, setTab] = useState<"one_time" | "subscription">("one_time");
+  const [productFilter, setProductFilter] = useState<"all" | "adesao" | "mentoria">("all");
 
   const resetForm = () => {
     setEditingId(null);
