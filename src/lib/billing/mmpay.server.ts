@@ -303,6 +303,34 @@ export async function resolveVivaReturn(orderCode: string): Promise<{ code: stri
   return { code: link?.code ?? null };
 }
 
+/** Dá 6 meses de acesso ao MM Club a quem pagou um link MMpay (cria conta se preciso). Idempotente por pagamento. */
+export async function grantMmpayClubAccess(sessionRef: string): Promise<void> {
+  try {
+    const { data: pay } = await supabaseAdmin
+      .from("mmpay_payments")
+      .select("id,email,name,status")
+      .eq("stripe_session_id", sessionRef)
+      .maybeSingle();
+    if (!pay || pay.status !== "paid" || !pay.email) return;
+    const email = pay.email.trim().toLowerCase();
+    const { findUserIdByEmail } = await import("./guest.server");
+    let userId = await findUserIdByEmail(email);
+    if (!userId) {
+      const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+        data: { display_name: pay.name ?? undefined },
+        redirectTo: "https://mmclub.pt/reset-password",
+      });
+      if (error) throw error;
+      userId = data.user?.id ?? null;
+    }
+    if (!userId) return;
+    const { error } = await supabaseAdmin.rpc("grant_mmpay_club_access", { _user_id: userId, _payment_id: pay.id });
+    if (error) throw error;
+  } catch (e) {
+    console.error("[mmpay] falha ao dar acesso ao clube", sessionRef, e);
+  }
+}
+
 /** Marca uma ordem Viva como paga depois de confirmar na própria Viva. Idempotente. */
 export async function settleVivaOrder(orderCode: string): Promise<{ paid: boolean }> {
   const { getVivaOrderStatus } = await import("./viva.server");
@@ -340,6 +368,7 @@ export async function settleVivaOrder(orderCode: string): Promise<{ paid: boolea
       });
     }
   }
+  await grantMmpayClubAccess(`vvo_${orderCode}`);
   return { paid: true };
 }
 
@@ -372,6 +401,7 @@ export async function confirmMmpayPayment(code: string, sessionId: string): Prom
     })
     .eq("stripe_session_id", sessionId)
     .neq("status", "paid");
+  if (paid) await grantMmpayClubAccess(sessionId);
   return { paid };
 }
 
@@ -445,5 +475,6 @@ export async function confirmKlarnaMmpayOrder(input: {
       stripe_session_id: `klo_${order.orderId}`,
     })
     .eq("id", payment.id);
+  await grantMmpayClubAccess(`klo_${order.orderId}`);
   return { paid: true };
 }
