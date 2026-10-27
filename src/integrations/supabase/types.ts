@@ -5155,6 +5155,10 @@ export type Database = {
         Args: { _months: number; _reason: string; _user_id: string }
         Returns: string
       }
+      grant_mmpay_club_access: {
+        Args: { _payment_id: string; _user_id: string }
+        Returns: string
+      }
       has_commercial_access: { Args: { _user_id: string }; Returns: boolean }
       has_feature: {
         Args: { _feature: string; _user_id: string }

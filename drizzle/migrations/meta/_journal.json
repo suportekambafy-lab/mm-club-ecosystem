@@ -141,6 +141,13 @@
       "when": 1792773465867,
       "tag": "0019_lead_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1793123737401,
+      "tag": "0020_mmpay_club_access",
+      "breakpoints": true
     }
   ]
 }
