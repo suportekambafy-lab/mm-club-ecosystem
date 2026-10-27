@@ -315,13 +315,31 @@ export async function grantMmpayClubAccess(sessionRef: string): Promise<void> {
     const email = pay.email.trim().toLowerCase();
     const { findUserIdByEmail } = await import("./guest.server");
     let userId = await findUserIdByEmail(email);
+    let newPassword: string | null = null;
     if (!userId) {
-      const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-        data: { display_name: pay.name ?? undefined },
-        redirectTo: "https://mmclub.pt/reset-password",
+      // Conta nova: palavra-passe gerada e enviada por email (o membro pode alterá-la no perfil).
+      const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+      const bytes = crypto.getRandomValues(new Uint8Array(10));
+      newPassword = Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("") + "@MM";
+      const { data, error } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: newPassword,
+        email_confirm: true,
+        user_metadata: { display_name: pay.name ?? undefined },
       });
       if (error) throw error;
       userId = data.user?.id ?? null;
+    }
+    if (userId && newPassword) {
+      try {
+        const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+        await sendTemplateEmail("club-welcome", email, {
+          templateData: { name: pay.name?.split(" ")[0] ?? "membro", email, password: newPassword },
+          idempotencyKey: `club-welcome-${pay.id}`,
+        });
+      } catch (e) {
+        console.error("[mmpay] falha ao enviar email de boas-vindas", email, e);
+      }
     }
     if (!userId) return;
     const { error } = await supabaseAdmin.rpc("grant_mmpay_club_access", { _user_id: userId, _payment_id: pay.id });
