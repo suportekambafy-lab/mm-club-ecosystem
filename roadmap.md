@@ -36,6 +36,7 @@
 - [ ] MMpay Klarna: código pronto; falta ativar Klarna no painel Stripe (utilizador)
 
 ## Em curso
+- [ ] Enviar vendas MMpay confirmadas à GlobalStream pelo webhook fornecido, com autenticação segura, prevenção de duplicados e verificação da receção.
 - [x] Regularizar os dez pagamentos MMpay antigos (nove compradores distintos): contas e nove funcionalidades por pagamento confirmadas, acesso até 28/04/2027; rotina existente de boas-vindas executada, entrega de email não confirmada. Ferramenta temporária removida; nenhuma nova cobrança.
 - [x] Separar vendas avulsas e assinaturas nos totais e na lista MMpay do faturamento; cinco testes passaram e navegador autenticado confirmou alternância entre separadores sem erros. Não publicado.
 - [x] Incluir vendas pagas MMpay no faturamento administrativo; testes e páginas autenticadas confirmaram totais/lista e acessos recentes. Dez pagamentos anteriores à automatização regularizados a pedido do dono; todas as quinze compras pagas têm conta e acesso. Alterações do painel não publicadas.
