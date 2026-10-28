@@ -36,6 +36,7 @@
 - [ ] MMpay Klarna: código pronto; falta ativar Klarna no painel Stripe (utilizador)
 
 ## Em curso
+- [ ] Enviar todo o histórico de vendas MMpay pagas à Novawebinar e confirmar cada resposta, sem novas cobranças.
 - [x] Enviar vendas MMpay confirmadas à Novawebinar/GlobalStream: chave segura, fila com novas tentativas, disparo em compras pagas e ciclos seguintes sem duplicar ciclo 1. Destino aceitou uma compra real existente (HTTP 200); teste dos campos passou. Envio automático depende de publicar o novo processador. Não enviar histórico em massa sem pedido.
 - [x] Regularizar os dez pagamentos MMpay antigos (nove compradores distintos): contas e nove funcionalidades por pagamento confirmadas, acesso até 28/04/2027; rotina existente de boas-vindas executada, entrega de email não confirmada. Ferramenta temporária removida; nenhuma nova cobrança.
 - [x] Separar vendas avulsas e assinaturas nos totais e na lista MMpay do faturamento; cinco testes passaram e navegador autenticado confirmou alternância entre separadores sem erros. Não publicado.
