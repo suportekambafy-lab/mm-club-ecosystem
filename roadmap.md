@@ -36,6 +36,7 @@
 - [ ] MMpay Klarna: código pronto; falta ativar Klarna no painel Stripe (utilizador)
 
 ## Em curso
+- [ ] Incluir vendas pagas MMpay no faturamento administrativo e verificar acessos reais dos compradores.
 - [x] Corrigir eliminação de capas partilhadas no MMpay; 9 testes passaram e navegador confirmou capa no produto original e checkout após eliminar a cópia; produtos temporários removidos.
 - [x] Restaurar a imagem original enviada pelo utilizador no mesmo endereço dos cinco produtos; navegador confirmou todas as capas e o checkout real, sem alterar links ou preços.
 - [x] Reduzir os métodos de pagamento do checkout MMpay: azulejos compactos (~85x88), marcas em azulejos brancos pequenos, selo «3x de …» do Klarna no lugar do nome; navegador confirmou alinhamento e nada cortado.
