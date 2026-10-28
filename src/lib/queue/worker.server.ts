@@ -12,6 +12,7 @@ import { notificationsConsumer } from "./handlers/notifications.server";
 import { recoveryConsumer } from "./handlers/recovery.server";
 import { timelineConsumer } from "./handlers/timeline.server";
 import type { JobPayload, JobRow } from "./types";
+import { globalstreamConsumer } from "./handlers/globalstream.server";
 
 const HANDLERS: Record<ConsumerName, (p: JobPayload) => Promise<void>> = {
   entitlements: entitlementsConsumer,
@@ -20,6 +21,7 @@ const HANDLERS: Record<ConsumerName, (p: JobPayload) => Promise<void>> = {
   email: emailConsumer,
   notifications: notificationsConsumer,
   recovery: recoveryConsumer,
+  globalstream: globalstreamConsumer,
 };
 
 const BACKOFF_SECONDS = [10, 60, 300, 1800, 7200];
