@@ -4,7 +4,7 @@
  * dataset is small and this keeps every metric definition in one place.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { mmpayRevenueRows } from "./mmpay-revenue";
+import { mmpayRevenueRows, revenueSaleType } from "./mmpay-revenue";
 import type { SubscriptionStatus } from "@/lib/billing/types";
 import type {
   AdminEventRow,
@@ -82,6 +82,7 @@ type PaymentRaw = {
   paid_at: string | null;
   created_at: string;
   product_title?: string;
+  sale_type?: 'subscription' | 'one_time';
 };
 
 type SubRaw = {
@@ -234,7 +235,7 @@ export async function collectFinanceOverview(
         .eq("type", "PaymentRecovered")
         .gte("occurred_at", since30.toISOString()),
       supabaseAdmin.from("mmpay_payments").select("id,link_id,email,name,status,amount_cents,currency,payment_method,paid_at,created_at").eq("status", "paid").limit(5000),
-      supabaseAdmin.from("mmpay_links").select("id,title").limit(5000),
+      supabaseAdmin.from("mmpay_links").select("id,title,billing_type").limit(5000),
       supabaseAdmin.from("mmpay_subscription_charges").select("id,subscription_id,cycle_number,status,amount_cents,finished_at,created_at").eq("status", "paid").gt("cycle_number", 1).limit(5000),
       supabaseAdmin.from("mmpay_subscriptions").select("id,customer_email,customer_name,product_title,currency").limit(5000),
       supabaseAdmin.from("entitlement_grants").select("source_id,expires_at,revoked_at").eq("source", "purchase").eq("feature_key", "academy.access").limit(5000),
@@ -416,6 +417,8 @@ export async function collectFinanceOverview(
   let pCount = 0;
   let pTrialCents = 0;
   let pTrialCount = 0;
+  const oneTime: MoneyPoint = { label: 'Vendas avulsas', cents: 0, count: 0 };
+  const subscriptionSales: MoneyPoint = { label: 'Vendas de assinatura', cents: 0, count: 0 };
   for (const p of paid) {
     if (!inPeriod(p.paid_at)) continue;
     const at = new Date(p.paid_at as string);
@@ -427,7 +430,9 @@ export async function collectFinanceOverview(
       pTrialCents += value;
       pTrialCount += 1;
     }
-    bump(pKind, trial ? "Trial / verificação" : "Venda paga", value);
+    const category = revenueSaleType(p) === 'subscription' ? subscriptionSales : oneTime;
+    if (!trial) { category.cents += value; category.count += 1; }
+    bump(pKind, trial ? "Trial / verificação" : category.label, value);
     const price = p.price_id ? priceById.get(p.price_id) : null;
     bump(
       pPlan,
@@ -481,6 +486,8 @@ export async function collectFinanceOverview(
       count: pCount - pTrialCount,
     },
     byKind: sortDesc(pKind),
+    oneTime,
+    subscriptionSales,
   };
 
   return {
@@ -498,7 +505,7 @@ export async function collectFinanceOverview(
             cents: p.amount_cents, at: p.paid_at ?? p.created_at,
             accessUntil: grant?.expires_at ?? null,
             accessActive: !!grant && !grant.revoked_at && (!grant.expires_at || new Date(grant.expires_at) > now),
-            recurringCharge: !p.paymentId };
+            recurringCharge: !p.paymentId, saleType: p.sale_type };
         }),
       };
     })(),

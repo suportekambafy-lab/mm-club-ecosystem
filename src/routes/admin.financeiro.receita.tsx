@@ -73,10 +73,16 @@ function RevenuePage() {
           hint={`${p.paymentsCount} pagamento(s) · ${p.regular.count} venda(s) + ${p.trial.count} trial`}
         />
         <StatCard
-          label="Vendas pagas"
-          value={money(p.regular.cents)}
+          label="Vendas avulsas"
+          value={money(p.oneTime.cents)}
           tone="positive"
-          hint={`${p.regular.count} pagamento(s) reais`}
+          hint={`${p.oneTime.count} pagamento(s)`}
+        />
+        <StatCard
+          label="Vendas de assinatura"
+          value={money(p.subscriptionSales.cents)}
+          tone="positive"
+          hint={`${p.subscriptionSales.count} cobrança(s) paga(s)`}
         />
         <StatCard
           label="Trial / verificação"
@@ -107,7 +113,7 @@ function RevenuePage() {
 
       <MmpaySales data={data} />
       <section className="grid gap-4 lg:grid-cols-2">
-        <Panel title={`Trial vs. vendas pagas · ${p.label}`}>
+        <Panel title={`Receita por tipo de venda · ${p.label}`}>
           <BarList items={p.byKind} emptyLabel="Sem pagamentos neste período." />
         </Panel>
       </section>
