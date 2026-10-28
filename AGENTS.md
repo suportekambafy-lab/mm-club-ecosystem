@@ -39,3 +39,4 @@
 - MMpay subscriptions are managed by MM Club (mmpay_subscriptions + per-attempt mmpay_subscription_charges); Viva only processes charges via the first payment's recurring transaction. Duplicate protection: unique initial order code, atomic claim RPC with locked_until, and one processing/paid charge per cycle.
 - Every paid MMpay payment grants 6 months of club features once per payment (purchase grant keyed by payment id), creating/inviting the buyer account by email; access failures are logged and never block payment confirmation.
 - Admin financial overview normalizes settled EUR MMpay payments and later recurring cycles into revenue once; cycle one stays in the initial payment source, and MMpay does not alter legacy subscription MRR or churn.
+- Financial sale categories use MMpay link billing type for initial payments, subscription type for later cycles, and subscription association for legacy billing; trials remain separate from both sale totals.

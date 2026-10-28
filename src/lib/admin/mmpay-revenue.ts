@@ -9,16 +9,17 @@ export function mmpayRevenueRows(
   payments: MmpayRevenuePayment[],
   charges: { id: string; subscription_id: string; cycle_number: number; status: string; amount_cents: number; finished_at: string | null; created_at: string }[],
   subscriptions: { id: string; customer_email: string; customer_name: string | null; product_title: string; currency: string }[],
-  links: { id: string; title: string }[],
+  links: { id: string; title: string; billing_type?: string | null }[],
 ) {
   const titles = new Map(links.map(l => [l.id, l.title]));
+  const types = new Map(links.map(l => [l.id, l.billing_type]));
   const subs = new Map(subscriptions.map(s => [s.id, s]));
   const rows = payments.filter(p => p.status === 'paid' && p.paid_at && p.currency.toUpperCase() === 'EUR').map(p => ({
     id: `mmpay:${p.id}`, paymentId: p.id, user_id: `mmpay:${p.email?.trim().toLowerCase() ?? p.id}`,
     subscription_id: null, price_id: null, status: 'paid', amount_cents: p.amount_cents,
     refunded_cents: 0, currency: p.currency, method: p.payment_method,
     paid_at: p.paid_at, created_at: p.created_at, product_title: titles.get(p.link_id) ?? 'Produto MMpay',
-    buyer_name: p.name, buyer_email: p.email,
+    buyer_name: p.name, buyer_email: p.email, sale_type: types.get(p.link_id) === 'subscription' ? 'subscription' as const : 'one_time' as const,
   }));
   for (const c of charges) {
     const s = subs.get(c.subscription_id);
@@ -26,7 +27,11 @@ export function mmpayRevenueRows(
     rows.push({ id: `mmpay-charge:${c.id}`, paymentId: '', user_id: `mmpay:${s.customer_email.trim().toLowerCase()}`,
       subscription_id: null, price_id: null, status: 'paid', amount_cents: c.amount_cents, refunded_cents: 0,
       currency: s.currency, method: 'card', paid_at: c.finished_at, created_at: c.created_at,
-      product_title: s.product_title, buyer_name: s.customer_name, buyer_email: s.customer_email });
+      product_title: s.product_title, buyer_name: s.customer_name, buyer_email: s.customer_email, sale_type: 'subscription' });
   }
   return rows;
+}
+
+export function revenueSaleType(p: { sale_type?: 'subscription' | 'one_time'; subscription_id: string | null }) {
+  return p.sale_type ?? (p.subscription_id ? 'subscription' : 'one_time');
 }
