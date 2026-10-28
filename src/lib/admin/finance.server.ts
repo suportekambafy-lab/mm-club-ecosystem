@@ -4,6 +4,7 @@
  * dataset is small and this keeps every metric definition in one place.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { mmpayRevenueRows } from "./mmpay-revenue";
 import type { SubscriptionStatus } from "@/lib/billing/types";
 import type {
   AdminEventRow,
@@ -80,6 +81,7 @@ type PaymentRaw = {
   method: string | null;
   paid_at: string | null;
   created_at: string;
+  product_title?: string;
 };
 
 type SubRaw = {
@@ -202,7 +204,7 @@ export async function collectFinanceOverview(
   const period = resolveRange(range, now);
 
 
-  const [paymentsRes, subsRes, pricesRes, productsRes, customersRes, couponsRes, recoveredRes] =
+  const [paymentsRes, subsRes, pricesRes, productsRes, customersRes, couponsRes, recoveredRes, mmpayRes, linksRes, chargesRes, mmSubsRes, grantsRes] =
     await Promise.all([
       supabaseAdmin
         .from("billing_payments")
@@ -231,9 +233,18 @@ export async function collectFinanceOverview(
         .select("id", { count: "exact", head: true })
         .eq("type", "PaymentRecovered")
         .gte("occurred_at", since30.toISOString()),
+      supabaseAdmin.from("mmpay_payments").select("id,link_id,email,name,status,amount_cents,currency,payment_method,paid_at,created_at").eq("status", "paid").limit(5000),
+      supabaseAdmin.from("mmpay_links").select("id,title").limit(5000),
+      supabaseAdmin.from("mmpay_subscription_charges").select("id,subscription_id,cycle_number,status,amount_cents,finished_at,created_at").eq("status", "paid").gt("cycle_number", 1).limit(5000),
+      supabaseAdmin.from("mmpay_subscriptions").select("id,customer_email,customer_name,product_title,currency").limit(5000),
+      supabaseAdmin.from("entitlement_grants").select("source_id,expires_at,revoked_at").eq("source", "purchase").eq("feature_key", "academy.access").limit(5000),
     ]);
 
-  const payments = (paymentsRes.data ?? []) as PaymentRaw[];
+  for (const result of [mmpayRes, linksRes, chargesRes, mmSubsRes, grantsRes]) {
+    if (result.error) throw new Error("Não foi possível carregar as vendas MMpay.");
+  }
+  const mmPayments = mmpayRevenueRows(mmpayRes.data ?? [], chargesRes.data ?? [], mmSubsRes.data ?? [], linksRes.data ?? []);
+  const payments: PaymentRaw[] = [...(paymentsRes.data ?? []) as PaymentRaw[], ...mmPayments];
   const subs = (subsRes.data ?? []) as SubRaw[];
   const priceById = new Map(
     (pricesRes.data ?? []).map((p) => [p.id, p] as const),
@@ -290,7 +301,7 @@ export async function collectFinanceOverview(
 
 
     const price = p.price_id ? priceById.get(p.price_id) : null;
-    const planName = price
+    const planName = p.product_title ? `MMpay · ${p.product_title}` : price
       ? (productById.get(price.product_id)?.name ?? price.slug)
       : "Avulso";
     bump(byPlan, planName, value);
@@ -420,7 +431,7 @@ export async function collectFinanceOverview(
     const price = p.price_id ? priceById.get(p.price_id) : null;
     bump(
       pPlan,
-      `${price ? (productById.get(price.product_id)?.name ?? price.slug) : "Avulso"}${trial ? " · trial" : ""}`,
+      `${p.product_title ? `MMpay · ${p.product_title}` : price ? (productById.get(price.product_id)?.name ?? price.slug) : "Avulso"}${trial ? " · trial" : ""}`,
       value,
     );
     bump(pCountry, countryByUser.get(p.user_id) ?? "—", value);
@@ -475,6 +486,22 @@ export async function collectFinanceOverview(
   return {
     generatedAt: new Date().toISOString(),
     period: periodBlock,
+    mmpay: (() => {
+      const grants = new Map((grantsRes.data ?? []).map(g => [g.source_id, g]));
+      const rows = mmPayments.filter(p => inPeriod(p.paid_at)).sort((a, b) => (b.paid_at ?? '').localeCompare(a.paid_at ?? ''));
+      return {
+        cents: rows.reduce((sum, p) => sum + p.amount_cents, 0),
+        count: rows.length,
+        sales: rows.map(p => {
+          const grant = grants.get(p.paymentId);
+          return { id: p.id, name: p.buyer_name, email: p.buyer_email, product: p.product_title,
+            cents: p.amount_cents, at: p.paid_at ?? p.created_at,
+            accessUntil: grant?.expires_at ?? null,
+            accessActive: !!grant && !grant.revoked_at && (!grant.expires_at || new Date(grant.expires_at) > now),
+            recurringCharge: !p.paymentId };
+        }),
+      };
+    })(),
 
     revenue: {
       todayCents,
