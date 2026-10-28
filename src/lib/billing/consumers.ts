@@ -11,6 +11,7 @@ export const CONSUMERS = [
   "email",
   "notifications",
   "recovery",
+  "globalstream",
 ] as const;
 
 export type ConsumerName = (typeof CONSUMERS)[number];
