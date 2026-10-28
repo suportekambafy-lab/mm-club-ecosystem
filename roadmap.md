@@ -36,7 +36,7 @@
 - [ ] MMpay Klarna: código pronto; falta ativar Klarna no painel Stripe (utilizador)
 
 ## Em curso
-- [ ] Separar vendas avulsas e assinaturas nos totais e na lista MMpay do faturamento.
+- [x] Separar vendas avulsas e assinaturas nos totais e na lista MMpay do faturamento; cinco testes passaram e navegador autenticado confirmou alternância entre separadores sem erros. Não publicado.
 - [x] Incluir vendas pagas MMpay no faturamento administrativo; testes e páginas autenticadas confirmaram totais/lista e acessos recentes. Dez pagamentos anteriores à automatização não têm conta/acesso; concessão retroativa aguarda pedido do dono. Não publicado.
 - [x] Corrigir eliminação de capas partilhadas no MMpay; 9 testes passaram e navegador confirmou capa no produto original e checkout após eliminar a cópia; produtos temporários removidos.
 - [x] Restaurar a imagem original enviada pelo utilizador no mesmo endereço dos cinco produtos; navegador confirmou todas as capas e o checkout real, sem alterar links ou preços.
