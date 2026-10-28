@@ -11,9 +11,11 @@ export const Route = createFileRoute("/api/public/globalstream-check")({
     if (!data.user) return new Response("Unauthorized", { status: 401 });
     const { data: admin } = await client.rpc("has_role", { _user_id: data.user.id, _role: "admin" });
     if (!admin) return new Response("Forbidden", { status: 403 });
-    const secret = process.env["GLOBALSTREAM_WEBHOOK_SECRET"];
-    if (!secret) return Response.json({ configured: false });
-    const res = await fetch("https://www.globalstream.live/api/public/hooks/62c76976bfa047158a21cd72ed4883bd", { method: "POST", redirect: "error", headers: { "Content-Type": "application/json", Authorization: `Bearer ${secret}` }, body: "{}", signal: AbortSignal.timeout(15000) });
-    return Response.json({ status: res.status });
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: payment } = await supabaseAdmin.from("mmpay_payments").select("id").eq("status", "paid").order("paid_at", { ascending: false }).limit(1).single();
+    if (!payment) return new Response("No paid sale", { status: 404 });
+    const { globalstreamConsumer } = await import("@/lib/queue/handlers/globalstream.server");
+    await globalstreamConsumer({ paymentId: payment.id, source: "payment" });
+    return Response.json({ delivered: true });
   } } },
 });
