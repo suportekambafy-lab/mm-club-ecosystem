@@ -148,6 +148,13 @@
       "when": 1793123737401,
       "tag": "0020_mmpay_club_access",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793228890961,
+      "tag": "0021_mmpay_globalstream_sale_notifications",
+      "breakpoints": true
     }
   ]
 }
