@@ -102,7 +102,6 @@ import { Route as AdminFinanceiroRecoveryRouteImport } from './routes/admin.fina
 import { Route as AdminFinanceiroSubscricoesRouteImport } from './routes/admin.financeiro.subscricoes'
 import { Route as AdminLivesIndexRouteImport } from './routes/admin.lives.index'
 import { Route as ApiKnowledgeSearchRouteImport } from './routes/api.knowledge.search'
-import { Route as ApiPublicGlobalstreamHistoryRouteImport } from './routes/api/public/globalstream-history'
 import { Route as ApiRealtimeSessionRouteImport } from './routes/api.realtime.session'
 import { Route as AppAcademiaCourseIdIndexRouteImport } from './routes/_app.academia.$courseId.index'
 import { Route as AppAcademiaCourseIdLessonIdRouteImport } from './routes/_app.academia.$courseId.$lessonId'
@@ -631,12 +630,6 @@ const ApiKnowledgeSearchRoute = ApiKnowledgeSearchRouteImport.update({
   path: '/api/knowledge/search',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicGlobalstreamHistoryRoute =
-  ApiPublicGlobalstreamHistoryRouteImport.update({
-    id: '/api/public/globalstream-history',
-    path: '/api/public/globalstream-history',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiRealtimeSessionRoute = ApiRealtimeSessionRouteImport.update({
   id: '/api/realtime/session',
   path: '/api/realtime/session',
@@ -1034,7 +1027,6 @@ export interface FileRoutesByFullPath {
   '/admin/financeiro/recovery': typeof AdminFinanceiroRecoveryRoute
   '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
-  '/api/public/globalstream-history': typeof ApiPublicGlobalstreamHistoryRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia/': typeof AppAcademiaIndexRoute
   '/ajuda/': typeof AppAjudaIndexRoute
@@ -1172,7 +1164,6 @@ export interface FileRoutesByTo {
   '/admin/financeiro/recovery': typeof AdminFinanceiroRecoveryRoute
   '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
-  '/api/public/globalstream-history': typeof ApiPublicGlobalstreamHistoryRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia': typeof AppAcademiaIndexRoute
   '/ajuda': typeof AppAjudaIndexRoute
@@ -1322,7 +1313,6 @@ export interface FileRoutesById {
   '/admin/financeiro/recovery': typeof AdminFinanceiroRecoveryRoute
   '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
-  '/api/public/globalstream-history': typeof ApiPublicGlobalstreamHistoryRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/_app/academia/': typeof AppAcademiaIndexRoute
   '/_app/ajuda/': typeof AppAjudaIndexRoute
@@ -1471,7 +1461,6 @@ export interface FileRouteTypes {
     | '/admin/financeiro/recovery'
     | '/admin/financeiro/subscricoes'
     | '/api/knowledge/search'
-    | '/api/public/globalstream-history'
     | '/api/realtime/session'
     | '/academia/'
     | '/ajuda/'
@@ -1609,7 +1598,6 @@ export interface FileRouteTypes {
     | '/admin/financeiro/recovery'
     | '/admin/financeiro/subscricoes'
     | '/api/knowledge/search'
-    | '/api/public/globalstream-history'
     | '/api/realtime/session'
     | '/academia'
     | '/ajuda'
@@ -1758,7 +1746,6 @@ export interface FileRouteTypes {
     | '/admin/financeiro/recovery'
     | '/admin/financeiro/subscricoes'
     | '/api/knowledge/search'
-    | '/api/public/globalstream-history'
     | '/api/realtime/session'
     | '/_app/academia/'
     | '/_app/ajuda/'
@@ -1849,7 +1836,6 @@ export interface RootRouteChildren {
   UpsellTrial14Route: typeof UpsellTrial14Route
   CheckoutIndexRoute: typeof CheckoutIndexRoute
   ApiKnowledgeSearchRoute: typeof ApiKnowledgeSearchRoute
-  ApiPublicGlobalstreamHistoryRoute: typeof ApiPublicGlobalstreamHistoryRoute
   ApiRealtimeSessionRoute: typeof ApiRealtimeSessionRoute
   ApiPublicCloudflareStreamWebhookRoute: typeof ApiPublicCloudflareStreamWebhookRoute
   ApiPublicCronCallRemindersRoute: typeof ApiPublicCronCallRemindersRoute
@@ -2542,13 +2528,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiKnowledgeSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/globalstream-history': {
-      id: '/api/public/globalstream-history'
-      path: '/api/public/globalstream-history'
-      fullPath: '/api/public/globalstream-history'
-      preLoaderRoute: typeof ApiPublicGlobalstreamHistoryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/realtime/session': {
       id: '/api/realtime/session'
       path: '/api/realtime/session'
@@ -3232,7 +3211,6 @@ const rootRouteChildren: RootRouteChildren = {
   UpsellTrial14Route: UpsellTrial14Route,
   CheckoutIndexRoute: CheckoutIndexRoute,
   ApiKnowledgeSearchRoute: ApiKnowledgeSearchRoute,
-  ApiPublicGlobalstreamHistoryRoute: ApiPublicGlobalstreamHistoryRoute,
   ApiRealtimeSessionRoute: ApiRealtimeSessionRoute,
   ApiPublicCloudflareStreamWebhookRoute: ApiPublicCloudflareStreamWebhookRoute,
   ApiPublicCronCallRemindersRoute: ApiPublicCronCallRemindersRoute,
