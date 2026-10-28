@@ -505,7 +505,7 @@ export async function collectFinanceOverview(
             cents: p.amount_cents, at: p.paid_at ?? p.created_at,
             accessUntil: grant?.expires_at ?? null,
             accessActive: !!grant && !grant.revoked_at && (!grant.expires_at || new Date(grant.expires_at) > now),
-            recurringCharge: !p.paymentId, saleType: p.sale_type };
+            recurringCharge: !p.paymentId, saleType: p.sale_type, method: p.method };
         }),
       };
     })(),

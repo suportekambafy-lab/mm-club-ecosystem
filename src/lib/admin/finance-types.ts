@@ -52,7 +52,7 @@ export type FinanceOverview = {
   mmpay: {
     cents: number;
     count: number;
-    sales: { id: string; name: string | null; email: string | null; product: string; cents: number; at: string; accessUntil: string | null; accessActive: boolean; recurringCharge: boolean; saleType: 'subscription' | 'one_time' }[];
+    sales: { id: string; name: string | null; email: string | null; product: string; cents: number; at: string; accessUntil: string | null; accessActive: boolean; recurringCharge: boolean; saleType: 'subscription' | 'one_time'; method: string | null }[];
   };
 
   revenue: {
