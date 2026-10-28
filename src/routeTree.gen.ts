@@ -102,6 +102,7 @@ import { Route as AdminFinanceiroRecoveryRouteImport } from './routes/admin.fina
 import { Route as AdminFinanceiroSubscricoesRouteImport } from './routes/admin.financeiro.subscricoes'
 import { Route as AdminLivesIndexRouteImport } from './routes/admin.lives.index'
 import { Route as ApiKnowledgeSearchRouteImport } from './routes/api.knowledge.search'
+import { Route as ApiPublicMmpayAccessBackfillRouteImport } from './routes/api/public/mmpay-access-backfill'
 import { Route as ApiRealtimeSessionRouteImport } from './routes/api.realtime.session'
 import { Route as AppAcademiaCourseIdIndexRouteImport } from './routes/_app.academia.$courseId.index'
 import { Route as AppAcademiaCourseIdLessonIdRouteImport } from './routes/_app.academia.$courseId.$lessonId'
@@ -630,6 +631,12 @@ const ApiKnowledgeSearchRoute = ApiKnowledgeSearchRouteImport.update({
   path: '/api/knowledge/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMmpayAccessBackfillRoute =
+  ApiPublicMmpayAccessBackfillRouteImport.update({
+    id: '/api/public/mmpay-access-backfill',
+    path: '/api/public/mmpay-access-backfill',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiRealtimeSessionRoute = ApiRealtimeSessionRouteImport.update({
   id: '/api/realtime/session',
   path: '/api/realtime/session',
@@ -1027,6 +1034,7 @@ export interface FileRoutesByFullPath {
   '/admin/financeiro/recovery': typeof AdminFinanceiroRecoveryRoute
   '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
+  '/api/public/mmpay-access-backfill': typeof ApiPublicMmpayAccessBackfillRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia/': typeof AppAcademiaIndexRoute
   '/ajuda/': typeof AppAjudaIndexRoute
@@ -1164,6 +1172,7 @@ export interface FileRoutesByTo {
   '/admin/financeiro/recovery': typeof AdminFinanceiroRecoveryRoute
   '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
+  '/api/public/mmpay-access-backfill': typeof ApiPublicMmpayAccessBackfillRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/academia': typeof AppAcademiaIndexRoute
   '/ajuda': typeof AppAjudaIndexRoute
@@ -1313,6 +1322,7 @@ export interface FileRoutesById {
   '/admin/financeiro/recovery': typeof AdminFinanceiroRecoveryRoute
   '/admin/financeiro/subscricoes': typeof AdminFinanceiroSubscricoesRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
+  '/api/public/mmpay-access-backfill': typeof ApiPublicMmpayAccessBackfillRoute
   '/api/realtime/session': typeof ApiRealtimeSessionRoute
   '/_app/academia/': typeof AppAcademiaIndexRoute
   '/_app/ajuda/': typeof AppAjudaIndexRoute
@@ -1461,6 +1471,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro/recovery'
     | '/admin/financeiro/subscricoes'
     | '/api/knowledge/search'
+    | '/api/public/mmpay-access-backfill'
     | '/api/realtime/session'
     | '/academia/'
     | '/ajuda/'
@@ -1598,6 +1609,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro/recovery'
     | '/admin/financeiro/subscricoes'
     | '/api/knowledge/search'
+    | '/api/public/mmpay-access-backfill'
     | '/api/realtime/session'
     | '/academia'
     | '/ajuda'
@@ -1746,6 +1758,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro/recovery'
     | '/admin/financeiro/subscricoes'
     | '/api/knowledge/search'
+    | '/api/public/mmpay-access-backfill'
     | '/api/realtime/session'
     | '/_app/academia/'
     | '/_app/ajuda/'
@@ -1836,6 +1849,7 @@ export interface RootRouteChildren {
   UpsellTrial14Route: typeof UpsellTrial14Route
   CheckoutIndexRoute: typeof CheckoutIndexRoute
   ApiKnowledgeSearchRoute: typeof ApiKnowledgeSearchRoute
+  ApiPublicMmpayAccessBackfillRoute: typeof ApiPublicMmpayAccessBackfillRoute
   ApiRealtimeSessionRoute: typeof ApiRealtimeSessionRoute
   ApiPublicCloudflareStreamWebhookRoute: typeof ApiPublicCloudflareStreamWebhookRoute
   ApiPublicCronCallRemindersRoute: typeof ApiPublicCronCallRemindersRoute
@@ -2528,6 +2542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiKnowledgeSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/mmpay-access-backfill': {
+      id: '/api/public/mmpay-access-backfill'
+      path: '/api/public/mmpay-access-backfill'
+      fullPath: '/api/public/mmpay-access-backfill'
+      preLoaderRoute: typeof ApiPublicMmpayAccessBackfillRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/realtime/session': {
       id: '/api/realtime/session'
       path: '/api/realtime/session'
@@ -3211,6 +3232,7 @@ const rootRouteChildren: RootRouteChildren = {
   UpsellTrial14Route: UpsellTrial14Route,
   CheckoutIndexRoute: CheckoutIndexRoute,
   ApiKnowledgeSearchRoute: ApiKnowledgeSearchRoute,
+  ApiPublicMmpayAccessBackfillRoute: ApiPublicMmpayAccessBackfillRoute,
   ApiRealtimeSessionRoute: ApiRealtimeSessionRoute,
   ApiPublicCloudflareStreamWebhookRoute: ApiPublicCloudflareStreamWebhookRoute,
   ApiPublicCronCallRemindersRoute: ApiPublicCronCallRemindersRoute,
