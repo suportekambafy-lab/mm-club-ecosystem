@@ -13,7 +13,7 @@ export async function globalstreamConsumer(job: JobPayload): Promise<void> {
     if (error || !charge) throw new Error("Sale not available");
     if (charge.status !== "paid" || charge.cycle_number <= 1 || !charge.finished_at) return;
     const { data: sub, error: subError } = await supabaseAdmin.from("mmpay_subscriptions").select("link_id,customer_email,customer_name,customer_phone,product_title,currency").eq("id", charge.subscription_id).single();
-    if (subError || !sub) throw new Error("Subscription not available");
+    if (subError || !sub || !sub.link_id) throw new Error("Subscription not available");
     sale = globalstreamSalePayload({ id: charge.id, amount_cents: charge.amount_cents, currency: sub.currency, email: sub.customer_email, name: sub.customer_name, phone: sub.customer_phone, product_id: sub.link_id, product_title: sub.product_title });
   } else {
     const { data: payment, error } = await supabaseAdmin.from("mmpay_payments").select("id,link_id,email,name,phone,status,amount_cents,currency,paid_at").eq("id", job.paymentId).single();
