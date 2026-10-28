@@ -11,6 +11,7 @@ import {
   STATUS_LABEL,
 } from "@/components/admin/finance-ui";
 import { getFinanceOverview } from "@/lib/admin-finance.functions";
+import { MmpaySales } from "@/components/admin/mmpay-sales";
 import { getPaymentMigrationReport, sendPaymentMigrationEmails } from "@/lib/payment-migration.functions";
 import type { FinanceRange } from "@/lib/admin/finance-types";
 import type { SubscriptionStatus } from "@/lib/billing/types";
@@ -121,6 +122,7 @@ function OverviewPage() {
         />
       </section>
 
+      <MmpaySales data={data} />
       <section className="grid gap-4 lg:grid-cols-2">
         <Panel title={`Receita por plano · ${p.label}`}>
           <BarList items={p.byPlan} emptyLabel="Sem receita neste período." />

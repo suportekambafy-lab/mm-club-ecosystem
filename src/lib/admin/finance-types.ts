@@ -47,6 +47,11 @@ export type FinancePeriod = {
 export type FinanceOverview = {
   generatedAt: string;
   period: FinancePeriod;
+  mmpay: {
+    cents: number;
+    count: number;
+    sales: { id: string; name: string | null; email: string | null; product: string; cents: number; at: string; accessUntil: string | null; accessActive: boolean; recurringCharge: boolean }[];
+  };
 
   revenue: {
     todayCents: number;

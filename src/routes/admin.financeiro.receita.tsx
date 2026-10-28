@@ -10,6 +10,7 @@ import {
   StatCard,
 } from "@/components/admin/finance-ui";
 import { getFinanceOverview } from "@/lib/admin-finance.functions";
+import { MmpaySales } from "@/components/admin/mmpay-sales";
 import type { FinanceRange } from "@/lib/admin/finance-types";
 
 export const Route = createFileRoute("/admin/financeiro/receita")({
@@ -104,6 +105,7 @@ function RevenuePage() {
         />
       </section>
 
+      <MmpaySales data={data} />
       <section className="grid gap-4 lg:grid-cols-2">
         <Panel title={`Trial vs. vendas pagas · ${p.label}`}>
           <BarList items={p.byKind} emptyLabel="Sem pagamentos neste período." />
