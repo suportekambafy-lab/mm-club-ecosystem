@@ -26,7 +26,7 @@ function CommercialHome() {
   return <div className="commercial-enter space-y-9">
     <section className="flex flex-wrap items-end justify-between gap-6 border-b border-border pb-8">
       <div><p className="mb-4 text-xs font-medium text-commercial-accent">COMERCIAL</p><h1 className="commercial-page-heading">Visão geral</h1><p className="mt-3 text-sm text-muted-foreground">Aplicações e contactos da equipa.</p></div>
-      <Button asChild className="h-11"><Link to="/comercial/aplicacoes">Ver aplicações<ArrowUpRight /></Link></Button>
+      <Button asChild className="btn-arrow h-11 pl-5"><Link to="/comercial/aplicacoes">Ver aplicações<ArrowUpRight /></Link></Button>
     </section>
     <section aria-label="Resumo das aplicações" className="commercial-stagger grid grid-cols-2 gap-x-5 gap-y-6 border-b border-border pb-8 lg:grid-cols-4">
       {stats.map(({ label, value, icon: Icon }) => <div key={label} className="commercial-stat"><div className="mb-4 flex items-center gap-2 text-muted-foreground"><Icon className="h-4 w-4" /><span className="text-xs">{label}</span></div><p className="text-4xl font-semibold tabular-nums">{value.toLocaleString("pt-PT")}</p><p className="mt-2 text-xs text-muted-foreground">Últimos 90 dias</p></div>)}
