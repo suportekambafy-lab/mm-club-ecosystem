@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle2, Loader2, Lock, ShieldCheck } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, Lock, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
@@ -199,7 +199,7 @@ function MmpayPage() {
             </a>
           </div>
         ) : (
-          <form onSubmit={submit} className="overflow-hidden rounded-3xl bg-surface-1 ring-1 ring-border">
+          <form onSubmit={submit} className="overflow-hidden rounded-[2rem] bg-surface-1 shadow-[var(--shadow-soft)] ring-1 ring-border/60">
             {link.coverUrl ? (
               <img src={link.coverUrl} alt={link.title} className="aspect-[3/1] w-full object-cover sm:aspect-[7/2]" />
             ) : null}
@@ -257,7 +257,7 @@ function MmpayPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@exemplo.com"
-                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary"
+                className="mt-2 w-full rounded-full border border-border bg-background px-5 py-3 text-sm text-foreground outline-none focus:border-primary"
               />
               <label className="mt-3 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Nome
@@ -269,7 +269,7 @@ function MmpayPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="O teu nome"
-                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary"
+                className="mt-2 w-full rounded-full border border-border bg-background px-5 py-3 text-sm text-foreground outline-none focus:border-primary"
               />
               <label className="mt-3 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Telemóvel
@@ -280,7 +280,7 @@ function MmpayPage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+351 912 345 678"
-                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary"
+                className="mt-2 w-full rounded-full border border-border bg-background px-5 py-3 text-sm text-foreground outline-none focus:border-primary"
               />
 
               <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
@@ -305,7 +305,7 @@ function MmpayPage() {
                         setError(null);
                       }}
                       title={opt.hint}
-                      className={`relative flex h-[5.5rem] flex-col items-center justify-center overflow-hidden rounded-xl p-1.5 ring-1 transition-colors ${
+                      className={`relative flex h-[5.5rem] flex-col items-center justify-center overflow-hidden rounded-2xl p-1.5 ring-1 transition-colors ${
                         selected
                           ? "text-primary ring-primary"
                           : "bg-background text-muted-foreground ring-border hover:text-foreground"
@@ -374,17 +374,22 @@ function MmpayPage() {
                 <button
                   type="submit"
                   disabled={pending}
-                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft disabled:opacity-60 sm:py-3.5"
+                  className="group mt-4 flex w-full items-center gap-2 rounded-full bg-foreground py-1.5 pl-6 pr-1.5 text-sm font-semibold text-background shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 disabled:opacity-60"
                 >
-                  {pending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> A abrir pagamento…
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="h-4 w-4" /> Pagar com segurança
-                    </>
-                  )}
+                  <span className="flex flex-1 items-center gap-2">
+                    {pending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> A abrir pagamento…
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="h-4 w-4" /> Pagar com segurança
+                      </>
+                    )}
+                  </span>
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition-transform group-hover:-rotate-45">
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
                 </button>
               )}
 
