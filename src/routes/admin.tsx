@@ -221,7 +221,7 @@ function AdminLayout() {
         key={item.to + item.label}
         to={item.to}
         className={cn(
-          "group flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] transition-colors",
+          "group flex items-center gap-2.5 rounded-xl px-2.5 py-[7px] text-[13px] transition-colors",
           active
             ? "bg-admin-hover text-admin-fg"
             : "text-admin-muted hover:bg-admin-panel hover:text-admin-fg",
@@ -242,7 +242,7 @@ function AdminLayout() {
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[236px] flex-col bg-admin-sidebar lg:flex">
         <div className="flex h-14 items-center px-4">
           <Link to="/admin" className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-admin-panel-2">
+            <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl bg-admin-panel-2">
               <img loading="lazy" decoding="async" src={mmIcon.url} alt="MM Club" className="h-5 w-5 object-contain" />
             </span>
             <span className="text-[14px] font-semibold tracking-[-0.01em] text-admin-fg">MMClub</span>
@@ -263,14 +263,14 @@ function AdminLayout() {
         <div className="space-y-0.5 px-3 pb-4">
           <a
             href="mailto:suporte@mmclub.pt"
-            className="flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] text-admin-muted transition hover:bg-admin-panel hover:text-admin-fg"
+            className="flex items-center gap-2.5 rounded-xl px-2.5 py-[7px] text-[13px] text-admin-muted transition hover:bg-admin-panel hover:text-admin-fg"
           >
             <LifeBuoy strokeWidth={1.6} className="h-[15px] w-[15px]" />
             Ajuda
           </a>
           <Link
             to="/"
-            className="flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] text-admin-muted transition hover:bg-admin-panel hover:text-admin-fg"
+            className="flex items-center gap-2.5 rounded-xl px-2.5 py-[7px] text-[13px] text-admin-muted transition hover:bg-admin-panel hover:text-admin-fg"
           >
             <ArrowLeft strokeWidth={1.6} className="h-[15px] w-[15px]" />
             Voltar ao site
@@ -288,7 +288,7 @@ function AdminLayout() {
             <button
               type="button"
               onClick={() => window.history.back()}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-admin-muted transition hover:bg-admin-panel hover:text-admin-fg"
+              className="flex h-7 w-7 items-center justify-center rounded-full text-admin-muted transition hover:bg-admin-panel hover:text-admin-fg"
               aria-label="Voltar"
             >
               <ChevronLeft strokeWidth={1.6} className="h-4 w-4" />
@@ -296,7 +296,7 @@ function AdminLayout() {
             <button
               type="button"
               onClick={() => window.history.forward()}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-admin-muted transition hover:bg-admin-panel hover:text-admin-fg"
+              className="flex h-7 w-7 items-center justify-center rounded-full text-admin-muted transition hover:bg-admin-panel hover:text-admin-fg"
               aria-label="Avançar"
             >
               <ChevronRight strokeWidth={1.6} className="h-4 w-4" />
@@ -312,7 +312,7 @@ function AdminLayout() {
             type="button"
             onClick={toggleTheme}
             aria-label={theme === "dark" ? "Modo claro" : "Modo escuro"}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-admin-muted transition hover:bg-admin-panel hover:text-admin-fg"
+            className="flex h-7 w-7 items-center justify-center rounded-full text-admin-muted transition hover:bg-admin-panel hover:text-admin-fg"
           >
             {theme === "dark" ? (
               <Sun strokeWidth={1.6} className="h-4 w-4" />
@@ -322,17 +322,19 @@ function AdminLayout() {
           </button>
           <Link
             to="/admin/financeiro/catalogo"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-admin-panel-2 px-3 py-1.5 text-[13px] text-admin-fg transition hover:bg-admin-hover"
+            className="inline-flex items-center gap-1.5 rounded-full bg-admin-panel-2 px-3.5 py-1.5 text-[13px] text-admin-fg transition hover:bg-admin-hover"
           >
             <Plus strokeWidth={1.8} className="h-3.5 w-3.5" />
             Catálogo
           </Link>
           <Link
             to="/admin/financeiro/subscricoes"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-admin-fg px-3 py-1.5 text-[13px] font-medium text-admin-bg transition hover:opacity-90"
+            className="group inline-flex items-center gap-2 rounded-full bg-admin-fg py-1 pl-3.5 pr-1 text-[13px] font-medium text-admin-bg transition hover:opacity-90"
           >
-            <ArrowUpRight strokeWidth={1.8} className="h-3.5 w-3.5" />
             Clientes
+            <span className="grid h-6 w-6 place-items-center rounded-full bg-admin-bg text-admin-fg transition-transform duration-200 group-hover:rotate-45">
+              <ArrowUpRight strokeWidth={1.8} className="h-3 w-3" />
+            </span>
           </Link>
         </header>
 
