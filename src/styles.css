@@ -77,7 +77,8 @@
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 1.25rem;
+  --shadow-soft: 0 1px 2px color-mix(in oklab, var(--foreground) 4%, transparent), 0 12px 32px -16px color-mix(in oklab, var(--foreground) 18%, transparent);
 
   /* LIGHT THEME (default) — marfim quente, dourado profundo */
   --background: oklch(0.98 0.005 80);
@@ -663,3 +664,15 @@ html[data-live-immersive="1"] [data-mobile-tabbar] { display: none !important; }
   color: var(--commercial-nav-foreground);
 }
 .sale-dialog-dark .btn-dialog-ghost:hover { background: oklch(1 0 0 / 8%); }
+
+/* Modern soft UI: arrow-circle action (pill + round arrow badge) */
+@utility arrow-chip {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--foreground) 6%, transparent);
+  transition: transform 200ms, background 200ms;
+  .group:hover & { transform: rotate(-45deg); background: var(--primary); color: var(--primary-foreground); }
+}
