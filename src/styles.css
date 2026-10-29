@@ -676,3 +676,31 @@ html[data-live-immersive="1"] [data-mobile-tabbar] { display: none !important; }
   transition: transform 200ms, background 200ms;
   .group:hover & { transform: rotate(-45deg); background: var(--primary); color: var(--primary-foreground); }
 }
+
+/* Pill CTA whose trailing arrow sits in a round badge (reference style) */
+@utility btn-arrow {
+  padding-right: 0.3rem !important;
+  padding-top: 0.3rem !important;
+  padding-bottom: 0.3rem !important;
+  gap: 0.75rem;
+  box-shadow: var(--shadow-soft);
+  transition: transform 200ms, filter 200ms;
+  &:hover { transform: translateY(-2px); }
+  & > svg:last-child {
+    box-sizing: content-box;
+    width: 1rem; height: 1rem;
+    padding: 0.6rem;
+    border-radius: 9999px;
+    background: var(--foreground);
+    color: var(--background);
+    transition: transform 250ms;
+  }
+  &:hover > svg:last-child, .group:hover & > svg:last-child { transform: rotate(-45deg); }
+}
+
+/* Soft floating card surface */
+@utility card-soft {
+  border-radius: 1.75rem;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+}
