@@ -275,7 +275,7 @@ function ReplayCard({
     <Link
       to="/lives/$liveId"
       params={{ liveId: live.id }}
-      className="group w-[44vw] max-w-[300px] shrink-0 overflow-hidden rounded-3xl border border-border bg-surface-1 transition hover:-translate-y-0.5 hover:border-primary/40 sm:w-[340px]"
+      className="group w-[44vw] max-w-[300px] shrink-0 overflow-hidden card-soft bg-surface-1 transition hover:-translate-y-0.5 hover:border-primary/40 sm:w-[340px]"
     >
       <div
         className="relative aspect-video w-full bg-surface-2"
@@ -395,7 +395,7 @@ function CinematicHero({ name, loading }: { name: string; loading?: boolean }) {
                 <Link
                   to="/academia/$courseId"
                   params={{ courseId: "marca-milionaria-legacy" }}
-                  className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
+                  className="btn-arrow mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
                 >
                   {legacy.cta} <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -427,7 +427,7 @@ function JadeCTA() {
   return (
     <Link
       to="/jade"
-      className="group relative flex flex-col gap-4 overflow-hidden rounded-2xl bg-surface-1 p-6 ring-1 ring-border transition hover:ring-[color:var(--hairline)] md:flex-row md:items-center md:justify-between md:p-8"
+      className="group relative flex flex-col gap-4 overflow-hidden card-soft bg-surface-1 p-6 transition hover:-translate-y-0.5 hover:ring-[color:var(--hairline)] md:flex-row md:items-center md:justify-between md:p-8"
     >
       <div className="flex items-center gap-4">
         <div>
@@ -442,7 +442,7 @@ function JadeCTA() {
           </p>
         </div>
       </div>
-      <span className="inline-flex w-max items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition group-hover:bg-gold-soft">
+      <span className="btn-arrow inline-flex w-max items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition group-hover:bg-gold-soft">
         Abrir chat <ArrowRight className="h-4 w-4" />
       </span>
     </Link>
@@ -482,7 +482,7 @@ function CommunityBlock() {
   ).length;
 
   return (
-    <section className="rounded-2xl bg-surface-1 p-6 ring-1 ring-border">
+    <section className="card-soft bg-surface-1 p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2">

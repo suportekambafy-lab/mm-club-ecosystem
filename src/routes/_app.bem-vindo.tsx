@@ -224,7 +224,7 @@ function OnboardingPage() {
             type="button"
             disabled={saving}
             onClick={() => void goToLesson()}
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
+            className="btn-arrow inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
           >
             Ver a primeira aula <ArrowRight className="h-4 w-4" />
           </button>
@@ -246,7 +246,7 @@ function OnboardingPage() {
               type="button"
               disabled={saving}
               onClick={() => void finish("/comunidade")}
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
+              className="btn-arrow inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
             >
               Entrar na comunidade <ArrowRight className="h-4 w-4" />
             </button>

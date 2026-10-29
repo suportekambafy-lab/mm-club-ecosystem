@@ -204,7 +204,7 @@ function FerramentasLayout() {
               ofertas de parceiro.
             </p>
           </div>
-          <span className="relative inline-flex w-fit shrink-0 items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition group-hover:opacity-90">
+          <span className="btn-arrow relative inline-flex w-fit shrink-0 items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition group-hover:opacity-90">
             Ver links <ArrowRight className="h-4 w-4" />
           </span>
         </Link>
