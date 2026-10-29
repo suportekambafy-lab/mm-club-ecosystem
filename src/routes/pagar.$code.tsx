@@ -374,17 +374,22 @@ function MmpayPage() {
                 <button
                   type="submit"
                   disabled={pending}
-                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft disabled:opacity-60 sm:py-3.5"
+                  className="group mt-4 flex w-full items-center gap-2 rounded-full bg-foreground py-1.5 pl-6 pr-1.5 text-sm font-semibold text-background shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 disabled:opacity-60"
                 >
-                  {pending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> A abrir pagamento…
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="h-4 w-4" /> Pagar com segurança
-                    </>
-                  )}
+                  <span className="flex flex-1 items-center gap-2">
+                    {pending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> A abrir pagamento…
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="h-4 w-4" /> Pagar com segurança
+                      </>
+                    )}
+                  </span>
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition-transform group-hover:-rotate-45">
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
                 </button>
               )}
 
