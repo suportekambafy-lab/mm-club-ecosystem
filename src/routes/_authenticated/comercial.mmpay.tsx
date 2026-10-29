@@ -470,6 +470,12 @@ function MmpayAdminPage() {
                     >
                       {link.billing.type === "subscription" ? "Assinatura" : "Avulso"}
                     </span>
+                    <span
+                      className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary ring-1 ring-primary/30"
+                      title="Número de vendas pagas deste link"
+                    >
+                      {link.paidCount} {link.paidCount === 1 ? "venda" : "vendas"}
+                    </span>
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {link.billing.type === "subscription" && link.billing.totalCycles && link.billing.totalCents
