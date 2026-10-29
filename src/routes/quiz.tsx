@@ -562,7 +562,7 @@ function Landing({ onStart }: { onStart: () => void }) {
         <button
           type="button"
           onClick={onStart}
-          className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-4 text-sm font-semibold text-primary-foreground shadow-[0_20px_60px_-20px_oklch(0.82_0.13_82_/_0.7)] transition hover:bg-gold-soft"
+          className="btn-arrow group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-4 text-sm font-semibold text-primary-foreground shadow-[0_20px_60px_-20px_oklch(0.82_0.13_82_/_0.7)] transition hover:bg-gold-soft"
         >
           Começar agora
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -692,7 +692,7 @@ function ProofStep({
         <button
           type="button"
           onClick={onNext}
-          className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+          className="btn-arrow inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
         >
           Continuar <ArrowRight className="h-4 w-4" />
         </button>
@@ -740,7 +740,7 @@ function GalleryStep({ onNext, onBack }: { onNext: () => void; onBack: () => voi
         <button
           type="button"
           onClick={onNext}
-          className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft"
+          className="btn-arrow group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft"
         >
           Continuar
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -993,7 +993,7 @@ function ResultStep({
         <button
           type="button"
           onClick={onGo}
-          className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-10 py-5 text-base font-semibold text-primary-foreground shadow-[0_20px_60px_-20px_oklch(0.82_0.13_82_/_0.7)] transition hover:bg-gold-soft sm:text-lg"
+          className="btn-arrow group inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-10 py-5 text-base font-semibold text-primary-foreground shadow-[0_20px_60px_-20px_oklch(0.82_0.13_82_/_0.7)] transition hover:bg-gold-soft sm:text-lg"
         >
           Entrar no MM Club
           <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />

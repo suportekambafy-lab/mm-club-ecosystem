@@ -104,7 +104,7 @@ const CircularBadge = () => (
       </text>
     </motion.svg>
     <div className="absolute inset-0 flex items-center justify-center">
-      <div className="flex h-11 w-11 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_oklch(0.82_0.13_82_/_0.7)]">
+      <div className="btn-arrow flex h-11 w-11 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_oklch(0.82_0.13_82_/_0.7)]">
         <ArrowRight className="h-4 w-4 sm:h-6 sm:w-6 -rotate-45" strokeWidth={2.4} />
       </div>
     </div>
@@ -299,7 +299,7 @@ export function BigTypeHero() {
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4 sm:mt-14">
           <Link
             to="/quiz"
-            className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-4 text-sm font-semibold text-primary-foreground shadow-[0_20px_60px_-20px_oklch(0.82_0.13_82_/_0.7)] hover:bg-gold-soft transition-all"
+            className="btn-arrow group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-4 text-sm font-semibold text-primary-foreground shadow-[0_20px_60px_-20px_oklch(0.82_0.13_82_/_0.7)] hover:bg-gold-soft transition-all"
           >
             Fazer diagnóstico
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
