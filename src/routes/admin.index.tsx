@@ -142,7 +142,7 @@ function AdminDashboard() {
   return (
     <div className="space-y-3 pt-1">
       {/* Balance band */}
-      <section className="rounded-xl bg-admin-panel px-6 py-6">
+      <section className="card-soft bg-admin-panel px-6 py-6">
         <div className="flex items-center gap-2 text-[13px] text-admin-muted">
           <CircleDollarSign className="h-4 w-4 text-admin-accent" />
           Receita total (30 dias)
@@ -170,7 +170,7 @@ function AdminDashboard() {
       </section>
 
       {/* Chart band */}
-      <section className="rounded-xl bg-admin-panel px-6 py-6">
+      <section className="card-soft bg-admin-panel px-6 py-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-[13px] text-admin-muted">
@@ -294,13 +294,13 @@ function AdminDashboard() {
       </section>
 
       {error ? (
-        <p className="rounded-xl bg-admin-panel p-5 text-[13px] text-admin-muted">
+        <p className="card-soft bg-admin-panel p-5 text-[13px] text-admin-muted">
           Não foi possível carregar as métricas.
         </p>
       ) : null}
 
       {/* Metric rows */}
-      <section className="grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-admin-border md:grid-cols-4">
+      <section className="card-soft grid grid-cols-2 gap-px overflow-hidden bg-admin-border md:grid-cols-4">
         {[
           { label: "MRR", value: data ? money(data.revenue.mrrCents) : "—" },
           { label: "ARR", value: data ? money(data.revenue.arrCents) : "—" },
@@ -350,7 +350,7 @@ function AdminDashboard() {
               <Link
                 key={s.to}
                 to={s.to}
-                className="group flex items-center gap-2.5 rounded-xl bg-admin-panel px-3.5 py-3 text-[13px] transition hover:bg-admin-panel-2"
+                className="group flex items-center gap-2.5 rounded-2xl bg-admin-panel px-3.5 py-3 text-[13px] transition hover:bg-admin-panel-2"
               >
                 <Icon className="h-4 w-4 text-admin-faint transition group-hover:text-admin-fg" />
                 <span className="truncate">{s.label}</span>
