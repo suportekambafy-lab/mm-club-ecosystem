@@ -41,3 +41,4 @@
 - Admin financial overview normalizes settled EUR MMpay payments and later recurring cycles into revenue once; cycle one stays in the initial payment source, and MMpay does not alter legacy subscription MRR or churn.
 - Financial sale categories use MMpay link billing type for initial payments, subscription type for later cycles, and subscription association for legacy billing; trials remain separate from both sale totals.
 - External MMpay sale notifications enqueue transactionally on settled payment transitions and later recurring cycles, using the shared retry queue and stable sale IDs; external failures never roll back payment or club access.
+- Authenticated external sale delivery uses manual redirects and rejects non-success responses; Workers do not support redirect:error, and credentials must never follow redirects.

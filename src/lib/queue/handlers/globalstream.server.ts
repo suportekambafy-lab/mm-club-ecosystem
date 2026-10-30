@@ -25,7 +25,9 @@ export async function globalstreamConsumer(job: JobPayload): Promise<void> {
   }
   const body = JSON.stringify(sale);
   const response = await fetch("https://www.globalstream.live/api/public/hooks/62c76976bfa047158a21cd72ed4883bd", {
-    method: "POST", redirect: "error", signal: AbortSignal.timeout(15000),
+    // Workers reject redirect:"error" before sending the request. Manual
+    // redirects preserve the same no-forwarding policy for the secret.
+    method: "POST", redirect: "manual", signal: AbortSignal.timeout(15000),
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${secret}`, "Idempotency-Key": sale.id }, body,
   });
   if (!response.ok) {
