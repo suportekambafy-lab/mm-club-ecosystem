@@ -12,6 +12,7 @@ export const CONSUMERS = [
   "notifications",
   "recovery",
   "globalstream",
+  "crm",
 ] as const;
 
 export type ConsumerName = (typeof CONSUMERS)[number];

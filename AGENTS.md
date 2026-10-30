@@ -42,3 +42,4 @@
 - Financial sale categories use MMpay link billing type for initial payments, subscription type for later cycles, and subscription association for legacy billing; trials remain separate from both sale totals.
 - External MMpay sale notifications enqueue transactionally on settled payment transitions and later recurring cycles, using the shared retry queue and stable sale IDs; external failures never roll back payment or club access.
 - Authenticated external sale delivery uses manual redirects and rejects non-success responses; Workers do not support redirect:error, and credentials must never follow redirects.
+- CRM and Novawebinar use independent MMpay sale jobs and a shared settled-sale reader, so one destination cannot block the other; CRM URL credentials and upstream bodies must never enter error logs.
