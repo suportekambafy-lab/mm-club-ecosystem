@@ -36,7 +36,8 @@
 - [ ] MMpay Klarna: código pronto; falta ativar Klarna no painel Stripe (utilizador)
 
 ## Em curso
-- [ ] Verificar vendas de 29/10 não recebidas pela Novawebinar, recuperar envios pendentes e corrigir a causa sem novas cobranças.
+- [x] Verificar vendas de 29/10 não recebidas pela Novawebinar: sete avisos falharam devido a redirect:error incompatível no servidor; sete reenviados e confirmados (1.379 €), fila relida com todos done, sem novas cobranças. Correção manual redirect com três testes aprovados; ferramenta temporária removida.
+- [ ] Ativar a correção permanente dos avisos Novawebinar no site público; aguarda publicação pedida pelo utilizador.
 - [x] Enviar todo o histórico pago à Novawebinar: 15 compras enviadas, 15 respostas de sucesso, zero falhas; sem cobranças novas, IDs originais preservados e ferramenta temporária removida.
 - [x] Enviar vendas MMpay confirmadas à Novawebinar/GlobalStream: chave segura, fila com novas tentativas, disparo em compras pagas e ciclos seguintes sem duplicar ciclo 1. Destino aceitou uma compra real existente (HTTP 200); teste dos campos passou. Envio automático depende de publicar o novo processador. Não enviar histórico em massa sem pedido.
 - [x] Regularizar os dez pagamentos MMpay antigos (nove compradores distintos): contas e nove funcionalidades por pagamento confirmadas, acesso até 28/04/2027; rotina existente de boas-vindas executada, entrega de email não confirmada. Ferramenta temporária removida; nenhuma nova cobrança.
