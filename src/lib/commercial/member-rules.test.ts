@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canManageMemberAccounts, canDeleteMemberAccount, deleteMemberSchema, memberDetailsSchema, createMemberSchema } from "./member-rules";
+import { canManageMemberAccounts, canDeleteMemberAccount, deleteMemberSchema, memberDetailsSchema, createMemberSchema, resendAccessSchema } from "./member-rules";
 describe("member account safeguards", () => {
  it("reserves account changes for admins", () => { expect(canManageMemberAccounts(false)).toBe(false); expect(canManageMemberAccounts(true)).toBe(true); });
  it("blocks deleting your own account", () => expect(canDeleteMemberAccount("a", "a", false, false)).toBe(false));
