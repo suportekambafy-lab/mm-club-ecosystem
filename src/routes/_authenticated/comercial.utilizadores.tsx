@@ -5,9 +5,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { commercialMembers, giveCommercialAccess } from "@/lib/commercial/commercial.functions";
 import { commercialMembersOptions } from "@/lib/commercial/members-query";
 import { Button } from "@/components/ui/button";
-import { KeyRound, Search, Loader2, Pencil, Trash2, UserPlus } from "lucide-react";
+import { KeyRound, Search, Loader2, Pencil, Trash2, UserPlus, Mail } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { MemberAccountDialog, type AccountDialogState } from "@/components/commercial/member-account-dialog";
+import { resendAccessEmail } from "@/lib/commercial/members.functions";
 import { toast } from "sonner";
 import { manualAccessSchema, type AccessDuration } from "@/lib/commercial/rules";
 import { AccessDurationPicker } from "@/components/commercial/access-duration-picker";
@@ -30,15 +31,24 @@ function CommercialMembers() {
   const qc = useQueryClient();
   const find = useServerFn(commercialMembers);
   const give = useServerFn(giveCommercialAccess);
+  const resend = useServerFn(resendAccessEmail);
   const [search,setSearch] = useState("");
   const [results,setResults] = useState<Member[] | null>(null);
   const [selected,setSelected] = useState<Member | null>(null);
   const [months,setMonths] = useState<AccessDuration>(1);
   const [reason,setReason] = useState("");
   const [busy,setBusy] = useState(false);
+  const [resending,setResending] = useState<string | null>(null);
   const [accountDialog,setAccountDialog] = useState<AccountDialogState | null>(null);
   async function refreshMembers() { setResults(null); setSearch(""); await qc.invalidateQueries({queryKey:["commercial-members"]}); }
   const members = results ?? data;
+  async function resendAccess(member: Member) {
+    setResending(member.id);
+    try {
+      const result = await resend({ data: { userId: member.id } });
+      toast.success(`Email de acesso reenviado para ${result.email}. O membro deve verificar o spam se não aparecer.`);
+    } catch(e) { toast.error(e instanceof Error ? e.message : "Não foi possível reenviar o email."); } finally { setResending(null); }
+  }
   async function searchMembers(e: React.FormEvent) {
     e.preventDefault(); setBusy(true);
     try { setResults(await find({data:{search}})); } catch { toast.error("Não foi possível pesquisar."); } finally { setBusy(false); }
@@ -66,7 +76,7 @@ function CommercialMembers() {
       <tbody>{members.map(member=><tr key={member.id} className="border-t border-admin-border">
         <td className="p-4"><p className="font-medium">{member.display_name || "Membro MM"}</p><p className="mt-1 text-xs text-admin-muted">{member.email || "—"}</p></td>
         <td className="p-4"><p className={member.hasAccess ? "text-primary" : "text-admin-muted"}>{member.hasAccess ? "Ativo" : "Sem acesso"}</p>{member.hasAccess && <p className="mt-1 text-xs text-admin-muted">{member.expiresAt ? `Até ${date(member.expiresAt)}` : "Sem data de fim"}</p>}</td>
-        <td className="p-4"><div className="flex items-center gap-2"><Button variant="outline" onClick={()=>{setSelected(member);setReason("");}}><KeyRound/>Dar acesso</Button><><Button variant="ghost" size="icon" title="Corrigir nome ou email" aria-label={`Corrigir ${member.display_name || member.id}`} onClick={()=>setAccountDialog({mode:"edit",member})}><Pencil /></Button><Button variant="ghost" size="icon" className="text-destructive" title="Eliminar utilizador" aria-label={`Eliminar ${member.display_name || member.id}`} onClick={()=>setAccountDialog({mode:"delete",member})}><Trash2 /></Button></></div></td>
+        <td className="p-4"><div className="flex items-center gap-2"><Button variant="outline" onClick={()=>{setSelected(member);setReason("");}}><KeyRound/>Dar acesso</Button><Button variant="ghost" title="Reenviar email de acesso" aria-label={`Reenviar acesso a ${member.display_name || member.email || member.id}`} disabled={resending !== null} onClick={()=>resendAccess(member)}>{resending === member.id ? <Loader2 className="animate-spin"/> : <Mail />}</Button><><Button variant="ghost" size="icon" title="Corrigir nome ou email" aria-label={`Corrigir ${member.display_name || member.id}`} onClick={()=>setAccountDialog({mode:"edit",member})}><Pencil /></Button><Button variant="ghost" size="icon" className="text-destructive" title="Eliminar utilizador" aria-label={`Eliminar ${member.display_name || member.id}`} onClick={()=>setAccountDialog({mode:"delete",member})}><Trash2 /></Button></></div></td>
       </tr>)}{!members.length && <tr><td colSpan={3} className="p-8 text-center text-admin-muted">Nenhum utilizador encontrado.</td></tr>}</tbody></table>
     </div>
     {accountDialog && <MemberAccountDialog state={accountDialog} onClose={()=>setAccountDialog(null)} onSaved={refreshMembers} />}
