@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { KeyRound, Search, Loader2, Pencil, Trash2, UserPlus, Mail } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { MemberAccountDialog, type AccountDialogState } from "@/components/commercial/member-account-dialog";
+import { resendAccessEmail } from "@/lib/commercial/members.functions";
 import { toast } from "sonner";
 import { manualAccessSchema, type AccessDuration } from "@/lib/commercial/rules";
 import { AccessDurationPicker } from "@/components/commercial/access-duration-picker";
