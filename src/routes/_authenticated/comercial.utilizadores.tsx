@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { commercialMembers, giveCommercialAccess } from "@/lib/commercial/commercial.functions";
 import { commercialMembersOptions } from "@/lib/commercial/members-query";
 import { Button } from "@/components/ui/button";
-import { KeyRound, Search, Loader2, Pencil, Trash2, UserPlus } from "lucide-react";
+import { KeyRound, Search, Loader2, Pencil, Trash2, UserPlus, Mail } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { MemberAccountDialog, type AccountDialogState } from "@/components/commercial/member-account-dialog";
 import { toast } from "sonner";
