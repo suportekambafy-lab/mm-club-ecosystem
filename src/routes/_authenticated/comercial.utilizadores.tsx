@@ -31,15 +31,24 @@ function CommercialMembers() {
   const qc = useQueryClient();
   const find = useServerFn(commercialMembers);
   const give = useServerFn(giveCommercialAccess);
+  const resend = useServerFn(resendAccessEmail);
   const [search,setSearch] = useState("");
   const [results,setResults] = useState<Member[] | null>(null);
   const [selected,setSelected] = useState<Member | null>(null);
   const [months,setMonths] = useState<AccessDuration>(1);
   const [reason,setReason] = useState("");
   const [busy,setBusy] = useState(false);
+  const [resending,setResending] = useState<string | null>(null);
   const [accountDialog,setAccountDialog] = useState<AccountDialogState | null>(null);
   async function refreshMembers() { setResults(null); setSearch(""); await qc.invalidateQueries({queryKey:["commercial-members"]}); }
   const members = results ?? data;
+  async function resendAccess(member: Member) {
+    setResending(member.id);
+    try {
+      const result = await resend({ data: { userId: member.id } });
+      toast.success(`Email de acesso reenviado para ${result.email}. O membro deve verificar o spam se não aparecer.`);
+    } catch(e) { toast.error(e instanceof Error ? e.message : "Não foi possível reenviar o email."); } finally { setResending(null); }
+  }
   async function searchMembers(e: React.FormEvent) {
     e.preventDefault(); setBusy(true);
     try { setResults(await find({data:{search}})); } catch { toast.error("Não foi possível pesquisar."); } finally { setBusy(false); }
