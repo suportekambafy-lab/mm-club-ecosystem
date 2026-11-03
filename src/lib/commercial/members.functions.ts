@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { canDeleteMemberAccount, canManageMemberAccounts, deleteMemberSchema, createMemberSchema, updateMemberSchema } from "./member-rules";
+import { canDeleteMemberAccount, canManageMemberAccounts, deleteMemberSchema, createMemberSchema, updateMemberSchema, resendAccessSchema } from "./member-rules";
 
 export const createPlatformMember = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((input: unknown) => createMemberSchema.parse(input)).handler(async ({ context, data }) => {
   const { data: allowed, error } = await context.supabase.rpc("has_commercial_access", { _user_id: context.userId });
