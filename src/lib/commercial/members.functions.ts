@@ -49,3 +49,16 @@ export const deletePlatformMember = createServerFn({ method: "POST" }).middlewar
   await db.from("admin_action_log").insert({ actor_id: context.userId, action: "member.delete", entity_type: "user", entity_id: data.userId });
   return { ok: true };
 });
+
+export const resendAccessEmail = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((input: unknown) => resendAccessSchema.parse(input)).handler(async ({ context, data }) => {
+  const { data: allowed, error } = await context.supabase.rpc("has_commercial_access", { _user_id: context.userId });
+  if (error || !canManageMemberAccounts(Boolean(allowed))) throw new Error("Sem permissão para gerir contas.");
+  const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+  const user = await db.auth.admin.getUserById(data.userId);
+  if (user.error || !user.data.user?.email) throw new Error("Utilizador não encontrado ou sem email.");
+  const email = user.data.user.email;
+  const sent = await db.auth.resetPasswordForEmail(email, { redirectTo: "https://mmclub.pt/reset-password" });
+  if (sent.error) throw new Error("Não foi possível enviar o email. Tenta novamente.");
+  await db.from("admin_action_log").insert({ actor_id: context.userId, action: "member.resend_access", entity_type: "user", entity_id: data.userId, after: { email } });
+  return { ok: true, email };
+});
