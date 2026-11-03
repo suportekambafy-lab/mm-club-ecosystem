@@ -10,4 +10,8 @@ describe("member account safeguards", () => {
  it("validates corrected email", () => expect(memberDetailsSchema.safeParse({name:"Nome",email:"invalid"}).success).toBe(false));
  it("requires duration when creating a member", () => expect(createMemberSchema.safeParse({name:"Nome",email:"member@example.com"}).success).toBe(false));
  it.each([1,3,6,12,"lifetime"])("creates a member with duration %s", months => expect(createMemberSchema.safeParse({name:"Nome",email:"member@example.com",months}).success).toBe(true));
+ it("resends access only to a valid user", () => {
+   expect(resendAccessSchema.safeParse({userId:"e78f7368-de84-4550-aefc-1d5c41192c86"}).success).toBe(true);
+   expect(resendAccessSchema.safeParse({userId:"nao-e-um-id"}).success).toBe(false);
+ });
 });
