@@ -328,7 +328,17 @@ export async function handleGatewayPayment(
     .maybeSingle();
 
   const paymentRowId = saved?.id ?? existing?.id ?? null;
-  const alreadyPaid = existing?.status === "paid";
+  let alreadyPaid = existing?.status === "paid";
+
+  // A paid renewal whose processing was interrupted (worker limit, retry of a
+  // parallel event) was stored as "paid" but never moved the period forward,
+  // leaving the member blocked after paying. Re-run it when the period still
+  // ends before this payment covers it and no renewal was applied for it.
+  if (alreadyPaid && payment.status === "paid" && subscriptionId && payment.amountCents > 0) {
+    if (await renewalMissingForPayment(subscriptionId, payment.id, payment.paidAt)) {
+      alreadyPaid = false;
+    }
+  }
 
   const { resolveRecoveryForPayment, startRecovery, cancelRecoveryForSubscription } =
     await import("./recovery/engine.server");
@@ -516,6 +526,8 @@ async function onPaymentPaid(args: {
           })
           .eq("id", subscriptionId);
       }
+      // One renewal per payment, even when the webhook is processed twice.
+      if (!(await claimRenewalForPayment(subscriptionId, payment.id))) return;
       await renewPeriod(
         subscriptionId,
         userId,
