@@ -328,7 +328,17 @@ export async function handleGatewayPayment(
     .maybeSingle();
 
   const paymentRowId = saved?.id ?? existing?.id ?? null;
-  const alreadyPaid = existing?.status === "paid";
+  let alreadyPaid = existing?.status === "paid";
+
+  // A paid renewal whose processing was interrupted (worker limit, retry of a
+  // parallel event) was stored as "paid" but never moved the period forward,
+  // leaving the member blocked after paying. Re-run it when the period still
+  // ends before this payment covers it and no renewal was applied for it.
+  if (alreadyPaid && payment.status === "paid" && subscriptionId && payment.amountCents > 0) {
+    if (await renewalMissingForPayment(subscriptionId, payment.id, payment.paidAt)) {
+      alreadyPaid = false;
+    }
+  }
 
   const { resolveRecoveryForPayment, startRecovery, cancelRecoveryForSubscription } =
     await import("./recovery/engine.server");
@@ -516,6 +526,8 @@ async function onPaymentPaid(args: {
           })
           .eq("id", subscriptionId);
       }
+      // One renewal per payment, even when the webhook is processed twice.
+      if (!(await claimRenewalForPayment(subscriptionId, payment.id))) return;
       await renewPeriod(
         subscriptionId,
         userId,
@@ -752,6 +764,45 @@ async function activateSubscription(args: {
   });
 
   return sub.id;
+}
+
+const renewalKey = (gatewayPaymentId: string) => `renewal_applied:${gatewayPaymentId}`;
+
+/** Atomically claims the single renewal a paid charge is entitled to. */
+async function claimRenewalForPayment(subscriptionId: string, gatewayPaymentId: string): Promise<boolean> {
+  const { error } = await supabaseAdmin.from("domain_events").insert({
+    type: "PaymentRenewalApplied",
+    aggregate_type: "subscription",
+    aggregate_id: subscriptionId,
+    payload: { gatewayPaymentId } as never,
+    idempotency_key: renewalKey(gatewayPaymentId),
+  });
+  if (!error) return true;
+  if (error.code === "23505") return false;
+  throw new Error(`claimRenewalForPayment: ${error.message}`);
+}
+
+async function renewalMissingForPayment(
+  subscriptionId: string,
+  gatewayPaymentId: string,
+  paidAt: string | null,
+): Promise<boolean> {
+  const { data: marker } = await supabaseAdmin
+    .from("domain_events")
+    .select("id")
+    .eq("idempotency_key", renewalKey(gatewayPaymentId))
+    .maybeSingle();
+  if (marker) return false;
+  const { data: sub } = await supabaseAdmin
+    .from("billing_subscriptions")
+    .select("current_period_end")
+    .eq("id", subscriptionId)
+    .maybeSingle();
+  if (!sub) return false;
+  const paid = paidAt ? new Date(paidAt).getTime() : Date.now();
+  const end = sub.current_period_end ? new Date(sub.current_period_end).getTime() : 0;
+  // A real renewal pushes the period well past the payment date.
+  return end < paid + 2 * 86400000;
 }
 
 async function renewPeriod(
