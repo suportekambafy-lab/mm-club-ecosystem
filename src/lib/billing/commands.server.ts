@@ -766,6 +766,45 @@ async function activateSubscription(args: {
   return sub.id;
 }
 
+const renewalKey = (gatewayPaymentId: string) => `renewal_applied:${gatewayPaymentId}`;
+
+/** Atomically claims the single renewal a paid charge is entitled to. */
+async function claimRenewalForPayment(subscriptionId: string, gatewayPaymentId: string): Promise<boolean> {
+  const { error } = await supabaseAdmin.from("domain_events").insert({
+    type: "PaymentRenewalApplied",
+    aggregate_type: "subscription",
+    aggregate_id: subscriptionId,
+    payload: { gatewayPaymentId } as never,
+    idempotency_key: renewalKey(gatewayPaymentId),
+  });
+  if (!error) return true;
+  if (error.code === "23505") return false;
+  throw new Error(`claimRenewalForPayment: ${error.message}`);
+}
+
+async function renewalMissingForPayment(
+  subscriptionId: string,
+  gatewayPaymentId: string,
+  paidAt: string | null,
+): Promise<boolean> {
+  const { data: marker } = await supabaseAdmin
+    .from("domain_events")
+    .select("id")
+    .eq("idempotency_key", renewalKey(gatewayPaymentId))
+    .maybeSingle();
+  if (marker) return false;
+  const { data: sub } = await supabaseAdmin
+    .from("billing_subscriptions")
+    .select("current_period_end")
+    .eq("id", subscriptionId)
+    .maybeSingle();
+  if (!sub) return false;
+  const paid = paidAt ? new Date(paidAt).getTime() : Date.now();
+  const end = sub.current_period_end ? new Date(sub.current_period_end).getTime() : 0;
+  // A real renewal pushes the period well past the payment date.
+  return end < paid + 2 * 86400000;
+}
+
 async function renewPeriod(
   subscriptionId: string,
   userId: string,
