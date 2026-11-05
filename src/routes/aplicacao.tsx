@@ -43,7 +43,7 @@ const QUESTIONS: Q[] = [
   { key: "experiencia", title: "Qual é a tua experiência com loja online?", kind: "choice" },
   { key: "o_que_travou", title: "O que te travou até agora?", kind: "long", placeholder: "Se nunca tentaste, conta o que te impediu de começar." },
   { key: "tempo_dia", title: "Quanto tempo por dia consegues dedicar à tua loja?", kind: "choice" },
-  { key: "verba_anuncios", title: "Quanto tens disponível para anúncios e testes de produto nos próximos 90 dias? (sem contar o acompanhamento)", kind: "choice" },
+  { key: "verba_anuncios", title: "Quanto tens disponível para investir neste momento?", kind: "choice" },
   { key: "investimento", title: "Se fizer sentido para ti, consegues investir num acompanhamento agora?", kind: "choice" },
   { key: "decisao", title: "Se a conversa fizer sentido, decides sozinho?", kind: "choice" },
 ];

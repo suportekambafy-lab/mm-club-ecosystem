@@ -2,17 +2,24 @@ import { describe, it, expect } from "vitest";
 import { classificar, validarTelefone, lisbonToUtc } from "./config";
 
 const quente = {
-  pais: "Portugal", idade: "25 a 34", tempo_dia: "2 a 4h",
-  verba_anuncios: "1.000 € a 3.000 €", investimento: "Sim, tenho o valor disponível",
+  pais: "Portugal", idade: "25 a 34", ocupacao: "Trabalho por conta de outrem",
+  experiencia: "Já vendi, mas parei", o_que_travou: "Faltou-me acompanhamento e estratégia de anúncios",
+  tempo_dia: "2 a 4h", verba_anuncios: "1.000 € a 3.000 €",
+  investimento: "Sim, tenho o valor disponível", decisao: "Sim",
 };
 
 describe("classificação de leads", () => {
-  it("A quando cumpre todos os cortes", () => expect(classificar(quente)).toBe("A"));
+  it("A com perfil forte", () => expect(classificar(quente)).toBe("A"));
   it("C se menor de 18", () => expect(classificar({ ...quente, idade: "Menos de 18" })).toBe("C"));
-  it("C se verba até 300 €", () => expect(classificar({ ...quente, verba_anuncios: "Até 300 €" })).toBe("C"));
-  it("C sem condições", () => expect(classificar({ ...quente, investimento: "Não tenho condições agora" })).toBe("C"));
-  it("B se mora no Brasil", () => expect(classificar({ ...quente, pais: "Brasil" })).toBe("B"));
-  it("B com menos de 1h por dia", () => expect(classificar({ ...quente, tempo_dia: "Menos de 1h" })).toBe("B"));
+  it("até 300 € sozinho não torna C", () => expect(classificar({ ...quente, verba_anuncios: "Até 300 €" })).not.toBe("C"));
+  it("falar com marido sozinho não torna C", () =>
+    expect(classificar({ ...quente, decisao: "Preciso de falar com marido, esposa ou sócio" })).toBe("A"));
+  it("prestações com 300 € e falta de acompanhamento é B", () =>
+    expect(classificar({ ...quente, verba_anuncios: "Até 300 €", investimento: "Sim, se for em prestações",
+      experiencia: "Já tentei montar loja, mas nunca vendi", tempo_dia: "1 a 2h", o_que_travou: "Falta de acompanhamento" })).toBe("B"));
+  it("estudante sem condições e resposta evasiva é C", () =>
+    expect(classificar({ ...quente, ocupacao: "Sou estudante", idade: "18 a 24", experiencia: "Nunca vendi nada online",
+      investimento: "Não tenho condições agora", verba_anuncios: "Até 300 €", o_que_travou: "Nada" })).toBe("C"));
 });
 
 describe("telefone", () => {
