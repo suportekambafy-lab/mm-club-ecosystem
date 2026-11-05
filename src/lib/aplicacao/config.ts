@@ -35,41 +35,65 @@ export const OPCOES = {
   decisao: ["Sim", "Preciso de falar com marido, esposa ou sócio"],
 } as const;
 
-export const CORTES = {
-  A: {
-    paises: ["Portugal", "Outro país da Europa"],
-    investimento: ["Sim, tenho o valor disponível", "Sim, se for em prestações"],
-    verba: ["1.000 € a 3.000 €", "Mais de 3.000 €"],
-    tempoExcluido: ["Menos de 1h"],
+// Pontuação do perfil completo: cada resposta soma ou tira pontos.
+// Nenhuma resposta isolada (ex.: "Até 300 €" ou "falar com marido") rebaixa sozinha para C,
+// porque a equipa consegue converter para valores maiores na call (prestações, etc.).
+export const PONTOS: Record<string, Record<string, number>> = {
+  pais: { "Portugal": 2, "Outro país da Europa": 2, "Brasil": 0, "Outro": 0 },
+  idade: { "18 a 24": 0, "25 a 34": 2, "35 a 44": 2, "45 ou mais": 1 },
+  ocupacao: {
+    "Tenho negócio próprio": 3, "Trabalho por conta de outrem": 2,
+    "Sou trabalhador independente ou freelancer": 2, "Estou desempregado": 0, "Sou estudante": -1,
   },
-  C: {
-    idade: ["Menos de 18"],
-    investimento: ["Não tenho condições agora"],
-    verba: ["Até 300 €"],
+  experiencia: {
+    "Nunca vendi nada online": 0, "Já tentei montar loja, mas nunca vendi": 1, "Já vendi, mas parei": 2,
+    "Tenho loja ativa a faturar até 3.000 € por mês": 3, "Tenho loja a faturar mais de 3.000 € por mês": 4,
   },
+  tempo_dia: { "Menos de 1h": -1, "1 a 2h": 1, "2 a 4h": 2, "Mais de 4h": 2 },
+  verba_anuncios: { "Até 300 €": 0, "300 € a 1.000 €": 2, "1.000 € a 3.000 €": 3, "Mais de 3.000 €": 4 },
+  investimento: {
+    "Sim, tenho o valor disponível": 4, "Sim, se for em prestações": 3,
+    "Agora não, mas consigo em até 30 dias": 1, "Não tenho condições agora": -2,
+  },
+  decisao: { "Sim": 1, "Preciso de falar com marido, esposa ou sócio": 0 },
 };
+
+export const CORTES = { A: 15, B: 10 };
+
+const EVASIVAS = /^(n[aã]o|nada|nunca|yes|sim|ok|n[aã]o sei|nenhum|nenhuma|-|\.)$/i;
+const MATURIDADE = /(acompanh|mentor|conhecimento|estrat[eé]g|aprender|experi[eê]ncia|medo|coragem|tempo|capital|dinheiro|investi|m[eé]todo|orienta|fornecedor|an[uú]ncio|tr[aá]fego|produto|vend[ai]|faturar|loja|neg[oó]cio|confian)/i;
+
+/** Maturidade da resposta "o que te travou": evasiva tira, reflexão concreta soma. */
+export function pontosTravou(texto?: string): number {
+  const t = (texto ?? "").trim();
+  const letras = t.replace(/[^a-zà-ú]/gi, "");
+  if (!t || EVASIVAS.test(t) || letras.length < 4) return -1;
+  // texto sem espaços/vogais suficientes = escrito ao calhas
+  const palavras = t.split(/\s+/).filter((w) => w.length > 1);
+  if (palavras.length >= 1 && palavras.some((w) => w.length > 20)) return -1;
+  const madura = MATURIDADE.test(t);
+  if (palavras.length <= 1 && !madura) return -1;
+  let p = 0;
+  if (madura) p += 1;
+  if (palavras.length >= 12) p += 1;
+  return p;
+}
 
 export type Respostas = {
-  pais?: string; idade?: string; tempo_dia?: string;
-  verba_anuncios?: string; investimento?: string;
+  pais?: string; idade?: string; ocupacao?: string; experiencia?: string; o_que_travou?: string;
+  tempo_dia?: string; verba_anuncios?: string; investimento?: string; decisao?: string;
 };
 
+export function pontuar(r: Respostas): number {
+  let total = pontosTravou(r.o_que_travou);
+  for (const [k, tabela] of Object.entries(PONTOS)) total += tabela[(r as Record<string, string | undefined>)[k] ?? ""] ?? 0;
+  return total;
+}
+
 export function classificar(r: Respostas): "A" | "B" | "C" {
-  const c = CORTES.C;
-  if (
-    c.idade.includes(r.idade ?? "") ||
-    c.investimento.includes(r.investimento ?? "") ||
-    c.verba.includes(r.verba_anuncios ?? "")
-  ) return "C";
-  const a = CORTES.A;
-  if (
-    a.paises.includes(r.pais ?? "") &&
-    !!r.idade && r.idade !== "Menos de 18" &&
-    a.investimento.includes(r.investimento ?? "") &&
-    a.verba.includes(r.verba_anuncios ?? "") &&
-    !!r.tempo_dia && !a.tempoExcluido.includes(r.tempo_dia)
-  ) return "A";
-  return "B";
+  if (r.idade === "Menos de 18") return "C";
+  const p = pontuar(r);
+  return p >= CORTES.A ? "A" : p >= CORTES.B ? "B" : "C";
 }
 
 export const PAISES_TEL = [
