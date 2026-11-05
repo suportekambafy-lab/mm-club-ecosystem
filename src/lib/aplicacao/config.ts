@@ -58,7 +58,7 @@ export const PONTOS: Record<string, Record<string, number>> = {
   decisao: { "Sim": 1, "Preciso de falar com marido, esposa ou sócio": 0 },
 };
 
-export const CORTES = { A: 15, B: 9 };
+export const CORTES = { A: 15, B: 10 };
 
 const EVASIVAS = /^(n[aã]o|nada|nunca|yes|sim|ok|n[aã]o sei|nenhum|nenhuma|-|\.)$/i;
 const MATURIDADE = /(acompanh|mentor|conhecimento|estrat[eé]g|aprender|experi[eê]ncia|medo|coragem|tempo|capital|dinheiro|investi|m[eé]todo|orienta|fornecedor|an[uú]ncio|tr[aá]fego|produto|vend[ai]|faturar|loja|neg[oó]cio|confian)/i;
@@ -71,8 +71,10 @@ export function pontosTravou(texto?: string): number {
   // texto sem espaços/vogais suficientes = escrito ao calhas
   const palavras = t.split(/\s+/).filter((w) => w.length > 1);
   if (palavras.length >= 1 && palavras.some((w) => w.length > 20)) return -1;
+  const madura = MATURIDADE.test(t);
+  if (palavras.length <= 1 && !madura) return -1;
   let p = 0;
-  if (MATURIDADE.test(t)) p += 1;
+  if (madura) p += 1;
   if (palavras.length >= 12) p += 1;
   return p;
 }
