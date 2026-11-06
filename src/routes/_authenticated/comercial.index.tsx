@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { commercialApplicationsOptions, monthlyGoalOptions } from "@/lib/commercial/queries";
+import { commercialApplicationsOptions, dailyTeamGoalsOptions, monthlyGoalOptions } from "@/lib/commercial/queries";
+import { DailyTeamGoals, RevenuePeriods } from "@/components/commercial/dashboard-panels";
 import { MonthlyGoal } from "@/components/commercial/monthly-goal";
 import { TeamProfile } from "@/components/commercial/team-profile";
 import { UpcomingCalls } from "@/components/commercial/scheduled-calls";
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/_authenticated/comercial/")({
   loader: ({ context }) => Promise.all([
     context.queryClient.ensureQueryData(commercialApplicationsOptions),
     context.queryClient.ensureQueryData(monthlyGoalOptions),
+    context.queryClient.ensureQueryData(dailyTeamGoalsOptions),
   ]),
   head: () => ({ meta: [{ title: "Início — Comercial MM Club" }, { name: "description", content: "Visão geral das aplicações e da equipa comercial MM Club." }, { property: "og:title", content: "Início — Comercial MM Club" }, { property: "og:description", content: "Aplicações, contactos e equipa comercial num só lugar." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex,nofollow" }] }),
   component: CommercialHome,
@@ -32,7 +34,9 @@ function CommercialHome() {
       <div><p className="mb-4 text-xs font-medium text-commercial-accent">COMERCIAL</p><h1 className="commercial-page-heading">Visão geral</h1><p className="mt-3 text-sm text-muted-foreground">Aplicações e contactos da equipa.</p></div>
       <Button asChild className="btn-arrow h-11 pl-5"><Link to="/comercial/aplicacoes">Ver aplicações<ArrowUpRight /></Link></Button>
     </section>
+    <RevenuePeriods />
     <MonthlyGoal />
+    <DailyTeamGoals />
     <section aria-label="Resumo das aplicações" className="commercial-stagger grid grid-cols-2 gap-x-5 gap-y-6 border-b border-border pb-8 lg:grid-cols-4">
       {stats.map(({ label, value, icon: Icon }) => <div key={label} className="commercial-stat"><div className="mb-4 flex items-center gap-2 text-muted-foreground"><Icon className="h-4 w-4" /><span className="text-xs">{label}</span></div><p className="text-4xl font-semibold tabular-nums">{value.toLocaleString("pt-PT")}</p><p className="mt-2 text-xs text-muted-foreground">Últimos 90 dias</p></div>)}
     </section>
