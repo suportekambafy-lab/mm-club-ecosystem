@@ -10,3 +10,5 @@ export const commercialApplicationsOptions = queryOptions({ queryKey: ["commerci
 export const myCallsOptions = queryOptions({ queryKey: ["commercial-my-calls"], queryFn: () => listMyCalls(), staleTime: 10_000, refetchInterval: 15_000, refetchIntervalInBackground: true });
 export const mySalesOptions = queryOptions({ queryKey: ["commercial-my-sales"], queryFn: () => listMySales(), staleTime: 0, refetchInterval: 30_000 });
 export const monthlyGoalOptions = queryOptions({ queryKey: ["commercial-monthly-goal"], queryFn: () => monthlyGoalProgress(), staleTime: 30_000, refetchInterval: 60_000 });
+import { dailyTeamGoals } from "./goal.functions";
+export const dailyTeamGoalsOptions = queryOptions({ queryKey: ["commercial-daily-goals"], queryFn: () => dailyTeamGoals(), staleTime: 15_000, refetchInterval: 30_000 });
