@@ -85,7 +85,7 @@ type SubRow = {
   viva_initial_transaction_id: string | null;
 };
 
-async function chargeOne(sub: SubRow, overrideCents?: number): Promise<"paid" | "failed" | "skipped"> {
+async function chargeOne(sub: SubRow, overrideCents?: number, manual = false): Promise<"paid" | "failed" | "skipped"> {
   const cycle = sub.charges_count + 1;
   const attempt = sub.failed_attempts + 1;
   const release = (patch: Record<string, unknown>) =>
@@ -157,6 +157,11 @@ async function chargeOne(sub: SubRow, overrideCents?: number): Promise<"paid" | 
     .from("mmpay_subscription_charges")
     .update({ status: "failed", error: res.error, finished_at: now.toISOString() })
     .eq("id", charge.id);
+  // Cobrança manual recusada: não mexe no calendário nem no estado da assinatura.
+  if (manual) {
+    await release({});
+    return "failed";
+  }
   const retry = afterFailedCharge(attempt, now);
   await release({ status: "past_due", failed_attempts: attempt, next_charge_at: retry.nextChargeAt?.toISOString() ?? null });
   return "failed";
@@ -212,7 +217,7 @@ export async function chargeSubscriptionNow(id: string, overrideCents?: number) 
     await supabaseAdmin.from("mmpay_subscriptions").update({ locked_until: null } as never).eq("id", id);
     throw new Error("Todas as prestações já foram cobradas.");
   }
-  const result = await chargeOne(sub, overrideCents);
+  const result = await chargeOne(sub, overrideCents, true);
   if (result === "skipped") throw new Error("Esta prestação já foi cobrada ou está em curso.");
   if (result === "failed") throw new Error("O banco recusou a cobrança. Vê o motivo no histórico de cobranças.");
 }
