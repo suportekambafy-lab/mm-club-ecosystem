@@ -8,7 +8,7 @@ import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 
 export const FEATURED_TEAM = [
-  { name: "Victor Muabi", title: "Fundador", photo: victor.url, match: "victor" },
+  { name: "Victor Muabi", title: "Fundador & Closer", photo: victor.url, match: "victor" },
   { name: "Guadalupe Costa", title: "Closer", photo: guadalupe.url, match: "guadalupe" },
   { name: "Elizângela dos Santos", title: "SDR", photo: elizangela.url, match: "elizângela" },
   { name: "Lysa Vilas Boas", title: "SDR", photo: lysa.url, match: "lysa" },
