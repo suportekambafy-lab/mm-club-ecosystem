@@ -5,6 +5,7 @@ export function PageSkeleton({ variant = "table" }: { variant?: "table" | "home"
     <div aria-hidden="true" className="flex flex-wrap items-end justify-between gap-6 border-b border-border pb-8">
       <div className="space-y-4"><Skeleton className="h-3 w-24" /><Skeleton className="h-9 w-64 max-w-full" /><Skeleton className="h-4 w-72 max-w-full" /></div><Skeleton className="h-11 w-36" />
     </div>
+    {variant === "home" && <div aria-hidden="true" className="card-soft space-y-4 bg-card p-6"><div className="flex items-center justify-between gap-4"><Skeleton className="h-10 w-40" /><Skeleton className="h-9 w-32" /></div><Skeleton className="h-3 w-full rounded-full" /><Skeleton className="h-3 w-44" /></div>}
     {variant !== "team" && <div aria-hidden="true" className={`grid grid-cols-2 gap-6 border-b border-border pb-8 ${variant === "sales" ? "lg:grid-cols-3" : "lg:grid-cols-4"}`}>
       {Array.from({ length: variant === "sales" ? 3 : 4 }, (_, i) => <div key={i} className="space-y-4"><Skeleton className="h-3 w-28 max-w-full" /><Skeleton className="h-9 w-24" /><Skeleton className="h-3 w-20" /></div>)}
     </div>}

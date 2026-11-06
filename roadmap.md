@@ -51,3 +51,4 @@
 - [x] Restaurar a imagem original enviada pelo utilizador no mesmo endereço dos cinco produtos; navegador confirmou todas as capas e o checkout real, sem alterar links ou preços.
 - [x] Reduzir os métodos de pagamento do checkout MMpay: azulejos compactos (~85x88), marcas em azulejos brancos pequenos, selo «3x de …» do Klarna no lugar do nome; navegador confirmou alinhamento e nada cortado.
 - [x] Klarna: endpoint corrigido para api.klarna.com, sessão criada com sucesso com credenciais live; nome+telefone obrigatórios; widget não testável no sandbox (x.klarnacdn.com bloqueado) — falta teste real do utilizador
+- [x] Adicionar «Meta do mês» ao topo da visão geral comercial, com barra de progresso e objetivo de 20.000 € para novembro de 2026; 7 testes passaram e navegador autenticado confirmou 4.438 € (22%), «Faltam 15.562 € · 25 dias» e barra a 22%, sem erros de consola. Não publicado.
