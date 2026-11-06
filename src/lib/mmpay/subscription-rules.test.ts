@@ -23,3 +23,21 @@ describe("splitInstallments", () => {
     expect(parts.every((p) => p >= 100)).toBe(true);
   });
 });
+
+import { firstThenSplit as _fts, installmentAmounts as _ia, isValidSchedule as _ivs } from "./subscription-rules";
+import { describe as _d, it as _it, expect as _e } from "vitest";
+_d("prestações personalizadas", () => {
+  _it("1.º valor diferente: 1997 € com 500 € hoje → resto dividido em 2", () => {
+    _e(_fts(199700, 3, 50000)).toEqual([50000, 74850, 74850]);
+  });
+  _it("valor de cada mês é usado quando soma o total", () => {
+    _e(_ia(100000, 3, [20000, 30000, 50000])).toEqual([20000, 30000, 50000]);
+  });
+  _it("plano que não soma o total é rejeitado e volta a partes iguais", () => {
+    _e(_ivs([20000, 30000], 100000, 2)).toBe(false);
+    _e(_ia(100000, 2, [20000, 30000])).toEqual([50000, 50000]);
+  });
+  _it("prestação abaixo de 1 € é inválida", () => {
+    _e(_ivs([99950, 50], 100000, 2)).toBe(false);
+  });
+});
