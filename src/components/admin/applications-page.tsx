@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { duplicateIds } from "@/lib/aplicacao/duplicate-rules";
+import { duplicateIds, type DupLead } from "@/lib/aplicacao/duplicate-rules";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -94,7 +94,7 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
     return { h, o, w, c, days };
   }, [leads]);
 
-  const dupIds = useMemo(() => duplicateIds(leads), [leads]);
+  const dupIds = useMemo(() => duplicateIds(leads as unknown as DupLead[]), [leads]);
   const filtered = leads.filter((l) =>
     (!fCls || l.classificacao === fCls) && (fStatus ? l.status === fStatus : l.status !== "incompleto") &&
     (!fFrom || dayKey(new Date(l.created_at)) >= fFrom) &&
