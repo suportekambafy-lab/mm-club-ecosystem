@@ -8,7 +8,7 @@ export const DEFAULT_MONTHLY_GOAL_EUR_CENTS = 2_000_000;
 
 /** Objetivos por mês, em cêntimos de euro. */
 export const MONTHLY_GOAL_EUR_CENTS: Record<string, number> = {
-  "2026-11": 20_000_00 / 10 * 100 / 100,
+  "2026-11": 2_000_000,
 };
 
 export function monthlyGoalEurCents(monthKey: string): number {
@@ -37,7 +37,7 @@ function zoneOffsetMs(utcMs: number, timeZone: string): number {
   return asUtc - utcMs;
 }
 
-/** Instante UTC em que o dia pede-meia-noite no fuso dado. */
+/** Instante UTC em que começa o dia indicado no fuso dado. */
 function instantInZone(year: number, month: number, day: number, timeZone: string): number {
   const guess = Date.UTC(year, month - 1, day);
   const first = guess - zoneOffsetMs(guess, timeZone);
