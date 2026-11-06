@@ -55,6 +55,8 @@ const billingSchema = z.discriminatedUnion("type", [
       totalCycles: z.number().int().min(1).max(600).nullable(),
       /** Valor total da venda em cêntimos (só faz sentido com totalCycles definido). */
       totalCents: z.number().int().min(100).max(MAX_CUSTOM_AMOUNT_CENTS).nullable().optional(),
+      /** Valor personalizado de cada prestação (soma = totalCents). */
+      scheduleCents: z.array(z.number().int().min(100).max(MAX_CUSTOM_AMOUNT_CENTS)).max(600).nullable().optional(),
     })
     .strict(),
 ]);
