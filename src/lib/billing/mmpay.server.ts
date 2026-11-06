@@ -10,6 +10,7 @@ import { installmentAmounts, isValidSchedule, type BillingInterval } from "@/lib
 import { createStripeProduct, deleteStripeProduct, getStripeCheckout, updateStripeProduct } from "./stripe.server";
 
 export type MmpayLinkRow = {
+  deleted_at?: string | null;
   id: string;
   code: string;
   title: string;
@@ -114,6 +115,7 @@ export async function listMmpayLinks(): Promise<MmpayLinkView[]> {
   const { data, error } = await supabaseAdmin
     .from("mmpay_links")
     .select("*")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(200);
   if (error) throw new Error(error.message);
@@ -238,17 +240,21 @@ export async function deleteMmpayLink(id: string): Promise<void> {
   const { data, error } = await supabaseAdmin.from("mmpay_links").select("*").eq("id", id).maybeSingle();
   if (error) throw new Error(error.message);
   const row = data as MmpayLinkRow | null;
-  if (!row) throw new Error("Este link já não existe.");
+  if (!row || row.deleted_at) throw new Error("Este link já não existe.");
 
   if (row.stripe_product_id) await deleteStripeProduct(row.stripe_product_id);
   // Duplicated links share cover URLs. Link deletion must not delete their image.
 
-  const { error: delError } = await supabaseAdmin.from("mmpay_links").delete().eq("id", id);
+  // Soft delete: sales history must survive link deletion (FK is RESTRICT).
+  const { error: delError } = await supabaseAdmin
+    .from("mmpay_links")
+    .update({ deleted_at: new Date().toISOString(), active: false })
+    .eq("id", id);
   if (delError) throw new Error(delError.message);
 }
 
 async function getRow(code: string): Promise<MmpayLinkRow | null> {
-  const { data, error } = await supabaseAdmin.from("mmpay_links").select("*").eq("code", code).maybeSingle();
+  const { data, error } = await supabaseAdmin.from("mmpay_links").select("*").eq("code", code).is("deleted_at", null).maybeSingle();
   if (error) throw new Error(error.message);
   return data as MmpayLinkRow | null;
 }

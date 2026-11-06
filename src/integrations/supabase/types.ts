@@ -3439,6 +3439,7 @@ export type Database = {
           created_by: string | null
           custom_amount_cents: number | null
           custom_description: string | null
+          deleted_at: string | null
           description: string | null
           id: string
           installment_schedule_cents: number[] | null
@@ -3460,6 +3461,7 @@ export type Database = {
           created_by?: string | null
           custom_amount_cents?: number | null
           custom_description?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           installment_schedule_cents?: number[] | null
@@ -3481,6 +3483,7 @@ export type Database = {
           created_by?: string | null
           custom_amount_cents?: number | null
           custom_description?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           installment_schedule_cents?: number[] | null
