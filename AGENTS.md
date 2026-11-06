@@ -24,6 +24,7 @@
 - Commercial presentation remaps semantic admin tokens within its shell and portalled dialog contents; shared admin palette changes stay in global CSS so business logic and permission boundaries remain unchanged.
 - Lead closure shares amount validation between UI and server and persists EUR cents; sale celebration and recorded bell playback occur only after the server returns the saved lead.
 - Sale bell animation follows actual audio playback state and restarts for each repetition, so local and team celebrations stay synchronized without independent animation timers.
+- Paid-sale bells share a commercial-authorized narrow polling feed across admin/commercial shells, baseline silently and deduplicate source IDs; later MMpay cycles exclude cycle one to avoid double announcements.
 - Staff call schedules live on the lead and update atomically with status and ownership; the shared authenticated own-calls query feeds home and header reminders independently of the applications history window.
 - Own sales use persisted closure author and timestamp, not current lead ownership; a database trigger snapshots BRL commission from EUR sale amounts, and the authenticated paginated query scopes results to the caller independently of application history limits. Historical sales use the recorded responsible person when closure authorship was unavailable.
 - Paddle zero-value verification for an existing subscription only links gateway billing; it must not emit payment/recovery events or extend access because verification is not revenue.

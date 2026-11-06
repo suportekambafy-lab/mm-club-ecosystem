@@ -48,7 +48,7 @@ function waitEnded(audio: HTMLAudioElement) {
   });
 }
 
-export function SaleCelebration({ amount, closer, onDismiss, strike, isRinging }: { amount: number; closer?: string; onDismiss: () => void; strike: number; isRinging: boolean }) {
+export function SaleCelebration({ amount, closer, buyer, onDismiss, strike, isRinging }: { amount: number; closer?: string; buyer?: string | null; onDismiss: () => void; strike: number; isRinging: boolean }) {
   useEffect(() => {
     if (isRinging) return;
     const timer = setTimeout(onDismiss, 6000);
@@ -56,7 +56,7 @@ export function SaleCelebration({ amount, closer, onDismiss, strike, isRinging }
   }, [onDismiss, isRinging, strike]);
   return <div role="status" aria-live="polite" className="sale-celebration fixed inset-x-4 bottom-6 z-[80] mx-auto flex max-w-md items-center gap-5 rounded-lg border border-border bg-card p-6 text-card-foreground shadow-xl">
     <div data-strike={strike} data-ringing={isRinging} className="sale-bell flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"><Bell key={strike} className="h-10 w-10" strokeWidth={1.7} /></div>
-    <div className="min-w-0 flex-1"><p className="text-sm font-medium text-muted-foreground">Venda realizada</p><p className="mt-1 text-2xl font-semibold tabular-nums">{formatSaleAmount(amount)}</p>{closer && <p className="mt-1 truncate text-sm text-muted-foreground">Fechado por: {closer}</p>}</div>
+    <div className="min-w-0 flex-1"><p className="text-sm font-medium text-muted-foreground">{buyer !== undefined ? "Venda paga" : "Venda realizada"}</p><p className="mt-1 text-2xl font-semibold tabular-nums">{formatSaleAmount(amount)}</p>{closer && <p className="mt-1 truncate text-sm text-muted-foreground">Fechado por: {closer}</p>}{buyer && <p className="mt-1 truncate text-sm text-muted-foreground">{buyer}</p>}</div>
     <Button variant="ghost" size="icon" aria-label="Fechar celebração" onClick={onDismiss}>×</Button>
   </div>;
 }

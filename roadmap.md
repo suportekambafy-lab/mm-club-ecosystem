@@ -36,6 +36,7 @@
 - [ ] MMpay Klarna: código pronto; falta ativar Klarna no painel Stripe (utilizador)
 
 ## Em curso
+- [x] Tocar o sino para novas vendas pagas no admin e comercial; 8 testes passaram, consultas reais autenticadas sem erros e aviso simulado confirmou valor e três reproduções nas duas áreas, sem criar vendas nem cobrar cartões. Não publicado.
 - [x] Verificar venda de 30/10 (197 €): aviso automático concluído às 22:10 UTC na primeira tentativa; reenvio com o mesmo ID devolveu HTTP 200 e ok:true, sem novas cobranças. Ausência na lista Novawebinar requer investigação no destino, ao qual não há acesso nesta sessão.
 - [x] Enviar todo o histórico pago MMpay ao CRM: 23 vendas (4.531 €) aceites, zero falhas e nenhum ciclo posterior pago; IDs originais preservados, sem novas cobranças e ferramenta temporária removida.
 - [x] Adicionar avisos de vendas MMpay ao CRM em fila independente da Novawebinar; sete testes passaram, os dois triggers confirmados e uma venda real existente aceite pelo CRM (HTTP 200). Chave segura e ferramenta temporária removida; não enviado histórico.
