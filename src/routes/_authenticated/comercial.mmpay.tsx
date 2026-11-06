@@ -4,7 +4,7 @@ import { Check, Copy, CopyPlus, ImagePlus, Link2, Pencil, Plus, Save, Trash2, X 
 import { useState } from "react";
 import { toast } from "sonner";
 import { MmpaySubscriptions } from "@/components/mmpay/subscriptions-panel";
-import { intervalLabel, splitInstallments, type BillingInterval } from "@/lib/mmpay/subscription-rules";
+import { firstThenSplit, installmentAmounts, intervalLabel, isValidSchedule, splitInstallments, type BillingInterval } from "@/lib/mmpay/subscription-rules";
 import { createMmpayLink, deleteMmpayLink, listMmpayLinks, setMmpayLinkActive, updateMmpayLink, uploadMmpayCover } from "@/lib/mmpay.functions";
 import { COVER_MIME_TYPES, MAX_COVER_BYTES, MAX_DESCRIPTION_LENGTH } from "@/lib/mmpay/rules";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -55,6 +55,9 @@ function MmpayAdminPage() {
   const [intervalCount, setIntervalCount] = useState("");
   const [durationKind, setDurationKind] = useState<"" | "indefinite" | "fixed">("");
   const [cycles, setCycles] = useState("");
+  const [splitMode, setSplitMode] = useState<"equal" | "first" | "custom">("equal");
+  const [firstEur, setFirstEur] = useState("");
+  const [customEur, setCustomEur] = useState<string[]>([]);
   const [tab, setTab] = useState<"one_time" | "subscription">("one_time");
   const [formOpen, setFormOpen] = useState(false);
   const [productFilter, setProductFilter] = useState<"all" | "adesao" | "mentoria">("all");
@@ -70,6 +73,9 @@ function MmpayAdminPage() {
     setIntervalCount("");
     setDurationKind("");
     setCycles("");
+    setSplitMode("equal");
+    setFirstEur("");
+    setCustomEur([]);
   };
 
   const linksQuery = useQuery({ queryKey: ["mmpay-links"], queryFn: () => listMmpayLinks() });
@@ -81,7 +87,16 @@ function MmpayAdminPage() {
     interval !== "" && Number.isInteger(countNum) && countNum >= 1 && countNum <= 24 &&
     (durationKind === "indefinite" || (isFixedPlan && Number.isInteger(cyclesNum) && cyclesNum >= 1 && cyclesNum <= 600));
   // Com prestações, o campo de valor é o TOTAL da venda; o sistema divide em prestações exatas.
-  const installments = isFixedPlan && subscriptionValid ? splitInstallments(amountCents, cyclesNum) : null;
+  const toCents = (v: string) => Math.round(Number(v.replace(",", ".")) * 100);
+  const scheduleCents: number[] | null =
+    !isFixedPlan || !subscriptionValid || splitMode === "equal"
+      ? null
+      : splitMode === "first"
+        ? firstThenSplit(amountCents, cyclesNum, toCents(firstEur))
+        : Array.from({ length: cyclesNum }, (_, i) => toCents(customEur[i] ?? ""));
+  const scheduleOk = !scheduleCents || isValidSchedule(scheduleCents, amountCents, cyclesNum);
+  const customSum = scheduleCents ? scheduleCents.reduce((a, b) => a + (Number.isFinite(b) ? b : 0), 0) : 0;
+  const installments = isFixedPlan && subscriptionValid ? (scheduleCents ?? splitInstallments(amountCents, cyclesNum)) : null;
   const billing =
     billingType === "subscription" && subscriptionValid
       ? {
@@ -90,6 +105,7 @@ function MmpayAdminPage() {
           intervalCount: countNum,
           totalCycles: durationKind === "fixed" ? cyclesNum : null,
           totalCents: isFixedPlan ? amountCents : null,
+          scheduleCents: scheduleCents && scheduleOk ? scheduleCents : null,
         }
       : { type: "one_time" as const };
 
@@ -167,7 +183,11 @@ function MmpayAdminPage() {
     }
   };
 
-  const loadBilling = (b: { type: string; interval?: BillingInterval; intervalCount?: number; totalCycles?: number | null }) => {
+  const loadBilling = (b: { type: string; interval?: BillingInterval; intervalCount?: number; totalCycles?: number | null; scheduleCents?: number[] | null }) => {
+    const sched = b.scheduleCents?.length ? b.scheduleCents : null;
+    setSplitMode(sched ? "custom" : "equal");
+    setFirstEur(sched ? String(sched[0] / 100).replace(".", ",") : "");
+    setCustomEur(sched ? sched.map((c) => String(c / 100).replace(".", ",")) : []);
     if (b.type === "subscription" && b.interval) {
       setBillingType("subscription");
       setBillingInterval(b.interval);
@@ -190,7 +210,7 @@ function MmpayAdminPage() {
     coverUrl: string | null;
     amountCents: number;
     totalCents?: number;
-    billing: { type: string; totalCycles?: number | null; totalCents?: number | null };
+    billing: { type: string; totalCycles?: number | null; totalCents?: number | null; scheduleCents?: number[] | null };
   };
   /** Com prestações, o formulário edita o valor total; sem prestações, o valor por cobrança. */
   const formAmount = (link: LinkLike) =>
@@ -221,7 +241,7 @@ function MmpayAdminPage() {
     toast.info("Link duplicado — muda o preço e cria.");
   };
 
-  const canSubmit = title.trim().length > 0 && amountCents >= 100 && !uploading && (billingType === "one_time" || subscriptionValid);
+  const canSubmit = title.trim().length > 0 && amountCents >= 100 && !uploading && (billingType === "one_time" || (subscriptionValid && scheduleOk));
 
   // Normaliza para comparar produtos independentemente de acentos ou maiúsculas.
   const normalizeTitle = (s: string) =>
@@ -318,7 +338,7 @@ function MmpayAdminPage() {
               </label>
               <input id="mmpay-price" type="text" inputMode="decimal" value={amountEur}
                 onChange={(e) => setAmountEur(e.target.value)} placeholder={isFixedPlan ? "Ex.: 1997" : "Ex.: 497"} className={inputCls} />
-              {installments && amountCents >= 100 ? (
+              {installments && amountCents >= 100 && splitMode === "equal" ? (
                 <p className="mt-2 text-xs text-muted-foreground">
                   {cyclesNum}x de {formatMoney(installments[0], "EUR")} {intervalLabel(interval as BillingInterval, countNum)}
                   {installments[0] !== installments[installments.length - 1]
@@ -354,6 +374,54 @@ function MmpayAdminPage() {
                   <div>
                     <label className={labelCls} htmlFor="mmpay-cycles">Total de cobranças</label>
                     <input id="mmpay-cycles" type="number" min={1} max={600} value={cycles} onChange={(e) => setCycles(e.target.value)} className={inputCls} />
+                  </div>
+                ) : null}
+                {isFixedPlan && cyclesNum >= 2 && cyclesNum <= 36 ? (
+                  <div className="md:col-span-3">
+                    <span className={labelCls}>Como dividir o total</span>
+                    <div className="mt-2 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Como dividir o total">
+                      {([["equal", "Partes iguais"], ["first", "1.º valor diferente"], ["custom", "Valor de cada um"]] as const).map(([v, l]) => (
+                        <button key={v} type="button" role="radio" aria-checked={splitMode === v}
+                          onClick={() => {
+                            setSplitMode(v);
+                            if (v === "custom" && installments) setCustomEur(installments.map((c) => String(c / 100).replace(".", ",")));
+                          }}
+                          className={cn("rounded-xl border px-3 py-2.5 text-xs font-medium sm:text-sm", splitMode === v ? "border-primary bg-primary/10 text-foreground" : "border-border bg-background text-muted-foreground")}>
+                          {l}
+                        </button>
+                      ))}
+                    </div>
+                    {splitMode === "first" ? (
+                      <div className="mt-3 max-w-[200px]">
+                        <label className={labelCls} htmlFor="mmpay-first">1.ª prestação (EUR)</label>
+                        <input id="mmpay-first" type="text" inputMode="decimal" value={firstEur} onChange={(e) => setFirstEur(e.target.value)} placeholder="Ex.: 500" className={inputCls} />
+                      </div>
+                    ) : null}
+                    {splitMode === "custom" ? (
+                      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        {Array.from({ length: cyclesNum }, (_, i) => (
+                          <div key={i}>
+                            <label className="text-xs text-muted-foreground" htmlFor={`mmpay-inst-${i}`}>{i + 1}.ª</label>
+                            <input id={`mmpay-inst-${i}`} type="text" inputMode="decimal" value={customEur[i] ?? ""}
+                              onChange={(e) => setCustomEur((prev) => { const next = [...prev]; next[i] = e.target.value; return next; })}
+                              className={inputCls} />
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    {scheduleCents && amountCents >= 100 ? (
+                      scheduleOk ? (
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          {scheduleCents.map((c, i) => `${i + 1}.ª ${formatMoney(c, "EUR")}`).join(" · ")}
+                        </p>
+                      ) : (
+                        <p className="mt-2 text-xs text-destructive">
+                          {splitMode === "first"
+                            ? "A 1.ª prestação tem de deixar pelo menos 1 € para cada uma das restantes."
+                            : `As prestações somam ${formatMoney(customSum, "EUR")}; têm de somar ${formatMoney(amountCents, "EUR")} (mínimo 1 € cada).`}
+                        </p>
+                      )
+                    ) : null}
                   </div>
                 ) : null}
               </div>
@@ -479,7 +547,7 @@ function MmpayAdminPage() {
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {link.billing.type === "subscription" && link.billing.totalCycles && link.billing.totalCents
-                      ? `${formatMoney(link.billing.totalCents, link.currency)} · ${link.billing.totalCycles}x de ${formatMoney(splitInstallments(link.billing.totalCents, link.billing.totalCycles)[0], link.currency)} ${intervalLabel(link.billing.interval, link.billing.intervalCount)}`
+                      ? `${formatMoney(link.billing.totalCents, link.currency)} · ${link.billing.scheduleCents?.length ? link.billing.scheduleCents.map((c) => formatMoney(c, link.currency)).join(" + ") : `${link.billing.totalCycles}x de ${formatMoney(splitInstallments(link.billing.totalCents, link.billing.totalCycles)[0], link.currency)}`} ${intervalLabel(link.billing.interval, link.billing.intervalCount)}`
                       : `${formatMoney(link.amountCents, link.currency)}${link.billing.type === "subscription" ? ` ${intervalLabel(link.billing.interval, link.billing.intervalCount)} · sem fim` : ""}`}{" "}· {link.paidCount}{" "}
                     {link.paidCount === 1 ? "venda paga" : "vendas pagas"} ·{" "}
                     {new Date(link.createdAt).toLocaleDateString("pt-PT", { timeZone: "Europe/Lisbon" })}

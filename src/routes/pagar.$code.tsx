@@ -11,7 +11,7 @@ import {
   startKlarnaMmpayPayment,
   startMmpayCheckout,
 } from "@/lib/mmpay.functions";
-import { intervalLabel, splitInstallments } from "@/lib/mmpay/subscription-rules";
+import { installmentAmounts, intervalLabel } from "@/lib/mmpay/subscription-rules";
 import { formatMoney } from "@/lib/billing/types";
 import { trackMeta } from "@/lib/meta/pixel";
 import { MMLogo } from "@/components/mm/logo";
@@ -220,11 +220,26 @@ function MmpayPage() {
                     </span>
                     <span className="text-sm text-muted-foreground">total</span>
                   </div>
-                  <p className="mt-1.5 text-sm font-medium text-foreground">
-                    {link.billing.totalCycles}x de{" "}
-                    {formatMoney(splitInstallments(link.billing.totalCents, link.billing.totalCycles)[0], link.currency)}{" "}
-                    {intervalLabel(link.billing.interval, link.billing.intervalCount)}
-                  </p>
+                  {(() => {
+                    const parts = installmentAmounts(link.billing.totalCents, link.billing.totalCycles, link.billing.scheduleCents);
+                    const allEqual = parts.every((c) => c === parts[0]) || !link.billing.scheduleCents?.length;
+                    return allEqual ? (
+                      <p className="mt-1.5 text-sm font-medium text-foreground">
+                        {link.billing.totalCycles}x de {formatMoney(parts[0], link.currency)}{" "}
+                        {intervalLabel(link.billing.interval, link.billing.intervalCount)}
+                      </p>
+                    ) : (
+                      <div className="mt-1.5 text-sm text-foreground">
+                        <p className="font-medium">
+                          Hoje: {formatMoney(parts[0], link.currency)}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          Depois: {parts.slice(1).map((c) => formatMoney(c, link.currency)).join(" + ")}{" "}
+                          {intervalLabel(link.billing.interval, link.billing.intervalCount)}
+                        </p>
+                      </div>
+                    );
+                  })()}
                   <p className="mt-1 text-xs text-muted-foreground">
                     1.ª prestação cobrada hoje; as restantes são debitadas automaticamente no mesmo cartão.
                   </p>
