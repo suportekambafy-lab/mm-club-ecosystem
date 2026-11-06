@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Repeat } from "lucide-react";
-import { cancelMmpaySubscription, listMmpaySubscriptionCharges, listMmpaySubscriptions } from "@/lib/mmpay.functions";
+import { cancelMmpaySubscription, chargeMmpaySubscriptionNow, listMmpaySubscriptionCharges, listMmpaySubscriptions } from "@/lib/mmpay.functions";
 import { intervalLabel, type BillingInterval } from "@/lib/mmpay/subscription-rules";
 import { formatMoney } from "@/lib/billing/types";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,25 @@ export function MmpaySubscriptions() {
     queryKey: ["mmpay-sub-charges", openId],
     queryFn: () => listMmpaySubscriptionCharges({ data: { id: openId! } }),
     enabled: Boolean(openId),
+  });
+  const [customAmount, setCustomAmount] = useState("");
+  const chargeNow = useMutation({
+    mutationFn: () => {
+      const v = customAmount.trim().replace(",", ".");
+      const cents = v ? Math.round(Number(v) * 100) : null;
+      if (cents !== null && (!Number.isFinite(cents) || cents < 100)) throw new Error("O valor manual tem de ser pelo menos 1 €.");
+      return chargeMmpaySubscriptionNow({ data: { id: openId!, amountCents: cents } });
+    },
+    onSuccess: () => {
+      toast.success("Cobrança feita com sucesso.");
+      setCustomAmount("");
+      void qc.invalidateQueries({ queryKey: ["mmpay-subs"] });
+      void qc.invalidateQueries({ queryKey: ["mmpay-sub-charges", openId] });
+    },
+    onError: (e: Error) => {
+      toast.error(e.message);
+      void qc.invalidateQueries({ queryKey: ["mmpay-sub-charges", openId] });
+    },
   });
   const cancel = useMutation({
     mutationFn: () => cancelMmpaySubscription({ data: { id: openId!, reason: reason.trim() || null } }),
@@ -121,6 +140,24 @@ export function MmpaySubscriptions() {
                   </ul>
                 )}
               </div>
+              {["active", "past_due"].includes(open.status) && (!open.total_cycles || open.charges_count < open.total_cycles) ? (
+                <div className="space-y-2 border-t border-border pt-4">
+                  <h3 className="font-semibold">Cobrar agora (antecipar)</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Cobra já a prestação {open.charges_count + 1} no cartão do cliente. Deixa o valor vazio para cobrar o valor previsto, ou escreve um valor manual. As datas seguintes mantêm-se.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <input value={customAmount} onChange={(e) => setCustomAmount(e.target.value)} inputMode="decimal" placeholder="Valor manual em € (opcional)"
+                      className="min-w-0 flex-1 rounded-xl border border-border bg-background px-4 py-2.5 outline-none focus:border-primary" />
+                    <Button disabled={chargeNow.isPending} onClick={() => {
+                      const label = customAmount.trim() ? `${customAmount.trim()} €` : "o valor previsto";
+                      if (window.confirm(`Cobrar agora ${label} a ${open.customer_name ?? open.customer_email}?`)) chargeNow.mutate();
+                    }}>
+                      {chargeNow.isPending ? "A cobrar…" : "Cobrar agora"}
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
               {["pending", "active", "past_due"].includes(open.status) ? (
                 <div className="space-y-2 border-t border-border pt-4">
                   <input value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} placeholder="Motivo do cancelamento (opcional)"
