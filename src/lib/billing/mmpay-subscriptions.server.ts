@@ -87,7 +87,7 @@ type SubRow = {
 
 async function chargeOne(sub: SubRow, overrideCents?: number, manual = false): Promise<"paid" | "failed" | "skipped"> {
   const cycle = sub.charges_count + 1;
-  const attempt = sub.failed_attempts + 1;
+  const baseAttempt = sub.failed_attempts + 1;
   const release = (patch: Record<string, unknown>) =>
     supabaseAdmin
       .from("mmpay_subscriptions")
@@ -110,6 +110,16 @@ async function chargeOne(sub: SubRow, overrideCents?: number, manual = false): P
     sub.total_amount_cents && sub.total_cycles
       ? installmentAmounts(sub.total_amount_cents, sub.total_cycles, sub.installment_schedule_cents)[cycle - 1] ?? sub.amount_cents
       : sub.amount_cents);
+
+  // Tentativas manuais falhadas não sobem failed_attempts: numera a partir da última tentativa registada do ciclo.
+  const { data: prev } = await supabaseAdmin
+    .from("mmpay_subscription_charges")
+    .select("attempt")
+    .eq("subscription_id", sub.id)
+    .eq("cycle_number", cycle)
+    .order("attempt", { ascending: false })
+    .limit(1);
+  const attempt = Math.max(baseAttempt, ((prev?.[0]?.attempt as number | undefined) ?? 0) + 1);
 
   // Reserva o ciclo antes de falar com a Viva. Se já há cobrança paga/em curso, não repete.
   const { data: charge, error: claimErr } = await supabaseAdmin
