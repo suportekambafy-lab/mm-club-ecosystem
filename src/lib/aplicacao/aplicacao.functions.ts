@@ -5,6 +5,7 @@ import { classificar } from "./config";
 import { leadSchema } from "./validation";
 import { contactOutcomeStatusPatch, leadUpdateSchema } from "./sale-rules";
 import { canScheduleCall } from "./lead-presentation";
+import { normEmail, normPhone } from "./duplicate-rules";
 
 async function admin() {
   return (await import("@/integrations/supabase/client.server")).supabaseAdmin;
@@ -20,6 +21,24 @@ export const saveLead = createServerFn({ method: "POST" })
     if (final) {
       row.classificacao = classificar(fields as Record<string, string | undefined>);
       row.status = "novo";
+    }
+    if (final) {
+      // Não duplicar: se já existe aplicação completa com o mesmo email/telemóvel, atualiza essa.
+      const email = normEmail(fields.email as string | null);
+      const phone = normPhone(fields.whatsapp as string | null);
+      const ors = [email && `email.ilike.${email}`, phone && `whatsapp.like.%${phone}`].filter(Boolean).join(",");
+      if (ors) {
+        const { data: cands } = await db.from("leads").select("id, email, whatsapp, status, created_at")
+          .neq("status", "incompleto").or(ors).order("created_at", { ascending: true }).limit(20);
+        const orig = (cands ?? []).find((c) => c.id !== id && ((email && normEmail(c.email) === email) || (phone && normPhone(c.whatsapp) === phone)));
+        if (orig) {
+          delete row.status;
+          const { error } = await db.from("leads").update(row as never).eq("id", orig.id);
+          if (error) throw new Error("Não foi possível guardar.");
+          if (id) await db.from("leads").delete().eq("id", id).eq("status", "incompleto");
+          return { id: orig.id as string, classificacao: (row.classificacao as string) ?? null };
+        }
+      }
     }
     if (id) {
       const { data: ex } = await db.from("leads").select("id, status").eq("id", id).maybeSingle();
