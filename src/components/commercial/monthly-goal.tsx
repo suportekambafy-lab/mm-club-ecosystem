@@ -25,7 +25,7 @@ export function MonthlyGoal() {
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"><Target className="h-4 w-4" /></span>
         <div>
           <p className="text-sm font-semibold">Meta do mês</p>
-          <p className="mt-0.5 text-xs text-muted-foreground capitalize">{monthLabel}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground first-letter:uppercase">{monthLabel}</p>
         </div>
       </div>
       <div className="text-right">
