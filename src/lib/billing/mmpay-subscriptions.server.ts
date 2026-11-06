@@ -9,7 +9,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   afterFailedCharge,
   afterPaidCharge,
-  splitInstallments,
+  installmentAmounts,
   type BillingInterval,
 } from "@/lib/mmpay/subscription-rules";
 import type { MmpayLinkRow } from "./mmpay.server";
@@ -41,6 +41,7 @@ export async function activateSubscriptionFromFirstPayment(input: {
       billing_interval_count: count,
       total_cycles: link.total_cycles,
       total_amount_cents: link.total_amount_cents,
+      installment_schedule_cents: link.installment_schedule_cents ?? null,
       charges_count: 1,
       status: next.status,
       started_at: now.toISOString(),
@@ -76,6 +77,7 @@ type SubRow = {
   billing_interval_count: number;
   total_cycles: number | null;
   total_amount_cents: number | null;
+  installment_schedule_cents: number[] | null;
   charges_count: number;
   status: string;
   failed_attempts: number;
@@ -106,7 +108,7 @@ async function chargeOne(sub: SubRow): Promise<"paid" | "failed" | "skipped"> {
   // (os cêntimos que sobram da divisão ficam nas primeiras prestações).
   const cycleCents =
     sub.total_amount_cents && sub.total_cycles
-      ? splitInstallments(sub.total_amount_cents, sub.total_cycles)[cycle - 1] ?? sub.amount_cents
+      ? installmentAmounts(sub.total_amount_cents, sub.total_cycles, sub.installment_schedule_cents)[cycle - 1] ?? sub.amount_cents
       : sub.amount_cents;
 
   // Reserva o ciclo antes de falar com a Viva. Se já há cobrança paga/em curso, não repete.

@@ -48,6 +48,29 @@ export function splitInstallments(totalCents: number, installments: number): num
   return Array.from({ length: n }, (_, i) => base + (i < extra ? 1 : 0));
 }
 
+/**
+ * Valores de cada prestação: usa o plano personalizado (`schedule`) quando é válido
+ * (mesmo número de prestações e soma igual ao total); senão divide em partes iguais.
+ */
+export function installmentAmounts(totalCents: number, cycles: number, schedule?: number[] | null): number[] {
+  if (schedule && isValidSchedule(schedule, totalCents, cycles)) return [...schedule];
+  return splitInstallments(totalCents, cycles);
+}
+
+export function isValidSchedule(schedule: number[], totalCents: number, cycles: number): boolean {
+  return (
+    schedule.length === cycles &&
+    schedule.every((c) => Number.isInteger(c) && c >= 100) &&
+    schedule.reduce((a, b) => a + b, 0) === totalCents
+  );
+}
+
+/** 1.ª prestação fixa; o resto do total é dividido em partes iguais pelas restantes. */
+export function firstThenSplit(totalCents: number, cycles: number, firstCents: number): number[] {
+  if (cycles <= 1) return [totalCents];
+  return [firstCents, ...splitInstallments(totalCents - firstCents, cycles - 1)];
+}
+
 /** Depois de `chargesDone` cobranças pagas, a assinatura terminou? */
 export function isSubscriptionComplete(chargesDone: number, totalCycles: number | null): boolean {
   return totalCycles != null && chargesDone >= totalCycles;

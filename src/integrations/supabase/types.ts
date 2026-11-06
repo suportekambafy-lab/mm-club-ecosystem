@@ -3408,6 +3408,7 @@ export type Database = {
           custom_description: string | null
           description: string | null
           id: string
+          installment_schedule_cents: number[] | null
           price_id: string | null
           stripe_price_id: string | null
           stripe_product_id: string | null
@@ -3428,6 +3429,7 @@ export type Database = {
           custom_description?: string | null
           description?: string | null
           id?: string
+          installment_schedule_cents?: number[] | null
           price_id?: string | null
           stripe_price_id?: string | null
           stripe_product_id?: string | null
@@ -3448,6 +3450,7 @@ export type Database = {
           custom_description?: string | null
           description?: string | null
           id?: string
+          installment_schedule_cents?: number[] | null
           price_id?: string | null
           stripe_price_id?: string | null
           stripe_product_id?: string | null
@@ -3584,6 +3587,7 @@ export type Database = {
           customer_phone: string | null
           failed_attempts: number
           id: string
+          installment_schedule_cents: number[] | null
           last_charge_at: string | null
           link_id: string | null
           locked_until: string | null
@@ -3612,6 +3616,7 @@ export type Database = {
           customer_phone?: string | null
           failed_attempts?: number
           id?: string
+          installment_schedule_cents?: number[] | null
           last_charge_at?: string | null
           link_id?: string | null
           locked_until?: string | null
@@ -3640,6 +3645,7 @@ export type Database = {
           customer_phone?: string | null
           failed_attempts?: number
           id?: string
+          installment_schedule_cents?: number[] | null
           last_charge_at?: string | null
           link_id?: string | null
           locked_until?: string | null
@@ -5271,6 +5277,7 @@ export type Database = {
           customer_phone: string | null
           failed_attempts: number
           id: string
+          installment_schedule_cents: number[] | null
           last_charge_at: string | null
           link_id: string | null
           locked_until: string | null
