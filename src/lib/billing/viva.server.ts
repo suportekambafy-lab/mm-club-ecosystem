@@ -86,6 +86,10 @@ export async function chargeVivaRecurring(input: {
     const json = await viva("POST", `/api/transactions/${encodeURIComponent(input.initialTransactionId)}`, {
       Amount: input.amountCents,
       CustomerTrns: input.description.slice(0, 2048),
+      MerchantTrns: input.description.slice(0, 2048),
+      // Sem SourceCode a Viva cobra na fonte "Default", não na fonte MMpay do pagamento inicial.
+      SourceCode: env("VIVA_SOURCE_CODE"),
+      CurrencyCode: "978",
     });
     if (json?.StatusId && json.StatusId !== "F") return { ok: false, error: `Estado ${json.StatusId}` };
     return { ok: true, transactionId: json?.TransactionId ? String(json.TransactionId) : null };
