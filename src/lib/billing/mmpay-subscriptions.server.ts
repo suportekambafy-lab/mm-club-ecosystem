@@ -85,7 +85,7 @@ type SubRow = {
   viva_initial_transaction_id: string | null;
 };
 
-async function chargeOne(sub: SubRow): Promise<"paid" | "failed" | "skipped"> {
+async function chargeOne(sub: SubRow, overrideCents?: number, manual = false): Promise<"paid" | "failed" | "skipped"> {
   const cycle = sub.charges_count + 1;
   const attempt = sub.failed_attempts + 1;
   const release = (patch: Record<string, unknown>) =>
@@ -106,10 +106,10 @@ async function chargeOne(sub: SubRow): Promise<"paid" | "failed" | "skipped"> {
 
   // Valor deste ciclo: com total + prestações, cada ciclo cobra a sua fatia exata
   // (os cêntimos que sobram da divisão ficam nas primeiras prestações).
-  const cycleCents =
+  const cycleCents = overrideCents ?? (
     sub.total_amount_cents && sub.total_cycles
       ? installmentAmounts(sub.total_amount_cents, sub.total_cycles, sub.installment_schedule_cents)[cycle - 1] ?? sub.amount_cents
-      : sub.amount_cents;
+      : sub.amount_cents);
 
   // Reserva o ciclo antes de falar com a Viva. Se já há cobrança paga/em curso, não repete.
   const { data: charge, error: claimErr } = await supabaseAdmin
@@ -157,6 +157,11 @@ async function chargeOne(sub: SubRow): Promise<"paid" | "failed" | "skipped"> {
     .from("mmpay_subscription_charges")
     .update({ status: "failed", error: res.error, finished_at: now.toISOString() })
     .eq("id", charge.id);
+  // Cobrança manual recusada: não mexe no calendário nem no estado da assinatura.
+  if (manual) {
+    await release({});
+    return "failed";
+  }
   const retry = afterFailedCharge(attempt, now);
   await release({ status: "past_due", failed_attempts: attempt, next_charge_at: retry.nextChargeAt?.toISOString() ?? null });
   return "failed";
@@ -189,6 +194,32 @@ export async function listSubscriptionCharges(subscriptionId: string) {
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
   return data ?? [];
+}
+
+/**
+ * Cobrança manual antecipada (comercial): cobra já a próxima prestação, com o
+ * valor previsto ou um valor manual. Reserva a assinatura com locked_until para
+ * nunca correr em paralelo com o agendador; o calendário seguinte mantém-se.
+ */
+export async function chargeSubscriptionNow(id: string, overrideCents?: number) {
+  const now = new Date();
+  const { data, error } = await supabaseAdmin
+    .from("mmpay_subscriptions")
+    .update({ locked_until: new Date(now.getTime() + 5 * 60_000).toISOString() } as never)
+    .eq("id", id)
+    .in("status", ["active", "past_due"])
+    .or(`locked_until.is.null,locked_until.lt.${now.toISOString()}`)
+    .select("id,product_title,amount_cents,billing_interval,billing_interval_count,total_cycles,total_amount_cents,installment_schedule_cents,charges_count,status,failed_attempts,next_charge_at,viva_initial_transaction_id");
+  if (error) throw new Error(error.message);
+  const sub = data?.[0] as SubRow | undefined;
+  if (!sub) throw new Error("Esta assinatura não está ativa ou já está a ser cobrada. Tenta daqui a uns minutos.");
+  if (sub.total_cycles && sub.charges_count >= sub.total_cycles) {
+    await supabaseAdmin.from("mmpay_subscriptions").update({ locked_until: null } as never).eq("id", id);
+    throw new Error("Todas as prestações já foram cobradas.");
+  }
+  const result = await chargeOne(sub, overrideCents, true);
+  if (result === "skipped") throw new Error("Esta prestação já foi cobrada ou está em curso.");
+  if (result === "failed") throw new Error("O banco recusou a cobrança. Vê o motivo no histórico de cobranças.");
 }
 
 /** Cancela: sem cobranças futuras; o histórico financeiro fica intacto. */
