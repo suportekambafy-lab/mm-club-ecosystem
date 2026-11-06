@@ -38,6 +38,7 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
   const [fFrom, setFFrom] = useState(""); const [search, setSearch] = useState("");
   const [open, setOpen] = useState<Lead | null>(null);
   const [tab, setTab] = useState<"leads" | "config">("leads");
+  const [view, setView] = useState<"kanban" | "lista">("kanban");
   const refresh = () => qc.invalidateQueries({ queryKey: ["aplicacao-leads"] });
 
   const leads: Lead[] = (data?.leads as Lead[]) ?? [];
@@ -172,9 +173,11 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
         <select value={fCls} onChange={(e) => setFCls(e.target.value)} className={sel}><option value="">Todas</option><option>A</option><option>B</option><option>C</option></select>
         <select value={fStatus} onChange={(e) => setFStatus(e.target.value)} className={sel}><option value="">Completas (sem incompletas)</option>{Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}{k === "incompleto" ? ` · ${leads.filter(l => l.status === "incompleto").length}` : ""}</option>)}</select>
         <input type="date" value={fFrom} onChange={(e) => setFFrom(e.target.value)} className={sel} aria-label="Desde" />
+        <div className="flex rounded-lg p-0.5 ring-1 ring-border">{(["kanban", "lista"] as const).map(v => <button key={v} onClick={() => setView(v)} className={cn("rounded-md px-3 py-1.5 text-sm", view === v ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>{v === "kanban" ? "Kanban" : "Lista"}</button>)}</div>
         <button onClick={exportCsv} className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm ring-1 ring-border hover:ring-primary"><Download className="h-4 w-4" /> Exportar CSV</button>
       </div>
 
+      {view === "kanban" ? <Kanban leads={filtered} names={actorNames} onOpen={setOpen} onMoved={() => { refresh(); qc.invalidateQueries({queryKey:["commercial-home-applications"]}); }} /> :
       <div className="overflow-x-auto rounded-xl ring-1 ring-border">
         <table className="w-full text-sm">
           <thead className="bg-surface-1 text-left text-xs text-muted-foreground">
@@ -192,7 +195,7 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
             {filtered.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Ainda sem aplicações.</td></tr>}
           </tbody>
         </table>
-      </div>
+      </div>}
       </>}
       {open && <Detail commercial={commercial} lead={open} actorNames={actorNames} me={data?.me ?? ""} canSchedule={canScheduleCall((data as any)?.myRoles ?? [])} closers={((data as any)?.closers ?? []) as { id: string; name: string }[]} agenda={agByLead.get(open.id) as string | undefined} onClose={closeDetail} onChanged={(l) => { setOpen(l); refresh(); qc.invalidateQueries({queryKey:["commercial-home-applications"]}); }} />}
     </div>
@@ -381,4 +384,46 @@ function Settings({ initial, onSaved }: { initial: any; onSaved: () => void }) {
       <button disabled={busy} onClick={submit} className="rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground">Guardar</button>
     </div>
   );
+}
+
+const STAGES = ["novo", "em_contato", "call_marcada", "fechou", "perdido"] as const;
+function Kanban({ leads, names, onOpen, onMoved }: { leads: Lead[]; names: Record<string, string>; onOpen: (l: Lead) => void; onMoved: () => void }) {
+  const upd = useServerFn(updateLead);
+  const [over, setOver] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  async function drop(stage: string, id: string) {
+    setOver(null);
+    const lead = leads.find(l => l.id === id);
+    if (!lead || lead.status === stage) return;
+    // Call e fecho precisam de data/closer ou valor: abrem os detalhes.
+    if (stage === "call_marcada" || stage === "fechou") { onOpen(lead); toast.info(stage === "fechou" ? "Indica o valor para marcar como fechado." : "Escolhe a data e o closer para marcar a call."); return; }
+    setBusy(id);
+    try { await upd({ data: { id, status: stage as "novo" | "em_contato" | "perdido" } }); toast.success(`Movido para ${STATUS[stage]}`); onMoved(); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Não foi possível mover."); }
+    finally { setBusy(null); }
+  }
+  return <div className="flex gap-3 overflow-x-auto pb-3">
+    {STAGES.map(stage => {
+      const items = leads.filter(l => l.status === stage);
+      const total = stage === "fechou" ? items.reduce((t, l) => t + (l.sale_amount_cents ?? 0), 0) : 0;
+      return <div key={stage} onDragOver={e => { e.preventDefault(); setOver(stage); }} onDragLeave={() => setOver(o => o === stage ? null : o)} onDrop={e => { e.preventDefault(); drop(stage, e.dataTransfer.getData("text/plain")); }}
+        className={cn("flex w-72 shrink-0 flex-col rounded-2xl bg-surface-1 p-3 ring-1 ring-border transition-colors", over === stage && "ring-primary")}>
+        <div className="mb-3 flex items-center justify-between px-1"><p className="text-sm font-semibold">{STATUS[stage]}</p><span className="rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums">{items.length}</span></div>
+        {stage === "fechou" && total > 0 && <p className="mb-2 px-1 text-xs text-primary">{formatSaleAmount(total)}</p>}
+        <div className="flex max-h-[65vh] min-h-24 flex-col gap-2 overflow-y-auto">
+          {items.map(l => <button key={l.id} draggable onDragStart={e => e.dataTransfer.setData("text/plain", l.id)} onClick={() => onOpen(l)}
+            className={cn("cursor-grab rounded-xl bg-card p-3 text-left ring-1 ring-border transition hover:ring-primary active:cursor-grabbing", busy === l.id && "opacity-50")}>
+            <div className="flex items-start justify-between gap-2"><p className="truncate text-sm font-medium">{l.nome ?? "—"}</p>{l.classificacao && <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-semibold", CLS_STYLE[l.classificacao])}>{l.classificacao}</span>}</div>
+            <p className="mt-1 text-xs text-muted-foreground">{l.whatsapp}</p>
+            {l.status === "call_marcada" && l.call_scheduled_at && <p className="mt-1 text-xs text-primary">{new Date(l.call_scheduled_at).toLocaleString("pt-PT", { timeZone: "Europe/Lisbon", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</p>}
+            {l.status === "fechou" && l.sale_amount_cents != null && <p className="mt-1 text-xs text-primary">{formatSaleAmount(l.sale_amount_cents)}</p>}
+            {l.contact_outcome && <p className="mt-1 text-[11px] text-muted-foreground">{OUTCOME[l.contact_outcome] ?? l.contact_outcome}</p>}
+            <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted-foreground"><span className="truncate">{l.responsavel ?? "Sem responsável"}</span><span>{new Date(l.created_at).toLocaleDateString("pt-PT")}</span></div>
+            <Attribution lead={l} names={names} />
+          </button>)}
+          {!items.length && <p className="px-1 py-6 text-center text-xs text-muted-foreground">Arrasta leads para aqui</p>}
+        </div>
+      </div>;
+    })}
+  </div>;
 }

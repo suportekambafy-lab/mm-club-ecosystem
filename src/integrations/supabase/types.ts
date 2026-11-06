@@ -1317,6 +1317,33 @@ export type Database = {
         }
         Relationships: []
       }
+      commercial_goals: {
+        Row: {
+          closer_daily_closes: number
+          month_key: string
+          revenue_goal_cents: number
+          sdr_daily_calls: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          closer_daily_closes?: number
+          month_key: string
+          revenue_goal_cents?: number
+          sdr_daily_calls?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          closer_daily_closes?: number
+          month_key?: string
+          revenue_goal_cents?: number
+          sdr_daily_calls?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       community_categories: {
         Row: {
           color: string | null
@@ -1987,6 +2014,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          call_booked_at: string | null
           call_reminder_day_sent_at: string | null
           call_reminder_hour_sent_at: string | null
           call_scheduled_at: string | null
@@ -2023,6 +2051,7 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          call_booked_at?: string | null
           call_reminder_day_sent_at?: string | null
           call_reminder_hour_sent_at?: string | null
           call_scheduled_at?: string | null
@@ -2059,6 +2088,7 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          call_booked_at?: string | null
           call_reminder_day_sent_at?: string | null
           call_reminder_hour_sent_at?: string | null
           call_scheduled_at?: string | null

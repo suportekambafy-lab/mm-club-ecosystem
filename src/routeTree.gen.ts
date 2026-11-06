@@ -87,6 +87,7 @@ import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
 import { Route as AuthenticatedComercialIndexRouteImport } from './routes/_authenticated/comercial.index'
 import { Route as AuthenticatedComercialAplicacoesRouteImport } from './routes/_authenticated/comercial.aplicacoes'
 import { Route as AuthenticatedComercialEquipaRouteImport } from './routes/_authenticated/comercial.equipa'
+import { Route as AuthenticatedComercialMetasRouteImport } from './routes/_authenticated/comercial.metas'
 import { Route as AuthenticatedComercialMmpayRouteImport } from './routes/_authenticated/comercial.mmpay'
 import { Route as AuthenticatedComercialUtilizadoresRouteImport } from './routes/_authenticated/comercial.utilizadores'
 import { Route as AuthenticatedComercialVendasRouteImport } from './routes/_authenticated/comercial.vendas'
@@ -547,6 +548,12 @@ const AuthenticatedComercialEquipaRoute =
   AuthenticatedComercialEquipaRouteImport.update({
     id: '/equipa',
     path: '/equipa',
+    getParentRoute: () => AuthenticatedComercialRoute,
+  } as any)
+const AuthenticatedComercialMetasRoute =
+  AuthenticatedComercialMetasRouteImport.update({
+    id: '/metas',
+    path: '/metas',
     getParentRoute: () => AuthenticatedComercialRoute,
   } as any)
 const AuthenticatedComercialMmpayRoute =
@@ -1014,6 +1021,7 @@ export interface FileRoutesByFullPath {
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
   '/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
+  '/comercial/metas': typeof AuthenticatedComercialMetasRoute
   '/comercial/mmpay': typeof AuthenticatedComercialMmpayRoute
   '/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
   '/comercial/vendas': typeof AuthenticatedComercialVendasRoute
@@ -1151,6 +1159,7 @@ export interface FileRoutesByTo {
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
   '/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
+  '/comercial/metas': typeof AuthenticatedComercialMetasRoute
   '/comercial/mmpay': typeof AuthenticatedComercialMmpayRoute
   '/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
   '/comercial/vendas': typeof AuthenticatedComercialVendasRoute
@@ -1300,6 +1309,7 @@ export interface FileRoutesById {
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
   '/_authenticated/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
   '/_authenticated/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
+  '/_authenticated/comercial/metas': typeof AuthenticatedComercialMetasRoute
   '/_authenticated/comercial/mmpay': typeof AuthenticatedComercialMmpayRoute
   '/_authenticated/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
   '/_authenticated/comercial/vendas': typeof AuthenticatedComercialVendasRoute
@@ -1448,6 +1458,7 @@ export interface FileRouteTypes {
     | '/lives/$liveId'
     | '/comercial/aplicacoes'
     | '/comercial/equipa'
+    | '/comercial/metas'
     | '/comercial/mmpay'
     | '/comercial/utilizadores'
     | '/comercial/vendas'
@@ -1585,6 +1596,7 @@ export interface FileRouteTypes {
     | '/lives/$liveId'
     | '/comercial/aplicacoes'
     | '/comercial/equipa'
+    | '/comercial/metas'
     | '/comercial/mmpay'
     | '/comercial/utilizadores'
     | '/comercial/vendas'
@@ -1733,6 +1745,7 @@ export interface FileRouteTypes {
     | '/_app/lives/$liveId'
     | '/_authenticated/comercial/aplicacoes'
     | '/_authenticated/comercial/equipa'
+    | '/_authenticated/comercial/metas'
     | '/_authenticated/comercial/mmpay'
     | '/_authenticated/comercial/utilizadores'
     | '/_authenticated/comercial/vendas'
@@ -2423,6 +2436,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedComercialEquipaRouteImport
       parentRoute: typeof AuthenticatedComercialRoute
     }
+    '/_authenticated/comercial/metas': {
+      id: '/_authenticated/comercial/metas'
+      path: '/metas'
+      fullPath: '/comercial/metas'
+      preLoaderRoute: typeof AuthenticatedComercialMetasRouteImport
+      parentRoute: typeof AuthenticatedComercialRoute
+    }
     '/_authenticated/comercial/mmpay': {
       id: '/_authenticated/comercial/mmpay'
       path: '/mmpay'
@@ -2905,6 +2925,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedComercialRouteChildren {
   AuthenticatedComercialAplicacoesRoute: typeof AuthenticatedComercialAplicacoesRoute
   AuthenticatedComercialEquipaRoute: typeof AuthenticatedComercialEquipaRoute
+  AuthenticatedComercialMetasRoute: typeof AuthenticatedComercialMetasRoute
   AuthenticatedComercialMmpayRoute: typeof AuthenticatedComercialMmpayRoute
   AuthenticatedComercialUtilizadoresRoute: typeof AuthenticatedComercialUtilizadoresRoute
   AuthenticatedComercialVendasRoute: typeof AuthenticatedComercialVendasRoute
@@ -2916,6 +2937,7 @@ const AuthenticatedComercialRouteChildren: AuthenticatedComercialRouteChildren =
     AuthenticatedComercialAplicacoesRoute:
       AuthenticatedComercialAplicacoesRoute,
     AuthenticatedComercialEquipaRoute: AuthenticatedComercialEquipaRoute,
+    AuthenticatedComercialMetasRoute: AuthenticatedComercialMetasRoute,
     AuthenticatedComercialMmpayRoute: AuthenticatedComercialMmpayRoute,
     AuthenticatedComercialUtilizadoresRoute:
       AuthenticatedComercialUtilizadoresRoute,

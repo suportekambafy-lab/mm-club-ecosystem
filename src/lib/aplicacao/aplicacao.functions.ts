@@ -112,6 +112,7 @@ export const updateLead = createServerFn({ method: "POST" })
       if (!data.callScheduledAt || Date.parse(data.callScheduledAt) <= Date.now()) throw new Error("Escolhe uma data e hora futuras.");
       patch.call_scheduled_at = data.callScheduledAt;
       patch.call_scheduled_by = context.userId;
+      if (lead.status !== "call_marcada") patch.call_booked_at = new Date().toISOString();
       patch.responsavel_id = data.closerId;
       patch.responsavel = closerProfileName;
     } else if (effectiveStatus) patch.call_scheduled_at = null;

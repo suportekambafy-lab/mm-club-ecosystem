@@ -70,3 +70,41 @@ export function summarizeGoal(revenueCents: number, goalCents: number): GoalProg
     reached: revenueCents >= goalCents,
   };
 }
+
+/** Janela do dia (Lisboa) que contém a data: início incluído, fim excluído. */
+export function dayWindow(date: Date, timeZone = TIME_ZONE): { startIso: string; endIso: string } {
+  const v = zoneParts(date, timeZone);
+  const y = Number(v.year), m = Number(v.month), d = Number(v.day);
+  const next = new Date(Date.UTC(y, m - 1, d + 1));
+  return {
+    startIso: new Date(instantInZone(y, m, d, timeZone)).toISOString(),
+    endIso: new Date(instantInZone(next.getUTCFullYear(), next.getUTCMonth() + 1, next.getUTCDate(), timeZone)).toISOString(),
+  };
+}
+
+/** Mês anterior ao da data, no fuso de Lisboa. */
+export function previousMonthWindow(date: Date, timeZone = TIME_ZONE): MonthlyWindow {
+  const current = monthlyWindow(date, timeZone);
+  return monthlyWindow(new Date(Date.parse(current.startIso) - 3_600_000), timeZone);
+}
+
+/** Início dos últimos 7 dias, contando hoje como um deles (Lisboa). */
+export function last7DaysStartIso(date: Date, timeZone = TIME_ZONE): string {
+  return dayWindow(new Date(Date.parse(dayWindow(date, timeZone).startIso) - 6 * 86_400_000 + 43_200_000), timeZone).startIso;
+}
+
+export type RevenuePeriods = { todayCents: number; last7DaysCents: number; monthCents: number; lastMonthCents: number };
+
+/** Soma vendas datadas pelos períodos do painel. */
+export function bucketRevenue(sales: { at: string; cents: number }[], now: Date): RevenuePeriods {
+  const today = dayWindow(now), month = monthlyWindow(now), last = previousMonthWindow(now), week = last7DaysStartIso(now);
+  const out: RevenuePeriods = { todayCents: 0, last7DaysCents: 0, monthCents: 0, lastMonthCents: 0 };
+  for (const { at, cents } of sales) {
+    const t = Date.parse(at);
+    if (t >= Date.parse(today.startIso) && t < Date.parse(today.endIso)) out.todayCents += cents;
+    if (t >= Date.parse(week) && t < Date.parse(today.endIso)) out.last7DaysCents += cents;
+    if (t >= Date.parse(month.startIso) && t < Date.parse(month.endIso)) out.monthCents += cents;
+    if (t >= Date.parse(last.startIso) && t < Date.parse(last.endIso)) out.lastMonthCents += cents;
+  }
+  return out;
+}
