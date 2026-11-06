@@ -33,6 +33,8 @@ export const saveLead = createServerFn({ method: "POST" })
         const orig = (cands ?? []).find((c) => c.id !== id && ((email && normEmail(c.email) === email) || (phone && normPhone(c.whatsapp) === phone)));
         if (orig) {
           delete row.status;
+          const { data: cur } = await db.from("leads").select("submission_count").eq("id", orig.id).maybeSingle();
+          row.submission_count = ((cur?.submission_count as number | undefined) ?? 1) + 1;
           const { error } = await db.from("leads").update(row as never).eq("id", orig.id);
           if (error) throw new Error("Não foi possível guardar.");
           if (id) await db.from("leads").delete().eq("id", id).eq("status", "incompleto");
