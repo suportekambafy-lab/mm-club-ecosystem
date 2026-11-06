@@ -191,7 +191,7 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
                 <td className="p-3">{l.classificacao ? <span className={cn("rounded px-2 py-0.5 text-xs font-semibold", CLS_STYLE[l.classificacao])}>{l.classificacao}</span> : "—"}</td>
                 <td className="p-3">{l.nome ?? "—"}{((l as any).submission_count ?? 1) > 1 && <DupBadge n={(l as any).submission_count} />}</td><td className="p-3">{l.whatsapp}</td>
                 <td className="p-3">{STATUS[l.status] ?? l.status}<Attribution lead={l} names={actorNames} />{l.contact_outcome && <p className="mt-1 text-xs text-muted-foreground">{OUTCOME[l.contact_outcome] ?? l.contact_outcome}{l.last_contact_at ? ` · ${new Date(l.last_contact_at).toLocaleDateString("pt-PT")}` : ""}</p>}{l.status === "fechou" && l.sale_amount_cents != null && <p className="mt-1 text-xs text-primary">{formatSaleAmount(l.sale_amount_cents)}</p>}</td><td className="p-3" onClick={(e) => e.stopPropagation()}><QuickOutcome lead={l} me={data?.me ?? ""} onDone={() => { refresh(); qc.invalidateQueries({queryKey:["commercial-home-applications"]}); }} /></td><td className="p-3">{l.responsavel ?? "—"}</td>
-                <td className="p-3 text-muted-foreground">{new Date(l.created_at).toLocaleString("pt-PT")}</td>
+                <td className="p-3 text-muted-foreground">{new Date(l.created_at).toLocaleString("pt-PT")}{l.status === "novo" && <DaysBadge createdAt={l.created_at} />}</td>
               </tr>
             ))}
             {filtered.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Ainda sem aplicações.</td></tr>}
@@ -388,6 +388,12 @@ function Settings({ initial, onSaved }: { initial: any; onSaved: () => void }) {
   );
 }
 
+function DaysBadge({ createdAt }: { createdAt: string }) {
+  const d = Math.max(0, Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000));
+  const label = d === 0 ? "Hoje" : d === 1 ? "1 dia" : `${d} dias`;
+  return <span className={cn("ml-2 inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold", d >= 3 ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground")}>{label}</span>;
+}
+
 const STAGES = ["novo", "em_contato", "call_marcada", "fechou", "perdido"] as const;
 function DupBadge({ n }: { n: number }) {
   return <span className="ml-2 inline-block rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-semibold text-destructive">Duplicado · inscreveu-se {n}x</span>;
@@ -424,7 +430,7 @@ function Kanban({ leads, dupIds, names, onOpen, onMoved }: { leads: Lead[]; dupI
             {l.status === "call_marcada" && l.call_scheduled_at && <p className="mt-1 text-xs text-primary">{new Date(l.call_scheduled_at).toLocaleString("pt-PT", { timeZone: "Europe/Lisbon", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</p>}
             {l.status === "fechou" && l.sale_amount_cents != null && <p className="mt-1 text-xs text-primary">{formatSaleAmount(l.sale_amount_cents)}</p>}
             {l.contact_outcome && <p className="mt-1 text-[11px] text-muted-foreground">{OUTCOME[l.contact_outcome] ?? l.contact_outcome}</p>}
-            <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted-foreground"><span className="truncate">{l.responsavel ?? "Sem responsável"}</span><span>{new Date(l.created_at).toLocaleDateString("pt-PT")}</span></div>
+            <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted-foreground"><span className="truncate">{l.responsavel ?? "Sem responsável"}</span><span>{new Date(l.created_at).toLocaleDateString("pt-PT")}{l.status === "novo" && <DaysBadge createdAt={l.created_at} />}</span></div>
             <Attribution lead={l} names={names} />
           </button>)}
           {!items.length && <p className="px-1 py-6 text-center text-xs text-muted-foreground">Arrasta leads para aqui</p>}
