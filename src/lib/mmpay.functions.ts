@@ -203,6 +203,32 @@ export const listMmpaySubscriptionCharges = createServerFn({ method: "GET" })
     return listSubscriptionCharges(data.id);
   });
 
+export const chargeMmpaySubscriptionNow = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ id: z.string().uuid(), amountCents: z.number().int().min(100).max(10_000_000).nullable() }).parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    await requireCommercial(context);
+    const { chargeSubscriptionNow } = await import("@/lib/billing/mmpay-subscriptions.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let error: string | null = null;
+    try {
+      await chargeSubscriptionNow(data.id, data.amountCents ?? undefined);
+    } catch (e) {
+      error = e instanceof Error ? e.message : "Erro desconhecido";
+    }
+    await supabaseAdmin.from("admin_action_log").insert({
+      actor_id: context.userId,
+      action: "mmpay.charge_subscription_now",
+      entity_type: "mmpay_subscription",
+      entity_id: data.id,
+      after: { amount_cents: data.amountCents, ok: !error, error },
+    } as never);
+    if (error) throw new Error(error);
+    return { ok: true };
+  });
+
 export const cancelMmpaySubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
