@@ -189,7 +189,7 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
             {filtered.map((l) => (
               <tr key={l.id} onClick={() => setOpen(l)} className="cursor-pointer border-t border-border hover:bg-surface-1">
                 <td className="p-3">{l.classificacao ? <span className={cn("rounded px-2 py-0.5 text-xs font-semibold", CLS_STYLE[l.classificacao])}>{l.classificacao}</span> : "—"}</td>
-                <td className="p-3">{l.nome ?? "—"}{dupIds.has(l.id) && <DupBadge />}</td><td className="p-3">{l.whatsapp}</td>
+                <td className="p-3">{l.nome ?? "—"}{((l as any).submission_count ?? 1) > 1 && <DupBadge n={(l as any).submission_count} />}</td><td className="p-3">{l.whatsapp}</td>
                 <td className="p-3">{STATUS[l.status] ?? l.status}<Attribution lead={l} names={actorNames} />{l.contact_outcome && <p className="mt-1 text-xs text-muted-foreground">{OUTCOME[l.contact_outcome] ?? l.contact_outcome}{l.last_contact_at ? ` · ${new Date(l.last_contact_at).toLocaleDateString("pt-PT")}` : ""}</p>}{l.status === "fechou" && l.sale_amount_cents != null && <p className="mt-1 text-xs text-primary">{formatSaleAmount(l.sale_amount_cents)}</p>}</td><td className="p-3" onClick={(e) => e.stopPropagation()}><QuickOutcome lead={l} me={data?.me ?? ""} onDone={() => { refresh(); qc.invalidateQueries({queryKey:["commercial-home-applications"]}); }} /></td><td className="p-3">{l.responsavel ?? "—"}</td>
                 <td className="p-3 text-muted-foreground">{new Date(l.created_at).toLocaleString("pt-PT")}</td>
               </tr>
@@ -389,8 +389,8 @@ function Settings({ initial, onSaved }: { initial: any; onSaved: () => void }) {
 }
 
 const STAGES = ["novo", "em_contato", "call_marcada", "fechou", "perdido"] as const;
-function DupBadge() {
-  return <span className="ml-2 inline-block rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-semibold text-destructive">Duplicado</span>;
+function DupBadge({ n }: { n: number }) {
+  return <span className="ml-2 inline-block rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-semibold text-destructive">Duplicado · inscreveu-se {n}x</span>;
 }
 
 function Kanban({ leads, dupIds, names, onOpen, onMoved }: { leads: Lead[]; dupIds: Set<string>; names: Record<string, string>; onOpen: (l: Lead) => void; onMoved: () => void }) {
@@ -420,7 +420,7 @@ function Kanban({ leads, dupIds, names, onOpen, onMoved }: { leads: Lead[]; dupI
           {items.map(l => <button key={l.id} draggable onDragStart={e => e.dataTransfer.setData("text/plain", l.id)} onClick={() => onOpen(l)}
             className={cn("cursor-grab rounded-xl bg-card p-3 text-left ring-1 ring-border transition hover:ring-primary active:cursor-grabbing", busy === l.id && "opacity-50")}>
             <div className="flex items-start justify-between gap-2"><p className="truncate text-sm font-medium">{l.nome ?? "—"}</p>{l.classificacao && <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-semibold", CLS_STYLE[l.classificacao])}>{l.classificacao}</span>}</div>
-            <p className="mt-1 text-xs text-muted-foreground">{l.whatsapp}{dupIds.has(l.id) && <DupBadge />}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{l.whatsapp}{((l as any).submission_count ?? 1) > 1 && <DupBadge n={(l as any).submission_count} />}</p>
             {l.status === "call_marcada" && l.call_scheduled_at && <p className="mt-1 text-xs text-primary">{new Date(l.call_scheduled_at).toLocaleString("pt-PT", { timeZone: "Europe/Lisbon", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</p>}
             {l.status === "fechou" && l.sale_amount_cents != null && <p className="mt-1 text-xs text-primary">{formatSaleAmount(l.sale_amount_cents)}</p>}
             {l.contact_outcome && <p className="mt-1 text-[11px] text-muted-foreground">{OUTCOME[l.contact_outcome] ?? l.contact_outcome}</p>}

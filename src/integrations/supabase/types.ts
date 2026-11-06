@@ -2041,6 +2041,7 @@ export type Database = {
           sale_closed_by: string | null
           sale_commission_brl_cents: number | null
           status: string
+          submission_count: number
           tempo_dia: string | null
           updated_at: string
           utm_campaign: string | null
@@ -2078,6 +2079,7 @@ export type Database = {
           sale_closed_by?: string | null
           sale_commission_brl_cents?: number | null
           status?: string
+          submission_count?: number
           tempo_dia?: string | null
           updated_at?: string
           utm_campaign?: string | null
@@ -2115,6 +2117,7 @@ export type Database = {
           sale_closed_by?: string | null
           sale_commission_brl_cents?: number | null
           status?: string
+          submission_count?: number
           tempo_dia?: string | null
           updated_at?: string
           utm_campaign?: string | null
