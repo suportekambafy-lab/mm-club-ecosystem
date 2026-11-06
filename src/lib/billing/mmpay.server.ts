@@ -10,6 +10,7 @@ import { installmentAmounts, isValidSchedule, type BillingInterval } from "@/lib
 import { createStripeProduct, deleteStripeProduct, getStripeCheckout, updateStripeProduct } from "./stripe.server";
 
 export type MmpayLinkRow = {
+  deleted_at?: string | null;
   id: string;
   code: string;
   title: string;
