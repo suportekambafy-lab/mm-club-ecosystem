@@ -6,15 +6,20 @@ export const createPlatformMember = createServerFn({ method: "POST" }).middlewar
   const { data: allowed, error } = await context.supabase.rpc("has_commercial_access", { _user_id: context.userId });
   if (error || !canManageMemberAccounts(Boolean(allowed))) throw new Error("Sem permissão para gerir contas.");
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-  const result = await db.auth.admin.inviteUserByEmail(data.email, { data: { display_name: data.name }, redirectTo: "https://mmclub.pt/reset-password" });
-  if (result.error || !result.data.user) throw new Error("Não foi possível criar o utilizador. Verifica se o email já está registado.");
-  const id = result.data.user.id;
+  const { createMemberWithPassword, sendNewMemberAccess } = await import("@/lib/member-onboarding.server");
+  const account = await createMemberWithPassword(db, data.email, data.name).catch(() => { throw new Error("Não foi possível criar o utilizador. Verifica se o email já está registado."); });
+  const id = account.id;
   const profile = await db.from("profiles").update({ display_name: data.name }).eq("id", id);
-  if (profile.error) throw new Error("O convite foi criado, mas não foi possível atualizar o nome.");
+  if (profile.error) throw new Error("A conta foi criada, mas não foi possível atualizar o nome.");
   const { data: expiresAt, error: accessError } = await context.supabase.rpc("grant_commercial_club_access", { _user_id: id, _months: data.months === "lifetime" ? 0 : data.months, _reason: "Acesso atribuído na criação da conta" });
-  if (accessError) throw new Error("O convite foi enviado, mas o acesso não foi atribuído. Procura o utilizador e usa Dar acesso; não voltes a criar a conta.");
+  if (accessError) throw new Error("A conta foi criada, mas o acesso não foi atribuído. Procura o utilizador e usa Dar acesso; não voltes a criar a conta.");
   await db.from("admin_action_log").insert({ actor_id: context.userId, action: "member.create", entity_type: "user", entity_id: id, after: { name: data.name, email: data.email, months: data.months, expires_at: expiresAt } });
-  return { id, expiresAt };
+  let emailSent = false;
+  try {
+    const result = await sendNewMemberAccess({ email: data.email, name: data.name, password: account.password, eventId: `manual-${id}` });
+    emailSent = result.sent;
+  } catch { console.error("[member.create] falha no envio do acesso", id); }
+  return { id, expiresAt, emailSent };
 });
 
 export const updatePlatformMember = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((input: unknown) => updateMemberSchema.parse(input)).handler(async ({ context, data }) => {
