@@ -327,34 +327,28 @@ export async function grantMmpayClubAccess(sessionRef: string): Promise<void> {
     const { findUserIdByEmail } = await import("./guest.server");
     let userId = await findUserIdByEmail(email);
     let newPassword: string | null = null;
+    const { createMemberWithPassword, sendNewMemberAccess } = await import("@/lib/member-onboarding.server");
     if (!userId) {
-      // Conta nova: palavra-passe gerada e enviada por email (o membro pode alterá-la no perfil).
-      const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
-      const bytes = crypto.getRandomValues(new Uint8Array(10));
-      newPassword = Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("") + "@MM";
-      const { data, error } = await supabaseAdmin.auth.admin.createUser({
-        email,
-        password: newPassword,
-        email_confirm: true,
-        user_metadata: { display_name: pay.name ?? undefined },
-      });
-      if (error) throw error;
-      userId = data.user?.id ?? null;
-    }
-    if (userId && newPassword) {
       try {
-        const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-        await sendTemplateEmail("club-welcome", email, {
-          templateData: { name: pay.name?.split(" ")[0] ?? "membro", email, password: newPassword },
-          idempotencyKey: `club-welcome-${pay.id}`,
-        });
-      } catch (e) {
-        console.error("[mmpay] falha ao enviar email de boas-vindas", email, e);
+        const account = await createMemberWithPassword(supabaseAdmin, email, pay.name);
+        userId = account.id;
+        newPassword = account.password;
+      } catch (error) {
+        // Simultaneous settlements may already have created this account. Never reset its password.
+        userId = await findUserIdByEmail(email);
+        if (!userId) throw error;
       }
     }
     if (!userId) return;
     const { error } = await supabaseAdmin.rpc("grant_mmpay_club_access", { _user_id: userId, _payment_id: pay.id });
     if (error) throw error;
+    if (userId && newPassword) {
+      try {
+        await sendNewMemberAccess({ email, name: pay.name, password: newPassword, eventId: pay.id, accessDescription: "O teu pagamento foi confirmado e já tens 6 meses de acesso ao MM Club." });
+      } catch {
+        console.error("[mmpay] falha ao enviar email de boas-vindas", pay.id);
+      }
+    }
   } catch (e) {
     console.error("[mmpay] falha ao dar acesso ao clube", sessionRef, e);
   }

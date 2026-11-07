@@ -143,11 +143,6 @@ export async function startGuestCheckout(
   return { status: "redirect", checkoutUrl: payment.checkoutUrl, intentId: intent.id };
 }
 
-function randomPassword(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(24));
-  return `Mm!${Array.from(bytes, (b) => b.toString(36)).join("")}`;
-}
-
 /**
  * Creates (or resolves) the account behind a paid guest intent.
  * Idempotent: repeated calls return the same user id.
@@ -169,29 +164,21 @@ export async function provisionAccountForIntent(
   const email = intent.email.trim().toLowerCase();
   let userId = await findUserIdByEmail(email);
   let created = false;
-  // Conta já existia mas nunca entrou (criada sem palavra-passe): tratamos como
-  // nova e enviamos também o email de acesso.
-  let neverSignedIn = false;
-  if (userId) {
-    const { data: existing } = await supabaseAdmin.auth.admin.getUserById(userId);
-    neverSignedIn = !existing?.user?.last_sign_in_at;
-  }
-
+  let newPassword: string | null = null;
 
   if (!userId) {
-    const { data, error } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password: randomPassword(),
-      email_confirm: true,
-      user_metadata: {
-        display_name: intent.name ?? email.split("@")[0],
-      },
-    });
-    if (error || !data.user) {
+    const { createMemberWithPassword } = await import("@/lib/member-onboarding.server");
+    try {
+      const account = await createMemberWithPassword(supabaseAdmin, email, intent.name);
+      userId = account.id;
+      newPassword = account.password;
+      created = true;
+    } catch (error) {
       // O email já pertence a uma conta (constraint de email duplicado ou
       // criação simultânea): ligamos o pagamento a essa conta em vez de
       // marcar o checkout como falhado e deixar o comprador sem acesso.
-      const msg = (error?.message ?? "").toLowerCase();
+      const message = error instanceof Error ? error.message : "create_user_failed";
+      const msg = message.toLowerCase();
       const duplicate =
         msg.includes("already") ||
         msg.includes("duplicate") ||
@@ -201,16 +188,11 @@ export async function provisionAccountForIntent(
       if (!recovered) {
         await supabaseAdmin
           .from("billing_checkout_intents")
-          .update({ status: "failed", error: error?.message ?? "create_user_failed" })
+          .update({ status: "failed", error: message })
           .eq("id", intent.id);
-        throw new Error(error?.message ?? "create_user_failed");
+        throw new Error(message);
       }
       userId = recovered;
-      const { data: existing } = await supabaseAdmin.auth.admin.getUserById(recovered);
-      neverSignedIn = !existing?.user?.last_sign_in_at;
-    } else {
-      userId = data.user.id;
-      created = true;
     }
   }
 
@@ -253,9 +235,10 @@ export async function provisionAccountForIntent(
     .eq("id", intent.id);
 
 
-  if (created || neverSignedIn) {
-    await sendAccountReadyEmail(userId, email).catch((e) =>
-      console.error("[guest checkout] welcome email", e),
+  if (created && newPassword) {
+    const { sendNewMemberAccess } = await import("@/lib/member-onboarding.server");
+    await sendNewMemberAccess({ email, name: intent.name, password: newPassword, eventId: `intent-${intent.id}` }).catch(() =>
+      console.error("[guest checkout] falha no envio do acesso", intent.id),
     );
   }
 
@@ -263,42 +246,3 @@ export async function provisionAccountForIntent(
   return userId;
 }
 
-async function sendAccountReadyEmail(userId: string, email: string) {
-  const origin = "https://mmclub.pt";
-  let actionUrl = `${origin}/auth?mode=recover&email=${encodeURIComponent(email)}`;
-  try {
-    const { data } = await supabaseAdmin.auth.admin.generateLink({
-      type: "recovery",
-      email,
-      options: { redirectTo: `${origin}/auth` },
-    });
-    if (data?.properties?.action_link) actionUrl = data.properties.action_link;
-  } catch (e) {
-    console.error("[guest checkout] generateLink", e);
-  }
-
-  const { sendEmail } = await import("@/lib/email.server");
-  await sendEmail({
-    to: email,
-    userId,
-    kind: "welcome",
-    ref: `guest_checkout:${userId}`,
-    subject: "A tua conta MM Club está pronta",
-    html: `
-      <div style="font-family:Inter,Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;color:#0b0b0c">
-        <h1 style="font-size:24px;margin:0 0 12px">Bem-vindo ao MM Club</h1>
-        <p style="font-size:15px;line-height:1.6;color:#4a4a52">
-          O teu pagamento foi confirmado e criámos a tua conta com o email
-          <strong>${email}</strong>. Define a tua palavra-passe para entrares.
-        </p>
-        <p style="margin:28px 0">
-          <a href="${actionUrl}" style="background:#0b0b0c;color:#fff;text-decoration:none;padding:14px 26px;border-radius:999px;font-size:14px;font-weight:600">
-            Definir palavra-passe
-          </a>
-        </p>
-        <p style="font-size:13px;color:#8a8a94">
-          Se o botão não funcionar, abre ${origin}/auth e usa "Esqueci-me da palavra-passe".
-        </p>
-      </div>`,
-  });
-}
