@@ -3443,6 +3443,7 @@ export type Database = {
           description: string | null
           id: string
           installment_schedule_cents: number[] | null
+          payment_methods: string[]
           price_id: string | null
           stripe_price_id: string | null
           stripe_product_id: string | null
@@ -3465,6 +3466,7 @@ export type Database = {
           description?: string | null
           id?: string
           installment_schedule_cents?: number[] | null
+          payment_methods?: string[]
           price_id?: string | null
           stripe_price_id?: string | null
           stripe_product_id?: string | null
@@ -3487,6 +3489,7 @@ export type Database = {
           description?: string | null
           id?: string
           installment_schedule_cents?: number[] | null
+          payment_methods?: string[]
           price_id?: string | null
           stripe_price_id?: string | null
           stripe_product_id?: string | null

@@ -54,6 +54,7 @@ export const createMmpayLink = createServerFn({ method: "POST" })
       amountCents: data.amountCents,
       coverUrl: data.coverUrl ?? null,
       billing: data.billing,
+      paymentMethods: data.paymentMethods,
     });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("admin_action_log").insert({

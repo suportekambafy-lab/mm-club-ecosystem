@@ -4,7 +4,7 @@
  * aceita cartão, Apple Pay, Google Pay e MB WAY. Sem acessos associados.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { generateMmpayCode, validateMmpayLinkInput } from "@/lib/mmpay/rules";
+import { effectiveMethods, generateMmpayCode, validateMmpayLinkInput, type MmpayMethod } from "@/lib/mmpay/rules";
 import { getPriceById } from "./catalog.server";
 import { installmentAmounts, isValidSchedule, type BillingInterval } from "@/lib/mmpay/subscription-rules";
 import { createStripeProduct, deleteStripeProduct, getStripeCheckout, updateStripeProduct } from "./stripe.server";
@@ -30,6 +30,7 @@ export type MmpayLinkRow = {
   total_cycles: number | null;
   total_amount_cents: number | null;
   installment_schedule_cents?: number[] | null;
+  payment_methods?: string[] | null;
 };
 
 export type MmpayBilling =
@@ -77,6 +78,7 @@ export type MmpayLinkView = {
   billing: MmpayBilling;
   /** Valor total da venda (assinaturas com prestações); igual a amountCents nas vendas únicas. */
   totalCents: number;
+  paymentMethods: MmpayMethod[];
 };
 
 async function toView(rows: MmpayLinkRow[], withStats = false): Promise<MmpayLinkView[]> {
@@ -106,6 +108,7 @@ async function toView(rows: MmpayLinkRow[], withStats = false): Promise<MmpayLin
       paidCount: paid.get(r.id) ?? 0,
       billing: billingOf(r),
       totalCents: r.total_amount_cents ?? amount,
+      paymentMethods: effectiveMethods(r.payment_methods, r.billing_type === "subscription"),
     });
   }
   return out;
@@ -139,6 +142,7 @@ export async function createMmpayLink(input: {
   amountCents: number;
   coverUrl: string | null;
   billing?: MmpayBilling;
+  paymentMethods?: MmpayMethod[];
 }): Promise<MmpayLinkView> {
   const validationError = validateMmpayLinkInput(input);
   if (validationError) throw new Error(validationError);
@@ -156,6 +160,7 @@ export async function createMmpayLink(input: {
         description: input.description?.trim() || null,
         cover_url: input.coverUrl,
         created_by: input.createdBy,
+        ...(input.paymentMethods ? { payment_methods: input.paymentMethods } : {}),
         ...billingColumns(input.billing),
       })
       .select("*")
@@ -197,6 +202,7 @@ export async function updateMmpayLink(input: {
   amountCents: number;
   coverUrl: string | null;
   billing?: MmpayBilling;
+  paymentMethods?: MmpayMethod[];
 }): Promise<MmpayLinkView> {
   const validationError = validateMmpayLinkInput(input);
   if (validationError) throw new Error(validationError);
@@ -224,6 +230,7 @@ export async function updateMmpayLink(input: {
     cover_url: input.coverUrl,
     stripe_product_id: stripe.productId,
     stripe_price_id: stripe.priceId,
+    ...(input.paymentMethods ? { payment_methods: input.paymentMethods } : {}),
     ...billingColumns(input.billing),
   }).eq("id", input.id).select("*").single();
   if (updateError) throw new Error(updateError.message);
@@ -278,6 +285,7 @@ export async function startMmpayCheckout(input: {
   const email = input.email.trim().toLowerCase();
   const view = (await toView([link]))[0];
   if (view.amountCents < 100) throw new Error("Este link não tem preço válido.");
+  if (!view.paymentMethods.includes(input.method ?? "card")) throw new Error("Este método de pagamento não está disponível neste link.");
 
   const { createVivaOrder } = await import("./viva.server");
   const order = await createVivaOrder({
@@ -439,6 +447,7 @@ export async function startKlarnaMmpayPayment(input: {
   if (!link || !link.active) throw new Error("Este link de pagamento já não está disponível.");
   const email = input.email.trim().toLowerCase();
   if (link.billing_type === "subscription") throw new Error("Assinaturas não podem ser pagas com Klarna.");
+  if (!effectiveMethods(link.payment_methods, false).includes("klarna")) throw new Error("Klarna não está disponível neste link.");
   const view = (await toView([link]))[0];
   if (view.amountCents < 100) throw new Error("Este link não tem preço válido.");
 
