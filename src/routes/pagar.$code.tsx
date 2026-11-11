@@ -302,7 +302,7 @@ function MmpayPage() {
                 Método de pagamento
               </p>
               <div className={`mx-auto mt-2 grid w-full max-w-[17rem] gap-2 ${link?.billing.type === "subscription" ? "grid-cols-1" : "grid-cols-3"}`}>
-                {METHOD_OPTIONS.filter((o) => !(link?.billing.type === "subscription" && (o.id === "klarna" || o.id === "mb_way"))).map((opt, i) => {
+                {METHOD_OPTIONS.filter((o) => (link?.paymentMethods ?? ["card"]).includes(o.id)).map((opt, i) => {
                   const Logo = opt.Logo;
                   const selected = method === opt.id;
                   return (

@@ -61,8 +61,19 @@ const billingSchema = z.discriminatedUnion("type", [
     .strict(),
 ]);
 
+export const MMPAY_METHODS = ["card", "mb_way", "klarna"] as const;
+export type MmpayMethod = (typeof MMPAY_METHODS)[number];
+
+/** Métodos efetivos: assinaturas só aceitam cartão; nunca fica vazio. */
+export function effectiveMethods(methods: readonly string[] | null | undefined, isSubscription: boolean): MmpayMethod[] {
+  if (isSubscription) return ["card"];
+  const list = MMPAY_METHODS.filter((m) => (methods ?? MMPAY_METHODS).includes(m));
+  return list.length ? list : ["card"];
+}
+
 export const createMmpayLinkSchema = z
   .object({
+    paymentMethods: z.array(z.enum(MMPAY_METHODS)).min(1, "Escolhe pelo menos um método.").max(3).optional(),
     billing: billingSchema.optional(),
     title: z.string().max(120),
     description: z.string().max(MAX_DESCRIPTION_LENGTH).nullish(),
