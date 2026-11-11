@@ -83,6 +83,10 @@ function MmpayPage() {
   });
 
   const link = data?.found ? data.link : null;
+
+  const allowedMethods = (link?.paymentMethods ?? ["card"]) as PayMethod[];
+
+  useEffect(() => { if (allowedMethods.length && !allowedMethods.includes(method)) setMethod(allowedMethods[0]); }, [allowedMethods.join(","), method]);
   const metaData = link ? { value: link.amountCents / 100, currency: (link.currency || "eur").toUpperCase(), content_name: link.title, content_ids: [code], content_type: "product" } : null;
   const isPaid = klarnaPaid || Boolean(session_id && confirmQuery.data?.paid);
   useEffect(() => { if (metaData && !session_id) void trackMeta("ViewContent", metaData); }, [link?.title]); // eslint-disable-line react-hooks/exhaustive-deps
