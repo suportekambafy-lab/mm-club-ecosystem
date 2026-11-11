@@ -1,0 +1,1 @@
+ALTER TABLE public.mmpay_links ADD COLUMN IF NOT EXISTS payment_methods text[] NOT NULL DEFAULT ARRAY['card','mb_way','klarna']::text[];
