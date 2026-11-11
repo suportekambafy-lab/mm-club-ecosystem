@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { MmpaySubscriptions } from "@/components/mmpay/subscriptions-panel";
 import { firstThenSplit, installmentAmounts, intervalLabel, isValidSchedule, splitInstallments, type BillingInterval } from "@/lib/mmpay/subscription-rules";
+import type { MmpayMethod } from "@/lib/mmpay/rules";
 import { createMmpayLink, deleteMmpayLink, listMmpayLinks, setMmpayLinkActive, updateMmpayLink, uploadMmpayCover } from "@/lib/mmpay.functions";
 import { COVER_MIME_TYPES, MAX_COVER_BYTES, MAX_DESCRIPTION_LENGTH } from "@/lib/mmpay/rules";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -47,6 +48,7 @@ function MmpayAdminPage() {
   const [amountEur, setAmountEur] = useState("");
   const [description, setDescription] = useState("");
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [methods, setMethods] = useState<MmpayMethod[]>(["card", "mb_way", "klarna"]);
   const [uploading, setUploading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -68,6 +70,7 @@ function MmpayAdminPage() {
     setAmountEur("");
     setDescription("");
     setCoverUrl(null);
+    setMethods(["card", "mb_way", "klarna"]);
     setBillingType("one_time");
     setBillingInterval("");
     setIntervalCount("");
@@ -129,7 +132,7 @@ function MmpayAdminPage() {
   const createMutation = useMutation({
     mutationFn: () =>
       createMmpayLink({
-        data: { title: title.trim(), description: description.trim() || null, amountCents, coverUrl, billing },
+        data: { title: title.trim(), description: description.trim() || null, amountCents, coverUrl, billing, paymentMethods: billingType === "subscription" ? ["card"] : methods },
       }),
     onSuccess: (link) => {
       toast.success(`Link criado: /pagar/${link.code}`);
@@ -150,7 +153,7 @@ function MmpayAdminPage() {
   const updateMutation = useMutation({
     mutationFn: () => {
       if (!editingId) throw new Error("Seleciona um produto para editar.");
-      return updateMmpayLink({ data: { id: editingId, title: title.trim(), description: description.trim() || null, amountCents, coverUrl, billing } });
+      return updateMmpayLink({ data: { id: editingId, title: title.trim(), description: description.trim() || null, amountCents, coverUrl, billing, paymentMethods: billingType === "subscription" ? ["card"] : methods } });
     },
     onSuccess: () => {
       toast.success("Produto atualizado.");
@@ -211,6 +214,7 @@ function MmpayAdminPage() {
     amountCents: number;
     totalCents?: number;
     billing: { type: string; totalCycles?: number | null; totalCents?: number | null; scheduleCents?: number[] | null };
+    paymentMethods?: MmpayMethod[];
   };
   /** Com prestações, o formulário edita o valor total; sem prestações, o valor por cobrança. */
   const formAmount = (link: LinkLike) =>
@@ -224,6 +228,7 @@ function MmpayAdminPage() {
     setTitle(link.title);
     setDescription(link.description ?? "");
     setCoverUrl(link.coverUrl);
+    setMethods(link.billing.type === "subscription" ? ["card", "mb_way", "klarna"] : (link.paymentMethods ?? ["card", "mb_way", "klarna"]));
     setAmountEur(String(formAmount(link) / 100).replace(".", ","));
     setFormOpen(true);
     setTimeout(() => document.getElementById("mmpay-title")?.focus({ preventScroll: true }), 300);
@@ -235,6 +240,7 @@ function MmpayAdminPage() {
     setTitle(`${link.title} (cópia)`);
     setDescription(link.description ?? "");
     setCoverUrl(link.coverUrl);
+    setMethods(link.billing.type === "subscription" ? ["card", "mb_way", "klarna"] : (link.paymentMethods ?? ["card", "mb_way", "klarna"]));
     setAmountEur(String(formAmount(link) / 100).replace(".", ","));
     setFormOpen(true);
     setTimeout(() => document.getElementById("mmpay-price")?.focus(), 300);
@@ -426,6 +432,25 @@ function MmpayAdminPage() {
                 ) : null}
               </div>
             ) : null}
+            <div className="md:col-span-2">
+              <span className={labelCls}>Métodos de pagamento ativos</span>
+              {billingType === "subscription" ? (
+                <p className="mt-2 text-sm text-muted-foreground">Assinaturas aceitam apenas cartão.</p>
+              ) : (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {([["card", "Cartão / Apple Pay / Google Pay"], ["mb_way", "MB WAY"], ["klarna", "Klarna"]] as const).map(([id, label]) => {
+                    const on = methods.includes(id);
+                    return (
+                      <button key={id} type="button" aria-pressed={on}
+                        onClick={() => setMethods((m) => on ? (m.length > 1 ? m.filter((x) => x !== id) : m) : [...m, id])}
+                        className={`rounded-full border px-4 py-2 text-sm transition ${on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground hover:text-foreground"}`}>
+                        {on ? "✓ " : ""}{label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
             <div className="md:col-span-2">
               <label className={labelCls} htmlFor="mmpay-desc">Descrição</label>
               <textarea id="mmpay-desc" value={description} onChange={(e) => setDescription(e.target.value)}
