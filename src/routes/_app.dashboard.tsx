@@ -56,7 +56,7 @@ export const Route = createFileRoute("/_app/dashboard")({
 
 
 function DashboardPage() {
-  const { user: sessionUser, loading: userLoading } = useCurrentUser();
+  const { loading: userLoading } = useCurrentUser();
   const { progress, loaded: progressLoaded } = useUserProgress();
   const [episode, setEpisode] = useState<MmcastEpisode | null>(null);
 
@@ -131,7 +131,7 @@ function DashboardPage() {
     <div className="space-y-8 md:space-y-10">
 
       {/* Cinematic hero — full bleed, autoplay muted loop, editorial overlay */}
-      <CinematicHero name={sessionUser?.name ?? ""} episode={episode} />
+      <CinematicHero episode={episode} />
 
       {/* Live activa ou próxima em destaque (com contador) */}
       {!livesLoaded ? null : livesError ? (
@@ -303,52 +303,44 @@ function ReplayCard({
 }
 
 
-function CinematicHero({ name, episode }: { name: string; episode: MmcastEpisode | null }) {
+function CinematicHero({ episode }: { episode: MmcastEpisode | null }) {
   const legacy = useLegacyLaunch();
-  const firstName = name.split(" ")[0];
-  const [slide, setSlide] = useState(1);
+  const [slide, setSlide] = useState(0);
   const [paused, setPaused] = useState(false);
-  const count = episode ? 3 : 2;
+  const count = episode ? 2 : 1;
 
   useEffect(() => {
-    if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (paused || count < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const timer = window.setInterval(() => setSlide((current) => (current + 1) % count), 7000);
     return () => window.clearInterval(timer);
   }, [count, paused]);
 
-  const slides = [
-    { image: dashboardHero, alt: "MM Club", contain: false },
-    { image: legacyHero.url, alt: "Marca Milionária Legacy", contain: false },
-    ...(episode ? [{ image: episode.thumbnail_url || dashboardHero, alt: episode.title, contain: true }] : []),
-  ];
+  const thumb = episode?.thumbnail_url || dashboardHero;
+  const fade = "absolute inset-0 transition-opacity duration-1000 motion-reduce:transition-none";
 
   return (
     <section aria-label="Destaques do MM Club" className="relative -mx-3 overflow-hidden sm:-mx-4 md:-mx-8">
-      <div className="relative min-h-[360px] bg-surface-2 sm:aspect-video md:aspect-[21/9] md:min-h-[420px] md:max-h-[600px]">
-        {slides.map((item, index) => (
-          <div key={item.alt} aria-hidden={slide !== index}
-            className={`absolute inset-0 transition-opacity duration-1000 motion-reduce:transition-none ${slide === index ? "opacity-100" : "opacity-0"}`}>
-            {item.contain && (
-              <img src={item.image} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-2xl" />
-            )}
-            <img src={item.image} alt={item.alt} decoding="async" fetchPriority={index === 1 ? "high" : "auto"}
-              className={`absolute inset-0 h-full w-full ${item.contain ? "object-contain md:object-right" : "object-cover"}`}
-            />
+      <div className="relative min-h-[450px] bg-surface-2 sm:min-h-[380px] sm:aspect-video md:aspect-[21/9] md:min-h-[420px] md:max-h-[600px]">
+        <div aria-hidden={slide !== 0} className={`${fade} ${slide === 0 ? "opacity-100" : "opacity-0"}`}>
+          <img src={legacyHero.url} alt="Marca Milionária Legacy" decoding="async" fetchPriority="high"
+            className="absolute inset-0 h-full w-full object-cover" />
+        </div>
+
+        {episode && (
+          <div aria-hidden={slide !== 1} className={`${fade} ${slide === 1 ? "opacity-100" : "opacity-0"}`}>
+            <img src={thumb} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-2xl" />
+            <div className="absolute inset-x-0 top-0 aspect-video overflow-hidden md:hidden">
+              <img src={thumb} alt={episode.title} decoding="async" className="absolute inset-0 h-full w-full object-cover" />
+            </div>
+            <img src={thumb} alt="" aria-hidden className="hidden md:block absolute inset-0 h-full w-full object-contain md:object-right" />
           </div>
-        ))}
+        )}
+
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-background/10" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-background/20 to-transparent" />
         <div className="absolute inset-0 flex items-end">
-          <div className="w-full px-6 pb-16 md:px-14 md:pb-20">
+          <div className="w-full px-6 pb-14 md:px-14 md:pb-20">
             {slide === 0 ? (
-              <div>
-                <p className="text-xs font-medium uppercase text-primary">MM Club</p>
-                <h1 className="mt-3 font-display text-3xl leading-tight text-foreground md:text-6xl">
-                  Bom regresso{firstName ? ", " : "."}<span className="text-primary">{firstName}</span>{firstName ? "." : ""}
-                </h1>
-                <p className="mt-3 max-w-xl text-sm text-muted-foreground md:text-lg">Continua a construir a tua Marca Milionária.</p>
-              </div>
-            ) : slide === 1 ? (
               <div>
                 <p className="text-xs font-medium uppercase text-primary">{legacy.released ? "Já disponível" : "Novo curso"}</p>
                 <h1 className="mt-3 max-w-3xl font-display text-3xl leading-tight text-foreground md:text-6xl">
@@ -362,27 +354,29 @@ function CinematicHero({ name, episode }: { name: string; episode: MmcastEpisode
             ) : episode ? (
               <div>
                 <p className="text-xs font-medium uppercase text-primary">Episódio {episode.episode_number}{episode.guest_name ? ` · ${episode.guest_name}` : ""}</p>
-                <h1 className="mt-3 font-display text-4xl leading-tight text-foreground md:text-6xl">MM<span className="text-primary">Cast</span></h1>
+                <h1 className="mt-3 font-display text-3xl leading-tight text-foreground md:text-6xl">MM<span className="text-primary">Cast</span></h1>
                 <p className="mt-3 max-w-xl text-base leading-snug text-foreground md:text-xl">{episode.title}</p>
-                <Button asChild className="btn-arrow mt-5">
+                <Button asChild className="btn-arrow mt-4">
                   <Link to="/mmcast/$episodeId" params={{ episodeId: episode.id }}><Play /> Ver episódio <ArrowRight /></Link>
                 </Button>
               </div>
             ) : null}
           </div>
         </div>
-        <div className="absolute bottom-3 right-5 flex items-center gap-1 md:bottom-5 md:right-10">
-          {slides.map((item, index) => (
-            <Button key={item.alt} variant="ghost" size="icon" onClick={() => setSlide(index)}
-              aria-label={`Ver destaque ${index + 1}: ${index === 2 ? "MMCast" : item.alt}`} aria-pressed={slide === index}
-              className="h-9 w-9">
-              <span className={`h-1.5 rounded-full transition-all motion-reduce:transition-none ${slide === index ? "w-6 bg-primary" : "w-1.5 bg-foreground/40"}`} />
+        {count > 1 && (
+          <div className="absolute bottom-3 right-5 flex items-center gap-1 md:bottom-5 md:right-10">
+            {Array.from({ length: count }).map((_, index) => (
+              <Button key={index} variant="ghost" size="icon" onClick={() => setSlide(index)}
+                aria-label={`Ver destaque ${index + 1}: ${index === 1 ? "MMCast" : "Marca Milionária Legacy"}`} aria-pressed={slide === index}
+                className="h-9 w-9">
+                <span className={`h-1.5 rounded-full transition-all motion-reduce:transition-none ${slide === index ? "w-6 bg-primary" : "w-1.5 bg-foreground/40"}`} />
+              </Button>
+            ))}
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground" onClick={() => setPaused((value) => !value)} aria-label={paused ? "Retomar destaques" : "Pausar destaques"} title={paused ? "Retomar destaques" : "Pausar destaques"}>
+              {paused ? <Play /> : <Pause />}
             </Button>
-          ))}
-          <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground" onClick={() => setPaused((value) => !value)} aria-label={paused ? "Retomar destaques" : "Pausar destaques"} title={paused ? "Retomar destaques" : "Pausar destaques"}>
-            {paused ? <Play /> : <Pause />}
-          </Button>
-        </div>
+          </div>
+        )}
       </div>
     </section>
   );
