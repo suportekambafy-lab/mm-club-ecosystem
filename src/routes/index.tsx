@@ -8,6 +8,7 @@ import {
   Sparkles,
   Circle,
   Radio,
+  Mic,
   Calendar,
   MessageCircle,
   Heart,
@@ -81,6 +82,7 @@ function LandingPage() {
       <FeatureJade />
       <FeatureComunidade />
       <FeatureLives />
+      <FeatureMMCast />
       <FeatureFerramentas />
       <FeatureEventos />
       <Manifesto />
@@ -101,12 +103,13 @@ function Nav({ scrolled }: { scrolled: boolean }) {
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <MMLogo />
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-6 lg:flex lg:gap-8">
           {[
             ["Academia", "academia"],
             ["MM Inteligence", "jade"],
             ["Comunidade", "comunidade"],
             ["Lives", "lives"],
+            ["MMCast", "mmcast"],
           ].map(([label, id]) => (
             <a
               key={id}
@@ -349,7 +352,7 @@ function Hero() {
 /* ---------- TRUST STRIP ---------- */
 
 function TrustStrip() {
-  const items = ["Método Marca Milionária", "Comunidade privada", "MM Inteligence 24/7", "Lives semanais", "Ferramentas exclusivas"];
+  const items = ["Método Marca Milionária", "Comunidade privada", "MM Inteligence 24/7", "Lives semanais", "MMCast podcast", "Ferramentas exclusivas"];
   return (
     <section className="border-y border-border py-8">
       <div className="mx-auto max-w-7xl px-6">
@@ -735,13 +738,103 @@ function FeatureLives() {
   );
 }
 
-/* ---------- 05 FERRAMENTAS ---------- */
+/* ---------- 05 MMCAST ---------- */
+
+const MMCAST_EPISODES = [
+  {
+    n: "Ep. 2",
+    guest: "Pablo Mendes",
+    when: "12 nov",
+    img: "https://i.ytimg.com/vi/sF-vY6ogoEI/hqdefault.jpg",
+  },
+  {
+    n: "Ep. 1",
+    guest: "Leandro Santana",
+    when: "5 nov",
+    img: "https://i.ytimg.com/vi/u2xOrBEmeNA/hqdefault.jpg",
+  },
+];
+
+function FeatureMMCast() {
+  const [featured, ...rest] = MMCAST_EPISODES;
+  return (
+    <FeatureSection
+      id="mmcast"
+      index="05"
+      eyebrow="MMCast"
+      reverse
+      title={
+        <>
+          O podcast da<br />
+          <span className="text-primary">Marca Milionária</span>.
+        </>
+      }
+      description="Conversas longas, sem guião, com quem está a construir resultados reais. O vídeo corre aqui dentro do clube e todos os episódios ficam guardados para veres quando quiseres."
+      bullets={[
+        "Convidados reais, à frente das câmaras",
+        "Vídeo a correr dentro do MM Club",
+        "Avisado no sino assim que estreia",
+      ]}
+      visual={
+        <Mockup tint="radial-gradient(60% 60% at 50% 50%, oklch(0.82 0.13 82 / 0.26), transparent 70%)">
+          <div className="relative aspect-video overflow-hidden rounded-xl">
+            <img
+              src={featured.img}
+              alt=""
+              loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
+            <div className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
+              <Mic className="h-3 w-3" /> Estreia
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 text-foreground shadow-2xl">
+                <Play className="h-5 w-5 translate-x-0.5" />
+              </div>
+            </div>
+            <div className="absolute bottom-3 left-3 right-3">
+              <p className="text-[10px] uppercase tracking-widest text-white/70">
+                {featured.n} · MMCast
+              </p>
+              <p className="text-sm font-semibold text-white">{featured.guest}</p>
+            </div>
+          </div>
+          <div className="mt-4 space-y-2">
+            {rest.map((ep) => (
+              <div
+                key={ep.n}
+                className="flex items-center gap-3 rounded-lg border border-border bg-surface-2/40 px-3 py-2"
+              >
+                <div className="relative h-10 w-14 shrink-0 overflow-hidden rounded-md">
+                  <img
+                    src={ep.img}
+                    alt=""
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] uppercase tracking-widest text-primary">{ep.n}</p>
+                  <p className="truncate text-sm font-medium">{ep.guest}</p>
+                </div>
+                <span className="shrink-0 text-[11px] text-muted-foreground">{ep.when}</span>
+              </div>
+            ))}
+          </div>
+        </Mockup>
+      }
+    />
+  );
+}
+
+/* ---------- 06 FERRAMENTAS ---------- */
 
 function FeatureFerramentas() {
   return (
     <FeatureSection
       id="ferramentas"
-      index="05"
+      index="06"
       eyebrow="Ferramentas"
       title={
         <>
@@ -788,7 +881,7 @@ function FeatureEventos() {
   return (
     <FeatureSection
       id="eventos"
-      index="06"
+      index="07"
       eyebrow="Eventos"
       reverse
       title={
