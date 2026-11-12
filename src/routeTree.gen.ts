@@ -35,6 +35,7 @@ import { Route as AppEventosRouteImport } from './routes/_app.eventos'
 import { Route as AppFerramentasRouteImport } from './routes/_app.ferramentas'
 import { Route as AppJadeRouteImport } from './routes/_app.jade'
 import { Route as AppLivesRouteImport } from './routes/_app.lives'
+import { Route as AppMmcastRouteImport } from './routes/_app.mmcast'
 import { Route as AppParceirosRouteImport } from './routes/_app.parceiros'
 import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
 import { Route as AppShortsRouteImport } from './routes/_app.shorts'
@@ -50,6 +51,7 @@ import { Route as AdminEventosRouteImport } from './routes/admin.eventos'
 import { Route as AdminFerramentasRouteImport } from './routes/admin.ferramentas'
 import { Route as AdminFinanceiroRouteImport } from './routes/admin.financeiro'
 import { Route as AdminLivesRouteImport } from './routes/admin.lives'
+import { Route as AdminMmcastRouteImport } from './routes/admin.mmcast'
 import { Route as AdminModeracaoRouteImport } from './routes/admin.moderacao'
 import { Route as AdminParceriasRouteImport } from './routes/admin.parcerias'
 import { Route as AdminPartnersLeadsRouteImport } from './routes/admin.partners-leads'
@@ -84,6 +86,7 @@ import { Route as AppJadeIndexRouteImport } from './routes/_app.jade.index'
 import { Route as AppJadeThreadIdRouteImport } from './routes/_app.jade.$threadId'
 import { Route as AppLivesIndexRouteImport } from './routes/_app.lives.index'
 import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
+import { Route as AppMmcastEpisodeIdRouteImport } from './routes/_app.mmcast_.$episodeId'
 import { Route as AuthenticatedComercialIndexRouteImport } from './routes/_authenticated/comercial.index'
 import { Route as AuthenticatedComercialAplicacoesRouteImport } from './routes/_authenticated/comercial.aplicacoes'
 import { Route as AuthenticatedComercialEquipaRouteImport } from './routes/_authenticated/comercial.equipa'
@@ -285,6 +288,11 @@ const AppLivesRoute = AppLivesRouteImport.update({
   path: '/lives',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMmcastRoute = AppMmcastRouteImport.update({
+  id: '/mmcast',
+  path: '/mmcast',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppParceirosRoute = AppParceirosRouteImport.update({
   id: '/parceiros',
   path: '/parceiros',
@@ -358,6 +366,11 @@ const AdminFinanceiroRoute = AdminFinanceiroRouteImport.update({
 const AdminLivesRoute = AdminLivesRouteImport.update({
   id: '/lives',
   path: '/lives',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMmcastRoute = AdminMmcastRouteImport.update({
+  id: '/mmcast',
+  path: '/mmcast',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminModeracaoRoute = AdminModeracaoRouteImport.update({
@@ -531,6 +544,11 @@ const AppLivesLiveIdRoute = AppLivesLiveIdRouteImport.update({
   id: '/$liveId',
   path: '/$liveId',
   getParentRoute: () => AppLivesRoute,
+} as any)
+const AppMmcastEpisodeIdRoute = AppMmcastEpisodeIdRouteImport.update({
+  id: '/mmcast_/$episodeId',
+  path: '/mmcast/$episodeId',
+  getParentRoute: () => AppRoute,
 } as any)
 const AuthenticatedComercialIndexRoute =
   AuthenticatedComercialIndexRouteImport.update({
@@ -974,6 +992,7 @@ export interface FileRoutesByFullPath {
   '/ferramentas': typeof AppFerramentasRouteWithChildren
   '/jade': typeof AppJadeRouteWithChildren
   '/lives': typeof AppLivesRouteWithChildren
+  '/mmcast': typeof AppMmcastRoute
   '/parceiros': typeof AppParceirosRoute
   '/perfil': typeof AppPerfilRoute
   '/shorts': typeof AppShortsRoute
@@ -988,6 +1007,7 @@ export interface FileRoutesByFullPath {
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/financeiro': typeof AdminFinanceiroRouteWithChildren
   '/admin/lives': typeof AdminLivesRouteWithChildren
+  '/admin/mmcast': typeof AdminMmcastRoute
   '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/parcerias': typeof AdminParceriasRoute
   '/admin/partners-leads': typeof AdminPartnersLeadsRoute
@@ -1019,6 +1039,7 @@ export interface FileRoutesByFullPath {
   '/ferramentas/thumbnails': typeof AppFerramentasThumbnailsRoute
   '/jade/$threadId': typeof AppJadeThreadIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
+  '/mmcast/$episodeId': typeof AppMmcastEpisodeIdRoute
   '/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
   '/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
   '/comercial/metas': typeof AuthenticatedComercialMetasRoute
@@ -1117,6 +1138,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AppDashboardRoute
   '/eventos': typeof AppEventosRoute
   '/ferramentas': typeof AppFerramentasRouteWithChildren
+  '/mmcast': typeof AppMmcastRoute
   '/parceiros': typeof AppParceirosRoute
   '/perfil': typeof AppPerfilRoute
   '/shorts': typeof AppShortsRoute
@@ -1128,6 +1150,7 @@ export interface FileRoutesByTo {
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
+  '/admin/mmcast': typeof AdminMmcastRoute
   '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/parcerias': typeof AdminParceriasRoute
   '/admin/partners-leads': typeof AdminPartnersLeadsRoute
@@ -1157,6 +1180,7 @@ export interface FileRoutesByTo {
   '/ferramentas/thumbnails': typeof AppFerramentasThumbnailsRoute
   '/jade/$threadId': typeof AppJadeThreadIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
+  '/mmcast/$episodeId': typeof AppMmcastEpisodeIdRoute
   '/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
   '/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
   '/comercial/metas': typeof AuthenticatedComercialMetasRoute
@@ -1262,6 +1286,7 @@ export interface FileRoutesById {
   '/_app/ferramentas': typeof AppFerramentasRouteWithChildren
   '/_app/jade': typeof AppJadeRouteWithChildren
   '/_app/lives': typeof AppLivesRouteWithChildren
+  '/_app/mmcast': typeof AppMmcastRoute
   '/_app/parceiros': typeof AppParceirosRoute
   '/_app/perfil': typeof AppPerfilRoute
   '/_app/shorts': typeof AppShortsRoute
@@ -1276,6 +1301,7 @@ export interface FileRoutesById {
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/financeiro': typeof AdminFinanceiroRouteWithChildren
   '/admin/lives': typeof AdminLivesRouteWithChildren
+  '/admin/mmcast': typeof AdminMmcastRoute
   '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/parcerias': typeof AdminParceriasRoute
   '/admin/partners-leads': typeof AdminPartnersLeadsRoute
@@ -1307,6 +1333,7 @@ export interface FileRoutesById {
   '/_app/ferramentas/thumbnails': typeof AppFerramentasThumbnailsRoute
   '/_app/jade/$threadId': typeof AppJadeThreadIdRoute
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
+  '/_app/mmcast_/$episodeId': typeof AppMmcastEpisodeIdRoute
   '/_authenticated/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
   '/_authenticated/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
   '/_authenticated/comercial/metas': typeof AuthenticatedComercialMetasRoute
@@ -1411,6 +1438,7 @@ export interface FileRouteTypes {
     | '/ferramentas'
     | '/jade'
     | '/lives'
+    | '/mmcast'
     | '/parceiros'
     | '/perfil'
     | '/shorts'
@@ -1425,6 +1453,7 @@ export interface FileRouteTypes {
     | '/admin/ferramentas'
     | '/admin/financeiro'
     | '/admin/lives'
+    | '/admin/mmcast'
     | '/admin/moderacao'
     | '/admin/parcerias'
     | '/admin/partners-leads'
@@ -1456,6 +1485,7 @@ export interface FileRouteTypes {
     | '/ferramentas/thumbnails'
     | '/jade/$threadId'
     | '/lives/$liveId'
+    | '/mmcast/$episodeId'
     | '/comercial/aplicacoes'
     | '/comercial/equipa'
     | '/comercial/metas'
@@ -1554,6 +1584,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/eventos'
     | '/ferramentas'
+    | '/mmcast'
     | '/parceiros'
     | '/perfil'
     | '/shorts'
@@ -1565,6 +1596,7 @@ export interface FileRouteTypes {
     | '/admin/cursos'
     | '/admin/eventos'
     | '/admin/ferramentas'
+    | '/admin/mmcast'
     | '/admin/moderacao'
     | '/admin/parcerias'
     | '/admin/partners-leads'
@@ -1594,6 +1626,7 @@ export interface FileRouteTypes {
     | '/ferramentas/thumbnails'
     | '/jade/$threadId'
     | '/lives/$liveId'
+    | '/mmcast/$episodeId'
     | '/comercial/aplicacoes'
     | '/comercial/equipa'
     | '/comercial/metas'
@@ -1698,6 +1731,7 @@ export interface FileRouteTypes {
     | '/_app/ferramentas'
     | '/_app/jade'
     | '/_app/lives'
+    | '/_app/mmcast'
     | '/_app/parceiros'
     | '/_app/perfil'
     | '/_app/shorts'
@@ -1712,6 +1746,7 @@ export interface FileRouteTypes {
     | '/admin/ferramentas'
     | '/admin/financeiro'
     | '/admin/lives'
+    | '/admin/mmcast'
     | '/admin/moderacao'
     | '/admin/parcerias'
     | '/admin/partners-leads'
@@ -1743,6 +1778,7 @@ export interface FileRouteTypes {
     | '/_app/ferramentas/thumbnails'
     | '/_app/jade/$threadId'
     | '/_app/lives/$liveId'
+    | '/_app/mmcast_/$episodeId'
     | '/_authenticated/comercial/aplicacoes'
     | '/_authenticated/comercial/equipa'
     | '/_authenticated/comercial/metas'
@@ -2072,6 +2108,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLivesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/mmcast': {
+      id: '/_app/mmcast'
+      path: '/mmcast'
+      fullPath: '/mmcast'
+      preLoaderRoute: typeof AppMmcastRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/parceiros': {
       id: '/_app/parceiros'
       path: '/parceiros'
@@ -2175,6 +2218,13 @@ declare module '@tanstack/react-router' {
       path: '/lives'
       fullPath: '/admin/lives'
       preLoaderRoute: typeof AdminLivesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/mmcast': {
+      id: '/admin/mmcast'
+      path: '/mmcast'
+      fullPath: '/admin/mmcast'
+      preLoaderRoute: typeof AdminMmcastRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/moderacao': {
@@ -2414,6 +2464,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/lives/$liveId'
       preLoaderRoute: typeof AppLivesLiveIdRouteImport
       parentRoute: typeof AppLivesRoute
+    }
+    '/_app/mmcast_/$episodeId': {
+      id: '/_app/mmcast_/$episodeId'
+      path: '/mmcast/$episodeId'
+      fullPath: '/mmcast/$episodeId'
+      preLoaderRoute: typeof AppMmcastEpisodeIdRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_authenticated/comercial/': {
       id: '/_authenticated/comercial/'
@@ -3075,12 +3132,14 @@ interface AppRouteChildren {
   AppFerramentasRoute: typeof AppFerramentasRouteWithChildren
   AppJadeRoute: typeof AppJadeRouteWithChildren
   AppLivesRoute: typeof AppLivesRouteWithChildren
+  AppMmcastRoute: typeof AppMmcastRoute
   AppParceirosRoute: typeof AppParceirosRoute
   AppPerfilRoute: typeof AppPerfilRoute
   AppShortsRoute: typeof AppShortsRoute
   AppSubscricaoRoute: typeof AppSubscricaoRoute
   AppAjudaSlugRoute: typeof AppAjudaSlugRoute
   AppEspecialistasExpertIdRoute: typeof AppEspecialistasExpertIdRoute
+  AppMmcastEpisodeIdRoute: typeof AppMmcastEpisodeIdRoute
   AppAjudaIndexRoute: typeof AppAjudaIndexRoute
   AppLivesLiveIdSalaRoute: typeof AppLivesLiveIdSalaRoute
 }
@@ -3097,12 +3156,14 @@ const AppRouteChildren: AppRouteChildren = {
   AppFerramentasRoute: AppFerramentasRouteWithChildren,
   AppJadeRoute: AppJadeRouteWithChildren,
   AppLivesRoute: AppLivesRouteWithChildren,
+  AppMmcastRoute: AppMmcastRoute,
   AppParceirosRoute: AppParceirosRoute,
   AppPerfilRoute: AppPerfilRoute,
   AppShortsRoute: AppShortsRoute,
   AppSubscricaoRoute: AppSubscricaoRoute,
   AppAjudaSlugRoute: AppAjudaSlugRoute,
   AppEspecialistasExpertIdRoute: AppEspecialistasExpertIdRoute,
+  AppMmcastEpisodeIdRoute: AppMmcastEpisodeIdRoute,
   AppAjudaIndexRoute: AppAjudaIndexRoute,
   AppLivesLiveIdSalaRoute: AppLivesLiveIdSalaRoute,
 }
@@ -3167,6 +3228,7 @@ interface AdminRouteChildren {
   AdminFerramentasRoute: typeof AdminFerramentasRoute
   AdminFinanceiroRoute: typeof AdminFinanceiroRouteWithChildren
   AdminLivesRoute: typeof AdminLivesRouteWithChildren
+  AdminMmcastRoute: typeof AdminMmcastRoute
   AdminModeracaoRoute: typeof AdminModeracaoRoute
   AdminParceriasRoute: typeof AdminParceriasRoute
   AdminPartnersLeadsRoute: typeof AdminPartnersLeadsRoute
@@ -3190,6 +3252,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminFerramentasRoute: AdminFerramentasRoute,
   AdminFinanceiroRoute: AdminFinanceiroRouteWithChildren,
   AdminLivesRoute: AdminLivesRouteWithChildren,
+  AdminMmcastRoute: AdminMmcastRoute,
   AdminModeracaoRoute: AdminModeracaoRoute,
   AdminParceriasRoute: AdminParceriasRoute,
   AdminPartnersLeadsRoute: AdminPartnersLeadsRoute,

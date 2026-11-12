@@ -14,6 +14,7 @@ import {
   Bot,
   Wrench,
   Radio,
+  Podcast,
   Users,
   CalendarDays,
   
@@ -221,7 +222,7 @@ export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
 
-type NavTo = "/dashboard" | "/academia" | "/certificados" | "/jade" | "/ferramentas" | "/lives" | "/comunidade" | "/shorts" | "/eventos" | "/perfil" | "/codigo" | "/ajuda" | "/parceiros";
+type NavTo = "/dashboard" | "/academia" | "/certificados" | "/jade" | "/ferramentas" | "/lives" | "/mmcast" | "/comunidade" | "/shorts" | "/eventos" | "/perfil" | "/codigo" | "/ajuda" | "/parceiros";
 type NavItem = {
   to: NavTo;
   label: string;
@@ -237,6 +238,7 @@ const navItems: NavItem[] = [
   { to: "/academia", label: "Academia", icon: GraduationCap },
   { to: "/jade", label: "MM Inteligence", icon: Star },
   { to: "/lives", label: "Ao Vivo", icon: Radio },
+  { to: "/mmcast", label: "MMCast", icon: Podcast, isNew: true },
   { to: "/comunidade", label: "Comunidade", icon: Users },
   { to: "/shorts", label: "MM Shorts", icon: Clapperboard },
   { to: "/ferramentas", label: "Ferramentas", icon: Wrench },
