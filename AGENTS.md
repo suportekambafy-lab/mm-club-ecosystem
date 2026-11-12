@@ -47,3 +47,5 @@
 - CRM and Novawebinar use independent MMpay sale jobs and a shared settled-sale reader, so one destination cannot block the other; CRM URL credentials and upstream bodies must never enter error logs.
 - Commercial goals (monthly revenue, SDR daily calls, closer daily closes) live per month in commercial_goals; only admins write them, commercial staff read, and SDR daily progress counts leads by call_booked_at set when a call is first booked.
 - MMpay link deletion is a soft delete (deleted_at) and payments FK is RESTRICT, so sales history is never lost.
+
+- Load the dashboard’s latest podcast episode once in its parent and share it with the hero and episode block to keep both highlights consistent without duplicate requests.

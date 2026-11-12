@@ -7,7 +7,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
   Play,
+  Pause,
 } from "lucide-react";
+import dashboardHero from "@/assets/dashboard-hero.jpg";
+import { Button } from "@/components/ui/button";
 import legacyHero from "@/assets/marca-milionaria-legacy-hero.jpg.asset.json";
 import { CourseCard } from "@/components/mm/course-card";
 import { Rail } from "@/components/mm/rail";
@@ -55,6 +58,15 @@ export const Route = createFileRoute("/_app/dashboard")({
 function DashboardPage() {
   const { user: sessionUser, loading: userLoading } = useCurrentUser();
   const { progress, loaded: progressLoaded } = useUserProgress();
+  const [episode, setEpisode] = useState<MmcastEpisode | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    listMmcastEpisodes().then((rows) => {
+      if (!cancelled) setEpisode(rows[0] ?? null);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   // Real live from backend — takes priority over static nextLive placeholder.
   type RealLive = Awaited<ReturnType<typeof listLives>>[number];
@@ -119,7 +131,7 @@ function DashboardPage() {
     <div className="space-y-8 md:space-y-10">
 
       {/* Cinematic hero — full bleed, autoplay muted loop, editorial overlay */}
-      <CinematicHero name={sessionUser?.name ?? ""} loading={userLoading && !sessionUser} />
+      <CinematicHero name={sessionUser?.name ?? ""} episode={episode} />
 
       {/* Live activa ou próxima em destaque (com contador) */}
       {!livesLoaded ? null : livesError ? (
@@ -166,7 +178,7 @@ function DashboardPage() {
 
       </Rail>
 
-      <MmcastBlock />
+      <MmcastBlock ep={episode} />
 
       {replays.length > 0 && (
         <Rail
@@ -193,21 +205,7 @@ function DashboardPage() {
   );
 }
 
-function MmcastBlock() {
-  const [ep, setEp] = useState<MmcastEpisode | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    listMmcastEpisodes()
-      .then((rows) => {
-        if (!cancelled) setEp(rows[0] ?? null);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
+function MmcastBlock({ ep }: { ep: MmcastEpisode | null }) {
   if (!ep) return null;
 
   return (
@@ -305,33 +303,80 @@ function ReplayCard({
 }
 
 
-function CinematicHero({ name }: { name: string; loading?: boolean }) {
+function CinematicHero({ name, episode }: { name: string; episode: MmcastEpisode | null }) {
   const legacy = useLegacyLaunch();
   const firstName = name.split(" ")[0];
+  const [slide, setSlide] = useState(1);
+  const [paused, setPaused] = useState(false);
+  const count = episode ? 3 : 2;
+
+  useEffect(() => {
+    if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const timer = window.setInterval(() => setSlide((current) => (current + 1) % count), 7000);
+    return () => window.clearInterval(timer);
+  }, [count, paused]);
+
+  const slides = [
+    { image: dashboardHero, alt: "MM Club" },
+    { image: legacyHero.url, alt: "Marca Milionária Legacy" },
+    ...(episode ? [{ image: episode.thumbnail_url || dashboardHero, alt: episode.title }] : []),
+  ];
 
   return (
-    <section className="relative -mx-3 overflow-hidden bg-surface-2 sm:-mx-4 md:-mx-8">
-      <div className="relative min-h-[260px] md:min-h-[300px]">
-        <img
-          src={legacyHero.url}
-          alt="Marca Milionária Legacy"
-          fetchPriority="high"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/75 to-background/20" />
-        <div className="relative flex min-h-[260px] flex-col justify-end px-6 py-7 md:min-h-[300px] md:px-10 md:py-9">
-          <p className="text-sm text-foreground/80">{firstName ? `Olá, ${firstName}.` : "Bem-vindo ao MM Club."}</p>
-          <h1 className="mt-3 max-w-lg font-display text-3xl leading-tight text-foreground md:text-4xl">
-            Marca Milionária <span className="text-primary">Legacy</span>
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">{legacy.released ? "As tuas aulas já estão disponíveis." : legacy.headline}</p>
-          <Link
-            to="/academia/$courseId"
-            params={{ courseId: "marca-milionaria-legacy" }}
-            className="btn-arrow mt-5 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
-          >
-            {legacy.cta} <ArrowRight className="h-4 w-4" />
-          </Link>
+    <section aria-label="Destaques do MM Club" className="relative -mx-3 overflow-hidden sm:-mx-4 md:-mx-8">
+      <div className="relative min-h-[360px] bg-surface-2 sm:aspect-video md:aspect-[21/9] md:min-h-[420px] md:max-h-[600px]">
+        {slides.map((item, index) => (
+          <img key={item.alt} src={item.image} alt={item.alt}
+            aria-hidden={slide !== index} decoding="async" fetchPriority={index === 1 ? "high" : "auto"}
+            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 motion-reduce:transition-none ${slide === index ? "opacity-100" : "opacity-0"}`}
+          />
+        ))}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-background/10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-background/20 to-transparent" />
+        <div className="absolute inset-0 flex items-end">
+          <div className="w-full px-6 pb-16 md:px-14 md:pb-20">
+            {slide === 0 ? (
+              <div>
+                <p className="text-xs font-medium uppercase text-primary">MM Club</p>
+                <h1 className="mt-3 font-display text-3xl leading-tight text-foreground md:text-6xl">
+                  Bom regresso{firstName ? ", " : "."}<span className="text-primary">{firstName}</span>{firstName ? "." : ""}
+                </h1>
+                <p className="mt-3 max-w-xl text-sm text-muted-foreground md:text-lg">Continua a construir a tua Marca Milionária.</p>
+              </div>
+            ) : slide === 1 ? (
+              <div>
+                <p className="text-xs font-medium uppercase text-primary">{legacy.released ? "Já disponível" : "Novo curso"}</p>
+                <h1 className="mt-3 max-w-3xl font-display text-3xl leading-tight text-foreground md:text-6xl">
+                  Marca Milionária <span className="text-primary">Legacy</span>
+                </h1>
+                <p className="mt-3 max-w-xl text-sm text-muted-foreground md:text-lg">{legacy.released ? "Já podes começar. Todas as aulas abertas para membros." : `${legacy.headline}.`}</p>
+                <Button asChild className="btn-arrow mt-5">
+                  <Link to="/academia/$courseId" params={{ courseId: "marca-milionaria-legacy" }}>{legacy.cta} <ArrowRight /></Link>
+                </Button>
+              </div>
+            ) : episode ? (
+              <div>
+                <p className="text-xs font-medium uppercase text-primary">Episódio {episode.episode_number}{episode.guest_name ? ` · ${episode.guest_name}` : ""}</p>
+                <h1 className="mt-3 font-display text-4xl leading-tight text-foreground md:text-6xl">MM<span className="text-primary">Cast</span></h1>
+                <p className="mt-3 max-w-xl text-base leading-snug text-foreground md:text-xl">{episode.title}</p>
+                <Button asChild className="btn-arrow mt-5">
+                  <Link to="/mmcast/$episodeId" params={{ episodeId: episode.id }}><Play /> Ver episódio <ArrowRight /></Link>
+                </Button>
+              </div>
+            ) : null}
+          </div>
+        </div>
+        <div className="absolute bottom-3 right-5 flex items-center gap-1 md:bottom-5 md:right-10">
+          {slides.map((item, index) => (
+            <Button key={item.alt} variant="ghost" size="icon" onClick={() => setSlide(index)}
+              aria-label={`Ver destaque ${index + 1}: ${index === 2 ? "MMCast" : item.alt}`} aria-pressed={slide === index}
+              className="h-9 w-9">
+              <span className={`h-1.5 rounded-full transition-all motion-reduce:transition-none ${slide === index ? "w-6 bg-primary" : "w-1.5 bg-foreground/40"}`} />
+            </Button>
+          ))}
+          <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground" onClick={() => setPaused((value) => !value)} aria-label={paused ? "Retomar destaques" : "Pausar destaques"} title={paused ? "Retomar destaques" : "Pausar destaques"}>
+            {paused ? <Play /> : <Pause />}
+          </Button>
         </div>
       </div>
     </section>
