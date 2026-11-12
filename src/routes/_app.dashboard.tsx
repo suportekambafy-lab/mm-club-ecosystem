@@ -26,6 +26,7 @@ import {
   recommendedFromProgress,
 } from "@/hooks/use-user-progress";
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
+import { listMmcastEpisodes, type MmcastEpisode } from "@/lib/mmcast.functions";
 import { expertsById } from "@/data/experts";
 import { courses } from "@/data/courses";
 import { sortCatalog } from "@/lib/course-order";
@@ -153,6 +154,9 @@ function DashboardPage() {
 
       {/* Sequência de aprendizagem e meta semanal */}
       <StreakCard />
+
+      {/* Último episódio do MMCast */}
+      <MmcastBlock />
 
       {/* Rails na ordem editorial */}
       {cont.length > 0 && (
