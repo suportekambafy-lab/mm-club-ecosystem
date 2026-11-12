@@ -317,19 +317,24 @@ function CinematicHero({ name, episode }: { name: string; episode: MmcastEpisode
   }, [count, paused]);
 
   const slides = [
-    { image: dashboardHero, alt: "MM Club" },
-    { image: legacyHero.url, alt: "Marca Milionária Legacy" },
-    ...(episode ? [{ image: episode.thumbnail_url || dashboardHero, alt: episode.title }] : []),
+    { image: dashboardHero, alt: "MM Club", contain: false },
+    { image: legacyHero.url, alt: "Marca Milionária Legacy", contain: false },
+    ...(episode ? [{ image: episode.thumbnail_url || dashboardHero, alt: episode.title, contain: true }] : []),
   ];
 
   return (
     <section aria-label="Destaques do MM Club" className="relative -mx-3 overflow-hidden sm:-mx-4 md:-mx-8">
       <div className="relative min-h-[360px] bg-surface-2 sm:aspect-video md:aspect-[21/9] md:min-h-[420px] md:max-h-[600px]">
         {slides.map((item, index) => (
-          <img key={item.alt} src={item.image} alt={item.alt}
-            aria-hidden={slide !== index} decoding="async" fetchPriority={index === 1 ? "high" : "auto"}
-            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 motion-reduce:transition-none ${slide === index ? "opacity-100" : "opacity-0"}`}
-          />
+          <div key={item.alt} aria-hidden={slide !== index}
+            className={`absolute inset-0 transition-opacity duration-1000 motion-reduce:transition-none ${slide === index ? "opacity-100" : "opacity-0"}`}>
+            {item.contain && (
+              <img src={item.image} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-2xl" />
+            )}
+            <img src={item.image} alt={item.alt} decoding="async" fetchPriority={index === 1 ? "high" : "auto"}
+              className={`absolute inset-0 h-full w-full ${item.contain ? "object-contain md:object-right" : "object-cover"}`}
+            />
+          </div>
         ))}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-background/10" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-background/20 to-transparent" />
