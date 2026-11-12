@@ -57,4 +57,4 @@
 
 - [x] Retirar «Seja Afiliado» do menu e simplificar o início dos membros: destaque fixo mais baixo, aula seguinte, Academia, MMCast e quatro replays; removidos promo Shopify, sequência semanal, recomendações e chamadas redundantes. Sessão real confirmou navegação MMCast, computador e telemóvel sem transbordo nem erros; build OK. Não publicado.
 
-- [ ] Repor o destaque panorâmico rotativo anterior e acrescentar o último MMCast, mantendo o início simplificado.
+- [x] Repor o destaque panorâmico rotativo anterior com boas-vindas, Legacy e último MMCast; episódio partilhado com o bloco da página. Sessão real confirmou seleção e abertura do episódio, computador e telemóvel sem transbordo nem erros; build OK. Não publicado.
