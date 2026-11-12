@@ -161,7 +161,7 @@ function MmcastPage() {
               className="group block overflow-hidden rounded-3xl border border-border bg-surface-1 transition hover:border-primary/40"
             >
               <div className="grid md:grid-cols-2">
-                <div className="relative aspect-video overflow-hidden md:aspect-auto md:min-h-[280px]">
+                <div className="relative aspect-video self-center overflow-hidden">
                   <img
                     src={featured.thumbnail_url ?? undefined}
                     alt={featured.title}

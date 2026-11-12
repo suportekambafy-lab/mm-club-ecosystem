@@ -231,7 +231,7 @@ function MmcastBlock({ ep }: { ep: MmcastEpisode | null }) {
         params={{ episodeId: ep.id }}
         className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-surface-1 transition hover:border-primary/40 sm:flex-row"
       >
-        <div className="relative aspect-video shrink-0 overflow-hidden sm:aspect-auto sm:h-auto sm:w-64 md:w-80">
+        <div className="relative aspect-video shrink-0 self-center overflow-hidden sm:w-64 md:w-80">
           <img
             src={ep.thumbnail_url ?? undefined}
             alt={ep.title}
