@@ -84,7 +84,7 @@ async function requireAdmin(supabase: unknown, userId: string) {
 export const adminListMmcastEpisodes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await requireAdmin(context);
+    await requireAdmin(context.supabase, context.userId);
     const { data, error } = await context.supabase
       .from("mmcast_episodes")
       .select(COLS)
@@ -111,7 +111,7 @@ export const adminSaveMmcastEpisode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i) => saveSchema.parse(i))
   .handler(async ({ data, context }) => {
-    await requireAdmin(context);
+    await requireAdmin(context.supabase, context.userId);
     const now = new Date().toISOString();
     const row = {
       episode_number: data.episode_number,
@@ -147,7 +147,7 @@ export const adminDeleteMmcastEpisode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    await requireAdmin(context);
+    await requireAdmin(context.supabase, context.userId);
     const { error } = await context.supabase
       .from("mmcast_episodes")
       .delete()
@@ -167,7 +167,7 @@ export const adminSetMmcastStatus = createServerFn({ method: "POST" })
     z.object({ id: z.string().uuid(), publish: z.boolean() }).parse(i),
   )
   .handler(async ({ data, context }) => {
-    await requireAdmin(context);
+    await requireAdmin(context.supabase, context.userId);
     const now = new Date().toISOString();
 
     const { data: ep, error: readErr } = await context.supabase
