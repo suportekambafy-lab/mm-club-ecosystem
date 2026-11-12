@@ -51,6 +51,7 @@ import { Route as AdminEventosRouteImport } from './routes/admin.eventos'
 import { Route as AdminFerramentasRouteImport } from './routes/admin.ferramentas'
 import { Route as AdminFinanceiroRouteImport } from './routes/admin.financeiro'
 import { Route as AdminLivesRouteImport } from './routes/admin.lives'
+import { Route as AdminMmcastRouteImport } from './routes/admin.mmcast'
 import { Route as AdminModeracaoRouteImport } from './routes/admin.moderacao'
 import { Route as AdminParceriasRouteImport } from './routes/admin.parcerias'
 import { Route as AdminPartnersLeadsRouteImport } from './routes/admin.partners-leads'
@@ -365,6 +366,11 @@ const AdminFinanceiroRoute = AdminFinanceiroRouteImport.update({
 const AdminLivesRoute = AdminLivesRouteImport.update({
   id: '/lives',
   path: '/lives',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMmcastRoute = AdminMmcastRouteImport.update({
+  id: '/mmcast',
+  path: '/mmcast',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminModeracaoRoute = AdminModeracaoRouteImport.update({
@@ -1001,6 +1007,7 @@ export interface FileRoutesByFullPath {
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/financeiro': typeof AdminFinanceiroRouteWithChildren
   '/admin/lives': typeof AdminLivesRouteWithChildren
+  '/admin/mmcast': typeof AdminMmcastRoute
   '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/parcerias': typeof AdminParceriasRoute
   '/admin/partners-leads': typeof AdminPartnersLeadsRoute
@@ -1143,6 +1150,7 @@ export interface FileRoutesByTo {
   '/admin/cursos': typeof AdminCursosRoute
   '/admin/eventos': typeof AdminEventosRoute
   '/admin/ferramentas': typeof AdminFerramentasRoute
+  '/admin/mmcast': typeof AdminMmcastRoute
   '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/parcerias': typeof AdminParceriasRoute
   '/admin/partners-leads': typeof AdminPartnersLeadsRoute
@@ -1293,6 +1301,7 @@ export interface FileRoutesById {
   '/admin/ferramentas': typeof AdminFerramentasRoute
   '/admin/financeiro': typeof AdminFinanceiroRouteWithChildren
   '/admin/lives': typeof AdminLivesRouteWithChildren
+  '/admin/mmcast': typeof AdminMmcastRoute
   '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/parcerias': typeof AdminParceriasRoute
   '/admin/partners-leads': typeof AdminPartnersLeadsRoute
@@ -1444,6 +1453,7 @@ export interface FileRouteTypes {
     | '/admin/ferramentas'
     | '/admin/financeiro'
     | '/admin/lives'
+    | '/admin/mmcast'
     | '/admin/moderacao'
     | '/admin/parcerias'
     | '/admin/partners-leads'
@@ -1586,6 +1596,7 @@ export interface FileRouteTypes {
     | '/admin/cursos'
     | '/admin/eventos'
     | '/admin/ferramentas'
+    | '/admin/mmcast'
     | '/admin/moderacao'
     | '/admin/parcerias'
     | '/admin/partners-leads'
@@ -1735,6 +1746,7 @@ export interface FileRouteTypes {
     | '/admin/ferramentas'
     | '/admin/financeiro'
     | '/admin/lives'
+    | '/admin/mmcast'
     | '/admin/moderacao'
     | '/admin/parcerias'
     | '/admin/partners-leads'
@@ -2206,6 +2218,13 @@ declare module '@tanstack/react-router' {
       path: '/lives'
       fullPath: '/admin/lives'
       preLoaderRoute: typeof AdminLivesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/mmcast': {
+      id: '/admin/mmcast'
+      path: '/mmcast'
+      fullPath: '/admin/mmcast'
+      preLoaderRoute: typeof AdminMmcastRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/moderacao': {
@@ -3219,6 +3238,7 @@ interface AdminRouteChildren {
   AdminFerramentasRoute: typeof AdminFerramentasRoute
   AdminFinanceiroRoute: typeof AdminFinanceiroRouteWithChildren
   AdminLivesRoute: typeof AdminLivesRouteWithChildren
+  AdminMmcastRoute: typeof AdminMmcastRoute
   AdminModeracaoRoute: typeof AdminModeracaoRoute
   AdminParceriasRoute: typeof AdminParceriasRoute
   AdminPartnersLeadsRoute: typeof AdminPartnersLeadsRoute
@@ -3242,6 +3262,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminFerramentasRoute: AdminFerramentasRoute,
   AdminFinanceiroRoute: AdminFinanceiroRouteWithChildren,
   AdminLivesRoute: AdminLivesRouteWithChildren,
+  AdminMmcastRoute: AdminMmcastRoute,
   AdminModeracaoRoute: AdminModeracaoRoute,
   AdminParceriasRoute: AdminParceriasRoute,
   AdminPartnersLeadsRoute: AdminPartnersLeadsRoute,
