@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile, BellRing, BellOff, UserRound, GraduationCap, Trophy, Gavel, ShieldQuestion, Handshake } from "lucide-react";
+import { Bell, Radio, Play, Check, Heart, MessageCircle, AtSign, Smile, BellRing, BellOff, UserRound, GraduationCap, Trophy, Gavel, ShieldQuestion, Handshake, Podcast } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
@@ -43,6 +43,7 @@ const iconByKind: Record<NotifKind, typeof Bell> = {
   partner_pending: Handshake,
   partner_approved: Handshake,
   partner_rejected: Handshake,
+  mmcast: Podcast,
 };
 
 const labelByKind: Record<NotifKind, string> = {
@@ -62,7 +63,7 @@ const labelByKind: Record<NotifKind, string> = {
   partner_pending: "MM Partners",
   partner_approved: "MM Partners",
   partner_rejected: "MM Partners",
-
+  mmcast: "MMCast",
 };
 
 const STORAGE_KEY = "mm.notifications.state.v2";
@@ -266,6 +267,12 @@ function communityCopy(
   }
 
 
+  if (kind === "mmcast") {
+    return {
+      title: "🎙️ Novo episódio do MMCast!",
+      subtitle: "Já está disponível um novo episódio — assiste agora",
+    };
+  }
   if (kind === "like") {
     return {
       title: isShort ? `${who} gostou do teu MM Short` : `${who} gostou do teu post`,
@@ -379,6 +386,8 @@ export function NotificationsBell({ className }: { className?: string }) {
         ? `/lives/${n.live_id}`
         : n.kind === "course_released"
         ? (n.course_id ? `/academia/${n.course_id}` : "/academia")
+        : n.kind === "mmcast"
+        ? (n.mmcast_episode_id ? `/mmcast/${n.mmcast_episode_id}` : "/mmcast")
         : isShort
         ? `/shorts?v=${n.short_id}${n.kind === "reply" || n.kind === "comment_reply" ? "&c=1" : ""}`
         : n.post_id
