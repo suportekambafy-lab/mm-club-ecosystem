@@ -8,6 +8,7 @@ import {
   Sparkles,
   Circle,
   Radio,
+  Mic,
   Calendar,
   MessageCircle,
   Heart,
