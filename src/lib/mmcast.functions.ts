@@ -67,19 +67,15 @@ export const getMmcastEpisode = createServerFn({ method: "GET" })
 
 // ------------------------------------------------------------------- admin
 
-type AdminContext = {
-  supabase: {
+async function requireAdmin(supabase: unknown, userId: string) {
+  const client = supabase as {
     rpc: (
       fn: string,
       args: Record<string, unknown>,
-    ) => Promise<{ data: unknown; error: { message: string } | null }>;
+    ) => Promise<{ data: unknown }>;
   };
-  userId: string;
-};
-
-async function requireAdmin(context: AdminContext) {
-  const { data } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId,
+  const { data } = await client.rpc("has_role", {
+    _user_id: userId,
     _role: "admin",
   });
   if (!data) throw new Error("Apenas administradores podem gerir o MMCast.");
