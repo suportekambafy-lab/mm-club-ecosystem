@@ -86,7 +86,7 @@ import { Route as AppJadeIndexRouteImport } from './routes/_app.jade.index'
 import { Route as AppJadeThreadIdRouteImport } from './routes/_app.jade.$threadId'
 import { Route as AppLivesIndexRouteImport } from './routes/_app.lives.index'
 import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
-import { Route as AppMmcastEpisodeIdRouteImport } from './routes/_app.mmcast.$episodeId'
+import { Route as AppMmcastEpisodeIdRouteImport } from './routes/_app.mmcast_.$episodeId'
 import { Route as AuthenticatedComercialIndexRouteImport } from './routes/_authenticated/comercial.index'
 import { Route as AuthenticatedComercialAplicacoesRouteImport } from './routes/_authenticated/comercial.aplicacoes'
 import { Route as AuthenticatedComercialEquipaRouteImport } from './routes/_authenticated/comercial.equipa'
@@ -546,9 +546,9 @@ const AppLivesLiveIdRoute = AppLivesLiveIdRouteImport.update({
   getParentRoute: () => AppLivesRoute,
 } as any)
 const AppMmcastEpisodeIdRoute = AppMmcastEpisodeIdRouteImport.update({
-  id: '/$episodeId',
-  path: '/$episodeId',
-  getParentRoute: () => AppMmcastRoute,
+  id: '/mmcast_/$episodeId',
+  path: '/mmcast/$episodeId',
+  getParentRoute: () => AppRoute,
 } as any)
 const AuthenticatedComercialIndexRoute =
   AuthenticatedComercialIndexRouteImport.update({
@@ -992,7 +992,7 @@ export interface FileRoutesByFullPath {
   '/ferramentas': typeof AppFerramentasRouteWithChildren
   '/jade': typeof AppJadeRouteWithChildren
   '/lives': typeof AppLivesRouteWithChildren
-  '/mmcast': typeof AppMmcastRouteWithChildren
+  '/mmcast': typeof AppMmcastRoute
   '/parceiros': typeof AppParceirosRoute
   '/perfil': typeof AppPerfilRoute
   '/shorts': typeof AppShortsRoute
@@ -1138,7 +1138,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AppDashboardRoute
   '/eventos': typeof AppEventosRoute
   '/ferramentas': typeof AppFerramentasRouteWithChildren
-  '/mmcast': typeof AppMmcastRouteWithChildren
+  '/mmcast': typeof AppMmcastRoute
   '/parceiros': typeof AppParceirosRoute
   '/perfil': typeof AppPerfilRoute
   '/shorts': typeof AppShortsRoute
@@ -1286,7 +1286,7 @@ export interface FileRoutesById {
   '/_app/ferramentas': typeof AppFerramentasRouteWithChildren
   '/_app/jade': typeof AppJadeRouteWithChildren
   '/_app/lives': typeof AppLivesRouteWithChildren
-  '/_app/mmcast': typeof AppMmcastRouteWithChildren
+  '/_app/mmcast': typeof AppMmcastRoute
   '/_app/parceiros': typeof AppParceirosRoute
   '/_app/perfil': typeof AppPerfilRoute
   '/_app/shorts': typeof AppShortsRoute
@@ -1333,7 +1333,7 @@ export interface FileRoutesById {
   '/_app/ferramentas/thumbnails': typeof AppFerramentasThumbnailsRoute
   '/_app/jade/$threadId': typeof AppJadeThreadIdRoute
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
-  '/_app/mmcast/$episodeId': typeof AppMmcastEpisodeIdRoute
+  '/_app/mmcast_/$episodeId': typeof AppMmcastEpisodeIdRoute
   '/_authenticated/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
   '/_authenticated/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
   '/_authenticated/comercial/metas': typeof AuthenticatedComercialMetasRoute
@@ -1778,7 +1778,7 @@ export interface FileRouteTypes {
     | '/_app/ferramentas/thumbnails'
     | '/_app/jade/$threadId'
     | '/_app/lives/$liveId'
-    | '/_app/mmcast/$episodeId'
+    | '/_app/mmcast_/$episodeId'
     | '/_authenticated/comercial/aplicacoes'
     | '/_authenticated/comercial/equipa'
     | '/_authenticated/comercial/metas'
@@ -2465,12 +2465,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLivesLiveIdRouteImport
       parentRoute: typeof AppLivesRoute
     }
-    '/_app/mmcast/$episodeId': {
-      id: '/_app/mmcast/$episodeId'
-      path: '/$episodeId'
+    '/_app/mmcast_/$episodeId': {
+      id: '/_app/mmcast_/$episodeId'
+      path: '/mmcast/$episodeId'
       fullPath: '/mmcast/$episodeId'
       preLoaderRoute: typeof AppMmcastEpisodeIdRouteImport
-      parentRoute: typeof AppMmcastRoute
+      parentRoute: typeof AppRoute
     }
     '/_authenticated/comercial/': {
       id: '/_authenticated/comercial/'
@@ -3120,18 +3120,6 @@ const AppLivesRouteWithChildren = AppLivesRoute._addFileChildren(
   AppLivesRouteChildren,
 )
 
-interface AppMmcastRouteChildren {
-  AppMmcastEpisodeIdRoute: typeof AppMmcastEpisodeIdRoute
-}
-
-const AppMmcastRouteChildren: AppMmcastRouteChildren = {
-  AppMmcastEpisodeIdRoute: AppMmcastEpisodeIdRoute,
-}
-
-const AppMmcastRouteWithChildren = AppMmcastRoute._addFileChildren(
-  AppMmcastRouteChildren,
-)
-
 interface AppRouteChildren {
   AppAcademiaRoute: typeof AppAcademiaRouteWithChildren
   AppBemVindoRoute: typeof AppBemVindoRoute
@@ -3144,13 +3132,14 @@ interface AppRouteChildren {
   AppFerramentasRoute: typeof AppFerramentasRouteWithChildren
   AppJadeRoute: typeof AppJadeRouteWithChildren
   AppLivesRoute: typeof AppLivesRouteWithChildren
-  AppMmcastRoute: typeof AppMmcastRouteWithChildren
+  AppMmcastRoute: typeof AppMmcastRoute
   AppParceirosRoute: typeof AppParceirosRoute
   AppPerfilRoute: typeof AppPerfilRoute
   AppShortsRoute: typeof AppShortsRoute
   AppSubscricaoRoute: typeof AppSubscricaoRoute
   AppAjudaSlugRoute: typeof AppAjudaSlugRoute
   AppEspecialistasExpertIdRoute: typeof AppEspecialistasExpertIdRoute
+  AppMmcastEpisodeIdRoute: typeof AppMmcastEpisodeIdRoute
   AppAjudaIndexRoute: typeof AppAjudaIndexRoute
   AppLivesLiveIdSalaRoute: typeof AppLivesLiveIdSalaRoute
 }
@@ -3167,13 +3156,14 @@ const AppRouteChildren: AppRouteChildren = {
   AppFerramentasRoute: AppFerramentasRouteWithChildren,
   AppJadeRoute: AppJadeRouteWithChildren,
   AppLivesRoute: AppLivesRouteWithChildren,
-  AppMmcastRoute: AppMmcastRouteWithChildren,
+  AppMmcastRoute: AppMmcastRoute,
   AppParceirosRoute: AppParceirosRoute,
   AppPerfilRoute: AppPerfilRoute,
   AppShortsRoute: AppShortsRoute,
   AppSubscricaoRoute: AppSubscricaoRoute,
   AppAjudaSlugRoute: AppAjudaSlugRoute,
   AppEspecialistasExpertIdRoute: AppEspecialistasExpertIdRoute,
+  AppMmcastEpisodeIdRoute: AppMmcastEpisodeIdRoute,
   AppAjudaIndexRoute: AppAjudaIndexRoute,
   AppLivesLiveIdSalaRoute: AppLivesLiveIdSalaRoute,
 }
