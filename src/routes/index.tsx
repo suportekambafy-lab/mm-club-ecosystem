@@ -82,6 +82,7 @@ function LandingPage() {
       <FeatureJade />
       <FeatureComunidade />
       <FeatureLives />
+      <FeatureMMCast />
       <FeatureFerramentas />
       <FeatureEventos />
       <Manifesto />
@@ -102,12 +103,13 @@ function Nav({ scrolled }: { scrolled: boolean }) {
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <MMLogo />
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-6 lg:flex lg:gap-8">
           {[
             ["Academia", "academia"],
             ["MM Inteligence", "jade"],
             ["Comunidade", "comunidade"],
             ["Lives", "lives"],
+            ["MMCast", "mmcast"],
           ].map(([label, id]) => (
             <a
               key={id}
@@ -350,7 +352,7 @@ function Hero() {
 /* ---------- TRUST STRIP ---------- */
 
 function TrustStrip() {
-  const items = ["Método Marca Milionária", "Comunidade privada", "MM Inteligence 24/7", "Lives semanais", "Ferramentas exclusivas"];
+  const items = ["Método Marca Milionária", "Comunidade privada", "MM Inteligence 24/7", "Lives semanais", "MMCast podcast", "Ferramentas exclusivas"];
   return (
     <section className="border-y border-border py-8">
       <div className="mx-auto max-w-7xl px-6">
@@ -742,7 +744,7 @@ function FeatureFerramentas() {
   return (
     <FeatureSection
       id="ferramentas"
-      index="05"
+      index="06"
       eyebrow="Ferramentas"
       title={
         <>
@@ -789,7 +791,7 @@ function FeatureEventos() {
   return (
     <FeatureSection
       id="eventos"
-      index="06"
+      index="07"
       eyebrow="Eventos"
       reverse
       title={
