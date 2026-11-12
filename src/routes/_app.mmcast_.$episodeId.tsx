@@ -10,7 +10,7 @@ import {
   type MmcastEpisode,
 } from "@/lib/mmcast.functions";
 
-export const Route = createFileRoute("/_app/mmcast/$episodeId")({
+export const Route = createFileRoute("/_app/mmcast_/$episodeId")({
   head: () => ({
     meta: [
       { title: "Episódio — MMCast" },
