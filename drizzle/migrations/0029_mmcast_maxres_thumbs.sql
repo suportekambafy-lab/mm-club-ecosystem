@@ -1,0 +1,1 @@
+update public.mmcast_episodes set thumbnail_url=replace(thumbnail_url,'/hqdefault.jpg','/maxresdefault.jpg') where thumbnail_url like '%i.ytimg.com%hqdefault.jpg';
