@@ -331,7 +331,6 @@ function CinematicHero({ episode }: { episode: MmcastEpisode | null }) {
             <img src={thumb} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-2xl" />
             <div className="absolute inset-x-0 top-0 aspect-video overflow-hidden md:hidden">
               <img src={thumb} alt={episode.title} decoding="async" className="absolute inset-0 h-full w-full object-cover" />
-              <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-b from-transparent to-surface-2" />
             </div>
             <img src={thumb} alt="" aria-hidden className="hidden md:block absolute inset-0 h-full w-full object-contain md:object-right" />
           </div>
