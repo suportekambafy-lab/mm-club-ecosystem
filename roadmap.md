@@ -54,3 +54,5 @@
 - [x] Reduzir os métodos de pagamento do checkout MMpay: azulejos compactos (~85x88), marcas em azulejos brancos pequenos, selo «3x de …» do Klarna no lugar do nome; navegador confirmou alinhamento e nada cortado.
 - [x] Klarna: endpoint corrigido para api.klarna.com, sessão criada com sucesso com credenciais live; nome+telefone obrigatórios; widget não testável no sandbox (x.klarnacdn.com bloqueado) — falta teste real do utilizador
 - [x] Adicionar «Meta do mês» ao topo da visão geral comercial, com barra de progresso e objetivo de 20.000 € para novembro de 2026; 7 testes passaram e navegador autenticado confirmou 4.438 € (22%), «Faltam 15.562 € · 25 dias» e barra a 22%, sem erros de consola. Não publicado.
+
+- [x] Retirar «Seja Afiliado» do menu e simplificar o início dos membros: destaque fixo mais baixo, aula seguinte, Academia, MMCast e quatro replays; removidos promo Shopify, sequência semanal, recomendações e chamadas redundantes. Sessão real confirmou navegação MMCast, computador e telemóvel sem transbordo nem erros; build OK. Não publicado.
