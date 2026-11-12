@@ -14,6 +14,7 @@ import {
   Sparkles,
   HeartPulse,
   Mail,
+  Mic,
   ChevronLeft,
   ChevronRight,
   Repeat,
@@ -91,6 +92,7 @@ type AdminTo =
   | "/admin/aulas"
   | "/admin/progresso"
   | "/admin/transcricoes"
+  | "/admin/mmcast"
   | "/admin/quizzes"
   | "/admin/certificados"
   | "/admin/eventos"
@@ -139,6 +141,7 @@ const nav: Array<{ label: string; items: NavItem[] }> = [
       { to: "/admin/certificados", label: "Certificados & Sequências", icon: Award },
       { to: "/admin/quizzes", label: "MM Quiz", icon: GraduationCap },
       { to: "/admin/transcricoes", label: "Transcrições", icon: Sparkles },
+      { to: "/admin/mmcast", label: "MMCast", icon: Mic },
     ],
   },
   {
@@ -158,6 +161,7 @@ const CRUMBS: Record<string, string> = {
   "/admin": "Início",
   "/admin/financeiro": "Financeiro",
   "/admin/certificados": "Certificados & Sequências",
+  "/admin/mmcast": "MMCast",
   "/admin/financeiro/receita": "Vendas",
   "/admin/financeiro/subscricoes": "Subscrições",
   "/admin/financeiro/cupoes": "Cupões",

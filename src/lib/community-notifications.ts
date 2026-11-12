@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export type CommunityNotifKind = "like" | "reply" | "mention" | "reaction" | "comment_reply" | "inactivity" | "live" | "course_released" | "rank" | "moderation" | "appeal" | "partner_pending" | "partner_approved" | "partner_rejected";
+export type CommunityNotifKind = "like" | "reply" | "mention" | "reaction" | "comment_reply" | "inactivity" | "live" | "course_released" | "rank" | "moderation" | "appeal" | "partner_pending" | "partner_approved" | "partner_rejected" | "mmcast";
 
 export type CommunityNotif = {
   id: string;
@@ -11,6 +11,7 @@ export type CommunityNotif = {
   short_id: string | null;
   live_id: string | null;
   course_id: string | null;
+  mmcast_episode_id: string | null;
   actor_id: string | null;
   actor_name: string | null;
   actor_avatar: string | null;
@@ -27,6 +28,7 @@ type Row = {
   short_id: string | null;
   live_id: string | null;
   course_id: string | null;
+  mmcast_episode_id: string | null;
   actor_id: string | null;
   read_at: string | null;
   dismissed_at: string | null;
@@ -41,7 +43,7 @@ export function useCommunityNotifications() {
   const load = useCallback(async (uid: string) => {
     const { data } = await supabase
       .from("notifications")
-      .select("id, kind, post_id, comment_id, short_id, live_id, course_id, actor_id, read_at, dismissed_at, created_at")
+      .select("id, kind, post_id, comment_id, short_id, live_id, course_id, mmcast_episode_id, actor_id, read_at, dismissed_at, created_at")
       .eq("user_id", uid)
       .is("dismissed_at", null)
       .order("created_at", { ascending: false })
