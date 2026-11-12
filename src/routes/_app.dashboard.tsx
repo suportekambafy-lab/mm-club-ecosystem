@@ -264,6 +264,75 @@ function DashboardPage() {
   );
 }
 
+function MmcastBlock() {
+  const [ep, setEp] = useState<MmcastEpisode | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    listMmcastEpisodes()
+      .then((rows) => {
+        if (!cancelled) setEp(rows[0] ?? null);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!ep) return null;
+
+  return (
+    <section>
+      <div className="mb-4 flex items-end justify-between px-1">
+        <div>
+          <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-primary">
+            MMCast
+          </p>
+          <h2 className="mt-1.5 font-display text-xl leading-tight text-foreground md:text-2xl">
+            Último episódio do podcast.
+          </h2>
+        </div>
+        <Link
+          to="/mmcast"
+          className="hidden text-xs font-medium text-primary hover:underline md:inline-flex md:items-center md:gap-1"
+        >
+          Ver todos <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+      <Link
+        to="/mmcast/$episodeId"
+        params={{ episodeId: ep.id }}
+        className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-surface-1 transition hover:border-primary/40 sm:flex-row"
+      >
+        <div className="relative aspect-video shrink-0 overflow-hidden sm:aspect-auto sm:h-auto sm:w-64 md:w-80">
+          <img
+            src={ep.thumbnail_url ?? undefined}
+            alt={ep.title}
+            className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+            loading="lazy"
+          />
+          <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold text-primary-foreground">
+            EP {ep.episode_number}
+          </span>
+        </div>
+        <div className="flex flex-1 flex-col justify-center gap-2 p-5 md:p-6">
+          <h3 className="line-clamp-2 font-display text-lg leading-snug text-foreground">
+            {ep.title}
+          </h3>
+          {ep.guest_name && (
+            <p className="text-sm font-medium text-foreground/70">
+              Com {ep.guest_name}
+            </p>
+          )}
+          <span className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition group-hover:gap-3">
+            <Play className="h-3.5 w-3.5" fill="currentColor" /> Assistir agora
+          </span>
+        </div>
+      </Link>
+    </section>
+  );
+}
+
 function ReplayCard({
   live,
 }: {
