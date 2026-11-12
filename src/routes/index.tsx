@@ -745,13 +745,13 @@ const MMCAST_EPISODES = [
     n: "Ep. 2",
     guest: "Pablo Mendes",
     when: "12 nov",
-    img: "https://i.ytimg.com/vi/sF-vY6ogoEI/hqdefault.jpg",
+    img: "https://i.ytimg.com/vi/sF-vY6ogoEI/maxresdefault.jpg",
   },
   {
     n: "Ep. 1",
     guest: "Leandro Santana",
     when: "5 nov",
-    img: "https://i.ytimg.com/vi/u2xOrBEmeNA/hqdefault.jpg",
+    img: "https://i.ytimg.com/vi/u2xOrBEmeNA/maxresdefault.jpg",
   },
 ];
 

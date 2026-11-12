@@ -33,7 +33,7 @@ export function extractYoutubeId(input: string): string | null {
 }
 
 export function youtubeThumbnail(videoId: string): string {
-  return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+  return `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
 }
 
 // ------------------------------------------------------------- área do aluno
