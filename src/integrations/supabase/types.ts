@@ -3427,6 +3427,60 @@ export type Database = {
         }
         Relationships: []
       }
+      mmcast_episodes: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string | null
+          episode_number: number
+          full_description: string | null
+          guest_name: string | null
+          id: string
+          published_at: string | null
+          short_description: string | null
+          status: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          youtube_url: string
+          youtube_video_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          episode_number: number
+          full_description?: string | null
+          guest_name?: string | null
+          id?: string
+          published_at?: string | null
+          short_description?: string | null
+          status?: string
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          youtube_url: string
+          youtube_video_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          episode_number?: number
+          full_description?: string | null
+          guest_name?: string | null
+          id?: string
+          published_at?: string | null
+          short_description?: string | null
+          status?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          youtube_url?: string
+          youtube_video_id?: string
+        }
+        Relationships: []
+      }
       mmpay_links: {
         Row: {
           active: boolean
@@ -3959,6 +4013,7 @@ export type Database = {
           id: string
           kind: string
           live_id: string | null
+          mmcast_episode_id: string | null
           post_id: string | null
           push_attempts: number
           push_error: string | null
@@ -3977,6 +4032,7 @@ export type Database = {
           id?: string
           kind: string
           live_id?: string | null
+          mmcast_episode_id?: string | null
           post_id?: string | null
           push_attempts?: number
           push_error?: string | null
@@ -3995,6 +4051,7 @@ export type Database = {
           id?: string
           kind?: string
           live_id?: string | null
+          mmcast_episode_id?: string | null
           post_id?: string | null
           push_attempts?: number
           push_error?: string | null
@@ -4017,6 +4074,13 @@ export type Database = {
             columns: ["live_id"]
             isOneToOne: false
             referencedRelation: "lives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_mmcast_episode_id_fkey"
+            columns: ["mmcast_episode_id"]
+            isOneToOne: false
+            referencedRelation: "mmcast_episodes"
             referencedColumns: ["id"]
           },
           {
