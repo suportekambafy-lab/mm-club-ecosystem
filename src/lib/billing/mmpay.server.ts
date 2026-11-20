@@ -311,13 +311,27 @@ export async function startMmpayCheckout(input: {
 }
 
 /** Descobre a que link pertence uma ordem Viva (página de retorno). */
-export async function resolveVivaReturn(orderCode: string): Promise<{ code: string | null }> {
+export async function resolveVivaReturn(
+  orderCode: string,
+): Promise<{ code: string | null; redirect?: string }> {
   const { data } = await supabaseAdmin
     .from("mmpay_payments")
     .select("link_id")
     .eq("stripe_session_id", `vvo_${orderCode}`)
     .maybeSingle();
-  if (!data) return { code: null };
+  if (!data) {
+    // Compras da plataforma pagas na Viva (ex.: créditos do MM Studio).
+    const { data: bp } = await supabaseAdmin
+      .from("billing_payments")
+      .select("id")
+      .eq("gateway", "viva")
+      .eq("gateway_payment_id", orderCode)
+      .maybeSingle();
+    if (!bp) return { code: null };
+    const { handleGatewayPayment } = await import("./commands.server");
+    await handleGatewayPayment("viva", orderCode).catch((e) => console.error("[viva return]", e));
+    return { code: null, redirect: "/ferramentas/studio?topup=success" };
+  }
   const { data: link } = await supabaseAdmin.from("mmpay_links").select("code").eq("id", data.link_id).maybeSingle();
   return { code: link?.code ?? null };
 }

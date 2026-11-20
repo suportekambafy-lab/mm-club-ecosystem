@@ -29,6 +29,10 @@ function VivaReturn() {
     if (!s || !/^[0-9]{8,24}$/.test(s)) return setError(true);
     resolveVivaReturn({ data: { orderCode: s } })
       .then((r) => {
+        if (r.redirect) {
+          window.location.replace(r.redirect);
+          return;
+        }
         if (!r.code) return setError(true);
         navigate({ to: "/pagar/$code", params: { code: r.code }, search: { session_id: `vvo_${s}` }, replace: true });
       })

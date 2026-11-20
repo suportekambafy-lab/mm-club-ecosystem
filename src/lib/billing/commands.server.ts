@@ -75,6 +75,8 @@ export type StartCheckoutInput = {
   origin: string;
   successPath?: string;
   couponCode?: string | null;
+  /** "viva" para compras avulsas pagas na Viva.com; omisso = gateway predefinido. */
+  gateway?: "viva";
 };
 
 export async function startCheckout(input: StartCheckoutInput): Promise<{
@@ -153,8 +155,11 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
     email: input.email,
   });
 
-  const gw = getGateway();
   const recurring = price.interval !== "one_time" && price.interval !== "lifetime";
+  if (input.gateway === "viva" && recurring) {
+    throw new Error("A Viva.com só está disponível para compras avulsas.");
+  }
+  const gw = getGateway(input.gateway === "viva" ? "viva" : undefined);
   const successPath =
     input.successPath ??
     (price.product.kind === "credit_pack"
@@ -217,6 +222,9 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
     metadata: {
       priceSlug: price.slug,
       recurring,
+      ...(gw.name === "viva"
+        ? { userId: input.userId, priceId: price.id, productId: price.product.id, kind: price.product.kind }
+        : {}),
       ...(settlingSubscriptionId ? { purpose: "settle_debt" } : {}),
     } as never,
   });
@@ -245,7 +253,11 @@ export async function handleGatewayPayment(
     .eq("gateway_payment_id", payment.id)
     .maybeSingle();
 
-  const meta = payment.metadata ?? {};
+  // Gateways sem metadados próprios (Viva) mantêm os que guardámos no checkout.
+  const meta = {
+    ...((existing?.metadata as Record<string, unknown> | null) ?? {}),
+    ...(payment.metadata ?? {}),
+  };
   let userId =
     (meta.userId as string | undefined) ?? existing?.user_id ?? null;
 

@@ -155,7 +155,7 @@ export function CreditsTopupModal({ open, onClose }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleBuy = async () => {
+  const handleBuy = async (gateway?: "viva") => {
     if (!user?.id) {
       setError("Precisas de sessão iniciada para carregar créditos.");
       return;
@@ -175,6 +175,7 @@ export function CreditsTopupModal({ open, onClose }: Props) {
           priceSlug: selected.slug,
           origin: window.location.origin,
           successPath: "/ferramentas/studio?topup=success",
+          ...(gateway ? { gateway } : {}),
         },
       });
       window.location.href = res.checkoutUrl;
@@ -373,11 +374,19 @@ export function CreditsTopupModal({ open, onClose }: Props) {
 
                   <button
                     type="button"
-                    onClick={handleBuy}
+                    onClick={() => handleBuy()}
                     disabled={pending}
                     className="inline-flex w-full items-center justify-center rounded-2xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground transition hover:brightness-110 disabled:opacity-60"
                   >
                     {pending ? "A abrir checkout…" : `Carregar ${priceLabel(selected)}`}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleBuy("viva")}
+                    disabled={pending}
+                    className="mt-2 inline-flex w-full items-center justify-center rounded-2xl border border-[color:var(--hairline)] bg-background/40 px-4 py-3.5 text-sm font-semibold text-foreground transition hover:border-primary/50 disabled:opacity-60"
+                  >
+                    Pagar com Viva.com (cartão ou MB WAY)
                   </button>
                 </>
               )}

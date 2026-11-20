@@ -1,5 +1,6 @@
 import { mollieGateway } from "./mollie.server";
 import { paddleGateway } from "./paddle.server";
+import { vivaGateway } from "./viva.server";
 import { adyenGateway, stripeGateway } from "./stubs.server";
 import type { PaymentGateway } from "./types";
 
@@ -8,6 +9,7 @@ const GATEWAYS: Record<string, PaymentGateway> = {
   stripe: stripeGateway,
   paddle: paddleGateway,
   adyen: adyenGateway,
+  viva: vivaGateway,
 };
 
 /**

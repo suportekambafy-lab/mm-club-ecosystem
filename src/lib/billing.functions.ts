@@ -59,6 +59,7 @@ export const startCheckout = createServerFn({ method: "POST" })
         origin: z.string().url(),
         successPath: z.string().max(200).optional(),
         couponCode: z.string().max(60).nullable().optional(),
+        gateway: z.enum(["viva"]).optional(),
       })
       .parse(input),
   )
@@ -73,6 +74,7 @@ export const startCheckout = createServerFn({ method: "POST" })
       origin: data.origin,
       successPath: data.successPath,
       couponCode: data.couponCode ?? null,
+      ...(data.gateway ? { gateway: data.gateway } : {}),
     });
     return { checkoutUrl };
   });
