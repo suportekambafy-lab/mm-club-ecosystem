@@ -374,20 +374,17 @@ export function CreditsTopupModal({ open, onClose }: Props) {
 
                   <button
                     type="button"
-                    onClick={() => handleBuy()}
+                    onClick={() => handleBuy("viva")}
                     disabled={pending}
                     className="inline-flex w-full items-center justify-center rounded-2xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground transition hover:brightness-110 disabled:opacity-60"
                   >
-                    {pending ? "A abrir checkout…" : `Carregar ${priceLabel(selected)}`}
+                    {pending
+                      ? "A abrir checkout…"
+                      : `Pagar ${priceLabel(selected)} · Viva.com`}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => handleBuy("viva")}
-                    disabled={pending}
-                    className="mt-2 inline-flex w-full items-center justify-center rounded-2xl border border-[color:var(--hairline)] bg-background/40 px-4 py-3.5 text-sm font-semibold text-foreground transition hover:border-primary/50 disabled:opacity-60"
-                  >
-                    Pagar com Viva.com (cartão ou MB WAY)
-                  </button>
+                  <p className="mt-2 text-center text-[11px] text-muted-foreground">
+                    Paga com cartão ou MB WAY, em segurança pela Viva.com.
+                  </p>
                 </>
               )}
 
