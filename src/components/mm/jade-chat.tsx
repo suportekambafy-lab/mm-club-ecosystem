@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUp, Square, Mic, Loader2, Phone, Copy, Check } from "lucide-react";
+import { ArrowUp, Square, Mic, Loader2, Phone, Copy, Check, LifeBuoy } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import ReactMarkdown from "react-markdown";
@@ -186,6 +187,15 @@ export function JadeChat({
           <p className="text-xs text-muted-foreground">Marca, marketing, vendas e escala.</p>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            to="/ajuda"
+            aria-label="Centro de Ajuda"
+            title="Centro de Ajuda"
+            className="inline-flex h-9 items-center gap-2 rounded-full border border-border px-3 text-xs font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+          >
+            <LifeBuoy className="h-4 w-4" />
+            <span className="hidden sm:inline">Centro de Ajuda</span>
+          </Link>
           <button
             onClick={() => setCallOpen(true)}
             aria-label="Chamada"
