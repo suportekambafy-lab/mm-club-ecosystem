@@ -1,0 +1,5 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "rm -f bun.lock && bun install --registry https://registry.npmjs.org",
+  "buildCommand": "bun run build"
+}

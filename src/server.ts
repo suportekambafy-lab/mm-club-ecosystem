@@ -1,4 +1,7 @@
 import "./lib/error-capture";
+import { installOutboundShim } from "./lib/outbound-shim.server";
+
+installOutboundShim();
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";

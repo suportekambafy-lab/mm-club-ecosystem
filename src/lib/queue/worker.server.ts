@@ -32,6 +32,11 @@ export type DrainResult = { processed: number; failed: number };
 
 /** Claims and runs up to `limit` due jobs. Safe to call concurrently. */
 export async function drainQueue(limit = 25): Promise<DrainResult> {
+  // Test deployments (e.g. a copy of production data) must never run real jobs.
+  if (process.env.QUEUE_DISABLED === "1") {
+    console.warn("[queue] QUEUE_DISABLED=1, not draining");
+    return { processed: 0, failed: 0 };
+  }
   const nowIso = new Date().toISOString();
 
   const { data: candidates } = await supabaseAdmin

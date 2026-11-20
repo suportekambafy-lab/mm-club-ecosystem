@@ -4,7 +4,8 @@
  * cujo URL de retorno aponta para /pagar/retorno. Recorrência: a ordem inicial é criada com
  * AllowRecurring e as cobranças seguintes usam o TransactionId do primeiro pagamento.
  */
-const WWW = "https://www.vivapayments.com";
+// VIVA_ENV=demo points at Viva's demo environment (test credentials); anything else is live.
+const WWW = process.env.VIVA_ENV === "demo" ? "https://demo.vivapayments.com" : "https://www.vivapayments.com";
 
 function env(name: string): string {
   const v = process.env[name];
