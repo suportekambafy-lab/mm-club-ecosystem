@@ -220,7 +220,7 @@ export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
 
-type NavTo = "/dashboard" | "/academia" | "/certificados" | "/jade" | "/ferramentas" | "/lives" | "/mmcast" | "/comunidade" | "/shorts" | "/eventos" | "/perfil" | "/codigo" | "/ajuda" | "/parceiros";
+type NavTo = "/dashboard" | "/academia" | "/certificados" | "/jade" | "/ferramentas" | "/lives" | "/mmcast" | "/comunidade" | "/shorts" | "/eventos" | "/perfil" | "/codigo" | "/ajuda" | "/parceiros" | "/servicos";
 type NavItem = {
   to: NavTo;
   label: string;
@@ -240,6 +240,7 @@ const navItems: NavItem[] = [
   { to: "/comunidade", label: "Comunidade", icon: Users },
   { to: "/shorts", label: "MM Shorts", icon: Clapperboard },
   { to: "/ferramentas", label: "Ferramentas", icon: Wrench },
+  { to: "/servicos", label: "Serviços individuais", icon: ShoppingBag, isNew: true },
   { to: "/eventos", label: "Eventos", icon: CalendarDays, soon: true },
   { to: "/certificados", label: "Certificados", icon: Award },
   { to: "/codigo", label: "Código do Clube", icon: ShieldCheck },

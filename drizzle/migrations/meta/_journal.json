@@ -218,6 +218,13 @@
       "when": 1795185283476,
       "tag": "0030_mmpay_remove_klarna",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1795185690087,
+      "tag": "0031_service_applications",
+      "breakpoints": true
     }
   ]
 }

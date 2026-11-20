@@ -5020,6 +5020,42 @@ export type Database = {
         }
         Relationships: []
       }
+      service_applications: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          message: string | null
+          phone: string
+          service: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          message?: string | null
+          phone: string
+          service: string
+          status?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          message?: string | null
+          phone?: string
+          service?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       support_actions: {
         Row: {
           action: string

@@ -38,6 +38,7 @@ import { Route as AppLivesRouteImport } from './routes/_app.lives'
 import { Route as AppMmcastRouteImport } from './routes/_app.mmcast'
 import { Route as AppParceirosRouteImport } from './routes/_app.parceiros'
 import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
+import { Route as AppServicosRouteImport } from './routes/_app.servicos'
 import { Route as AppShortsRouteImport } from './routes/_app.shorts'
 import { Route as AppSubscricaoRouteImport } from './routes/_app.subscricao'
 import { Route as AuthenticatedComercialRouteImport } from './routes/_authenticated/comercial'
@@ -301,6 +302,11 @@ const AppParceirosRoute = AppParceirosRouteImport.update({
 const AppPerfilRoute = AppPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppServicosRoute = AppServicosRouteImport.update({
+  id: '/servicos',
+  path: '/servicos',
   getParentRoute: () => AppRoute,
 } as any)
 const AppShortsRoute = AppShortsRouteImport.update({
@@ -995,6 +1001,7 @@ export interface FileRoutesByFullPath {
   '/mmcast': typeof AppMmcastRoute
   '/parceiros': typeof AppParceirosRoute
   '/perfil': typeof AppPerfilRoute
+  '/servicos': typeof AppServicosRoute
   '/shorts': typeof AppShortsRoute
   '/subscricao': typeof AppSubscricaoRoute
   '/comercial': typeof AuthenticatedComercialRouteWithChildren
@@ -1141,6 +1148,7 @@ export interface FileRoutesByTo {
   '/mmcast': typeof AppMmcastRoute
   '/parceiros': typeof AppParceirosRoute
   '/perfil': typeof AppPerfilRoute
+  '/servicos': typeof AppServicosRoute
   '/shorts': typeof AppShortsRoute
   '/subscricao': typeof AppSubscricaoRoute
   '/admin/aplicacoes': typeof AdminAplicacoesRoute
@@ -1289,6 +1297,7 @@ export interface FileRoutesById {
   '/_app/mmcast': typeof AppMmcastRoute
   '/_app/parceiros': typeof AppParceirosRoute
   '/_app/perfil': typeof AppPerfilRoute
+  '/_app/servicos': typeof AppServicosRoute
   '/_app/shorts': typeof AppShortsRoute
   '/_app/subscricao': typeof AppSubscricaoRoute
   '/_authenticated/comercial': typeof AuthenticatedComercialRouteWithChildren
@@ -1441,6 +1450,7 @@ export interface FileRouteTypes {
     | '/mmcast'
     | '/parceiros'
     | '/perfil'
+    | '/servicos'
     | '/shorts'
     | '/subscricao'
     | '/comercial'
@@ -1587,6 +1597,7 @@ export interface FileRouteTypes {
     | '/mmcast'
     | '/parceiros'
     | '/perfil'
+    | '/servicos'
     | '/shorts'
     | '/subscricao'
     | '/admin/aplicacoes'
@@ -1734,6 +1745,7 @@ export interface FileRouteTypes {
     | '/_app/mmcast'
     | '/_app/parceiros'
     | '/_app/perfil'
+    | '/_app/servicos'
     | '/_app/shorts'
     | '/_app/subscricao'
     | '/_authenticated/comercial'
@@ -2127,6 +2139,13 @@ declare module '@tanstack/react-router' {
       path: '/perfil'
       fullPath: '/perfil'
       preLoaderRoute: typeof AppPerfilRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/servicos': {
+      id: '/_app/servicos'
+      path: '/servicos'
+      fullPath: '/servicos'
+      preLoaderRoute: typeof AppServicosRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/shorts': {
@@ -3135,6 +3154,7 @@ interface AppRouteChildren {
   AppMmcastRoute: typeof AppMmcastRoute
   AppParceirosRoute: typeof AppParceirosRoute
   AppPerfilRoute: typeof AppPerfilRoute
+  AppServicosRoute: typeof AppServicosRoute
   AppShortsRoute: typeof AppShortsRoute
   AppSubscricaoRoute: typeof AppSubscricaoRoute
   AppAjudaSlugRoute: typeof AppAjudaSlugRoute
@@ -3159,6 +3179,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMmcastRoute: AppMmcastRoute,
   AppParceirosRoute: AppParceirosRoute,
   AppPerfilRoute: AppPerfilRoute,
+  AppServicosRoute: AppServicosRoute,
   AppShortsRoute: AppShortsRoute,
   AppSubscricaoRoute: AppSubscricaoRoute,
   AppAjudaSlugRoute: AppAjudaSlugRoute,
