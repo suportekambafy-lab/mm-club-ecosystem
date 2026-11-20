@@ -48,7 +48,7 @@ function MmpayAdminPage() {
   const [amountEur, setAmountEur] = useState("");
   const [description, setDescription] = useState("");
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
-  const [methods, setMethods] = useState<MmpayMethod[]>(["card", "mb_way", "klarna"]);
+  const [methods, setMethods] = useState<MmpayMethod[]>(["card", "mb_way"]);
   const [uploading, setUploading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -70,7 +70,7 @@ function MmpayAdminPage() {
     setAmountEur("");
     setDescription("");
     setCoverUrl(null);
-    setMethods(["card", "mb_way", "klarna"]);
+    setMethods(["card", "mb_way"]);
     setBillingType("one_time");
     setBillingInterval("");
     setIntervalCount("");
@@ -228,7 +228,7 @@ function MmpayAdminPage() {
     setTitle(link.title);
     setDescription(link.description ?? "");
     setCoverUrl(link.coverUrl);
-    setMethods(link.billing.type === "subscription" ? ["card", "mb_way", "klarna"] : (link.paymentMethods ?? ["card", "mb_way", "klarna"]));
+    setMethods(link.billing.type === "subscription" ? ["card"] : (link.paymentMethods ?? ["card", "mb_way"]));
     setAmountEur(String(formAmount(link) / 100).replace(".", ","));
     setFormOpen(true);
     setTimeout(() => document.getElementById("mmpay-title")?.focus({ preventScroll: true }), 300);
@@ -240,7 +240,7 @@ function MmpayAdminPage() {
     setTitle(`${link.title} (cópia)`);
     setDescription(link.description ?? "");
     setCoverUrl(link.coverUrl);
-    setMethods(link.billing.type === "subscription" ? ["card", "mb_way", "klarna"] : (link.paymentMethods ?? ["card", "mb_way", "klarna"]));
+    setMethods(link.billing.type === "subscription" ? ["card"] : (link.paymentMethods ?? ["card", "mb_way"]));
     setAmountEur(String(formAmount(link) / 100).replace(".", ","));
     setFormOpen(true);
     setTimeout(() => document.getElementById("mmpay-price")?.focus(), 300);
@@ -268,7 +268,7 @@ function MmpayAdminPage() {
           <h1 className="commercial-page-heading">MMpay</h1>
           <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
             Cria um link de venda com título, capa, descrição e preço. O cliente escolhe como pagar: cartão
-            (com Apple Pay e Google Pay), MB WAY ou Klarna em 3 vezes — numa página com a nossa marca.
+            (com Apple Pay e Google Pay) ou MB WAY — numa página com a nossa marca.
           </p>
         </div>
         <Button
@@ -438,7 +438,7 @@ function MmpayAdminPage() {
                 <p className="mt-2 text-sm text-muted-foreground">Assinaturas aceitam apenas cartão.</p>
               ) : (
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {([["card", "Cartão / Apple Pay / Google Pay"], ["mb_way", "MB WAY"], ["klarna", "Klarna"]] as const).map(([id, label]) => {
+                  {([["card", "Cartão / Apple Pay / Google Pay"], ["mb_way", "MB WAY"]] as const).map(([id, label]) => {
                     const on = methods.includes(id);
                     return (
                       <button key={id} type="button" aria-pressed={on}

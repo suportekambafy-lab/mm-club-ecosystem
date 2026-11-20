@@ -211,6 +211,13 @@
       "when": 1794510360035,
       "tag": "0029_mmcast_maxres_thumbs",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1795185283476,
+      "tag": "0030_mmpay_remove_klarna",
+      "breakpoints": true
     }
   ]
 }

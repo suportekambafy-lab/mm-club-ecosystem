@@ -4,18 +4,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, CheckCircle2, Loader2, Lock, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import {
-  confirmKlarnaMmpayOrder,
-  confirmMmpayPayment,
-  getMmpayLink,
-  startKlarnaMmpayPayment,
-  startMmpayCheckout,
-} from "@/lib/mmpay.functions";
+import { confirmMmpayPayment, getMmpayLink, startMmpayCheckout } from "@/lib/mmpay.functions";
 import { installmentAmounts, intervalLabel } from "@/lib/mmpay/subscription-rules";
 import { formatMoney } from "@/lib/billing/types";
 import { trackMeta } from "@/lib/meta/pixel";
 import { MMLogo } from "@/components/mm/logo";
-import { CardBrandsLogo, KlarnaLogo, MbWayLogo } from "@/components/mmpay/payment-logos";
+import { CardBrandsLogo, MbWayLogo } from "@/components/mmpay/payment-logos";
 
 export const Route = createFileRoute("/pagar/$code")({
   validateSearch: z.object({ session_id: z.string().optional() }),
@@ -33,7 +27,7 @@ export const Route = createFileRoute("/pagar/$code")({
   component: MmpayPage,
 });
 
-type PayMethod = "card" | "mb_way" | "klarna";
+type PayMethod = "card" | "mb_way";
 
 const METHOD_OPTIONS: Array<{
   id: PayMethod;
@@ -43,21 +37,7 @@ const METHOD_OPTIONS: Array<{
 }> = [
   { id: "card", label: "Cartão", hint: "Visa, Mastercard, Apple Pay e Google Pay", Logo: CardBrandsLogo },
   { id: "mb_way", label: "MB WAY", hint: "Confirma na app MB WAY", Logo: MbWayLogo },
-  { id: "klarna", label: "Klarna", hint: "Paga em 3 vezes sem juros", Logo: KlarnaLogo },
 ];
-
-async function loadKlarnaSdk(): Promise<any> {
-  const w = window as any;
-  if (w.Klarna) return w.Klarna;
-  await new Promise<void>((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = "https://x.klarnacdn.net/kp/lib/v1/api.js";
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error("Não foi possível carregar o Klarna. Tenta novamente."));
-    document.head.appendChild(s);
-  });
-  return (window as any).Klarna;
-}
 
 function MmpayPage() {
   const { code } = useParams({ from: "/pagar/$code" });
@@ -68,8 +48,6 @@ function MmpayPage() {
   const [method, setMethod] = useState<PayMethod>("card");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [klarna, setKlarna] = useState<{ clientToken: string; sessionRef: string } | null>(null);
-  const [klarnaPaid, setKlarnaPaid] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["mmpay-link", code],
@@ -88,11 +66,11 @@ function MmpayPage() {
 
   useEffect(() => { if (allowedMethods.length && !allowedMethods.includes(method)) setMethod(allowedMethods[0]); }, [allowedMethods.join(","), method]);
   const metaData = link ? { value: link.amountCents / 100, currency: (link.currency || "eur").toUpperCase(), content_name: link.title, content_ids: [code], content_type: "product" } : null;
-  const isPaid = klarnaPaid || Boolean(session_id && confirmQuery.data?.paid);
+  const isPaid = Boolean(session_id && confirmQuery.data?.paid);
   useEffect(() => { if (metaData && !session_id) void trackMeta("ViewContent", metaData); }, [link?.title]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!isPaid || !metaData) return;
-    const key = `mm.purchase.${session_id ?? code + "-klarna"}`;
+    const key = `mm.purchase.${session_id ?? code}`;
     try { if (localStorage.getItem(key)) return; localStorage.setItem(key, "1"); } catch { /* noop */ }
     void trackMeta("Purchase", metaData, { email: email || null, phone: phone || null });
   }, [isPaid, link?.title]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -106,27 +84,6 @@ function MmpayPage() {
       void trackMeta("InitiateCheckout", metaData, { email: email.trim(), phone: phone.trim(), firstName: fn || null, lastName: rest.pop() ?? null });
     }
     try {
-      if (method === "klarna") {
-        const res = await startKlarnaMmpayPayment({
-          data: { code, email: email.trim(), name: name.trim(), phone: phone.trim() },
-        });
-        const Klarna = await loadKlarnaSdk();
-        Klarna.Payments.init({ client_token: res.clientToken });
-        setKlarna(res);
-        Klarna.Payments.load(
-          { container: "#klarna-widget", payment_method_category: "pay_later" },
-          {},
-          (r: { show_form?: boolean }) => {
-            if (r && r.show_form === false) {
-              setError("O Klarna não está disponível para este pagamento. Experimenta cartão ou MB WAY.");
-              setPending(false);
-              return;
-            }
-            authorizeKlarna(res);
-          },
-        );
-        return;
-      }
       const res = await startMmpayCheckout({
         data: { code, email: email.trim(), name: name.trim(), phone: phone.trim(), origin: window.location.origin, method },
       });
@@ -135,31 +92,6 @@ function MmpayPage() {
       setError(err instanceof Error ? err.message : "Não foi possível abrir o pagamento. Tenta novamente.");
       setPending(false);
     }
-  };
-
-  const authorizeKlarna = (klarna: { clientToken: string; sessionRef: string }) => {
-    const Klarna = (window as any).Klarna;
-    Klarna.Payments.authorize(
-      { payment_method_category: "pay_later" },
-      {},
-      async (res: { approved?: boolean; authorization_token?: string }) => {
-        if (!res.approved || !res.authorization_token) {
-          setError("O Klarna não aprovou este pagamento. Experimenta outro método.");
-          setPending(false);
-          return;
-        }
-        try {
-          const done = await confirmKlarnaMmpayOrder({
-            data: { code, sessionRef: klarna.sessionRef, authorizationToken: res.authorization_token },
-          });
-          if (done.paid) setKlarnaPaid(true);
-          else setError("Não foi possível concluir o pagamento. Fala com a equipa MM Club.");
-        } catch (err) {
-          setError(err instanceof Error ? err.message : "Não foi possível concluir o pagamento.");
-        }
-        setPending(false);
-      },
-    );
   };
 
   return (
@@ -180,7 +112,7 @@ function MmpayPage() {
 
         {isLoading || (session_id && confirmQuery.isLoading) ? (
           <div className="h-96 animate-pulse rounded-3xl bg-surface-1 ring-1 ring-border" />
-        ) : klarnaPaid || (session_id && confirmQuery.data?.paid) ? (
+        ) : session_id && confirmQuery.data?.paid ? (
           <div className="rounded-3xl bg-surface-1 p-8 text-center ring-1 ring-border">
             <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
             <h1 className="mt-4 font-display text-2xl tracking-tight text-foreground">Pagamento confirmado</h1>
@@ -305,7 +237,7 @@ function MmpayPage() {
               <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Método de pagamento
               </p>
-              <div className={`mx-auto mt-2 grid w-full max-w-[17rem] gap-2 ${link?.billing.type === "subscription" ? "grid-cols-1" : "grid-cols-3"}`}>
+              <div className={`mx-auto mt-2 grid w-full max-w-[17rem] gap-2 ${link?.billing.type === "subscription" ? "grid-cols-1" : "grid-cols-2"}`}>
                 {METHOD_OPTIONS.filter((o) => (link?.paymentMethods ?? ["card"]).includes(o.id)).map((opt, i) => {
                   const Logo = opt.Logo;
                   const selected = method === opt.id;
@@ -320,7 +252,6 @@ function MmpayPage() {
                       whileTap={{ scale: 0.96 }}
                       onClick={() => {
                         setMethod(opt.id);
-                        setKlarna(null);
                         setError(null);
                       }}
                       title={opt.hint}
@@ -345,19 +276,9 @@ function MmpayPage() {
                         <Logo className="h-9 w-full" />
                       </motion.span>
                       <span className="relative mt-1 flex h-[2.1rem] w-full flex-col items-center justify-center gap-0.5">
-                        {opt.id === "klarna" && link ? (
-                          <motion.span
-                            className="rounded-full bg-[#FFB3C7] px-1.5 py-0.5 text-[10px] font-bold text-[#17120F]"
-                            animate={{ scale: [1, 1.08, 1] }}
-                            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                          >
-                            3x {formatMoney(Math.ceil(link.amountCents / 3), link.currency)}
-                          </motion.span>
-                        ) : (
-                          <span className="w-full truncate text-center text-[11px] font-semibold leading-tight">
-                            {opt.label}
-                          </span>
-                        )}
+                        <span className="w-full truncate text-center text-[11px] font-semibold leading-tight">
+                          {opt.label}
+                        </span>
                       </span>
                     </motion.button>
                   );
@@ -372,13 +293,7 @@ function MmpayPage() {
                   transition={{ duration: 0.25 }}
                   className="mt-3 text-center text-xs text-muted-foreground"
                 >
-                  {method === "klarna" && link ? (
-                    <>
-                      Paga em <span className="font-semibold text-foreground">3x de {formatMoney(Math.ceil(link.amountCents / 3), link.currency)}</span> sem juros com Klarna
-                    </>
-                  ) : (
-                    METHOD_OPTIONS.find((o) => o.id === method)?.hint
-                  )}
+                  {METHOD_OPTIONS.find((o) => o.id === method)?.hint}
                 </motion.p>
               </AnimatePresence>
 
@@ -388,7 +303,6 @@ function MmpayPage() {
                 </p>
               ) : null}
 
-              <div id="klarna-widget" aria-hidden className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0" />
               {(
                 <button
                   type="submit"
@@ -415,7 +329,7 @@ function MmpayPage() {
               <div className="mt-4 border-t border-border pt-3">
                 <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
                   <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                  Pagamento seguro processado pela Viva.com ou Klarna. O MM Club nunca vê os dados do teu cartão.
+                  Pagamento seguro processado pela Viva.com. O MM Club nunca vê os dados do teu cartão.
                 </p>
               </div>
             </div>
