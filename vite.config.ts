@@ -11,6 +11,9 @@ import { fileURLToPath } from "node:url";
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  // Node hosts (e.g. Vercel) resolve `tslib` to modules/index.js, which the
+  // default trace omits; trace the whole package so SSR can load it.
+  nitro: { traceDeps: ["tslib*"] },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
