@@ -103,11 +103,21 @@ export async function createDirectUpload(meta: Record<string, string>): Promise<
  * Requires a Stream Signing Key (PEM private key + key ID).
  */
 export async function signPlaybackToken(videoUid: string, opts: { ttlSeconds?: number } = {}): Promise<string> {
-  const kid = requireEnv("CLOUDFLARE_STREAM_SIGNING_KEY_ID");
-  const key = await importStreamSigningKey(requireEnv("CLOUDFLARE_STREAM_SIGNING_KEY_PEM"));
-
   const now = Math.floor(Date.now() / 1000);
   const exp = now + (opts.ttlSeconds ?? 7200);
+
+  // Without a signing key, ask Cloudflare to mint the token with the API token.
+  // One extra API call per playback, but no private key has to be stored.
+  if (!process.env.CLOUDFLARE_STREAM_SIGNING_KEY_ID || !process.env.CLOUDFLARE_STREAM_SIGNING_KEY_PEM) {
+    const result = await cfFetch<{ token: string }>(`/stream/${encodeURIComponent(videoUid)}/token`, {
+      method: "POST",
+      body: JSON.stringify({ exp, nbf: now }),
+    });
+    return result.token;
+  }
+
+  const kid = requireEnv("CLOUDFLARE_STREAM_SIGNING_KEY_ID");
+  const key = await importStreamSigningKey(requireEnv("CLOUDFLARE_STREAM_SIGNING_KEY_PEM"));
 
   return await new SignJWT({ sub: videoUid, kid, exp, nbf: now })
     .setProtectedHeader({ alg: "RS256", kid })
