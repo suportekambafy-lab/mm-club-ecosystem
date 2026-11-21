@@ -17,13 +17,27 @@ function merchantAuth(): string {
   return `Basic ${btoa(`${env("VIVA_MERCHANT_ID")}:${env("VIVA_API_KEY")}`)}`;
 }
 
+/**
+ * Viva order codes are 16-digit integers and can exceed Number.MAX_SAFE_INTEGER, where
+ * JSON.parse silently rounds them (an odd code becomes a different, non-existent order).
+ * Quote long integers before parsing so they survive as strings.
+ */
+export function parseVivaJson(text: string): any {
+  if (!text) return null;
+  try {
+    return JSON.parse(text.replace(/("[A-Za-z_]+"\s*:\s*)(\d{16,})(?=\s*[,}\]])/g, '$1"$2"'));
+  } catch {
+    return null;
+  }
+}
+
 async function viva(method: "GET" | "POST", path: string, body?: unknown): Promise<any> {
   const res = await fetch(`${WWW}${path}`, {
     method,
     headers: { Authorization: merchantAuth(), "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
   });
-  const json: any = await res.json().catch(() => null);
+  const json: any = parseVivaJson(await res.text().catch(() => ""));
   if (!res.ok || (json && json.ErrorCode && json.ErrorCode !== 0)) {
     console.error("[viva]", method, path.split("?")[0], res.status, json?.ErrorText);
     throw new Error(json?.ErrorText || `Viva.com ${res.status}`);

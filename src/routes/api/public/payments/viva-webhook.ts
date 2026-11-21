@@ -19,7 +19,10 @@ export const Route = createFileRoute("/api/public/payments/viva-webhook")({
       POST: async ({ request }) => {
         let orderCode: string | null = null;
         try {
-          const body: any = await request.json();
+          // Order codes can exceed Number.MAX_SAFE_INTEGER; parse them without rounding.
+          const { parseVivaJson } = await import("@/lib/billing/viva.server");
+          const body: any = parseVivaJson(await request.text());
+          if (!body) return new Response("bad request", { status: 400 });
           const raw = body?.EventData?.OrderCode;
           orderCode = raw != null && /^[0-9]{8,24}$/.test(String(raw)) ? String(raw) : null;
         } catch {
