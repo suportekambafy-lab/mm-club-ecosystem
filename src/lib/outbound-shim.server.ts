@@ -5,7 +5,9 @@
  *
  * OFF_LOVABLE=1
  *   Rewrites calls to Lovable-only gateways to the providers' own APIs:
- *   - ai.gateway.lovable.dev/v1/*            -> AI_GATEWAY_BASE_URL/* (Bearer AI_GATEWAY_API_KEY)
+ *   - ai.gateway.lovable.dev/v1/*            -> AI_GATEWAY_BASE_URL/* (Bearer AI_GATEWAY_API_KEY),
+ *     or, with AI_PROVIDER=openai (default when only OPENAI_API_KEY is set), straight to
+ *     OpenAI, and to Gemini for /v1/videos (see ai-direct.server.ts)
  *   - connector-gateway.lovable.dev/resend/* -> api.resend.com/*      (Bearer X-Connection-Api-Key)
  *   - connector-gateway.lovable.dev/paddle/* -> (sandbox-)api.paddle.com/*
  *   - connector-gateway.lovable.dev/firecrawl/* -> api.firecrawl.dev/*
@@ -17,6 +19,8 @@
  *   everything else (old app, CRM, Meta CAPI, partner webhooks...) is blocked with a 503.
  *   Extra hosts: SAFE_MODE_ALLOW_HOSTS="host1,host2".
  */
+
+import { directAiEnabled, handleDirectAi } from "./ai-direct.server";
 
 const LOVABLE_AI = "ai.gateway.lovable.dev";
 const LOVABLE_CONNECTORS = "connector-gateway.lovable.dev";
@@ -38,6 +42,9 @@ const SAFE_BASE_ALLOW = [
   "sandbox-api.paddle.com",
   "api.firecrawl.dev",
   "r.jina.ai",
+  // AI providers: they never message students or move money.
+  "api.openai.com",
+  "generativelanguage.googleapis.com",
 ];
 
 function env(name: string): string | undefined {
@@ -153,6 +160,9 @@ export function installOutboundShim(): void {
     const request = new Request(input, init);
     let url = new URL(request.url);
     let headers = new Headers(request.headers);
+
+    // AI straight from OpenAI/Gemini instead of a gateway (AI_PROVIDER=openai, or no gateway key).
+    if (url.host === LOVABLE_AI && directAiEnabled()) return handleDirectAi(original, request, url);
 
     const rewritten = rewriteLovable(url, headers);
     if (rewritten) {

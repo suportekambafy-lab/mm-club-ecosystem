@@ -32,6 +32,8 @@ start with `VITE_`.
 | `PUBLIC_APP_URL` | server | the deployment URL |
 | `LOVABLE_API_KEY` | server | any placeholder |
 | `AI_GATEWAY_API_KEY`, `AI_GATEWAY_BASE_URL` | server | default base `https://ai-gateway.vercel.sh/v1` |
+| `OPENAI_API_KEY` | server | when set without `AI_GATEWAY_API_KEY` (or with `AI_PROVIDER=openai`), chat, embeddings, images and transcription go straight to OpenAI. Optional model overrides: `OPENAI_CHAT_MODEL` (default `gpt-4.1-mini`), `OPENAI_CHAT_MODEL_LITE` (`gpt-4.1-nano`), `OPENAI_IMAGE_MODEL`, `OPENAI_IMAGE_FALLBACK_MODEL` (`gpt-image-1`) |
+| `GEMINI_API_KEY` | server | MM Studio video generation (Veo) in direct mode. Optional `GEMINI_VIDEO_MODEL` (default `veo-3.1-fast-generate-preview`) |
 | `RESEND_API_KEY` | server | |
 | `VIVA_MERCHANT_ID`, `VIVA_API_KEY`, `VIVA_SOURCE_CODE`, `VIVA_ENV` | server | demo credentials on test |
 | `PADDLE_SANDBOX_API_KEY`, `PADDLE_LIVE_API_KEY`, `VITE_PAYMENTS_CLIENT_TOKEN` | server / build | `test_` token selects sandbox |
