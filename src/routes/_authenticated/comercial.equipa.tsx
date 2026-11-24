@@ -37,8 +37,8 @@ function CommercialTeam() {
   const refresh = () => qc.invalidateQueries({ queryKey: ["commercial-team"] });
 
   async function remove(m: Member) {
-    if (!confirm(`Remover ${m.name ?? m.email} da equipa comercial? A conta no MM Club mantém-se.`)) return;
-    try { await removeCommercialTeamMember({ data: { userId: m.id } }); toast.success("Removido da equipa."); refresh(); } catch (e) { toast.error((e as Error).message); }
+    if (!confirm(`Remover ${m.name ?? m.email} do sistema? Deixa de conseguir entrar no comercial e no MM Club.`)) return;
+    try { await removeCommercialTeamMember({ data: { userId: m.id } }); toast.success("Colaborador removido e bloqueado."); refresh(); } catch (e) { toast.error((e as Error).message); }
   }
 
   return <div className="commercial-enter">

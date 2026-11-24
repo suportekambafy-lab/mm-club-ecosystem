@@ -82,7 +82,15 @@ export const removeCommercialTeamMember = createServerFn({ method: "POST" }).mid
   .inputValidator((i: unknown) => z.object({ userId: z.string().uuid() }).parse(i))
   .handler(async ({ context, data }) => {
     await assertAdmin(context as Ctx);
+    if (data.userId === context.userId) throw new Error("Não te podes remover a ti próprio.");
+    const { data: targetAdmin } = await context.supabase.rpc("has_role", { _user_id: data.userId, _role: "admin" });
+    if (targetAdmin === true) throw new Error("Não é possível remover um administrador.");
     const { error } = await context.supabase.rpc("set_commercial_role", { _user_id: data.userId, _role: "none" });
     if (error) throw new Error("Não foi possível remover.");
+    const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+    // Bloqueia o login (a conta e o histórico de vendas mantêm-se) e termina sessões ativas.
+    const { error: banErr } = await db.auth.admin.updateUserById(data.userId, { ban_duration: "876000h" });
+    if (banErr) throw new Error("Saiu da equipa, mas não foi possível bloquear o login.");
+    await db.from("entitlement_grants").update({ revoked_at: new Date().toISOString() }).eq("user_id", data.userId).is("revoked_at", null);
     return { ok: true };
   });
