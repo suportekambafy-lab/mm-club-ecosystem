@@ -152,7 +152,7 @@ type TargetConfig = {
   authorColumn: string;
 };
 
-const TARGETS: Record<ModerationKind, TargetConfig> = {
+export const MODERATION_TARGETS: Record<ModerationKind, TargetConfig> = {
   community_post: {
     table: "community_posts",
     idColumn: "id",
@@ -296,7 +296,7 @@ export async function moderateTarget(args: {
   kind: ModerationKind;
   id: string;
 }): Promise<{ removed: boolean; category: string; reason: string; sanction?: SanctionResult }> {
-  const cfg = TARGETS[args.kind];
+  const cfg = MODERATION_TARGETS[args.kind];
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
   // Lemos a linha completa: se a decisão for revertida, o conteúdo é reposto
@@ -388,7 +388,7 @@ export async function restoreModeratedContent(actionId: string): Promise<{
   if (action.action !== "remove") return { restored: false, reason: "Nada foi removido." };
   if (action.restored_at) return { restored: false, reason: "Já reposto." };
 
-  const cfg = TARGETS[action.kind as ModerationKind];
+  const cfg = MODERATION_TARGETS[action.kind as ModerationKind];
   if (!cfg) return { restored: false, reason: "Tipo desconhecido." };
 
   // Já existe (por exemplo, o membro republicou)? Marcamos como reposto.

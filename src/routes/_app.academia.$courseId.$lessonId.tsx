@@ -921,6 +921,15 @@ function TrackedVideoPlayer({
     // O Panda Video emite eventos próprios via postMessage (panda_timeupdate/panda_ended).
     const onPandaMessage = (event: MessageEvent) => {
       if (source.kind !== "panda") return;
+      // Só aceita mensagens do próprio leitor Panda desta aula.
+      const playerWindow = iframeRef.current?.contentWindow;
+      if (!playerWindow || event.source !== playerWindow) return;
+      try {
+        const origin = new URL(event.origin);
+        if (origin.protocol !== "https:" || !/(^|\.)pandavideo\.com(\.br)?$/.test(origin.hostname)) return;
+      } catch {
+        return;
+      }
       const raw = event.data;
       let payload: { message?: string; currentTime?: number; video?: unknown } | null = null;
       if (typeof raw === "string") {

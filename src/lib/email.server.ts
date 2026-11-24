@@ -1114,20 +1114,12 @@ export const emailTemplates = {
   }) {
     const safe = escapeHtml(opts.name);
     const author = escapeHtml(opts.authorName);
-    const raw = opts.body.trim();
-    const reply = escapeHtml(raw.length > 300 ? `${raw.slice(0, 300)}…` : raw);
-    const mine = (opts.yourComment ?? "").trim();
-    const mineHtml = mine
-      ? `<p style="font-size:13px;color:#666;margin:0 0 10px;">O teu comentário: “${escapeHtml(mine.length > 140 ? `${mine.slice(0, 140)}…` : mine)}”</p>`
-      : "";
     return {
       subject: `${opts.authorName} respondeu ao teu comentário`,
       html: layout(
         `${opts.authorName} respondeu ao teu comentário num MM Short.`,
         `<div style="font-size:12px;color:#c9a961;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">MM Shorts</div>
-         <h1 style="font-size:24px;color:#ffffff;margin:0 0 16px;font-weight:600;line-height:1.3;">${author} respondeu-te</h1>
-         ${mineHtml}
-         <div style="background:#0a0a0a;border-left:3px solid #c9a961;padding:18px 22px;margin:0 0 24px;border-radius:8px;font-size:15px;line-height:1.7;color:#e5e5e5;white-space:pre-wrap;">${reply}</div>
+         <h1 style="font-size:24px;color:#ffffff;margin:0 0 16px;font-weight:600;line-height:1.3;">${author} respondeu ao teu comentário</h1>
          <p style="font-size:15px;line-height:1.65;color:#a3a3a3;margin:0 0 28px;">Olá ${safe}, continua a conversa no MM Club.</p>
          <p style="margin:0 0 8px;">${btn("Responder →", `${APP_URL}/shorts?s=${opts.shortId}`)}</p>`,
       ),

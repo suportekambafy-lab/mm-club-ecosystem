@@ -75,7 +75,8 @@ export const joinRoom = createServerFn({ method: "POST" })
   .inputValidator((i) => z.object({ liveId: uuid, target: targetSchema }).parse(i))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { liveId, target } = data;
+    const { liveId } = data;
+    let target = data.target;
 
     // Live must exist & be reachable via RLS.
     const { data: live, error: liveErr } = await supabase
@@ -105,7 +106,22 @@ export const joinRoom = createServerFn({ method: "POST" })
     if (!me) {
       // First join: host if creator, otherwise default participant / viewer.
       const isCreator = live.created_by === userId;
-      const initialRole = isCreator ? "host" : target === "backstage" ? "speaker" : "participant";
+      // Só o anfitrião, co-anfitriões e a equipa entram como oradores;
+      // pedir "backstage" já não dá permissões de publicação.
+      const [admin, moderator, cohost] = await Promise.all([
+        supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+        supabase.rpc("has_role", { _user_id: userId, _role: "moderator" }),
+        supabase.rpc("is_live_cohost", { _live_id: liveId, _user_id: userId }),
+      ]);
+      const privileged = admin.data === true || moderator.data === true || cohost.data === true;
+      if (!isCreator && !privileged) target = "main";
+      const initialRole = isCreator
+        ? "host"
+        : cohost.data === true
+          ? "cohost"
+          : privileged && target === "backstage"
+            ? "speaker"
+            : "participant";
       const isPublisher = initialRole !== "participant";
       const { data: inserted, error: insErr } = await supabase
         .from("live_participants")

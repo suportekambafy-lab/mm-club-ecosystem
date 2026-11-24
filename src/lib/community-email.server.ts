@@ -54,6 +54,13 @@ export async function sendCommunityPostEmails(postId: string) {
   ]);
 
   const authorName = author?.display_name ?? "Um membro";
+  // Só a equipa envia o texto e a imagem do post por email; para membros o
+  // aviso é genérico (sem conteúdo escrito por eles) com link para o post.
+  const [{ data: authorAdmin }, { data: authorMod }] = await Promise.all([
+    supabaseAdmin.rpc("has_role", { _user_id: post.author_id, _role: "admin" }),
+    supabaseAdmin.rpc("has_role", { _user_id: post.author_id, _role: "moderator" }),
+  ]);
+  const authorIsStaff = authorAdmin === true || authorMod === true;
   const optedOut = await optedOutUserIds("community_posts");
   const { lapsedUserIds } = await import("@/lib/billing/lapsed-recipients.server");
   const lapsed = await lapsedUserIds();
@@ -81,8 +88,8 @@ export async function sendCommunityPostEmails(postId: string) {
       const tpl = emailTemplates.communityPost({
         name,
         authorName,
-        body: post.content ?? "",
-        imageUrl: post.image_url,
+        body: authorIsStaff ? (post.content ?? "") : "",
+        imageUrl: authorIsStaff ? post.image_url : null,
         postId: post.id,
         categoryLabel: category?.name ?? null,
         locked: lapsed.has(u.id),

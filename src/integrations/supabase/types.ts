@@ -5316,6 +5316,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_academy_viewer: { Args: { _user_id: string }; Returns: boolean }
+      is_club_viewer: { Args: { _user_id: string }; Returns: boolean }
       is_community_restricted: { Args: { _user_id: string }; Returns: boolean }
       is_live_cohost: {
         Args: { _live_id: string; _user_id: string }

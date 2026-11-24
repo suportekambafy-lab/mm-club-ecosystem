@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export interface LinkPreviewData {
   url: string;
@@ -12,7 +13,40 @@ export interface LinkPreviewData {
 }
 
 const BLOCKED_HOST =
-  /^(localhost$|127\.|10\.|0\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1\]?$|.*\.local$|.*\.internal$)/i;
+  /^(localhost$|.*\.localhost$|127\.|10\.|0\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|.*\.local$|.*\.internal$|metadata\.)/i;
+
+/** Rejeita IPs literais (IPv6 sempre; IPv4 privados via BLOCKED_HOST) e nomes sem ponto. */
+function isBlockedHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  if (h.startsWith("[") || h.includes(":")) return true;
+  if (!h.includes(".")) return true;
+  if (/^\d+$/.test(h) || /^0x/i.test(h)) return true;
+  return BLOCKED_HOST.test(h);
+}
+
+async function readCapped(res: Response, max: number): Promise<string | null> {
+  const reader = res.body?.getReader();
+  if (!reader) return null;
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > max) {
+      await reader.cancel();
+      break;
+    }
+    chunks.push(value);
+  }
+  const buf = new Uint8Array(chunks.reduce((n, c) => n + c.byteLength, 0));
+  let o = 0;
+  for (const c of chunks) {
+    buf.set(c, o);
+    o += c.byteLength;
+  }
+  return new TextDecoder().decode(buf);
+}
 
 function decodeEntities(s: string) {
   return s
@@ -52,6 +86,7 @@ function youTubeId(u: URL): string | null {
 
 /** Lê metadados Open Graph de um URL público para pré-visualização em publicações. */
 export const fetchLinkPreview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({ url: z.string().url().max(2000) }).parse(i))
   .handler(async ({ data }): Promise<LinkPreviewData | null> => {
     let u: URL;
@@ -60,8 +95,9 @@ export const fetchLinkPreview = createServerFn({ method: "GET" })
     } catch {
       return null;
     }
-    if (u.protocol !== "http:" && u.protocol !== "https:") return null;
-    if (BLOCKED_HOST.test(u.hostname)) return null;
+    if (u.protocol !== "https:" || u.username || u.password) return null;
+    if (u.port && u.port !== "443") return null;
+    if (isBlockedHost(u.hostname)) return null;
 
     const isYouTube = /(^|\.)(youtube\.com|youtu\.be)$/i.test(u.hostname);
     const ytId = isYouTube ? youTubeId(u) : null;
@@ -72,10 +108,11 @@ export const fetchLinkPreview = createServerFn({ method: "GET" })
           `https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(
             `https://www.youtube.com/watch?v=${ytId}`,
           )}`,
-          { signal: AbortSignal.timeout(8000) },
+          { signal: AbortSignal.timeout(8000), redirect: "manual" },
         );
-        if (res.ok) {
-          const j = (await res.json()) as {
+        const body = res.ok ? await readCapped(res, 64_000) : null;
+        if (body) {
+          const j = JSON.parse(body) as {
             title?: string;
             author_name?: string;
             thumbnail_url?: string;
@@ -106,7 +143,7 @@ export const fetchLinkPreview = createServerFn({ method: "GET" })
 
     try {
       const res = await fetch(u.toString(), {
-        redirect: "follow",
+        redirect: "manual",
         headers: {
           "user-agent": "Mozilla/5.0 (compatible; MMClubBot/1.0; +https://mmclub.pt)",
           accept: "text/html,application/xhtml+xml",
@@ -116,7 +153,8 @@ export const fetchLinkPreview = createServerFn({ method: "GET" })
       if (!res.ok) return null;
       const ct = res.headers.get("content-type") ?? "";
       if (!ct.includes("html")) return null;
-      const html = (await res.text()).slice(0, 400_000);
+      const html = await readCapped(res, 400_000);
+      if (!html) return null;
 
       const title =
         meta(html, ["og:title", "twitter:title"]) ??
