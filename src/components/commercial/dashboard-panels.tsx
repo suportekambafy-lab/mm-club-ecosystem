@@ -4,22 +4,14 @@ import { dailyTeamGoalsOptions, monthlyGoalOptions } from "@/lib/commercial/quer
 import { formatSaleAmount } from "@/lib/aplicacao/sale-rules";
 import { CalendarCheck, Handshake } from "lucide-react";
 
-export function RevenueInPeriod({ fromIso, toIso, label }: { fromIso: string; toIso: string; label: string }) {
-  const q = useQuery({ queryKey: ["commercial-revenue-range", fromIso, toIso], queryFn: () => revenueInRange({ data: { fromIso, toIso } }), refetchInterval: 60_000 });
-  const d = q.data;
-  const parts = [["Aplicações", d?.applicationsCents], ["MMpay", d?.mmpayCents], ["Recorrências", d?.recurringCents]] as const;
-  return <section aria-label="Faturamento no período" className="card-soft bg-card p-5">
-    <div className="flex flex-wrap items-end justify-between gap-4">
-      <div><p className="text-xs text-muted-foreground">Faturamento · {label}</p><p className="mt-2 text-3xl font-semibold tabular-nums">{q.isLoading ? "…" : formatSaleAmount(d?.totalCents ?? 0)}</p><p className="mt-1 text-xs text-muted-foreground">{d ? `${d.sales} vendas` : ""}</p></div>
-      <div className="flex gap-6">{parts.map(([l, c]) => <div key={l}><p className="text-xs text-muted-foreground">{l}</p><p className="mt-1 text-sm font-medium tabular-nums">{formatSaleAmount(c ?? 0)}</p></div>)}</div>
-    </div>
-  </section>;
-}
-
-export function RevenuePeriods() {
+export function RevenuePeriods({ range, label }: { range?: { fromIso: string; toIso: string } | null; label?: string }) {
   const { data } = useSuspenseQuery(monthlyGoalOptions);
   const p = data.periods;
-  const cards = [["Faturamento hoje", p.todayCents], ["Últimos 7 dias", p.last7DaysCents], ["Este mês", p.monthCents], ["Último mês", p.lastMonthCents]] as const;
+  const q = useQuery({ queryKey: ["commercial-revenue-range", range?.fromIso, range?.toIso], queryFn: () => revenueInRange({ data: range! }), enabled: Boolean(range), refetchInterval: 60_000 });
+  const r = q.data;
+  const cards: (readonly [string, number])[] = range
+    ? [[`Faturamento · ${label ?? ""}`, r?.totalCents ?? 0], ["Aplicações fechadas", r?.applicationsCents ?? 0], ["MMpay", r?.mmpayCents ?? 0], ["Recorrências", r?.recurringCents ?? 0]]
+    : [["Faturamento hoje", p.todayCents], ["Últimos 7 dias", p.last7DaysCents], ["Este mês", p.monthCents], ["Último mês", p.lastMonthCents]];
   return <section aria-label="Faturamento" className="commercial-stagger grid grid-cols-2 gap-4 lg:grid-cols-4">
     {cards.map(([label, cents]) => <div key={label} className="card-soft bg-card p-5"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-3 text-2xl font-semibold tabular-nums">{formatSaleAmount(cents)}</p></div>)}
   </section>;

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { commercialApplicationsOptions, dailyTeamGoalsOptions, monthlyGoalOptions } from "@/lib/commercial/queries";
-import { DailyTeamGoals, RevenueInPeriod, RevenuePeriods } from "@/components/commercial/dashboard-panels";
+import { DailyTeamGoals, RevenuePeriods } from "@/components/commercial/dashboard-panels";
 import { MonthlyGoal } from "@/components/commercial/monthly-goal";
 import { TeamProfile } from "@/components/commercial/team-profile";
 import { UpcomingCalls } from "@/components/commercial/scheduled-calls";
@@ -45,8 +45,7 @@ function CommercialHome() {
       {PERIODS.map(([k, l]) => <Button key={k} size="sm" variant={period === k ? "default" : "outline"} onClick={() => setPeriod(k)}>{l}</Button>)}
       {period === "custom" && <span className="flex items-center gap-2 text-xs"><input type="date" value={from} onChange={e => setFrom(e.target.value)} className="h-9 rounded-md border border-border bg-background px-2" />até<input type="date" value={to} onChange={e => setTo(e.target.value)} className="h-9 rounded-md border border-border bg-background px-2" /></span>}
     </section>
-    {range && <RevenueInPeriod fromIso={range.fromIso} toIso={range.toIso} label={periodLabel(period, from, to)} />}
-    <RevenuePeriods />
+    <RevenuePeriods range={range} label={periodLabel(period, from, to)} />
     <MonthlyGoal />
     <DailyTeamGoals />
     <section aria-label="Resumo das aplicações" className="commercial-stagger grid grid-cols-2 gap-x-5 gap-y-6 border-b border-border pb-8 lg:grid-cols-4">
