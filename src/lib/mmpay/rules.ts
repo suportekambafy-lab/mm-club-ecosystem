@@ -61,7 +61,7 @@ const billingSchema = z.discriminatedUnion("type", [
     .strict(),
 ]);
 
-export const MMPAY_METHODS = ["card", "mb_way"] as const;
+export const MMPAY_METHODS = ["card", "mb_way", "klarna"] as const;
 export type MmpayMethod = (typeof MMPAY_METHODS)[number];
 
 /** Métodos efetivos: assinaturas só aceitam cartão; nunca fica vazio. */
@@ -73,7 +73,7 @@ export function effectiveMethods(methods: readonly string[] | null | undefined, 
 
 export const createMmpayLinkSchema = z
   .object({
-    paymentMethods: z.array(z.enum(MMPAY_METHODS)).min(1, "Escolhe pelo menos um método.").max(2).optional(),
+    paymentMethods: z.array(z.enum(MMPAY_METHODS)).min(1, "Escolhe pelo menos um método.").max(3).optional(),
     billing: billingSchema.optional(),
     title: z.string().max(120),
     description: z.string().max(MAX_DESCRIPTION_LENGTH).nullish(),
@@ -100,6 +100,23 @@ export const startMmpayCheckoutSchema = z
     phone: phoneSchema,
     origin: z.string().url(),
     method: z.enum(["card", "mb_way"]).default("card"),
+  })
+  .strict();
+
+export const startKlarnaPaymentSchema = z
+  .object({
+    code: codeSchema,
+    email: z.string().email().max(200),
+    name: nameSchema,
+    phone: phoneSchema,
+  })
+  .strict();
+
+export const confirmKlarnaOrderSchema = z
+  .object({
+    code: codeSchema,
+    sessionRef: z.string().regex(/^kps_[A-Za-z0-9-]+$/).max(200),
+    authorizationToken: z.string().min(10).max(200),
   })
   .strict();
 

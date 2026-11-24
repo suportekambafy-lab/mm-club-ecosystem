@@ -98,8 +98,8 @@ export async function deleteStripeProduct(productId: string): Promise<void> {
   }
 }
 
-/** Cartão (inclui Apple Pay e Google Pay automaticamente) + MB WAY. */
-export const MMPAY_PAYMENT_METHODS = ["card", "mb_way"];
+/** Cartão (inclui Apple Pay e Google Pay automaticamente) + MB WAY + Klarna. */
+export const MMPAY_PAYMENT_METHODS = ["card", "mb_way", "klarna"];
 
 export async function createStripeCheckout(input: {
   priceId: string;
