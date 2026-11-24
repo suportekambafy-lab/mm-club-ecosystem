@@ -548,13 +548,13 @@ function AppLayout() {
                     "group relative flex items-center rounded-xl cursor-not-allowed",
                     compact
                       ? "justify-center px-2 py-3 text-sm text-muted-foreground/70"
-                      : "gap-4 px-4 py-3 font-display text-[15px] tracking-wide text-muted-foreground/60",
+                      : "gap-3 px-4 py-3 font-display text-[15px] tracking-wide text-muted-foreground/60",
                   )}
                 >
                   <Icon className="h-[19px] w-[19px] shrink-0 text-muted-foreground/50" />
                   {!compact && (
                     <>
-                      <span className="min-w-0 flex-1 whitespace-nowrap text-[13px]">{item.label}</span>
+                      <span className="min-w-0 flex-1 truncate text-[13px]">{item.label}</span>
                       <span className="shrink-0 whitespace-nowrap rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary">
                         {badge}
                       </span>
@@ -572,7 +572,7 @@ function AppLayout() {
                   "group relative flex items-center rounded-xl transition-all duration-300",
                   compact
                     ? "justify-center px-2 py-3 text-sm"
-                    : "gap-4 px-4 py-3 font-display text-[15px] tracking-wide",
+                    : "gap-3 px-4 py-3 font-display text-[15px] tracking-wide",
                   active
                     ? "text-foreground"
                     : "text-muted-foreground hover:text-foreground",
@@ -594,7 +594,7 @@ function AppLayout() {
                     active ? "text-primary" : "text-muted-foreground/80 group-hover:text-foreground",
                   )}
                 />
-                {!compact && <span className="min-w-0 flex-1 whitespace-nowrap">{item.label}</span>}
+                {!compact && <span className="min-w-0 flex-1 truncate">{item.label}</span>}
                 {!compact && item.isNew && (
                   <span className="shrink-0 whitespace-nowrap rounded-full bg-primary px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary-foreground">
                     Novo
@@ -699,7 +699,7 @@ function AppLayout() {
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-border bg-sidebar transition-[width] duration-200 ease-out lg:flex",
-          collapsed ? "w-[76px]" : "w-64",
+          collapsed ? "w-[76px]" : "w-72",
         )}
       >
         <SidebarInner compact={collapsed} />
@@ -736,7 +736,7 @@ function AppLayout() {
         key="app-scroll"
         className={cn(
           "h-full min-w-0 max-w-full overflow-y-auto overflow-x-clip overscroll-none transition-[padding] duration-200 ease-out [-webkit-overflow-scrolling:touch]",
-          collapsed ? "lg:pl-[76px]" : "lg:pl-64",
+          collapsed ? "lg:pl-[76px]" : "lg:pl-72",
         )}
       >
         {/* Topbar — hidden on immersive routes */}
