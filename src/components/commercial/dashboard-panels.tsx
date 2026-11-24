@@ -4,16 +4,17 @@ import { dailyTeamGoalsOptions, monthlyGoalOptions } from "@/lib/commercial/quer
 import { formatSaleAmount } from "@/lib/aplicacao/sale-rules";
 import { CalendarCheck, Handshake } from "lucide-react";
 
-export function RevenuePeriods({ range, label }: { range?: { fromIso: string; toIso: string } | null; label?: string }) {
+export function RevenuePeriods({ range, label, pickDates }: { range?: { fromIso: string; toIso: string } | null; label?: string; pickDates?: boolean }) {
   const { data } = useSuspenseQuery(monthlyGoalOptions);
   const p = data.periods;
-  const q = useQuery({ queryKey: ["commercial-revenue-range", range?.fromIso, range?.toIso], queryFn: () => revenueInRange({ data: range! }), enabled: Boolean(range), refetchInterval: 60_000 });
+  const q = useQuery({ queryKey: ["commercial-revenue-range", range?.fromIso, range?.toIso], queryFn: () => revenueInRange({ data: range! }), enabled: Boolean(range), refetchInterval: 60_000, retry: 2 });
   const r = q.data;
-  const cards: (readonly [string, number])[] = range
-    ? [[`Faturamento · ${label ?? ""}`, r?.totalCents ?? 0], ["Aplicações fechadas", r?.applicationsCents ?? 0], ["MMpay", r?.mmpayCents ?? 0], ["Recorrências", r?.recurringCents ?? 0]]
-    : [["Faturamento hoje", p.todayCents], ["Últimos 7 dias", p.last7DaysCents], ["Este mês", p.monthCents], ["Último mês", p.lastMonthCents]];
+  const show = (c: number | undefined) => pickDates ? "—" : q.isError ? "Erro" : r ? formatSaleAmount(c ?? 0) : "…";
+  const cards: (readonly [string, string])[] = range || pickDates
+    ? [[`Faturamento · ${label ?? ""}`, show(r?.totalCents)], ["Aplicações fechadas", show(r?.applicationsCents)], ["MMpay", show(r?.mmpayCents)], ["Recorrências", show(r?.recurringCents)]]
+    : [["Faturamento hoje", formatSaleAmount(p.todayCents)], ["Últimos 7 dias", formatSaleAmount(p.last7DaysCents)], ["Este mês", formatSaleAmount(p.monthCents)], ["Último mês", formatSaleAmount(p.lastMonthCents)]];
   return <section aria-label="Faturamento" className="commercial-stagger grid grid-cols-2 gap-4 lg:grid-cols-4">
-    {cards.map(([label, cents]) => <div key={label} className="card-soft bg-card p-5"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-3 text-2xl font-semibold tabular-nums">{formatSaleAmount(cents)}</p></div>)}
+    {cards.map(([l, v]) => <div key={l} className="card-soft bg-card p-5"><p className="text-xs text-muted-foreground">{l}</p><p className="mt-3 text-2xl font-semibold tabular-nums">{v}</p></div>)}
   </section>;
 }
 

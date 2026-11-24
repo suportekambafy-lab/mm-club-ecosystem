@@ -44,7 +44,7 @@ function CommercialHome() {
       {PERIODS.map(([k, l]) => <Button key={k} size="sm" variant={period === k ? "default" : "outline"} onClick={() => setPeriod(k)}>{l}</Button>)}
       {period === "custom" && <span className="flex items-center gap-2 text-xs"><input type="date" value={from} onChange={e => setFrom(e.target.value)} className="h-9 rounded-md border border-border bg-background px-2" />até<input type="date" value={to} onChange={e => setTo(e.target.value)} className="h-9 rounded-md border border-border bg-background px-2" /></span>}
     </section>
-    <RevenuePeriods range={range} label={periodLabel(period, from, to)} />
+    <RevenuePeriods range={range} label={periodLabel(period, from, to)} pickDates={period === "custom" && !range} />
     <MonthlyGoal />
     <DailyTeamGoals />
     <section aria-label="Resumo das aplicações" className="commercial-stagger grid grid-cols-2 gap-x-5 gap-y-6 border-b border-border pb-8 lg:grid-cols-4">
