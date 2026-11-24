@@ -89,6 +89,7 @@ import { Route as AppLivesIndexRouteImport } from './routes/_app.lives.index'
 import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
 import { Route as AppMmcastEpisodeIdRouteImport } from './routes/_app.mmcast_.$episodeId'
 import { Route as AuthenticatedComercialIndexRouteImport } from './routes/_authenticated/comercial.index'
+import { Route as AuthenticatedComercialAoVivoRouteImport } from './routes/_authenticated/comercial.ao-vivo'
 import { Route as AuthenticatedComercialAplicacoesRouteImport } from './routes/_authenticated/comercial.aplicacoes'
 import { Route as AuthenticatedComercialEquipaRouteImport } from './routes/_authenticated/comercial.equipa'
 import { Route as AuthenticatedComercialMetasRouteImport } from './routes/_authenticated/comercial.metas'
@@ -561,6 +562,12 @@ const AuthenticatedComercialIndexRoute =
   AuthenticatedComercialIndexRouteImport.update({
     id: '/',
     path: '/',
+    getParentRoute: () => AuthenticatedComercialRoute,
+  } as any)
+const AuthenticatedComercialAoVivoRoute =
+  AuthenticatedComercialAoVivoRouteImport.update({
+    id: '/ao-vivo',
+    path: '/ao-vivo',
     getParentRoute: () => AuthenticatedComercialRoute,
   } as any)
 const AuthenticatedComercialAplicacoesRoute =
@@ -1054,6 +1061,7 @@ export interface FileRoutesByFullPath {
   '/jade/$threadId': typeof AppJadeThreadIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/mmcast/$episodeId': typeof AppMmcastEpisodeIdRoute
+  '/comercial/ao-vivo': typeof AuthenticatedComercialAoVivoRoute
   '/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
   '/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
   '/comercial/metas': typeof AuthenticatedComercialMetasRoute
@@ -1197,6 +1205,7 @@ export interface FileRoutesByTo {
   '/jade/$threadId': typeof AppJadeThreadIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/mmcast/$episodeId': typeof AppMmcastEpisodeIdRoute
+  '/comercial/ao-vivo': typeof AuthenticatedComercialAoVivoRoute
   '/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
   '/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
   '/comercial/metas': typeof AuthenticatedComercialMetasRoute
@@ -1352,6 +1361,7 @@ export interface FileRoutesById {
   '/_app/jade/$threadId': typeof AppJadeThreadIdRoute
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
   '/_app/mmcast_/$episodeId': typeof AppMmcastEpisodeIdRoute
+  '/_authenticated/comercial/ao-vivo': typeof AuthenticatedComercialAoVivoRoute
   '/_authenticated/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
   '/_authenticated/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
   '/_authenticated/comercial/metas': typeof AuthenticatedComercialMetasRoute
@@ -1506,6 +1516,7 @@ export interface FileRouteTypes {
     | '/jade/$threadId'
     | '/lives/$liveId'
     | '/mmcast/$episodeId'
+    | '/comercial/ao-vivo'
     | '/comercial/aplicacoes'
     | '/comercial/equipa'
     | '/comercial/metas'
@@ -1649,6 +1660,7 @@ export interface FileRouteTypes {
     | '/jade/$threadId'
     | '/lives/$liveId'
     | '/mmcast/$episodeId'
+    | '/comercial/ao-vivo'
     | '/comercial/aplicacoes'
     | '/comercial/equipa'
     | '/comercial/metas'
@@ -1803,6 +1815,7 @@ export interface FileRouteTypes {
     | '/_app/jade/$threadId'
     | '/_app/lives/$liveId'
     | '/_app/mmcast_/$episodeId'
+    | '/_authenticated/comercial/ao-vivo'
     | '/_authenticated/comercial/aplicacoes'
     | '/_authenticated/comercial/equipa'
     | '/_authenticated/comercial/metas'
@@ -2511,6 +2524,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedComercialIndexRouteImport
       parentRoute: typeof AuthenticatedComercialRoute
     }
+    '/_authenticated/comercial/ao-vivo': {
+      id: '/_authenticated/comercial/ao-vivo'
+      path: '/ao-vivo'
+      fullPath: '/comercial/ao-vivo'
+      preLoaderRoute: typeof AuthenticatedComercialAoVivoRouteImport
+      parentRoute: typeof AuthenticatedComercialRoute
+    }
     '/_authenticated/comercial/aplicacoes': {
       id: '/_authenticated/comercial/aplicacoes'
       path: '/aplicacoes'
@@ -3019,6 +3039,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedComercialRouteChildren {
+  AuthenticatedComercialAoVivoRoute: typeof AuthenticatedComercialAoVivoRoute
   AuthenticatedComercialAplicacoesRoute: typeof AuthenticatedComercialAplicacoesRoute
   AuthenticatedComercialEquipaRoute: typeof AuthenticatedComercialEquipaRoute
   AuthenticatedComercialMetasRoute: typeof AuthenticatedComercialMetasRoute
@@ -3031,6 +3052,7 @@ interface AuthenticatedComercialRouteChildren {
 
 const AuthenticatedComercialRouteChildren: AuthenticatedComercialRouteChildren =
   {
+    AuthenticatedComercialAoVivoRoute: AuthenticatedComercialAoVivoRoute,
     AuthenticatedComercialAplicacoesRoute:
       AuthenticatedComercialAplicacoesRoute,
     AuthenticatedComercialEquipaRoute: AuthenticatedComercialEquipaRoute,

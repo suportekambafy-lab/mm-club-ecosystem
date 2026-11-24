@@ -14,6 +14,7 @@ import {
 import { installmentAmounts, intervalLabel } from "@/lib/mmpay/subscription-rules";
 import { formatMoney } from "@/lib/billing/types";
 import { trackMeta } from "@/lib/meta/pixel";
+import { useTrackCheckoutPresence } from "@/lib/mmpay/checkout-live";
 import { MMLogo } from "@/components/mm/logo";
 import { CardBrandsLogo, KlarnaLogo, MbWayLogo } from "@/components/mmpay/payment-logos";
 
@@ -89,6 +90,7 @@ function MmpayPage() {
   useEffect(() => { if (allowedMethods.length && !allowedMethods.includes(method)) setMethod(allowedMethods[0]); }, [allowedMethods.join(","), method]);
   const metaData = link ? { value: link.amountCents / 100, currency: (link.currency || "eur").toUpperCase(), content_name: link.title, content_ids: [code], content_type: "product" } : null;
   const isPaid = klarnaPaid || Boolean(session_id && confirmQuery.data?.paid);
+  useTrackCheckoutPresence(link && !session_id && !isPaid ? { code, title: link.title, stage: pending || klarna ? "paying" : (email || name || phone) ? "filling" : "viewing", method, amountCents: link.amountCents, currency: link.currency || "eur" } : null);
   useEffect(() => { if (metaData && !session_id) void trackMeta("ViewContent", metaData); }, [link?.title]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!isPaid || !metaData) return;
