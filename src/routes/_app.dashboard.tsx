@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { InlineAlert } from "@/components/mm/inline-alert";
 import { NextStepCard } from "@/components/mm/next-step-card";
+import { OnboardingChecklist } from "@/components/mm/onboarding-checklist";
+import { ContinueWatching } from "@/components/mm/continue-watching";
 import { trackLoadTime } from "@/lib/ux-analytics";
 
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -56,7 +58,7 @@ export const Route = createFileRoute("/_app/dashboard")({
 
 
 function DashboardPage() {
-  const { loading: userLoading } = useCurrentUser();
+  const { loading: userLoading, user } = useCurrentUser();
   const { progress, loaded: progressLoaded } = useUserProgress();
   const [episode, setEpisode] = useState<MmcastEpisode | null>(null);
 
@@ -151,6 +153,9 @@ function DashboardPage() {
           <LiveHeroBanner live={realFeaturedLive} />
         )
       )}
+
+      {user && <OnboardingChecklist userId={user.id} />}
+      {user && <ContinueWatching userId={user.id} />}
 
       {/* Trilho guiado: a aula exata a ver a seguir */}
       <NextStepCard />

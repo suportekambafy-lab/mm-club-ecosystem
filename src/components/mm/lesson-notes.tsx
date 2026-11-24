@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { NotebookPen, Trash2, Clock } from "lucide-react";
+import { NotebookPen, Trash2, Clock, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccessToken } from "@/hooks/use-access-token";
 import { cn } from "@/lib/utils";
@@ -31,7 +31,9 @@ export function LessonNotes({
   currentSeconds,
   onSeek,
   className,
+  lessonTitle,
 }: {
+  lessonTitle?: string;
   courseId: string;
   lessonId: string;
   currentSeconds: number;
@@ -105,6 +107,16 @@ export function LessonNotes({
     }
   };
 
+  const exportNotes = () => {
+    const text = [`As minhas notas${lessonTitle ? ` — ${lessonTitle}` : ""}`, "", ...notes.map((n) => `[${formatSeconds(n.seconds)}] ${n.body}`)].join("\n");
+    const url = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `notas-${(lessonTitle || lessonId).toLowerCase().replace(/[^a-z0-9]+/gi, "-").slice(0, 60)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const remove = async (id: string) => {
     setNotes((prev) => prev.filter((n) => n.id !== id));
     await (supabase as unknown as { from: (t: string) => any })
@@ -118,6 +130,11 @@ export function LessonNotes({
       <div className="flex items-center gap-2">
         <NotebookPen className="h-4 w-4 text-primary" />
         <h3 className="font-display text-base text-foreground">As minhas notas</h3>
+        {notes.length > 0 && (
+          <button type="button" onClick={exportNotes} className="ml-auto inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] text-muted-foreground transition hover:bg-surface-2 hover:text-foreground">
+            <Download className="h-3 w-3" /> Descarregar
+          </button>
+        )}
         <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-muted-foreground">
           <Clock className="h-3 w-3" /> {formatSeconds(currentSeconds || 0)}
         </span>

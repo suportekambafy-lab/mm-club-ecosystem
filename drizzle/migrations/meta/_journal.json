@@ -232,6 +232,13 @@
       "when": 1795527404578,
       "tag": "0032_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1795549273975,
+      "tag": "0033_community_parcerias_channel",
+      "breakpoints": true
     }
   ]
 }

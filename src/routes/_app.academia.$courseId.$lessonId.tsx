@@ -26,6 +26,7 @@ import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 import { TranscriptProgress } from "@/components/mm/transcript-progress";
 import { LessonResources } from "@/components/mm/lesson-resources";
 import { LessonNotes } from "@/components/mm/lesson-notes";
+import { LessonAiTutor } from "@/components/mm/lesson-ai-tutor";
 import { CourseComments } from "@/components/mm/course-comments";
 import { pingLearningActivity, recordLessonCompleted } from "@/lib/learning-activity";
 import { useCourseQuiz, lockedModuleIds } from "@/hooks/use-course-quiz";
@@ -423,9 +424,12 @@ function LessonPlayer() {
               materials={current.lesson.materials}
             />
 
+            <LessonAiTutor courseTitle={course.title} moduleTitle={current.module.title} lessonTitle={current.lesson.title} />
+
             <LessonNotes
               courseId={course.id}
               lessonId={current.lesson.id}
+              lessonTitle={current.lesson.title}
               currentSeconds={row?.progress_seconds ?? 0}
               onSeek={(seconds) => {
                 if (seekRef.current) {
