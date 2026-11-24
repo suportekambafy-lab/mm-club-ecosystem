@@ -93,6 +93,7 @@ import { Route as AuthenticatedComercialAplicacoesRouteImport } from './routes/_
 import { Route as AuthenticatedComercialEquipaRouteImport } from './routes/_authenticated/comercial.equipa'
 import { Route as AuthenticatedComercialMetasRouteImport } from './routes/_authenticated/comercial.metas'
 import { Route as AuthenticatedComercialMmpayRouteImport } from './routes/_authenticated/comercial.mmpay'
+import { Route as AuthenticatedComercialTransacoesRouteImport } from './routes/_authenticated/comercial.transacoes'
 import { Route as AuthenticatedComercialUtilizadoresRouteImport } from './routes/_authenticated/comercial.utilizadores'
 import { Route as AuthenticatedComercialVendasRouteImport } from './routes/_authenticated/comercial.vendas'
 import { Route as AdminFinanceiroIndexRouteImport } from './routes/admin.financeiro.index'
@@ -586,6 +587,12 @@ const AuthenticatedComercialMmpayRoute =
     path: '/mmpay',
     getParentRoute: () => AuthenticatedComercialRoute,
   } as any)
+const AuthenticatedComercialTransacoesRoute =
+  AuthenticatedComercialTransacoesRouteImport.update({
+    id: '/transacoes',
+    path: '/transacoes',
+    getParentRoute: () => AuthenticatedComercialRoute,
+  } as any)
 const AuthenticatedComercialUtilizadoresRoute =
   AuthenticatedComercialUtilizadoresRouteImport.update({
     id: '/utilizadores',
@@ -1051,6 +1058,7 @@ export interface FileRoutesByFullPath {
   '/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
   '/comercial/metas': typeof AuthenticatedComercialMetasRoute
   '/comercial/mmpay': typeof AuthenticatedComercialMmpayRoute
+  '/comercial/transacoes': typeof AuthenticatedComercialTransacoesRoute
   '/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
   '/comercial/vendas': typeof AuthenticatedComercialVendasRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
@@ -1193,6 +1201,7 @@ export interface FileRoutesByTo {
   '/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
   '/comercial/metas': typeof AuthenticatedComercialMetasRoute
   '/comercial/mmpay': typeof AuthenticatedComercialMmpayRoute
+  '/comercial/transacoes': typeof AuthenticatedComercialTransacoesRoute
   '/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
   '/comercial/vendas': typeof AuthenticatedComercialVendasRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
@@ -1347,6 +1356,7 @@ export interface FileRoutesById {
   '/_authenticated/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
   '/_authenticated/comercial/metas': typeof AuthenticatedComercialMetasRoute
   '/_authenticated/comercial/mmpay': typeof AuthenticatedComercialMmpayRoute
+  '/_authenticated/comercial/transacoes': typeof AuthenticatedComercialTransacoesRoute
   '/_authenticated/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
   '/_authenticated/comercial/vendas': typeof AuthenticatedComercialVendasRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
@@ -1500,6 +1510,7 @@ export interface FileRouteTypes {
     | '/comercial/equipa'
     | '/comercial/metas'
     | '/comercial/mmpay'
+    | '/comercial/transacoes'
     | '/comercial/utilizadores'
     | '/comercial/vendas'
     | '/admin/financeiro/catalogo'
@@ -1642,6 +1653,7 @@ export interface FileRouteTypes {
     | '/comercial/equipa'
     | '/comercial/metas'
     | '/comercial/mmpay'
+    | '/comercial/transacoes'
     | '/comercial/utilizadores'
     | '/comercial/vendas'
     | '/admin/financeiro/catalogo'
@@ -1795,6 +1807,7 @@ export interface FileRouteTypes {
     | '/_authenticated/comercial/equipa'
     | '/_authenticated/comercial/metas'
     | '/_authenticated/comercial/mmpay'
+    | '/_authenticated/comercial/transacoes'
     | '/_authenticated/comercial/utilizadores'
     | '/_authenticated/comercial/vendas'
     | '/admin/financeiro/catalogo'
@@ -2526,6 +2539,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedComercialMmpayRouteImport
       parentRoute: typeof AuthenticatedComercialRoute
     }
+    '/_authenticated/comercial/transacoes': {
+      id: '/_authenticated/comercial/transacoes'
+      path: '/transacoes'
+      fullPath: '/comercial/transacoes'
+      preLoaderRoute: typeof AuthenticatedComercialTransacoesRouteImport
+      parentRoute: typeof AuthenticatedComercialRoute
+    }
     '/_authenticated/comercial/utilizadores': {
       id: '/_authenticated/comercial/utilizadores'
       path: '/utilizadores'
@@ -3003,6 +3023,7 @@ interface AuthenticatedComercialRouteChildren {
   AuthenticatedComercialEquipaRoute: typeof AuthenticatedComercialEquipaRoute
   AuthenticatedComercialMetasRoute: typeof AuthenticatedComercialMetasRoute
   AuthenticatedComercialMmpayRoute: typeof AuthenticatedComercialMmpayRoute
+  AuthenticatedComercialTransacoesRoute: typeof AuthenticatedComercialTransacoesRoute
   AuthenticatedComercialUtilizadoresRoute: typeof AuthenticatedComercialUtilizadoresRoute
   AuthenticatedComercialVendasRoute: typeof AuthenticatedComercialVendasRoute
   AuthenticatedComercialIndexRoute: typeof AuthenticatedComercialIndexRoute
@@ -3015,6 +3036,8 @@ const AuthenticatedComercialRouteChildren: AuthenticatedComercialRouteChildren =
     AuthenticatedComercialEquipaRoute: AuthenticatedComercialEquipaRoute,
     AuthenticatedComercialMetasRoute: AuthenticatedComercialMetasRoute,
     AuthenticatedComercialMmpayRoute: AuthenticatedComercialMmpayRoute,
+    AuthenticatedComercialTransacoesRoute:
+      AuthenticatedComercialTransacoesRoute,
     AuthenticatedComercialUtilizadoresRoute:
       AuthenticatedComercialUtilizadoresRoute,
     AuthenticatedComercialVendasRoute: AuthenticatedComercialVendasRoute,
