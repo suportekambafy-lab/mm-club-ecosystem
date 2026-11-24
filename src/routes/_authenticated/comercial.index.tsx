@@ -1,13 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { commercialApplicationsOptions, dailyTeamGoalsOptions, monthlyGoalOptions } from "@/lib/commercial/queries";
-import { DailyTeamGoals, RevenuePeriods } from "@/components/commercial/dashboard-panels";
+import { DailyTeamGoals, RevenueInPeriod, RevenuePeriods } from "@/components/commercial/dashboard-panels";
 import { MonthlyGoal } from "@/components/commercial/monthly-goal";
 import { TeamProfile } from "@/components/commercial/team-profile";
 import { UpcomingCalls } from "@/components/commercial/scheduled-calls";
 import { Button } from "@/components/ui/button";
 import { HomeSkeleton } from "@/components/ui/page-skeleton";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { dayWindow } from "@/lib/commercial/goal-rules";
 import { ArrowUpRight, ArrowRight, Users, Inbox, Target, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/comercial/")({
@@ -25,6 +26,7 @@ function CommercialHome() {
   const { data } = useSuspenseQuery(commercialApplicationsOptions);
   const [period, setPeriod] = useState<Period>("90");
   const [from, setFrom] = useState(""); const [to, setTo] = useState("");
+  const range = useMemo(() => periodRange(period, from, to), [period, from, to]);
   const leads = data.leads.filter(l => inPeriod(l.created_at, period, from, to));
   const completed = leads.filter(lead => lead.classificacao);
   const stats = [
@@ -38,14 +40,15 @@ function CommercialHome() {
       <div><p className="mb-4 text-xs font-medium text-commercial-accent">COMERCIAL</p><h1 className="commercial-page-heading">Visão geral</h1><p className="mt-3 text-sm text-muted-foreground">Aplicações e contactos da equipa.</p></div>
       <Button asChild className="btn-arrow h-11 pl-5"><Link to="/comercial/aplicacoes">Ver aplicações<ArrowUpRight /></Link></Button>
     </section>
-    <RevenuePeriods />
-    <MonthlyGoal />
-    <DailyTeamGoals />
     <section aria-label="Filtrar período" className="flex flex-wrap items-center gap-2">
       <span className="mr-1 text-xs text-muted-foreground">Período:</span>
       {PERIODS.map(([k, l]) => <Button key={k} size="sm" variant={period === k ? "default" : "outline"} onClick={() => setPeriod(k)}>{l}</Button>)}
       {period === "custom" && <span className="flex items-center gap-2 text-xs"><input type="date" value={from} onChange={e => setFrom(e.target.value)} className="h-9 rounded-md border border-border bg-background px-2" />até<input type="date" value={to} onChange={e => setTo(e.target.value)} className="h-9 rounded-md border border-border bg-background px-2" /></span>}
     </section>
+    {range && <RevenueInPeriod fromIso={range.fromIso} toIso={range.toIso} label={periodLabel(period, from, to)} />}
+    <RevenuePeriods />
+    <MonthlyGoal />
+    <DailyTeamGoals />
     <section aria-label="Resumo das aplicações" className="commercial-stagger grid grid-cols-2 gap-x-5 gap-y-6 border-b border-border pb-8 lg:grid-cols-4">
       {stats.map(({ label, value, icon: Icon }) => <div key={label} className="commercial-stat"><div className="mb-4 flex items-center gap-2 text-muted-foreground"><Icon className="h-4 w-4" /><span className="text-xs">{label}</span></div><p className="text-4xl font-semibold tabular-nums">{value.toLocaleString("pt-PT")}</p><p className="mt-2 text-xs text-muted-foreground">{periodLabel(period, from, to)}</p></div>)}
     </section>
@@ -71,4 +74,13 @@ function inPeriod(iso: string, p: Period, from: string, to: string) {
 function periodLabel(p: Period, from: string, to: string) {
   if (p === "custom") return from || to ? `${from || "…"} → ${to || "…"}` : "Escolhe as datas";
   return PERIODS.find(([k]) => k === p)?.[1] ?? "";
+}
+
+function periodRange(p: Period, from: string, to: string): { fromIso: string; toIso: string } | null {
+  const now = new Date(); const day = (d: Date) => dayWindow(d);
+  const at = (ymd: string) => new Date(`${ymd}T12:00:00Z`);
+  if (p === "today") { const w = day(now); return { fromIso: w.startIso, toIso: w.endIso }; }
+  if (p === "yesterday") { const w = day(new Date(now.getTime() - 864e5)); return { fromIso: w.startIso, toIso: w.endIso }; }
+  if (p === "custom") { if (!from || !to || from > to) return null; return { fromIso: day(at(from)).startIso, toIso: day(at(to)).endIso }; }
+  return { fromIso: day(new Date(now.getTime() - (Number(p) - 1) * 864e5)).startIso, toIso: day(now).endIso };
 }

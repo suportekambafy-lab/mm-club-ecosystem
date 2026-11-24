@@ -1,7 +1,20 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { revenueInRange } from "@/lib/commercial/goal.functions";
 import { dailyTeamGoalsOptions, monthlyGoalOptions } from "@/lib/commercial/queries";
 import { formatSaleAmount } from "@/lib/aplicacao/sale-rules";
 import { CalendarCheck, Handshake } from "lucide-react";
+
+export function RevenueInPeriod({ fromIso, toIso, label }: { fromIso: string; toIso: string; label: string }) {
+  const q = useQuery({ queryKey: ["commercial-revenue-range", fromIso, toIso], queryFn: () => revenueInRange({ data: { fromIso, toIso } }), refetchInterval: 60_000 });
+  const d = q.data;
+  const parts = [["Aplicações", d?.applicationsCents], ["MMpay", d?.mmpayCents], ["Recorrências", d?.recurringCents]] as const;
+  return <section aria-label="Faturamento no período" className="card-soft bg-card p-5">
+    <div className="flex flex-wrap items-end justify-between gap-4">
+      <div><p className="text-xs text-muted-foreground">Faturamento · {label}</p><p className="mt-2 text-3xl font-semibold tabular-nums">{q.isLoading ? "…" : formatSaleAmount(d?.totalCents ?? 0)}</p><p className="mt-1 text-xs text-muted-foreground">{d ? `${d.sales} vendas` : ""}</p></div>
+      <div className="flex gap-6">{parts.map(([l, c]) => <div key={l}><p className="text-xs text-muted-foreground">{l}</p><p className="mt-1 text-sm font-medium tabular-nums">{formatSaleAmount(c ?? 0)}</p></div>)}</div>
+    </div>
+  </section>;
+}
 
 export function RevenuePeriods() {
   const { data } = useSuspenseQuery(monthlyGoalOptions);

@@ -124,3 +124,21 @@ export const saveCommercialGoals = createServerFn({ method: "POST" })
     if (error) throw new Error("Não foi possível guardar as metas.");
     return { ok: true };
   });
+
+/** Faturamento confirmado num intervalo escolhido (mesmas fontes da meta mensal). */
+export const revenueInRange = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ fromIso: z.string().datetime(), toIso: z.string().datetime() }).parse(d))
+  .handler(async ({ context, data: { fromIso: from, toIso: to } }) => {
+    await assertCommercial(context);
+    const db = context.supabase;
+    const [closed, payments, charges] = await Promise.all([
+      collect<{ sale_amount_cents: number | null }>((o, l) => db.from("leads").select("sale_amount_cents").eq("status", "fechou").gte("sale_closed_at", from).lt("sale_closed_at", to).order("id").range(o, o + l - 1)),
+      collect<{ amount_cents: number }>((o, l) => db.from("mmpay_payments").select("amount_cents").eq("status", "paid").gte("paid_at", from).lt("paid_at", to).order("id").range(o, o + l - 1)),
+      collect<{ amount_cents: number }>((o, l) => db.from("mmpay_subscription_charges").select("amount_cents").eq("status", "paid").gt("cycle_number", 1).gte("finished_at", from).lt("finished_at", to).order("id").range(o, o + l - 1)),
+    ]);
+    const applicationsCents = closed.reduce((t, r) => t + (r.sale_amount_cents ?? 0), 0);
+    const mmpayCents = payments.reduce((t, r) => t + r.amount_cents, 0);
+    const recurringCents = charges.reduce((t, r) => t + r.amount_cents, 0);
+    return { totalCents: applicationsCents + mmpayCents + recurringCents, applicationsCents, mmpayCents, recurringCents, sales: closed.length + payments.length + charges.length };
+  });
