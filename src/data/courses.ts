@@ -15,7 +15,7 @@ import lessonL8 from "@/assets/lesson-l8.jpg";
 const COURSE_COVER = "https://yarjxrbhxaawzdizmvlh.supabase.co/storage/v1/object/sign/course-media/courses/marca-milionaria/logo/1785064506187-bze4qr.PNG?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV81YTA0ZWZiOS0yZmMzLTQxZGQtYjkzYi1jNWRiMzQzNzllOTAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJjb3Vyc2UtbWVkaWEvY291cnNlcy9tYXJjYS1taWxpb25hcmlhL2xvZ28vMTc4NTA2NDUwNjE4Ny1iemU0cXIuUE5HIiwic2NvcGUiOiJkb3dubG9hZCIsImlhdCI6MTc4NTA2NDUwNiwiZXhwIjoyMTAwNDI0NTA2fQ.psHSZ9Fo80xUEpFR4Ml-omo86qb4PgVMcH-pEvggoIg";
 const COURSE_LOGO = "https://yarjxrbhxaawzdizmvlh.supabase.co/storage/v1/object/sign/course-media/courses/marca-milionaria/logo/1785064506187-bze4qr.PNG?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV81YTA0ZWZiOS0yZmMzLTQxZGQtYjkzYi1jNWRiMzQzNzllOTAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJjb3Vyc2UtbWVkaWEvY291cnNlcy9tYXJjYS1taWxpb25hcmlhL2xvZ28vMTc4NTA2NDUwNjE4Ny1iemU0cXIuUE5HIiwic2NvcGUiOiJkb3dubG9hZCIsImlhdCI6MTc4NTA2NDUwNiwiZXhwIjoyMTAwNDI0NTA2fQ.psHSZ9Fo80xUEpFR4Ml-omo86qb4PgVMcH-pEvggoIg";
 
-export const courses: Course[] = [
+const baseCourses: Course[] = [
   {
     id: "marca-milionaria",
     title: "Marca Milionária",
@@ -91,7 +91,12 @@ export const courses: Course[] = [
   },
 ];
 
-export const coursesById = Object.fromEntries(courses.map((c) => [c.id, c]));
+/** Cursos desativados: deixam de aparecer no MM Club. */
+export const HIDDEN_COURSE_IDS = new Set(["marca-milionaria"]);
+
+export const courses: Course[] = baseCourses.filter((c) => !HIDDEN_COURSE_IDS.has(c.id));
+
+export const coursesById: Record<string, Course> = Object.fromEntries(courses.map((c) => [c.id, c]));
 
 export const liveCourses = courses.filter((c) => c.status !== "coming-soon");
 export const upcomingCourses = courses.filter((c) => c.status === "coming-soon");
