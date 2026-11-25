@@ -229,8 +229,7 @@ function LessonPlayer() {
           </Link>
           <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
           <Link
-            to="/academia/$courseId"
-            params={{ courseId: course.id }}
+            to="/academia"
             className="shrink-0 text-muted-foreground transition hover:text-foreground"
           >
             {course.title}

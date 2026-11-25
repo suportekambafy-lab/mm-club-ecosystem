@@ -334,7 +334,7 @@ function CinematicHero({ episode }: { episode: MmcastEpisode | null }) {
                 </h1>
                 <p className="mt-3 max-w-xl text-sm text-muted-foreground md:text-lg">{legacy.released ? "Já podes começar. Todas as aulas abertas para membros." : `${legacy.headline}.`}</p>
                 <Button asChild className="btn-arrow mt-5">
-                  <Link to="/academia/$courseId" params={{ courseId: "marca-milionaria-legacy" }}>{legacy.cta} <ArrowRight /></Link>
+                  <Link to="/academia">{legacy.cta} <ArrowRight /></Link>
                 </Button>
               </div>
             ) : episode ? (
