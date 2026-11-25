@@ -61,6 +61,7 @@ import { Route as AdminProgressoRouteImport } from './routes/admin.progresso'
 import { Route as AdminQuizzesRouteImport } from './routes/admin.quizzes'
 import { Route as AdminSaudeRouteImport } from './routes/admin.saude'
 import { Route as AdminSegurancaRouteImport } from './routes/admin.seguranca'
+import { Route as AdminServicosRouteImport } from './routes/admin.servicos'
 import { Route as AdminSuporteRouteImport } from './routes/admin.suporte'
 import { Route as AdminTranscricoesRouteImport } from './routes/admin.transcricoes'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
@@ -94,6 +95,7 @@ import { Route as AuthenticatedComercialAplicacoesRouteImport } from './routes/_
 import { Route as AuthenticatedComercialEquipaRouteImport } from './routes/_authenticated/comercial.equipa'
 import { Route as AuthenticatedComercialMetasRouteImport } from './routes/_authenticated/comercial.metas'
 import { Route as AuthenticatedComercialMmpayRouteImport } from './routes/_authenticated/comercial.mmpay'
+import { Route as AuthenticatedComercialServicosRouteImport } from './routes/_authenticated/comercial.servicos'
 import { Route as AuthenticatedComercialTransacoesRouteImport } from './routes/_authenticated/comercial.transacoes'
 import { Route as AuthenticatedComercialUtilizadoresRouteImport } from './routes/_authenticated/comercial.utilizadores'
 import { Route as AuthenticatedComercialVendasRouteImport } from './routes/_authenticated/comercial.vendas'
@@ -421,6 +423,11 @@ const AdminSegurancaRoute = AdminSegurancaRouteImport.update({
   path: '/seguranca',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminServicosRoute = AdminServicosRouteImport.update({
+  id: '/servicos',
+  path: '/servicos',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSuporteRoute = AdminSuporteRouteImport.update({
   id: '/suporte',
   path: '/suporte',
@@ -592,6 +599,12 @@ const AuthenticatedComercialMmpayRoute =
   AuthenticatedComercialMmpayRouteImport.update({
     id: '/mmpay',
     path: '/mmpay',
+    getParentRoute: () => AuthenticatedComercialRoute,
+  } as any)
+const AuthenticatedComercialServicosRoute =
+  AuthenticatedComercialServicosRouteImport.update({
+    id: '/servicos',
+    path: '/servicos',
     getParentRoute: () => AuthenticatedComercialRoute,
   } as any)
 const AuthenticatedComercialTransacoesRoute =
@@ -1037,6 +1050,7 @@ export interface FileRoutesByFullPath {
   '/admin/quizzes': typeof AdminQuizzesRoute
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/seguranca': typeof AdminSegurancaRoute
+  '/admin/servicos': typeof AdminServicosRoute
   '/admin/suporte': typeof AdminSuporteRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
@@ -1066,6 +1080,7 @@ export interface FileRoutesByFullPath {
   '/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
   '/comercial/metas': typeof AuthenticatedComercialMetasRoute
   '/comercial/mmpay': typeof AuthenticatedComercialMmpayRoute
+  '/comercial/servicos': typeof AuthenticatedComercialServicosRoute
   '/comercial/transacoes': typeof AuthenticatedComercialTransacoesRoute
   '/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
   '/comercial/vendas': typeof AuthenticatedComercialVendasRoute
@@ -1183,6 +1198,7 @@ export interface FileRoutesByTo {
   '/admin/quizzes': typeof AdminQuizzesRoute
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/seguranca': typeof AdminSegurancaRoute
+  '/admin/servicos': typeof AdminServicosRoute
   '/admin/suporte': typeof AdminSuporteRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
@@ -1210,6 +1226,7 @@ export interface FileRoutesByTo {
   '/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
   '/comercial/metas': typeof AuthenticatedComercialMetasRoute
   '/comercial/mmpay': typeof AuthenticatedComercialMmpayRoute
+  '/comercial/servicos': typeof AuthenticatedComercialServicosRoute
   '/comercial/transacoes': typeof AuthenticatedComercialTransacoesRoute
   '/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
   '/comercial/vendas': typeof AuthenticatedComercialVendasRoute
@@ -1337,6 +1354,7 @@ export interface FileRoutesById {
   '/admin/quizzes': typeof AdminQuizzesRoute
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/seguranca': typeof AdminSegurancaRoute
+  '/admin/servicos': typeof AdminServicosRoute
   '/admin/suporte': typeof AdminSuporteRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
@@ -1366,6 +1384,7 @@ export interface FileRoutesById {
   '/_authenticated/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
   '/_authenticated/comercial/metas': typeof AuthenticatedComercialMetasRoute
   '/_authenticated/comercial/mmpay': typeof AuthenticatedComercialMmpayRoute
+  '/_authenticated/comercial/servicos': typeof AuthenticatedComercialServicosRoute
   '/_authenticated/comercial/transacoes': typeof AuthenticatedComercialTransacoesRoute
   '/_authenticated/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
   '/_authenticated/comercial/vendas': typeof AuthenticatedComercialVendasRoute
@@ -1492,6 +1511,7 @@ export interface FileRouteTypes {
     | '/admin/quizzes'
     | '/admin/saude'
     | '/admin/seguranca'
+    | '/admin/servicos'
     | '/admin/suporte'
     | '/admin/transcricoes'
     | '/api/chat'
@@ -1521,6 +1541,7 @@ export interface FileRouteTypes {
     | '/comercial/equipa'
     | '/comercial/metas'
     | '/comercial/mmpay'
+    | '/comercial/servicos'
     | '/comercial/transacoes'
     | '/comercial/utilizadores'
     | '/comercial/vendas'
@@ -1638,6 +1659,7 @@ export interface FileRouteTypes {
     | '/admin/quizzes'
     | '/admin/saude'
     | '/admin/seguranca'
+    | '/admin/servicos'
     | '/admin/suporte'
     | '/admin/transcricoes'
     | '/api/chat'
@@ -1665,6 +1687,7 @@ export interface FileRouteTypes {
     | '/comercial/equipa'
     | '/comercial/metas'
     | '/comercial/mmpay'
+    | '/comercial/servicos'
     | '/comercial/transacoes'
     | '/comercial/utilizadores'
     | '/comercial/vendas'
@@ -1791,6 +1814,7 @@ export interface FileRouteTypes {
     | '/admin/quizzes'
     | '/admin/saude'
     | '/admin/seguranca'
+    | '/admin/servicos'
     | '/admin/suporte'
     | '/admin/transcricoes'
     | '/api/chat'
@@ -1820,6 +1844,7 @@ export interface FileRouteTypes {
     | '/_authenticated/comercial/equipa'
     | '/_authenticated/comercial/metas'
     | '/_authenticated/comercial/mmpay'
+    | '/_authenticated/comercial/servicos'
     | '/_authenticated/comercial/transacoes'
     | '/_authenticated/comercial/utilizadores'
     | '/_authenticated/comercial/vendas'
@@ -2328,6 +2353,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSegurancaRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/servicos': {
+      id: '/admin/servicos'
+      path: '/servicos'
+      fullPath: '/admin/servicos'
+      preLoaderRoute: typeof AdminServicosRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/suporte': {
       id: '/admin/suporte'
       path: '/suporte'
@@ -2557,6 +2589,13 @@ declare module '@tanstack/react-router' {
       path: '/mmpay'
       fullPath: '/comercial/mmpay'
       preLoaderRoute: typeof AuthenticatedComercialMmpayRouteImport
+      parentRoute: typeof AuthenticatedComercialRoute
+    }
+    '/_authenticated/comercial/servicos': {
+      id: '/_authenticated/comercial/servicos'
+      path: '/servicos'
+      fullPath: '/comercial/servicos'
+      preLoaderRoute: typeof AuthenticatedComercialServicosRouteImport
       parentRoute: typeof AuthenticatedComercialRoute
     }
     '/_authenticated/comercial/transacoes': {
@@ -3044,6 +3083,7 @@ interface AuthenticatedComercialRouteChildren {
   AuthenticatedComercialEquipaRoute: typeof AuthenticatedComercialEquipaRoute
   AuthenticatedComercialMetasRoute: typeof AuthenticatedComercialMetasRoute
   AuthenticatedComercialMmpayRoute: typeof AuthenticatedComercialMmpayRoute
+  AuthenticatedComercialServicosRoute: typeof AuthenticatedComercialServicosRoute
   AuthenticatedComercialTransacoesRoute: typeof AuthenticatedComercialTransacoesRoute
   AuthenticatedComercialUtilizadoresRoute: typeof AuthenticatedComercialUtilizadoresRoute
   AuthenticatedComercialVendasRoute: typeof AuthenticatedComercialVendasRoute
@@ -3058,6 +3098,7 @@ const AuthenticatedComercialRouteChildren: AuthenticatedComercialRouteChildren =
     AuthenticatedComercialEquipaRoute: AuthenticatedComercialEquipaRoute,
     AuthenticatedComercialMetasRoute: AuthenticatedComercialMetasRoute,
     AuthenticatedComercialMmpayRoute: AuthenticatedComercialMmpayRoute,
+    AuthenticatedComercialServicosRoute: AuthenticatedComercialServicosRoute,
     AuthenticatedComercialTransacoesRoute:
       AuthenticatedComercialTransacoesRoute,
     AuthenticatedComercialUtilizadoresRoute:
@@ -3303,6 +3344,7 @@ interface AdminRouteChildren {
   AdminQuizzesRoute: typeof AdminQuizzesRoute
   AdminSaudeRoute: typeof AdminSaudeRoute
   AdminSegurancaRoute: typeof AdminSegurancaRoute
+  AdminServicosRoute: typeof AdminServicosRoute
   AdminSuporteRoute: typeof AdminSuporteRoute
   AdminTranscricoesRoute: typeof AdminTranscricoesRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -3327,6 +3369,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminQuizzesRoute: AdminQuizzesRoute,
   AdminSaudeRoute: AdminSaudeRoute,
   AdminSegurancaRoute: AdminSegurancaRoute,
+  AdminServicosRoute: AdminServicosRoute,
   AdminSuporteRoute: AdminSuporteRoute,
   AdminTranscricoesRoute: AdminTranscricoesRoute,
   AdminIndexRoute: AdminIndexRoute,

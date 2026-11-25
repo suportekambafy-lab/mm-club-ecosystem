@@ -1,0 +1,3 @@
+CREATE POLICY "commercial read service applications" ON public.service_applications FOR SELECT TO authenticated USING (public.has_commercial_access(auth.uid()));
+CREATE POLICY "commercial update service applications" ON public.service_applications FOR UPDATE TO authenticated USING (public.has_commercial_access(auth.uid()) OR public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_commercial_access(auth.uid()) OR public.has_role(auth.uid(),'admin'));
+GRANT SELECT, INSERT, UPDATE ON public.service_applications TO authenticated;
