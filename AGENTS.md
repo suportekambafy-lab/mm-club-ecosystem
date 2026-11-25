@@ -49,3 +49,4 @@
 - MMpay link deletion is a soft delete (deleted_at) and payments FK is RESTRICT, so sales history is never lost.
 
 - Load the dashboard’s latest podcast episode once in its parent and share it with the hero and episode block to keep both highlights consistent without duplicate requests.
+- Keep dashboard hero selection in the browser-safe hero-selection module; the dashboard shell overlays its topbar using scoped hero tokens so other pages and themes remain unchanged.

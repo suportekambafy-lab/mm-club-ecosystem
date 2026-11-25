@@ -59,6 +59,7 @@
   --color-surface-2: var(--surface-2);
   --color-surface-3: var(--surface-3);
   --color-hairline: var(--hairline);
+  --color-hero-shade: var(--hero-shade);
 
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -191,6 +192,16 @@
   --sidebar-accent-foreground: oklch(0.97 0.005 80);
   --sidebar-border: oklch(1 0 0 / 6%);
   --sidebar-ring: oklch(0.82 0.13 82 / 60%);
+}
+
+.hero-theme {
+  --background: oklch(0.16 0 0);
+  --foreground: oklch(0.98 0 0);
+  --muted-foreground: oklch(0.88 0 0);
+  --surface-1: oklch(0.2 0 0 / 75%);
+  --surface-2: oklch(0.22 0 0 / 80%);
+  --border: oklch(1 0 0 / 18%);
+  --hero-shade: oklch(0.1 0 0);
 }
 
 @layer base {

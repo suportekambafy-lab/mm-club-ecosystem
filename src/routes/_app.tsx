@@ -739,13 +739,13 @@ function AppLayout() {
         data-app-scroll
         key="app-scroll"
         className={cn(
-          "h-full min-w-0 max-w-full overflow-y-auto overflow-x-clip overscroll-none transition-[padding] duration-200 ease-out [-webkit-overflow-scrolling:touch]",
+          "relative h-full min-w-0 max-w-full overflow-y-auto overflow-x-clip overscroll-none transition-[padding] duration-200 ease-out [-webkit-overflow-scrolling:touch]",
           collapsed ? "lg:pl-[76px]" : "lg:pl-72",
         )}
       >
         {/* Topbar — hidden on immersive routes */}
         {pathname !== "/shorts" && (
-        <header data-app-topbar className="sticky top-0 z-30 grid max-w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 overflow-x-clip bg-background/80 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 backdrop-blur-xl sm:gap-4 sm:px-4 sm:pt-[calc(env(safe-area-inset-top)+1rem)] sm:pb-4 md:px-8 md:pt-[calc(env(safe-area-inset-top)+1.5rem)] lg:flex">
+        <header data-app-topbar className={cn("top-0 z-30 grid max-w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 sm:gap-4 sm:px-4 sm:pt-[calc(env(safe-area-inset-top)+1rem)] sm:pb-4 md:px-8 md:pt-[calc(env(safe-area-inset-top)+1.5rem)] lg:flex", pathname === "/dashboard" ? cn("hero-theme absolute inset-x-0 text-foreground", collapsed ? "lg:ml-[76px]" : "lg:ml-72") : "sticky overflow-x-clip bg-background/80 backdrop-blur-xl")}>
 
           {/* Mobile: menu button opens the slide-in sidebar */}
           <button
@@ -765,8 +765,6 @@ function AppLayout() {
           <div
             className={cn(
               "col-start-3 flex min-w-0 items-center justify-end gap-1.5 sm:gap-3 lg:col-start-auto lg:flex-1",
-              pathname === "/dashboard" &&
-                "sm:rounded-2xl sm:border sm:border-border sm:bg-surface-1 sm:px-5 sm:py-3 md:py-4",
             )}
           >
             {/* Greeting moved into cinematic dashboard hero — topbar stays minimal */}
@@ -806,7 +804,7 @@ function AppLayout() {
 
         {/* Mobile search — só na home, escondida quando o menu está aberto */}
         {pathname === "/dashboard" && !mobileOpen && (
-          <div className="border-b border-border px-3 py-2.5 sm:px-4 sm:py-3 md:hidden">
+          <div className="hero-theme absolute inset-x-0 top-[calc(env(safe-area-inset-top)+4.5rem)] z-20 px-3 py-2.5 text-foreground sm:px-4 sm:py-3 md:hidden">
             <GlobalSearch />
           </div>
         )}
@@ -817,10 +815,12 @@ function AppLayout() {
             ? "relative min-w-0 max-w-full overflow-x-clip"
             : /^\/lives\/[^/]+/.test(pathname)
               ? "relative min-w-0 max-w-full overflow-hidden lg:mx-auto lg:overflow-x-clip lg:px-8 lg:pt-8 lg:pb-12 lg:max-w-7xl xl:max-w-[1600px] 2xl:max-w-[1760px]"
-              : "relative mx-auto min-w-0 max-w-7xl overflow-x-clip px-3 pb-[72px] pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8 lg:pb-12 xl:max-w-[1600px] 2xl:max-w-[1760px]",
+              : pathname === "/dashboard"
+                ? "relative min-w-0 max-w-full overflow-x-clip px-3 pb-[72px] sm:px-4 md:px-8 lg:pb-12"
+                : "relative mx-auto min-w-0 max-w-7xl overflow-x-clip px-3 pb-[72px] pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8 lg:pb-12 xl:max-w-[1600px] 2xl:max-w-[1760px]",
         )}>
           {/* Ambient editorial glow — matches landing page atmosphere */}
-          {pathname !== "/shorts" && (
+          {pathname !== "/shorts" && pathname !== "/dashboard" && (
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"

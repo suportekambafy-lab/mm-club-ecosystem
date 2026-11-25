@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import dashboardHero from "@/assets/dashboard-hero.jpg";
 import { Button } from "@/components/ui/button";
-import legacyHero from "@/assets/marca-milionaria-legacy-hero.jpg.asset.json";
+import { activeHeroKey, heroKeys, type HeroKey } from "@/lib/club/hero-selection";
 import { CourseCard } from "@/components/mm/course-card";
 import { Rail } from "@/components/mm/rail";
 
@@ -45,7 +45,6 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { resolveLiveCoverUrl } from "@/lib/live-cover-url";
-import { useLegacyLaunch } from "@/hooks/use-legacy-launch";
 
 
 
@@ -308,12 +307,12 @@ function ReplayCard({
 
 type HeroSlide =
   | { key: "live"; kind: "live"; live: RealLive }
-  | { key: "legacy"; kind: "legacy" }
+  | { key: "academy"; kind: "academy" }
   | { key: "mmcast"; kind: "mmcast"; episode: MmcastEpisode };
 
 const SLIDE_LABEL: Record<HeroSlide["key"], string> = {
   live: "sessão ao vivo",
-  legacy: "Marca Milionária Legacy",
+  academy: "Academia",
   mmcast: "MMCast",
 };
 
@@ -324,22 +323,27 @@ function CinematicHero({
   episode: MmcastEpisode | null;
   live: RealLive | null;
 }) {
-  const legacy = useLegacyLaunch();
-  const [activeKey, setActiveKey] = useState<string | null>(null);
+  const [activeKey, setActiveKey] = useState<HeroKey | null>(null);
   const [paused, setPaused] = useState(false);
 
   const slides = useMemo<HeroSlide[]>(
     () => [
       ...(live ? [{ key: "live", kind: "live", live } as const] : []),
-      { key: "legacy", kind: "legacy" } as const,
       ...(episode ? [{ key: "mmcast", kind: "mmcast", episode } as const] : []),
+      ...(!live && !episode ? [{ key: "academy", kind: "academy" } as const] : []),
     ],
     [live, episode],
   );
   const count = slides.length;
   // A live no ar fica colada no topo e não roda sozinha: é o que interessa já.
   const onAir = live?.status === "live";
-  const active = slides[Math.max(0, slides.findIndex((s) => s.key === activeKey))] ?? slides[0];
+  const selectedKey = activeHeroKey(heroKeys(Boolean(live), Boolean(episode)), activeKey, onAir);
+  const active = slides.find((slide) => slide.key === selectedKey) ?? slides[0];
+
+  // A newly loaded or changed session always becomes the first highlight.
+  useEffect(() => {
+    setActiveKey(live ? "live" : null);
+  }, [live?.id, live?.status]);
 
   useEffect(() => {
     if (paused || onAir || count < 2) return;
@@ -347,55 +351,49 @@ function CinematicHero({
     const timer = window.setInterval(() => {
       setActiveKey((current) => {
         const at = Math.max(0, slides.findIndex((s) => s.key === current));
-        return slides[(at + 1) % slides.length].key;
+        return slides[(at + 1) % slides.length]?.key ?? null;
       });
     }, 7000);
     return () => window.clearInterval(timer);
   }, [count, paused, onAir, slides]);
 
   const thumb = episode?.thumbnail_url || dashboardHero;
+  if (!active) return null;
   const fade = "absolute inset-0 transition-opacity duration-1000 motion-reduce:transition-none";
   const layer = (key: HeroSlide["key"]) =>
     `${fade} ${active.key === key ? "opacity-100" : "opacity-0"}`;
 
   return (
-    <section aria-label="Destaques do MM Club" className="relative -mx-3 overflow-hidden sm:-mx-4 md:-mx-8">
-      <div className="relative min-h-[450px] bg-surface-2 sm:min-h-[380px] sm:aspect-video md:aspect-[21/9] md:min-h-[420px] md:max-h-[600px]">
+    <section aria-label="Destaques do MM Club" className="hero-theme relative -mx-3 overflow-hidden text-foreground sm:-mx-4 md:-mx-8">
+      <div className="relative min-h-[540px] bg-background sm:min-h-[460px] sm:aspect-video md:aspect-[21/9] md:min-h-[500px] md:max-h-[600px]">
         {live && (
           <div aria-hidden={active.key !== "live"} className={layer("live")}>
             <HeroLiveBackdrop live={live} />
           </div>
         )}
 
-        <div aria-hidden={active.key !== "legacy"} className={layer("legacy")}>
-          <img src={legacyHero.url} alt="Marca Milionária Legacy" decoding="async" fetchPriority="high"
+        <div aria-hidden={active.key !== "academy"} className={layer("academy")}>
+          <img src={dashboardHero} alt="" aria-hidden decoding="async" fetchPriority="high"
             className="absolute inset-0 h-full w-full object-cover" />
         </div>
 
         {episode && (
           <div aria-hidden={active.key !== "mmcast"} className={layer("mmcast")}>
-            <img src={thumb} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-2xl" />
-            <div className="absolute inset-x-0 top-0 aspect-video overflow-hidden md:hidden">
-              <img src={thumb} alt={episode.title} decoding="async" className="absolute inset-0 h-full w-full object-cover" />
-            </div>
-            <img src={thumb} alt="" aria-hidden className="hidden md:block absolute inset-0 h-full w-full object-contain md:object-right" />
+            <img src={thumb} alt={episode.title} decoding="async" className="absolute inset-0 h-full w-full object-cover object-center" />
           </div>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-background/10" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-background/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-hero-shade/80 via-hero-shade/15 to-hero-shade/20" />
         <div className="absolute inset-0 flex items-end">
-          <div className="w-full px-6 pb-14 md:px-14 md:pb-20">
+          <div className="w-full px-6 pb-14 pt-40 md:px-14 md:pb-16 md:pt-32">
             {active.kind === "live" && <HeroLiveContent live={active.live} />}
-            {active.kind === "legacy" && (
+            {active.kind === "academy" && (
               <div>
-                <p className="text-xs font-medium uppercase text-primary">{legacy.released ? "Já disponível" : "Novo curso"}</p>
                 <h1 className="mt-3 max-w-3xl font-display text-3xl leading-tight text-foreground md:text-6xl">
-                  Marca Milionária <span className="text-primary">Legacy</span>
+                  MM Club
                 </h1>
-                <p className="mt-3 max-w-xl text-sm text-muted-foreground md:text-lg">{legacy.released ? "Já podes começar. Todas as aulas abertas para membros." : `${legacy.headline}.`}</p>
                 <Button asChild className="btn-arrow mt-5">
-                  <Link to="/academia">{legacy.cta} <ArrowRight /></Link>
+                  <Link to="/academia">Ir para a Academia <ArrowRight /></Link>
                 </Button>
               </div>
             )}
@@ -435,10 +433,7 @@ function HeroLiveBackdrop({ live }: { live: RealLive }) {
   const cover = resolveLiveCoverUrl(live.cover_url ?? null);
   if (!cover) {
     return (
-      <div
-        className="absolute inset-0"
-        style={{ background: "linear-gradient(135deg, oklch(0.55 0.12 60), oklch(0.15 0.03 60))" }}
-      />
+      <img src={dashboardHero} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
     );
   }
   return (
@@ -463,15 +458,15 @@ function HeroLiveContent({ live }: { live: RealLive }) {
     <div className="max-w-3xl space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         {isLive ? (
-          <span className="inline-flex items-center gap-2 rounded-full bg-red-500 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white shadow-lg shadow-red-500/30">
+          <span className="inline-flex items-center gap-2 rounded-full bg-destructive px-3 py-1.5 text-[11px] font-bold uppercase text-destructive-foreground">
             <span className="relative inline-flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive-foreground opacity-75 motion-reduce:animate-none" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-destructive-foreground" />
             </span>
             Ao vivo agora
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary ring-1 ring-primary/30">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-1 px-3 py-1.5 text-[11px] font-semibold uppercase text-foreground ring-1 ring-border">
             <Calendar className="h-3 w-3" />
             Próxima sessão
           </span>
