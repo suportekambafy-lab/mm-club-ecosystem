@@ -3,6 +3,9 @@ import { InlineAlert } from "@/components/mm/inline-alert";
 import { NextStepCard } from "@/components/mm/next-step-card";
 import { OnboardingChecklist } from "@/components/mm/onboarding-checklist";
 import { ContinueWatching } from "@/components/mm/continue-watching";
+import { useContinueWatching } from "@/hooks/use-continue-watching";
+import { useNextStep } from "@/hooks/use-next-step";
+import { resumeMatchesStep } from "@/lib/club/resume-merge";
 import { ActiveProductModules } from "@/components/mm/product-modules";
 import { trackLoadTime } from "@/lib/ux-analytics";
 
@@ -21,7 +24,6 @@ import { Rail } from "@/components/mm/rail";
 import { LiveHeroBanner } from "@/components/mm/live-hero-banner";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import {
-  useUserProgress,
   applyProgress,
 } from "@/hooks/use-user-progress";
 import { listLivesAuthed as listLives } from "@/lib/lives.functions";
@@ -60,7 +62,14 @@ export const Route = createFileRoute("/_app/dashboard")({
 
 function DashboardPage() {
   const { loading: userLoading, user } = useCurrentUser();
-  const { progress, loaded: progressLoaded } = useUserProgress();
+  const { step, loaded: stepLoaded } = useNextStep();
+  const { item: resume } = useContinueWatching(user?.id);
+  // A mesma aula nunca aparece duas vezes: se o próximo passo já é a aula a
+  // retomar, é ele que mostra o minuto exato e o outro cartão fica de fora.
+  const merged = resumeMatchesStep(
+    resume,
+    step ? { courseId: step.course.id, lessonId: step.lesson.id } : null,
+  );
   const [episode, setEpisode] = useState<MmcastEpisode | null>(null);
 
   useEffect(() => {
@@ -122,7 +131,7 @@ function DashboardPage() {
 
   // Revelação progressiva: assim que a sessão e o progresso estão prontos o
   // painel aparece. As lives entram depois, com o seu próprio estado.
-  const ready = !userLoading && progressLoaded;
+  const ready = !userLoading && stepLoaded;
 
   useEffect(() => {
     if (ready) trackLoadTime("dashboard", startedAt.current);
@@ -156,10 +165,10 @@ function DashboardPage() {
       )}
 
       {user && <OnboardingChecklist userId={user.id} />}
-      {user && <ContinueWatching userId={user.id} />}
+      {resume && stepLoaded && !merged && <ContinueWatching item={resume} />}
 
-      {/* Trilho guiado: a aula exata a ver a seguir */}
-      <NextStepCard />
+      {/* Trilho guiado: a aula exata a ver a seguir, com o minuto de retoma */}
+      <NextStepCard step={step} resumeSeconds={merged && resume ? resume.seconds : null} />
 
 
       <ActiveProductModules />

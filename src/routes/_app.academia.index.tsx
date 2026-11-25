@@ -13,6 +13,7 @@ import { courseCoverBackground } from "@/lib/course-cover";
 import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb, parseDurationToMinutes, formatMinutes } from "@/lib/course-duration";
 import { CardGridSkeleton, RailSkeleton } from "@/components/mm/skeletons";
 import { NextStepCard } from "@/components/mm/next-step-card";
+import { computeNextStep } from "@/lib/next-step";
 import { Skeleton } from "@/components/ui/skeleton";
 import { trackUx } from "@/lib/ux-analytics";
 import { isFeaturedCourse, sortCatalog } from "@/lib/course-order";
@@ -113,6 +114,18 @@ function AcademiaPage() {
   const productCourses = catalog.filter((c) => productOfCourse(c) === activeProduct);
   const isFiltering = query.trim().length > 0 || objective !== "all";
 
+  // A aula exata a seguir, dentro do produto escolhido.
+  const step = useMemo(
+    () =>
+      loaded
+        ? computeNextStep(
+            allCourses.filter((c) => canOpen(c) && productOfCourse(c) === activeProduct),
+            progress,
+          )
+        : null,
+    [loaded, canOpen, activeProduct, progress],
+  );
+
 
   // Wait for real progress before painting hero/cards, so covers and
   // "continua onde ficaste" never flash the wrong state.
@@ -123,7 +136,7 @@ function AcademiaPage() {
 
   return (
     <div className="section-stack max-w-full overflow-x-clip">
-      <NextStepCard />
+      <NextStepCard step={step} />
 
       <section className="space-y-4">
         <div className="grid grid-cols-1 gap-4 px-1 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
