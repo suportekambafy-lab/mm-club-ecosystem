@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Clock, Lock, Play } from "lucide-react";
+import { useRef } from "react";
+import { ArrowRight, ChevronLeft, ChevronRight, Clock, Lock, Play } from "lucide-react";
 import { courses as allCourses, formatCourseRelease } from "@/data/courses";
 import { useUserProgress } from "@/hooks/use-user-progress";
 import { useCourseAccess } from "@/hooks/use-course-release";
@@ -16,6 +17,7 @@ export function CourseModules({ course, progress, openable, query }: { course: C
   const modules = (course.modules ?? []).filter((m) => m.lessons.length > 0).filter((m) =>
     !q || m.title.toLowerCase().includes(q) || m.lessons.some((l) => l.title.toLowerCase().includes(q)),
   );
+  const scroller = useRef<HTMLDivElement>(null);
   if (modules.length === 0) return null;
   return (
     <div className="space-y-4 pt-4">
@@ -26,7 +28,10 @@ export function CourseModules({ course, progress, openable, query }: { course: C
           </span>
         )}
       </div>
-      <div className={"grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 " + (openable ? "" : "opacity-60")}>
+      <div className="relative">
+      <button type="button" aria-label="Anterior" onClick={() => scroller.current?.scrollBy({ left: -(scroller.current.clientWidth * 0.8), behavior: "smooth" })} className="absolute -left-3 top-[28%] z-10 hidden h-9 w-9 items-center justify-center rounded-full bg-surface-1 text-foreground ring-1 ring-border shadow-lg hover:ring-primary/60 sm:flex"><ChevronLeft className="h-4 w-4" /></button>
+      <button type="button" aria-label="Seguinte" onClick={() => scroller.current?.scrollBy({ left: scroller.current.clientWidth * 0.8, behavior: "smooth" })} className="absolute -right-3 top-[28%] z-10 hidden h-9 w-9 items-center justify-center rounded-full bg-surface-1 text-foreground ring-1 ring-border shadow-lg hover:ring-primary/60 sm:flex"><ChevronRight className="h-4 w-4" /></button>
+      <div ref={scroller} className={"flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden " + (openable ? "" : "opacity-60")}>
         {modules.map((m, i) => {
           const completed = m.lessons.filter((l) => done?.has(l.id)).length;
           const next = m.lessons.find((l) => !done?.has(l.id)) ?? m.lessons[0]!;
@@ -59,13 +64,14 @@ export function CourseModules({ course, progress, openable, query }: { course: C
               </div>
             </>
           );
-          const cls = "group flex flex-col overflow-hidden rounded-2xl bg-surface-1 ring-1 ring-border transition hover:-translate-y-0.5 hover:ring-primary/60";
+          const cls = "group flex w-[78%] shrink-0 snap-start flex-col sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-2.5rem)/3)] xl:w-[calc((100%-3.75rem)/4)] overflow-hidden rounded-2xl bg-surface-1 ring-1 ring-border transition hover:-translate-y-0.5 hover:ring-primary/60";
           return openable ? (
             <Link key={m.id} to="/academia/$courseId/$lessonId" params={{ courseId: course.id, lessonId: next.id }} className={cls}>{body}</Link>
           ) : (
             <div key={m.id} className={cls}>{body}</div>
           );
         })}
+      </div>
       </div>
     </div>
   );
