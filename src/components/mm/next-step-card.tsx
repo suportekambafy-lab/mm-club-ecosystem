@@ -8,6 +8,8 @@ import { computeNextStep } from "@/lib/next-step";
 import { lessonThumb } from "@/lib/course-duration";
 import { courseCoverBackground, courseCoverImage } from "@/lib/course-cover";
 import { cn } from "@/lib/utils";
+import { useActiveProduct } from "@/hooks/use-active-product";
+import { productOfCourse } from "@/lib/club/products";
 
 /**
  * Trilho guiado — "o teu próximo passo".
@@ -20,7 +22,8 @@ export function NextStepCard({ className }: { className?: string }) {
   const { progress, loaded } = useUserProgress();
   const { canOpen } = useCourseAccess();
 
-  const open = useMemo(() => allCourses.filter((c) => canOpen(c)), [canOpen]);
+  const [active] = useActiveProduct();
+  const open = useMemo(() => allCourses.filter((c) => canOpen(c) && productOfCourse(c) === active), [canOpen, active]);
   const step = useMemo(
     () => (loaded ? computeNextStep(open, progress) : null),
     [loaded, open, progress],

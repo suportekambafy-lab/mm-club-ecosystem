@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { coursesById } from "@/data/courses";
 import { lessonThumb } from "@/lib/course-duration";
 import { courseCoverImage } from "@/lib/course-cover";
+import { useActiveProduct } from "@/hooks/use-active-product";
+import { productOfCourse } from "@/lib/club/products";
 import { formatSeconds } from "@/components/mm/lesson-notes";
 
 function durationSeconds(d: unknown): number {
@@ -19,6 +21,7 @@ type Item = { courseId: string; lessonId: string; seconds: number };
 /** Retoma a última aula aberta e não terminada, no minuto exato. */
 export function ContinueWatching({ userId }: { userId: string }) {
   const [item, setItem] = useState<Item | null>(null);
+  const [active] = useActiveProduct();
 
   useEffect(() => {
     let cancelled = false;
@@ -29,14 +32,14 @@ export function ContinueWatching({ userId }: { userId: string }) {
       .eq("completed", false)
       .gt("progress_seconds", 20)
       .order("last_watched_at", { ascending: false })
-      .limit(5)
+      .limit(30)
       .then(({ data }) => {
         if (cancelled) return;
-        const row = (data ?? []).find((r) => coursesById[r.course_id]);
+        const row = (data ?? []).find((r) => { const c = coursesById[r.course_id]; return !!c && productOfCourse(c) === active; });
         setItem(row ? { courseId: row.course_id, lessonId: row.lesson_id, seconds: row.progress_seconds } : null);
       });
     return () => { cancelled = true; };
-  }, [userId]);
+  }, [userId, active]);
 
   if (!item) return null;
   const course = coursesById[item.courseId];

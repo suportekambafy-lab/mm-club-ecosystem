@@ -3,6 +3,7 @@ import { InlineAlert } from "@/components/mm/inline-alert";
 import { NextStepCard } from "@/components/mm/next-step-card";
 import { OnboardingChecklist } from "@/components/mm/onboarding-checklist";
 import { ContinueWatching } from "@/components/mm/continue-watching";
+import { ActiveProductModules } from "@/components/mm/product-modules";
 import { trackLoadTime } from "@/lib/ux-analytics";
 
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -161,27 +162,7 @@ function DashboardPage() {
       <NextStepCard />
 
 
-      <Rail
-        title="Academia"
-        action={
-          <Link
-            to="/academia"
-            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-primary hover:underline"
-          >
-            Ver tudo <ArrowRight className="h-3 w-3" />
-          </Link>
-        }
-      >
-        {sortCatalog(courses).map((c) => (
-          <CourseCard
-            key={c.id}
-            course={applyProgress(c, progress)}
-            resumeLessonId={progress[c.id]?.lastLessonId ?? null}
-            className="w-[44vw] max-w-[300px] shrink-0 sm:w-[340px]"
-          />
-        ))}
-
-      </Rail>
+      <ActiveProductModules />
 
       <MmcastBlock ep={episode} />
 
