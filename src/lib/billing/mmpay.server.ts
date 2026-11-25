@@ -366,7 +366,7 @@ export async function grantMmpayClubAccess(sessionRef: string): Promise<void> {
     if (error) throw error;
     if (userId && newPassword) {
       try {
-        await sendNewMemberAccess({ email, name: pay.name, password: newPassword, eventId: pay.id, accessDescription: "O teu pagamento foi confirmado e já tens 6 meses de acesso ao MM Club." });
+        await sendNewMemberAccess({ email, name: pay.name, password: newPassword, eventId: pay.id, accessDescription: "O teu pagamento foi confirmado e o teu acesso ao MM Club já está ativo." });
       } catch {
         console.error("[mmpay] falha ao enviar email de boas-vindas", pay.id);
       }

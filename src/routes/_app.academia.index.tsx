@@ -17,6 +17,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { trackUx } from "@/lib/ux-analytics";
 import { isFeaturedCourse, sortCatalog } from "@/lib/course-order";
 import { Crown } from "lucide-react";
+import { useClubProducts } from "@/hooks/use-club-products";
+import { CLUB_PRODUCTS, productOfCourse, type ClubProduct } from "@/lib/club/products";
 
 
 export const Route = createFileRoute("/_app/academia/")({
@@ -47,6 +49,7 @@ function AcademiaPage() {
   const { progress, loaded } = useUserProgress();
   useAdminOverridesVersion();
   const { canOpen } = useCourseAccess();
+  const { ready: productsReady, isUnlocked } = useClubProducts();
   const liveCourses = useMemo(() => allCourses.filter((c) => canOpen(c)), [canOpen]);
   const upcomingCourses = useMemo(() => allCourses.filter((c) => !canOpen(c)), [canOpen]);
 
@@ -107,7 +110,7 @@ function AcademiaPage() {
 
   // Wait for real progress before painting hero/cards, so covers and
   // "continua onde ficaste" never flash the wrong state.
-  if (!loaded) return <AcademiaSkeleton />;
+  if (!loaded || !productsReady) return <AcademiaSkeleton />;
 
 
 
@@ -224,15 +227,33 @@ function AcademiaPage() {
                 {catalog.length} {catalog.length === 1 ? "curso" : "cursos"}
               </p>
             )}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {catalog.map((c) =>
-                canOpen(c) ? (
-                  <PosterCard key={c.id} course={c} progress={progress} inGrid />
-                ) : (
-                  <ComingSoonCard key={c.id} course={c} />
-                ),
-              )}
-            </div>
+            {CLUB_PRODUCTS.map((product) => {
+              const list = catalog.filter((c) => productOfCourse(c) === product.id);
+              const unlocked = isUnlocked(product.id);
+              if (list.length === 0 && isFiltering) return null;
+              return (
+                <div key={product.id} className="space-y-4 pt-4">
+                  <ProductHeader product={product} unlocked={unlocked} />
+                  {list.length === 0 ? (
+                    <p className="rounded-2xl border border-dashed border-border bg-surface-1 px-6 py-8 text-center text-sm text-muted-foreground">
+                      Cursos a chegar em breve.
+                    </p>
+                  ) : (
+                    <div className={"grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 " + (unlocked ? "" : "opacity-70")}>
+                      {list.map((c) =>
+                        !unlocked ? (
+                          <ComingSoonCard key={c.id} course={c} lockedLabel={`Desbloquear · ${product.priceEur} €`} />
+                        ) : canOpen(c) ? (
+                          <PosterCard key={c.id} course={c} progress={progress} inGrid />
+                        ) : (
+                          <ComingSoonCard key={c.id} course={c} />
+                        ),
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </>
         )}
 
@@ -357,7 +378,30 @@ function PosterCard({
   );
 }
 
-function ComingSoonCard({ course }: { course: Course }) {
+function ProductHeader({ product, unlocked }: { product: ClubProduct; unlocked: boolean }) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-3 px-1">
+      <div>
+        <h3 className="font-display text-xl text-foreground">{product.name}</h3>
+        <p className="text-sm text-muted-foreground">{product.tagline}</p>
+      </div>
+      {unlocked ? (
+        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+          {product.feature ? "Desbloqueado" : "Incluído no MM Club"}
+        </span>
+      ) : product.checkoutCode ? (
+        <a
+          href={`/pagar/${product.checkoutCode}`}
+          className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-gold-soft"
+        >
+          <Lock className="h-3.5 w-3.5" /> Desbloquear por {product.priceEur} €
+        </a>
+      ) : null}
+    </div>
+  );
+}
+
+function ComingSoonCard({ course, lockedLabel }: { course: Course; lockedLabel?: string }) {
   const expert = expertsById[course.expertId];
   return (
     <Link
@@ -370,12 +414,12 @@ function ComingSoonCard({ course }: { course: Course }) {
       </div>
       <div className="flex flex-col gap-2 p-5">
         <div className="inline-flex w-max items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-primary">
-          <Lock className="h-3 w-3" /> Em breve
+          <Lock className="h-3 w-3" /> {lockedLabel ?? "Em breve"}
         </div>
         <h3 className="font-display text-lg leading-tight text-foreground">
           {course.title}
         </h3>
-        {course.releaseAt && (
+        {!lockedLabel && course.releaseAt && (
           <p className="inline-flex items-center gap-1.5 text-xs text-primary">
             <Clock className="h-3 w-3" /> Disponível a {formatCourseRelease(course)}
           </p>

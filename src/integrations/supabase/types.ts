@@ -3504,6 +3504,7 @@ export type Database = {
           title: string
           total_amount_cents: number | null
           total_cycles: number | null
+          unlocks_feature: string | null
         }
         Insert: {
           active?: boolean
@@ -3527,6 +3528,7 @@ export type Database = {
           title: string
           total_amount_cents?: number | null
           total_cycles?: number | null
+          unlocks_feature?: string | null
         }
         Update: {
           active?: boolean
@@ -3550,6 +3552,7 @@ export type Database = {
           title?: string
           total_amount_cents?: number | null
           total_cycles?: number | null
+          unlocks_feature?: string | null
         }
         Relationships: [
           {
@@ -3558,6 +3561,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "catalog_prices"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mmpay_links_unlocks_feature_fkey"
+            columns: ["unlocks_feature"]
+            isOneToOne: false
+            referencedRelation: "entitlement_features"
+            referencedColumns: ["key"]
           },
         ]
       }
