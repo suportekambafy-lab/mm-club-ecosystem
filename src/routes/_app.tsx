@@ -1,4 +1,4 @@
-import { ProductSwitcher } from "@/components/mm/product-switcher";
+import { AccountMenu } from "@/components/mm/account-menu";
 import { createFileRoute, Link, Outlet, redirect, useRouter, useRouterState } from "@tanstack/react-router";
 import { SupportWidget } from "@/components/mm/support-widget";
 import { useEffect, useState, useSyncExternalStore } from "react";
@@ -529,9 +529,6 @@ function AppLayout() {
           </>
         )}
       </div>
-      <div className={cn("pb-3", compact ? "px-2" : "px-4")}>
-        <ProductSwitcher compact={compact} onPicked={() => setMobileOpen(false)} />
-      </div>
 
       <nav className={cn("flex-1 overflow-y-auto pb-4", compact ? "px-2 pt-2" : "px-4 pt-4")}>
         <div className={cn("space-y-1", !compact && "space-y-1.5")}>
@@ -633,37 +630,10 @@ function AppLayout() {
       <div className={cn("border-t border-border", compact ? "p-2" : "p-4")}>
         {authUser ? (
           compact ? (
-            <Link
-              to="/perfil"
-              aria-label="Perfil"
-              title={displayName}
-              className="mx-auto flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft"
-            >
-              {avatarSrc ? (
-                <img decoding="async" fetchPriority="high" src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
-              ) : (
-                initials
-              )}
-            </Link>
+            <AccountMenu avatarSrc={avatarSrc} initials={initials} displayName={displayName} onSignOut={handleSignOut} onPicked={() => setMobileOpen(false)} />
           ) : (
             <div className="flex items-center gap-2 rounded-lg px-2 py-2">
-              <Link
-                to="/perfil"
-                aria-label="Perfil"
-                className="flex min-w-0 flex-1 items-center gap-3 rounded-lg transition hover:bg-sidebar-accent -mx-1 px-1 py-1"
-              >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                  {avatarSrc ? (
-                    <img decoding="async" fetchPriority="high" src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
-                  ) : (
-                    initials
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
-                  <p className="truncate text-xs text-muted-foreground">{planLabel}</p>
-                </div>
-              </Link>
+              <AccountMenu expanded avatarSrc={avatarSrc} initials={initials} displayName={displayName} planLabel={planLabel} onSignOut={handleSignOut} onPicked={() => setMobileOpen(false)} />
               <button
                 onClick={handleSignOut}
                 aria-label="Sair"
@@ -786,17 +756,7 @@ function AppLayout() {
               <NotificationsBell />
               <NotificationsPrompt />
 
-              <Link
-                to="/perfil"
-                aria-label="Perfil"
-                className="ml-0.5 flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-background transition hover:bg-gold-soft sm:ml-1 sm:h-10 sm:w-10"
-              >
-                {avatarSrc ? (
-                  <img decoding="async" fetchPriority="high" src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
-                ) : (
-                  initials
-                )}
-              </Link>
+              <AccountMenu avatarSrc={avatarSrc} initials={initials} displayName={displayName} onSignOut={handleSignOut} />
             </div>
           </div>
         </header>

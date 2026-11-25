@@ -50,3 +50,4 @@
 
 - Load the dashboard’s latest podcast episode once in its parent and share it with the hero and episode block to keep both highlights consistent without duplicate requests.
 - Keep dashboard hero selection in the browser-safe hero-selection module; the dashboard shell overlays its topbar using scoped hero tokens so other pages and themes remain unchanged.
+- Share account and club switching through AccountMenu avatar triggers in the member shell; reuse existing product access checks and selection without a separate sidebar selector.
