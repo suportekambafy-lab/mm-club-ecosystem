@@ -307,11 +307,13 @@ function ReplayCard({
 
 type HeroSlide =
   | { key: "live"; kind: "live"; live: RealLive }
+  | { key: "weekly"; kind: "weekly" }
   | { key: "academy"; kind: "academy" }
   | { key: "mmcast"; kind: "mmcast"; episode: MmcastEpisode };
 
 const SLIDE_LABEL: Record<HeroSlide["key"], string> = {
   live: "sessão ao vivo",
+  weekly: "Live de acompanhamento",
   academy: "Academia",
   mmcast: "MMCast",
 };
@@ -329,6 +331,7 @@ function CinematicHero({
   const slides = useMemo<HeroSlide[]>(
     () => [
       ...(live ? [{ key: "live", kind: "live", live } as const] : []),
+      { key: "weekly", kind: "weekly" },
       ...(episode ? [{ key: "mmcast", kind: "mmcast", episode } as const] : []),
       ...(!live && !episode ? [{ key: "academy", kind: "academy" } as const] : []),
     ],
@@ -372,7 +375,7 @@ function CinematicHero({
           </div>
         )}
 
-        <div aria-hidden={active.key !== "academy"} className={layer("academy")}>
+        <div aria-hidden={active.key !== "academy" && active.key !== "weekly"} className={`${fade} ${active.key === "academy" || active.key === "weekly" ? "opacity-100" : "opacity-0"}`}>
           <img src={dashboardHero} alt="" aria-hidden decoding="async" fetchPriority="high"
             className="absolute inset-0 h-full w-full object-cover" />
         </div>
@@ -387,6 +390,16 @@ function CinematicHero({
         <div className="absolute inset-0 flex items-end">
           <div className="w-full px-6 pb-14 pt-40 md:px-14 md:pb-16 md:pt-32">
             {active.kind === "live" && <HeroLiveContent live={active.live} />}
+            {active.kind === "weekly" && (
+              <div className="max-w-3xl">
+                <p className="flex items-center gap-2 text-xs font-medium uppercase text-primary"><Calendar className="h-4 w-4" /> Todas as quartas-feiras</p>
+                <h1 className="mt-3 font-display text-3xl leading-tight text-foreground md:text-5xl">Live de acompanhamento</h1>
+                <p className="mt-3 text-xl font-medium text-foreground md:text-3xl">Às 20h30</p>
+                <Button asChild className="btn-arrow mt-5">
+                  <Link to="/lives"><Radio /> Ver lives <ArrowRight /></Link>
+                </Button>
+              </div>
+            )}
             {active.kind === "academy" && (
               <div>
                 <h1 className="mt-3 max-w-3xl font-display text-3xl leading-tight text-foreground md:text-6xl">
