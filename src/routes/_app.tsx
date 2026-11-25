@@ -1,3 +1,4 @@
+import { ProductSwitcher } from "@/components/mm/product-switcher";
 import { createFileRoute, Link, Outlet, redirect, useRouter, useRouterState } from "@tanstack/react-router";
 import { SupportWidget } from "@/components/mm/support-widget";
 import { useEffect, useState, useSyncExternalStore } from "react";
@@ -527,6 +528,9 @@ function AppLayout() {
             </div>
           </>
         )}
+      </div>
+      <div className={cn("pb-3", compact ? "px-2" : "px-4")}>
+        <ProductSwitcher compact={compact} onPicked={() => setMobileOpen(false)} />
       </div>
 
       <nav className={cn("flex-1 overflow-y-auto pb-4", compact ? "px-2 pt-2" : "px-4 pt-4")}>
