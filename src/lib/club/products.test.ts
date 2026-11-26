@@ -8,13 +8,10 @@ describe("produtos MM Club", () => {
   it("afiliados vai para Infoprodutos, incluindo cópias founder", () => {
     expect(productOfCourse({ id: "founder--marca-milionaria--lncamentos-4-em-1" })).toBe("infoprodutos");
   });
-  it("extras custam 97 €", () => {
-    expect(clubProduct("infoprodutos").priceEur).toBe(97);
-    expect(clubProduct("ia").priceEur).toBe(97);
+  it("Marca Milionária fica no Cash on Delivery", () => {
+    expect(productOfCourse({ id: "marca-milionaria" })).toBe("cod");
   });
-  it("extra trancado sem compra, aberto com compra", () => {
-    expect(isProductUnlocked("ia", new Set(), false)).toBe(false);
-    expect(isProductUnlocked("ia", new Set(["product.ia"]), false)).toBe(true);
-    expect(isProductUnlocked("ecommerce", new Set(), false)).toBe(true);
+  it("todos os clubes abertos a quem tem acesso", () => {
+    for (const id of ["ecommerce", "infoprodutos", "ia", "cod"] as const) expect(isProductUnlocked(id, new Set(), false)).toBe(true);
   });
 });
