@@ -62,6 +62,8 @@ function ProfilePage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const coverFileRef = useRef<HTMLInputElement>(null);
   const adminIds = useAdminIds();
+  const [accessUserId, setAccessUserId] = useState("");
+  const access = useClubAccessExpiry(accessUserId);
 
   const [overview, setOverview] = useState<BillingOverview | null>(null);
   const [subLoading, setSubLoading] = useState(true);
@@ -297,7 +299,7 @@ function ProfilePage() {
     .join("")
     .toUpperCase();
   const isAdmin = authUser ? adminIds.has(authUser.id) : false;
-  const access = useClubAccessExpiry(authUser?.id ?? "");
+  if (authUser && accessUserId !== authUser.id) queueMicrotask(() => setAccessUserId(authUser.id));
 
 
   const courses = allCourses.map((c) => applyProgress(c, userProgress));
