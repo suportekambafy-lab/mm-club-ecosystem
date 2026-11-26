@@ -15,6 +15,15 @@ export type GrantInput = {
   metadata?: Record<string, unknown>;
 };
 
+/** Assinaturas deixam de prolongar o acesso: terminam no máximo nesta data. */
+export const SUBSCRIPTION_ACCESS_DEADLINE = "2027-02-26T23:59:59Z";
+
+export function capSubscriptionExpiry(source: string, expiresAt: string | null): string | null {
+  if (source !== "subscription") return expiresAt;
+  if (!expiresAt || Date.parse(expiresAt) > Date.parse(SUBSCRIPTION_ACCESS_DEADLINE)) return SUBSCRIPTION_ACCESS_DEADLINE;
+  return expiresAt;
+}
+
 export async function grantFeature(input: GrantInput): Promise<void> {
   // The uniqueness index on entitlement_grants uses COALESCE(source_id, ...),
   // an expression index PostgREST cannot target with ON CONFLICT — so we do an
@@ -25,7 +34,7 @@ export async function grantFeature(input: GrantInput): Promise<void> {
     source: input.source,
     source_id: input.sourceId ?? null,
     quota: input.quota ?? null,
-    expires_at: input.expiresAt ?? null,
+    expires_at: capSubscriptionExpiry(input.source, input.expiresAt ?? null),
     revoked_at: null,
     metadata: (input.metadata ?? {}) as never,
   };
