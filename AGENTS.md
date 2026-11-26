@@ -53,3 +53,4 @@
 - Share account and club switching through AccountMenu avatar triggers in the member shell; reuse existing product access checks and selection without a separate sidebar selector.
 - External Legacy buyers activate via public /ativar; the allow-list lives in a server-only module and grants use a fixed source id so they stay idempotent.
 - Card-update email suppression uses a shared policy at both legacy and notification-engine delivery boundaries, including forced resends, so billing processing remains untouched.
+- Billing revocations must remain scoped to the subscription source and ID; independent manual access survives failed payments, suspension and cancellation without changing collection processing.
