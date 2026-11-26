@@ -800,7 +800,7 @@ function AppLayout() {
               <CancelBanner />
             </>
           ) : null}
-          {authUser ? contentLocked ? <div className="py-12 text-center"><GraduationCap className="mx-auto mb-4 h-8 w-8 text-muted-foreground"/><h1 className="text-2xl font-semibold">Acesso aos conteúdos bloqueado</h1><Link to="/subscricao" className="mt-4 inline-block text-primary underline underline-offset-4">Renovar acesso</Link></div> : <Outlet /> : <div className="min-h-[60vh]" />}
+          {authUser ? contentLocked ? <div className="py-12 text-center"><GraduationCap className="mx-auto mb-4 h-8 w-8 text-muted-foreground"/><h1 className="text-2xl font-semibold">O teu acesso terminou</h1><p className="mt-2 text-muted-foreground">Para renovar, entra em contacto com o suporte.</p><a href="mailto:geral@mmclub.pt" className="mt-4 inline-block text-primary underline underline-offset-4">Contactar o suporte</a></div> : <Outlet /> : <div className="min-h-[60vh]" />}
         </main>
       </div>
 
