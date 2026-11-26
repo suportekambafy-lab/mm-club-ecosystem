@@ -1481,6 +1481,27 @@ export type Database = {
           },
         ]
       }
+      community_post_announcements: {
+        Row: {
+          announce: boolean | null
+          created_at: string
+          post_id: string
+          reason: string | null
+        }
+        Insert: {
+          announce?: boolean | null
+          created_at?: string
+          post_id: string
+          reason?: string | null
+        }
+        Update: {
+          announce?: boolean | null
+          created_at?: string
+          post_id?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
       community_post_views: {
         Row: {
           post_id: string
@@ -3504,6 +3525,7 @@ export type Database = {
           title: string
           total_amount_cents: number | null
           total_cycles: number | null
+          unlocks_feature: string | null
         }
         Insert: {
           active?: boolean
@@ -3527,6 +3549,7 @@ export type Database = {
           title: string
           total_amount_cents?: number | null
           total_cycles?: number | null
+          unlocks_feature?: string | null
         }
         Update: {
           active?: boolean
@@ -3550,6 +3573,7 @@ export type Database = {
           title?: string
           total_amount_cents?: number | null
           total_cycles?: number | null
+          unlocks_feature?: string | null
         }
         Relationships: [
           {
@@ -3558,6 +3582,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "catalog_prices"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mmpay_links_unlocks_feature_fkey"
+            columns: ["unlocks_feature"]
+            isOneToOne: false
+            referencedRelation: "entitlement_features"
+            referencedColumns: ["key"]
           },
         ]
       }
@@ -5316,6 +5347,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_academy_viewer: { Args: { _user_id: string }; Returns: boolean }
+      is_club_viewer: { Args: { _user_id: string }; Returns: boolean }
       is_community_restricted: { Args: { _user_id: string }; Returns: boolean }
       is_live_cohost: {
         Args: { _live_id: string; _user_id: string }

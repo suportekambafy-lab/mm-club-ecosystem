@@ -37,6 +37,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { RankBadge } from "@/components/mm/rank-badge";
+import { memberTenureLabel } from "@/lib/club/member-tenure";
 import { CommunityLeaderboard } from "@/components/mm/community-leaderboard";
 import { useCommunityRanks } from "@/hooks/use-community-ranks";
 import { useAdminIds } from "@/hooks/use-admin-ids";
@@ -81,6 +82,7 @@ type Profile = {
   display_name: string;
   avatar_url: string | null;
   bio: string | null;
+  created_at?: string | null;
 };
 type Reaction = { emoji: string; user_id: string };
 type Post = {
@@ -188,7 +190,7 @@ function usePosts(categoryId: string | null, userId: string | null, enabled: boo
         .from("community_posts")
         .select(
           `id, author_id, category_id, content, image_url, created_at, edited_at, pinned_at, views_count,
-           author:profiles!community_posts_author_id_fkey (id, display_name, avatar_url, bio),
+           author:profiles!community_posts_author_id_fkey (id, display_name, avatar_url, bio, created_at),
            category:community_categories (id, slug, name, color, sort_order),
            likes:community_likes (user_id),
            comments:community_comments (id),
@@ -1470,6 +1472,9 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string |
               <MemberNameButton userId={post.author_id}>{authorName}</MemberNameButton>
               {authorIsAdmin && <VerifiedBadge size={14} />}
               <RankBadge rank={ranks.get(post.author_id)} userId={post.author_id} name={authorName} compact />
+              {memberTenureLabel(post.author?.created_at) && (
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary ring-1 ring-primary/20">{memberTenureLabel(post.author?.created_at)}</span>
+              )}
             </p>
             <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
               <span>{timeAgo(post.created_at)}</span>

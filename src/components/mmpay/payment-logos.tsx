@@ -73,3 +73,23 @@ export function MbWayLogo({ className }: LogoProps) {
   );
 }
 
+export function KlarnaLogo({ className }: LogoProps) {
+  return (
+    <LogoTile label="Klarna" tone="pink" className={className}>
+      <svg viewBox="0 0 46 16" className="h-auto w-[76%]" aria-hidden>
+        <text
+          x="23"
+          y="12.5"
+          textAnchor="middle"
+          fontFamily="Arial, Helvetica, sans-serif"
+          fontSize="12"
+          fontWeight="800"
+          fill="#17120F"
+          letterSpacing="0.3"
+        >
+          Klarna.
+        </text>
+      </svg>
+    </LogoTile>
+  );
+}

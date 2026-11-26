@@ -7,8 +7,10 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { secured } from "@/lib/security/gate";
 import {
+  confirmKlarnaOrderSchema,
   confirmMmpayPaymentSchema,
   createMmpayLinkSchema,
+  startKlarnaPaymentSchema,
   startMmpayCheckoutSchema,
   uploadMmpayCoverSchema,
   updateMmpayLinkSchema,
@@ -143,6 +145,30 @@ export const startMmpayCheckout = createServerFn({ method: "POST" })
       origin: data.origin,
       method: data.method,
     });
+  });
+
+/** Inicia um pagamento Klarna direto (visitante, sem conta). */
+export const startKlarnaMmpayPayment = createServerFn({ method: "POST" })
+  .middleware([
+    ...secured({
+      name: "mmpay.startKlarna",
+      write: true,
+      auth: false,
+      emergency: "block",
+    }),
+  ])
+  .inputValidator((input: unknown) => startKlarnaPaymentSchema.parse(input))
+  .handler(async ({ data }) => {
+    const { startKlarnaMmpayPayment: start } = await import("@/lib/billing/mmpay.server");
+    return start({ code: data.code, email: data.email, name: data.name, phone: data.phone });
+  });
+
+/** Conclui o pagamento Klarna com o authorization_token do widget. */
+export const confirmKlarnaMmpayOrder = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => confirmKlarnaOrderSchema.parse(input))
+  .handler(async ({ data }) => {
+    const { confirmKlarnaMmpayOrder: confirm } = await import("@/lib/billing/mmpay.server");
+    return confirm(data);
   });
 
 /** Confirma o pagamento quando o cliente regressa do Stripe. */

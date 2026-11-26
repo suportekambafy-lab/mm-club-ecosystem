@@ -26,6 +26,10 @@ export const Route = createFileRoute("/_app/jade/$threadId")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { q?: string; send?: number } => ({
+    ...(typeof s.q === "string" && s.q ? { q: s.q.slice(0, 1000) } : {}),
+    ...(s.send ? { send: 1 } : {}),
+  }),
   component: JadeThreadPage,
   errorComponent: JadeThreadError,
 });
@@ -68,6 +72,7 @@ function toUIMessages(rows: AiMessageRow[]): UIMessage[] {
 
 function JadeThreadPage() {
   const { threadId } = Route.useParams();
+  const search = Route.useSearch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fetchThread = useServerFn(getThread);
@@ -105,6 +110,8 @@ function JadeThreadPage() {
       threadId={threadId}
       initialMessages={initialMessages}
       onTitleChanged={onTitleChanged}
+      initialPrompt={search.q}
+      autoSend={!!search.send}
     />
   );
 }

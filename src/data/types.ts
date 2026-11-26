@@ -61,6 +61,8 @@ export interface Module {
 
 export interface Course {
   id: string;
+  /** Produto do MM Club a que o curso pertence (por omissão: E-commerce). */
+  product?: "ecommerce" | "infoprodutos" | "ia";
   title: string;
   tagline: string;
   description: string;

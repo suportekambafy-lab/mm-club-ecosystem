@@ -10,10 +10,11 @@ import { trackMeta } from "@/lib/meta/pixel";
 export const Route = createFileRoute("/checkout/return")({
   validateSearch: (
     search: Record<string, unknown>,
-  ): { session_id?: string; intent?: string } => ({
+  ): { session_id?: string; intent?: string; token?: string } => ({
     session_id:
       typeof search.session_id === "string" ? search.session_id : undefined,
     intent: typeof search.intent === "string" ? search.intent : undefined,
+    token: typeof search.token === "string" ? search.token : undefined,
   }),
   head: () => ({
     meta: [
@@ -25,14 +26,14 @@ export const Route = createFileRoute("/checkout/return")({
 });
 
 function CheckoutReturn() {
-  const { session_id, intent } = Route.useSearch();
+  const { session_id, intent, token } = Route.useSearch();
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["guest-checkout", intent],
-    queryFn: () => getGuestCheckoutStatus({ data: { intentId: intent! } }),
-    enabled: Boolean(intent),
+    queryKey: ["guest-checkout", intent, token],
+    queryFn: () => getGuestCheckoutStatus({ data: { intentId: intent!, token: token ?? "" } }),
+    enabled: Boolean(intent && token),
     refetchInterval: (q) => {
       const d = q.state.data;
       if (d && "ready" in d && (d.ready || d.failed)) return false;

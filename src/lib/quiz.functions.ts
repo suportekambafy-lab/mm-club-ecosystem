@@ -52,6 +52,36 @@ async function assertStaff(supabase: any, userId: string) {
   if (!(await isStaff(supabase, userId))) throw new Error("Acesso apenas para a equipa");
 }
 
+/** Só membros com acesso à academia (ou a equipa) fazem testes publicados. */
+async function assertQuizAccess(
+  supabaseAdmin: any,
+  context: { supabase: any; userId: string },
+  courseId: string,
+  moduleId: string,
+): Promise<{ pass_score: number; question_count: number; published: boolean }> {
+  const staff = await isStaff(context.supabase, context.userId);
+  if (!staff) {
+    const { data: ok, error } = await context.supabase.rpc("has_feature", {
+      _user_id: context.userId,
+      _feature: "academy.access",
+    });
+    if (error || ok !== true) throw new Error("Acesso não autorizado");
+  }
+  const { data: cfg, error } = await supabaseAdmin
+    .from("quiz_module_settings")
+    .select("published, pass_score, question_count")
+    .eq("course_id", courseId)
+    .eq("module_id", moduleId)
+    .maybeSingle();
+  if (error) throw new Error("Teste indisponível");
+  if (!staff && !cfg?.published) throw new Error("Teste indisponível");
+  return {
+    published: Boolean(cfg?.published),
+    pass_score: cfg?.pass_score ?? 80,
+    question_count: cfg?.question_count ?? 5,
+  };
+}
+
 /** Estado dos testes de um curso para o membro autenticado. */
 export const getCourseQuizState = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -136,26 +166,15 @@ export const getModuleQuiz = createServerFn({ method: "POST" })
     courseId: String(data?.courseId ?? ""),
     moduleId: String(data?.moduleId ?? ""),
   }))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const [{ data: settings }, { data: rows }] = await Promise.all([
-      supabaseAdmin
-        .from("quiz_module_settings" as never)
-        .select("published, pass_score, question_count")
-        .eq("course_id" as never, data.courseId as never)
-        .eq("module_id" as never, data.moduleId as never)
-        .maybeSingle(),
-      supabaseAdmin
-        .from("quiz_questions" as never)
-        .select("id, prompt, options")
-        .eq("course_id" as never, data.courseId as never)
-        .eq("module_id" as never, data.moduleId as never)
-        .eq("active" as never, true as never),
-    ]);
-
-    const cfg = (settings ?? null) as
-      | { published: boolean; pass_score: number; question_count: number }
-      | null;
+    const cfg = await assertQuizAccess(supabaseAdmin, context as any, data.courseId, data.moduleId);
+    const { data: rows } = await supabaseAdmin
+      .from("quiz_questions" as never)
+      .select("id, prompt, options")
+      .eq("course_id" as never, data.courseId as never)
+      .eq("module_id" as never, data.moduleId as never)
+      .eq("active" as never, true as never);
     const list = ((rows ?? []) as Array<{ id: string; prompt: string; options: unknown }>).map(
       (r) => ({
         id: r.id,
@@ -198,22 +217,18 @@ export const submitModuleQuiz = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const ids = data.answers.map((a) => a.questionId).filter(Boolean);
 
-    const [{ data: settings }, { data: rows }] = await Promise.all([
-      supabaseAdmin
-        .from("quiz_module_settings" as never)
-        .select("pass_score")
-        .eq("course_id" as never, data.courseId as never)
-        .eq("module_id" as never, data.moduleId as never)
-        .maybeSingle(),
-      supabaseAdmin
-        .from("quiz_questions" as never)
-        .select("id, prompt, options, correct_index, explanation, lesson_id, lesson_title, start_seconds")
-        .eq("course_id" as never, data.courseId as never)
-        .eq("module_id" as never, data.moduleId as never)
-        .in("id" as never, ids as never),
-    ]);
-
-    const passScore = ((settings ?? null) as { pass_score: number } | null)?.pass_score ?? 80;
+    const cfg = await assertQuizAccess(supabaseAdmin, context as any, data.courseId, data.moduleId);
+    if (new Set(ids).size !== ids.length) throw new Error("Respostas inválidas");
+    const { data: rows, error: rowsError } = await supabaseAdmin
+      .from("quiz_questions" as never)
+      .select("id, prompt, options, correct_index, explanation, lesson_id, lesson_title, start_seconds")
+      .eq("course_id" as never, data.courseId as never)
+      .eq("module_id" as never, data.moduleId as never)
+      .eq("active" as never, true as never)
+      .in("id" as never, ids as never);
+    if (rowsError) throw new Error("Teste indisponível");
+    if (((rows ?? []) as unknown[]).length !== ids.length) throw new Error("Respostas inválidas");
+    const passScore = cfg.pass_score;
     const byId = new Map(
       ((rows ?? []) as Array<any>).map((r) => [r.id as string, r]),
     );
@@ -243,7 +258,7 @@ export const submitModuleQuiz = createServerFn({ method: "POST" })
     const score = Math.round((correct / total) * 100);
     const passed = score >= passScore;
 
-    await supabaseAdmin.from("quiz_attempts" as never).insert({
+    const { error: attemptError } = await supabaseAdmin.from("quiz_attempts" as never).insert({
       user_id: context.userId,
       course_id: data.courseId,
       module_id: data.moduleId,
@@ -255,6 +270,7 @@ export const submitModuleQuiz = createServerFn({ method: "POST" })
         correct: r.correct,
       })),
     } as never);
+    if (attemptError) throw new Error("Não foi possível gravar a tentativa");
 
     return { score, passed, passScore, correct, total: results.length, results };
   });
@@ -266,15 +282,16 @@ export const checkQuizAnswer = createServerFn({ method: "POST" })
     questionId: String(data?.questionId ?? ""),
     choice: Number(data?.choice),
   }))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await supabaseAdmin
       .from("quiz_questions" as never)
-      .select("id, correct_index, explanation, lesson_id, lesson_title, start_seconds")
+      .select("id, course_id, module_id, active, correct_index, explanation, lesson_id, lesson_title, start_seconds")
       .eq("id" as never, data.questionId as never)
       .maybeSingle();
     const r = (row ?? null) as any;
-    if (!r) throw new Error("Pergunta não encontrada");
+    if (!r || !r.active) throw new Error("Pergunta não encontrada");
+    await assertQuizAccess(supabaseAdmin, context as any, r.course_id, r.module_id);
     return {
       correctIndex: Number(r.correct_index),
       correct: Number(r.correct_index) === data.choice,

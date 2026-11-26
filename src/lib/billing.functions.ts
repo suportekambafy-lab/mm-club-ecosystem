@@ -433,7 +433,7 @@ export const startGuestCheckout = createServerFn({ method: "POST" })
 /** Status of a guest checkout intent (used by the return page to poll). */
 export const getGuestCheckoutStatus = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) =>
-    z.object({ intentId: z.string().uuid() }).parse(input),
+    z.object({ intentId: z.string().uuid(), token: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import(
@@ -443,11 +443,13 @@ export const getGuestCheckoutStatus = createServerFn({ method: "GET" })
     const { data: intent } = await supabaseAdmin
       .from("billing_checkout_intents")
       .select(
-        "id, email, status, account_created, gateway, gateway_payment_id, price_id",
+        "id, email, status, account_created, gateway, gateway_payment_id, price_id, metadata",
       )
       .eq("id", data.intentId)
       .maybeSingle();
-    if (!intent) return { found: false as const };
+    // Só quem tem o segredo do link de regresso do pagamento vê o estado.
+    const expectedToken = (intent?.metadata as { returnToken?: string } | null)?.returnToken;
+    if (!intent || !expectedToken || expectedToken !== data.token) return { found: false as const };
 
     // Reconcile straight away so the user does not wait for the webhook.
     if (intent.status !== "provisioned" && intent.gateway_payment_id) {

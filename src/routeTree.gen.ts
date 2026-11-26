@@ -14,6 +14,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AplicacaoRouteImport } from './routes/aplicacao'
+import { Route as AtivarRouteImport } from './routes/ativar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ComercialLoginRouteImport } from './routes/comercial-login'
 import { Route as PagamentoRouteImport } from './routes/pagamento'
@@ -44,6 +45,7 @@ import { Route as AppSubscricaoRouteImport } from './routes/_app.subscricao'
 import { Route as AuthenticatedComercialRouteImport } from './routes/_authenticated/comercial'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAplicacoesRouteImport } from './routes/admin.aplicacoes'
+import { Route as AdminAtivacoesRouteImport } from './routes/admin.ativacoes'
 import { Route as AdminAulasRouteImport } from './routes/admin.aulas'
 import { Route as AdminCertificadosRouteImport } from './routes/admin.certificados'
 import { Route as AdminComunicacaoRouteImport } from './routes/admin.comunicacao'
@@ -61,6 +63,7 @@ import { Route as AdminProgressoRouteImport } from './routes/admin.progresso'
 import { Route as AdminQuizzesRouteImport } from './routes/admin.quizzes'
 import { Route as AdminSaudeRouteImport } from './routes/admin.saude'
 import { Route as AdminSegurancaRouteImport } from './routes/admin.seguranca'
+import { Route as AdminServicosRouteImport } from './routes/admin.servicos'
 import { Route as AdminSuporteRouteImport } from './routes/admin.suporte'
 import { Route as AdminTranscricoesRouteImport } from './routes/admin.transcricoes'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
@@ -89,10 +92,13 @@ import { Route as AppLivesIndexRouteImport } from './routes/_app.lives.index'
 import { Route as AppLivesLiveIdRouteImport } from './routes/_app.lives.$liveId'
 import { Route as AppMmcastEpisodeIdRouteImport } from './routes/_app.mmcast_.$episodeId'
 import { Route as AuthenticatedComercialIndexRouteImport } from './routes/_authenticated/comercial.index'
+import { Route as AuthenticatedComercialAoVivoRouteImport } from './routes/_authenticated/comercial.ao-vivo'
 import { Route as AuthenticatedComercialAplicacoesRouteImport } from './routes/_authenticated/comercial.aplicacoes'
 import { Route as AuthenticatedComercialEquipaRouteImport } from './routes/_authenticated/comercial.equipa'
 import { Route as AuthenticatedComercialMetasRouteImport } from './routes/_authenticated/comercial.metas'
 import { Route as AuthenticatedComercialMmpayRouteImport } from './routes/_authenticated/comercial.mmpay'
+import { Route as AuthenticatedComercialServicosRouteImport } from './routes/_authenticated/comercial.servicos'
+import { Route as AuthenticatedComercialTransacoesRouteImport } from './routes/_authenticated/comercial.transacoes'
 import { Route as AuthenticatedComercialUtilizadoresRouteImport } from './routes/_authenticated/comercial.utilizadores'
 import { Route as AuthenticatedComercialVendasRouteImport } from './routes/_authenticated/comercial.vendas'
 import { Route as AdminFinanceiroIndexRouteImport } from './routes/admin.financeiro.index'
@@ -182,6 +188,11 @@ const AdminRoute = AdminRouteImport.update({
 const AplicacaoRoute = AplicacaoRouteImport.update({
   id: '/aplicacao',
   path: '/aplicacao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AtivarRoute = AtivarRouteImport.update({
+  id: '/ativar',
+  path: '/ativar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -334,6 +345,11 @@ const AdminAplicacoesRoute = AdminAplicacoesRouteImport.update({
   path: '/aplicacoes',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAtivacoesRoute = AdminAtivacoesRouteImport.update({
+  id: '/ativacoes',
+  path: '/ativacoes',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAulasRoute = AdminAulasRouteImport.update({
   id: '/aulas',
   path: '/aulas',
@@ -417,6 +433,11 @@ const AdminSaudeRoute = AdminSaudeRouteImport.update({
 const AdminSegurancaRoute = AdminSegurancaRouteImport.update({
   id: '/seguranca',
   path: '/seguranca',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminServicosRoute = AdminServicosRouteImport.update({
+  id: '/servicos',
+  path: '/servicos',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSuporteRoute = AdminSuporteRouteImport.update({
@@ -562,6 +583,12 @@ const AuthenticatedComercialIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedComercialRoute,
   } as any)
+const AuthenticatedComercialAoVivoRoute =
+  AuthenticatedComercialAoVivoRouteImport.update({
+    id: '/ao-vivo',
+    path: '/ao-vivo',
+    getParentRoute: () => AuthenticatedComercialRoute,
+  } as any)
 const AuthenticatedComercialAplicacoesRoute =
   AuthenticatedComercialAplicacoesRouteImport.update({
     id: '/aplicacoes',
@@ -584,6 +611,18 @@ const AuthenticatedComercialMmpayRoute =
   AuthenticatedComercialMmpayRouteImport.update({
     id: '/mmpay',
     path: '/mmpay',
+    getParentRoute: () => AuthenticatedComercialRoute,
+  } as any)
+const AuthenticatedComercialServicosRoute =
+  AuthenticatedComercialServicosRouteImport.update({
+    id: '/servicos',
+    path: '/servicos',
+    getParentRoute: () => AuthenticatedComercialRoute,
+  } as any)
+const AuthenticatedComercialTransacoesRoute =
+  AuthenticatedComercialTransacoesRouteImport.update({
+    id: '/transacoes',
+    path: '/transacoes',
     getParentRoute: () => AuthenticatedComercialRoute,
   } as any)
 const AuthenticatedComercialUtilizadoresRoute =
@@ -977,6 +1016,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/aplicacao': typeof AplicacaoRoute
+  '/ativar': typeof AtivarRoute
   '/auth': typeof AuthRoute
   '/comercial-login': typeof ComercialLoginRoute
   '/pagamento': typeof PagamentoRoute
@@ -1006,6 +1046,7 @@ export interface FileRoutesByFullPath {
   '/subscricao': typeof AppSubscricaoRoute
   '/comercial': typeof AuthenticatedComercialRouteWithChildren
   '/admin/aplicacoes': typeof AdminAplicacoesRoute
+  '/admin/ativacoes': typeof AdminAtivacoesRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/certificados': typeof AdminCertificadosRoute
   '/admin/comunicacao': typeof AdminComunicacaoRoute
@@ -1023,6 +1064,7 @@ export interface FileRoutesByFullPath {
   '/admin/quizzes': typeof AdminQuizzesRoute
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/seguranca': typeof AdminSegurancaRoute
+  '/admin/servicos': typeof AdminServicosRoute
   '/admin/suporte': typeof AdminSuporteRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
@@ -1047,10 +1089,13 @@ export interface FileRoutesByFullPath {
   '/jade/$threadId': typeof AppJadeThreadIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/mmcast/$episodeId': typeof AppMmcastEpisodeIdRoute
+  '/comercial/ao-vivo': typeof AuthenticatedComercialAoVivoRoute
   '/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
   '/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
   '/comercial/metas': typeof AuthenticatedComercialMetasRoute
   '/comercial/mmpay': typeof AuthenticatedComercialMmpayRoute
+  '/comercial/servicos': typeof AuthenticatedComercialServicosRoute
+  '/comercial/transacoes': typeof AuthenticatedComercialTransacoesRoute
   '/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
   '/comercial/vendas': typeof AuthenticatedComercialVendasRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
@@ -1127,6 +1172,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/aplicacao': typeof AplicacaoRoute
+  '/ativar': typeof AtivarRoute
   '/auth': typeof AuthRoute
   '/comercial-login': typeof ComercialLoginRoute
   '/pagamento': typeof PagamentoRoute
@@ -1152,6 +1198,7 @@ export interface FileRoutesByTo {
   '/shorts': typeof AppShortsRoute
   '/subscricao': typeof AppSubscricaoRoute
   '/admin/aplicacoes': typeof AdminAplicacoesRoute
+  '/admin/ativacoes': typeof AdminAtivacoesRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/certificados': typeof AdminCertificadosRoute
   '/admin/comunicacao': typeof AdminComunicacaoRoute
@@ -1167,6 +1214,7 @@ export interface FileRoutesByTo {
   '/admin/quizzes': typeof AdminQuizzesRoute
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/seguranca': typeof AdminSegurancaRoute
+  '/admin/servicos': typeof AdminServicosRoute
   '/admin/suporte': typeof AdminSuporteRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
@@ -1189,10 +1237,13 @@ export interface FileRoutesByTo {
   '/jade/$threadId': typeof AppJadeThreadIdRoute
   '/lives/$liveId': typeof AppLivesLiveIdRoute
   '/mmcast/$episodeId': typeof AppMmcastEpisodeIdRoute
+  '/comercial/ao-vivo': typeof AuthenticatedComercialAoVivoRoute
   '/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
   '/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
   '/comercial/metas': typeof AuthenticatedComercialMetasRoute
   '/comercial/mmpay': typeof AuthenticatedComercialMmpayRoute
+  '/comercial/servicos': typeof AuthenticatedComercialServicosRoute
+  '/comercial/transacoes': typeof AuthenticatedComercialTransacoesRoute
   '/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
   '/comercial/vendas': typeof AuthenticatedComercialVendasRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
@@ -1273,6 +1324,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/aplicacao': typeof AplicacaoRoute
+  '/ativar': typeof AtivarRoute
   '/auth': typeof AuthRoute
   '/comercial-login': typeof ComercialLoginRoute
   '/pagamento': typeof PagamentoRoute
@@ -1302,6 +1354,7 @@ export interface FileRoutesById {
   '/_app/subscricao': typeof AppSubscricaoRoute
   '/_authenticated/comercial': typeof AuthenticatedComercialRouteWithChildren
   '/admin/aplicacoes': typeof AdminAplicacoesRoute
+  '/admin/ativacoes': typeof AdminAtivacoesRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/certificados': typeof AdminCertificadosRoute
   '/admin/comunicacao': typeof AdminComunicacaoRoute
@@ -1319,6 +1372,7 @@ export interface FileRoutesById {
   '/admin/quizzes': typeof AdminQuizzesRoute
   '/admin/saude': typeof AdminSaudeRoute
   '/admin/seguranca': typeof AdminSegurancaRoute
+  '/admin/servicos': typeof AdminServicosRoute
   '/admin/suporte': typeof AdminSuporteRoute
   '/admin/transcricoes': typeof AdminTranscricoesRoute
   '/api/chat': typeof ApiChatRoute
@@ -1343,10 +1397,13 @@ export interface FileRoutesById {
   '/_app/jade/$threadId': typeof AppJadeThreadIdRoute
   '/_app/lives/$liveId': typeof AppLivesLiveIdRoute
   '/_app/mmcast_/$episodeId': typeof AppMmcastEpisodeIdRoute
+  '/_authenticated/comercial/ao-vivo': typeof AuthenticatedComercialAoVivoRoute
   '/_authenticated/comercial/aplicacoes': typeof AuthenticatedComercialAplicacoesRoute
   '/_authenticated/comercial/equipa': typeof AuthenticatedComercialEquipaRoute
   '/_authenticated/comercial/metas': typeof AuthenticatedComercialMetasRoute
   '/_authenticated/comercial/mmpay': typeof AuthenticatedComercialMmpayRoute
+  '/_authenticated/comercial/servicos': typeof AuthenticatedComercialServicosRoute
+  '/_authenticated/comercial/transacoes': typeof AuthenticatedComercialTransacoesRoute
   '/_authenticated/comercial/utilizadores': typeof AuthenticatedComercialUtilizadoresRoute
   '/_authenticated/comercial/vendas': typeof AuthenticatedComercialVendasRoute
   '/admin/financeiro/catalogo': typeof AdminFinanceiroCatalogoRoute
@@ -1426,6 +1483,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/aplicacao'
+    | '/ativar'
     | '/auth'
     | '/comercial-login'
     | '/pagamento'
@@ -1455,6 +1513,7 @@ export interface FileRouteTypes {
     | '/subscricao'
     | '/comercial'
     | '/admin/aplicacoes'
+    | '/admin/ativacoes'
     | '/admin/aulas'
     | '/admin/certificados'
     | '/admin/comunicacao'
@@ -1472,6 +1531,7 @@ export interface FileRouteTypes {
     | '/admin/quizzes'
     | '/admin/saude'
     | '/admin/seguranca'
+    | '/admin/servicos'
     | '/admin/suporte'
     | '/admin/transcricoes'
     | '/api/chat'
@@ -1496,10 +1556,13 @@ export interface FileRouteTypes {
     | '/jade/$threadId'
     | '/lives/$liveId'
     | '/mmcast/$episodeId'
+    | '/comercial/ao-vivo'
     | '/comercial/aplicacoes'
     | '/comercial/equipa'
     | '/comercial/metas'
     | '/comercial/mmpay'
+    | '/comercial/servicos'
+    | '/comercial/transacoes'
     | '/comercial/utilizadores'
     | '/comercial/vendas'
     | '/admin/financeiro/catalogo'
@@ -1576,6 +1639,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/aplicacao'
+    | '/ativar'
     | '/auth'
     | '/comercial-login'
     | '/pagamento'
@@ -1601,6 +1665,7 @@ export interface FileRouteTypes {
     | '/shorts'
     | '/subscricao'
     | '/admin/aplicacoes'
+    | '/admin/ativacoes'
     | '/admin/aulas'
     | '/admin/certificados'
     | '/admin/comunicacao'
@@ -1616,6 +1681,7 @@ export interface FileRouteTypes {
     | '/admin/quizzes'
     | '/admin/saude'
     | '/admin/seguranca'
+    | '/admin/servicos'
     | '/admin/suporte'
     | '/admin/transcricoes'
     | '/api/chat'
@@ -1638,10 +1704,13 @@ export interface FileRouteTypes {
     | '/jade/$threadId'
     | '/lives/$liveId'
     | '/mmcast/$episodeId'
+    | '/comercial/ao-vivo'
     | '/comercial/aplicacoes'
     | '/comercial/equipa'
     | '/comercial/metas'
     | '/comercial/mmpay'
+    | '/comercial/servicos'
+    | '/comercial/transacoes'
     | '/comercial/utilizadores'
     | '/comercial/vendas'
     | '/admin/financeiro/catalogo'
@@ -1721,6 +1790,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/admin'
     | '/aplicacao'
+    | '/ativar'
     | '/auth'
     | '/comercial-login'
     | '/pagamento'
@@ -1750,6 +1820,7 @@ export interface FileRouteTypes {
     | '/_app/subscricao'
     | '/_authenticated/comercial'
     | '/admin/aplicacoes'
+    | '/admin/ativacoes'
     | '/admin/aulas'
     | '/admin/certificados'
     | '/admin/comunicacao'
@@ -1767,6 +1838,7 @@ export interface FileRouteTypes {
     | '/admin/quizzes'
     | '/admin/saude'
     | '/admin/seguranca'
+    | '/admin/servicos'
     | '/admin/suporte'
     | '/admin/transcricoes'
     | '/api/chat'
@@ -1791,10 +1863,13 @@ export interface FileRouteTypes {
     | '/_app/jade/$threadId'
     | '/_app/lives/$liveId'
     | '/_app/mmcast_/$episodeId'
+    | '/_authenticated/comercial/ao-vivo'
     | '/_authenticated/comercial/aplicacoes'
     | '/_authenticated/comercial/equipa'
     | '/_authenticated/comercial/metas'
     | '/_authenticated/comercial/mmpay'
+    | '/_authenticated/comercial/servicos'
+    | '/_authenticated/comercial/transacoes'
     | '/_authenticated/comercial/utilizadores'
     | '/_authenticated/comercial/vendas'
     | '/admin/financeiro/catalogo'
@@ -1875,6 +1950,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   AplicacaoRoute: typeof AplicacaoRoute
+  AtivarRoute: typeof AtivarRoute
   AuthRoute: typeof AuthRoute
   ComercialLoginRoute: typeof ComercialLoginRoute
   PagamentoRoute: typeof PagamentoRoute
@@ -1971,6 +2047,13 @@ declare module '@tanstack/react-router' {
       path: '/aplicacao'
       fullPath: '/aplicacao'
       preLoaderRoute: typeof AplicacaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ativar': {
+      id: '/ativar'
+      path: '/ativar'
+      fullPath: '/ativar'
+      preLoaderRoute: typeof AtivarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -2183,6 +2266,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAplicacoesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/ativacoes': {
+      id: '/admin/ativacoes'
+      path: '/ativacoes'
+      fullPath: '/admin/ativacoes'
+      preLoaderRoute: typeof AdminAtivacoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/aulas': {
       id: '/admin/aulas'
       path: '/aulas'
@@ -2300,6 +2390,13 @@ declare module '@tanstack/react-router' {
       path: '/seguranca'
       fullPath: '/admin/seguranca'
       preLoaderRoute: typeof AdminSegurancaRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/servicos': {
+      id: '/admin/servicos'
+      path: '/servicos'
+      fullPath: '/admin/servicos'
+      preLoaderRoute: typeof AdminServicosRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/suporte': {
@@ -2498,6 +2595,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedComercialIndexRouteImport
       parentRoute: typeof AuthenticatedComercialRoute
     }
+    '/_authenticated/comercial/ao-vivo': {
+      id: '/_authenticated/comercial/ao-vivo'
+      path: '/ao-vivo'
+      fullPath: '/comercial/ao-vivo'
+      preLoaderRoute: typeof AuthenticatedComercialAoVivoRouteImport
+      parentRoute: typeof AuthenticatedComercialRoute
+    }
     '/_authenticated/comercial/aplicacoes': {
       id: '/_authenticated/comercial/aplicacoes'
       path: '/aplicacoes'
@@ -2524,6 +2628,20 @@ declare module '@tanstack/react-router' {
       path: '/mmpay'
       fullPath: '/comercial/mmpay'
       preLoaderRoute: typeof AuthenticatedComercialMmpayRouteImport
+      parentRoute: typeof AuthenticatedComercialRoute
+    }
+    '/_authenticated/comercial/servicos': {
+      id: '/_authenticated/comercial/servicos'
+      path: '/servicos'
+      fullPath: '/comercial/servicos'
+      preLoaderRoute: typeof AuthenticatedComercialServicosRouteImport
+      parentRoute: typeof AuthenticatedComercialRoute
+    }
+    '/_authenticated/comercial/transacoes': {
+      id: '/_authenticated/comercial/transacoes'
+      path: '/transacoes'
+      fullPath: '/comercial/transacoes'
+      preLoaderRoute: typeof AuthenticatedComercialTransacoesRouteImport
       parentRoute: typeof AuthenticatedComercialRoute
     }
     '/_authenticated/comercial/utilizadores': {
@@ -2999,10 +3117,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedComercialRouteChildren {
+  AuthenticatedComercialAoVivoRoute: typeof AuthenticatedComercialAoVivoRoute
   AuthenticatedComercialAplicacoesRoute: typeof AuthenticatedComercialAplicacoesRoute
   AuthenticatedComercialEquipaRoute: typeof AuthenticatedComercialEquipaRoute
   AuthenticatedComercialMetasRoute: typeof AuthenticatedComercialMetasRoute
   AuthenticatedComercialMmpayRoute: typeof AuthenticatedComercialMmpayRoute
+  AuthenticatedComercialServicosRoute: typeof AuthenticatedComercialServicosRoute
+  AuthenticatedComercialTransacoesRoute: typeof AuthenticatedComercialTransacoesRoute
   AuthenticatedComercialUtilizadoresRoute: typeof AuthenticatedComercialUtilizadoresRoute
   AuthenticatedComercialVendasRoute: typeof AuthenticatedComercialVendasRoute
   AuthenticatedComercialIndexRoute: typeof AuthenticatedComercialIndexRoute
@@ -3010,11 +3131,15 @@ interface AuthenticatedComercialRouteChildren {
 
 const AuthenticatedComercialRouteChildren: AuthenticatedComercialRouteChildren =
   {
+    AuthenticatedComercialAoVivoRoute: AuthenticatedComercialAoVivoRoute,
     AuthenticatedComercialAplicacoesRoute:
       AuthenticatedComercialAplicacoesRoute,
     AuthenticatedComercialEquipaRoute: AuthenticatedComercialEquipaRoute,
     AuthenticatedComercialMetasRoute: AuthenticatedComercialMetasRoute,
     AuthenticatedComercialMmpayRoute: AuthenticatedComercialMmpayRoute,
+    AuthenticatedComercialServicosRoute: AuthenticatedComercialServicosRoute,
+    AuthenticatedComercialTransacoesRoute:
+      AuthenticatedComercialTransacoesRoute,
     AuthenticatedComercialUtilizadoresRoute:
       AuthenticatedComercialUtilizadoresRoute,
     AuthenticatedComercialVendasRoute: AuthenticatedComercialVendasRoute,
@@ -3241,6 +3366,7 @@ const AdminLivesRouteWithChildren = AdminLivesRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminAplicacoesRoute: typeof AdminAplicacoesRoute
+  AdminAtivacoesRoute: typeof AdminAtivacoesRoute
   AdminAulasRoute: typeof AdminAulasRoute
   AdminCertificadosRoute: typeof AdminCertificadosRoute
   AdminComunicacaoRoute: typeof AdminComunicacaoRoute
@@ -3258,6 +3384,7 @@ interface AdminRouteChildren {
   AdminQuizzesRoute: typeof AdminQuizzesRoute
   AdminSaudeRoute: typeof AdminSaudeRoute
   AdminSegurancaRoute: typeof AdminSegurancaRoute
+  AdminServicosRoute: typeof AdminServicosRoute
   AdminSuporteRoute: typeof AdminSuporteRoute
   AdminTranscricoesRoute: typeof AdminTranscricoesRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -3265,6 +3392,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAplicacoesRoute: AdminAplicacoesRoute,
+  AdminAtivacoesRoute: AdminAtivacoesRoute,
   AdminAulasRoute: AdminAulasRoute,
   AdminCertificadosRoute: AdminCertificadosRoute,
   AdminComunicacaoRoute: AdminComunicacaoRoute,
@@ -3282,6 +3410,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminQuizzesRoute: AdminQuizzesRoute,
   AdminSaudeRoute: AdminSaudeRoute,
   AdminSegurancaRoute: AdminSegurancaRoute,
+  AdminServicosRoute: AdminServicosRoute,
   AdminSuporteRoute: AdminSuporteRoute,
   AdminTranscricoesRoute: AdminTranscricoesRoute,
   AdminIndexRoute: AdminIndexRoute,
@@ -3295,6 +3424,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   AplicacaoRoute: AplicacaoRoute,
+  AtivarRoute: AtivarRoute,
   AuthRoute: AuthRoute,
   ComercialLoginRoute: ComercialLoginRoute,
   PagamentoRoute: PagamentoRoute,

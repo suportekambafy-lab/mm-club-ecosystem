@@ -391,8 +391,15 @@ export const adminCreateLive = createServerFn({ method: "POST" })
   .inputValidator((i) =>
     z
       .object({
-        title: z.string().min(3).max(180),
-        description: z.string().max(2000).optional(),
+        title: z
+          .string()
+          .transform((v) => v.replace(/[\u0000-\u001f\u007f-\u009f]/g, " ").trim())
+          .pipe(z.string().min(3).max(180)),
+        description: z
+          .string()
+          .transform((v) => v.replace(/[\u0000-\u0008\u000b-\u001f\u007f-\u009f]/g, ""))
+          .pipe(z.string().max(2000))
+          .optional(),
         expert_id: z.string().max(120).optional(),
         starts_at: z.string().optional(), // ISO; empty = start now
         duration_minutes: z.number().int().min(5).max(600).optional(),

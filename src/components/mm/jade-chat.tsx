@@ -19,12 +19,16 @@ export function JadeChat({
   threadId,
   initialMessages,
   onTitleChanged,
+  initialPrompt,
+  autoSend,
 }: {
   threadId: string;
   initialMessages: UIMessage[];
   onTitleChanged?: () => void;
+  initialPrompt?: string;
+  autoSend?: boolean;
 }) {
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(initialMessages.length === 0 && initialPrompt && !autoSend ? initialPrompt : "");
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -87,6 +91,14 @@ export function JadeChat({
       body.style.overscrollBehavior = prevOverscroll;
     };
   }, []);
+
+  // Pergunta vinda de uma aula: envia uma única vez numa conversa nova.
+  const autoSent = useRef(false);
+  useEffect(() => {
+    if (autoSent.current || !autoSend || !initialPrompt || initialMessages.length > 0) return;
+    autoSent.current = true;
+    void sendMessage({ text: initialPrompt });
+  }, [autoSend, initialPrompt, initialMessages.length, sendMessage]);
 
   function send(text: string) {
     const trimmed = text.trim();

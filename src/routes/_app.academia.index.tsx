@@ -13,10 +13,16 @@ import { courseCoverBackground } from "@/lib/course-cover";
 import { computeCourseDuration, computeLessonsCount, findLesson, lessonThumb, parseDurationToMinutes, formatMinutes } from "@/lib/course-duration";
 import { CardGridSkeleton, RailSkeleton } from "@/components/mm/skeletons";
 import { NextStepCard } from "@/components/mm/next-step-card";
+import { computeNextStep } from "@/lib/next-step";
 import { Skeleton } from "@/components/ui/skeleton";
 import { trackUx } from "@/lib/ux-analytics";
 import { isFeaturedCourse, sortCatalog } from "@/lib/course-order";
 import { Crown } from "lucide-react";
+import { useClubProducts } from "@/hooks/use-club-products";
+import { CLUB_PRODUCTS, clubProduct, productOfCourse, type ClubProduct } from "@/lib/club/products";
+import { useActiveProduct } from "@/hooks/use-active-product";
+import { ProductPaywall } from "@/components/mm/product-paywall";
+import { CourseModules } from "@/components/mm/product-modules";
 
 
 export const Route = createFileRoute("/_app/academia/")({
@@ -47,6 +53,9 @@ function AcademiaPage() {
   const { progress, loaded } = useUserProgress();
   useAdminOverridesVersion();
   const { canOpen } = useCourseAccess();
+  const { ready: productsReady, isUnlocked } = useClubProducts();
+  const [activeProduct] = useActiveProduct();
+  const product = clubProduct(activeProduct);
   const liveCourses = useMemo(() => allCourses.filter((c) => canOpen(c)), [canOpen]);
   const upcomingCourses = useMemo(() => allCourses.filter((c) => !canOpen(c)), [canOpen]);
 
@@ -62,8 +71,8 @@ function AcademiaPage() {
         const tb = progress[b.id]?.lastWatchedAt ?? "";
         return tb.localeCompare(ta);
       });
-    return { continuing, enrolled };
-  }, [progress, liveCourses]);
+    return { continuing: continuing.filter((c) => productOfCourse(c) === activeProduct), enrolled };
+  }, [progress, liveCourses, activeProduct]);
 
   // Pesquisa e filtro do catálogo (local, sem pedidos ao servidor).
   const [query, setQuery] = useState("");
@@ -102,50 +111,44 @@ function AcademiaPage() {
     };
   }, [query, catalog.length]);
 
+  const productCourses = catalog.filter((c) => productOfCourse(c) === activeProduct);
   const isFiltering = query.trim().length > 0 || objective !== "all";
+
+  // A aula exata a seguir, dentro do produto escolhido.
+  const step = useMemo(
+    () =>
+      loaded
+        ? computeNextStep(
+            allCourses.filter((c) => canOpen(c) && productOfCourse(c) === activeProduct),
+            progress,
+          )
+        : null,
+    [loaded, canOpen, activeProduct, progress],
+  );
 
 
   // Wait for real progress before painting hero/cards, so covers and
   // "continua onde ficaste" never flash the wrong state.
-  if (!loaded) return <AcademiaSkeleton />;
+  if (!loaded || !productsReady) return <AcademiaSkeleton />;
+  if (!isUnlocked(activeProduct)) return <ProductPaywall productId={activeProduct} />;
 
 
 
   return (
     <div className="section-stack max-w-full overflow-x-clip">
-      <NextStepCard />
-
-      {continuing.length > 0 && (
-        <section className="space-y-4">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 px-1">
-            <div>
-              <p className="type-eyebrow text-primary">
-                A tua jornada
-              </p>
-              <h2 className="type-section mt-1.5 text-foreground">
-                Continua onde ficaste.
-              </h2>
-            </div>
-          </div>
-          <div className="scrollbar-none -mx-1 flex gap-5 overflow-x-auto px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {continuing.map((c) => (
-              <PosterCard key={c.id} course={c} progress={progress} showResumeThumb />
-            ))}
-          </div>
-        </section>
-      )}
+      <NextStepCard step={step} />
 
       <section className="space-y-4">
         <div className="grid grid-cols-1 gap-4 px-1 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
           <div>
             <p className="type-eyebrow text-primary">
-              Academia MM
+              Academia · {product.name}
             </p>
             <h2 className="type-section mt-1.5 text-foreground">
-              O catálogo completo.
+              Os teus módulos.
             </h2>
             <p className="mt-1.5 max-w-lg text-sm text-muted-foreground">
-              Streaming premium de conhecimento — todos os cursos, sem ruído.
+              {product.tagline} Escolhe um módulo e começa logo a aula.
             </p>
             <Link
               to="/academia/pesquisa"
@@ -166,7 +169,7 @@ function AcademiaPage() {
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Procurar curso..."
+                placeholder="Procurar módulo ou aula..."
                 className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:hidden"
               />
               {query && (
@@ -221,18 +224,18 @@ function AcademiaPage() {
           <>
             {isFiltering && (
               <p className="px-1 text-xs text-muted-foreground" aria-live="polite">
-                {catalog.length} {catalog.length === 1 ? "curso" : "cursos"}
+                Resultados em {product.name}
               </p>
             )}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {catalog.map((c) =>
-                canOpen(c) ? (
-                  <PosterCard key={c.id} course={c} progress={progress} inGrid />
-                ) : (
-                  <ComingSoonCard key={c.id} course={c} />
-                ),
-              )}
-            </div>
+            {productCourses.length === 0 ? (
+              <p className="rounded-2xl border border-dashed border-border bg-surface-1 px-6 py-8 text-center text-sm text-muted-foreground">
+                Conteúdos a chegar em breve.
+              </p>
+            ) : (
+              productCourses.map((c) => (
+                <CourseModules key={c.id} course={c} progress={progress} openable={canOpen(c)} query={query} />
+              ))
+            )}
           </>
         )}
 
@@ -357,7 +360,30 @@ function PosterCard({
   );
 }
 
-function ComingSoonCard({ course }: { course: Course }) {
+function ProductHeader({ product, unlocked }: { product: ClubProduct; unlocked: boolean }) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-3 px-1">
+      <div>
+        <h3 className="font-display text-xl text-foreground">{product.name}</h3>
+        <p className="text-sm text-muted-foreground">{product.tagline}</p>
+      </div>
+      {unlocked ? (
+        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+          {product.feature ? "Desbloqueado" : "Incluído no MM Club"}
+        </span>
+      ) : product.checkoutCode ? (
+        <a
+          href={`/pagar/${product.checkoutCode}`}
+          className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-gold-soft"
+        >
+          <Lock className="h-3.5 w-3.5" /> Desbloquear por {product.priceEur} €
+        </a>
+      ) : null}
+    </div>
+  );
+}
+
+function ComingSoonCard({ course, lockedLabel }: { course: Course; lockedLabel?: string }) {
   const expert = expertsById[course.expertId];
   return (
     <Link
@@ -370,12 +396,12 @@ function ComingSoonCard({ course }: { course: Course }) {
       </div>
       <div className="flex flex-col gap-2 p-5">
         <div className="inline-flex w-max items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-primary">
-          <Lock className="h-3 w-3" /> Em breve
+          <Lock className="h-3 w-3" /> {lockedLabel ?? "Em breve"}
         </div>
         <h3 className="font-display text-lg leading-tight text-foreground">
           {course.title}
         </h3>
-        {course.releaseAt && (
+        {!lockedLabel && course.releaseAt && (
           <p className="inline-flex items-center gap-1.5 text-xs text-primary">
             <Clock className="h-3 w-3" /> Disponível a {formatCourseRelease(course)}
           </p>
@@ -406,3 +432,4 @@ function AcademiaSkeleton() {
     </div>
   );
 }
+

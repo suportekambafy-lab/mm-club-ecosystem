@@ -26,6 +26,7 @@ import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
 import { TranscriptProgress } from "@/components/mm/transcript-progress";
 import { LessonResources } from "@/components/mm/lesson-resources";
 import { LessonNotes } from "@/components/mm/lesson-notes";
+import { LessonAiTutor } from "@/components/mm/lesson-ai-tutor";
 import { CourseComments } from "@/components/mm/course-comments";
 import { pingLearningActivity, recordLessonCompleted } from "@/lib/learning-activity";
 import { useCourseQuiz, lockedModuleIds } from "@/hooks/use-course-quiz";
@@ -228,8 +229,7 @@ function LessonPlayer() {
           </Link>
           <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
           <Link
-            to="/academia/$courseId"
-            params={{ courseId: course.id }}
+            to="/academia"
             className="shrink-0 text-muted-foreground transition hover:text-foreground"
           >
             {course.title}
@@ -423,9 +423,12 @@ function LessonPlayer() {
               materials={current.lesson.materials}
             />
 
+            <LessonAiTutor courseTitle={course.title} moduleTitle={current.module.title} lessonTitle={current.lesson.title} />
+
             <LessonNotes
               courseId={course.id}
               lessonId={current.lesson.id}
+              lessonTitle={current.lesson.title}
               currentSeconds={row?.progress_seconds ?? 0}
               onSeek={(seconds) => {
                 if (seekRef.current) {
@@ -921,6 +924,15 @@ function TrackedVideoPlayer({
     // O Panda Video emite eventos próprios via postMessage (panda_timeupdate/panda_ended).
     const onPandaMessage = (event: MessageEvent) => {
       if (source.kind !== "panda") return;
+      // Só aceita mensagens do próprio leitor Panda desta aula.
+      const playerWindow = iframeRef.current?.contentWindow;
+      if (!playerWindow || event.source !== playerWindow) return;
+      try {
+        const origin = new URL(event.origin);
+        if (origin.protocol !== "https:" || !/(^|\.)pandavideo\.com(\.br)?$/.test(origin.hostname)) return;
+      } catch {
+        return;
+      }
       const raw = event.data;
       let payload: { message?: string; currentTime?: number; video?: unknown } | null = null;
       if (typeof raw === "string") {

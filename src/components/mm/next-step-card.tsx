@@ -1,46 +1,52 @@
-import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { Award, Bell, Compass, Play, Target } from "lucide-react";
-import { courses as allCourses } from "@/data/courses";
-import { useCourseAccess } from "@/hooks/use-course-release";
-import { useUserProgress } from "@/hooks/use-user-progress";
-import { computeNextStep } from "@/lib/next-step";
 import { lessonThumb } from "@/lib/course-duration";
 import { courseCoverBackground, courseCoverImage } from "@/lib/course-cover";
 import { cn } from "@/lib/utils";
+import { formatSeconds } from "@/components/mm/lesson-notes";
+import type { NextStep } from "@/lib/next-step";
 
 /**
  * Trilho guiado — "o teu próximo passo".
  *
  * Um único bloco, sempre com uma ação concreta: a aula exata a ver a seguir,
- * onde ela encaixa no módulo e quanto falta para o certificado. Para quem
- * ainda não viu nada, mostra a primeira sessão orientada em 3 passos.
+ * onde ela encaixa no módulo e quanto falta para o certificado. Quando o
+ * membro já deixou essa aula a meio, é este bloco que mostra o minuto exato
+ * de retoma — o outro cartão nem aparece.
  */
-export function NextStepCard({ className }: { className?: string }) {
-  const { progress, loaded } = useUserProgress();
-  const { canOpen } = useCourseAccess();
+export function NextStepCard({
+  className,
+  step,
+  resumeSeconds = null,
+}: {
+  className?: string;
+  step: NextStep | null;
+  /** Segundo exato onde a aula ficou parada, quando é a mesma aula. */
+  resumeSeconds?: number | null;
+}) {
+  if (!step) return null;
 
-  const open = useMemo(() => allCourses.filter((c) => canOpen(c)), [canOpen]);
-  const step = useMemo(
-    () => (loaded ? computeNextStep(open, progress) : null),
-    [loaded, open, progress],
-  );
-
-  if (!loaded || !step) return null;
+  const resumeAt =
+    typeof resumeSeconds === "number" && resumeSeconds > 0 ? Math.floor(resumeSeconds) : null;
+  const search = resumeAt != null ? { t: resumeAt } : undefined;
 
   // Sem miniatura da aula, mostramos a capa do curso (nunca um bloco vazio).
   const thumb = lessonThumb(step.lesson, step.course) || courseCoverImage(step.course);
   const coverBackground = thumb
     ? `url(${thumb}) center/cover no-repeat, #000`
     : courseCoverBackground(step.course);
-  const firstTime = step.kind === "start";
+  // Quem já deixou a aula a meio nunca vê a lista de "primeira vez": vê o
+  // progresso e o minuto exato de retoma.
+  const firstTime = step.kind === "start" && resumeAt == null;
 
   const label =
-    step.kind === "start"
-      ? "Começa aqui"
-      : step.kind === "finish"
-        ? "Reta final"
-        : "O teu próximo passo";
+    resumeAt != null
+      ? "Continuar a assistir"
+      : step.kind === "start"
+        ? "Começa aqui"
+        : step.kind === "finish"
+          ? "Reta final"
+          : "O teu próximo passo";
 
   return (
     <section className={cn("surface-card", className)}>
@@ -48,6 +54,7 @@ export function NextStepCard({ className }: { className?: string }) {
         <Link
           to="/academia/$courseId/$lessonId"
           params={{ courseId: step.course.id, lessonId: step.lesson.id }}
+          search={search}
           aria-label={`Ver aula ${step.lesson.title}`}
           className="group relative block aspect-video w-full bg-surface-2 md:aspect-auto md:h-full"
           style={{ background: coverBackground }}
@@ -111,10 +118,15 @@ export function NextStepCard({ className }: { className?: string }) {
             <Link
               to="/academia/$courseId/$lessonId"
               params={{ courseId: step.course.id, lessonId: step.lesson.id }}
+              search={search}
               className="tap-target inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
             >
               <Play className="h-4 w-4" />
-              {firstTime ? "Começar agora" : "Continuar"}
+              {resumeAt != null
+                ? `Retomar em ${formatSeconds(resumeAt)}`
+                : firstTime
+                  ? "Começar agora"
+                  : "Continuar"}
             </Link>
             <Link
               to="/certificados"

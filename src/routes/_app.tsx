@@ -1,3 +1,4 @@
+import { AccountMenu } from "@/components/mm/account-menu";
 import { createFileRoute, Link, Outlet, redirect, useRouter, useRouterState } from "@tanstack/react-router";
 import { SupportWidget } from "@/components/mm/support-widget";
 import { useEffect, useState, useSyncExternalStore } from "react";
@@ -127,7 +128,7 @@ export const Route = createFileRoute("/_app")({
         }
 
         if (isLockedPath(location.pathname)) {
-          throw redirect({ to: "/subscricao", replace: true });
+          throw redirect({ to: "/perfil", replace: true });
         }
       } else {
         clearIntendedPlan();
@@ -548,13 +549,13 @@ function AppLayout() {
                     "group relative flex items-center rounded-xl cursor-not-allowed",
                     compact
                       ? "justify-center px-2 py-3 text-sm text-muted-foreground/70"
-                      : "gap-4 px-4 py-3 font-display text-[15px] tracking-wide text-muted-foreground/60",
+                      : "gap-3 px-4 py-3 font-display text-[15px] tracking-wide text-muted-foreground/60",
                   )}
                 >
                   <Icon className="h-[19px] w-[19px] shrink-0 text-muted-foreground/50" />
                   {!compact && (
                     <>
-                      <span className="min-w-0 flex-1 whitespace-nowrap text-[13px]">{item.label}</span>
+                      <span className="min-w-0 flex-1 truncate text-[13px]">{item.label}</span>
                       <span className="shrink-0 whitespace-nowrap rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary">
                         {badge}
                       </span>
@@ -572,7 +573,7 @@ function AppLayout() {
                   "group relative flex items-center rounded-xl transition-all duration-300",
                   compact
                     ? "justify-center px-2 py-3 text-sm"
-                    : "gap-4 px-4 py-3 font-display text-[15px] tracking-wide",
+                    : "gap-3 px-4 py-3 font-display text-[15px] tracking-wide",
                   active
                     ? "text-foreground"
                     : "text-muted-foreground hover:text-foreground",
@@ -594,7 +595,7 @@ function AppLayout() {
                     active ? "text-primary" : "text-muted-foreground/80 group-hover:text-foreground",
                   )}
                 />
-                {!compact && <span className="min-w-0 flex-1 whitespace-nowrap">{item.label}</span>}
+                {!compact && <span className="min-w-0 flex-1 truncate">{item.label}</span>}
                 {!compact && item.isNew && (
                   <span className="shrink-0 whitespace-nowrap rounded-full bg-primary px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary-foreground">
                     Novo
@@ -629,37 +630,10 @@ function AppLayout() {
       <div className={cn("border-t border-border", compact ? "p-2" : "p-4")}>
         {authUser ? (
           compact ? (
-            <Link
-              to="/perfil"
-              aria-label="Perfil"
-              title={displayName}
-              className="mx-auto flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-semibold text-primary-foreground transition hover:bg-gold-soft"
-            >
-              {avatarSrc ? (
-                <img decoding="async" fetchPriority="high" src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
-              ) : (
-                initials
-              )}
-            </Link>
+            <AccountMenu avatarSrc={avatarSrc} initials={initials} displayName={displayName} onSignOut={handleSignOut} onPicked={() => setMobileOpen(false)} />
           ) : (
             <div className="flex items-center gap-2 rounded-lg px-2 py-2">
-              <Link
-                to="/perfil"
-                aria-label="Perfil"
-                className="flex min-w-0 flex-1 items-center gap-3 rounded-lg transition hover:bg-sidebar-accent -mx-1 px-1 py-1"
-              >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                  {avatarSrc ? (
-                    <img decoding="async" fetchPriority="high" src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
-                  ) : (
-                    initials
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
-                  <p className="truncate text-xs text-muted-foreground">{planLabel}</p>
-                </div>
-              </Link>
+              <AccountMenu expanded avatarSrc={avatarSrc} initials={initials} displayName={displayName} planLabel={planLabel} onSignOut={handleSignOut} onPicked={() => setMobileOpen(false)} />
               <button
                 onClick={handleSignOut}
                 aria-label="Sair"
@@ -699,7 +673,7 @@ function AppLayout() {
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-border bg-sidebar transition-[width] duration-200 ease-out lg:flex",
-          collapsed ? "w-[76px]" : "w-64",
+          collapsed ? "w-[76px]" : "w-72",
         )}
       >
         <SidebarInner compact={collapsed} />
@@ -735,13 +709,13 @@ function AppLayout() {
         data-app-scroll
         key="app-scroll"
         className={cn(
-          "h-full min-w-0 max-w-full overflow-y-auto overflow-x-clip overscroll-none transition-[padding] duration-200 ease-out [-webkit-overflow-scrolling:touch]",
-          collapsed ? "lg:pl-[76px]" : "lg:pl-64",
+          "relative h-full min-w-0 max-w-full overflow-y-auto overflow-x-clip overscroll-none transition-[padding] duration-200 ease-out [-webkit-overflow-scrolling:touch]",
+          collapsed ? "lg:pl-[76px]" : "lg:pl-72",
         )}
       >
         {/* Topbar — hidden on immersive routes */}
         {pathname !== "/shorts" && (
-        <header data-app-topbar className="sticky top-0 z-30 grid max-w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 overflow-x-clip bg-background/80 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 backdrop-blur-xl sm:gap-4 sm:px-4 sm:pt-[calc(env(safe-area-inset-top)+1rem)] sm:pb-4 md:px-8 md:pt-[calc(env(safe-area-inset-top)+1.5rem)] lg:flex">
+        <header data-app-topbar className={cn("top-0 z-30 grid max-w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 sm:gap-4 sm:px-4 sm:pt-[calc(env(safe-area-inset-top)+1rem)] sm:pb-4 md:px-8 md:pt-[calc(env(safe-area-inset-top)+1.5rem)] lg:flex", pathname === "/dashboard" ? cn("hero-theme absolute inset-x-0 text-foreground", collapsed ? "lg:ml-[76px]" : "lg:ml-72") : "sticky overflow-x-clip bg-background/80 backdrop-blur-xl")}>
 
           {/* Mobile: menu button opens the slide-in sidebar */}
           <button
@@ -761,8 +735,6 @@ function AppLayout() {
           <div
             className={cn(
               "col-start-3 flex min-w-0 items-center justify-end gap-1.5 sm:gap-3 lg:col-start-auto lg:flex-1",
-              pathname === "/dashboard" &&
-                "sm:rounded-2xl sm:border sm:border-border sm:bg-surface-1 sm:px-5 sm:py-3 md:py-4",
             )}
           >
             {/* Greeting moved into cinematic dashboard hero — topbar stays minimal */}
@@ -784,17 +756,7 @@ function AppLayout() {
               <NotificationsBell />
               <NotificationsPrompt />
 
-              <Link
-                to="/perfil"
-                aria-label="Perfil"
-                className="ml-0.5 flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-background transition hover:bg-gold-soft sm:ml-1 sm:h-10 sm:w-10"
-              >
-                {avatarSrc ? (
-                  <img decoding="async" fetchPriority="high" src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
-                ) : (
-                  initials
-                )}
-              </Link>
+              <AccountMenu avatarSrc={avatarSrc} initials={initials} displayName={displayName} onSignOut={handleSignOut} />
             </div>
           </div>
         </header>
@@ -802,7 +764,7 @@ function AppLayout() {
 
         {/* Mobile search — só na home, escondida quando o menu está aberto */}
         {pathname === "/dashboard" && !mobileOpen && (
-          <div className="border-b border-border px-3 py-2.5 sm:px-4 sm:py-3 md:hidden">
+          <div className="hero-theme absolute inset-x-0 top-[calc(env(safe-area-inset-top)+4.5rem)] z-20 px-3 py-2.5 text-foreground sm:px-4 sm:py-3 md:hidden">
             <GlobalSearch />
           </div>
         )}
@@ -813,10 +775,12 @@ function AppLayout() {
             ? "relative min-w-0 max-w-full overflow-x-clip"
             : /^\/lives\/[^/]+/.test(pathname)
               ? "relative min-w-0 max-w-full overflow-hidden lg:mx-auto lg:overflow-x-clip lg:px-8 lg:pt-8 lg:pb-12 lg:max-w-7xl xl:max-w-[1600px] 2xl:max-w-[1760px]"
-              : "relative mx-auto min-w-0 max-w-7xl overflow-x-clip px-3 pb-[72px] pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8 lg:pb-12 xl:max-w-[1600px] 2xl:max-w-[1760px]",
+              : pathname === "/dashboard"
+                ? "relative min-w-0 max-w-full overflow-x-clip px-3 pb-[72px] sm:px-4 md:px-8 lg:pb-12"
+                : "relative mx-auto min-w-0 max-w-7xl overflow-x-clip px-3 pb-[72px] pt-4 sm:px-4 sm:pt-6 md:px-8 md:pt-8 lg:pb-12 xl:max-w-[1600px] 2xl:max-w-[1760px]",
         )}>
           {/* Ambient editorial glow — matches landing page atmosphere */}
-          {pathname !== "/shorts" && (
+          {pathname !== "/shorts" && pathname !== "/dashboard" && (
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
@@ -827,16 +791,15 @@ function AppLayout() {
           />
           )}
           {viewAs ? <ViewAsBar target={viewAs} /> : null}
-          {authUser && accessState?.manual && <AccessExpiryBanner expired={accessState.expired} expiresAt={accessState.expiresAt} />}
+          {authUser && accessState?.expired && <AccessExpiryBanner expired={accessState.expired} expiresAt={accessState.expiresAt} />}
           {!hasAccess && authUser && !accessState?.expired ? (
             <DebtBanner userId={viewAs ? viewAs.userId : authUser.id} />
           ) : authUser && hasAccess ? (
             <>
-              <PaymentMigrationBanner />
-              <CancelBanner />
+              {null}
             </>
           ) : null}
-          {authUser ? contentLocked ? <div className="py-12 text-center"><GraduationCap className="mx-auto mb-4 h-8 w-8 text-muted-foreground"/><h1 className="text-2xl font-semibold">Acesso aos conteúdos bloqueado</h1><Link to="/subscricao" className="mt-4 inline-block text-primary underline underline-offset-4">Renovar acesso</Link></div> : <Outlet /> : <div className="min-h-[60vh]" />}
+          {authUser ? contentLocked ? <div className="py-12 text-center"><GraduationCap className="mx-auto mb-4 h-8 w-8 text-muted-foreground"/><h1 className="text-2xl font-semibold">O teu acesso terminou</h1><p className="mt-2 text-muted-foreground">Para renovar, entra em contacto com o suporte.</p><a href="mailto:geral@mmclub.pt" className="mt-4 inline-block text-primary underline underline-offset-4">Contactar o suporte</a></div> : <Outlet /> : <div className="min-h-[60vh]" />}
         </main>
       </div>
 

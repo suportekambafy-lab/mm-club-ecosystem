@@ -225,6 +225,41 @@
       "when": 1795185690087,
       "tag": "0031_service_applications",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1795527404578,
+      "tag": "0032_migration",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1795549273975,
+      "tag": "0033_community_parcerias_channel",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1795614286382,
+      "tag": "0034_service_applications_commercial_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1795615872835,
+      "tag": "0035_club_extra_products",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1795691778339,
+      "tag": "0036_community_post_announcements",
+      "breakpoints": true
     }
   ]
 }

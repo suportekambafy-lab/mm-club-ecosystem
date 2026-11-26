@@ -68,6 +68,8 @@ export async function startGuestCheckout(
   // ligamos o pagamento à conta existente ou criamos uma nova se necessário.
 
   const origin = input.origin.replace(/\/$/, "");
+  // Segredo de regresso: só quem volta do pagamento consegue ver o estado.
+  const returnToken = crypto.randomUUID();
 
   const { data: intent, error } = await supabaseAdmin
     .from("billing_checkout_intents")
@@ -77,6 +79,7 @@ export async function startGuestCheckout(
       price_id: price.id,
       coupon_code: input.couponCode ?? null,
       status: "pending",
+      metadata: { returnToken } as never,
     })
     .select("id")
     .single();
@@ -101,7 +104,7 @@ export async function startGuestCheckout(
     await supabaseAdmin
       .from("billing_checkout_intents")
       .update({
-        metadata: { gatewayCustomerId } as never,
+        metadata: { returnToken, gatewayCustomerId } as never,
       })
       .eq("id", intent.id);
   }
@@ -111,7 +114,7 @@ export async function startGuestCheckout(
     amountCents: price.trialDays > 0 ? TRIAL_VERIFICATION_CENTS : price.amountCents,
     currency: price.currency,
     description: buildCheckoutDescription(price),
-    redirectUrl: `${origin}/checkout/return?intent=${intent.id}`,
+    redirectUrl: `${origin}/checkout/return?intent=${intent.id}&token=${returnToken}`,
     webhookUrl: `${origin}/api/public/payments/gateway-webhook`,
     customerId: gatewayCustomerId,
     customerEmail: email,
