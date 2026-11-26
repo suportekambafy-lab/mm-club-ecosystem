@@ -14,6 +14,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AplicacaoRouteImport } from './routes/aplicacao'
+import { Route as AtivarRouteImport } from './routes/ativar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ComercialLoginRouteImport } from './routes/comercial-login'
 import { Route as PagamentoRouteImport } from './routes/pagamento'
@@ -186,6 +187,11 @@ const AdminRoute = AdminRouteImport.update({
 const AplicacaoRoute = AplicacaoRouteImport.update({
   id: '/aplicacao',
   path: '/aplicacao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AtivarRoute = AtivarRouteImport.update({
+  id: '/ativar',
+  path: '/ativar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -1004,6 +1010,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/aplicacao': typeof AplicacaoRoute
+  '/ativar': typeof AtivarRoute
   '/auth': typeof AuthRoute
   '/comercial-login': typeof ComercialLoginRoute
   '/pagamento': typeof PagamentoRoute
@@ -1158,6 +1165,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/aplicacao': typeof AplicacaoRoute
+  '/ativar': typeof AtivarRoute
   '/auth': typeof AuthRoute
   '/comercial-login': typeof ComercialLoginRoute
   '/pagamento': typeof PagamentoRoute
@@ -1308,6 +1316,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/aplicacao': typeof AplicacaoRoute
+  '/ativar': typeof AtivarRoute
   '/auth': typeof AuthRoute
   '/comercial-login': typeof ComercialLoginRoute
   '/pagamento': typeof PagamentoRoute
@@ -1465,6 +1474,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/aplicacao'
+    | '/ativar'
     | '/auth'
     | '/comercial-login'
     | '/pagamento'
@@ -1619,6 +1629,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/aplicacao'
+    | '/ativar'
     | '/auth'
     | '/comercial-login'
     | '/pagamento'
@@ -1768,6 +1779,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/admin'
     | '/aplicacao'
+    | '/ativar'
     | '/auth'
     | '/comercial-login'
     | '/pagamento'
@@ -1926,6 +1938,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   AplicacaoRoute: typeof AplicacaoRoute
+  AtivarRoute: typeof AtivarRoute
   AuthRoute: typeof AuthRoute
   ComercialLoginRoute: typeof ComercialLoginRoute
   PagamentoRoute: typeof PagamentoRoute
@@ -2022,6 +2035,13 @@ declare module '@tanstack/react-router' {
       path: '/aplicacao'
       fullPath: '/aplicacao'
       preLoaderRoute: typeof AplicacaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ativar': {
+      id: '/ativar'
+      path: '/ativar'
+      fullPath: '/ativar'
+      preLoaderRoute: typeof AtivarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -3383,6 +3403,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   AplicacaoRoute: AplicacaoRoute,
+  AtivarRoute: AtivarRoute,
   AuthRoute: AuthRoute,
   ComercialLoginRoute: ComercialLoginRoute,
   PagamentoRoute: PagamentoRoute,
