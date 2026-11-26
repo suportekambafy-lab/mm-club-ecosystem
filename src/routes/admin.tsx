@@ -102,6 +102,7 @@ type AdminTo =
   | "/admin/partners-leads"
   | "/admin/aplicacoes"
   | "/admin/servicos"
+  | "/admin/ativacoes"
   | "/admin/partners-pedidos"
   | "/admin/comunicacao"
   | "/admin/seguranca"
@@ -129,6 +130,7 @@ const nav: Array<{ label: string; items: NavItem[] }> = [
       { to: "/admin/parcerias", label: "Parcerias & Créditos", icon: Coins },
       { to: "/admin/aplicacoes", label: "Aplicações", icon: UserPlus },
       { to: "/admin/servicos", label: "Serviços individuais", icon: UserPlus },
+      { to: "/admin/ativacoes", label: "Ativações Legacy", icon: UserPlus },
       { to: "/admin/partners-leads", label: "Leads do MM Partners", icon: UserPlus },
       { to: "/admin/partners-pedidos", label: "Pedidos do MM Partners", icon: UserPlus },
 

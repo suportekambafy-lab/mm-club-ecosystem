@@ -45,6 +45,7 @@ import { Route as AppSubscricaoRouteImport } from './routes/_app.subscricao'
 import { Route as AuthenticatedComercialRouteImport } from './routes/_authenticated/comercial'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAplicacoesRouteImport } from './routes/admin.aplicacoes'
+import { Route as AdminAtivacoesRouteImport } from './routes/admin.ativacoes'
 import { Route as AdminAulasRouteImport } from './routes/admin.aulas'
 import { Route as AdminCertificadosRouteImport } from './routes/admin.certificados'
 import { Route as AdminComunicacaoRouteImport } from './routes/admin.comunicacao'
@@ -342,6 +343,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const AdminAplicacoesRoute = AdminAplicacoesRouteImport.update({
   id: '/aplicacoes',
   path: '/aplicacoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAtivacoesRoute = AdminAtivacoesRouteImport.update({
+  id: '/ativacoes',
+  path: '/ativacoes',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAulasRoute = AdminAulasRouteImport.update({
@@ -1040,6 +1046,7 @@ export interface FileRoutesByFullPath {
   '/subscricao': typeof AppSubscricaoRoute
   '/comercial': typeof AuthenticatedComercialRouteWithChildren
   '/admin/aplicacoes': typeof AdminAplicacoesRoute
+  '/admin/ativacoes': typeof AdminAtivacoesRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/certificados': typeof AdminCertificadosRoute
   '/admin/comunicacao': typeof AdminComunicacaoRoute
@@ -1191,6 +1198,7 @@ export interface FileRoutesByTo {
   '/shorts': typeof AppShortsRoute
   '/subscricao': typeof AppSubscricaoRoute
   '/admin/aplicacoes': typeof AdminAplicacoesRoute
+  '/admin/ativacoes': typeof AdminAtivacoesRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/certificados': typeof AdminCertificadosRoute
   '/admin/comunicacao': typeof AdminComunicacaoRoute
@@ -1346,6 +1354,7 @@ export interface FileRoutesById {
   '/_app/subscricao': typeof AppSubscricaoRoute
   '/_authenticated/comercial': typeof AuthenticatedComercialRouteWithChildren
   '/admin/aplicacoes': typeof AdminAplicacoesRoute
+  '/admin/ativacoes': typeof AdminAtivacoesRoute
   '/admin/aulas': typeof AdminAulasRoute
   '/admin/certificados': typeof AdminCertificadosRoute
   '/admin/comunicacao': typeof AdminComunicacaoRoute
@@ -1504,6 +1513,7 @@ export interface FileRouteTypes {
     | '/subscricao'
     | '/comercial'
     | '/admin/aplicacoes'
+    | '/admin/ativacoes'
     | '/admin/aulas'
     | '/admin/certificados'
     | '/admin/comunicacao'
@@ -1655,6 +1665,7 @@ export interface FileRouteTypes {
     | '/shorts'
     | '/subscricao'
     | '/admin/aplicacoes'
+    | '/admin/ativacoes'
     | '/admin/aulas'
     | '/admin/certificados'
     | '/admin/comunicacao'
@@ -1809,6 +1820,7 @@ export interface FileRouteTypes {
     | '/_app/subscricao'
     | '/_authenticated/comercial'
     | '/admin/aplicacoes'
+    | '/admin/ativacoes'
     | '/admin/aulas'
     | '/admin/certificados'
     | '/admin/comunicacao'
@@ -2252,6 +2264,13 @@ declare module '@tanstack/react-router' {
       path: '/aplicacoes'
       fullPath: '/admin/aplicacoes'
       preLoaderRoute: typeof AdminAplicacoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/ativacoes': {
+      id: '/admin/ativacoes'
+      path: '/ativacoes'
+      fullPath: '/admin/ativacoes'
+      preLoaderRoute: typeof AdminAtivacoesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/aulas': {
@@ -3347,6 +3366,7 @@ const AdminLivesRouteWithChildren = AdminLivesRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminAplicacoesRoute: typeof AdminAplicacoesRoute
+  AdminAtivacoesRoute: typeof AdminAtivacoesRoute
   AdminAulasRoute: typeof AdminAulasRoute
   AdminCertificadosRoute: typeof AdminCertificadosRoute
   AdminComunicacaoRoute: typeof AdminComunicacaoRoute
@@ -3372,6 +3392,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAplicacoesRoute: AdminAplicacoesRoute,
+  AdminAtivacoesRoute: AdminAtivacoesRoute,
   AdminAulasRoute: AdminAulasRoute,
   AdminCertificadosRoute: AdminCertificadosRoute,
   AdminComunicacaoRoute: AdminComunicacaoRoute,
