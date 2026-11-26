@@ -1,6 +1,7 @@
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
+import { parseChatMessages } from "@/lib/security/chat-input";
 
 type ChatRequestBody = { messages?: unknown; threadId?: unknown };
 
@@ -170,10 +171,10 @@ export const Route = createFileRoute("/api/chat")({
         const auth = await requireRequestUser(request);
         if ("denied" in auth) return auth.denied;
 
-        const { messages, threadId } = (await request.json()) as ChatRequestBody;
-        if (!Array.isArray(messages)) {
-          return new Response("Messages are required", { status: 400 });
-        }
+        const { messages: rawMessages, threadId } = (await request.json()) as ChatRequestBody;
+        let messages: UIMessage[];
+        try { messages = parseChatMessages(rawMessages); }
+        catch { return new Response("Mensagem inválida.", { status: 400 }); }
         const thread = typeof threadId === "string" && threadId ? threadId : null;
 
         const key = process.env.LOVABLE_API_KEY;

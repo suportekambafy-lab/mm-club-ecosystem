@@ -1,5 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { z } from "zod";
+
+export const issueCourseCertificate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ courseId: z.string().trim().min(1).max(200) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { issueCertificateForMember } = await import("./certificate-issuance.server");
+    return issueCertificateForMember(context.userId, data.courseId);
+  });
 
 /**
  * Gera o PDF do certificado de conclusão. O certificado só é devolvido ao

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Award, Download, Loader2, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getCertificatePdf } from "@/lib/certificates.functions";
+import { getCertificatePdf, issueCourseCertificate } from "@/lib/certificates.functions";
 import { sendCertificateEmail } from "@/lib/certificate-email.functions";
 import { cn } from "@/lib/utils";
 
@@ -59,16 +59,7 @@ export function CourseCertificate({
   const issue = useCallback(async () => {
     setBusy(true);
     try {
-      const { data, error } = await (supabase as unknown as {
-        rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: Certificate[] | null; error: unknown }>;
-      }).rpc("issue_course_certificate", {
-        _course_id: courseId,
-        _course_title: courseTitle,
-        _hours: hours,
-        _lessons_total: lessonsTotal,
-      });
-      if (error) throw error;
-      const row = Array.isArray(data) ? data[0] : null;
+      const row = await issueCourseCertificate({ data: { courseId } });
       if (row) {
         setCert(row);
         void sendCertificateEmail({ data: { code: row.code } }).catch(() => {});

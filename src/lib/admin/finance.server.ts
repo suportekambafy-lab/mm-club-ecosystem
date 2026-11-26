@@ -4,6 +4,7 @@
  * dataset is small and this keeps every metric definition in one place.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { quotedContains } from "@/lib/security/input-boundaries";
 import { mmpayRevenueRows, revenueSaleType } from "./mmpay-revenue";
 import type { SubscriptionStatus } from "@/lib/billing/types";
 import type {
@@ -1054,7 +1055,7 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
     supabaseAdmin
       .from("billing_customers")
       .select("user_id, email, name")
-      .or(`email.ilike.${like},name.ilike.${like}`)
+      .or(`email.ilike.${quotedContains(q)},name.ilike.${quotedContains(q)}`)
       .limit(20),
     supabaseAdmin
       .from("profiles")

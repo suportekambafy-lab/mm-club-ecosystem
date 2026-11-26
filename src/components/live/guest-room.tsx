@@ -157,6 +157,13 @@ export function GuestRoom({
         const r = await sync({
           data: { liveId, code, guestId, displayName, raiseHand, currentlyOnStage: onStageRef.current },
         });
+        if (r.denied) {
+          leavingRef.current = true;
+          setReconnecting(false);
+          setError("Já não tens acesso a esta sessão.");
+          await roomRef.current?.disconnect();
+          return;
+        }
         setHandRaised(r.handRaised);
         if (r.token) {
           setOnStage(r.onStage);
@@ -173,6 +180,7 @@ export function GuestRoom({
     // 8s é suficiente para apanhar promoções ao palco; o servidor só grava o
     // "sinal de vida" uma vez por minuto, por isso o resto são leituras leves.
     const id = setInterval(() => {
+      if (leavingRef.current) return;
       if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
       void poll();
     }, 8000);
@@ -255,9 +263,17 @@ export function GuestRoom({
       .on(RoomEvent.SignalConnected, resubscribeAll)
       .on(RoomEvent.MediaDevicesChanged, () => void recoverCamera())
       .on(RoomEvent.AudioPlaybackStatusChanged, () => setAudioBlocked(!r.canPlaybackAudio))
-      .on(RoomEvent.Disconnected, () => {
+      .on(RoomEvent.Disconnected, (reason) => {
         if (cancelled) return;
         if (leavingRef.current) {
+          onLeave();
+          return;
+        }
+        // Participant removal / room deletion must not replay a cached token.
+        if (reason === 4 || reason === 5) {
+          leavingRef.current = true;
+          setReconnecting(false);
+          setError("Já não tens acesso a esta sessão.");
           onLeave();
           return;
         }

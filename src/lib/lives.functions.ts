@@ -527,7 +527,7 @@ export const adminCreateLive = createServerFn({ method: "POST" })
             userId: u.id,
             kind: "live_announcement",
             ref: row.id,
-          }).catch((e) => console.error("[lives] announce email failed", u.email, e));
+          }).catch(() => console.error("[lives] announce email failed"));
         }
         if (list.users.length < 100) break;
         page += 1;

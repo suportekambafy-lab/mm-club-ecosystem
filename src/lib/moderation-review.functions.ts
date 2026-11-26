@@ -7,6 +7,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { quotedContains } from "@/lib/security/input-boundaries";
 
 async function assertStaff(context: any) {
   const [{ data: isAdmin }, { data: isMod }] = await Promise.all([
@@ -128,7 +129,7 @@ export const listModerationActions = createServerFn({ method: "POST" })
     if (data.status === "removed") q = q.eq("action", "remove").is("reverted_at", null);
     if (data.status === "allowed") q = q.eq("action", "allow");
     if (data.status === "reverted") q = q.not("reverted_at", "is", null);
-    if (data.search) q = q.or(`excerpt.ilike.%${data.search}%,reason.ilike.%${data.search}%`);
+    if (data.search) q = q.or(`excerpt.ilike.${quotedContains(data.search)},reason.ilike.${quotedContains(data.search)}`);
 
     const { data: rows, error } = await q;
     if (error) throw error;

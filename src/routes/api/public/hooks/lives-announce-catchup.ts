@@ -86,8 +86,8 @@ export const Route = createFileRoute("/api/public/hooks/lives-announce-catchup")
                     ref: id,
                   });
                   sent += 1;
-                } catch (e) {
-                  console.error("[lives-catchup] send failed", u.email, id, e);
+                } catch {
+                  console.error("[lives-catchup] send failed");
                 }
               }
             }
