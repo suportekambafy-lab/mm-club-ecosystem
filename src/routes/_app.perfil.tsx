@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { VerifiedBadge } from "@/components/mm/verified-badge";
 import { useAdminIds } from "@/hooks/use-admin-ids";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useClubAccessExpiry } from "@/components/mm/access-expiry";
 import {
   getBillingOverview,
   type BillingOverview,
@@ -296,6 +297,7 @@ function ProfilePage() {
     .join("")
     .toUpperCase();
   const isAdmin = authUser ? adminIds.has(authUser.id) : false;
+  const access = useClubAccessExpiry(authUser?.id ?? "");
 
 
   const courses = allCourses.map((c) => applyProgress(c, userProgress));
@@ -499,12 +501,7 @@ function ProfilePage() {
       {/* Gerenciar plano */}
       <section className="space-y-4">
         <div className="flex items-baseline justify-between px-1">
-          <h2 className="font-display text-xl text-foreground md:text-2xl">Gerenciar plano</h2>
-          {sub?.status && (
-            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              {sub.status}
-            </span>
-          )}
+          <h2 className="font-display text-xl text-foreground md:text-2xl">O meu acesso</h2>
         </div>
 
         <div className="rounded-2xl bg-surface-1 p-5 ring-1 ring-border sm:p-6">
@@ -513,43 +510,6 @@ function ProfilePage() {
               <Skeleton className="h-5 w-48" />
               <Skeleton className="h-4 w-64" />
               <Skeleton className="h-10 w-40" />
-            </div>
-          ) : sub ? (
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <p className="font-display text-lg text-foreground">
-                  {sub.productName} · {formatMoney(sub.amountCents, sub.currency)}
-                  <span className="text-sm text-muted-foreground">
-                    {sub.interval === "year" ? "/ano" : sub.interval === "month" ? "/mês" : ""}
-                  </span>
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {sub.cancelAtPeriodEnd
-                    ? "Cancela no final do período atual"
-                    : sub.currentPeriodEnd
-                      ? `Próxima renovação em ${new Date(sub.currentPeriodEnd).toLocaleDateString("pt-PT", { day: "2-digit", month: "long", year: "numeric" })}`
-                      : "Assinatura ativa"}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  to="/subscricao"
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
-                >
-                  <CreditCard className="h-4 w-4" />
-                  Gerir subscrição
-                </Link>
-                <Link
-                  to="/comunicacoes"
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-border px-5 py-2.5 text-sm font-medium transition hover:border-primary hover:text-primary"
-                >
-                  As minhas comunicações
-                </Link>
-              </div>
-
-
-
             </div>
           ) : isAdmin ? (
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
@@ -561,19 +521,16 @@ function ProfilePage() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <p className="font-display text-lg text-foreground">Sem plano ativo</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Ativa o teu acesso completo ao MM Club para desbloquear todos os cursos, lives e ferramentas.
-                </p>
-              </div>
-              <Link
-                to="/checkout"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-gold-soft"
-              >
-                Ver planos
-              </Link>
+            <div className="min-w-0">
+              <p className="font-display text-lg text-foreground">
+                {access?.hasAccess && access.expiresAt
+                  ? `Acesso até ${new Date(access.expiresAt).toLocaleDateString("pt-PT", { day: "2-digit", month: "long", year: "numeric" })}`
+                  : access?.hasAccess ? "Acesso ativo" : "Sem acesso ativo"}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {access?.hasAccess ? "Depois desta data, para renovar entra em contacto com o suporte." : "Para renovar, entra em contacto com o suporte."}
+                {" "}<a href="mailto:geral@mmclub.pt" className="text-primary underline underline-offset-4">geral@mmclub.pt</a>
+              </p>
             </div>
           )}
 

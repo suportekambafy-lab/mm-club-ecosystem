@@ -4,5 +4,5 @@ export function resolveAccessState(grants: AccessGrant[], now: number) {
   const indefinite = active.some(g => g.expires_at === null);
   const expiresAt = indefinite ? null : active.map(g => g.expires_at).filter((v): v is string => v !== null).sort().at(-1) ?? null;
   const manual = grants.some(g => g.source === "manual" && typeof g.metadata === "object" && g.metadata !== null && "origin" in g.metadata && g.metadata.origin === "commercial");
-  return { hasAccess: active.length > 0, expiresAt, manual, expired: manual && active.length === 0 };
+  return { hasAccess: active.length > 0, expiresAt, manual, expired: grants.length > 0 && active.length === 0 };
 }

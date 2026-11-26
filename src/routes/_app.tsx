@@ -128,7 +128,7 @@ export const Route = createFileRoute("/_app")({
         }
 
         if (isLockedPath(location.pathname)) {
-          throw redirect({ to: "/subscricao", replace: true });
+          throw redirect({ to: "/perfil", replace: true });
         }
       } else {
         clearIntendedPlan();
@@ -791,13 +791,12 @@ function AppLayout() {
           />
           )}
           {viewAs ? <ViewAsBar target={viewAs} /> : null}
-          {authUser && accessState?.manual && <AccessExpiryBanner expired={accessState.expired} expiresAt={accessState.expiresAt} />}
+          {authUser && accessState?.expired && <AccessExpiryBanner expired={accessState.expired} expiresAt={accessState.expiresAt} />}
           {!hasAccess && authUser && !accessState?.expired ? (
             <DebtBanner userId={viewAs ? viewAs.userId : authUser.id} />
           ) : authUser && hasAccess ? (
             <>
-              <PaymentMigrationBanner />
-              <CancelBanner />
+              {null}
             </>
           ) : null}
           {authUser ? contentLocked ? <div className="py-12 text-center"><GraduationCap className="mx-auto mb-4 h-8 w-8 text-muted-foreground"/><h1 className="text-2xl font-semibold">O teu acesso terminou</h1><p className="mt-2 text-muted-foreground">Para renovar, entra em contacto com o suporte.</p><a href="mailto:geral@mmclub.pt" className="mt-4 inline-block text-primary underline underline-offset-4">Contactar o suporte</a></div> : <Outlet /> : <div className="min-h-[60vh]" />}
