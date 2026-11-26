@@ -253,6 +253,13 @@
       "when": 1795615872835,
       "tag": "0035_club_extra_products",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1795691778339,
+      "tag": "0036_community_post_announcements",
+      "breakpoints": true
     }
   ]
 }

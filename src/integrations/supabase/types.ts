@@ -1481,6 +1481,27 @@ export type Database = {
           },
         ]
       }
+      community_post_announcements: {
+        Row: {
+          announce: boolean | null
+          created_at: string
+          post_id: string
+          reason: string | null
+        }
+        Insert: {
+          announce?: boolean | null
+          created_at?: string
+          post_id: string
+          reason?: string | null
+        }
+        Update: {
+          announce?: boolean | null
+          created_at?: string
+          post_id?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
       community_post_views: {
         Row: {
           post_id: string

@@ -54,6 +54,22 @@ export async function sendCommunityPostEmails(postId: string) {
   ]);
 
   const authorName = author?.display_name ?? "Um membro";
+
+  // Um só anúncio por post: o primeiro a reservar a linha ganha; edições,
+  // varrimentos e pedidos paralelos nunca voltam a enviar.
+  const claim = await supabaseAdmin
+    .from("community_post_announcements")
+    .insert({ post_id: post.id })
+    .select("post_id")
+    .maybeSingle();
+  if (claim.error || !claim.data) return { sent: 0, skipped: 0 };
+
+  const decision = await decideAnnouncement(post.content ?? "", category?.name ?? null);
+  await supabaseAdmin
+    .from("community_post_announcements")
+    .update({ announce: decision.announce, reason: decision.reason })
+    .eq("post_id", post.id);
+  if (!decision.announce) return { sent: 0, skipped: 0 };
   // Só a equipa envia o texto e a imagem do post por email; para membros o
   // aviso é genérico (sem conteúdo escrito por eles) com link para o post.
   const [{ data: authorAdmin }, { data: authorMod }] = await Promise.all([
@@ -113,4 +129,31 @@ export async function sendCommunityPostEmails(postId: string) {
   }
 
   return { sent, skipped };
+}
+
+/** A IA decide se o post interessa a todos os membros o suficiente para um email. */
+export async function decideAnnouncement(text: string, category: string | null): Promise<{ announce: boolean; reason: string }> {
+  const body = text.trim();
+  if (body.length < 20) return { announce: false, reason: "Texto demasiado curto." };
+  if (/reembols|cobran|cobrad|fatura|cancel|devolu|burla|golpe|reclama|n[aã]o funciona|suporte|ajuda/i.test(body)) {
+    return { announce: false, reason: "Reclamação ou pedido de ajuda." };
+  }
+  const key = process.env.LOVABLE_API_KEY;
+  if (!key) return { announce: false, reason: "IA indisponível." };
+  const { generateText } = await import("ai");
+  const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
+  const gateway = createLovableAiGatewayProvider(key);
+  try {
+    const r = await generateText({
+      model: gateway("openai/gpt-6-astra"),
+      system: "És o editor da comunidade MM Club (empreendedores de e-commerce). Decide se um novo post merece um email para TODOS os membros. SIM só para conteúdo de valor para a maioria: aprendizagens, resultados/vitórias, dicas práticas, oportunidades, anúncios relevantes. NÃO para reclamações, queixas, pedidos de suporte ou ajuda pessoal, problemas técnicos, perguntas simples, conversa casual, saudações, autopromoção ou spam. Responde só JSON: {\"announce\": true|false, \"reason\": \"curto\"}",
+      prompt: `Categoria: ${category ?? "Geral"}\nPost:\n${body.slice(0, 3000)}`,
+    });
+    const m = (r.text ?? "").match(/\{[\s\S]*\}/);
+    const v = m ? (JSON.parse(m[0]) as { announce?: unknown; reason?: unknown }) : null;
+    return { announce: v?.announce === true, reason: typeof v?.reason === "string" ? v.reason.slice(0, 300) : "" };
+  } catch (e) {
+    console.error("[community-email] announce decision failed", e);
+    return { announce: false, reason: "Falha da IA." };
+  }
 }
