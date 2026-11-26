@@ -54,3 +54,4 @@
 - External Legacy buyers activate via public /ativar; the allow-list lives in a server-only module and grants use a fixed source id so they stay idempotent.
 - Card-update email suppression uses a shared policy at both legacy and notification-engine delivery boundaries, including forced resends, so billing processing remains untouched.
 - Billing revocations must remain scoped to the subscription source and ID; independent manual access survives failed payments, suspension and cancellation without changing collection processing.
+- Lesson file playback attaches HLS through a browser-only dynamic hls.js fallback when native support is absent; destroy the stream on navigation so Legacy playlists work across browsers without stale playback.
