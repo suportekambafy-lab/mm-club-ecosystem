@@ -1,6 +1,7 @@
 // Server-only Resend sender via Lovable connector gateway.
 // Do NOT import from client code. Load inside server handlers.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { isCardUpdateEmailDisabled } from "@/lib/notifications/card-update-policy";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 const FROM = "MM Club <geral@mmclub.pt>";
@@ -53,6 +54,8 @@ export async function sendEmail(opts: SendOpts): Promise<{
   error?: string;
 }> {
   const { to, subject, html, userId, kind, ref, replyTo, attachments } = opts;
+
+  if (isCardUpdateEmailDisabled(kind)) return { sent: false, skipped: true };
 
   // Dedupe: same (user_id, kind, ref) is only ever sent once.
   if (userId && ref) {

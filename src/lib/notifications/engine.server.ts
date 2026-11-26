@@ -10,6 +10,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { APP_URL, TEMPLATES } from "./catalog";
 import { mergeTemplate, renderTemplate } from "./render";
 import type { NotificationChannel, TemplateOverride } from "./types";
+import { isCardUpdateEmailDisabled } from "./card-update-policy";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 const FROM = "MM Club <geral@mmclub.pt>";
@@ -221,6 +222,10 @@ async function deliverEmail(args: {
 // -------------------------------------------------------------------- notify
 
 export async function notify(input: NotifyInput): Promise<NotifyResult> {
+  // Applies to automatic sends and admin resends, regardless of force.
+  if (isCardUpdateEmailDisabled(input.templateKey))
+    return { sent: false, skipped: true, reason: "card_update_disabled" };
+
   const def = TEMPLATES[input.templateKey];
   if (!def) return { sent: false, reason: "unknown_template" };
 

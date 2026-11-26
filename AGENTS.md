@@ -52,3 +52,4 @@
 - Keep dashboard hero selection in the browser-safe hero-selection module; the dashboard shell overlays its topbar using scoped hero tokens so other pages and themes remain unchanged.
 - Share account and club switching through AccountMenu avatar triggers in the member shell; reuse existing product access checks and selection without a separate sidebar selector.
 - External Legacy buyers activate via public /ativar; the allow-list lives in a server-only module and grants use a fixed source id so they stay idempotent.
+- Card-update email suppression uses a shared policy at both legacy and notification-engine delivery boundaries, including forced resends, so billing processing remains untouched.
