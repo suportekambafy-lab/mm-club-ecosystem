@@ -116,11 +116,12 @@ export const updateLead = createServerFn({ method: "POST" })
       throw new Error("Este lead já foi assumido por outra pessoa.");
     let closerProfileName: string | null = null;
     if (data.status === "call_marcada") {
-      const { data: roles } = await db.from("user_roles").select("user_id, role").in("user_id", [context.userId, data.closerId!]);
+      if (!data.closerId) throw new Error("Escolhe um closer válido.");
+      const { data: roles } = await db.from("user_roles").select("user_id, role").in("user_id", [context.userId, data.closerId]);
       const mine = (roles ?? []).filter(r => r.user_id === context.userId).map(r => r.role as string);
       if (!mine.includes("admin") && !mine.includes("sdr")) throw new Error("Só o SDR pode marcar calls.");
       if (!(roles ?? []).some(r => r.user_id === data.closerId && r.role === "closer")) throw new Error("Escolhe um closer válido.");
-      const { data: cp } = await db.from("profiles").select("display_name").eq("id", data.closerId!).maybeSingle();
+      const { data: cp } = await db.from("profiles").select("display_name").eq("id", data.closerId).maybeSingle();
       closerProfileName = cp?.display_name ?? "Closer";
     }
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -158,31 +159,8 @@ export const updateLead = createServerFn({ method: "POST" })
       closerName = p?.display_name ?? "Equipa";
     }
     if (data.status === "call_marcada" && patch.call_scheduled_at) {
-      // Confirmação imediata ao responsável (os lembretes de dia/hora ficam com o agendador).
-      try {
-        const responsavelId = (patch.responsavel_id as string | undefined) ?? lead.responsavel_id ?? context.userId;
-        const { data: userRes } = await db.auth.admin.getUserById(responsavelId);
-        const email = userRes?.user?.email;
-        if (email) {
-          const { data: p } = await db.from("profiles").select("display_name").eq("id", responsavelId).maybeSingle();
-          const whenLabel = new Intl.DateTimeFormat("pt-PT", {
-            timeZone: "Europe/Lisbon", weekday: "long", day: "numeric", month: "long",
-            hour: "2-digit", minute: "2-digit",
-          }).format(new Date(patch.call_scheduled_at as string));
-          const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-          await sendTemplateEmail("call-reminder", email, {
-            templateData: {
-              closerName: p?.display_name ?? "Equipa",
-              leadName: (updated as Record<string, unknown>).nome ?? "o lead",
-              whenLabel: `${whenLabel} (Lisboa)`,
-              kind: "confirm",
-            },
-            idempotencyKey: `call-reminder-confirm-${data.id}-${patch.call_scheduled_at}`,
-          });
-        }
-      } catch (e) {
-        console.error("[updateLead] call confirmation email failed:", e);
-      }
+      const { sendCallConfirmation } = await import("./call-confirmation.server");
+      await sendCallConfirmation(updated);
     }
     return { ok: true, lead: updated, closerName };
   });
