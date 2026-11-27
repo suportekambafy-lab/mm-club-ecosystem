@@ -5,6 +5,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { DEFAULT_GATEWAY, getGateway } from "./gateway/index.server";
 import { ensureCustomer } from "./commands.server";
+import { internalReturnPath, trustedPaymentOrigin } from "@/lib/security/input-boundaries";
 
 /**
  * Adding an extra payment method is free: a 0,00 € authorisation is enough to
@@ -122,7 +123,8 @@ export async function startAddPaymentMethod(input: {
   origin: string;
   returnPath?: string;
 }): Promise<{ checkoutUrl: string }> {
-  const origin = input.origin.replace(/\/$/, "");
+  const origin = trustedPaymentOrigin(input.origin);
+  const returnPath = internalReturnPath(input.returnPath ?? "/subscricao?pm=added");
   const customer = await ensureCustomer({
     userId: input.userId,
     email: input.email,
@@ -136,7 +138,7 @@ export async function startAddPaymentMethod(input: {
     amountCents: VERIFICATION_CENTS,
     currency: "EUR",
     description: "MM Club — verificação do método de pagamento",
-    redirectUrl: `${origin}${input.returnPath ?? "/subscricao?pm=added"}`,
+    redirectUrl: `${origin}${returnPath}`,
     webhookUrl: `${origin}/api/public/payments/gateway-webhook`,
     customerId: customer.gatewayCustomerId,
     customerEmail: input.email,

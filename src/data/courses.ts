@@ -92,7 +92,7 @@ const baseCourses: Course[] = [
 ];
 
 /** Cursos desativados: deixam de aparecer no MM Club. */
-export const HIDDEN_COURSE_IDS = new Set(["marca-milionaria"]);
+export const HIDDEN_COURSE_IDS = new Set<string>([]);
 
 export const courses: Course[] = baseCourses.filter((c) => !HIDDEN_COURSE_IDS.has(c.id));
 

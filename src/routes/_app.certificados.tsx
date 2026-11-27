@@ -6,7 +6,7 @@ import { useCourseAccess } from "@/hooks/use-course-release";
 import { useUserProgress } from "@/hooks/use-user-progress";
 import { computeCourseDuration, computeLessonsCount, parseDurationToMinutes } from "@/lib/course-duration";
 import { supabase } from "@/integrations/supabase/client";
-import { getCertificatePdf } from "@/lib/certificates.functions";
+import { getCertificatePdf, issueCourseCertificate } from "@/lib/certificates.functions";
 import { sendCertificateEmail } from "@/lib/certificate-email.functions";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Course } from "@/data/types";
@@ -179,16 +179,7 @@ function CourseCertRow({
   const issue = async () => {
     setBusy(true);
     try {
-      const { data, error } = await (supabase as unknown as {
-        rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: any; error: unknown }>;
-      }).rpc("issue_course_certificate", {
-        _course_id: course.id,
-        _course_title: course.title,
-        _hours: hours,
-        _lessons_total: total,
-      });
-      if (error) throw error;
-      const row = Array.isArray(data) ? data[0] : null;
+      const row = await issueCourseCertificate({ data: { courseId: course.id } });
       if (row) {
         onIssued({ ...row, course_id: course.id });
         void sendCertificateEmail({ data: { code: row.code } }).catch(() => {});

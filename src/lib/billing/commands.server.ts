@@ -5,6 +5,7 @@
  * these same commands. No UI, no framework, no gateway specifics here.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { internalReturnPath, trustedPaymentOrigin } from "@/lib/security/input-boundaries";
 import { gatewayInterval, getPriceById, getPriceBySlug } from "./catalog.server";
 import { emitEvent } from "./events.server";
 import { DEFAULT_GATEWAY, getGateway } from "./gateway/index.server";
@@ -83,6 +84,8 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
   checkoutUrl: string;
   paymentId: string;
 }> {
+  const origin = trustedPaymentOrigin(input.origin);
+  if (input.successPath !== undefined) internalReturnPath(input.successPath);
   const price = input.priceId
     ? await getPriceById(input.priceId)
     : input.priceSlug
@@ -149,7 +152,6 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
 
 
 
-  const origin = input.origin.replace(/\/$/, "");
   const customer = await ensureCustomer({
     userId: input.userId,
     email: input.email,
@@ -160,11 +162,11 @@ export async function startCheckout(input: StartCheckoutInput): Promise<{
     throw new Error("A Viva.com só está disponível para compras avulsas.");
   }
   const gw = getGateway(input.gateway === "viva" ? "viva" : undefined);
-  const successPath =
+  const successPath = internalReturnPath(
     input.successPath ??
     (price.product.kind === "credit_pack"
       ? "/ferramentas/studio?topup=success"
-      : "/dashboard?checkout=success");
+      : "/dashboard?checkout=success"));
 
   // Quem está a regularizar paga a mensalidade cheia: o desconto de
   // verificação de 1,00 € é só para quem entra em trial pela primeira vez.

@@ -2,6 +2,7 @@ import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, stepCountIs, streamText, type UIMessage } from "ai";
 import { buildSupportRows, textOf } from "@/lib/support-messages";
+import { parseChatMessages } from "@/lib/security/chat-input";
 
 
 
@@ -32,7 +33,8 @@ async function persistSupport(
       threadId = created.id as string;
     }
 
-    const unique = buildSupportRows(threadId!, userId, messages);
+    if (!threadId) return;
+    const unique = buildSupportRows(threadId, userId, messages);
 
 
     if (unique.length > 0) {
@@ -109,10 +111,10 @@ export const Route = createFileRoute("/api/support")({
         const auth = await requireRequestUser(request);
         if ("denied" in auth) return auth.denied;
 
-        const { messages } = (await request.json()) as SupportRequestBody;
-        if (!Array.isArray(messages)) {
-          return new Response("Messages are required", { status: 400 });
-        }
+        const { messages: rawMessages } = (await request.json()) as SupportRequestBody;
+        let messages: UIMessage[];
+        try { messages = parseChatMessages(rawMessages); }
+        catch { return new Response("Mensagem inválida.", { status: 400 }); }
 
         const key = process.env.LOVABLE_API_KEY;
         if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });

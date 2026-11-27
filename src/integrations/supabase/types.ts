@@ -5372,6 +5372,20 @@ export type Database = {
           member_name: string
         }[]
       }
+      issue_course_certificate_internal: {
+        Args: {
+          _course_id: string
+          _course_title: string
+          _hours: number
+          _lesson_ids: string[]
+          _user_id: string
+        }
+        Returns: {
+          code: string
+          issued_at: string
+          member_name: string
+        }[]
+      }
       match_lesson_chunks: {
         Args: {
           match_count?: number

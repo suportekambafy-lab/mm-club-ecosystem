@@ -117,8 +117,8 @@ export async function sendCommunityPostEmails(postId: string) {
         userId: u.id,
         kind: "community_post",
         ref: post.id,
-      }).catch((e) => {
-        console.error("[community-email] send failed", u.email, e);
+      }).catch(() => {
+        console.error("[community-email] send failed");
         return { sent: false };
       });
       if (res.sent) sent += 1;

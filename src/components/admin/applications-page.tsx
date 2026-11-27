@@ -17,6 +17,7 @@ import { parseCallDateTime } from "@/lib/aplicacao/call-rules";
 import { formatSaleAmount, parseSaleAmount, type ContactOutcome } from "@/lib/aplicacao/sale-rules";
 import { canScheduleCall, isLeadLocked, leadAttribution } from "@/lib/aplicacao/lead-presentation";
 import { supabase } from "@/integrations/supabase/client";
+import { csvCell } from "@/lib/security/input-boundaries";
 
 const STATUS: Record<string, string> = {
   novo: "Novo", incompleto: "Incompleto", em_contato: "Em contacto",
@@ -108,8 +109,7 @@ export function AplicacoesPage({ commercial = false }: { commercial?: boolean })
 
   function exportCsv() {
     const cols = ["created_at","nome","whatsapp","email","instagram","pais","idade","ocupacao","experiencia","o_que_travou","tempo_dia","verba_anuncios","investimento","decisao","classificacao","status","sale_amount_cents","responsavel","utm_source","utm_medium","utm_campaign","utm_content"];
-    const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-    const csv = [cols.join(";"), ...filtered.map((l) => cols.map((c) => esc(l[c])).join(";"))].join("\n");
+    const csv = [cols.join(";"), ...filtered.map((l) => cols.map((c) => csvCell(l[c])).join(";"))].join("\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
     a.download = `aplicacoes-${today}.csv`; a.click();

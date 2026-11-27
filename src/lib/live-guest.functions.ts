@@ -83,15 +83,17 @@ export const joinLiveAsGuest = createServerFn({ method: "POST" })
       if (!open) throw new Error("A sessão ainda não começou. Volta à hora marcada.");
     }
 
-    const guestId = data.guestId ?? crypto.randomUUID();
+    const { getOrCreateGuestIdentity } = await import("./live-guest-identity.server");
+    const guestId = await getOrCreateGuestIdentity(data.liveId);
 
     const { data: existing } = await supabaseAdmin
       .from("live_participants")
-      .select("id, banned, role, on_stage, mic_allowed, cam_allowed, screen_allowed")
+      .select("id, is_guest, banned, role, on_stage, mic_allowed, cam_allowed, screen_allowed")
       .eq("live_id", live.id)
       .eq("user_id", guestId)
       .maybeSingle();
     if (existing?.banned) throw new Error("Já não tens acesso a esta sessão.");
+    if (existing && (!existing.is_guest || existing.role === "host" || existing.role === "cohost")) throw new Error("Sessão de convidado inválida.");
 
     if (existing) {
       await supabaseAdmin
@@ -104,7 +106,7 @@ export const joinLiveAsGuest = createServerFn({ method: "POST" })
           guest_name: data.displayName,
           is_guest: true,
         })
-        .eq("id", existing.id);
+        .eq("id", existing.id).eq("is_guest", true).eq("banned", false);
     } else {
       // Guests join as regular attendees (audience). The host can promote them
       // to the stage afterwards — being a guest does not mean being a speaker.
@@ -137,9 +139,9 @@ export const joinLiveAsGuest = createServerFn({ method: "POST" })
       publishOverride: {
         mic: Boolean(existing?.mic_allowed) && onStage,
         cam: Boolean(existing?.cam_allowed) && onStage,
-        screen: onStage,
+        screen: Boolean(existing?.screen_allowed) && onStage,
       },
-      ttlSeconds: 60 * 60 * 6,
+      ttlSeconds: 300,
     });
 
     return {
@@ -181,6 +183,14 @@ export const guestSync = createServerFn({ method: "POST" })
     if (!live || !live.guest_token || live.guest_token !== data.code) {
       throw new Error("Link de convidado inválido ou expirado.");
     }
+    const { requireGuestIdentity } = await import("./live-guest-identity.server");
+    const guestId = await requireGuestIdentity(data.liveId);
+    const { data: admission, error: admissionError } = await supabaseAdmin.from("live_participants")
+      .select("is_guest,banned,role").eq("live_id", live.id).eq("user_id", guestId).maybeSingle();
+    if (admissionError) throw new Error("Não foi possível verificar a sessão.");
+    if (!admission?.is_guest || admission.banned || admission.role === "host" || admission.role === "cohost" || live.status === "ended" || live.status === "published") {
+      return { denied: true, onStage: false, handRaised: false, status: String(live.status), token: null };
+    }
 
     // Heartbeat: mantém o convidado "vivo" na lista (evita fantasmas).
     // IMPORTANTE: cada UPDATE nesta tabela é difundido em tempo real a todos
@@ -204,13 +214,13 @@ export const guestSync = createServerFn({ method: "POST" })
             hand_raised_at: data.raiseHand ? nowIso : null,
           })
           .eq("live_id", live.id)
-          .eq("user_id", data.guestId);
+          .eq("user_id", guestId).eq("is_guest", true).eq("banned", false);
       } else {
         await supabaseAdmin
           .from("live_participants")
           .update({ last_seen_at: nowIso, guest_name: data.displayName, is_guest: true })
           .eq("live_id", live.id)
-          .eq("user_id", data.guestId)
+          .eq("user_id", guestId).eq("is_guest", true).eq("banned", false)
           .or(`last_seen_at.is.null,last_seen_at.lt.${staleBefore}`);
       }
     }
@@ -220,7 +230,7 @@ export const guestSync = createServerFn({ method: "POST" })
       .from("live_participants")
       .select("role, on_stage, banned, hand_raised_at, mic_allowed, cam_allowed, screen_allowed")
       .eq("live_id", live.id)
-      .eq("user_id", data.guestId)
+      .eq("user_id", guestId).eq("is_guest", true)
       .maybeSingle();
     if (!me) throw new Error("Já não estás nesta sessão.");
     if (me.banned) throw new Error("Já não tens acesso a esta sessão.");
@@ -232,20 +242,21 @@ export const guestSync = createServerFn({ method: "POST" })
       const minted = await mintLiveKitToken({
         liveId: live.id,
         target: "main",
-        userId: data.guestId,
+        userId: guestId,
         displayName: data.displayName,
         role: me.role as "host" | "cohost" | "speaker" | "participant" | "viewer",
         publishOverride: {
           mic: Boolean(me.mic_allowed) && onStage,
           cam: Boolean(me.cam_allowed) && onStage,
-          screen: onStage,
+          screen: Boolean(me.screen_allowed) && onStage,
         },
-        ttlSeconds: 60 * 60 * 6,
+        ttlSeconds: 300,
       });
       token = minted.token;
     }
 
     return {
+      denied: false,
       onStage,
       handRaised: Boolean(me.hand_raised_at),
       status: live.status as string,
@@ -303,11 +314,13 @@ export const guestLeave = createServerFn({ method: "POST" })
       .eq("id", data.liveId)
       .maybeSingle();
     if (!live || live.guest_token !== data.code) return { ok: false };
+    const { requireGuestIdentity } = await import("./live-guest-identity.server");
+    const guestId = await requireGuestIdentity(data.liveId);
     await supabaseAdmin
       .from("live_participants")
       .update({ left_at: new Date().toISOString(), on_stage: false, hand_raised_at: null })
       .eq("live_id", live.id)
-      .eq("user_id", data.guestId);
+      .eq("user_id", guestId).eq("is_guest", true);
     return { ok: true };
   });
 
@@ -332,7 +345,7 @@ export const listGuestChatMessages = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }): Promise<GuestChatRow[]> => {
     const { assertGuestChatAccess } = await import("@/lib/live-guest-chat.server");
-    const supabaseAdmin = await assertGuestChatAccess(data.liveId, data.code);
+    const { supabaseAdmin } = await assertGuestChatAccess(data.liveId, data.code);
 
     const { data: rows, error } = await supabaseAdmin
       .from("live_chat_messages")
@@ -384,13 +397,13 @@ export const sendGuestChatMessage = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }): Promise<GuestChatRow> => {
     const { assertGuestChatAccess } = await import("@/lib/live-guest-chat.server");
-    const supabaseAdmin = await assertGuestChatAccess(data.liveId, data.code);
+    const { supabaseAdmin, guestId } = await assertGuestChatAccess(data.liveId, data.code);
 
     const { data: me } = await supabaseAdmin
       .from("live_participants")
       .select("banned")
       .eq("live_id", data.liveId)
-      .eq("user_id", data.guestId)
+      .eq("user_id", guestId).eq("is_guest", true)
       .maybeSingle();
     if (!me) throw new Error("Já não estás nesta sessão.");
     if (me.banned) throw new Error("Já não tens acesso a esta sessão.");
@@ -401,7 +414,7 @@ export const sendGuestChatMessage = createServerFn({ method: "POST" })
       kind: "live_chat",
       text: data.body,
       liveId: data.liveId,
-      guestId: data.guestId,
+      guestId,
       guestName: data.displayName,
     });
     if (check.blocked) {
@@ -417,7 +430,7 @@ export const sendGuestChatMessage = createServerFn({ method: "POST" })
       .insert({
         live_id: data.liveId,
         body: data.body,
-        guest_id: data.guestId,
+        guest_id: guestId,
         guest_name: data.displayName,
       })
       .select("id, body, created_at, pinned_at")
@@ -433,7 +446,7 @@ export const sendGuestChatMessage = createServerFn({ method: "POST" })
       body: row.body as string,
       created_at: row.created_at as string,
       pinned_at: (row.pinned_at as string | null) ?? null,
-      authorId: data.guestId,
+      authorId: guestId,
       authorName: data.displayName,
       isGuest: true,
     };

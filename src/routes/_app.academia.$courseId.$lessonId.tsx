@@ -20,6 +20,7 @@ import { useAdminOverridesVersion } from "@/hooks/use-admin-overrides";
 import type { Course, Lesson, Module } from "@/data/types";
 import { cn } from "@/lib/utils";
 import { parseVideoUrl } from "@/lib/video-source";
+import { attachVideoSource } from "@/lib/attach-video-source";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { lessonThumb } from "@/lib/course-duration";
 import { useBunnyThumb } from "@/hooks/use-bunny-thumb";
@@ -48,7 +49,17 @@ export const Route = createFileRoute("/_app/academia/$courseId/$lessonId")({
     if (!course) throw notFound();
     return { courseId: params.courseId, lessonId: params.lessonId };
   },
-  head: () => ({ meta: [{ title: "Aula — MM Club" }] }),
+  head: ({ params }) => {
+    const course = coursesById[params.courseId];
+    const lesson = course?.modules?.flatMap((m) => m.lessons).find((l) => l.id === params.lessonId);
+    const title = `${lesson?.title ?? "Aula"} — ${course?.title ?? "Academia"} | MM Club`;
+    const description = `Assiste à aula ${lesson?.title ?? "da Academia"} do curso ${course?.title ?? "MM Club"} e acompanha o teu progresso.`;
+    return { meta: [
+      { title }, { name: "description", content: description },
+      { property: "og:title", content: title }, { property: "og:description", content: description },
+      { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+    ] };
+  },
   component: LessonPlayer,
 });
 
@@ -675,6 +686,11 @@ function TrackedVideoPlayer({
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || source.kind !== "file" || !source.fileUrl) return;
+    return attachVideoSource(video, source.fileUrl);
+  }, [source.kind, source.fileUrl, lessonId]);
   const playerRef = useRef<PlayerJsPlayer | null>(null);
   const lastSavedRef = useRef(0);
   const initialSeekDoneRef = useRef(false);
@@ -986,7 +1002,6 @@ function TrackedVideoPlayer({
         <video
           key={lessonId}
           ref={videoRef}
-          src={source.fileUrl}
           controls
           autoPlay
           playsInline

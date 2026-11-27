@@ -95,9 +95,9 @@ export async function notifyLiveRescheduled(args: {
         });
         if (r.sent) sent += 1;
         else skipped += 1;
-      } catch (e) {
+      } catch {
         failed += 1;
-        console.error("[live-reschedule] send failed", u.email, e);
+        console.error("[live-reschedule] send failed");
       }
     }
     if (list.users.length < 100) break;

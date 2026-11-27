@@ -73,7 +73,7 @@ export async function notifyReplayReady(liveId: string): Promise<{ sent: boolean
           userId: u.id,
           kind: "replay_ready",
           ref: live.id,
-        }).catch((e) => console.error("[replay-notify] email failed", u.email, e));
+        }).catch(() => console.error("[replay-notify] email failed"));
       }
       if (list.users.length < 100) break;
       page += 1;

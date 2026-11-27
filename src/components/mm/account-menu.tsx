@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Bot, Check, Lock, LogOut, Package, ShoppingCart, UserRound } from "lucide-react";
+import { Bot, Check, Truck, Lock, LogOut, Package, ShoppingCart, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
@@ -10,7 +10,7 @@ import { useActiveProduct } from "@/hooks/use-active-product";
 import { useClubProducts } from "@/hooks/use-club-products";
 import { cn } from "@/lib/utils";
 
-const ICONS: Record<ClubProductId, typeof ShoppingCart> = { ecommerce: ShoppingCart, infoprodutos: Package, ia: Bot };
+const ICONS: Record<ClubProductId, typeof ShoppingCart> = { ecommerce: ShoppingCart, infoprodutos: Package, ia: Bot, cod: Truck };
 
 export function AccountMenu({ avatarSrc, initials, displayName, planLabel, expanded = false, onPicked, onSignOut }: {
   avatarSrc: string | null;

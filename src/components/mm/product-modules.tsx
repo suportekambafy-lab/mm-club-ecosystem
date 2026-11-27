@@ -19,6 +19,49 @@ export function CourseModules({ course, progress, openable, query }: { course: C
   );
   const scroller = useRef<HTMLDivElement>(null);
   if (modules.length === 0) return null;
+  if ((course.modules ?? []).filter((m) => m.lessons.length > 0).length === 1) {
+    const lessons = modules[0]!.lessons.filter((l) => !q || l.title.toLowerCase().includes(q) || modules[0]!.title.toLowerCase().includes(q) || course.title.toLowerCase().includes(q));
+    const arrows = "absolute top-[35%] z-10 hidden h-9 w-9 items-center justify-center rounded-full bg-surface-1 text-foreground ring-1 ring-border shadow-lg hover:ring-primary/60 sm:flex";
+    return (
+      <div className="space-y-3 pt-4">
+        <div className="flex items-end justify-between gap-3 px-1">
+          <h3 className="text-base font-semibold text-foreground">{course.title}</h3>
+          {!openable && <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><Clock className="h-3.5 w-3.5" /> {formatCourseRelease(course) ?? "Em breve"}</span>}
+        </div>
+        <div className="relative">
+          <button type="button" aria-label="Anterior" onClick={() => scroller.current?.scrollBy({ left: -(scroller.current.clientWidth * 0.8), behavior: "smooth" })} className={arrows + " -left-3"}><ChevronLeft className="h-4 w-4" /></button>
+          <button type="button" aria-label="Seguinte" onClick={() => scroller.current?.scrollBy({ left: scroller.current.clientWidth * 0.8, behavior: "smooth" })} className={arrows + " -right-3"}><ChevronRight className="h-4 w-4" /></button>
+          <div ref={scroller} className={"flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden " + (openable ? "" : "opacity-60")}>
+            {lessons.map((l, i) => {
+              const isDone = done?.has(l.id);
+              const cover = l.cover ?? modules[0]!.cover;
+              const bg = cover ? (/^(https?:|\/)/.test(cover) ? `url(${cover}) center/cover no-repeat` : cover) : courseCoverBackground(course);
+              const cls = "group flex w-[78%] shrink-0 snap-start flex-col sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-2.5rem)/3)] xl:w-[calc((100%-3.75rem)/4)] overflow-hidden rounded-2xl bg-surface-1 ring-1 ring-border transition hover:-translate-y-0.5 hover:ring-primary/60";
+              const body = (
+                <>
+                  <div className="relative aspect-[16/9] overflow-hidden" style={{ background: bg }}>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+                    <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/45 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-white backdrop-blur-md">Aula {i + 1}</span>
+                    <div className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary opacity-0 transition group-hover:opacity-100">
+                      {openable ? <Play className="h-4 w-4 fill-primary-foreground text-primary-foreground" /> : <Lock className="h-4 w-4 text-primary-foreground" />}
+                    </div>
+                    {isDone && <div className="absolute inset-x-0 bottom-0 h-[3px] bg-primary" />}
+                  </div>
+                  <div className="flex flex-1 flex-col gap-2 p-4">
+                    <p className="line-clamp-2 text-sm font-medium text-foreground">{l.title}</p>
+                    <p className="line-clamp-1 text-xs text-muted-foreground">{l.duration}{isDone ? " · Concluída" : ""}</p>
+                  </div>
+                </>
+              );
+              return openable ? (
+                <Link key={l.id} to="/academia/$courseId/$lessonId" params={{ courseId: course.id, lessonId: l.id }} className={cls}>{body}</Link>
+              ) : (<div key={l.id} className={cls}>{body}</div>);
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="space-y-4 pt-4">
       <div className="flex items-end justify-end gap-3 px-1 empty:hidden">

@@ -86,17 +86,29 @@ export async function registerSession(
 
   const deviceId = device?.id ?? existing?.id ?? "";
 
-  await supabaseAdmin.from("security_sessions").upsert(
+  const session = {
+    user_id: input.userId,
+    device_id: deviceId || null,
+    session_token: input.sessionToken,
+    ip: input.ip,
+    user_agent: input.userAgent?.slice(0, 300) ?? null,
+    last_seen_at: now,
+  };
+  // Claim a new token without overwriting a concurrent/other owner's row.
+  const { error: claimError } = await supabaseAdmin.from("security_sessions").upsert(
+    session,
+    { onConflict: "session_token", ignoreDuplicates: true },
+  );
+  if (claimError) throw new Error("Não foi possível registar a sessão.");
+  const { data: ownedSession, error: sessionError } = await supabaseAdmin.from("security_sessions").update(
     {
-      user_id: input.userId,
       device_id: deviceId || null,
-      session_token: input.sessionToken,
       ip: input.ip,
       user_agent: input.userAgent?.slice(0, 300) ?? null,
       last_seen_at: now,
     },
-    { onConflict: "session_token" },
-  );
+  ).eq("session_token", input.sessionToken).eq("user_id", input.userId).is("revoked_at", null).select("id").maybeSingle();
+  if (sessionError || !ownedSession) throw new Error("Sessão inválida.");
 
   const { data: active } = await supabaseAdmin
     .from("security_sessions")

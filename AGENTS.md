@@ -54,3 +54,8 @@
 - External Legacy buyers activate via public /ativar; the allow-list lives in a server-only module and grants use a fixed source id so they stay idempotent.
 - Card-update email suppression uses a shared policy at both legacy and notification-engine delivery boundaries, including forced resends, so billing processing remains untouched.
 - Billing revocations must remain scoped to the subscription source and ID; independent manual access survives failed payments, suspension and cancellation without changing collection processing.
+- Lesson file playback attaches HLS through a browser-only dynamic hls.js fallback when native support is absent; destroy the stream on navigation so Legacy playlists work across browsers without stale playback.
+- Billing commands validate trusted origins and local return paths before side effects; quoted filter values and formula-neutralized CSV cells keep searches and exports as data.
+- Guest mutations resolve a signed browser identity, never caller-supplied participant IDs; guest tokens have short lifetimes and removed guests stop reconnecting.
+- Certificate issuance uses authenticated server catalogue resolution and a service-only function checking every canonical completed lesson; existing certificates remain immutable snapshots.
+- Chat endpoints accept bounded user/assistant text only; system roles and submitted tool results never enter model instructions or tool execution.

@@ -108,21 +108,7 @@ function GuestEntry() {
     setEntering(true);
     setError(null);
     try {
-      // Reuse a stable guest identity per live so refreshing/rejoining does not
-      // create a duplicate participant tile in the room.
-      const storageKey = `mm-guest-id:${liveId}`;
-      let storedId: string | undefined;
-      try {
-        storedId = window.localStorage.getItem(storageKey) ?? undefined;
-      } catch {
-        storedId = undefined;
-      }
-      const res = await join({ data: { liveId, code: c, displayName: name.trim(), guestId: storedId } });
-      try {
-        window.localStorage.setItem(storageKey, res.guestId);
-      } catch {
-        /* storage blocked — identity stays per-session */
-      }
+      const res = await join({ data: { liveId, code: c, displayName: name.trim() } });
       setSession({ token: res.token, url: res.url, title: res.title, guestId: res.guestId, onStage: res.onStage });
       setPrefs(mediaPrefs);
       setStep("room");
