@@ -373,6 +373,7 @@ export function BigTypeHero() {
             <p className="mt-2 text-sm text-muted-foreground">
               cursos novos todos os meses, do zero ao €10k/mês
             </p>
+            {realCourse && (
             <div className="mt-8 flex items-center justify-between rounded-2xl border border-border bg-surface-2/60 p-3">
               <div className="flex items-center gap-2.5">
                 <img
@@ -393,6 +394,7 @@ export function BigTypeHero() {
                 Disponível
               </span>
             </div>
+            )}
 
             {/* Arrow to next */}
             <div className="absolute -right-4 top-1/2 z-10 hidden h-10 w-16 -translate-y-1/2 text-foreground md:block">
