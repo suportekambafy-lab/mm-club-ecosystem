@@ -59,3 +59,4 @@
 - Guest mutations resolve a signed browser identity, never caller-supplied participant IDs; guest tokens have short lifetimes and removed guests stop reconnecting.
 - Certificate issuance uses authenticated server catalogue resolution and a service-only function checking every canonical completed lesson; existing certificates remain immutable snapshots.
 - Chat endpoints accept bounded user/assistant text only; system roles and submitted tool results never enter model instructions or tool execution.
+- Service requests link to one CRM lead; authenticated atomic scheduling validates SDR/admin and closer, while lead transitions synchronize service status so agenda, goals and reminders share the same source.

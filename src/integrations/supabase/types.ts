@@ -5057,6 +5057,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          lead_id: string | null
           message: string | null
           phone: string
           service: string
@@ -5068,6 +5069,7 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          lead_id?: string | null
           message?: string | null
           phone: string
           service: string
@@ -5079,13 +5081,22 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          lead_id?: string | null
           message?: string | null
           phone?: string
           service?: string
           status?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "service_applications_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_actions: {
         Row: {
@@ -5385,6 +5396,10 @@ export type Database = {
           issued_at: string
           member_name: string
         }[]
+      }
+      manage_service_call: {
+        Args: { _at?: string; _closer?: string; _id: string; _status: string }
+        Returns: string
       }
       match_lesson_chunks: {
         Args: {

@@ -36,6 +36,7 @@
 - [ ] MMpay Klarna: código pronto; falta ativar Klarna no painel Stripe (utilizador)
 
 ## Em curso
+- [x] Marcar/reagendar calls dos serviços com um closer, ligadas ao CRM, agenda e metas; 13 testes e fluxo autenticado passaram, dados temporários removidos. Confirmação por email falhou no destinatário de teste e lembretes automáticos não executados; tarefas existentes não reativadas. Não publicado.
 - [x] Corrigir 24 dos 29 problemas de segurança selecionados: cinco logs, dois filtros, dois retornos de pagamentos, sessões, saída de convidados, exportação, dois assistentes, testes, certificados e oito leituras. 39 testes e navegador autenticado confirmaram rejeições, certificado válido e isolamento dos convidados; certificados de teste removidos. Não publicado.
 - [ ] Cinco problemas selecionados pendentes: associação de compras existentes, URLs dos vídeos e duas capas privadas aguardam confirmação para alterar compras/reprodução/emails; bloqueio definitivo de convidados depende de revogação efetiva no serviço das lives (identidade e reconexão já mitigadas). Não alterar restantes findings.
 - [x] Ajustar destaque do Início ao topo com menu sobreposto, sem luz esbranquiçada, live em primeiro e sem Legacy fixo; três testes passaram e sessão autenticada confirmou computador/telemóvel, seleção MMCast/live e ausência de transbordo ou erros. Não publicado.
